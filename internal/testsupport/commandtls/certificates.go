@@ -17,7 +17,11 @@ import (
 	"time"
 )
 
-const ServerDNSName = "modeldev.test"
+// ServerDNSName is the registered server identity for the Governance -> ModelDev
+// business listener. Fixtures mint the production literal DNS SAN so the real
+// startup and client checks exercise the same name; the CA and keys stay
+// synthetic and private to test storage.
+const ServerDNSName = "ani-modeldev-service"
 const GovernanceDNSName = "ani-governance"
 
 type Certificates struct {

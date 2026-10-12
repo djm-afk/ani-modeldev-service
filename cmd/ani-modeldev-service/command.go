@@ -71,6 +71,11 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 	if err != nil {
 		return failed("command server certificate pair invalid")
 	}
+	// Reject a pair that does not present the registered server identity at
+	// startup, so a mismatched SAN cannot silently fail every Governance call.
+	if !server.ValidCommandServerCertificate(certificate) {
+		return failed("command server certificate identity invalid")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	command := service.NewCommand(execution.New(pool))
