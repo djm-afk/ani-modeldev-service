@@ -30,3 +30,6 @@ Thumbs.db
 .DS_Store
 
 .private/
+
+# Local task specifications and execution evidence.
+/.scratch/
