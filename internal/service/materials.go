@@ -108,6 +108,17 @@ func inputVersionView(v biz.InputVersion) *modeldevv1.InputVersionView {
 	}
 	return out
 }
+
+// presetDisplayName derives a stable, distinguishing label for one preset.
+// The immutable Release contract has no display name, so reuse its fixed
+// identity: a human base plus a short prefix of the preset UUID.
+func presetDisplayName(presetID string) string {
+	const base = "General CPU MLP"
+	if len(presetID) < 8 {
+		return base
+	}
+	return base + " · " + presetID[:8]
+}
 func materialPage(p *modeldevv1.PageRequest) (int, string, error) {
 	limit, after := 20, ""
 	if p != nil {
@@ -190,7 +201,7 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 	for _, release := range releases {
 		p := presets[release.PresetID]
 		if p == nil {
-			p = &modeldevv1.PresetView{PresetId: release.PresetID, Name: "General CPU MLP", Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING}
+			p = &modeldevv1.PresetView{PresetId: release.PresetID, Name: presetDisplayName(release.PresetID), Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING}
 			presets[release.PresetID] = p
 			for _, v := range release.Program.DefaultParameters {
 				rule := &modeldevv1.ParameterRule{Name: v.Name, DefaultValue: parameterView(v)}

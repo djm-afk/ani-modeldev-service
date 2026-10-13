@@ -37,3 +37,18 @@ func TestRejectedTrainingQueryUsesCommittedObservationTime(t *testing.T) {
 		})
 	}
 }
+
+func TestPresetDisplayNameDistinguishesPresetIdentity(t *testing.T) {
+	first := presetDisplayName("aaaaaaaa-1111-4111-8111-bbbbbbbbbbbb")
+	second := presetDisplayName("cccccccc-2222-4222-8222-dddddddddddd")
+	if first == second {
+		t.Fatalf("distinct preset IDs must not share a display name: %q", first)
+	}
+	if first != "General CPU MLP · aaaaaaaa" {
+		t.Fatalf("display name = %q, want stable preset-derived label", first)
+	}
+	if short := presetDisplayName("abcd"); short != "General CPU MLP" {
+		t.Fatalf("short ID display name = %q, want base label", short)
+	}
+}
+
