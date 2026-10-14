@@ -51,4 +51,3 @@ func TestPresetDisplayNameDistinguishesPresetIdentity(t *testing.T) {
 		t.Fatalf("short ID display name = %q, want base label", short)
 	}
 }
-
