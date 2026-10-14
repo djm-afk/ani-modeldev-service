@@ -160,7 +160,12 @@ func assembleRecoveryOwner(t *testing.T, f *completeFixture, pool *pgxpool.Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
-	closer, err := biz.NewExecutionCloser(managed, runs, proof)
+	var closer *biz.ExecutionCloser
+	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
+		closer, err = biz.NewExecutionCloser(managed, runs, proof, proof)
+	} else {
+		closer, err = biz.NewExecutionCloser(managed, runs, proof)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}

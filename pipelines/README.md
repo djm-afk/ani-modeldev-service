@@ -18,10 +18,16 @@ The fine tuning image uses `finetuning-step.Dockerfile` with the verified worklo
 OCI manifest as `WORKLOAD_IMAGE` and the static step binary from the final pushed
 commit. Fine tuning has disk `/tmp`, a 20Gi workspace, separate export/verify
 subpath mounts and fixed stage limits. Pinned KFP 2.16.0 does not encode read-only
-PVC mounts, root filesystem or ephemeral-storage resource requests. ENV must
-provide and validate those fields for the isolated task namespace before live
-acceptance; do not silently add unsupported fields to the IR or weaken the
-workspace contract. The compiler labels the role as `ani.modeldev/step-role`.
+PVC mounts, root filesystem or ephemeral-storage resource requests. The formal
+[ModelDev webhook](../deploy/modeldev-webhook/README.md) provides and validates
+those fields for explicitly enrolled namespaces before live acceptance.
+Both execution kinds require a frozen `admission_profile` binding. The compiler
+labels every runnable step with `ani.modeldev/admission-profile` and
+`ani.modeldev/step-role`, including the failure-close component. Newly compiled
+IR rejects a missing or malformed profile. Already published IR and canonical
+Release bytes stay immutable; migrate by publishing a new PipelineVersion and
+Release after validating the shared webhook. No cluster registration is performed
+by the compiler.
 
 ```sh
 python3 -m venv /absolute/task/kfp-venv
@@ -46,7 +52,8 @@ An uploaded registry copy must retain the digest before an actual Run uses it.
   "owner_config_map": "${OWNER_CONFIG_MAP}",
   "storage_class": "${ENV_STORAGE_CLASS}",
   "workspace_size": "${FROZEN_WORKSPACE_CAPACITY}",
-  "workspace_access_mode": "${ENV_WORKSPACE_ACCESS_MODE}"
+  "workspace_access_mode": "${ENV_WORKSPACE_ACCESS_MODE}",
+  "admission_profile": "${FROZEN_MODELDEV_ADMISSION_PROFILE_ID}"
 }
 ```
 

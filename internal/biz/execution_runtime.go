@@ -159,6 +159,7 @@ type RuntimePublication struct {
 // ExecutionRuntime contains committed facts; no state value reconstructs an
 // outbound creation permit. Normal step advancement belongs to KFP.
 type ExecutionRuntime struct {
+	StepExitCleanup        *StepExitCleanupReceipt `json:",omitempty"`
 	FinetuningRegistration *FinetuningRegistration `json:",omitempty"`
 	Workspace              *WorkspaceBinding
 	Training               *TrainingPlan
@@ -229,21 +230,43 @@ type ManagedOwnerTermination struct {
 	WorkflowPhase           string
 	WorkflowFinishedAt      time.Time
 	WorkflowResourceVersion string
+	WorkflowNodesSHA256     string `json:",omitempty"`
+}
+
+// StepExitCleanupReceipt is recorded before releasing or deleting an original
+// Workflow Pod. Its complete owner evidence includes control/close Pods which
+// were still running when a managed close task confirmed data-plane closure.
+// Training Pods and their controllers are deliberately outside this receipt.
+type StepExitCleanupReceipt struct {
+	CloseGeneration  uint64
+	Evidence         ManagedCloseEvidence
+	StartedAt        time.Time
+	RemovedResources []RuntimeResource
+	CompletedAt      *time.Time `json:",omitempty"`
 }
 
 type ManagedSkippedTask struct {
 	TaskName, TaskID string
 }
 
-func FreezeTrainingPlan(execution Execution, workspace WorkspaceBinding, admittedAt ...time.Time) (TrainingPlan, error) {
+// ValidateWorkspaceBinding checks only the immutable workspace contract. It
+// cannot construct or renew the separate first-admission training deadline.
+func ValidateWorkspaceBinding(execution Execution, workspace WorkspaceBinding) error {
 	if _, _, err := execution.CanonicalPayloads(); err != nil {
-		return TrainingPlan{}, ErrInvalidAdmission
+		return ErrInvalidAdmission
 	}
 	want := execution.Snapshot.Workspace
 	if workspace.Mode != want.Mode || workspace.NamespaceName != execution.Snapshot.Environment.NamespaceName || workspace.NamespaceUID != execution.Snapshot.Environment.NamespaceUID ||
 		workspace.PVCName == "" || workspace.PVCUID == "" || workspace.InputSubpath != want.InputSubpath || workspace.TrainingSubpath != want.TrainingSubpath ||
 		workspace.ReportsSubpath != want.ReportsSubpath || workspace.PublicationSubpath != want.PublicationSubpath || workspace.PreparedManifestBytes <= 0 || !closeSpecHashPattern.MatchString(workspace.PreparedManifestSHA256) {
-		return TrainingPlan{}, ErrRuntimeConflict
+		return ErrRuntimeConflict
+	}
+	return nil
+}
+
+func FreezeTrainingPlan(execution Execution, workspace WorkspaceBinding, admittedAt ...time.Time) (TrainingPlan, error) {
+	if err := ValidateWorkspaceBinding(execution, workspace); err != nil {
+		return TrainingPlan{}, err
 	}
 	plan := TrainingPlan{TenantID: execution.TenantID, OperationID: execution.OperationID, ExecutionID: execution.ExecutionID, SpecHash: execution.SpecHash,
 		Name: "md-" + strings.ToLower(execution.ExecutionID), Snapshot: execution.Snapshot, Workspace: workspace}

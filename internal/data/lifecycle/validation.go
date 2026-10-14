@@ -206,6 +206,9 @@ func validCloseEvidence(authority biz.RunAuthorityCandidate, reason string, evid
 		return false
 	}
 	if owner := evidence.OwnerTermination; owner != nil {
+		if owner.WorkflowNodesSHA256 != "" && !validDigest(owner.WorkflowNodesSHA256) {
+			return false
+		}
 		if (owner.RunState != "SUCCEEDED" && owner.RunState != "FAILED" && owner.RunState != "CANCELED") || (owner.WorkflowPhase != "Succeeded" && owner.WorkflowPhase != "Failed" && owner.WorkflowPhase != "Error") || owner.RunFinishedAt.IsZero() || owner.WorkflowFinishedAt.IsZero() || owner.RunFinishedAt.After(evidence.ObservedAt) || owner.WorkflowFinishedAt.After(evidence.ObservedAt) || !validOpaqueID(owner.WorkflowResourceVersion) {
 			return false
 		}

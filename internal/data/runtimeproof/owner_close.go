@@ -2,6 +2,7 @@ package runtimeproof
 
 import (
 	"context"
+	"encoding/json"
 	"sort"
 	"time"
 
@@ -62,7 +63,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	}
 	proof.RunState, proof.RunFinishedAt = run.State, run.FinishedAt
 	if workspace != nil {
-		if _, err := biz.FreezeTrainingPlan(execution, *workspace); err != nil {
+		if err := biz.ValidateWorkspaceBinding(execution, *workspace); err != nil {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeConflict
 		}
 		pvc, err := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "persistentvolumeclaims"}).Namespace(environment.NamespaceName).Get(ctx, workspace.PVCName, metav1.GetOptions{})
@@ -251,7 +252,11 @@ func ownerWorkflowCompletion(workflow *unstructured.Unstructured, now time.Time)
 		}
 		fulfillablePods[id] = true
 	}
-	return biz.ManagedOwnerTermination{WorkflowPhase: phase, WorkflowFinishedAt: at.UTC(), WorkflowResourceVersion: workflow.GetResourceVersion()}, fulfillablePods, nil
+	encoded, err := json.Marshal(nodes)
+	if err != nil {
+		return biz.ManagedOwnerTermination{}, nil, biz.ErrRuntimeNotReady
+	}
+	return biz.ManagedOwnerTermination{WorkflowPhase: phase, WorkflowFinishedAt: at.UTC(), WorkflowResourceVersion: workflow.GetResourceVersion(), WorkflowNodesSHA256: contentSHA(encoded)}, fulfillablePods, nil
 }
 
 func ownerWorkspaceReference(pod *unstructured.Unstructured, workspace *biz.WorkspaceBinding) (bool, bool) {

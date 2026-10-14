@@ -55,12 +55,20 @@ func TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed(t *testing.T) {
 	runCompleteMainFlow(t, false)
 }
 
+func TestMainFlowUnifiedWebhookActualMLPToDurableExitCleanup(t *testing.T) {
+	t.Setenv("ANI_MODELDEV_WEBHOOK_MAINFLOW", "1")
+	runCompleteMainFlow(t, false)
+}
+
 func TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication(t *testing.T) {
 	runCompleteMainFlow(t, true)
 }
 
 func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	f := newCompleteFixture(t)
+	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
+		f.admitModelDevSteps(t)
+	}
 	open := postgres.Prepare(t)
 	pool := open()
 	admissions := execution.New(pool)
@@ -331,6 +339,9 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	stored, err := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
 	if err != nil || stored.ClosedAt == nil || stored.Publication == nil || stored.TrainingHandle == nil || stored.CloseReason != "NATURAL_TERMINAL" || stored.CloseEvidence == nil || stored.CloseEvidence.OwnerTermination == nil || stored.CloseEvidence.OwnerTermination.RunState != "SUCCEEDED" || stored.CloseEvidence.OwnerTermination.WorkflowPhase != "Succeeded" {
 		t.Fatalf("reconnected owner lost runtime: %v", err)
+	}
+	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
+		f.assertStepExitCleanup(t, ctx, pool)
 	}
 	restartedSubmitter, err := biz.NewPipelineSubmitter(dispatch, runs, 3*time.Second)
 	if err != nil {

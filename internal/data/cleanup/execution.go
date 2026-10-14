@@ -53,14 +53,14 @@ func (adapter *Adapter) VerifyCleanupResolved(ctx context.Context, record biz.Op
 	// Unlike the pre-delete check, this proof does not require disposed training
 	// controllers to remain present. The frozen original Run/Workflow and every
 	// current PVC writer are still independently checked by the owner verifier.
-	proof, err := adapter.writers.VerifyOwnerWritersAbsent(ctx, record.Execution, *record.Authority, record.Runtime.Workspace)
+	proof, err := adapter.ownerWriterProof(ctx, record)
 	if err != nil {
 		return nil, err
 	}
 	for _, expected := range record.Runtime.CloseEvidence.Resources {
 		matched := false
 		for _, current := range proof.Resources {
-			matched = matched || expected.APIVersion == current.APIVersion && expected.Kind == current.Kind && expected.Namespace == current.Namespace && expected.Name == current.Name && expected.UID == current.UID && expected.OwnerUID == current.OwnerUID && expected.OwnerUID == record.Authority.WorkflowUID && expected.ExitCode != nil && current.ExitCode != nil && *expected.ExitCode == *current.ExitCode
+			matched = matched || expected.OwnerUID == record.Authority.WorkflowUID && sameRetainedStepExit(expected, current)
 		}
 		if !matched {
 			return nil, biz.ErrCleanupBlocked
@@ -112,6 +112,16 @@ func (adapter *Adapter) VerifyCleanupResolved(ctx context.Context, record biz.Op
 		}
 	}
 	for _, expected := range retained {
+		if recordedStepRemoval(record, expected) {
+			pod, err := adapter.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "pods"}).Namespace(namespace).Get(ctx, expected.Name, metav1.GetOptions{})
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			if err != nil || pod == nil || string(pod.GetUID()) != expected.UID {
+				return nil, biz.ErrCleanupConflict
+			}
+			return nil, biz.ErrCleanupBlocked
+		}
 		if expected.APIVersion != "v1" || expected.Kind != "Pod" || expected.Namespace != namespace || expected.Name == "" || expected.UID == "" || expected.OwnerUID == "" || !expected.APIObjectPresent || !expected.Terminal || expected.ExitCode == nil || expected.InitializationAbort != nil {
 			return nil, biz.ErrCleanupBlocked
 		}
@@ -252,7 +262,7 @@ func (adapter *Adapter) VerifyCleanupWritersAbsent(ctx context.Context, record b
 			return biz.ErrCleanupConflict
 		}
 	}
-	if _, err := adapter.writers.VerifyOwnerWritersAbsent(ctx, record.Execution, *record.Authority, record.Runtime.Workspace); err != nil {
+	if _, err := adapter.ownerWriterProof(ctx, record); err != nil {
 		return err
 	}
 	if record.Runtime.Training == nil {
@@ -278,6 +288,46 @@ func (adapter *Adapter) VerifyCleanupWritersAbsent(ctx context.Context, record b
 		}
 	}
 	return nil
+}
+
+// A committed full exit receipt replaces only the requirement for the original
+// step Pod to remain present. Current unrelated PVC writers are still read and
+// checked; training Pod/log retention and exact controller cleanup stay intact.
+func (adapter *Adapter) ownerWriterProof(ctx context.Context, record biz.OperationRecord) (biz.ManagedCloseEvidence, error) {
+	if receipt := record.Runtime.StepExitCleanup; receipt != nil {
+		verifier, ok := adapter.writers.(biz.RecordedOwnerWriterVerifier)
+		if !ok || receipt.CloseGeneration != record.Runtime.CloseGeneration || receipt.Evidence.OwnerTermination == nil {
+			return biz.ManagedCloseEvidence{}, biz.ErrCleanupBlocked
+		}
+		if err := verifier.VerifyRecordedOwnerWritersAbsent(ctx, record.Execution, *record.Authority, record.Runtime.Workspace, receipt.Evidence); err != nil {
+			return biz.ManagedCloseEvidence{}, err
+		}
+		return receipt.Evidence, nil
+	}
+	return adapter.writers.VerifyOwnerWritersAbsent(ctx, record.Execution, *record.Authority, record.Runtime.Workspace)
+}
+
+func recordedStepRemoval(record biz.OperationRecord, expected biz.RuntimeResource) bool {
+	receipt := record.Runtime.StepExitCleanup
+	if receipt == nil || receipt.CompletedAt == nil || expected.OwnerUID != receipt.Evidence.WorkflowUID {
+		return false
+	}
+	for _, removed := range receipt.RemovedResources {
+		removed.APIObjectPresent = true
+		if sameRetainedStepExit(expected, removed) {
+			return true
+		}
+	}
+	return false
+}
+
+func sameRetainedStepExit(left, right biz.RuntimeResource) bool {
+	if left.InitializationAbort != nil && right.InitializationAbort != nil {
+		l, r := *left.InitializationAbort, *right.InitializationAbort
+		l.PodResourceVersion, r.PodResourceVersion = "", ""
+		left.InitializationAbort, right.InitializationAbort = &l, &r
+	}
+	return reflect.DeepEqual(left, right)
 }
 
 func (adapter *Adapter) DeleteExecutionResource(ctx context.Context, record biz.OperationRecord, target biz.RuntimeResource) error {

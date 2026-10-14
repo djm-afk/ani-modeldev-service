@@ -21,6 +21,7 @@ class FinetuningAssembly(unittest.TestCase):
                 "storage_class": "finetuning-workspace-fixture",
                 "workspace_size": "20Gi", "workspace_access_mode": "ReadWriteMany",
                 "kind": "FINETUNING",
+                "admission_profile": "finetuning-v1",
             }
             config, output = root / "config.json", root / "pipeline.yaml"
             config.write_text(json.dumps(configuration), encoding="utf-8")
@@ -61,12 +62,17 @@ class FinetuningAssembly(unittest.TestCase):
                     self.assertEqual(container["resources"]["resourceCpuRequest"], "2")
                     self.assertEqual(container["resources"]["resourceMemoryRequest"], "6Gi")
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/step-role"], role)
+                self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/admission-profile"], "finetuning-v1")
                 self.assertEqual(k8s["emptyDirMounts"][0]["sizeLimit"], "12Gi")
                 self.assertFalse(k8s["emptyDirMounts"][0].get("medium"))
                 if role in ("export", "verify"):
                     mounts = k8s["pvcMount"]
                     self.assertTrue(all(m["subPath"] and m["mountPath"] == "/workspace/" + m["subPath"] for m in mounts))
             self.assertNotIn("deletepvc", output.read_text(encoding="utf-8"))
+            final_executor = ir["components"][finalizer["componentRef"]["name"]]["executorLabel"]
+            final_labels = platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][final_executor]["podMetadata"]["labels"]
+            self.assertEqual(final_labels["ani.modeldev/step-role"], "finalize-close")
+            self.assertEqual(final_labels["ani.modeldev/admission-profile"], "finetuning-v1")
 
 
 if __name__ == "__main__":

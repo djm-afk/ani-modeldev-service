@@ -246,6 +246,9 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 	if state.ClosedAt != nil && state.CloseEvidence == nil {
 		return nil, biz.ErrPersistence
 	}
+	if state.ClosedAt == nil && state.StepExitCleanup != nil {
+		return nil, biz.ErrPersistence
+	}
 	if generation > state.CloseGeneration {
 		close, err := executions.GetCloseIntent(ctx, executionsql.GetCloseIntentParams{TenantID: tenantID, ExecutionID: executionID})
 		closeGeneration, valid := pgvalue.Uint64(close.OwnerGeneration)

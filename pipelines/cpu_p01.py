@@ -8,13 +8,16 @@ from kfp import compiler, dsl, kubernetes
 
 def compile_pipeline(configuration, output):
     required = {"component_image", "owner_config_map",
-                "storage_class", "workspace_size", "workspace_access_mode"}
+                "storage_class", "workspace_size", "workspace_access_mode", "admission_profile"}
     if set(configuration) not in (required, required | {"kind"}):
         raise ValueError("all frozen deployment bindings are required")
     kind = configuration.get("kind", "GENERAL_TRAINING")
     if kind not in ("GENERAL_TRAINING", "FINETUNING"):
         raise ValueError("unsupported managed execution kind")
     finetuning = kind == "FINETUNING"
+    profile = configuration["admission_profile"]
+    if not isinstance(profile, str) or not re.fullmatch(r"[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?", profile):
+        raise ValueError("a frozen ModelDev admission profile DNS label is required")
     if not re.fullmatch(r"[^\s@]+@sha256:[0-9a-f]{64}", configuration["component_image"]):
         raise ValueError("component image must use a manifest digest")
     for key in ("owner_config_map", "storage_class"):
@@ -79,8 +82,9 @@ def compile_pipeline(configuration, output):
     def configure(task, *, timeout=600):
         task.set_caching_options(False).set_retry(0)
         cpu_request, cpu_limit, memory_request, memory_limit = "100m", "500m", "128Mi", "512Mi"
+        kubernetes.add_pod_label(task, "ani.modeldev/admission-profile", profile)
+        kubernetes.add_pod_label(task, "ani.modeldev/step-role", task.name)
         if finetuning:
-            kubernetes.add_pod_label(task, "ani.modeldev/step-role", task.name)
             if task.name in ("prepare", "export", "verify"):
                 cpu_request, cpu_limit, memory_request, memory_limit = "2", "4", "6Gi", "8Gi"
                 timeout = {"prepare": 900, "export": 1800, "verify": 900}[task.name]

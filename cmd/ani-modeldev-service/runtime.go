@@ -74,7 +74,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed dispatch configuration invalid")
 	}
-	closer, err := biz.NewExecutionCloser(runtime, clients.runs, proof)
+	closer, err := biz.NewExecutionCloser(runtime, clients.runs, proof, proof)
 	if err != nil {
 		return failed("managed execution close configuration invalid")
 	}

@@ -49,7 +49,7 @@ func (verifier *Verifier) VerifyPrepared(ctx context.Context, execution biz.Exec
 	if err != nil {
 		return err
 	}
-	if _, err := biz.FreezeTrainingPlan(execution, workspace); err != nil {
+	if err := biz.ValidateWorkspaceBinding(execution, workspace); err != nil {
 		return err
 	}
 	manifest, err := workspaceio.PreparedManifestBytes(execution, workspace)

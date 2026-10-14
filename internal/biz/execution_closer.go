@@ -16,6 +16,21 @@ type OwnerWriterVerifier interface {
 	VerifyOwnerWritersAbsent(context.Context, Execution, RunAuthorityCandidate, *WorkspaceBinding) (ManagedCloseEvidence, error)
 }
 
+type StepExitCleanupRepository interface {
+	BeginStepExitCleanup(context.Context, RunAuthorityCandidate, uint64, ManagedCloseEvidence) (ExecutionRuntime, error)
+	CompleteStepExitCleanup(context.Context, RunAuthorityCandidate, uint64, []RuntimeResource) (ExecutionRuntime, error)
+}
+
+// StepExitCleanupBoundary operates only on the exact original Pods whose exits
+// have already been committed. Missing Pods are never evidence for closing.
+type StepExitCleanupBoundary interface {
+	ReconcileStepExitCleanup(context.Context, Execution, RunAuthorityCandidate, *WorkspaceBinding, StepExitCleanupReceipt) ([]RuntimeResource, error)
+}
+
+type RecordedOwnerWriterVerifier interface {
+	VerifyRecordedOwnerWritersAbsent(context.Context, Execution, RunAuthorityCandidate, *WorkspaceBinding, ManagedCloseEvidence) error
+}
+
 type UndispatchedCloser interface {
 	CloseUndispatched(context.Context, string, string) (ExecutionRuntime, error)
 }
@@ -42,13 +57,21 @@ type ExecutionCloser struct {
 	runtime *ManagedRuntime
 	runs    ManagedRunCloser
 	writers OwnerWriterVerifier
+	cleanup StepExitCleanupBoundary
 }
 
-func NewExecutionCloser(runtime *ManagedRuntime, runs ManagedRunCloser, writers OwnerWriterVerifier) (*ExecutionCloser, error) {
-	if runtime == nil || runs == nil || writers == nil {
+func NewExecutionCloser(runtime *ManagedRuntime, runs ManagedRunCloser, writers OwnerWriterVerifier, cleanup ...StepExitCleanupBoundary) (*ExecutionCloser, error) {
+	if runtime == nil || runs == nil || writers == nil || len(cleanup) > 1 {
 		return nil, ErrRuntimeNotReady
 	}
-	return &ExecutionCloser{runtime: runtime, runs: runs, writers: writers}, nil
+	closer := &ExecutionCloser{runtime: runtime, runs: runs, writers: writers}
+	if len(cleanup) == 1 {
+		if _, ok := runtime.repository.(StepExitCleanupRepository); !ok || cleanup[0] == nil {
+			return nil, ErrRuntimeNotReady
+		}
+		closer.cleanup = cleanup[0]
+	}
+	return closer, nil
 }
 
 // Reconcile resumes closing the original durable execution. It must never
@@ -113,7 +136,7 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 	}
 	result := ManagedRuntimeResult{Execution: admitted, Authority: authority, Runtime: state}
 	if state.ClosedAt != nil {
-		return runtimeResult(result, state, true)
+		return closer.reconcileStepExits(ctx, result, owner, true)
 	}
 	if state.CloseGeneration == 0 || state.CloseReason == "NATURAL_TERMINAL" {
 		// The database clock checks the original frozen deadline while holding
@@ -205,7 +228,47 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 		}
 		return ManagedRuntimeResult{}, err
 	}
-	return runtimeResult(result, state, false)
+	result.Runtime = state
+	return closer.reconcileStepExits(ctx, result, owner, false)
+}
+
+func (closer *ExecutionCloser) reconcileStepExits(ctx context.Context, result ManagedRuntimeResult, owner RunAuthorityCandidate, replayed bool) (ManagedRuntimeResult, error) {
+	state := result.Runtime
+	if closer.cleanup == nil {
+		return runtimeResult(result, state, replayed)
+	}
+	if state.CloseEvidence == nil {
+		return result, ErrRuntimeNotReady
+	}
+	if state.CloseEvidence.NoDispatch || state.StepExitCleanup != nil && state.StepExitCleanup.CompletedAt != nil {
+		return runtimeResult(result, state, replayed)
+	}
+	repository, ok := closer.runtime.repository.(StepExitCleanupRepository)
+	if !ok || state.ClosedAt == nil {
+		return result, ErrRuntimeNotReady
+	}
+	if state.StepExitCleanup == nil {
+		// Managed close excluded its still-running control Pod. Obtain the full
+		// terminal owner graph independently before committing its cleanup plan.
+		evidence, err := closer.writers.VerifyOwnerWritersAbsent(ctx, result.Execution, owner, state.Workspace)
+		if err != nil {
+			return result, err
+		}
+		state, err = repository.BeginStepExitCleanup(ctx, owner, state.CloseGeneration, evidence)
+		if err != nil {
+			return result, err
+		}
+		result.Runtime = state
+	}
+	removed, err := closer.cleanup.ReconcileStepExitCleanup(ctx, result.Execution, owner, state.Workspace, *state.StepExitCleanup)
+	if err != nil {
+		return result, err
+	}
+	state, err = repository.CompleteStepExitCleanup(ctx, owner, state.CloseGeneration, removed)
+	if err != nil {
+		return result, err
+	}
+	return runtimeResult(result, state, replayed)
 }
 
 func (closer *ExecutionCloser) recoverRun(ctx context.Context, admitted Execution, dispatch PipelineDispatch, runID string) (RunAuthority, error) {

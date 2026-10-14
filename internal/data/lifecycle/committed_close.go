@@ -17,7 +17,7 @@ func validateCommittedClose(ctx context.Context, current *runtimeTransaction) er
 	}
 	dispatch, err := submission.ReadInTransaction(ctx, current.transaction, admitted.TenantID, admitted.ExecutionID)
 	if state.CloseEvidence.NoDispatch {
-		if !errors.Is(err, biz.ErrExecutionNotFound) || state.CloseReason == "NATURAL_TERMINAL" || state.Workspace != nil || state.Training != nil || state.TrainingHandle != nil || state.Observation != nil || state.Publication != nil || state.CloseAuthority != nil || state.CloseEvidence.RunID != "" || state.CloseEvidence.WorkflowUID != "" || state.CloseEvidence.ObservedAt.IsZero() || len(state.CloseEvidence.Resources) != 0 || len(state.CloseEvidence.SkippedTasks) != 0 || state.CloseEvidence.OwnerTermination != nil {
+		if !errors.Is(err, biz.ErrExecutionNotFound) || state.CloseReason == "NATURAL_TERMINAL" || state.Workspace != nil || state.Training != nil || state.TrainingHandle != nil || state.Observation != nil || state.Publication != nil || state.CloseAuthority != nil || state.StepExitCleanup != nil || state.CloseEvidence.RunID != "" || state.CloseEvidence.WorkflowUID != "" || state.CloseEvidence.ObservedAt.IsZero() || len(state.CloseEvidence.Resources) != 0 || len(state.CloseEvidence.SkippedTasks) != 0 || state.CloseEvidence.OwnerTermination != nil {
 			return biz.ErrPersistence
 		}
 		return nil
@@ -31,6 +31,9 @@ func validateCommittedClose(ctx context.Context, current *runtimeTransaction) er
 		candidate, err = *state.CloseAuthority, nil
 	}
 	if err != nil || !validExecutionCloseEvidence(admitted, candidate, state.CloseReason, *state.CloseEvidence) || !finetuningStartsTerminated(state, candidate, *state.CloseEvidence) || len(dispatch.ConfirmedRuns) > 1 || (len(dispatch.ConfirmedRuns) == 1 && dispatch.ConfirmedRuns[0].RunID != candidate.RunID) || (state.CloseAuthority != nil && len(dispatch.ConfirmedRuns) != 1) {
+		return biz.ErrPersistence
+	}
+	if !validStepExitCleanup(current, candidate) {
 		return biz.ErrPersistence
 	}
 	if state.Training != nil && state.TrainingRejection == nil {

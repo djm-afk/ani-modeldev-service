@@ -11,6 +11,9 @@ CPU-P01 的已实现功能、架构与扩展方式、环境部署和用户操作
 CPU 受管微调的执行主链、隔离验收装配和保留的上游依赖边界见
 [CPU managed fine tuning execution slice](docs/finetuning-core-flow.md)。
 
+通用训练与微调共用的正式 Kubernetes 准入组件、退出留证和自动步骤回收见
+[ModelDev webhook](docs/modeldev-webhook.md)。组件独立部署，代码和发布由本仓库维护。
+
 `THIRD_PARTY_NOTICES.go-kratos-layout.txt` preserves the upstream template's
 MIT notice. This generated repository intentionally has no project `LICENSE`;
 its owner must make that choice before publication.

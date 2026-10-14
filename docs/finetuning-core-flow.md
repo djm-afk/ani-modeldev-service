@@ -58,18 +58,28 @@ go test -c -tags finetuning_core_flow \
 ```
 
 The compiler configuration is the existing five deployment bindings plus
-`"kind":"FINETUNING"`. Images, IR, Runtime content, environment UID and object
+`"kind":"FINETUNING"` and the frozen `"admission_profile"` ID. Images, IR,
+Runtime content, environment UID and object
 versions must be actual immutable bindings, never fixture digests. Final images
 are built from the pushed source commit. No task runs one KFP step by manually
 creating a Job; the production application dispatches one authoritative Run.
 
 Pinned KFP 2.16.0 cannot encode read-only root/PVC mounts or ephemeral-storage
-resource requests. The finite environment adapter under
-`deploy/finetuning-core-flow/` supplies those fields and retained Pod exit facts.
-It checks the original namespace UID, live Workflow UID/run, role, images and
-mounts. Its renderer only performs server dry-run. Registering its new admission
-configuration requires explicit authorization because goal.md excludes automatic
-cluster-level policy changes. It never changes the existing shared webhook.
+resource requests. The formal shared [ModelDev webhook](modeldev-webhook.md)
+supplies those fields and retained step Pod exit facts for both GENERAL_TRAINING
+and FINETUNING. Profiles load canonical, digest-pinned Release material and
+explicit namespace UID bindings. The service verifies the live original Workflow,
+run association, role, image and mounts before returning field patches.
+After durable CLOSED and full step exit proof, the existing owner worker persists
+a cleanup receipt, conditionally releases only its step finalizer and removes
+the exact terminal step Pods. Training log Pods, PVCs and published objects stay
+retained; the existing explicit controller CleanupPlan remains separate.
+
+The unified implementation and Fedora integration can be verified without
+registering it. Cluster registration, switching the existing shared webhook and
+target-cluster business tests are explicitly not authorized in this delivery.
+The earlier date-specific manifests and actual records remain historical
+evidence; they are not the deployment path for the formal component.
 
 Live acceptance uses only the verified 172.16.101.10–12 cluster and the task's
 isolated namespaces, database and S3 identities. WORKLOAD checks, PostgreSQL
