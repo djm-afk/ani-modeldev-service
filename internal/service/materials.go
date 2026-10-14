@@ -122,13 +122,13 @@ func presetDisplayName(presetID string) string {
 func materialPage(p *modeldevv1.PageRequest) (int, string, error) {
 	limit, after := 20, ""
 	if p != nil {
-		if !validMaterialMessage(p) || p.PageSize > 100 || (p.PageToken != "" && !queryID(p.PageToken)) {
+		if !validMaterialMessage(p) || p.Limit > 100 || (p.Cursor != "" && !queryID(p.Cursor)) {
 			return 0, "", status.Error(codes.InvalidArgument, "invalid material page")
 		}
-		if p.PageSize > 0 {
-			limit = int(p.PageSize)
+		if p.Limit > 0 {
+			limit = int(p.Limit)
 		}
-		after = p.PageToken
+		after = p.Cursor
 	}
 	return limit, after, nil
 }
@@ -175,7 +175,11 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
-	response := &modeldevv1.ListInputVersionsResponse{NextPageToken: next}
+	total, err := q.materials.InputsCount(ctx, scope.TenantID, state)
+	if err != nil {
+		return nil, materialsError(err, scope.RequestID)
+	}
+	response := &modeldevv1.ListInputVersionsResponse{NextCursor: next, Total: total}
 	for _, value := range values {
 		response.InputVersions = append(response.InputVersions, inputVersionView(value))
 	}
@@ -231,10 +235,12 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 		}
 	}
 	sort.Strings(ids)
-	response := &modeldevv1.ListPresetsResponse{}
+	// total is every distinct preset for this tenant, independent of the window;
+	// presets are aggregated from the approved catalogue rather than a table.
+	response := &modeldevv1.ListPresetsResponse{Total: uint64(len(presets))}
 	if len(ids) > limit {
 		ids = ids[:limit]
-		response.NextPageToken = ids[len(ids)-1]
+		response.NextCursor = ids[len(ids)-1]
 	}
 	for _, id := range ids {
 		p := presets[id]

@@ -44,3 +44,21 @@ func (r *Repository) List(ctx context.Context, tenant string, state biz.InputSta
 	}
 	return out, next, nil
 }
+
+func (r *Repository) Count(ctx context.Context, tenant string, state biz.InputState) (uint64, error) {
+	tenantID, err := databaseID(tenant)
+	if err != nil {
+		return 0, err
+	}
+	if state != "" && state != biz.InputStateValidating && state != biz.InputStateReady && state != biz.InputStateRejected {
+		return 0, biz.ErrInvalidInput
+	}
+	if r == nil || r.pool == nil {
+		return 0, biz.ErrPersistence
+	}
+	total, err := inputsql.New(r.pool).CountInputVersions(ctx, inputsql.CountInputVersionsParams{TenantID: tenantID, StateFilter: string(state)})
+	if err != nil {
+		return 0, biz.ErrPersistence
+	}
+	return uint64(total), nil
+}

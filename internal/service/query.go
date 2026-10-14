@@ -180,13 +180,13 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 	}
 	filter := biz.ExecutionQuery{Limit: 20}
 	if page := request.Page; page != nil {
-		if len(page.ProtoReflect().GetUnknown()) != 0 || page.PageSize > 100 || (page.PageToken != "" && !queryID(page.PageToken)) {
+		if len(page.ProtoReflect().GetUnknown()) != 0 || page.Limit > 100 || (page.Cursor != "" && !queryID(page.Cursor)) {
 			return nil, status.Error(codes.InvalidArgument, "invalid execution page")
 		}
-		if page.PageSize > 0 {
-			filter.Limit = int(page.PageSize)
+		if page.Limit > 0 {
+			filter.Limit = int(page.Limit)
 		}
-		filter.AfterID = page.PageToken
+		filter.AfterID = page.Cursor
 	}
 	if request.ComputeState != nil {
 		name, known := modeldevv1.ComputeState_name[int32(*request.ComputeState)]
@@ -216,7 +216,11 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
-	response := &modeldevv1.ListExecutionsResponse{NextPageToken: next}
+	total, err := query.repository.CountQueryRecords(ctx, scope.TenantID, filter)
+	if err != nil {
+		return nil, queryError(err, scope.RequestID)
+	}
+	response := &modeldevv1.ListExecutionsResponse{NextCursor: next, Total: total}
 	for _, record := range records {
 		view, err := executionView(record)
 		if err != nil {
@@ -239,16 +243,16 @@ func (query *Query) ListExecutionArtifacts(ctx context.Context, request *modelde
 	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 {
 		return nil, status.Error(codes.InvalidArgument, "invalid artifact query")
 	}
-	size := uint32(50)
+	size := uint32(20)
 	cursor := ""
 	if page := request.Page; page != nil {
-		if len(page.ProtoReflect().GetUnknown()) != 0 || page.PageSize > 100 || (page.PageToken != "" && !queryID(page.PageToken)) {
+		if len(page.ProtoReflect().GetUnknown()) != 0 || page.Limit > 100 || (page.Cursor != "" && !queryID(page.Cursor)) {
 			return nil, status.Error(codes.InvalidArgument, "invalid artifact page")
 		}
-		if page.PageSize > 0 {
-			size = page.PageSize
+		if page.Limit > 0 {
+			size = page.Limit
 		}
-		cursor = page.PageToken
+		cursor = page.Cursor
 	}
 	if query == nil || query.repository == nil {
 		return nil, queryError(biz.ErrDownloadUnavailable, scope.RequestID)
@@ -263,12 +267,15 @@ func (query *Query) ListExecutionArtifacts(ctx context.Context, request *modelde
 	}
 	files := append([]biz.PublishedRuntimeFile(nil), record.Runtime.Publication.Files...)
 	sort.Slice(files, func(i, j int) bool { return files[i].ArtifactID < files[j].ArtifactID })
+	// total is every published artifact of this execution, independent of the
+	// pagination window.
+	response.Total = uint64(len(files))
 	for _, file := range files {
 		if file.ArtifactID <= cursor {
 			continue
 		}
 		if len(response.Artifacts) == int(size) {
-			response.NextPageToken = response.Artifacts[len(response.Artifacts)-1].ArtifactId
+			response.NextCursor = response.Artifacts[len(response.Artifacts)-1].ArtifactId
 			break
 		}
 		response.Artifacts = append(response.Artifacts, artifactView(record, file))
