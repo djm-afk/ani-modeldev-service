@@ -78,7 +78,18 @@ WHERE admitted.tenant_id = sqlc.arg(tenant_id)::uuid
          (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz <= clock_timestamp()))
        OR (runtime.closed_at IS NOT NULL
            AND COALESCE(runtime.facts -> 'CloseEvidence' ->> 'NoDispatch', 'false') <> 'true'
-           AND runtime.facts -> 'StepExitCleanup' ->> 'CompletedAt' IS NULL))
+           AND (runtime.facts -> 'StepExitCleanup' ->> 'CompletedAt' IS NULL
+                OR runtime.facts -> 'ComputeCleanup' IS NULL
+                OR (runtime.facts -> 'ComputeCleanup' ->> 'phase' <> 'APPLIED'
+                    AND (COALESCE((runtime.facts -> 'ComputeCleanup' ->> 'attempts')::integer, 0) < 3
+                         OR runtime.facts -> 'ComputeCleanup' ->> 'phase' = 'STARTED')))))
   AND (sqlc.narg(after_execution_id)::uuid IS NULL OR admitted.execution_id > sqlc.narg(after_execution_id)::uuid)
 ORDER BY admitted.execution_id
 LIMIT sqlc.arg(batch_size)::integer;
+
+-- name: HasUnresolvedManualCleanup :one
+SELECT EXISTS (
+    SELECT 1 FROM modeldev_execution_cleanup_audits
+    WHERE tenant_id = sqlc.arg(tenant_id)::uuid AND execution_id = sqlc.arg(execution_id)::uuid
+      AND phase IN ('STARTED', 'NEEDS_REVIEW')
+) AS blocked;

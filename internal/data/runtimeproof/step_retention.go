@@ -24,6 +24,10 @@ var _ biz.RecordedOwnerWriterVerifier = (*Verifier)(nil)
 // independently enumerating current PVC writers. Only exact already-proved Pod
 // UIDs may be absent; a changed name/UID, graph or live writer is still blocked.
 func (verifier *Verifier) VerifyRecordedOwnerWritersAbsent(ctx context.Context, execution biz.Execution, authority biz.RunAuthorityCandidate, workspace *biz.WorkspaceBinding, evidence biz.ManagedCloseEvidence) error {
+	return verifier.verifyRecordedOwnerWritersAbsent(ctx, execution, authority, workspace, evidence, false)
+}
+
+func (verifier *Verifier) verifyRecordedOwnerWritersAbsent(ctx context.Context, execution biz.Execution, authority biz.RunAuthorityCandidate, workspace *biz.WorkspaceBinding, evidence biz.ManagedCloseEvidence, workflowRemovalRecorded bool) error {
 	if verifier == nil || verifier.kube == nil || verifier.runs == nil || verifier.plans == nil || ctx == nil || ctx.Err() != nil || evidence.OwnerTermination == nil || len(evidence.OwnerTermination.WorkflowNodesSHA256) != 64 || evidence.RunID != authority.RunID || evidence.WorkflowUID != authority.WorkflowUID {
 		return biz.ErrRuntimeNotReady
 	}
@@ -61,12 +65,14 @@ func (verifier *Verifier) VerifyRecordedOwnerWritersAbsent(ctx context.Context, 
 	}
 	workflows := verifier.kube.Resource(schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}).Namespace(environment.NamespaceName)
 	workflow, err := workflows.Get(ctx, authority.WorkflowName, metav1.GetOptions{})
-	if err != nil || !sameObject(workflow, "argoproj.io/v1alpha1", "Workflow", environment.NamespaceName, authority.WorkflowName, authority.WorkflowUID) || workflow.GetDeletionTimestamp() != nil {
-		return biz.ErrRuntimeNotReady
-	}
-	completion, nodes, err := ownerWorkflowCompletion(workflow, now)
-	if err != nil || completion.WorkflowNodesSHA256 != evidence.OwnerTermination.WorkflowNodesSHA256 || completion.WorkflowPhase != evidence.OwnerTermination.WorkflowPhase || !completion.WorkflowFinishedAt.Equal(evidence.OwnerTermination.WorkflowFinishedAt) || len(nodes) != len(evidence.Resources) {
-		return biz.ErrRuntimeNotReady
+	if !(apierrors.IsNotFound(err) && workflowRemovalRecorded) {
+		if err != nil || !sameObject(workflow, "argoproj.io/v1alpha1", "Workflow", environment.NamespaceName, authority.WorkflowName, authority.WorkflowUID) || workflow.GetDeletionTimestamp() != nil {
+			return biz.ErrRuntimeNotReady
+		}
+		completion, nodes, err := ownerWorkflowCompletion(workflow, now)
+		if err != nil || completion.WorkflowNodesSHA256 != evidence.OwnerTermination.WorkflowNodesSHA256 || completion.WorkflowPhase != evidence.OwnerTermination.WorkflowPhase || !completion.WorkflowFinishedAt.Equal(evidence.OwnerTermination.WorkflowFinishedAt) || len(nodes) != len(evidence.Resources) {
+			return biz.ErrRuntimeNotReady
+		}
 	}
 	if workspace != nil {
 		if err := biz.ValidateWorkspaceBinding(execution, *workspace); err != nil {

@@ -194,11 +194,15 @@ func runCoreFlowCloseOnly(ctx context.Context, f coreFlowFixture, config *conf.B
 			return result, readErr
 		}
 		result.Runtime = state
-		if state.ClosedAt != nil && state.CloseEvidence != nil && (state.CloseEvidence.NoDispatch || state.StepExitCleanup != nil && state.StepExitCleanup.CompletedAt != nil) {
+		if coreFlowCleanupComplete(state) {
 			result.Outcome = "CLOSED"
 			break
 		}
 		if state.CloseReviewReason != "" && state.ClosedAt == nil {
+			result.Outcome = "NEEDS_REVIEW"
+			break
+		}
+		if state.ComputeCleanup != nil && state.ComputeCleanup.Phase == "NEEDS_REVIEW" && state.ComputeCleanup.Attempts >= biz.ComputeCleanupMaximumAttempts {
 			result.Outcome = "NEEDS_REVIEW"
 			break
 		}
@@ -278,6 +282,9 @@ func TestFinetuningCoreFlow(t *testing.T) {
 			t.Fatal("original close did not reach a verified result", closeErr)
 		}
 		t.Logf("CORE_FLOW_CLOSE_ONLY outcome=%s execution=%s training=%t", result.Outcome, f.ExecutionID, result.Runtime.TrainingHandle != nil)
+		if result.Outcome != "CLOSED" {
+			t.Fatal("original close remains NEEDS_REVIEW")
+		}
 		return
 	}
 	if config.Command.AdmissionResolution == nil {
@@ -403,9 +410,12 @@ func TestFinetuningCoreFlow(t *testing.T) {
 			if state.CloseReviewReason != "" {
 				t.Fatal("close remains uncertain", state.CloseReviewReason)
 			}
+			if state.ComputeCleanup != nil && state.ComputeCleanup.Phase == "NEEDS_REVIEW" && state.ComputeCleanup.Attempts >= biz.ComputeCleanupMaximumAttempts {
+				t.Fatal("automatic compute cleanup remains NEEDS_REVIEW", state.ComputeCleanup.LastError)
+			}
 			// CLOSED is committed before the owner's external cleanup I/O. Keep
 			// that owner alive until its durable post-close receipt is complete.
-			if state.ClosedAt != nil && state.StepExitCleanup != nil && state.StepExitCleanup.CompletedAt != nil {
+			if coreFlowCleanupComplete(state) {
 				final = state
 				break
 			}
@@ -460,4 +470,8 @@ func TestFinetuningCoreFlow(t *testing.T) {
 	// No credentials, signed URL, input bytes or complete private config enters
 	// standard output. The independent readback has a separate read-only identity.
 	t.Logf("CORE_FLOW_CLOSED scenario=%s execution=%s publication=%t namespace_uid=%s", f.Scenario, f.ExecutionID, final.Publication != nil, resolved.Snapshot.Environment.NamespaceUID)
+}
+
+func coreFlowCleanupComplete(state biz.ExecutionRuntime) bool {
+	return state.ClosedAt != nil && state.CloseEvidence != nil && (state.CloseEvidence.NoDispatch || state.StepExitCleanup != nil && state.StepExitCleanup.CompletedAt != nil && state.ComputeCleanup != nil && state.ComputeCleanup.Phase == "APPLIED")
 }

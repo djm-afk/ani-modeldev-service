@@ -64,8 +64,8 @@ func TestStepExitCleanupPersistsBeforeReleaseAndResumesClosedScan(t *testing.T) 
 		t.Fatal("cleanup replay renewed its original database receipt", err)
 	}
 	ids, err = repository.ListPendingClosures(ctx, biz.PipelineDispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}}, "", 10)
-	if err != nil || len(ids) != 0 {
-		t.Fatal("completed cleanup remained in the restart scan", ids, err)
+	if err != nil || len(ids) != 1 || ids[0] != admission.ExecutionID {
+		t.Fatal("step cleanup hid the still-pending terminal compute cleanup", ids, err)
 	}
 }
 

@@ -44,17 +44,29 @@ type stepRetentionFixture struct {
 	patches, deletes int
 	losePatch        bool
 	replaceOnPatch   bool
+	serveExtra       func(*testing.T, http.ResponseWriter, *http.Request) bool
+	clientConfig     *rest.Config
 }
 
 func newStepRetentionFixture(t *testing.T, abort bool, fine ...bool) *stepRetentionFixture {
+	return newConfiguredStepRetentionFixture(t, abort, fine, nil, nil)
+}
+
+func newConfiguredStepRetentionFixture(t *testing.T, abort bool, fine []bool, configure func(*ownerCloseFixture), prepared func(*stepRetentionFixture, *lifecycle.Repository, dynamic.Interface), deadline ...time.Duration) *stepRetentionFixture {
 	t.Helper()
 	f := newOwnerCloseFixture(t)
 	if len(fine) == 1 && fine[0] {
 		f.execution.Snapshot, f.execution.Intent = conformance.FinetuningSnapshotV1(), conformance.FinetuningIntentV1()
 		_, f.execution.IntentHash, _ = cpup01.CanonicalIntent(f.execution.Intent)
 	}
+	if configure != nil {
+		configure(f)
+	}
 	f.execution.AcceptedAt = time.Now().UTC().Truncate(time.Microsecond)
 	f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(time.Hour)
+	if len(deadline) == 1 {
+		f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(deadline[0])
+	}
 	hash, err := f.execution.Snapshot.Digest()
 	if err != nil {
 		t.Fatal(err)
@@ -101,7 +113,8 @@ func newStepRetentionFixture(t *testing.T, abort bool, fine ...bool) *stepRetent
 	}
 	peer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fixture.serve(t, w, r) }))
 	t.Cleanup(peer.Close)
-	client, err := dynamic.NewForConfig(&rest.Config{Host: peer.URL, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: peer.Certificate().Raw})}, Timeout: 3 * time.Second})
+	fixture.clientConfig = &rest.Config{Host: peer.URL, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: peer.Certificate().Raw})}, Timeout: 3 * time.Second, QPS: 100, Burst: 200}
+	client, err := dynamic.NewForConfig(fixture.clientConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,6 +122,9 @@ func newStepRetentionFixture(t *testing.T, abort bool, fine ...bool) *stepRetent
 	repository := lifecycle.New(pool)
 	if _, _, err := repository.RecordPrepared(ctx, f.authority(), fixture.workspace); err != nil {
 		t.Fatal(err)
+	}
+	if prepared != nil {
+		prepared(fixture, repository, client)
 	}
 	closing, _, err := repository.RequestRuntimeClose(ctx, f.authority(), "STEP_FAILED")
 	if err != nil {
@@ -118,7 +134,11 @@ func newStepRetentionFixture(t *testing.T, abort bool, fine ...bool) *stepRetent
 	if err != nil {
 		t.Fatal("independent actual HTTPS owner exits", err)
 	}
-	if _, err := repository.ConfirmRuntimeClosed(ctx, f.authority(), closing.CloseGeneration, biz.TrainingRuntimeObservation{}, evidence); err != nil {
+	observation := biz.TrainingRuntimeObservation{}
+	if closing.Observation != nil {
+		observation = *closing.Observation
+	}
+	if _, err := repository.ConfirmRuntimeClosed(ctx, f.authority(), closing.CloseGeneration, observation, evidence); err != nil {
 		t.Fatal(err)
 	}
 	started, err := repository.BeginStepExitCleanup(ctx, f.authority(), closing.CloseGeneration, evidence)
@@ -132,6 +152,9 @@ func newStepRetentionFixture(t *testing.T, abort bool, fine ...bool) *stepRetent
 func (f *stepRetentionFixture) serve(t *testing.T, w http.ResponseWriter, r *http.Request) {
 	t.Helper()
 	w.Header().Set("Content-Type", "application/json")
+	if f.serveExtra != nil && f.serveExtra(t, w, r) {
+		return
+	}
 	ns := f.f.authority().NamespaceName
 	prefix := "/api/v1/namespaces/" + ns
 	if r.Method == http.MethodPatch || r.Method == http.MethodDelete {

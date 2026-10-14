@@ -61,7 +61,7 @@ class Cluster:
         ns = meta.get("namespace")
         if ns not in {None, SYSTEM, TENANT} or meta.get("labels", {}).get("ani.io/managed-by") != OWNER:
             raise RuntimeError("manifest outside task ownership")
-        if ns is None and not (obj["kind"] == "Namespace" and meta["name"] in {SYSTEM, TENANT} or obj["kind"] in {"ClusterRole", "ClusterRoleBinding"} and meta["name"] == OWNER):
+        if ns is None and not (obj["kind"] == "Namespace" and meta["name"] in {SYSTEM, TENANT} or obj["kind"] in {"ClusterRole", "ClusterRoleBinding"} and meta["name"] in {OWNER, OWNER + "-step-namespace"}):
             raise RuntimeError("cluster-scoped manifest outside finite task RBAC")
         original = self.get(obj["kind"], meta["name"], ns, optional=True)
         if original and original["metadata"].get("labels", {}).get("ani.io/managed-by") != OWNER:
@@ -103,10 +103,15 @@ def foundation(root):
     # Native Argo init/wait containers omit these fields. Namespace defaults
     # satisfy this task's quota while preserving explicit workload resources.
     rows.append(obj("LimitRange", "core-flow-container-defaults", TENANT, spec={"limits": [{"type": "Container", "defaultRequest": {"cpu": "100m", "memory": "64Mi"}, "default": {"cpu": "500m", "memory": "512Mi"}}]}))
+    # prepare independently checks the frozen Namespace UID with its own
+    # identity. Do not grant it the control identity's TokenReview permission.
+    step_namespace_role = OWNER + "-step-namespace"
+    rows.append(obj("ClusterRole", step_namespace_role, rules=[{"apiGroups": [""], "resources": ["namespaces"], "resourceNames": [TENANT], "verbs": ["get"]}]))
+    rows.append(obj("ClusterRoleBinding", step_namespace_role, roleRef={"apiGroup": "rbac.authorization.k8s.io", "kind": "ClusterRole", "name": step_namespace_role}, subjects=[{"kind": "ServiceAccount", "name": "modeldev-step", "namespace": TENANT}]))
     cluster_rules = [{"apiGroups": [""], "resources": ["namespaces"], "resourceNames": [TENANT], "verbs": ["get"]}, {"apiGroups": ["authentication.k8s.io"], "resources": ["tokenreviews"], "verbs": ["create"]}]
     rows.append(obj("ClusterRole", OWNER, rules=cluster_rules))
     rows.append(obj("ClusterRoleBinding", OWNER, roleRef={"apiGroup": "rbac.authorization.k8s.io", "kind": "ClusterRole", "name": OWNER}, subjects=[{"kind": "ServiceAccount", "name": "modeldev-control", "namespace": SYSTEM}]))
-    rules = [{"apiGroups": [""], "resources": ["pods", "pods/log", "persistentvolumeclaims", "serviceaccounts"], "verbs": ["get", "list", "watch"]}, {"apiGroups": [""], "resources": ["pods"], "verbs": ["patch", "delete"]}, {"apiGroups": [""], "resources": ["persistentvolumeclaims"], "verbs": ["create"]}, {"apiGroups": ["trainer.kubeflow.org"], "resources": ["trainjobs"], "verbs": ["get", "list", "watch", "create", "patch", "update"]}, {"apiGroups": ["trainer.kubeflow.org"], "resources": ["trainingruntimes"], "verbs": ["get"]}, {"apiGroups": ["jobset.x-k8s.io"], "resources": ["jobsets"], "verbs": ["get", "list", "watch"]}, {"apiGroups": ["batch"], "resources": ["jobs"], "verbs": ["get", "list", "watch"]}, {"apiGroups": ["argoproj.io"], "resources": ["workflows"], "verbs": ["get", "list", "watch", "patch", "update"]}, {"apiGroups": ["pipelines.kubeflow.org"], "resources": ["pipelines", "pipelines/versions", "experiments", "runs", "runs/terminate"], "verbs": ["get", "list", "create", "delete", "update"]}]
+    rules = [{"apiGroups": [""], "resources": ["pods", "pods/log", "persistentvolumeclaims", "serviceaccounts"], "verbs": ["get", "list", "watch"]}, {"apiGroups": [""], "resources": ["pods"], "verbs": ["patch", "delete"]}, {"apiGroups": [""], "resources": ["persistentvolumeclaims"], "verbs": ["create"]}, {"apiGroups": ["trainer.kubeflow.org"], "resources": ["trainjobs"], "verbs": ["get", "list", "watch", "create", "patch", "update", "delete"]}, {"apiGroups": ["trainer.kubeflow.org"], "resources": ["trainingruntimes"], "verbs": ["get"]}, {"apiGroups": ["jobset.x-k8s.io"], "resources": ["jobsets"], "verbs": ["get", "list", "watch", "delete"]}, {"apiGroups": ["batch"], "resources": ["jobs"], "verbs": ["get", "list", "watch", "delete"]}, {"apiGroups": ["argoproj.io"], "resources": ["workflows"], "verbs": ["get", "list", "watch", "patch", "update", "delete"]}, {"apiGroups": ["pipelines.kubeflow.org"], "resources": ["pipelines", "pipelines/versions", "experiments", "runs", "runs/terminate"], "verbs": ["get", "list", "create", "delete", "update"]}]
     rows.append(obj("Role", "modeldev-control", TENANT, rules=rules))
     rows.append(obj("RoleBinding", "modeldev-control", TENANT, roleRef={"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": "modeldev-control"}, subjects=[{"kind": "ServiceAccount", "name": "modeldev-control", "namespace": SYSTEM}]))
     # Restrict the shared runtime lookup to the one already verified profile.

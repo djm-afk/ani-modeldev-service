@@ -159,6 +159,7 @@ type RuntimePublication struct {
 // ExecutionRuntime contains committed facts; no state value reconstructs an
 // outbound creation permit. Normal step advancement belongs to KFP.
 type ExecutionRuntime struct {
+	ComputeCleanup         *ComputeCleanupReceipt  `json:",omitempty"`
 	StepExitCleanup        *StepExitCleanupReceipt `json:",omitempty"`
 	FinetuningRegistration *FinetuningRegistration `json:",omitempty"`
 	Workspace              *WorkspaceBinding
@@ -204,6 +205,7 @@ type TrainingRuntime interface {
 
 type PreparedWorkspaceVerifier interface {
 	VerifyPrepared(context.Context, Execution, ManagedStepAssociation, WorkspaceBinding) error
+	VerifyPreparedCompletion(context.Context, Execution, ManagedStepAssociation, WorkspaceBinding) error
 }
 
 type PublicationVerifier interface {

@@ -92,6 +92,26 @@ func (q *Queries) GetRuntimeIdentity(ctx context.Context, arg GetRuntimeIdentity
 	return i, err
 }
 
+const hasUnresolvedManualCleanup = `-- name: HasUnresolvedManualCleanup :one
+SELECT EXISTS (
+    SELECT 1 FROM modeldev_execution_cleanup_audits
+    WHERE tenant_id = $1::uuid AND execution_id = $2::uuid
+      AND phase IN ('STARTED', 'NEEDS_REVIEW')
+) AS blocked
+`
+
+type HasUnresolvedManualCleanupParams struct {
+	TenantID    pgtype.UUID
+	ExecutionID pgtype.UUID
+}
+
+func (q *Queries) HasUnresolvedManualCleanup(ctx context.Context, arg HasUnresolvedManualCleanupParams) (bool, error) {
+	row := q.db.QueryRow(ctx, hasUnresolvedManualCleanup, arg.TenantID, arg.ExecutionID)
+	var blocked bool
+	err := row.Scan(&blocked)
+	return blocked, err
+}
+
 const listPendingBoundClosures = `-- name: ListPendingBoundClosures :many
 SELECT admitted.execution_id
 FROM modeldev_executions AS admitted
@@ -108,7 +128,11 @@ WHERE admitted.tenant_id = $1::uuid
          (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz <= clock_timestamp()))
        OR (runtime.closed_at IS NOT NULL
            AND COALESCE(runtime.facts -> 'CloseEvidence' ->> 'NoDispatch', 'false') <> 'true'
-           AND runtime.facts -> 'StepExitCleanup' ->> 'CompletedAt' IS NULL))
+           AND (runtime.facts -> 'StepExitCleanup' ->> 'CompletedAt' IS NULL
+                OR runtime.facts -> 'ComputeCleanup' IS NULL
+                OR (runtime.facts -> 'ComputeCleanup' ->> 'phase' <> 'APPLIED'
+                    AND (COALESCE((runtime.facts -> 'ComputeCleanup' ->> 'attempts')::integer, 0) < 3
+                         OR runtime.facts -> 'ComputeCleanup' ->> 'phase' = 'STARTED')))))
   AND ($3::uuid IS NULL OR admitted.execution_id > $3::uuid)
 ORDER BY admitted.execution_id
 LIMIT $4::integer

@@ -186,6 +186,12 @@ func (runtime *ManagedRuntime) Ensure(ctx context.Context, token string, request
 	if err != nil {
 		return result, err
 	}
+	if result.Runtime.Workspace == nil {
+		return ManagedRuntimeResult{}, ErrRuntimeNotReady
+	}
+	if err := runtime.workspaces.VerifyPreparedCompletion(ctx, result.Execution, request.Association, *result.Runtime.Workspace); err != nil {
+		return ManagedRuntimeResult{}, err
+	}
 	reservation, err := runtime.repository.ReserveTraining(ctx, result.Authority.RunAuthorityCandidate)
 	if err != nil {
 		return ManagedRuntimeResult{}, err

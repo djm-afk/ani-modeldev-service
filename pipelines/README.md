@@ -110,6 +110,22 @@ group policy) and the actual node/storage mount capability. A compiled IR does
 not prove those permissions. Workspace class/capacity must equal the immutable
 Release contract. This Pipeline has no DeletePVC step.
 
+Preparation no longer publishes whole directories through
+`renameat2(RENAME_NOREPLACE)`. A separate prepare Pod writes fixed inputs to the
+execution's PVC, verifies actual content, saves the existing prepared manifest
+and durable preparation record, and exits successfully before training uses
+that same PVC with read-only inputs. Missing, partial or conflicting content is
+not ready; replay retains original identities and bytes. The training entry must
+verify actual inputs against the original manifest and frozen references before
+model loading or computation. CSI supplies the mounted filesystem; this design
+does not call storage-vendor APIs or require a Ceph-specific branch.
+
+Preparation rejects an existing model tree without its original valid completion
+manifest. Reusing an existing manifest requires verification of every actual input;
+it cannot repair missing or conflicting bytes. Both RWO and RWX are compiler inputs;
+actual volume access, persistence and sequential role mounts remain environment
+acceptance checks for each frozen image and Release.
+
 Publish writes a small candidate to KFP's declared string `OutputPath`. Close
 receives that string through `--candidate-json` into an independent temporary
 file. Its empty default and `ignore_upstream_failure()` keep close runnable when

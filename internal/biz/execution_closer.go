@@ -58,6 +58,7 @@ type ExecutionCloser struct {
 	runs    ManagedRunCloser
 	writers OwnerWriterVerifier
 	cleanup StepExitCleanupBoundary
+	compute ComputeCleanupBoundary
 }
 
 func NewExecutionCloser(runtime *ManagedRuntime, runs ManagedRunCloser, writers OwnerWriterVerifier, cleanup ...StepExitCleanupBoundary) (*ExecutionCloser, error) {
@@ -241,7 +242,7 @@ func (closer *ExecutionCloser) reconcileStepExits(ctx context.Context, result Ma
 		return result, ErrRuntimeNotReady
 	}
 	if state.CloseEvidence.NoDispatch || state.StepExitCleanup != nil && state.StepExitCleanup.CompletedAt != nil {
-		return runtimeResult(result, state, replayed)
+		return closer.reconcileComputeCleanup(ctx, result, owner, replayed)
 	}
 	repository, ok := closer.runtime.repository.(StepExitCleanupRepository)
 	if !ok || state.ClosedAt == nil {
@@ -268,7 +269,8 @@ func (closer *ExecutionCloser) reconcileStepExits(ctx context.Context, result Ma
 	if err != nil {
 		return result, err
 	}
-	return runtimeResult(result, state, replayed)
+	result.Runtime = state
+	return closer.reconcileComputeCleanup(ctx, result, owner, replayed)
 }
 
 func (closer *ExecutionCloser) recoverRun(ctx context.Context, admitted Execution, dispatch PipelineDispatch, runID string) (RunAuthority, error) {

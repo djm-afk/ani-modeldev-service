@@ -215,13 +215,14 @@ type ExecutionCleanupBoundary interface {
 
 func CleanupPlanFor(record OperationRecord) (CleanupPlan, error) {
 	admitted, runtime := record.Execution, record.Runtime
+	automatic := ComputeCleanupApplied(record)
 	if admitted.States.Close != CloseStateClosed || runtime.ClosedAt == nil || runtime.CloseGeneration == 0 || runtime.CloseReviewReason != "" || runtime.CloseEvidence == nil || admitted.OwnerRevision != runtime.OwnerRevision {
 		return CleanupPlan{}, ErrCleanupBlocked
 	}
 	if record.Dispatch != nil && (record.Dispatch.State != PipelineDispatchConfirmed || len(record.Dispatch.ConfirmedRuns) != 1) {
 		return CleanupPlan{}, ErrCleanupBlocked
 	}
-	if runtime.Training != nil && (runtime.TrainingHandle == nil || runtime.Observation == nil || !runtime.Observation.WritersAbsent || runtime.Publication == nil || admitted.States.Delivery != DeliveryStatePublished) {
+	if runtime.Training != nil && !automatic && (runtime.TrainingHandle == nil || runtime.Observation == nil || !runtime.Observation.WritersAbsent || runtime.Publication == nil || admitted.States.Delivery != DeliveryStatePublished) {
 		// A stopped execution can still own the only unpublished output. Retain
 		// all of its resources until publication/retention is proved separately.
 		return CleanupPlan{}, ErrCleanupBlocked
@@ -229,10 +230,13 @@ func CleanupPlanFor(record OperationRecord) (CleanupPlan, error) {
 	plan := CleanupPlan{TenantID: admitted.TenantID, ExecutionID: admitted.ExecutionID, OperationID: admitted.OperationID,
 		SpecHash: admitted.SpecHash, OwnerRevision: admitted.OwnerRevision, CloseGeneration: runtime.CloseGeneration,
 		NamespaceUID: admitted.Snapshot.Environment.NamespaceUID, Targets: []RuntimeResource{}, Retained: []string{"PVC", "Workflow", "Pod", "S3 publication", "execution and audit records"}, ObservedAt: runtime.CloseEvidence.ObservedAt}
+	if automatic {
+		plan.Retained = []string{"PVC", "S3 publication", "execution and audit records", "recorded training log tails"}
+	}
 	if runtime.Publication != nil {
 		plan.PublicationID = runtime.Publication.ID
 	}
-	if runtime.Observation != nil {
+	if runtime.Observation != nil && !automatic {
 		seen := map[string]bool{}
 		for _, resource := range runtime.Observation.Resources {
 			if resource.Kind == "Pod" || !resource.APIObjectPresent {

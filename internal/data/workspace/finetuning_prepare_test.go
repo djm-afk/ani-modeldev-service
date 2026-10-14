@@ -114,11 +114,14 @@ func TestFinetuningPrepareRejectsUnapprovedArchiveWithoutCompletionReceipt(t *te
 			if err == nil || result.PreparedManifestSHA256 != "" || result.PreparedManifestBytes != 0 {
 				t.Fatal("bad model archive produced a trusted prepared receipt")
 			}
-			if _, err := os.Stat(filepath.Join(f.directory, "inputs/model")); !os.IsNotExist(err) {
-				t.Fatal("partial/invalid model became ready materialization")
-			}
 			if _, err := os.Stat(filepath.Join(f.directory, "reports/prepared-manifest.json")); !os.IsNotExist(err) {
 				t.Fatal("failed prepare emitted completion manifest")
+			}
+			// Direct materialization may retain unready bytes after extraction
+			// fails. Neither partial nor complete-looking files permit replay.
+			result, err = workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory)
+			if err == nil || result.PreparedManifestSHA256 != "" || result.PreparedManifestBytes != 0 {
+				t.Fatal("replay promoted rejected archive contents into prepared input")
 			}
 		})
 	}
@@ -144,6 +147,61 @@ func TestFinetuningPrepareDoesNotReuseUnexpectedModelFilesOrFollowInputSymlink(t
 	entries, err := os.ReadDir(outside)
 	if err != nil || len(entries) != 0 {
 		t.Fatal("prepare wrote outside execution workspace")
+	}
+}
+
+func TestFinetuningPrepareLeavesIncompleteInputUnreadyWithoutRepairingIt(t *testing.T) {
+	f := prepareFinetuningInputs(t, "wrong member SHA")
+	prepared, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory)
+	if err == nil || prepared.PreparedManifestSHA256 != "" {
+		t.Fatal("incomplete materialization became prepared")
+	}
+	member := filepath.Join(f.directory, "inputs/model/config.json")
+	before, err := os.ReadFile(member)
+	if err != nil {
+		t.Fatalf("interrupted extraction must leave its unready bytes in this execution's input directory: %v", err)
+	}
+	info, err := os.Stat(member)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gets := f.baseGets.Load()
+	prepared, err = workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory)
+	if err == nil || prepared.PreparedManifestSHA256 != "" || f.baseGets.Load() != gets {
+		t.Fatal("prepare repaired or re-fetched an existing incomplete model")
+	}
+	after, err := os.ReadFile(member)
+	afterInfo, statErr := os.Stat(member)
+	if err != nil || statErr != nil || !bytes.Equal(before, after) || !os.SameFile(info, afterInfo) {
+		t.Fatal("prepare changed the original incomplete model bytes or inode")
+	}
+	if _, err := os.Stat(filepath.Join(f.directory, "reports/prepared-manifest.json")); !os.IsNotExist(err) {
+		t.Fatal("incomplete model acquired a completion manifest")
+	}
+}
+
+func TestFinetuningPrepareDoesNotRepairInputsBehindExistingManifest(t *testing.T) {
+	for _, missing := range []string{"inputs/model", "inputs/data/finetune_data.json", "inputs/data/dataset_info.json", "inputs/finetune_configuration.json", "inputs/base_manifest.json", "reports/prepared-manifest.json"} {
+		t.Run(missing, func(t *testing.T) {
+			f := prepareFinetuningInputs(t, "valid")
+			if _, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.RemoveAll(filepath.Join(f.directory, missing)); err != nil {
+				t.Fatal(err)
+			}
+			gets := f.baseGets.Load()
+			prepared, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory)
+			if err == nil || prepared.PreparedManifestSHA256 != "" || prepared.PreparedManifestBytes != 0 {
+				t.Fatal("manifest-only or damaged preparation became trusted")
+			}
+			if f.baseGets.Load() != gets {
+				t.Fatal("existing preparation caused a second base download")
+			}
+			if _, err := os.Stat(filepath.Join(f.directory, missing)); !os.IsNotExist(err) {
+				t.Fatal("prepare repaired content behind an existing completion manifest")
+			}
+		})
 	}
 }
 

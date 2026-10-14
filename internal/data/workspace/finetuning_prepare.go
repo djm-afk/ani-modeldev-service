@@ -13,7 +13,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
@@ -43,6 +42,12 @@ func PrepareFinetuningInput(ctx context.Context, dataClient, baseClient *s3.Clie
 		return biz.WorkspaceBinding{}, err
 	}
 	defer unix.Close(root)
+	if reused, manifest, err := reuseFinetuningPreparation(ctx, root, e, binding); err != nil {
+		return biz.WorkspaceBinding{}, err
+	} else if reused {
+		binding.PreparedManifestSHA256, binding.PreparedManifestBytes = pipelineContentHash(manifest), int64(len(manifest))
+		return binding, nil
+	}
 	input, fine := e.Snapshot.Input, e.Snapshot.Finetuning
 	scope := cpup01.StorageScope{StorageConnectionID: input.Object.StorageConnectionID, Bucket: input.Object.Bucket, ApprovedPrefix: path.Dir(input.Object.Key)}
 	verified, err := objectstore.NewVerifier(dataClient, input.Object.StorageConnectionID, 32<<20).VerifyAlpaca(ctx, scope, input.Object)
@@ -112,6 +117,65 @@ func PrepareFinetuningInput(ctx context.Context, dataClient, baseClient *s3.Clie
 	return binding, nil
 }
 
+// An existing marker is evidence to check, never permission to repair inputs.
+// Reuse requires the actual frozen files and model inventory before returning
+// the original candidate; the caller still owns durable Prepared/Task gating.
+func reuseFinetuningPreparation(ctx context.Context, root int, e biz.Execution, binding biz.WorkspaceBinding) (bool, []byte, error) {
+	reports, err := openPipelineSubdirectory(root, e.Snapshot.Workspace.ReportsSubpath)
+	if err != nil {
+		return false, nil, err
+	}
+	defer unix.Close(reports)
+	var stat unix.Stat_t
+	if err := unix.Fstatat(reports, "prepared-manifest.json", &stat, unix.AT_SYMLINK_NOFOLLOW); errors.Is(err, unix.ENOENT) {
+		return false, nil, nil
+	} else if err != nil || stat.Mode&unix.S_IFMT != unix.S_IFREG || stat.Nlink != 1 {
+		return false, nil, biz.ErrInputVerification
+	}
+	fine := e.Snapshot.Finetuning
+	configuration, err := (cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: e.Snapshot.Program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}).Canonical()
+	if err != nil {
+		return false, nil, err
+	}
+	baseManifest, err := fine.BaseModel.BaseManifestBytes()
+	if err != nil {
+		return false, nil, err
+	}
+	manifest, err := PreparedManifestBytes(e, binding)
+	if err != nil {
+		return false, nil, err
+	}
+	input := e.Snapshot.Workspace.InputSubpath
+	files := []cpup01.OutputFile{{RelativePath: input + "/data/finetune_data.json", SizeBytes: e.Snapshot.Input.Object.SizeBytes, SHA256: e.Snapshot.Input.Object.SHA256}}
+	for _, file := range []struct {
+		name string
+		data []byte
+	}{
+		{input + "/data/dataset_info.json", []byte(FinetuningDatasetInfo)},
+		{input + "/finetune_configuration.json", configuration},
+		{input + "/base_manifest.json", baseManifest},
+		{e.Snapshot.Workspace.ReportsSubpath + "/prepared-manifest.json", manifest},
+	} {
+		files = append(files, cpup01.OutputFile{RelativePath: file.name, SizeBytes: int64(len(file.data)), SHA256: pipelineContentHash(file.data)})
+	}
+	for _, expected := range files {
+		file, err := capturePipelineFile(ctx, root, expected)
+		if err != nil {
+			return false, nil, err
+		}
+		file.Close()
+	}
+	model, err := openFinetuningFile(root, input+"/model", unix.O_RDONLY|unix.O_DIRECTORY, 0)
+	if err != nil {
+		return false, nil, err
+	}
+	defer unix.Close(model)
+	if err := verifyBaseTree(ctx, model, fine.BaseModel); err != nil {
+		return false, nil, err
+	}
+	return true, manifest, nil
+}
+
 func readFixedDataset(ctx context.Context, client *s3.Client, o cpup01.FixedObjectRef) ([]byte, error) {
 	r, err := client.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(o.Bucket), Key: aws.String(o.Key), VersionId: o.VersionID})
 	if err != nil || r == nil || r.Body == nil {
@@ -131,7 +195,13 @@ func readFixedDataset(ctx context.Context, client *s3.Client, o cpup01.FixedObje
 func prepareBaseArchive(ctx context.Context, client *s3.Client, inputs int, base cpup01.BaseModelRef, budgets cpup01.ComponentBudgets) error {
 	if model, err := unix.Openat(inputs, "model", unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0); err == nil {
 		defer unix.Close(model)
-		return verifyBaseTree(ctx, model, base)
+		if err := verifyBaseTree(ctx, model, base); err != nil {
+			return err
+		}
+		// A complete tree without the original completion manifest can also be
+		// left by a rejected tar tail or an interrupted prepare. Do not promote
+		// those bytes into a successful preparation on a later invocation.
+		return biz.ErrInputVerification
 	} else if !errors.Is(err, unix.ENOENT) {
 		return biz.ErrInputVerification
 	}
@@ -169,35 +239,28 @@ func prepareBaseArchive(ctx context.Context, client *s3.Client, inputs int, base
 	if _, err := archive.Seek(0, io.SeekStart); err != nil {
 		return biz.ErrInputVerification
 	}
-	stagingName := ".base-staging-" + uuid.NewString()
-	if err := unix.Mkdirat(inputs, stagingName, 0700); err != nil {
+	// This execution's original prepare is the only input writer. A directory
+	// is never a readiness signal: failed extraction leaves unready bytes, and
+	// a subsequent observation may only verify them, never repair or replace.
+	if err := unix.Mkdirat(inputs, "model", 0700); err != nil {
+		if errors.Is(err, unix.EEXIST) {
+			return biz.ErrInputVerification
+		}
 		return biz.ErrInvalidWorkspaceOutput
 	}
-	stage, err := unix.Openat(inputs, stagingName, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+	model, err := unix.Openat(inputs, "model", unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
 	if err != nil {
 		return biz.ErrInvalidWorkspaceOutput
 	}
-	defer unix.Close(stage)
-	if err := extractBaseModel(ctx, archive, stage, base, budgets.MaxBaseModelExpandedBytes); err != nil {
+	defer unix.Close(model)
+	if err := extractBaseModel(ctx, archive, model, base, budgets.MaxBaseModelExpandedBytes); err != nil {
 		return err
 	}
-	if err := unix.Fsync(stage); err != nil {
-		return biz.ErrInvalidWorkspaceOutput
+	if err := verifyBaseTree(ctx, model, base); err != nil {
+		return err
 	}
-	if err := unix.Renameat2(inputs, stagingName, inputs, "model", unix.RENAME_NOREPLACE); err != nil {
-		// A repeated prepare may only reuse the original verified content. Never
-		// replace a conflicting directory or weaken no-overwrite on another CSI.
-		if !errors.Is(err, unix.EEXIST) {
-			return biz.ErrInvalidWorkspaceOutput
-		}
-		model, err := unix.Openat(inputs, "model", unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
-		if err != nil {
-			return biz.ErrInputVerification
-		}
-		defer unix.Close(model)
-		if err := verifyBaseTree(ctx, model, base); err != nil {
-			return err
-		}
+	if err := unix.Fsync(model); err != nil {
+		return biz.ErrInvalidWorkspaceOutput
 	}
 	return unix.Fsync(inputs)
 }

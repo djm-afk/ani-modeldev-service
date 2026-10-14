@@ -1,4 +1,4 @@
-# ModelDev webhook and retained step exit cleanup
+# ModelDev webhook and retained compute exit cleanup
 
 ModelDev owns one Pod admission component, built from `cmd/ani-modeldev-webhook`
 and deployed independently of its business listeners. GENERAL_TRAINING and
@@ -49,18 +49,30 @@ real execution repository before releasing retention. The webhook only adds the
 step mark; the business owner performs this reconciliation outside admission.
 
 After CLOSED, the close worker also discovers executions with unfinished step
-cleanup. It first persists the complete post-close owner proof and cleanup
+or compute cleanup. It first persists the complete post-close owner proof and cleanup
 receipt, then tests UID, resourceVersion, ownerReferences and the finalizer set
 before removing only the step mark. Deletion targets that same original UID and
 resourceVersion, and a later GET confirms absence. A lost response or restarted
 owner resumes from the receipt. A replaced UID or uncertain/active writer remains
 unresolved; another controller's finalizer is preserved and never forcibly cleared.
 
-Automatic cleanup here removes terminal Workflow-owned **step Pods**, including
-close and failure-close. Training log Pods, TrainJob/JobSet/Job controllers,
-workspace PVCs and publications remain available. Controller disposal uses the
-existing explicit, audited CleanupPlan. This keeps post-training log reads and
-artifact retrieval intact; it does not grant blanket garbage-collection authority.
+After step disposal, the same owner freezes the original terminal training
+Pod, TrainJob/JobSet/Job and Workflow identities in a durable compute cleanup
+receipt. It captures a bounded training log tail before any training Pod DELETE.
+Log queries retain their existing authorization and original identity checks and
+can read that saved tail after the Pod is gone. The cleanup receipt preserves
+the full original exit graph; an equivalent verifier checks the receipt and live
+absence when an explicit later CleanupPlan needs that graph.
+
+Controller removal tests original UID and resourceVersion and confirms absence
+after each DELETE. Normal terminal controllers use orphan propagation. The
+suspended Stop/deadline path additionally verifies the original suspend fence
+and protects the retained PVC before background deletion of the original
+TrainJob; observed in-progress deletion remains pending. Replacement identities,
+unknown workspace writers and foreign finalizers block disposal. Attempts are
+bounded and persist their unresolved result across owner restart. PVCs and
+publications remain available; automatic compute cleanup never authorizes their
+deletion.
 
 ## Verification and rollout boundary
 
@@ -79,10 +91,10 @@ Kubernetes and S3 remain explicit external boundary substitutes in this lane;
 it cannot establish LIVE or M3-A acceptance. Additional shared-retention cases
 cover both execution kinds and recovery/CAS failures.
 
-**This delivery must not register or replace cluster webhooks.** Render and
-review the service, typed binding/profile material, certificate/issuer dependency,
-RBAC and separate registration manifest. Cluster registration and live migration
-remain NOT_RUN until separately authorized. Keep the old registration untouched
+Render and review the service, typed binding/profile material,
+certificate/issuer dependency, RBAC and separate registration manifest before
+registration. Register only within the cluster owner's explicit authorized
+scope; source checks do not establish that any cluster was changed. Keep the old registration untouched
 while old Runs use it, verify new PipelineVersion/Release bytes and nonoverlapping
 selectors, then migrate each enrolled namespace. Existing step/training finalizer
 names remain compatible; no bulk finalizer deletion is part of migration.

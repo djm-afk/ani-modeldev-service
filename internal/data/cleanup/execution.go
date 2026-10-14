@@ -47,6 +47,12 @@ func (adapter *Adapter) VerifyCleanupResolved(ctx context.Context, record biz.Op
 		}
 		return []biz.RuntimeResource{}, nil
 	}
+	if biz.ComputeCleanupApplied(record) {
+		if _, err := adapter.ownerWriterProof(ctx, record); err != nil {
+			return nil, err
+		}
+		return []biz.RuntimeResource{}, nil
+	}
 	if record.Authority == nil || adapter.writers == nil || record.Runtime.CloseEvidence.RunID != record.Authority.RunID || record.Runtime.CloseEvidence.WorkflowUID != record.Authority.WorkflowUID || len(record.Runtime.CloseEvidence.Resources) == 0 {
 		return nil, biz.ErrCleanupBlocked
 	}
@@ -230,6 +236,10 @@ func (adapter *Adapter) VerifyCleanupWritersAbsent(ctx context.Context, record b
 		}
 		return nil
 	}
+	if biz.ComputeCleanupApplied(record) {
+		_, err := adapter.ownerWriterProof(ctx, record)
+		return err
+	}
 	if record.Authority == nil || adapter.writers == nil {
 		return biz.ErrCleanupBlocked
 	}
@@ -294,6 +304,16 @@ func (adapter *Adapter) VerifyCleanupWritersAbsent(ctx context.Context, record b
 // step Pod to remain present. Current unrelated PVC writers are still read and
 // checked; training Pod/log retention and exact controller cleanup stay intact.
 func (adapter *Adapter) ownerWriterProof(ctx context.Context, record biz.OperationRecord) (biz.ManagedCloseEvidence, error) {
+	if biz.ComputeCleanupApplied(record) {
+		verifier, ok := adapter.writers.(biz.RecordedComputeWriterVerifier)
+		if !ok {
+			return biz.ManagedCloseEvidence{}, biz.ErrCleanupBlocked
+		}
+		if err := verifier.VerifyRecordedComputeWritersAbsent(ctx, record.Execution, *record.Authority, record.Runtime); err != nil {
+			return biz.ManagedCloseEvidence{}, err
+		}
+		return record.Runtime.StepExitCleanup.Evidence, nil
+	}
 	if receipt := record.Runtime.StepExitCleanup; receipt != nil {
 		verifier, ok := adapter.writers.(biz.RecordedOwnerWriterVerifier)
 		if !ok || receipt.CloseGeneration != record.Runtime.CloseGeneration || receipt.Evidence.OwnerTermination == nil {
@@ -335,6 +355,31 @@ func (adapter *Adapter) DeleteExecutionResource(ctx context.Context, record biz.
 	if err != nil || adapter == nil || adapter.kube == nil || ctx == nil {
 		return biz.ErrCleanupBlocked
 	}
+	return adapter.deleteController(ctx, record, target, plan, false)
+}
+
+// DeleteRecordedComputeController reuses the same exact-UID parent-first
+// controller disposal after the automatic owner committed its complete exits,
+// original target intent and bounded logs. Work volume and publication remain.
+func (adapter *Adapter) DeleteRecordedComputeController(ctx context.Context, record biz.OperationRecord, target biz.RuntimeResource) error {
+	if record.Authority == nil || record.Runtime.ComputeCleanup == nil || !record.Runtime.ComputeCleanup.LogsReady || adapter == nil || adapter.kube == nil || ctx == nil {
+		return biz.ErrCleanupBlocked
+	}
+	targets, hash, err := biz.ComputeCleanupTargets(record.Execution, *record.Authority, record.Runtime)
+	receipt := record.Runtime.ComputeCleanup
+	if err != nil || hash != receipt.PlanHash || !reflect.DeepEqual(targets, receipt.Targets) || !reflect.DeepEqual(targets, receipt.Requested) || !biz.ComputeCleanupLogsComplete(record.Execution, record.Runtime, receipt.Logs) {
+		return biz.ErrCleanupBlocked
+	}
+	plan := biz.CleanupPlan{NamespaceUID: record.Authority.NamespaceUID, Targets: []biz.RuntimeResource{}}
+	for _, resource := range targets {
+		if resource.Kind != "Workflow" && resource.Kind != "Pod" {
+			plan.Targets = append(plan.Targets, resource)
+		}
+	}
+	return adapter.deleteController(ctx, record, target, plan, true)
+}
+
+func (adapter *Adapter) deleteController(ctx context.Context, record biz.OperationRecord, target biz.RuntimeResource, plan biz.CleanupPlan, automatic bool) error {
 	known := false
 	for _, expected := range plan.Targets {
 		known = known || reflect.DeepEqual(expected, target)
@@ -359,17 +404,28 @@ func (adapter *Adapter) DeleteExecutionResource(ctx context.Context, record biz.
 	if err := adapter.verifyOriginalParentsAbsent(ctx, record, plan, target); err != nil {
 		return err
 	}
+	propagation := metav1.DeletePropagationOrphan
 	if target.Kind == "TrainJob" {
 		if err := adapter.verifyOriginalUnsuspendedSets(ctx, plan, target, object); err != nil {
-			return err
+			if !automatic || adapter.verifyOriginalSuspendedSets(ctx, record, plan, target, object) != nil {
+				return err
+			}
+			// While suspended, Trainer v2.1 continually applies JobSet owner
+			// references. Background removal avoids its Orphan-finalizer race.
+			// Only the automatic path has already durably retained every original
+			// child exit, log tail and deletion intent before permitting GC.
+			propagation = metav1.DeletePropagationBackground
 		}
 	}
 	uid, version := types.UID(target.UID), object.GetResourceVersion()
-	orphan := metav1.DeletePropagationOrphan
-	if err := client.Delete(ctx, target.Name, metav1.DeleteOptions{Preconditions: &metav1.Preconditions{UID: &uid, ResourceVersion: &version}, PropagationPolicy: &orphan}); err != nil {
+	if err := client.Delete(ctx, target.Name, metav1.DeleteOptions{Preconditions: &metav1.Preconditions{UID: &uid, ResourceVersion: &version}, PropagationPolicy: &propagation}); err != nil {
 		return biz.ErrCleanupUncertain
 	}
-	wait, cancel := context.WithTimeout(ctx, 5*time.Second)
+	budget := 5 * time.Second
+	if automatic {
+		budget = 30 * time.Second
+	}
+	wait, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
 	for {
 		current, err := client.Get(wait, target.Name, metav1.GetOptions{})
@@ -389,6 +445,72 @@ func (adapter *Adapter) DeleteExecutionResource(ctx context.Context, record biz.
 		case <-timer.C:
 		}
 	}
+}
+
+func (adapter *Adapter) verifyOriginalSuspendedSets(ctx context.Context, record biz.OperationRecord, plan biz.CleanupPlan, target biz.RuntimeResource, train *unstructured.Unstructured) error {
+	if record.Runtime.ClosedAt == nil || record.Runtime.CloseRequestedAt.IsZero() || (record.Runtime.CloseReason != "USER_STOP" && record.Runtime.CloseReason != "DEADLINE" && record.Runtime.CloseReason != "STEP_FAILED") || !originalObservedSuspend(train, record.Runtime.CloseRequestedAt) {
+		return biz.ErrCleanupBlocked
+	}
+	sets := 0
+	for _, expected := range plan.Targets {
+		if expected.Kind != "JobSet" {
+			continue
+		}
+		resource, valid := targetResource(expected)
+		if !valid || expected.OwnerUID != target.UID || expected.Namespace != target.Namespace {
+			return biz.ErrCleanupConflict
+		}
+		set, err := adapter.kube.Resource(resource).Namespace(expected.Namespace).Get(ctx, expected.Name, metav1.GetOptions{})
+		if err != nil || set == nil {
+			return biz.ErrCleanupUncertain
+		}
+		if !exactObject(set, expected) || set.GetDeletionTimestamp() != nil || !originalObservedSuspend(set, record.Runtime.CloseRequestedAt) {
+			return biz.ErrCleanupBlocked
+		}
+		sets++
+	}
+	if sets == 0 {
+		return biz.ErrCleanupBlocked
+	}
+	return nil
+}
+
+// Only the original create (generation 1) followed by the one supported Stop
+// spec change (generation 2) is eligible. Fixed Trainer/JobSet versions omit
+// observedGeneration; both actual Suspended reports must instead follow the
+// original durable close fence, and every writer exit is proved separately.
+func originalObservedSuspend(object *unstructured.Unstructured, fence time.Time) bool {
+	suspend, found, err := unstructured.NestedBool(object.Object, "spec", "suspend")
+	if err != nil || !found || !suspend || object.GetGeneration() != 2 {
+		return false
+	}
+	conditions, found, err := unstructured.NestedSlice(object.Object, "status", "conditions")
+	if err != nil || !found {
+		return false
+	}
+	seen := false
+	for _, raw := range conditions {
+		condition, ok := raw.(map[string]any)
+		if !ok {
+			return false
+		}
+		if condition["type"] != "Suspended" {
+			continue
+		}
+		if seen || condition["status"] != "True" {
+			return false
+		}
+		seen = true
+		text, _, err := unstructured.NestedString(condition, "lastTransitionTime")
+		at, parseErr := time.Parse(time.RFC3339Nano, text)
+		if err != nil || parseErr != nil || at.Before(fence.Truncate(time.Second)) || at.After(time.Now().UTC()) {
+			return false
+		}
+		if generation, present, err := unstructured.NestedInt64(condition, "observedGeneration"); err != nil || present && generation != object.GetGeneration() {
+			return false
+		}
+	}
+	return seen
 }
 
 func originalOrOrphanObject(object *unstructured.Unstructured, target biz.RuntimeResource) bool {

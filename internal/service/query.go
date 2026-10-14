@@ -96,9 +96,6 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
-	if query.logs == nil {
-		return nil, queryError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
-	}
 	options := biz.TrainingLogOptions{TailLines: request.TailLines, MaxBytes: request.MaxBytes}
 	if options.TailLines == 0 {
 		options.TailLines = 200
@@ -106,9 +103,18 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if options.MaxBytes == 0 {
 		options.MaxBytes = 16384
 	}
-	result, err := query.logs.ReadTrainingLogs(ctx, source, options)
+	result, recorded, err := biz.RecordedTrainingLogsFor(record, source, options)
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
+	}
+	if !recorded {
+		if query.logs == nil {
+			return nil, queryError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
+		}
+		result, err = query.logs.ReadTrainingLogs(ctx, source, options)
+		if err != nil {
+			return nil, queryError(err, scope.RequestID)
+		}
 	}
 	response := &modeldevv1.GetExecutionLogsResponse{Source: &trainingv1.LogRef{LogId: source.LogID, ResourceUid: source.PodUID, ContainerName: source.ContainerName}, Truncated: result.Truncated, ObservedAt: timestamppb.New(result.ObservedAt)}
 	for _, line := range result.Lines {

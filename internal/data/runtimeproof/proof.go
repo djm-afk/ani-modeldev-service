@@ -30,6 +30,7 @@ type Verifier struct {
 	runs    *kfp.Client
 	objects *objectstore.Verifier
 	plans   PlanReader
+	logs    biz.TrainingLogReader
 }
 
 func New(kube dynamic.Interface, runs *kfp.Client, objects *objectstore.Verifier, plans PlanReader) *Verifier {
