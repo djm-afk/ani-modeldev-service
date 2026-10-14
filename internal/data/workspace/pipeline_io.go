@@ -141,23 +141,23 @@ func PreparedManifestBytes(execution biz.Execution, binding biz.WorkspaceBinding
 // publish after the uploader container has actually terminated successfully.
 func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Execution, directory string, output biz.CollectedOutput) (biz.RuntimePublication, error) {
 	if ctx == nil || client == nil {
-		return biz.RuntimePublication{}, biz.ErrObjectSourceUnavailable
+		return biz.RuntimePublication{}, publicationFailure("validate", "client", biz.ErrObjectSourceUnavailable)
 	}
 	if err := ctx.Err(); err != nil {
-		return biz.RuntimePublication{}, err
+		return biz.RuntimePublication{}, publicationFailure("validate", "context", err)
 	}
 	manifest, manifestSHA, err := cpup01.OutputManifestBytes(cpup01.AdmissionEnvelope(execution.Admission), output.Files)
 	if err != nil || output.ExecutionID != execution.ExecutionID || output.ExecutionSpecHash != execution.SpecHash || output.StorageState != "WORKSPACE_ONLY" ||
 		!bytes.Equal(output.Manifest, manifest) || output.ManifestSHA256 != manifestSHA {
-		return biz.RuntimePublication{}, biz.ErrInvalidWorkspaceOutput
+		return biz.RuntimePublication{}, publicationFailure("validate", "manifest", biz.ErrInvalidWorkspaceOutput)
 	}
 	scope := execution.Snapshot.PublicationScope
 	if !biz.ValidStorageKey(scope.ApprovedPrefix) {
-		return biz.RuntimePublication{}, biz.ErrInvalidWorkspaceOutput
+		return biz.RuntimePublication{}, publicationFailure("validate", "scope", biz.ErrInvalidWorkspaceOutput)
 	}
 	root, err := openPipelineRoot(directory)
 	if err != nil {
-		return biz.RuntimePublication{}, err
+		return biz.RuntimePublication{}, publicationFailure("open", "directory", err)
 	}
 	defer unix.Close(root)
 	files := append([]cpup01.OutputFile{}, output.Files...)
@@ -167,17 +167,17 @@ func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Executio
 	if execution.Snapshot.Kind == "FINETUNING" {
 		spool, err = openPipelineSubdirectory(root, execution.Snapshot.Workspace.PublicationSubpath+"/spool")
 		if err != nil {
-			return biz.RuntimePublication{}, err
+			return biz.RuntimePublication{}, publicationFailure("spool", "directory", err)
 		}
 		defer unix.Close(spool)
 		var filesystem unix.Statfs_t
 		if unix.Fstatfs(spool, &filesystem) != nil || filesystem.Type == unix.TMPFS_MAGIC {
-			return biz.RuntimePublication{}, biz.ErrInvalidWorkspaceOutput
+			return biz.RuntimePublication{}, publicationFailure("spool", "filesystem", biz.ErrInvalidWorkspaceOutput)
 		}
 		spoolRemaining = execution.Snapshot.Finetuning.Budgets.MaxSpoolBytes
 		for _, file := range files {
 			if file.SizeBytes <= 0 || file.SizeBytes > spoolRemaining {
-				return biz.RuntimePublication{}, biz.ErrInvalidWorkspaceOutput
+				return biz.RuntimePublication{}, publicationFailure("spool", "budget", biz.ErrInvalidWorkspaceOutput)
 			}
 			spoolRemaining -= file.SizeBytes
 		}
@@ -193,7 +193,7 @@ func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Executio
 	for _, file := range files {
 		capture, err := capturePipelineFileInto(ctx, root, file, spool)
 		if err != nil {
-			return biz.RuntimePublication{}, err
+			return biz.RuntimePublication{}, publicationFailure("capture", "content", err)
 		}
 		captured = append(captured, capture)
 	}
@@ -207,7 +207,7 @@ func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Executio
 			bundle, bundleBytes, bundleHash, err = bundlePipelineFiles(ctx, files, captured, manifest)
 		}
 		if err != nil {
-			return biz.RuntimePublication{}, err
+			return biz.RuntimePublication{}, publicationFailure("bundle", "archive", err)
 		}
 		defer bundle.Close()
 	}
@@ -215,36 +215,36 @@ func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Executio
 		remaining := int64(8 << 30)
 		for _, file := range files {
 			if file.SizeBytes > remaining {
-				return biz.RuntimePublication{}, biz.ErrInvalidWorkspaceOutput
+				return biz.RuntimePublication{}, publicationFailure("inventory", "budget", biz.ErrInvalidWorkspaceOutput)
 			}
 			remaining -= file.SizeBytes
 		}
 		if bundleBytes > remaining {
-			return biz.RuntimePublication{}, biz.ErrInvalidWorkspaceOutput
+			return biz.RuntimePublication{}, publicationFailure("inventory", "budget", biz.ErrInvalidWorkspaceOutput)
 		}
 		remaining -= bundleBytes
 		if int64(len(manifest)) > remaining {
-			return biz.RuntimePublication{}, biz.ErrInvalidWorkspaceOutput
+			return biz.RuntimePublication{}, publicationFailure("inventory", "budget", biz.ErrInvalidWorkspaceOutput)
 		}
 		if err := verifyFinetuningInventory(ctx, root, execution.Snapshot.OutputContract); err != nil {
-			return biz.RuntimePublication{}, err
+			return biz.RuntimePublication{}, publicationFailure("inventory", "content", err)
 		}
 	}
 	candidate := biz.RuntimePublication{LogicalKey: "cpu-p01:" + execution.ExecutionID}
 	prefix := scope.ApprovedPrefix + "/" + execution.ExecutionID + "/"
 	for i, file := range files {
-		object, err := uploadPipelineObject(ctx, client, scope, prefix+file.RelativePath, file.SizeBytes, file.SHA256, captured[i])
+		object, err := uploadPipelineObject(ctx, client, scope, prefix+file.RelativePath, file.SizeBytes, file.SHA256, captured[i], "put")
 		if err != nil {
 			return biz.RuntimePublication{}, err
 		}
 		candidate.Files = append(candidate.Files, biz.PublishedRuntimeFile{File: file, Object: object})
 	}
-	candidate.Manifest, err = uploadPipelineObject(ctx, client, scope, prefix+"output-manifest.json", int64(len(manifest)), manifestSHA, bytes.NewReader(manifest))
+	candidate.Manifest, err = uploadPipelineObject(ctx, client, scope, prefix+"output-manifest.json", int64(len(manifest)), manifestSHA, bytes.NewReader(manifest), "put-manifest")
 	if err != nil {
 		return biz.RuntimePublication{}, err
 	}
 	if bundle != nil {
-		object, err := uploadPipelineObject(ctx, client, scope, prefix+"bundle.tar", bundleBytes, bundleHash, bundle)
+		object, err := uploadPipelineObject(ctx, client, scope, prefix+"bundle.tar", bundleBytes, bundleHash, bundle, "put-bundle")
 		if err != nil {
 			return biz.RuntimePublication{}, err
 		}
@@ -590,18 +590,18 @@ func bundlePipelineFiles(ctx context.Context, files []cpup01.OutputFile, capture
 	return bundle, size, hex.EncodeToString(digest.Sum(nil)), nil
 }
 
-func uploadPipelineObject(ctx context.Context, client *s3.Client, scope cpup01.StorageScope, key string, size int64, digest string, content io.ReadSeeker) (cpup01.FixedObjectRef, error) {
+func uploadPipelineObject(ctx context.Context, client *s3.Client, scope cpup01.StorageScope, key string, size int64, digest string, content io.ReadSeeker, phase string) (cpup01.FixedObjectRef, error) {
 	if !biz.ValidStorageKey(key) || !strings.HasPrefix(key, scope.ApprovedPrefix+"/") {
-		return cpup01.FixedObjectRef{}, biz.ErrInvalidWorkspaceOutput
+		return cpup01.FixedObjectRef{}, publicationFailure(phase, "scope", biz.ErrInvalidWorkspaceOutput)
 	}
 	if _, err := content.Seek(0, io.SeekStart); err != nil {
-		return cpup01.FixedObjectRef{}, biz.ErrInvalidWorkspaceOutput
+		return cpup01.FixedObjectRef{}, publicationFailure(phase, "seek", biz.ErrInvalidWorkspaceOutput)
 	}
 	object := cpup01.FixedObjectRef{StorageConnectionID: scope.StorageConnectionID, Bucket: scope.Bucket, Key: key, SizeBytes: size, SHA256: digest}
 	response, err := client.PutObject(ctx, &s3.PutObjectInput{Bucket: aws.String(scope.Bucket), Key: aws.String(key), Body: content, ContentLength: aws.Int64(size), IfNoneMatch: aws.String("*")})
 	if err == nil {
 		if response == nil || response.VersionId == nil || !validPipelineVersion(*response.VersionId) {
-			return cpup01.FixedObjectRef{}, biz.ErrObjectSourceUnavailable
+			return cpup01.FixedObjectRef{}, publicationFailure(phase, "version", biz.ErrObjectSourceUnavailable)
 		}
 		version := *response.VersionId
 		object.VersionID = &version
@@ -609,22 +609,22 @@ func uploadPipelineObject(ctx context.Context, client *s3.Client, scope cpup01.S
 	}
 	var apiError smithy.APIError
 	if !errors.As(err, &apiError) || apiError.ErrorCode() != "PreconditionFailed" {
-		return cpup01.FixedObjectRef{}, pipelineIOError(ctx, biz.ErrObjectSourceUnavailable)
+		return cpup01.FixedObjectRef{}, publicationStorageFailure(ctx, phase, "storage", err)
 	}
 	// A retry may reuse only an existing immutable version with the same actual
 	// byte identity. HEAD supplies the version, never the content digest.
 	existing, err := client.HeadObject(ctx, &s3.HeadObjectInput{Bucket: aws.String(scope.Bucket), Key: aws.String(key)})
 	if err != nil {
-		return cpup01.FixedObjectRef{}, pipelineIOError(ctx, biz.ErrObjectSourceUnavailable)
+		return cpup01.FixedObjectRef{}, publicationStorageFailure(ctx, phase, "head-existing", err)
 	}
 	if existing == nil || existing.VersionId == nil || !validPipelineVersion(*existing.VersionId) {
-		return cpup01.FixedObjectRef{}, biz.ErrObjectVerification
+		return cpup01.FixedObjectRef{}, publicationFailure(phase, "version", biz.ErrObjectVerification)
 	}
 	version := *existing.VersionId
 	object.VersionID = &version
 	verified, err := objectstore.NewVerifier(client, scope.StorageConnectionID, size).Verify(ctx, scope, object)
 	if err != nil {
-		return cpup01.FixedObjectRef{}, err
+		return cpup01.FixedObjectRef{}, publicationFailure(phase, "verify-existing", err)
 	}
 	return verified.Object, nil
 }
