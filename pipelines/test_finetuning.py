@@ -31,6 +31,11 @@ class FinetuningAssembly(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             ir, platform = yaml.safe_load_all(output.read_text(encoding="utf-8"))
             json_format.ParseDict(ir, pipeline_spec_pb2.PipelineSpec())
+            # Observed KFP 2.16 / Argo v2 Pod naming. KCN uses the complete
+            # name in a VNic annotation suffix, whose Kubernetes limit is 63.
+            component_template = "metadata-0-2-retry-system-container-impl"
+            native_pod_name = ir["pipelineInfo"]["name"] + "-abcde-" + component_template + "-4294967295"
+            self.assertLessEqual(len(native_pod_name.encode("ascii")), 63)
             root_tasks = ir["root"]["dag"]["tasks"]
             body_name, = set(root_tasks) - {"finalize-close"}
             body = ir["components"][root_tasks[body_name]["componentRef"]["name"]]

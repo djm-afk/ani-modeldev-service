@@ -104,7 +104,9 @@ def compile_pipeline(configuration, output):
         kubernetes.empty_dir_mount(task, "component-tmp", "/tmp", size_limit="12Gi" if finetuning else "16Mi")
         return task
 
-    @dsl.pipeline(name="general-cpu")
+    # KFP/Argo includes this name in component Pod names; KCN also uses each
+    # Pod name as an annotation suffix, limited to 63 bytes by Kubernetes.
+    @dsl.pipeline(name="ft" if finetuning else "general-cpu")
     def pipeline(execution_id: str, spec_hash: str):
         # KFP records display_name as the managed role checked by ModelDev.
         run_id = dsl.PIPELINE_JOB_ID_PLACEHOLDER
