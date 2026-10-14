@@ -24,7 +24,8 @@ For CPU-P01, execute these commands only in the task's fixed Fedora checkout.
 Starting the runtime shell there is module verification, not target-cluster
 business acceptance.
 
-The minimum Go toolchain is 1.26.7, matching the verified Fedora release line.
+The minimum Go toolchain is 1.26.9. Fedora verification and release builds use
+this patched toolchain through task-scoped `GOTOOLCHAIN` selection.
 CI reads this requirement from `go.mod`. The prior Go 1.25.7 toolchain failed the
 standard-library vulnerability gate; use the declared minimum or a newer
 supported toolchain and retain the vulnerability scan. See the
