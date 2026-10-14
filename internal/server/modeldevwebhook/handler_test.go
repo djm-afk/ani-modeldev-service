@@ -560,6 +560,100 @@ func TestPinnedBackendDriversRetainOnlyOriginalExitEvidence(t *testing.T) {
 	}
 }
 
+func TestPinnedBackendDriverArgoEmissaryCommand(t *testing.T) {
+	config, reader := fixtureConfig(t)
+	driverImage := "example.invalid/kfp-driver@sha256:" + strings.Repeat("b", 64)
+	config.Bindings[0].Driver = &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}
+	handler, err := modeldevwebhook.New(config, reader, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewTLSServer(handler)
+	defer server.Close()
+	// Argo v3.7.3 workflowpod.go wraps the original command after all
+	// substitutions. The installed controller uses these default log options.
+	command := []string{"/var/run/argo/argoexec", "emissary", "--loglevel", "info", "--log-format", "text", "--gloglevel", "0", "--", "driver"}
+	for _, kind := range []string{"ROOT_DAG", "DAG", "CONTAINER"} {
+		t.Run(kind, func(t *testing.T) {
+			body := request(t, config, "cpu-v1", "workspace-name")
+			changePod(t, &body, func(p *corev1.Pod) {
+				delete(p.Labels, modeldevwebhook.ProfileLabel)
+				delete(p.Labels, modeldevwebhook.RoleLabel)
+				p.Spec.Containers[0].Image = driverImage
+				p.Spec.Containers[0].Command = append([]string(nil), command...)
+				p.Spec.Containers[0].Args = []string{"--type", kind, "--run_id", runID}
+			})
+			result := call(t, server, body)
+			if !result.Allowed || len(result.Patch) == 0 {
+				t.Fatalf("canonical Argo emissary driver refused: %v", result.Result)
+			}
+			var operations []map[string]any
+			if err := json.Unmarshal(result.Patch, &operations); err != nil {
+				t.Fatal(err)
+			}
+			for _, operation := range operations {
+				if strings.HasPrefix(operation["path"].(string), "/spec") {
+					t.Fatal("driver wrapping or backend compute policy changed")
+				}
+			}
+			patch, err := jsonpatch.DecodePatch(result.Patch)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mutated, err := patch.Apply(body.Request.Object.Raw)
+			if err != nil {
+				t.Fatal(err)
+			}
+			body.Request.Object.Raw = mutated
+			if replay := call(t, server, body); !replay.Allowed || len(replay.Patch) != 0 {
+				t.Fatal("wrapped driver replay not idempotent")
+			}
+			logging := body
+			logging.Request = body.Request.DeepCopy()
+			changePod(t, &logging, func(p *corev1.Pod) {
+				p.Spec.Containers[0].Command[3] = "warning"
+				p.Spec.Containers[0].Command[5] = "json"
+				p.Spec.Containers[0].Command[7] = "2"
+			})
+			if result := call(t, server, logging); !result.Allowed || len(result.Patch) != 0 {
+				t.Fatal("canonical controller log options refused or compute policy changed")
+			}
+			for _, test := range []struct {
+				name   string
+				mutate func(*corev1.Pod)
+			}{
+				{"other-wrapper", func(p *corev1.Pod) { p.Spec.Containers[0].Command[0] = "/usr/bin/argoexec" }},
+				{"other-subcommand", func(p *corev1.Pod) { p.Spec.Containers[0].Command[1] = "wait" }},
+				{"unknown-option", func(p *corev1.Pod) { p.Spec.Containers[0].Command[2] = "--config" }},
+				{"option-order", func(p *corev1.Pod) {
+					p.Spec.Containers[0].Command[2], p.Spec.Containers[0].Command[4] = "--log-format", "--loglevel"
+				}},
+				{"invalid-log-level", func(p *corev1.Pod) { p.Spec.Containers[0].Command[3] = "info;driver" }},
+				{"invalid-log-format", func(p *corev1.Pod) { p.Spec.Containers[0].Command[5] = "yaml" }},
+				{"noncanonical-glog-level", func(p *corev1.Pod) { p.Spec.Containers[0].Command[7] = "00" }},
+				{"missing-delimiter", func(p *corev1.Pod) { p.Spec.Containers[0].Command[8] = "driver" }},
+				{"other-executable", func(p *corev1.Pod) { p.Spec.Containers[0].Command[9] = "sh" }},
+				{"extra-command", func(p *corev1.Pod) { p.Spec.Containers[0].Command = append(p.Spec.Containers[0].Command, "other") }},
+				{"extra-prefix", func(p *corev1.Pod) {
+					p.Spec.Containers[0].Command = append([]string{"sh", "-c"}, p.Spec.Containers[0].Command...)
+				}},
+				{"other-image", func(p *corev1.Pod) { p.Spec.Containers[0].Image = supportImage }},
+				{"other-run", func(p *corev1.Pod) { p.Spec.Containers[0].Args[3] = namespaceUID }},
+				{"other-owner", func(p *corev1.Pod) { p.OwnerReferences[0].UID = types.UID(namespaceUID) }},
+			} {
+				t.Run(test.name, func(t *testing.T) {
+					bad := body
+					bad.Request = body.Request.DeepCopy()
+					changePod(t, &bad, test.mutate)
+					if call(t, server, bad).Allowed {
+						t.Fatal("untrusted wrapped driver accepted")
+					}
+				})
+			}
+		})
+	}
+}
+
 func TestNewFreezesCallerOwnedProfileAndDriverSlices(t *testing.T) {
 	config, reader := fixtureConfig(t)
 	driverImage := "example.invalid/kfp-driver@sha256:" + strings.Repeat("b", 64)

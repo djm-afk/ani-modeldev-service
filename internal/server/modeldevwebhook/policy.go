@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	admissionv1 "k8s.io/api/admission/v1"
@@ -362,7 +363,7 @@ func (handler *Handler) retainDriver(request *admissionv1.AdmissionRequest, pod 
 			seen[container.Name] = true
 			if category.primary && container.Name == "main" {
 				mainFound = true
-				if container.Image != driver.Image || !slices.Equal(container.Command, driver.Command) {
+				if container.Image != driver.Image || !matchesDriverCommand(container.Command, driver.Command) {
 					return denied(request, "driver_contract")
 				}
 				kind, kindOK := driverArgument(container.Args, "--type")
@@ -415,6 +416,23 @@ func (handler *Handler) retainDriver(request *admissionv1.AdmissionRequest, pod 
 		return response, "driver_retained"
 	}
 	return response, "already_conforming"
+}
+
+// Argo v3.7.3 workflow/controller/workflowpod.go prepends this exact emissary
+// grammar to the original command. Only its three logging options may vary;
+// the executable after the delimiter must still equal the frozen command.
+func matchesDriverCommand(command, frozen []string) bool {
+	if slices.Equal(command, frozen) {
+		return true
+	}
+	if len(command) != 9+len(frozen) || command[0] != "/var/run/argo/argoexec" || command[1] != "emissary" || command[2] != "--loglevel" || command[4] != "--log-format" || command[6] != "--gloglevel" || command[8] != "--" {
+		return false
+	}
+	if !slices.Contains([]string{"panic", "fatal", "error", "warning", "info", "debug", "trace"}, command[3]) || !slices.Contains([]string{"text", "json"}, command[5]) {
+		return false
+	}
+	level, err := strconv.Atoi(command[7])
+	return err == nil && strconv.Itoa(level) == command[7] && slices.Equal(command[9:], frozen)
 }
 
 func driverArgument(arguments []string, name string) (string, bool) {

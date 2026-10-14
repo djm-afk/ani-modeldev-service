@@ -124,6 +124,61 @@ def foundation(root):
     return rows
 
 
+def database_proof(cluster, database, expected_materials):
+    # A fresh psql invocation must observe the committed database. The exec
+    # process exit alone cannot prove that stdin ever reached PostgreSQL.
+    query = """
+    WITH runtime AS (SELECT * FROM pg_roles WHERE rolname='finetuning_runtime')
+    SELECT json_build_object(
+      'database', current_database(), 'owner_role', current_user,
+      'verified_at', clock_timestamp(),
+      'schema_materials', (SELECT COALESCE(json_agg(json_build_object('name', name, 'sha256', sha256) ORDER BY name), '[]'::json) FROM public.core_flow_schema_materials),
+      'runtime_role', (SELECT json_build_object('name', rolname, 'can_login', rolcanlogin, 'superuser', rolsuper, 'bypass_rls', rolbypassrls, 'create_database', rolcreatedb, 'create_role', rolcreaterole, 'replication', rolreplication, 'inherit', rolinherit) FROM runtime),
+      'role_memberships', (SELECT COALESCE(json_agg(parent.rolname ORDER BY parent.rolname), '[]'::json) FROM pg_auth_members membership JOIN pg_roles parent ON parent.oid=membership.roleid WHERE membership.member=(SELECT oid FROM runtime)),
+      'database_connect', has_database_privilege('finetuning_runtime', current_database(), 'CONNECT'),
+      'database_create', has_database_privilege('finetuning_runtime', current_database(), 'CREATE'),
+      'schema_usage', has_schema_privilege('finetuning_runtime', 'public', 'USAGE'),
+      'schema_create', has_schema_privilege('finetuning_runtime', 'public', 'CREATE'),
+      'table_privileges', (SELECT COALESCE(json_agg(json_build_object(
+        'name', relation.relname, 'owner', relation.relowner=(SELECT oid FROM runtime),
+        'select', has_table_privilege('finetuning_runtime', relation.oid, 'SELECT'),
+        'insert', has_table_privilege('finetuning_runtime', relation.oid, 'INSERT'),
+        'update', has_table_privilege('finetuning_runtime', relation.oid, 'UPDATE'),
+        'delete', has_table_privilege('finetuning_runtime', relation.oid, 'DELETE'),
+        'truncate', has_table_privilege('finetuning_runtime', relation.oid, 'TRUNCATE'),
+        'references', has_table_privilege('finetuning_runtime', relation.oid, 'REFERENCES'),
+        'trigger', has_table_privilege('finetuning_runtime', relation.oid, 'TRIGGER')) ORDER BY relation.relname), '[]'::json)
+        FROM pg_class relation JOIN pg_namespace ns ON ns.oid=relation.relnamespace WHERE ns.nspname='public' AND relation.relkind IN ('r','p')),
+      'sequence_privileges', (SELECT COALESCE(json_agg(json_build_object(
+        'name', relation.relname, 'owner', relation.relowner=(SELECT oid FROM runtime),
+        'usage', has_sequence_privilege('finetuning_runtime', relation.oid, 'USAGE'),
+        'select', has_sequence_privilege('finetuning_runtime', relation.oid, 'SELECT'),
+        'update', has_sequence_privilege('finetuning_runtime', relation.oid, 'UPDATE')) ORDER BY relation.relname), '[]'::json)
+        FROM pg_class relation JOIN pg_namespace ns ON ns.oid=relation.relnamespace WHERE ns.nspname='public' AND relation.relkind='S'));
+    """
+    raw = cluster.run(["-n", SYSTEM, "exec", "deployment/core-flow-postgresql", "--", "psql", "-X", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-U", "finetuning_owner", "-d", database, "-c", query])
+    try:
+        proof = json.loads(raw)
+    except (ValueError, TypeError):
+        raise RuntimeError("task database readback absent or malformed") from None
+    if not isinstance(proof, dict):
+        raise RuntimeError("task database readback absent or malformed")
+    role = proof.get("runtime_role")
+    if proof.get("database") != database or proof.get("owner_role") != "finetuning_owner" or proof.get("schema_materials") != expected_materials or not isinstance(role, dict) or role.get("name") != "finetuning_runtime" or role.get("can_login") is not True or any(role.get(flag) is not False for flag in ("superuser", "bypass_rls", "create_database", "create_role", "replication", "inherit")) or proof.get("role_memberships") != [] or proof.get("database_connect") is not True or proof.get("schema_usage") is not True or proof.get("database_create") is not False or proof.get("schema_create") is not False:
+        raise RuntimeError("task database migration or finite runtime role readback mismatch")
+    tables = proof.get("table_privileges", [])
+    if len(tables) < 2 or sum(row.get("name") == "core_flow_schema_materials" for row in tables) != 1:
+        raise RuntimeError("task database table privilege inventory absent")
+    for row in tables:
+        allowed = row["name"] != "core_flow_schema_materials"
+        if any(row.get(flag) is not allowed for flag in ("select", "insert", "update", "delete")) or any(row.get(flag) is not False for flag in ("owner", "truncate", "references", "trigger")):
+            raise RuntimeError("task database table runtime privileges differ from finite grants")
+    for row in proof.get("sequence_privileges", []):
+        if row.get("usage") is not True or row.get("select") is not True or row.get("update") is not False or row.get("owner") is not False:
+            raise RuntimeError("task database sequence runtime privileges differ from finite grants")
+    return proof
+
+
 def migrate(cluster, root, source):
     state = json.loads((root / ".private/foundation-state.json").read_bytes())
     if state["owner"] != OWNER or state["database"] != "finetuning_core_flow":
@@ -143,8 +198,9 @@ def migrate(cluster, root, source):
     script = "\n".join(sql).encode() + b"\n"
     private = root / ".private/migrate.sql"
     private.write_bytes(script)
-    cluster.run(["-n", SYSTEM, "exec", "deployment/core-flow-postgresql", "--", "psql", "-X", "-v", "ON_ERROR_STOP=1", "-U", "finetuning_owner", "-d", state["database"]], script)
-    save(root / "database-receipt.json", {"owner": OWNER, "database": state["database"], "namespace": SYSTEM, "runtime_role": "finetuning_runtime", "schema_materials": files, "business_rows_inserted": 0, "commands": cluster.receipts})
+    cluster.run(["-n", SYSTEM, "exec", "-i", "deployment/core-flow-postgresql", "--", "psql", "-X", "-v", "ON_ERROR_STOP=1", "-U", "finetuning_owner", "-d", state["database"]], script)
+    proof = database_proof(cluster, state["database"], files)
+    save(root / "database-receipt.json", {"owner": OWNER, "database": proof["database"], "namespace": SYSTEM, "runtime_role": proof["runtime_role"]["name"], "schema_materials": proof["schema_materials"], "database_verification": proof, "database_verification_sha256": hashlib.sha256(encoded(proof)).hexdigest(), "business_rows_inserted": 0, "commands": cluster.receipts})
     print(json.dumps({"phase": "TASK_DATABASE_MIGRATED", "receipt": str(root / "database-receipt.json"), "business_rows_inserted": 0}))
 
 
