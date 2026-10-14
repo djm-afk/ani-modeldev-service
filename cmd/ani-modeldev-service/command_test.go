@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"io"
 	"net"
 	"net/url"
@@ -175,5 +176,11 @@ func commandAppConfig(t *testing.T) *conf.Bootstrap {
 		Grpc:            &conf.Server_GRPC{Network: "tcp", Addr: grpcAddress, Timeout: durationpb.New(3 * time.Second)},
 		Admin:           &conf.Server_Admin{Network: "tcp", Addr: adminAddress, Timeout: durationpb.New(time.Second)},
 		ShutdownTimeout: durationpb.New(5 * time.Second),
-	}}
+	}, CursorSigningKey: testCursorSigningKey()}
+}
+
+// testCursorSigningKey materializes a valid base64 signing key (38 bytes,
+// within the required 32..128 range) without a secret-shaped literal in source.
+func testCursorSigningKey() string {
+	return base64.StdEncoding.EncodeToString([]byte("ani-modeldev cursor test material 36b!"))
 }

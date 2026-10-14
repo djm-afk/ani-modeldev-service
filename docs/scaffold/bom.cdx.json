@@ -44,11 +44,11 @@
       }
     ],
     "component": {
-      "bom-ref": "pkg:golang/github.com/zhangzhe-ctrl/ani-modeldev-service@v0.0.0-20000101000000-e7828e813996?type=module",
+      "bom-ref": "pkg:golang/github.com/zhangzhe-ctrl/ani-modeldev-service@v0.0.0-20000101000000-b8b461fa2f1f?type=module",
       "type": "application",
       "name": "github.com/zhangzhe-ctrl/ani-modeldev-service",
-      "version": "v0.0.0-20000101000000-e7828e813996",
-      "purl": "pkg:golang/github.com/zhangzhe-ctrl/ani-modeldev-service@v0.0.0-20000101000000-e7828e813996?goarch=amd64\u0026goos=linux\u0026type=module",
+      "version": "v0.0.0-20000101000000-b8b461fa2f1f",
+      "purl": "pkg:golang/github.com/zhangzhe-ctrl/ani-modeldev-service@v0.0.0-20000101000000-b8b461fa2f1f?goarch=amd64\u0026goos=linux\u0026type=module",
       "externalReferences": [
         {
           "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service",
@@ -2175,7 +2175,7 @@
   ],
   "dependencies": [
     {
-      "ref": "pkg:golang/github.com/zhangzhe-ctrl/ani-modeldev-service@v0.0.0-20000101000000-e7828e813996?type=module",
+      "ref": "pkg:golang/github.com/zhangzhe-ctrl/ani-modeldev-service@v0.0.0-20000101000000-b8b461fa2f1f?type=module",
       "dependsOn": [
         "pkg:golang/github.com/aws/aws-sdk-go-v2@v1.47.1?type=module",
         "pkg:golang/github.com/aws/aws-sdk-go-v2/service/s3@v1.113.4?type=module",

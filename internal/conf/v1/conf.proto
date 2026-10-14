@@ -13,6 +13,10 @@ message Bootstrap {
   GovernanceCommand command = 2;
   // Presence assembles the managed execution main flow alongside command.
   ManagedRuntime runtime = 3;
+  // Cursor signing key for list pagination: base64 of 32..128 bytes. Required
+  // whenever a query listener is assembled; list pagination is fail-closed
+  // without it, matching the Network cursor contract.
+  string cursor_signing_key = 4;
 }
 
 message ManagedRuntime {

@@ -29,9 +29,13 @@ type Bootstrap struct {
 	// assembles the real Governance command listener without plaintext fallback.
 	Command *GovernanceCommand `protobuf:"bytes,2,opt,name=command,proto3" json:"command,omitempty"`
 	// Presence assembles the managed execution main flow alongside command.
-	Runtime       *ManagedRuntime `protobuf:"bytes,3,opt,name=runtime,proto3" json:"runtime,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Runtime *ManagedRuntime `protobuf:"bytes,3,opt,name=runtime,proto3" json:"runtime,omitempty"`
+	// Cursor signing key for list pagination: base64 of 32..128 bytes. Required
+	// whenever a query listener is assembled; list pagination is fail-closed
+	// without it, matching the Network cursor contract.
+	CursorSigningKey string `protobuf:"bytes,4,opt,name=cursor_signing_key,json=cursorSigningKey,proto3" json:"cursor_signing_key,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Bootstrap) Reset() {
@@ -83,6 +87,13 @@ func (x *Bootstrap) GetRuntime() *ManagedRuntime {
 		return x.Runtime
 	}
 	return nil
+}
+
+func (x *Bootstrap) GetCursorSigningKey() string {
+	if x != nil {
+		return x.CursorSigningKey
+	}
+	return ""
 }
 
 type ManagedRuntime struct {
@@ -740,11 +751,12 @@ var File_conf_v1_conf_proto protoreflect.FileDescriptor
 
 const file_conf_v1_conf_proto_rawDesc = "" +
 	"\n" +
-	"\x12conf/v1/conf.proto\x12\aconf.v1\x1a\x1egoogle/protobuf/duration.proto\"\x9d\x01\n" +
+	"\x12conf/v1/conf.proto\x12\aconf.v1\x1a\x1egoogle/protobuf/duration.proto\"\xcb\x01\n" +
 	"\tBootstrap\x12'\n" +
 	"\x06server\x18\x01 \x01(\v2\x0f.conf.v1.ServerR\x06server\x124\n" +
 	"\acommand\x18\x02 \x01(\v2\x1a.conf.v1.GovernanceCommandR\acommand\x121\n" +
-	"\aruntime\x18\x03 \x01(\v2\x17.conf.v1.ManagedRuntimeR\aruntime\"\xfd\x04\n" +
+	"\aruntime\x18\x03 \x01(\v2\x17.conf.v1.ManagedRuntimeR\aruntime\x12,\n" +
+	"\x12cursor_signing_key\x18\x04 \x01(\tR\x10cursorSigningKey\"\xfd\x04\n" +
 	"\x0eManagedRuntime\x12(\n" +
 	"\x04step\x18\x01 \x01(\v2\x14.conf.v1.Server.GRPCR\x04step\x12)\n" +
 	"\x10certificate_file\x18\x02 \x01(\tR\x0fcertificateFile\x12(\n" +

@@ -2,6 +2,7 @@
 package conf
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net"
 	"net/url"
@@ -36,6 +37,12 @@ func (c *Bootstrap) Validate() error {
 			if err := validateAdmissionResolution(c.Command.AdmissionResolution); err != nil {
 				return err
 			}
+		}
+		// List pagination cursors are signed; a query listener without a usable
+		// key must fail closed rather than serve or emit unsigned cursors.
+		key, err := base64.StdEncoding.DecodeString(c.CursorSigningKey)
+		if err != nil || len(key) < 32 || len(key) > 128 {
+			return fmt.Errorf("cursor_signing_key must encode 32..128 bytes as base64")
 		}
 	}
 	if err := validateListener("grpc", c.Server.Grpc.Network, c.Server.Grpc.Addr, c.Server.Grpc.Timeout); err != nil {

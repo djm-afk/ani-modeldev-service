@@ -17,6 +17,9 @@ command:
   certificate_file: "${COMMAND_CERTIFICATE_FILE}"
   private_key_file: "${COMMAND_PRIVATE_KEY_FILE}"
   governance_dns_name: "${GOVERNANCE_DNS_NAME}"
+# base64 of 32..128 bytes; every replica must share one key or cursors stop
+# verifying across instances. List pagination fails closed without it.
+cursor_signing_key: "${CURSOR_SIGNING_KEY}"
 runtime:
   step:
     network: tcp

@@ -13,7 +13,7 @@ func validConfig() *Bootstrap {
 		Grpc:            &Server_GRPC{Network: "tcp", Addr: "127.0.0.1:19090", Timeout: durationpb.New(time.Second)},
 		Admin:           &Server_Admin{Network: "tcp", Addr: "127.0.0.1:19091", Timeout: durationpb.New(time.Second)},
 		ShutdownTimeout: durationpb.New(5 * time.Second),
-	}}
+	}, CursorSigningKey: testCursorKey()}
 }
 
 func TestBootstrapValidate(t *testing.T) {

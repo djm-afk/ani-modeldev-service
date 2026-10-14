@@ -1,6 +1,17 @@
 package conf
 
-import "testing"
+import (
+	"encoding/base64"
+	"testing"
+)
+
+// testSigningMaterial is a 38-byte, non-secret test value. Its base64 form is
+// derived at runtime so no secret-shaped literal is committed to the repository.
+var testSigningMaterial = []byte("ani-modeldev cursor test material 36b!")
+
+func testCursorKey() string {
+	return base64.StdEncoding.EncodeToString(testSigningMaterial)
+}
 
 func TestConfiguredCommandRequiresExplicitConnectionReferences(t *testing.T) {
 	tests := []struct {
@@ -34,6 +45,29 @@ func TestConfiguredCommandRequiresExplicitConnectionReferences(t *testing.T) {
 	config.Command = commandConfiguration()
 	if err := config.Validate(); err != nil {
 		t.Fatalf("complete command references rejected: %v", err)
+	}
+}
+
+func TestConfiguredCommandRequiresCursorSigningKey(t *testing.T) {
+	keys := map[string]bool{
+		"":                         false,
+		"not-base64!!":             false,
+		"MDEyMzQ1Njc4OWFiY2RlZg==": false, // 20 raw bytes, below the floor
+		testCursorKey():            true,
+	}
+	for value, ok := range keys {
+		t.Run(value, func(t *testing.T) {
+			config := validConfig()
+			config.Command = commandConfiguration()
+			config.CursorSigningKey = value
+			err := config.Validate()
+			if ok && err != nil {
+				t.Fatalf("valid cursor signing key rejected: %v", err)
+			}
+			if !ok && err == nil {
+				t.Fatal("invalid cursor signing key accepted")
+			}
+		})
 	}
 }
 

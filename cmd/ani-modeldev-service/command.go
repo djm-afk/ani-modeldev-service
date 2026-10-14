@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"errors"
 	"io"
 	"os"
@@ -24,14 +25,29 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
 )
 
+// newCursorCodec decodes the base64 signing key and builds the list-cursor
+// codec. Presence of the command listener already implies validation passed, so
+// a failure here is a startup error rather than a silent unsigned fallback.
+func newCursorCodec(encoded string) (*biz.CursorCodec, error) {
+	key, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return nil, errors.New("cursor signing key unavailable")
+	}
+	codec, err := biz.NewCursorCodec(key)
+	if err != nil {
+		return nil, errors.New("cursor signing key invalid")
+	}
+	return codec, nil
+}
+
 // Command assembly consumes mounted references only. It does not run schema
 // migrations, create roles, enable readiness, or fall back to another listener.
-func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceCommand, middlewares ...middleware.Middleware) (*kratosgrpc.Server, func(), error) {
+func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceCommand, codec *biz.CursorCodec, middlewares ...middleware.Middleware) (*kratosgrpc.Server, func(), error) {
 	pool, err := openCommandPool(config)
 	if err != nil {
 		return nil, nil, err
 	}
-	s, err := buildCommandServerWithPool(listener, config, pool, middlewares...)
+	s, err := buildCommandServerWithPool(listener, config, pool, codec, middlewares...)
 	if err != nil {
 		pool.Close()
 		return nil, nil, err
@@ -41,15 +57,15 @@ func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceComma
 
 // The runtime composition shares this restricted pool with all durable ports;
 // this builder never takes ownership of the caller's pool.
-func buildCommandServerWithPool(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
-	return buildCommandServerWithQuery(listener, config, pool, nil, middlewares...)
+func buildCommandServerWithPool(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, codec *biz.CursorCodec, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+	return buildCommandServerWithQuery(listener, config, pool, nil, codec, middlewares...)
 }
 
-func buildCommandServerWithQuery(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
-	return buildCommandServerWithCapabilities(listener, config, pool, query, nil, nil, middlewares...)
+func buildCommandServerWithQuery(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, codec *biz.CursorCodec, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+	return buildCommandServerWithCapabilities(listener, config, pool, query, nil, nil, codec, middlewares...)
 }
 
-func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, codec *biz.CursorCodec, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
 	failed := func(message string) (*kratosgrpc.Server, error) { return nil, errors.New(message) }
 	ca, err := readCommandMaterial(config.ClientCaFile, 1<<20)
 	if err != nil {
@@ -78,6 +94,9 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	if codec == nil {
+		return failed("query listener requires a cursor signing key")
+	}
 	command := service.NewCommand(execution.New(pool))
 	var admission modeldevv1.ModelDevAdmissionServiceServer
 	var management modeldevv1.ModelDevManagementServiceServer
@@ -103,6 +122,12 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 		} else if concrete, ok := query.(*service.Query); ok {
 			concrete.WithMaterials(materials)
 		}
+	}
+	// Every assembled query serves signed cursors; wire the codec regardless of
+	// whether the admission resolution branch created the query. A nil query
+	// still means "no query listener" and is left untouched.
+	if concrete, ok := query.(*service.Query); ok {
+		concrete.WithCursorCodec(codec)
 	}
 	s, err := server.NewGovernanceServicesServer(listener, server.CommandTLS{Certificate: certificate, ClientCAs: roots, GovernanceDNSName: config.GovernanceDnsName}, command, admission, query, server.GovernanceServices{Management: management, Operations: operations}, middlewares...)
 	if err != nil {

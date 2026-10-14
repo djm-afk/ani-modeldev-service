@@ -122,7 +122,7 @@ func presetDisplayName(presetID string) string {
 func materialPage(p *modeldevv1.PageRequest) (int, string, error) {
 	limit, after := 20, ""
 	if p != nil {
-		if !validMaterialMessage(p) || p.Limit > 100 || (p.Cursor != "" && !queryID(p.Cursor)) {
+		if !validMaterialMessage(p) || p.Limit > 100 || len(p.Cursor) > 2048 {
 			return 0, "", status.Error(codes.InvalidArgument, "invalid material page")
 		}
 		if p.Limit > 0 {
@@ -154,7 +154,7 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 	if r == nil || !validMaterialMessage(r) {
 		return nil, status.Error(codes.InvalidArgument, "invalid input query")
 	}
-	limit, after, err := materialPage(r.Page)
+	limit, cursorToken, err := materialPage(r.Page)
 	if err != nil {
 		return nil, err
 	}
@@ -171,6 +171,12 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 			return nil, status.Error(codes.InvalidArgument, "invalid input state")
 		}
 	}
+	binding := biz.CursorBinding{Kind: biz.CursorKindInputVersions, TenantID: scope.TenantID,
+		FilterKey: biz.CursorFilterKey(string(state))}
+	after, err := q.listCursor(binding, cursorToken)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid input page")
+	}
 	values, next, err := q.materials.Inputs(ctx, scope.TenantID, state, after, limit)
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
@@ -179,7 +185,11 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
-	response := &modeldevv1.ListInputVersionsResponse{NextCursor: next, Total: total}
+	response := &modeldevv1.ListInputVersionsResponse{Total: total}
+	response.NextCursor, err = q.nextListCursor(binding, next)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid input page")
+	}
 	for _, value := range values {
 		response.InputVersions = append(response.InputVersions, inputVersionView(value))
 	}
@@ -193,9 +203,15 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 	if r == nil || !validMaterialMessage(r) {
 		return nil, status.Error(codes.InvalidArgument, "invalid preset query")
 	}
-	limit, after, err := materialPage(r.Page)
+	limit, cursorToken, err := materialPage(r.Page)
 	if err != nil {
 		return nil, err
+	}
+	binding := biz.CursorBinding{Kind: biz.CursorKindPresets, TenantID: scope.TenantID,
+		FilterKey: biz.CursorFilterKey("")}
+	after, err := q.listCursor(binding, cursorToken)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid preset page")
 	}
 	releases, err := q.materials.Releases(ctx, scope.TenantID)
 	if err != nil {
@@ -240,7 +256,10 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 	response := &modeldevv1.ListPresetsResponse{Total: uint64(len(presets))}
 	if len(ids) > limit {
 		ids = ids[:limit]
-		response.NextCursor = ids[len(ids)-1]
+		response.NextCursor, err = q.nextListCursor(binding, ids[len(ids)-1])
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid preset page")
+		}
 	}
 	for _, id := range ids {
 		p := presets[id]
