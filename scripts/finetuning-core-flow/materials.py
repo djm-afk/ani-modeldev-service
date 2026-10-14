@@ -32,11 +32,11 @@ def certificate_materials(cluster, root):
         if r.returncode:
             raise RuntimeError("task certificate operation failed; private output suppressed")
     if not ca.exists():
-        openssl(["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(key), "-out", str(ca), "-days", "90", "-subj", "/CN=finetuning-core-flow-20261014-task-CA", "-addext", "basicConstraints=critical,CA:TRUE"])
+        openssl(["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(key), "-out", str(ca), "-days", "90", "-subj", "/CN=finetuning-core-flow-20261014-task-CA", "-addext", "basicConstraints=critical,CA:TRUE", "-addext", "keyUsage=critical,keyCertSign,cRLSign", "-addext", "subjectKeyIdentifier=hash", "-addext", "authorityKeyIdentifier=keyid:always"])
     if not leaf.exists():
         csr = private / "modeldev.csr"
         extensions = private / "modeldev.ext"
-        extensions.write_text("subjectAltName=DNS:ani-modeldev-service,DNS:modeldev." + SYSTEM + ".svc,DNS:modeldev." + SYSTEM + ".svc.cluster.local\nextendedKeyUsage=serverAuth\n")
+        extensions.write_text("subjectAltName=DNS:ani-modeldev-service,DNS:modeldev." + SYSTEM + ".svc,DNS:modeldev." + SYSTEM + ".svc.cluster.local\nbasicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\nsubjectKeyIdentifier=hash\nauthorityKeyIdentifier=keyid,issuer\n")
         openssl(["req", "-new", "-newkey", "rsa:2048", "-nodes", "-keyout", str(leafkey), "-out", str(csr), "-subj", "/CN=ani-modeldev-service"])
         openssl(["x509", "-req", "-in", str(csr), "-CA", str(ca), "-CAkey", str(key), "-CAcreateserial", "-out", str(leaf), "-days", "30", "-extfile", str(extensions)])
     for name, ns, secret in [("s3-ca.crt", "ani-platform", "ani-rustfs-tls"), ("kfp-ca.crt", "kubeflow", "ani-kfp-ca")]:
