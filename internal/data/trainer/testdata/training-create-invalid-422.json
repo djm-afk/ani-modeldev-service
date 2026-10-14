@@ -1,0 +1,19 @@
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {},
+  "status": "Failure",
+  "message": "trainjobs.trainer.kubeflow.org \"md-b7b52879-46da-441c-85f4-4b93c4d1c046\" is forbidden: ValidatingAdmissionPolicy 'ani-kfp-trainjob' with binding 'ani-kfp-trainjob' denied request: Use the fixed versioned runtime",
+  "reason": "Invalid",
+  "details": {
+    "name": "md-b7b52879-46da-441c-85f4-4b93c4d1c046",
+    "group": "trainer.kubeflow.org",
+    "kind": "trainjobs",
+    "causes": [
+      {
+        "message": "ValidatingAdmissionPolicy 'ani-kfp-trainjob' with binding 'ani-kfp-trainjob' denied request: Use the fixed versioned runtime"
+      }
+    ]
+  },
+  "code": 422
+}

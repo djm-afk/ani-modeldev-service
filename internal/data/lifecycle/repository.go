@@ -236,7 +236,7 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 	if rejected := state.TrainingRejection; rejected != nil {
 		if state.Training == nil || state.TrainingHandle != nil || state.Observation != nil || state.Publication != nil ||
 			rejected.RequestSHA256 != state.Training.RequestSHA256 || rejected.NamespaceUID != state.Workspace.NamespaceUID ||
-			(rejected.StatusCode != 400 && rejected.StatusCode != 403) || rejected.ObservedAt.IsZero() || !identity.DatabaseNow.Valid || rejected.ObservedAt.After(identity.DatabaseNow.Time) {
+			(rejected.StatusCode != 400 && rejected.StatusCode != 403 && rejected.StatusCode != 422) || rejected.ObservedAt.IsZero() || !identity.DatabaseNow.Valid || rejected.ObservedAt.After(identity.DatabaseNow.Time) {
 			return nil, biz.ErrPersistence
 		}
 	}
@@ -410,7 +410,7 @@ func (repository *Repository) RecordTrainingRejection(ctx context.Context, autho
 		state := &current.state
 		if state.Training == nil || state.Workspace == nil || state.TrainingHandle != nil || state.Observation != nil || state.Publication != nil ||
 			rejection.RequestSHA256 != state.Training.RequestSHA256 || rejection.NamespaceUID != state.Workspace.NamespaceUID ||
-			(rejection.StatusCode != 400 && rejection.StatusCode != 403) {
+			(rejection.StatusCode != 400 && rejection.StatusCode != 403 && rejection.StatusCode != 422) {
 			return false, biz.ErrRuntimeConflict
 		}
 		if existing := state.TrainingRejection; existing != nil {

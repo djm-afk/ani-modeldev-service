@@ -58,7 +58,7 @@ func (a *Adapter) CreateTraining(ctx context.Context, plan biz.TrainingPlan) (bi
 		if errors.As(err, &response) && !apierrors.IsUnexpectedServerError(err) {
 			status := response.Status()
 			if status.APIVersion == "v1" && status.Kind == "Status" && status.Status == metav1.StatusFailure &&
-				((status.Code == 400 && status.Reason == metav1.StatusReasonBadRequest) || (status.Code == 403 && status.Reason == metav1.StatusReasonForbidden)) {
+				((status.Code == 400 && status.Reason == metav1.StatusReasonBadRequest) || (status.Code == 403 && status.Reason == metav1.StatusReasonForbidden) || (status.Code == 422 && status.Reason == metav1.StatusReasonInvalid)) {
 				return biz.TrainingHandle{}, &biz.TrainingCreationRejection{RequestSHA256: plan.RequestSHA256, NamespaceUID: plan.Workspace.NamespaceUID, StatusCode: status.Code}
 			}
 		}
