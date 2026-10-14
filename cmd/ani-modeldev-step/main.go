@@ -148,6 +148,7 @@ func storageClient(config *storageConfig, provider aws.CredentialsProvider) (*s3
 	streamingTimeout := 2 * time.Minute
 	if config.StreamingTimeoutSeconds > 0 {
 		streamingTimeout = time.Duration(config.StreamingTimeoutSeconds) * time.Second
+		transport.ResponseHeaderTimeout = streamingTimeout
 	}
 	client := &http.Client{Transport: transport, Timeout: streamingTimeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	return s3.New(s3.Options{Region: config.Region, BaseEndpoint: aws.String(config.Endpoint), Credentials: provider, UsePathStyle: true, HTTPClient: client, RetryMaxAttempts: 1, RequestChecksumCalculation: aws.RequestChecksumCalculationWhenRequired, ResponseChecksumValidation: aws.ResponseChecksumValidationWhenRequired}), nil

@@ -59,8 +59,12 @@ func TestFinetuningStreamingStepStorageBudgetAndParentCancellation(t *testing.T)
 		if seconds == 0 {
 			want = 120 * time.Second
 		}
-		if httpClient.Timeout != want || decoded.TimeoutSeconds != 300 || httpClient.Transport.(*http.Transport).ResponseHeaderTimeout != 30*time.Second {
-			t.Fatalf("streaming budget %d changed original control/header budget: %+v", seconds, httpClient)
+		wantHeader := 30 * time.Second
+		if seconds > 0 {
+			wantHeader = want
+		}
+		if httpClient.Timeout != want || decoded.TimeoutSeconds != 300 || httpClient.Transport.(*http.Transport).ResponseHeaderTimeout != wantHeader {
+			t.Fatalf("streaming budget %d changed expected streaming/header or control budget: %+v", seconds, httpClient)
 		}
 		defer httpClient.CloseIdleConnections()
 		if seconds != 900 {
