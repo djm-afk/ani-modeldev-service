@@ -207,7 +207,9 @@ func TestFinetuningCoreFlow(t *testing.T) {
 			if state.CloseReviewReason != "" {
 				t.Fatal("close remains uncertain", state.CloseReviewReason)
 			}
-			if state.ClosedAt != nil {
+			// CLOSED is committed before the owner's external cleanup I/O. Keep
+			// that owner alive until its durable post-close receipt is complete.
+			if state.ClosedAt != nil && state.StepExitCleanup != nil && state.StepExitCleanup.CompletedAt != nil {
 				final = state
 				break
 			}
@@ -220,7 +222,7 @@ func TestFinetuningCoreFlow(t *testing.T) {
 		case <-ticker.C:
 		}
 	}
-	if final.Training == nil || final.TrainingHandle == nil || final.Observation == nil || !final.Observation.WritersAbsent || final.CloseEvidence == nil {
+	if final.Training == nil || final.TrainingHandle == nil || final.Observation == nil || !final.Observation.WritersAbsent || final.CloseEvidence == nil || final.StepExitCleanup == nil || final.StepExitCleanup.CompletedAt == nil {
 		t.Fatal("CLOSED lacks real computation writer facts")
 	}
 	if f.ExpectDeadline {
