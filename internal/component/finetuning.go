@@ -115,17 +115,22 @@ func (r *Runner) finetuningCompute(ctx context.Context, role string) error {
 		}
 		report.ResultManifest = ref
 	}
-	// A finished original process can report its late result within one bounded
-	// I/O window. This grants no new compute or continuation budget.
-	record, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	if reportErr := r.reportFinetuningResult(ctx, fine.Budgets, report); reportErr != nil {
+		return reportErr
+	}
+	return err
+}
+
+func (r *Runner) reportFinetuningResult(ctx context.Context, budgets cpup01.ComponentBudgets, report *modeldevv1.ReportFinetuningStepResultRequest) error {
+	// A finished original process can report its late result within the frozen
+	// RPC budget. This grants no new compute or continuation budget.
+	record, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Duration(budgets.RPCTimeoutSeconds)*time.Second)
 	defer cancel()
 	call, callErr := r.callContext(record)
 	if callErr != nil {
 		return callErr
 	}
-	if _, reportErr := r.client.ReportFinetuningStepResult(call, report); reportErr != nil {
-		return reportErr
-	}
+	_, err := r.client.ReportFinetuningStepResult(call, report)
 	return err
 }
 
