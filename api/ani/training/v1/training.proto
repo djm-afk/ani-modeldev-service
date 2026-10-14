@@ -10,6 +10,7 @@ option go_package = "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/train
 enum ExecutionKind {
   EXECUTION_KIND_UNSPECIFIED = 0;
   EXECUTION_KIND_GENERAL_TRAINING = 1;
+  EXECUTION_KIND_FINETUNING = 2;
 }
 
 enum DeliveryMode {
@@ -20,6 +21,7 @@ enum DeliveryMode {
 enum OutputKind {
   OUTPUT_KIND_UNSPECIFIED = 0;
   OUTPUT_KIND_CHECKPOINT = 1;
+  OUTPUT_KIND_MERGED_HF_MODEL = 2;
 }
 
 enum TrainingOutcome {
@@ -48,6 +50,11 @@ enum FileRole {
   FILE_ROLE_INPUT_MANIFEST = 5;
   FILE_ROLE_EXECUTION_MANIFEST = 6;
   FILE_ROLE_LOG = 7;
+  FILE_ROLE_HF_MODEL = 8;
+  FILE_ROLE_LORA_ADAPTER = 9;
+  FILE_ROLE_EXPORT_REPORT = 10;
+  FILE_ROLE_VERIFY_REPORT = 11;
+  FILE_ROLE_SOURCE_METADATA = 12;
 }
 
 // Values are typed before canonical hashing. Decimal values use the contract's
@@ -150,6 +157,7 @@ message RequiredOutput {
   FileRole role = 1;
   string relative_path = 2;
   int64 max_size_bytes = 3;
+  optional bool in_tar = 4;
 }
 
 message OutputContract {
@@ -160,6 +168,7 @@ message OutputContract {
   uint32 max_file_count = 5;
   int64 max_total_bytes = 6;
   bool create_tar_bundle = 7;
+  optional int64 max_tar_bytes = 8;
 }
 
 // A hash always describes actual file bytes, not an object-store ETag.

@@ -31,6 +31,7 @@ type Snapshot struct {
 	PublicationScope StorageScope               `json:"publication_scope"`
 	OutputContract   OutputContract             `json:"output_contract"`
 	DeadlineAt       time.Time                  `json:"deadline_at"`
+	Finetuning       *FinetuningSnapshot        `json:"finetuning,omitempty"`
 }
 
 type ReleaseSnapshot struct {
@@ -128,6 +129,7 @@ type RequiredOutput struct {
 	Role         string `json:"role"`
 	RelativePath string `json:"relative_path"`
 	MaxSizeBytes int64  `json:"max_size_bytes,string"`
+	InTar        *bool  `json:"in_tar,omitempty"`
 }
 
 type OutputContract struct {
@@ -138,6 +140,7 @@ type OutputContract struct {
 	MaxFileCount    uint32           `json:"max_file_count"`
 	MaxTotalBytes   int64            `json:"max_total_bytes,string"`
 	CreateTarBundle bool             `json:"create_tar_bundle"`
+	MaxTarBytes     *int64           `json:"max_tar_bytes,string,omitempty"`
 }
 
 // Canonical validates and returns v1 canonical UTF-8 bytes. It never resolves
@@ -164,6 +167,10 @@ func (snapshot Snapshot) Canonical() ([]byte, error) {
 		return snapshot.OutputContract.RequiredFiles[i].RelativePath < snapshot.OutputContract.RequiredFiles[j].RelativePath
 	})
 	snapshot.DeadlineAt = snapshot.DeadlineAt.UTC()
+	if snapshot.Finetuning != nil {
+		fine := canonicalFinetuningSnapshot(*snapshot.Finetuning)
+		snapshot.Finetuning = &fine
+	}
 	canonical, err := encodeCanonicalJSON(snapshot)
 	if err != nil {
 		return nil, fmt.Errorf("%w: snapshot encoding", ErrInvalidArgument)
@@ -188,7 +195,10 @@ func (snapshot Snapshot) Validate() error {
 	if snapshot.SchemaVersion != SnapshotSchemaVersion {
 		return invalid("schema_version")
 	}
-	if snapshot.Kind != "GENERAL_TRAINING" || snapshot.DeliveryMode != "SAVE_ARTIFACTS" {
+	if (snapshot.Kind != "GENERAL_TRAINING" && snapshot.Kind != "FINETUNING") || snapshot.DeliveryMode != "SAVE_ARTIFACTS" {
+		return invalid("capability")
+	}
+	if snapshot.Kind == "GENERAL_TRAINING" && snapshot.Finetuning != nil {
 		return invalid("capability")
 	}
 	for _, value := range []string{snapshot.Release.ReleaseID, snapshot.Release.PresetID, snapshot.Release.PipelineID, snapshot.Release.PipelineVersionID, snapshot.Input.InputVersionID, snapshot.Program.ImageVersionID, snapshot.Environment.BindingID, snapshot.Environment.NamespaceUID, snapshot.Environment.ExperimentID} {
@@ -208,7 +218,7 @@ func (snapshot Snapshot) Validate() error {
 		return invalid(field)
 	}
 	input := snapshot.Input
-	if input.Format != "CSV" || input.SchemaVersion != "ani.cpu.csv.v1" || input.RowCount != 1024 || input.FeatureCount != 16 {
+	if snapshot.Kind == "GENERAL_TRAINING" && (input.Format != "CSV" || input.SchemaVersion != "ani.cpu.csv.v1" || input.RowCount != 1024 || input.FeatureCount != 16) {
 		return invalid("fixed CSV contract")
 	}
 	object := input.Object
@@ -241,14 +251,18 @@ func (snapshot Snapshot) Validate() error {
 			return invalid("resolved args")
 		}
 	}
-	if len(program.ResolvedParameters) != 3 {
+	if snapshot.Kind == "GENERAL_TRAINING" && len(program.ResolvedParameters) != 3 {
 		return invalid("complete resolved parameters")
 	}
 	// Reuse the accepted parameter grammar with this snapshot's real IDs.
 	// This is only a local validation value, never a submitted user intent.
 	parameterCheck := Intent{Name: "snapshot-validation", Kind: snapshot.Kind, PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID, ImageVersionID: &program.ImageVersionID, GeneralParameters: &program.ResolvedParameters}
-	if err := validateIntent(parameterCheck); err != nil {
-		return invalid("resolved parameters")
+	if snapshot.Kind == "GENERAL_TRAINING" {
+		if err := validateIntent(parameterCheck); err != nil {
+			return invalid("resolved parameters")
+		}
+	} else if field := invalidFinetuningSnapshot(snapshot); field != "" {
+		return invalid(field)
 	}
 	if field := invalidCPUResources(snapshot.Resources); field != "" {
 		return invalid(field)
@@ -276,7 +290,7 @@ func (snapshot Snapshot) Validate() error {
 	if !validSnapshotReference(scope.StorageConnectionID) || !validSnapshotDNSName(scope.Bucket) || !validSnapshotPath(scope.ApprovedPrefix) || !validSnapshotReference(scope.CredentialReference) {
 		return invalid("publication scope")
 	}
-	if field := invalidOutputContract(snapshot.OutputContract); field != "" {
+	if field := invalidOutputContractForKind(snapshot.Kind, snapshot.OutputContract); field != "" {
 		return invalid(field)
 	}
 	deadline := snapshot.DeadlineAt.UTC()

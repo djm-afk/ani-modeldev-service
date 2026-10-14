@@ -6,6 +6,23 @@ Only `execution_id` and `spec_hash` are Run parameters. Tenant and infrastructur
 bindings come from mounted owner configuration; the service resolves the original
 operation only after checking the current workload and the frozen KFP Run.
 
+The same compiler also accepts an optional `kind: FINETUNING` deployment binding.
+It then assembles `prepare → train-wait → export → verify → collect → publish →
+register → close` with the same failure finalizer. The register component first
+confirms actual published object versions and uploader termination. Without a
+configured Model provider it records the original registration intent and fails
+with an explicit dependency error; the owner closes the real resources. This
+does not enable a public creation mode or manufacture a Model READY receipt.
+
+The fine tuning image uses `finetuning-step.Dockerfile` with the verified workload
+OCI manifest as `WORKLOAD_IMAGE` and the static step binary from the final pushed
+commit. Fine tuning has disk `/tmp`, a 20Gi workspace, separate export/verify
+subpath mounts and fixed stage limits. Pinned KFP 2.16.0 does not encode read-only
+PVC mounts, root filesystem or ephemeral-storage resource requests. ENV must
+provide and validate those fields for the isolated task namespace before live
+acceptance; do not silently add unsupported fields to the IR or weaken the
+workspace contract. The compiler labels the role as `ani.modeldev/step-role`.
+
 ```sh
 python3 -m venv /absolute/task/kfp-venv
 /absolute/task/kfp-venv/bin/pip install -r pipelines/requirements.txt

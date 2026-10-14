@@ -29,4 +29,5 @@ type ModeldevInputVersion struct {
 	VerifiedFeatureCount  pgtype.Int4
 	FailureCode           pgtype.Text
 	FailureObservedAt     pgtype.Timestamptz
+	Format                string
 }

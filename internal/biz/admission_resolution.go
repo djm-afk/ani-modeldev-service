@@ -83,6 +83,7 @@ type AdmissionResolver struct {
 	releases AdmissionReleaseReader
 	inputs   AdmissionInputReader
 	facts    AdmissionFactsReader
+	models   FinetuningModelFactsReader
 }
 
 func NewAdmissionResolver(releases AdmissionReleaseReader, inputs AdmissionInputReader) *AdmissionResolver {
@@ -140,7 +141,7 @@ func (resolver *AdmissionResolver) Resolve(ctx context.Context, request Admissio
 		return AdmissionResolution{}, err
 	}
 	if release.ReleaseID != strings.ToLower(request.Release.ReleaseID) || release.PresetID != intent.PresetID ||
-		release.Kind != intent.Kind || release.Program.ParameterContractVersion != "ani.cpu.mlp.parameters.v1" ||
+		release.Kind != intent.Kind || !supportedAdmissionProgram(release) ||
 		release.ExecutionTimeoutSeconds == 0 ||
 		(intent.ImageVersionID != nil && *intent.ImageVersionID != release.Program.ImageVersionID) {
 		return AdmissionResolution{}, ErrNoCompatibleRelease
@@ -155,8 +156,9 @@ func (resolver *AdmissionResolver) Resolve(ctx context.Context, request Admissio
 	if !strings.EqualFold(version.Import.TenantID, request.TenantID) || version.Import.InputVersionID != intent.DatasetVersionID {
 		return AdmissionResolution{}, ErrPersistence
 	}
-	if version.State != InputStateReady || version.Verification == nil || version.Failure != nil || version.Verification.ValidateFor(version.Import) != nil {
-		return AdmissionResolution{}, ErrAdmissionInputNotReady
+	input, err := verifiedAdmissionInput(version, intent.Kind)
+	if err != nil {
+		return AdmissionResolution{}, err
 	}
 	if !compatibleAdmissionFacts(facts, release, version.Import.Object) {
 		return AdmissionResolution{}, ErrAdmissionEnvironmentNotReady
@@ -164,6 +166,20 @@ func (resolver *AdmissionResolver) Resolve(ctx context.Context, request Admissio
 	// Parsed Release defaults and canonical explicit parameters share the same
 	// registered grammar. Merge copies, preserving the original Intent presence.
 	parameters := slices.Clone(release.Program.DefaultParameters)
+	var finetuning *cpup01.FinetuningSnapshot
+	if intent.Kind == "FINETUNING" {
+		if resolver.models == nil {
+			return AdmissionResolution{}, ErrFinetuningNotEnabled
+		}
+		parameters, err = cpup01.ResolveFinetuningParameters(release.Program, *intent.Finetuning)
+		if err != nil {
+			return AdmissionResolution{}, err
+		}
+		finetuning, err = resolver.resolveFinetuningModelFacts(ctx, request.TenantID, intent, release, parameters, input.Object)
+		if err != nil {
+			return AdmissionResolution{}, err
+		}
+	}
 	if intent.GeneralParameters != nil {
 		for _, selected := range *intent.GeneralParameters {
 			matched := false
@@ -179,7 +195,12 @@ func (resolver *AdmissionResolver) Resolve(ctx context.Context, request Admissio
 			}
 		}
 	}
-	arguments, err := resolveAdmissionArguments(release.Program.ArgsTemplate, parameters, facts, version.Import.Object)
+	var arguments []string
+	if finetuning != nil {
+		arguments, err = resolveFinetuningArguments(release.Program.ArgsTemplate, input.Object, finetuning.BaseModel)
+	} else {
+		arguments, err = resolveAdmissionArguments(release.Program.ArgsTemplate, parameters, facts, version.Import.Object)
+	}
 	if err != nil {
 		return AdmissionResolution{}, err
 	}
@@ -195,16 +216,14 @@ func (resolver *AdmissionResolver) Resolve(ctx context.Context, request Admissio
 			PipelineID:                release.PipelineID, PipelineVersionID: release.PipelineVersionID,
 			PipelineIRSHA256: release.PipelineIRSHA256, Runtime: release.Runtime,
 		},
-		Input: cpup01.InputRef{
-			InputVersionID: version.Import.InputVersionID, Object: version.Verification.Object, Format: "CSV",
-			SchemaVersion: version.Verification.SchemaVersion, RowCount: version.Verification.RowCount, FeatureCount: version.Verification.FeatureCount,
-		},
+		Input: input,
 		Program: cpup01.ProgramRef{
 			ImageVersionID: release.Program.ImageVersionID, ImageDigest: release.Program.ImageDigest,
 			Command: release.Program.Command, ResolvedArgs: arguments, ResolvedParameters: parameters,
 		},
 		Resources: release.Resources, Environment: facts.Environment, Workspace: release.Workspace,
 		PublicationScope: facts.PublicationScope, OutputContract: release.OutputContract, DeadlineAt: deadline,
+		Finetuning: finetuning,
 	}
 	canonical, err := snapshot.Canonical()
 	if err != nil {

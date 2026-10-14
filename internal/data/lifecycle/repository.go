@@ -218,7 +218,14 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 		if state.Workspace == nil {
 			return nil, biz.ErrPersistence
 		}
-		expected, err := biz.FreezeTrainingPlan(admitted, *state.Workspace)
+		var starts []time.Time
+		if state.Training.FinetuningTiming != nil {
+			starts = []time.Time{state.Training.FinetuningTiming.AdmittedAt}
+			if !identity.DatabaseNow.Valid || state.Training.FinetuningTiming.AdmittedAt.After(identity.DatabaseNow.Time) {
+				return nil, biz.ErrPersistence
+			}
+		}
+		expected, err := biz.FreezeTrainingPlan(admitted, *state.Workspace, starts...)
 		if err != nil || !reflect.DeepEqual(expected, *state.Training) {
 			return nil, biz.ErrPersistence
 		}
@@ -264,6 +271,23 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 		return nil, biz.ErrPersistence
 	}
 	current := &runtimeTransaction{transaction: tx, queries: queries, tenantID: tenantID, executionID: executionID, execution: admitted, state: state, now: identity.DatabaseNow.Time.UTC()}
+	if !validFinetuningStarts(current) {
+		return nil, biz.ErrPersistence
+	}
+	if !validRegistrationFacts(current) {
+		return nil, biz.ErrPersistence
+	}
+	if len(state.FinetuningSteps) > 0 {
+		authority, err := submissionsql.New(tx).GetRunAuthorityRow(ctx, submissionsql.GetRunAuthorityRowParams{TenantID: tenantID, ExecutionID: executionID})
+		if err != nil {
+			return nil, biz.ErrPersistence
+		}
+		for _, start := range state.FinetuningSteps {
+			if start.Binding.RunID != authority.RunID.String() || start.Binding.WorkflowUID != authority.WorkflowUid || start.Binding.SpecHash != authority.SpecHash {
+				return nil, biz.ErrPersistence
+			}
+		}
+	}
 	if state.ClosedAt != nil {
 		if err := validateCommittedClose(ctx, current); err != nil {
 			return nil, err
@@ -340,7 +364,7 @@ func (repository *Repository) ReserveTraining(ctx context.Context, authority biz
 		if err := requireOpen(current); err != nil {
 			return false, err
 		}
-		plan, err := biz.FreezeTrainingPlan(current.execution, *current.state.Workspace)
+		plan, err := biz.FreezeTrainingPlan(current.execution, *current.state.Workspace, current.now)
 		if err != nil {
 			return false, err
 		}
@@ -481,7 +505,10 @@ func (repository *Repository) ConfirmRuntimeClosed(ctx context.Context, authorit
 		if generation == 0 || current.state.CloseGeneration != generation {
 			return false, biz.ErrRuntimeConflict
 		}
-		if !validCloseEvidence(authority, current.state.CloseReason, evidence) {
+		if !validExecutionCloseEvidence(current.execution, authority, current.state.CloseReason, evidence) {
+			return false, biz.ErrRuntimeNotReady
+		}
+		if !finetuningStartsTerminated(current.state, authority, evidence) {
 			return false, biz.ErrRuntimeNotReady
 		}
 		// Recheck retained Run identities under the same lock as observations.

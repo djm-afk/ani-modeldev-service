@@ -16,9 +16,16 @@ import (
 // A separate provider is created for this process's one execution and purpose.
 // AWS refresh invokes the same authenticated owner API before the session ends;
 // no permanent RustFS credential is mounted in or returned to the component.
-func stepStorageCredentials(client modeldevv1.ModelDevStepServiceClient, tenant, tokenFile string, claim *modeldevv1.StepContext) (*aws.CredentialsCache, error) {
+func stepStorageCredentials(client modeldevv1.ModelDevStepServiceClient, tenant, tokenFile string, claim *modeldevv1.StepContext, baseRead ...bool) (*aws.CredentialsCache, error) {
 	if client == nil || !canonicalUUID(tenant) || claim == nil || claim.Identity == nil || claim.Association == nil ||
 		(claim.Step != modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE && claim.Step != modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH) {
+		return nil, component.ErrConfiguration
+	}
+	if len(baseRead) > 1 {
+		return nil, component.ErrConfiguration
+	}
+	readBase := len(baseRead) == 1 && baseRead[0]
+	if readBase && claim.Step != modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE {
 		return nil, component.ErrConfiguration
 	}
 	frozen := proto.Clone(claim).(*modeldevv1.StepContext)
@@ -48,7 +55,7 @@ func stepStorageCredentials(client modeldevv1.ModelDevStepServiceClient, tenant,
 		if err != nil || digest != frozen.Identity.ExecutionSpecHash || snapshot.Environment.NamespaceName != frozen.Association.NamespaceName || snapshot.Environment.NamespaceUID != frozen.Association.NamespaceUid {
 			return aws.Credentials{}, component.ErrConfiguration
 		}
-		response, err := client.GetStorageCredentials(call, &modeldevv1.GetStorageCredentialsRequest{Context: frozen})
+		response, err := client.GetStorageCredentials(call, &modeldevv1.GetStorageCredentialsRequest{Context: frozen, ReadBaseModel: readBase})
 		if err != nil || response == nil || !proto.Equal(response.Identity, configuration.Identity) || response.Step != frozen.Step {
 			return aws.Credentials{}, component.ErrConfiguration
 		}
@@ -63,6 +70,12 @@ func stepStorageCredentials(client modeldevv1.ModelDevStepServiceClient, tenant,
 		}
 		if frozen.Step == modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE {
 			input := snapshot.Input.Object
+			if readBase {
+				if snapshot.Kind != "FINETUNING" || snapshot.Finetuning == nil {
+					return aws.Credentials{}, component.ErrConfiguration
+				}
+				input = snapshot.Finetuning.BaseModel.Object
+			}
 			if value.StorageConnectionId != input.StorageConnectionID || value.Bucket != input.Bucket || value.GetObjectKey() != input.Key || value.GetObjectPrefix() != "" {
 				return aws.Credentials{}, component.ErrConfiguration
 			}

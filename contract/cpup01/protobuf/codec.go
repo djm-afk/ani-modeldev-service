@@ -19,9 +19,13 @@ func EncodeIntent(intent cpup01.Intent) (*modeldevv1.UserIntent, error) {
 		return nil, err
 	}
 	message := &modeldevv1.UserIntent{
-		Name: intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING,
+		Name: intent.Name, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+intent.Kind]),
 		PresetId: intent.PresetID, DatasetVersionId: intent.DatasetVersionID,
 		ImageVersionId: cloneString(intent.ImageVersionID), SourceExecutionId: cloneString(intent.SourceExecutionID),
+		BaseModelVersionId: cloneString(intent.BaseModelVersionID), TargetModelId: cloneString(intent.TargetModelID), NewModelName: cloneString(intent.NewModelName),
+	}
+	if intent.Finetuning != nil {
+		message.Finetuning = &modeldevv1.FinetuningParameters{LearningRate: cloneString(intent.Finetuning.LearningRate), MaxSteps: cloneInt64(intent.Finetuning.MaxSteps)}
 	}
 	if intent.GeneralParameters != nil {
 		parameters, err := encodeParameters(*intent.GeneralParameters)
@@ -44,6 +48,10 @@ func DecodeIntent(message *modeldevv1.UserIntent) (cpup01.Intent, error) {
 		Name: message.Name, Kind: strings.TrimPrefix(message.Kind.String(), "EXECUTION_KIND_"),
 		PresetID: message.PresetId, DatasetVersionID: message.DatasetVersionId,
 		ImageVersionID: cloneString(message.ImageVersionId), SourceExecutionID: cloneString(message.SourceExecutionId),
+		BaseModelVersionID: cloneString(message.BaseModelVersionId), TargetModelID: cloneString(message.TargetModelId), NewModelName: cloneString(message.NewModelName),
+	}
+	if message.Finetuning != nil {
+		intent.Finetuning = &cpup01.FinetuningParameters{LearningRate: cloneString(message.Finetuning.LearningRate), MaxSteps: cloneInt64(message.Finetuning.MaxSteps)}
 	}
 	if message.GeneralParameters != nil {
 		parameters, err := decodeParameters(message.GeneralParameters.Values)
@@ -77,10 +85,10 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 	}
 	files := make([]*trainingv1.RequiredOutput, 0, len(snapshot.OutputContract.RequiredFiles))
 	for _, file := range snapshot.OutputContract.RequiredFiles {
-		files = append(files, &trainingv1.RequiredOutput{Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+file.Role]), RelativePath: file.RelativePath, MaxSizeBytes: file.MaxSizeBytes})
+		files = append(files, &trainingv1.RequiredOutput{Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+file.Role]), RelativePath: file.RelativePath, MaxSizeBytes: file.MaxSizeBytes, InTar: cloneBool(file.InTar)})
 	}
-	return &modeldevv1.ExecutionSnapshot{
-		SchemaVersion: snapshot.SchemaVersion, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING,
+	message := &modeldevv1.ExecutionSnapshot{
+		SchemaVersion: snapshot.SchemaVersion, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+snapshot.Kind]),
 		DeliveryMode: trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS,
 		Release: &modeldevv1.ReleaseSnapshot{
 			ReleaseId: snapshot.Release.ReleaseID, ReleaseDigest: snapshot.Release.ReleaseDigest, PresetId: snapshot.Release.PresetID,
@@ -99,9 +107,13 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 		},
 		Workspace:        &trainingv1.WorkspaceContract{Mode: trainingv1.WorkspaceMode(trainingv1.WorkspaceMode_value["WORKSPACE_MODE_"+snapshot.Workspace.Mode]), StorageClass: snapshot.Workspace.StorageClass, CapacityBytes: snapshot.Workspace.CapacityBytes, InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath},
 		PublicationScope: &modeldevv1.StorageScope{StorageConnectionId: snapshot.PublicationScope.StorageConnectionID, Bucket: snapshot.PublicationScope.Bucket, ApprovedPrefix: snapshot.PublicationScope.ApprovedPrefix, CredentialReference: snapshot.PublicationScope.CredentialReference},
-		OutputContract:   &trainingv1.OutputContract{SchemaVersion: snapshot.OutputContract.SchemaVersion, OutputKind: trainingv1.OutputKind_OUTPUT_KIND_CHECKPOINT, DeliveryMode: trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS, RequiredFiles: files, MaxFileCount: snapshot.OutputContract.MaxFileCount, MaxTotalBytes: snapshot.OutputContract.MaxTotalBytes, CreateTarBundle: snapshot.OutputContract.CreateTarBundle},
+		OutputContract:   &trainingv1.OutputContract{SchemaVersion: snapshot.OutputContract.SchemaVersion, OutputKind: trainingv1.OutputKind(trainingv1.OutputKind_value["OUTPUT_KIND_"+snapshot.OutputContract.OutputKind]), DeliveryMode: trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS, RequiredFiles: files, MaxFileCount: snapshot.OutputContract.MaxFileCount, MaxTotalBytes: snapshot.OutputContract.MaxTotalBytes, CreateTarBundle: snapshot.OutputContract.CreateTarBundle, MaxTarBytes: cloneInt64(snapshot.OutputContract.MaxTarBytes)},
 		DeadlineAt:       timestamppb.New(snapshot.DeadlineAt.UTC()),
-	}, nil
+	}
+	if snapshot.Finetuning != nil {
+		message.Finetuning = encodeFinetuningSnapshot(*snapshot.Finetuning)
+	}
+	return message, nil
 }
 
 func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, error) {
@@ -143,7 +155,7 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 		if file == nil {
 			return cpup01.Snapshot{}, invalid("missing required output")
 		}
-		files = append(files, cpup01.RequiredOutput{Role: strings.TrimPrefix(file.Role.String(), "FILE_ROLE_"), RelativePath: file.RelativePath, MaxSizeBytes: file.MaxSizeBytes})
+		files = append(files, cpup01.RequiredOutput{Role: strings.TrimPrefix(file.Role.String(), "FILE_ROLE_"), RelativePath: file.RelativePath, MaxSizeBytes: file.MaxSizeBytes, InTar: cloneBool(file.InTar)})
 	}
 	snapshot := cpup01.Snapshot{
 		SchemaVersion: message.SchemaVersion, Kind: strings.TrimPrefix(message.Kind.String(), "EXECUTION_KIND_"), DeliveryMode: strings.TrimPrefix(message.DeliveryMode.String(), "DELIVERY_MODE_"),
@@ -163,8 +175,15 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 		},
 		Workspace:        cpup01.WorkspaceContract{Mode: strings.TrimPrefix(message.Workspace.Mode.String(), "WORKSPACE_MODE_"), StorageClass: message.Workspace.StorageClass, CapacityBytes: message.Workspace.CapacityBytes, InputSubpath: message.Workspace.InputSubpath, TrainingSubpath: message.Workspace.TrainingSubpath, ReportsSubpath: message.Workspace.ReportsSubpath, PublicationSubpath: message.Workspace.PublicationSubpath},
 		PublicationScope: cpup01.StorageScope{StorageConnectionID: message.PublicationScope.StorageConnectionId, Bucket: message.PublicationScope.Bucket, ApprovedPrefix: message.PublicationScope.ApprovedPrefix, CredentialReference: message.PublicationScope.CredentialReference},
-		OutputContract:   cpup01.OutputContract{SchemaVersion: message.OutputContract.SchemaVersion, OutputKind: strings.TrimPrefix(message.OutputContract.OutputKind.String(), "OUTPUT_KIND_"), DeliveryMode: strings.TrimPrefix(message.OutputContract.DeliveryMode.String(), "DELIVERY_MODE_"), RequiredFiles: files, MaxFileCount: message.OutputContract.MaxFileCount, MaxTotalBytes: message.OutputContract.MaxTotalBytes, CreateTarBundle: message.OutputContract.CreateTarBundle},
+		OutputContract:   cpup01.OutputContract{SchemaVersion: message.OutputContract.SchemaVersion, OutputKind: strings.TrimPrefix(message.OutputContract.OutputKind.String(), "OUTPUT_KIND_"), DeliveryMode: strings.TrimPrefix(message.OutputContract.DeliveryMode.String(), "DELIVERY_MODE_"), RequiredFiles: files, MaxFileCount: message.OutputContract.MaxFileCount, MaxTotalBytes: message.OutputContract.MaxTotalBytes, CreateTarBundle: message.OutputContract.CreateTarBundle, MaxTarBytes: cloneInt64(message.OutputContract.MaxTarBytes)},
 		DeadlineAt:       message.DeadlineAt.AsTime(),
+	}
+	if message.Finetuning != nil {
+		fine, err := decodeFinetuningSnapshot(message.Finetuning)
+		if err != nil {
+			return cpup01.Snapshot{}, err
+		}
+		snapshot.Finetuning = &fine
 	}
 	if err := snapshot.Validate(); err != nil {
 		return cpup01.Snapshot{}, err

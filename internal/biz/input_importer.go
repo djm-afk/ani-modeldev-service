@@ -38,6 +38,9 @@ func (importer *InputImporter) ImportCSV(ctx context.Context, request InputImpor
 	if err := request.Validate(); err != nil {
 		return InputVersion{}, err
 	}
+	if request.InputFormat() != "CSV" {
+		return InputVersion{}, ErrInvalidInput
+	}
 	if importer == nil || importer.repository == nil || importer.verifier == nil {
 		return InputVersion{}, ErrPersistence
 	}

@@ -149,7 +149,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 		}
 	}
-	tasks, err := resolvedManagedTasks(workflow, run.Tasks, pods.Items)
+	tasks, err := resolvedManagedTasksForKind(workflow, run.Tasks, pods.Items, execution.Snapshot.Kind)
 	if err != nil {
 		return biz.ManagedCloseEvidence{}, err
 	}

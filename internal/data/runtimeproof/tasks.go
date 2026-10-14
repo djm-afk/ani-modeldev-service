@@ -9,6 +9,10 @@ import (
 )
 
 func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured) ([]kfp.ManagedTask, error) {
+	return resolvedManagedTasksForKind(workflow, tasks, pods, "GENERAL_TRAINING")
+}
+
+func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured, kind string) ([]kfp.ManagedTask, error) {
 	// The original top-level Pod association is retained for older adapters.
 	// The live 2.16 response instead supplies controller node references.
 	legacy := len(tasks) > 0
@@ -46,6 +50,10 @@ func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.Manag
 		}
 		switch name {
 		case "workspace-name", "prepare", "train-wait", "collect", "publish", "close", "close-finalizer":
+		case "export", "verify", "register":
+			if kind != "FINETUNING" {
+				continue
+			}
 		default:
 			continue
 		}

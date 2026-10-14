@@ -288,8 +288,11 @@ type ObjectStorageConnection struct {
 	CredentialsFile string                 `protobuf:"bytes,4,opt,name=credentials_file,json=credentialsFile,proto3" json:"credentials_file,omitempty"`
 	ConnectionId    string                 `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	MaxObjectBytes  int64                  `protobuf:"varint,6,opt,name=max_object_bytes,json=maxObjectBytes,proto3" json:"max_object_bytes,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Optional explicit streaming I/O budget. Absence preserves api_timeout.
+	// Every request still consumes its original caller/stage deadline.
+	StreamingTimeout *durationpb.Duration `protobuf:"bytes,7,opt,name=streaming_timeout,json=streamingTimeout,proto3" json:"streaming_timeout,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ObjectStorageConnection) Reset() {
@@ -362,6 +365,13 @@ func (x *ObjectStorageConnection) GetMaxObjectBytes() int64 {
 		return x.MaxObjectBytes
 	}
 	return 0
+}
+
+func (x *ObjectStorageConnection) GetStreamingTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.StreamingTimeout
+	}
+	return nil
 }
 
 type GovernanceCommand struct {
@@ -766,14 +776,15 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x17\n" +
 	"\aca_file\x18\x02 \x01(\tR\x06caFile\x12\x1d\n" +
 	"\n" +
-	"token_file\x18\x03 \x01(\tR\ttokenFile\"\xe0\x01\n" +
+	"token_file\x18\x03 \x01(\tR\ttokenFile\"\xa8\x02\n" +
 	"\x17ObjectStorageConnection\x12\x1a\n" +
 	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x17\n" +
 	"\aca_file\x18\x02 \x01(\tR\x06caFile\x12\x16\n" +
 	"\x06region\x18\x03 \x01(\tR\x06region\x12)\n" +
 	"\x10credentials_file\x18\x04 \x01(\tR\x0fcredentialsFile\x12#\n" +
 	"\rconnection_id\x18\x05 \x01(\tR\fconnectionId\x12(\n" +
-	"\x10max_object_bytes\x18\x06 \x01(\x03R\x0emaxObjectBytes\"\xbb\x02\n" +
+	"\x10max_object_bytes\x18\x06 \x01(\x03R\x0emaxObjectBytes\x12F\n" +
+	"\x11streaming_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\x10streamingTimeout\"\xbb\x02\n" +
 	"\x11GovernanceCommand\x12*\n" +
 	"\x11database_url_file\x18\x01 \x01(\tR\x0fdatabaseUrlFile\x12$\n" +
 	"\x0eclient_ca_file\x18\x02 \x01(\tR\fclientCaFile\x12)\n" +
@@ -837,18 +848,19 @@ var file_conf_v1_conf_proto_depIdxs = []int32{
 	3,  // 6: conf.v1.ManagedRuntime.object_storage:type_name -> conf.v1.ObjectStorageConnection
 	10, // 7: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
 	10, // 8: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
-	5,  // 9: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
-	6,  // 10: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
-	8,  // 11: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
-	9,  // 12: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
-	10, // 13: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
-	10, // 14: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	10, // 15: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	10, // 9: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
+	5,  // 10: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
+	6,  // 11: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
+	8,  // 12: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
+	9,  // 13: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
+	10, // 14: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
+	10, // 15: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	10, // 16: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_conf_v1_conf_proto_init() }

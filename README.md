@@ -8,6 +8,9 @@ independent source snapshot: builds and runtime do not require the layout.
 CPU-P01 的已实现功能、架构与扩展方式、环境部署和用户操作见
 [CPU-P01 功能、实现、扩展、部署与使用指南](docs/cpu-p01-guide.md)。
 
+CPU 受管微调的执行主链、隔离验收装配和保留的上游依赖边界见
+[CPU managed fine tuning execution slice](docs/finetuning-core-flow.md)。
+
 `THIRD_PARTY_NOTICES.go-kratos-layout.txt` preserves the upstream template's
 MIT notice. This generated repository intentionally has no project `LICENSE`;
 its owner must make that choice before publication.

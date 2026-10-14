@@ -1,0 +1,9 @@
+torch==2.6.0+cpu
+llamafactory==0.9.3
+transformers==4.49.0
+datasets==3.6.0
+accelerate==1.7.0
+peft==0.15.2
+trl==0.9.6
+tokenizers==0.21.1
+numpy==1.26.4

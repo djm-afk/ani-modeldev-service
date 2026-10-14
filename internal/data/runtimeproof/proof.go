@@ -77,8 +77,12 @@ func (verifier *Verifier) VerifyPublication(ctx context.Context, execution biz.E
 	if err != nil {
 		return biz.RuntimePublication{}, err
 	}
-	closeTask, err := oneTask(tasks, "close")
-	if err != nil || closeTask.PodName != association.PodName {
+	confirmationRole := "close"
+	if execution.Snapshot.Kind == "FINETUNING" {
+		confirmationRole = "register"
+	}
+	confirmationTask, err := oneTask(tasks, confirmationRole)
+	if err != nil || confirmationTask.PodName != association.PodName {
 		return biz.RuntimePublication{}, biz.ErrRuntimeConflict
 	}
 	uploader, err := oneTask(tasks, "publish")
@@ -144,7 +148,12 @@ func (verifier *Verifier) VerifyPublication(ctx context.Context, execution biz.E
 		if candidate.Bundle.Key != prefix+"bundle.tar" {
 			return biz.RuntimePublication{}, biz.ErrRuntimeConflict
 		}
-		verified, err := verifier.objects.VerifyOutputBundle(ctx, scope, *candidate.Bundle, files, manifest)
+		var verified biz.VerifiedObject
+		if execution.Snapshot.Kind == "FINETUNING" {
+			verified, err = verifier.objects.VerifyFinetuningOutputBundle(ctx, scope, *candidate.Bundle, files, execution.Snapshot.OutputContract)
+		} else {
+			verified, err = verifier.objects.VerifyOutputBundle(ctx, scope, *candidate.Bundle, files, manifest)
+		}
 		if err != nil {
 			return biz.RuntimePublication{}, err
 		}
@@ -170,7 +179,11 @@ func (verifier *Verifier) VerifyWritersAbsent(ctx context.Context, execution biz
 	}
 	evidence := biz.ManagedCloseEvidence{RunID: association.RunID, WorkflowUID: association.WorkflowUID}
 	seen := make(map[string]bool)
-	for _, name := range []string{"prepare", "train-wait", "collect", "publish"} {
+	roles := []string{"prepare", "train-wait", "collect", "publish"}
+	if execution.Snapshot.Kind == "FINETUNING" {
+		roles = []string{"prepare", "train-wait", "export", "verify", "collect", "publish", "register"}
+	}
+	for _, name := range roles {
 		task, err := oneTask(tasks, name)
 		if err != nil {
 			return biz.ManagedCloseEvidence{}, err

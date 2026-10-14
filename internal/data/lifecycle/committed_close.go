@@ -30,7 +30,7 @@ func validateCommittedClose(ctx context.Context, current *runtimeTransaction) er
 	if errors.Is(err, biz.ErrExecutionNotFound) && state.CloseAuthority != nil {
 		candidate, err = *state.CloseAuthority, nil
 	}
-	if err != nil || !validCloseEvidence(candidate, state.CloseReason, *state.CloseEvidence) || len(dispatch.ConfirmedRuns) > 1 || (len(dispatch.ConfirmedRuns) == 1 && dispatch.ConfirmedRuns[0].RunID != candidate.RunID) || (state.CloseAuthority != nil && len(dispatch.ConfirmedRuns) != 1) {
+	if err != nil || !validExecutionCloseEvidence(admitted, candidate, state.CloseReason, *state.CloseEvidence) || !finetuningStartsTerminated(state, candidate, *state.CloseEvidence) || len(dispatch.ConfirmedRuns) > 1 || (len(dispatch.ConfirmedRuns) == 1 && dispatch.ConfirmedRuns[0].RunID != candidate.RunID) || (state.CloseAuthority != nil && len(dispatch.ConfirmedRuns) != 1) {
 		return biz.ErrPersistence
 	}
 	if state.Training != nil && state.TrainingRejection == nil {

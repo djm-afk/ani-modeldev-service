@@ -46,6 +46,9 @@ func bootstrapInvocation(ctx context.Context, args []string, kube dynamic.Interf
 		"collect":    modeldevv1.PipelineStep_PIPELINE_STEP_COLLECT,
 		"publish":    modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH,
 		"close":      modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE,
+		"export":     modeldevv1.PipelineStep_PIPELINE_STEP_EXPORT,
+		"verify":     modeldevv1.PipelineStep_PIPELINE_STEP_VERIFY,
+		"register":   modeldevv1.PipelineStep_PIPELINE_STEP_REGISTER,
 	}[step]
 	if !ok {
 		return invocation{}, invalid
@@ -79,21 +82,21 @@ func bootstrapInvocation(ctx context.Context, args []string, kube dynamic.Interf
 	if host, port, err := net.SplitHostPort(config.Target); err != nil || host == "" || port == "" {
 		return invocation{}, invalid
 	}
-	if config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 1800 || config.PollIntervalSeconds < 1 || config.PollIntervalSeconds > 30 {
+	if config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 10800 || config.PollIntervalSeconds < 1 || config.PollIntervalSeconds > 30 {
 		return invocation{}, invalid
 	}
 	if provided["candidate-file"] && provided["candidate-json"] {
 		return invocation{}, invalid
 	}
 	if provided["candidate-file"] {
-		if step != "publish" && step != "close" {
+		if step != "publish" && step != "close" && step != "register" {
 			return invocation{}, invalid
 		}
 		config.CandidateFile = *candidateFile
 	}
 	var candidate *string
 	if provided["candidate-json"] {
-		if step != "close" {
+		if step != "close" && step != "register" {
 			return invocation{}, invalid
 		}
 		// Oversized and empty candidates are both missing publication proof. Let

@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -26,6 +27,17 @@ var trainJobs = schema.GroupVersionResource{Group: "trainer.kubeflow.org", Versi
 // CreateTraining is called only by the holder of the durable first creation
 // permit. Reading an existing intent must use FindTraining, never another POST.
 func (a *Adapter) CreateTraining(ctx context.Context, plan biz.TrainingPlan) (biz.TrainingHandle, error) {
+	if ctx == nil {
+		return biz.TrainingHandle{}, biz.ErrRuntimeConflict
+	}
+	if plan.FinetuningTiming != nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, plan.FinetuningTiming.DeadlineAt)
+		defer cancel()
+		if err := ctx.Err(); err != nil {
+			return biz.TrainingHandle{}, err
+		}
+	}
 	wanted, err := a.trainingRequest(ctx, plan, true)
 	if err != nil {
 		return biz.TrainingHandle{}, err
@@ -153,9 +165,12 @@ func (a *Adapter) trainingRequest(ctx context.Context, plan biz.TrainingPlan, re
 	if runtime == nil || runtime.GetAPIVersion() != "trainer.kubeflow.org/v1alpha1" || runtime.GetKind() != snapshot.Release.Runtime.Kind || runtime.GetName() != snapshot.Release.Runtime.Name || runtime.GetNamespace() != runtimeNamespace || runtime.GetDeletionTimestamp() != nil || !safeRuntime(runtime, snapshot.Release.Runtime.ContentSHA256, snapshot.Release.Runtime.TargetJobs[0], requireExitRetention) {
 		return nil, biz.ErrRuntimeConflict
 	}
+	if snapshot.Kind == "FINETUNING" && !safeFinetuningRuntime(runtime, snapshot.Finetuning.Budgets.TrainingTimeoutSeconds) {
+		return nil, biz.ErrRuntimeConflict
+	}
 
 	annotations := map[string]any{"modeldev.ani.io/tenant-id": plan.TenantID, "modeldev.ani.io/execution-id": plan.ExecutionID, "modeldev.ani.io/execution-spec-sha256": plan.SpecHash, "modeldev.ani.io/training-request-sha256": plan.RequestSHA256, "modeldev.ani.io/workspace-uid": workspace.PVCUID, "modeldev.ani.io/runtime-spec-sha256": snapshot.Release.Runtime.ContentSHA256}
-	return &unstructured.Unstructured{Object: map[string]any{
+	wanted := &unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "trainer.kubeflow.org/v1alpha1", "kind": "TrainJob",
 		"metadata": map[string]any{"name": plan.Name, "namespace": workspace.NamespaceName, "annotations": annotations},
 		"spec": map[string]any{
@@ -174,7 +189,36 @@ func (a *Adapter) trainingRequest(ctx context.Context, plan biz.TrainingPlan, re
 				}}},
 			}}},
 		},
-	}}, nil
+	}}
+	if snapshot.Kind == "FINETUNING" {
+		annotations["modeldev.ani.io/training-admitted-at"] = plan.FinetuningTiming.AdmittedAt.Format(time.RFC3339Nano)
+		annotations["modeldev.ani.io/training-deadline-at"] = plan.FinetuningTiming.DeadlineAt.Format(time.RFC3339Nano)
+		// Trainer 2.1 supports env/volumeMounts only on container overrides.
+		// UID, read-only root, restart policy and the Job deadline are verified
+		// in the exact frozen Runtime, never written as unsupported overrides.
+		override := map[string]any{
+			"targetJobs": []any{map[string]any{"name": snapshot.Release.Runtime.TargetJobs[0]}},
+			"spec": map[string]any{
+				"serviceAccountName": snapshot.Environment.Identities.TrainerServiceAccount,
+				"volumes": []any{
+					map[string]any{"name": "ft-input", "persistentVolumeClaim": map[string]any{"claimName": workspace.PVCName}},
+					map[string]any{"name": "ft-adapter", "persistentVolumeClaim": map[string]any{"claimName": workspace.PVCName}},
+					map[string]any{"name": "ft-report", "persistentVolumeClaim": map[string]any{"claimName": workspace.PVCName}},
+					map[string]any{"name": "ft-tmp", "emptyDir": map[string]any{"sizeLimit": "4Gi"}},
+				},
+				"containers": []any{map[string]any{"name": "node", "volumeMounts": []any{
+					map[string]any{"name": "ft-input", "mountPath": "/workspace/inputs", "subPath": workspace.InputSubpath, "readOnly": true},
+					map[string]any{"name": "ft-adapter", "mountPath": "/workspace/training/adapter", "subPath": path.Join(workspace.TrainingSubpath, "adapter"), "readOnly": false},
+					map[string]any{"name": "ft-report", "mountPath": "/workspace/reports/train", "subPath": path.Join(workspace.ReportsSubpath, "train"), "readOnly": false},
+					map[string]any{"name": "ft-tmp", "mountPath": "/tmp", "readOnly": false},
+				}}},
+			},
+		}
+		if err := unstructured.SetNestedSlice(wanted.Object, []any{override}, "spec", "podTemplateOverrides"); err != nil {
+			return nil, biz.ErrRuntimeConflict
+		}
+	}
+	return wanted, nil
 }
 
 func verifyTrainingObject(plan biz.TrainingPlan, wanted, actual *unstructured.Unstructured) (biz.TrainingHandle, error) {
@@ -229,7 +273,56 @@ func validTrainingPlan(plan biz.TrainingPlan) bool {
 	if len(s.Program.Command) == 0 || !strings.Contains(s.Program.ImageDigest, "@sha256:") || s.Resources.Nodes != 1 || s.Resources.ProcessesPerNode != 1 || s.Resources.RequestMillicpu <= 0 || s.Resources.LimitMillicpu < s.Resources.RequestMillicpu || s.Resources.RequestMemoryBytes <= 0 || s.Resources.LimitMemoryBytes < s.Resources.RequestMemoryBytes {
 		return false
 	}
+	if s.Kind == "FINETUNING" {
+		if s.Finetuning == nil || plan.FinetuningTiming == nil || s.Finetuning.Budgets.TrainingTimeoutSeconds == 0 || plan.FinetuningTiming.AdmittedAt.IsZero() || !plan.FinetuningTiming.DeadlineAt.After(plan.FinetuningTiming.AdmittedAt) || w.InputSubpath != "inputs" || w.TrainingSubpath != "training" || w.ReportsSubpath != "reports" || w.PublicationSubpath != "publication" {
+			return false
+		}
+		deadline := plan.FinetuningTiming.AdmittedAt.Add(time.Duration(s.Finetuning.Budgets.TrainingTimeoutSeconds) * time.Second)
+		if s.DeadlineAt.Before(deadline) {
+			deadline = s.DeadlineAt
+		}
+		if !plan.FinetuningTiming.DeadlineAt.Equal(deadline) {
+			return false
+		}
+	} else if plan.FinetuningTiming != nil {
+		return false
+	}
 	return true
+}
+
+func safeFinetuningRuntime(runtime *unstructured.Unstructured, seconds uint32) bool {
+	jobs, found, err := unstructured.NestedSlice(runtime.Object, "spec", "template", "spec", "replicatedJobs")
+	if err != nil || !found || len(jobs) != 1 {
+		return false
+	}
+	job, ok := jobs[0].(map[string]any)
+	if !ok {
+		return false
+	}
+	deadline, found, err := unstructured.NestedInt64(job, "template", "spec", "activeDeadlineSeconds")
+	if err != nil || !found || seconds == 0 || deadline != int64(seconds) {
+		return false
+	}
+	pod, found, err := unstructured.NestedMap(job, "template", "spec", "template", "spec")
+	if err != nil || !found {
+		return false
+	}
+	for _, key := range []string{"runAsUser", "runAsGroup", "fsGroup"} {
+		value, present, err := unstructured.NestedInt64(pod, "securityContext", key)
+		if err != nil || !present || value != 10001 {
+			return false
+		}
+	}
+	containers, found, err := unstructured.NestedSlice(pod, "containers")
+	if err != nil || !found || len(containers) != 1 {
+		return false
+	}
+	container, ok := containers[0].(map[string]any)
+	if !ok {
+		return false
+	}
+	readOnly, present, err := unstructured.NestedBool(container, "securityContext", "readOnlyRootFilesystem")
+	return err == nil && present && readOnly
 }
 
 func safeRuntime(runtime *unstructured.Unstructured, expectedSHA, targetJob string, requireExitRetention bool) bool {
