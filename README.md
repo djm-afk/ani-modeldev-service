@@ -59,7 +59,9 @@ the typed `ANI` environment configuration when the deployment design is added.
 ## Runtime shell
 
 - Kratos lifecycle with graceful shutdown.
-- gRPC and a separate admin HTTP server.
+- A separate admin HTTP server, plus the gRPC business listener only when a
+  `command` block configures its mTLS transport; the shell never binds a
+  plaintext business port.
 - Structured redacted logs, tracing, metrics, and middleware.
 - `/healthz` reports process liveness.
 - `/readyz` remains HTTP 503 while the required business adapters are absent;

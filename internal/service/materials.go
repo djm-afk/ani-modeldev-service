@@ -108,16 +108,27 @@ func inputVersionView(v biz.InputVersion) *modeldevv1.InputVersionView {
 	}
 	return out
 }
+
+// presetDisplayName derives a stable, distinguishing label for one preset.
+// The immutable Release contract has no display name, so reuse its fixed
+// identity: a human base plus a short prefix of the preset UUID.
+func presetDisplayName(presetID string) string {
+	const base = "General CPU MLP"
+	if len(presetID) < 8 {
+		return base
+	}
+	return base + " · " + presetID[:8]
+}
 func materialPage(p *modeldevv1.PageRequest) (int, string, error) {
 	limit, after := 20, ""
 	if p != nil {
-		if !validMaterialMessage(p) || p.PageSize > 100 || (p.PageToken != "" && !queryID(p.PageToken)) {
+		if !validMaterialMessage(p) || p.Limit > 100 || (p.Cursor != "" && !queryID(p.Cursor)) {
 			return 0, "", status.Error(codes.InvalidArgument, "invalid material page")
 		}
-		if p.PageSize > 0 {
-			limit = int(p.PageSize)
+		if p.Limit > 0 {
+			limit = int(p.Limit)
 		}
-		after = p.PageToken
+		after = p.Cursor
 	}
 	return limit, after, nil
 }
@@ -164,7 +175,11 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
-	response := &modeldevv1.ListInputVersionsResponse{NextPageToken: next}
+	total, err := q.materials.InputsCount(ctx, scope.TenantID, state)
+	if err != nil {
+		return nil, materialsError(err, scope.RequestID)
+	}
+	response := &modeldevv1.ListInputVersionsResponse{NextCursor: next, Total: total}
 	for _, value := range values {
 		response.InputVersions = append(response.InputVersions, inputVersionView(value))
 	}
@@ -190,7 +205,7 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 	for _, release := range releases {
 		p := presets[release.PresetID]
 		if p == nil {
-			p = &modeldevv1.PresetView{PresetId: release.PresetID, Name: "General CPU MLP", Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING}
+			p = &modeldevv1.PresetView{PresetId: release.PresetID, Name: presetDisplayName(release.PresetID), Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING}
 			presets[release.PresetID] = p
 			for _, v := range release.Program.DefaultParameters {
 				rule := &modeldevv1.ParameterRule{Name: v.Name, DefaultValue: parameterView(v)}
@@ -220,10 +235,12 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 		}
 	}
 	sort.Strings(ids)
-	response := &modeldevv1.ListPresetsResponse{}
+	// total is every distinct preset for this tenant, independent of the window;
+	// presets are aggregated from the approved catalogue rather than a table.
+	response := &modeldevv1.ListPresetsResponse{Total: uint64(len(presets))}
 	if len(ids) > limit {
 		ids = ids[:limit]
-		response.NextPageToken = ids[len(ids)-1]
+		response.NextCursor = ids[len(ids)-1]
 	}
 	for _, id := range ids {
 		p := presets[id]

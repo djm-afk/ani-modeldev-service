@@ -31,6 +31,11 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
 ORDER BY input_version_id
 LIMIT sqlc.arg(row_limit)::integer;
 
+-- name: CountInputVersions :one
+SELECT count(*) FROM modeldev_input_versions
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND (sqlc.arg(state_filter)::text = '' OR state = sqlc.arg(state_filter)::text);
+
 -- name: RecordVerifiedCSV :one
 UPDATE modeldev_input_versions
 SET state = 'READY',

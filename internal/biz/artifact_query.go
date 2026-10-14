@@ -21,6 +21,7 @@ type QueryRecord struct {
 type ArtifactQueryRepository interface {
 	GetQueryRecord(context.Context, string, string) (QueryRecord, error)
 	ListQueryRecords(context.Context, string, ExecutionQuery) ([]QueryRecord, string, error)
+	CountQueryRecords(context.Context, string, ExecutionQuery) (uint64, error)
 	FindPublishedArtifact(context.Context, string, string) (QueryRecord, PublishedRuntimeFile, error)
 }
 

@@ -15,8 +15,13 @@ One Kratos application owns two listeners:
 
 | Listener | Purpose | Default local bind | Public business API |
 | --- | --- | --- | --- |
-| gRPC | service APIs plus standard gRPC health | `127.0.0.1:19090` | contracts exist; business handlers are not assembled yet |
+| gRPC | configured mTLS business listener (command/query/admission) | `127.0.0.1:19090` | only when the `command` block is present |
 | admin HTTP | process health, readiness, and metrics | `127.0.0.1:19091` | no |
+
+The gRPC listener is served only when a `command` block is configured, so it
+carries the Governance mTLS business contract; a shell/composition without that
+block constructs no plaintext business listener and never binds this port. See
+[command delivery](design/cpu-p01-command-delivery.md) for the transport rules.
 
 The committed defaults are safe for local execution. A service deployment may
 override an address to an unspecified IP such as `0.0.0.0`; that choice belongs

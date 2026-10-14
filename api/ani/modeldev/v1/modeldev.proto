@@ -207,9 +207,11 @@ message ExecutionStates {
   CloseState close_state = 4;
 }
 
+// Cursor pagination aligned with the Governance limit/cursor baseline:
+// the first page omits cursor and later pages replay the previous next_cursor.
 message PageRequest {
-  uint32 page_size = 1;
-  string page_token = 2;
+  uint32 limit = 1;
+  string cursor = 2;
 }
 
 message ParameterRule {
@@ -238,7 +240,9 @@ message ListPresetsRequest {
 
 message ListPresetsResponse {
   repeated PresetView presets = 1;
-  string next_page_token = 2;
+  string next_cursor = 2;
+  // Matching total under the same tenant and filters, independent of the window.
+  uint64 total = 3;
 }
 
 // Public metadata omits backend object keys and credentials.
@@ -269,7 +273,9 @@ message ListInputVersionsRequest {
 
 message ListInputVersionsResponse {
   repeated InputVersionView input_versions = 1;
-  string next_page_token = 2;
+  string next_cursor = 2;
+  // Matching total under the same tenant and filters, independent of the window.
+  uint64 total = 3;
 }
 
 message ExecutionView {
@@ -309,7 +315,9 @@ message ListExecutionsRequest {
 
 message ListExecutionsResponse {
   repeated ExecutionView executions = 1;
-  string next_page_token = 2;
+  string next_cursor = 2;
+  // Matching total under the same tenant and filters, independent of the window.
+  uint64 total = 3;
 }
 
 message GetExecutionLogsRequest {
@@ -350,7 +358,9 @@ message ListExecutionArtifactsRequest {
 
 message ListExecutionArtifactsResponse {
   repeated ArtifactView artifacts = 1;
-  string next_page_token = 2;
+  string next_cursor = 2;
+  // Matching total under the same tenant and filters, independent of the window.
+  uint64 total = 3;
 }
 
 message AuthorizeArtifactDownloadRequest {

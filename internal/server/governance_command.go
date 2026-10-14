@@ -23,12 +23,51 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// CommandServerDNSName is the registered server identity for the Governance ->
+// ModelDev business listener. Governance verifies this literal DNS SAN, so the
+// mounted server certificate must present it exactly.
+const CommandServerDNSName = "ani-modeldev-service"
+
 // CommandTLS contains explicit deployment inputs. No environment certificate,
 // endpoint or peer name is supplied by a default or by the RPC body.
 type CommandTLS struct {
 	Certificate       tls.Certificate
 	ClientCAs         *x509.CertPool
 	GovernanceDNSName string
+}
+
+// ValidCommandServerCertificate requires the mounted server certificate to
+// present the registered literal DNS SAN with a server-auth usage. A mismatched
+// certificate would make every Governance handshake fail, so it is rejected at
+// startup instead of at the first RPC. Additional SANs are allowed; a wildcard
+// DNS entry is never accepted.
+func ValidCommandServerCertificate(certificate tls.Certificate) bool {
+	if len(certificate.Certificate) == 0 || certificate.PrivateKey == nil {
+		return false
+	}
+	leaf, err := x509.ParseCertificate(certificate.Certificate[0])
+	if err != nil || time.Now().Before(leaf.NotBefore) || !time.Now().Before(leaf.NotAfter) {
+		return false
+	}
+	matched := false
+	for _, name := range leaf.DNSNames {
+		if strings.Contains(name, "*") {
+			return false
+		}
+		matched = matched || name == CommandServerDNSName
+	}
+	if !matched {
+		return false
+	}
+	if len(leaf.ExtKeyUsage) == 0 {
+		return true
+	}
+	for _, usage := range leaf.ExtKeyUsage {
+		if usage == x509.ExtKeyUsageAny || usage == x509.ExtKeyUsageServerAuth {
+			return true
+		}
+	}
+	return false
 }
 
 // NewGovernanceCommandServer registers commands and optional read-only admission

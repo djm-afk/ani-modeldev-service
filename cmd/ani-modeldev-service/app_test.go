@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"net"
 	"net/http"
@@ -11,14 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	modeldev "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 )
 
@@ -43,8 +36,7 @@ func TestBuildAppRunsProductionComposition(t *testing.T) {
 	go func() { runResult <- app.Run() }()
 	waitForHTTP(t, "http://"+adminAddress+"/healthz")
 	assertProductionAdmin(t, adminAddress)
-	assertProductionGRPCHealth(t, grpcAddress)
-	assertProductionBusinessRPCUnimplemented(t, grpcAddress)
+	assertProductionBusinessPortClosed(t, grpcAddress)
 	assertProductionNotReadyWithoutBusinessAdapters(t, adminAddress)
 
 	if err := app.Stop(); err != nil {
@@ -125,37 +117,12 @@ func assertProductionAdmin(t *testing.T, address string) {
 	}
 }
 
-func assertProductionGRPCHealth(t *testing.T, address string) {
+func assertProductionBusinessPortClosed(t *testing.T, address string) {
 	t.Helper()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	connection, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatalf("dial production gRPC: %v", err)
-	}
-	defer connection.Close()
-	response, err := grpc_health_v1.NewHealthClient(connection).Check(ctx, &grpc_health_v1.HealthCheckRequest{})
-	if err != nil {
-		t.Fatalf("production gRPC health: %v", err)
-	}
-	if response.Status != grpc_health_v1.HealthCheckResponse_SERVING {
-		t.Fatalf("production gRPC health = %s", response.Status)
-	}
-}
-
-func assertProductionBusinessRPCUnimplemented(t *testing.T, address string) {
-	t.Helper()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	connection, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Errorf("dial production business gRPC: %v", err)
-		return
-	}
-	defer connection.Close()
-	_, err = modeldev.NewModelDevQueryServiceClient(connection).ListPresets(ctx, &modeldev.ListPresetsRequest{})
-	if status.Code(err) != codes.Unimplemented {
-		t.Errorf("business RPC without an implementation = %v, want Unimplemented", err)
+	connection, err := net.DialTimeout("tcp", address, 250*time.Millisecond)
+	if err == nil {
+		connection.Close()
+		t.Fatalf("plaintext business port %s is reachable without a configured mTLS listener", address)
 	}
 }
 

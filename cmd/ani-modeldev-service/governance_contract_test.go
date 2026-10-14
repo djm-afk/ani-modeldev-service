@@ -96,10 +96,10 @@ func startGovernanceContractProvider(t *testing.T) (string, configuredAdmissionF
 		}
 	})
 	fixture := prepareConfiguredAdmission(t)
-	// Preserve the existing helper's test SAN and add the fixed production
-	// service identity tested by Governance. Only this synthetic CA signs it.
+	// Use the fixed production service identity the Governance client verifies.
+	// Only this synthetic CA signs it.
 	fixture.certificates.Server = fixture.certificates.ClientCertificate(t, func(certificate *x509.Certificate) {
-		certificate.DNSNames = []string{commandtls.ServerDNSName, "ani-modeldev-service"}
+		certificate.DNSNames = []string{commandtls.ServerDNSName}
 		certificate.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
 	})
 	serverFiles := fixture.certificates.WriteServerFiles(t)

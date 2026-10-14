@@ -39,19 +39,19 @@ func TestMainFlowQueryListFiltersCurrentTenantBeforePagination(t *testing.T) {
 	acceptThroughCommandRPC(t, ctx, repository, last)
 	client := startMainFlowQuery(t, pool, nil, base)
 	method := modeldevv1.ModelDevQueryService_ListExecutions_FullMethodName
-	request := &modeldevv1.ListExecutionsRequest{Page: &modeldevv1.PageRequest{PageSize: 1}}
+	request := &modeldevv1.ListExecutionsRequest{Page: &modeldevv1.PageRequest{Limit: 1}}
 	page, err := client.ListExecutions(queryCall(ctx, base, method), request)
-	if err != nil || len(page.GetExecutions()) != 1 || page.Executions[0].Identity.ExecutionId != first.ExecutionID || page.NextPageToken == "" {
+	if err != nil || len(page.GetExecutions()) != 1 || page.Executions[0].Identity.ExecutionId != first.ExecutionID || page.NextCursor == "" || page.Total != 2 {
 		t.Fatalf("QUERY_LIST_NOT_IMPLEMENTED: current tenant cannot list its first execution: %v %v", page, err)
 	}
-	request.Page.PageToken = page.NextPageToken
+	request.Page.Cursor = page.NextCursor
 	page, err = client.ListExecutions(queryCall(ctx, base, method), request)
-	if err != nil || len(page.GetExecutions()) != 1 || page.Executions[0].Identity.ExecutionId != last.ExecutionID || page.NextPageToken != "" {
+	if err != nil || len(page.GetExecutions()) != 1 || page.Executions[0].Identity.ExecutionId != last.ExecutionID || page.NextCursor != "" || page.Total != 2 {
 		t.Fatalf("tenant filter was applied after pagination: %v %v", page, err)
 	}
 	published := modeldevv1.DeliveryState_DELIVERY_STATE_PUBLISHED
 	page, err = client.ListExecutions(queryCall(ctx, base, method), &modeldevv1.ListExecutionsRequest{DeliveryState: &published})
-	if err != nil || len(page.GetExecutions()) != 0 || page.NextPageToken != "" {
+	if err != nil || len(page.GetExecutions()) != 0 || page.NextCursor != "" || page.Total != 0 {
 		t.Fatalf("list state filter did not use durable execution facts: %v %v", page, err)
 	}
 	for _, denied := range []context.Context{ctx, queryCall(ctx, base, modeldevv1.ModelDevQueryService_GetExecution_FullMethodName)} {
