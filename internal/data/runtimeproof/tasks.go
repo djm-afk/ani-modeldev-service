@@ -70,7 +70,7 @@ func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kf
 		mainNodes := 0
 		for podID, raw := range nodes {
 			podNode := raw.(map[string]any)
-			if podNode["boundaryID"] != id || podNode["type"] != "Pod" || podNode["templateName"] != "retry-system-container-impl" {
+			if podNode["boundaryID"] != id || podNode["type"] != "Pod" || !managedExecutorTemplate(podNode["templateName"]) {
 				continue
 			}
 			mainNodes++
@@ -120,6 +120,14 @@ func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kf
 		return nil, biz.ErrRuntimeNotReady
 	}
 	return result, nil
+}
+
+func managedExecutorTemplate(name any) bool {
+	// KFP wraps the executor template when the frozen platform spec supplies
+	// the two admission labels. Match the observed templates exactly; the
+	// independent Run node membership and current Workflow/Pod checks below
+	// still establish authority, never a template prefix or a Pod name.
+	return name == "retry-system-container-impl" || name == "metadata-0-2-retry-system-container-impl"
 }
 
 // KFP 2.16 derives task details from Argo displayName and node children. Those
