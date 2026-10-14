@@ -3,10 +3,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -50,6 +55,173 @@ type coreFlowFixture struct {
 	EvidenceDirectory   string              `json:"evidence_directory"`
 	SourceCommit        string              `json:"source_commit"`
 	MaterialSource      string              `json:"material_source"`
+	CloseOnly           *coreFlowCloseOnly  `json:"close_only,omitempty"`
+}
+
+type coreFlowCloseOnly struct {
+	OriginalSpecHash        string    `json:"original_spec_hash"`
+	OriginalSourceCommit    string    `json:"original_source_commit"`
+	OriginalEnvironmentFile string    `json:"original_environment_file"`
+	StopSourceGeneration    uint64    `json:"stop_source_generation"`
+	StopRequestedAt         time.Time `json:"stop_requested_at"`
+}
+
+type coreFlowCloseResult struct {
+	Outcome    string
+	Original   biz.Execution
+	Stop       biz.CloseReceipt
+	StopReplay biz.CloseReceipt
+	Runtime    biz.ExecutionRuntime
+}
+
+func coreFlowOriginalStop(f coreFlowFixture) biz.CloseIntent {
+	if f.CloseOnly == nil {
+		return biz.CloseIntent{}
+	}
+	return biz.CloseIntent{TenantID: f.TenantID, ExecutionID: f.ExecutionID, OperationID: f.OperationID, SpecHash: f.CloseOnly.OriginalSpecHash, SourceGeneration: f.CloseOnly.StopSourceGeneration, Reason: biz.CloseReasonUserStop, RequestedAt: f.CloseOnly.StopRequestedAt, RequestedActor: f.Actor}
+}
+
+func runCoreFlowCloseOnly(ctx context.Context, f coreFlowFixture, config *conf.Bootstrap) (result coreFlowCloseResult, err error) {
+	if ctx == nil || f.CloseOnly == nil || config == nil || config.Command == nil || config.Runtime == nil || f.StopWhenTraining || f.RestartWhenTraining || f.ExpectDeadline {
+		return result, biz.ErrInvalidAdmission
+	}
+	stop := coreFlowOriginalStop(f)
+	if err := stop.Validate(); err != nil {
+		return result, err
+	}
+	// This mode is a bounded close delivery for an existing command. It cannot
+	// import inputs, resolve a current Release or reconstruct an admission.
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+	pool, err := openCommandPool(config.Command)
+	if err != nil {
+		return result, errors.New("close-only database unavailable")
+	}
+	defer pool.Close()
+	admissions := execution.New(pool)
+	original, err := admissions.Get(ctx, f.TenantID, f.ExecutionID)
+	if err != nil {
+		return result, err
+	}
+	close := f.CloseOnly
+	if original.TenantID != f.TenantID || original.ExecutionID != f.ExecutionID || original.OperationID != f.OperationID || original.Actor != f.Actor || !original.AcceptedAt.Equal(f.AcceptedAt) || original.SpecHash != close.OriginalSpecHash || !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(close.OriginalSourceCommit) {
+		return result, biz.ErrAdmissionConflict
+	}
+	proof, err := readCommandMaterial(close.OriginalEnvironmentFile, 1<<20)
+	if err != nil {
+		return result, errors.New("original environment evidence unavailable")
+	}
+	proof = bytes.TrimSuffix(proof, []byte{'\n'})
+	digest := sha256.Sum256(proof)
+	var identity struct {
+		SourceCommit string `json:"source_commit"`
+	}
+	if hex.EncodeToString(digest[:]) != original.Snapshot.Environment.BindingDigest || json.Unmarshal(proof, &identity) != nil || identity.SourceCommit != close.OriginalSourceCommit {
+		return result, biz.ErrAdmissionConflict
+	}
+	bindingBytes, err := readCommandMaterial(config.Runtime.BindingFile, 1<<20)
+	if err != nil {
+		return result, errors.New("original owner binding unavailable")
+	}
+	bindDigest := sha256.Sum256(bindingBytes)
+	var binding biz.PipelineDispatchBinding
+	if hex.EncodeToString(bindDigest[:]) != config.Runtime.BindingSha256 || decodeRuntimeMaterial(bindingBytes, &binding) != nil || binding.Validate() != nil || binding.TenantID != original.TenantID || binding.Environment != original.Snapshot.Environment {
+		return result, biz.ErrAdmissionConflict
+	}
+	first, err := admissions.ApplyCloseIntent(ctx, stop)
+	if err != nil {
+		return result, err
+	}
+	replay, err := admissions.ApplyCloseIntent(ctx, stop)
+	if err != nil || !replay.Replayed || replay.CloseRecord != first.CloseRecord {
+		return result, errors.New("original Stop replay mismatch")
+	}
+	result.Original, result.Stop, result.StopReplay = original, first, replay
+	app, err := buildApp(config, newRuntimeLogger(io.Discard))
+	if err != nil {
+		return result, errors.New("original close owner wiring unavailable")
+	}
+	done := make(chan error, 1)
+	go func() { done <- app.Run() }()
+	exited := false
+	defer func() {
+		stopErr := app.Stop()
+		if !exited {
+			select {
+			case ownerErr := <-done:
+				stopErr = errors.Join(stopErr, ownerErr)
+			case <-time.After(config.Server.ShutdownTimeout.AsDuration() + time.Second):
+				stopErr = errors.Join(stopErr, errors.New("close owner shutdown incomplete"))
+			}
+		}
+		if stopErr != nil {
+			err = errors.Join(err, errors.New("close owner shutdown failed"))
+		}
+	}()
+	facts := lifecycle.New(pool)
+	tick := time.NewTicker(100 * time.Millisecond)
+	defer tick.Stop()
+	// Await the original app's existing readiness endpoint before reading an
+	// already-terminal receipt; stopping before Run starts would leak the owner.
+	_, adminPort, _ := net.SplitHostPort(config.Server.Admin.Addr)
+	adminURL := "http://" + net.JoinHostPort("127.0.0.1", adminPort) + "/readyz"
+	localTransport := &http.Transport{}
+	defer localTransport.CloseIdleConnections()
+	localClient := &http.Client{Transport: localTransport, Timeout: time.Second}
+	started := false
+	for {
+		if !started {
+			request, _ := http.NewRequestWithContext(ctx, http.MethodGet, adminURL, nil)
+			response, readyErr := localClient.Do(request)
+			if readyErr == nil {
+				started = response.StatusCode == http.StatusOK
+				_ = response.Body.Close()
+			}
+			if !started {
+				select {
+				case <-tick.C:
+					continue
+				case ownerErr := <-done:
+					exited = true
+					return result, errors.Join(errors.New("original close owner failed to start"), ownerErr)
+				case <-ctx.Done():
+					return result, ctx.Err()
+				}
+			}
+		}
+		state, readErr := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
+		if readErr != nil {
+			return result, readErr
+		}
+		result.Runtime = state
+		if state.ClosedAt != nil && state.CloseEvidence != nil && (state.CloseEvidence.NoDispatch || state.StepExitCleanup != nil && state.StepExitCleanup.CompletedAt != nil) {
+			result.Outcome = "CLOSED"
+			break
+		}
+		if state.CloseReviewReason != "" && state.ClosedAt == nil {
+			result.Outcome = "NEEDS_REVIEW"
+			break
+		}
+		select {
+		case ownerErr := <-done:
+			exited = true
+			return result, errors.Join(errors.New("original close owner exited before verified result"), ownerErr)
+		case <-ctx.Done():
+			return result, ctx.Err()
+		case <-tick.C:
+		}
+	}
+	// The source delivery cannot rewrite either immutable admission payload.
+	after, err := admissions.Get(ctx, original.TenantID, original.ExecutionID)
+	if err != nil {
+		return result, err
+	}
+	beforeIntent, beforeSnapshot, beforeErr := original.CanonicalPayloads()
+	afterIntent, afterSnapshot, afterErr := after.CanonicalPayloads()
+	if beforeErr != nil || afterErr != nil || !bytes.Equal(beforeIntent, afterIntent) || !bytes.Equal(beforeSnapshot, afterSnapshot) || after.SpecHash != original.SpecHash || after.OperationID != original.OperationID || !after.AcceptedAt.Equal(original.AcceptedAt) {
+		return result, biz.ErrAdmissionConflict
+	}
+	return result, nil
 }
 
 type coreFlowModelFixture struct {
@@ -83,6 +255,30 @@ func TestFinetuningCoreFlow(t *testing.T) {
 	var config conf.Bootstrap
 	if protojson.Unmarshal(f.Bootstrap, &config) != nil || config.Validate() != nil || config.Command == nil || config.Runtime == nil {
 		t.Fatal("invalid production bootstrap")
+	}
+	if f.CloseOnly != nil {
+		if f.CloseOnly.OriginalEnvironmentFile != "/config/original-environment.json" || coreFlowOriginalStop(f).Validate() != nil {
+			t.Fatal("original close evidence must be a fixed read-only fixture material")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+		result, closeErr := runCoreFlowCloseOnly(ctx, f, &config)
+		record := map[string]any{"scope": "CORE_FLOW_CLOSE_ONLY", "scenario": f.Scenario, "source_commit": f.SourceCommit, "original_source_commit": f.CloseOnly.OriginalSourceCommit, "execution_id": f.ExecutionID, "operation_id": f.OperationID, "original_spec_hash": f.CloseOnly.OriginalSpecHash, "original_environment_reference": f.CloseOnly.OriginalEnvironmentFile, "outcome": result.Outcome, "original": result.Original, "stop": result.Stop, "stop_replay": result.StopReplay, "runtime": result.Runtime, "upstream_boundary": "isolated USER_STOP application-layer delivery; Gov identity NOT_RUN"}
+		if closeErr != nil {
+			record["outcome"] = "INCOMPLETE"
+		}
+		if err := os.MkdirAll(f.EvidenceDirectory, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		raw, err := json.MarshalIndent(record, "", "  ")
+		if err != nil || os.WriteFile(filepath.Join(f.EvidenceDirectory, "close-only-"+f.ExecutionID+".json"), append(raw, '\n'), 0o600) != nil {
+			t.Fatal("close-only evidence write failed")
+		}
+		if closeErr != nil {
+			t.Fatal("original close did not reach a verified result", closeErr)
+		}
+		t.Logf("CORE_FLOW_CLOSE_ONLY outcome=%s execution=%s training=%t", result.Outcome, f.ExecutionID, result.Runtime.TrainingHandle != nil)
+		return
 	}
 	if config.Command.AdmissionResolution == nil {
 		t.Fatal("managed facts and immutable catalogue required")

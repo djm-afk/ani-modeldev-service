@@ -71,7 +71,7 @@ class Cluster:
 
 
 def obj(kind, name, namespace=None, **fields):
-    api = "v1" if kind in {"Namespace", "Secret", "Service", "ServiceAccount", "ConfigMap", "PersistentVolumeClaim", "ResourceQuota"} else "rbac.authorization.k8s.io/v1"
+    api = "v1" if kind in {"Namespace", "Secret", "Service", "ServiceAccount", "ConfigMap", "PersistentVolumeClaim", "ResourceQuota", "LimitRange"} else "rbac.authorization.k8s.io/v1"
     if kind == "Deployment":
         api = "apps/v1"
     if kind == "NetworkPolicy":
@@ -100,6 +100,9 @@ def foundation(root):
         rows.append(obj("ServiceAccount", name, TENANT, automountServiceAccountToken=name == "modeldev-step"))
     rows.append(obj("ConfigMap", "ani-workspace-policy", TENANT, data={"storageClass": "ani-cephfs", "maxSize": "20Gi"}))
     rows.append(obj("ResourceQuota", "core-flow-budget", TENANT, spec={"hard": {"requests.cpu": "8", "limits.cpu": "16", "requests.memory": "32Gi", "limits.memory": "64Gi", "pods": "40", "persistentvolumeclaims": "8", "requests.storage": "160Gi"}}))
+    # Native Argo init/wait containers omit these fields. Namespace defaults
+    # satisfy this task's quota while preserving explicit workload resources.
+    rows.append(obj("LimitRange", "core-flow-container-defaults", TENANT, spec={"limits": [{"type": "Container", "defaultRequest": {"cpu": "100m", "memory": "64Mi"}, "default": {"cpu": "500m", "memory": "512Mi"}}]}))
     cluster_rules = [{"apiGroups": [""], "resources": ["namespaces"], "resourceNames": [TENANT], "verbs": ["get"]}, {"apiGroups": ["authentication.k8s.io"], "resources": ["tokenreviews"], "verbs": ["create"]}]
     rows.append(obj("ClusterRole", OWNER, rules=cluster_rules))
     rows.append(obj("ClusterRoleBinding", OWNER, roleRef={"apiGroup": "rbac.authorization.k8s.io", "kind": "ClusterRole", "name": OWNER}, subjects=[{"kind": "ServiceAccount", "name": "modeldev-control", "namespace": SYSTEM}]))

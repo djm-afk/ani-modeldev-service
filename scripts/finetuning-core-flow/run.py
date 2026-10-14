@@ -87,7 +87,11 @@ def render(cluster, args):
     state = json.loads(state_path.read_bytes()) if state_path.exists() else {"owner": OWNER, "binding_id": str(uuid.uuid4()), "input_requested_at": now(), "scenarios": {}}
     if state["owner"] != OWNER:
         raise ValueError("driver state owner mismatch")
-    if args.scenario in state["scenarios"]:
+    case_key = args.case_name or args.scenario
+    if args.case_name and (not re.fullmatch(r"core-flow-" + args.scenario + r"-[a-z0-9-]{1,39}", args.case_name) or len(args.case_name) > 63):
+        raise ValueError("case name must be a bounded task-owned name for this scenario")
+    scenario_label = args.case_name.removeprefix("core-flow-") if args.case_name else args.scenario
+    if case_key in state["scenarios"]:
         raise ValueError("scenario already frozen; use retained manifest and original operation/execution")
     raw_token = cluster.run(["create", "token", "modeldev-step", "-n", TENANT, "--duration=10m"]).decode().strip()
     claims = json.loads(base64.urlsafe_b64decode(raw_token.split(".")[1] + "=="))
@@ -122,9 +126,9 @@ def render(cluster, args):
         accepted -= datetime.timedelta(seconds=10800 - args.remaining_seconds)
     accepted_at = accepted.isoformat(timespec="microseconds").replace("+00:00", "Z")
     operation, execution = str(uuid.uuid4()), str(uuid.uuid4())
-    intent = {"name": "CORE FLOW " + args.scenario, "kind": "FINETUNING", "preset_id": release["preset_id"], "dataset_version_id": storage["input_version_id"], "base_model_version_id": storage["base_version_id"], "finetuning": {"learning_rate": "0.0002", "max_steps": 10} if args.scenario == "b" else {}, "new_model_name": "ft-core-" + args.scenario}
-    fixture = {"schema": "ani.finetuning.core-flow-fixture.v1", "bootstrap": bootstrap, "scenario": args.scenario, "tenant_id": tenant, "actor": "core-flow:test-driver", "operation_id": operation, "execution_id": execution, "intent": intent, "release_id": release["release_id"], "release_digest": digest, "canonical_release": release, "input": {"Format": "JSON", "TenantID": tenant, "RequestID": storage["import_request_id"], "InputVersionID": storage["input_version_id"], "Actor": "core-flow:test-driver", "RequestedAt": state["input_requested_at"], "Scope": input_scope, "Object": fixed("approved/data/finetune_data.json", storage["object_heads"]["input"], materials["input_sha256"])}, "base_model": base, "accepted_at": accepted_at, "stop_when_training": args.scenario == "stop", "restart_when_training": args.scenario == "restart", "expect_deadline": args.scenario == "deadline", "evidence_directory": "/evidence", "source_commit": source_commit, "material_source": str(root / "storage-receipt.json")}
-    name = "core-flow-" + args.scenario
+    intent = {"name": "CORE FLOW " + scenario_label, "kind": "FINETUNING", "preset_id": release["preset_id"], "dataset_version_id": storage["input_version_id"], "base_model_version_id": storage["base_version_id"], "finetuning": {"learning_rate": "0.0002", "max_steps": 10} if args.scenario == "b" else {}, "new_model_name": "ft-core-" + scenario_label}
+    fixture = {"schema": "ani.finetuning.core-flow-fixture.v1", "bootstrap": bootstrap, "scenario": scenario_label, "tenant_id": tenant, "actor": "core-flow:test-driver", "operation_id": operation, "execution_id": execution, "intent": intent, "release_id": release["release_id"], "release_digest": digest, "canonical_release": release, "input": {"Format": "JSON", "TenantID": tenant, "RequestID": storage["import_request_id"], "InputVersionID": storage["input_version_id"], "Actor": "core-flow:test-driver", "RequestedAt": state["input_requested_at"], "Scope": input_scope, "Object": fixed("approved/data/finetune_data.json", storage["object_heads"]["input"], materials["input_sha256"])}, "base_model": base, "accepted_at": accepted_at, "stop_when_training": args.scenario == "stop", "restart_when_training": args.scenario == "restart", "expect_deadline": args.scenario == "deadline", "evidence_directory": "/evidence", "source_commit": source_commit, "material_source": str(root / "storage-receipt.json")}
+    name = args.case_name or "core-flow-" + args.scenario
     private = root / ".private"
     config_rows = [obj("ConfigMap", "modeldev-step-owner", TENANT, data={"config.json": encoded(step_configuration).decode(), "ca.crt": (private / "task-ca.crt").read_text(), "s3-ca.crt": (private / "s3-ca.crt").read_text()}), obj("ConfigMap", "ani-kfp-ca", TENANT, data={"ca.crt": (private / "kfp-ca.crt").read_text()}), obj("Secret", "ani-kfp-ca", TENANT, type="Opaque", data={"ca.crt": base64.b64encode((private / "kfp-ca.crt").read_bytes()).decode()}), obj("Role", "modeldev-step", TENANT, rules=[{"apiGroups": [""], "resources": ["pods"], "verbs": ["get"]}, {"apiGroups": [""], "resources": ["persistentvolumeclaims"], "verbs": ["get", "create", "watch"]}, {"apiGroups": ["argoproj.io"], "resources": ["workflows"], "verbs": ["get"]}, {"apiGroups": ["argoproj.io"], "resources": ["workflowtaskresults"], "verbs": ["create", "patch"]}]), obj("RoleBinding", "modeldev-step", TENANT, roleRef={"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": "modeldev-step"}, subjects=[{"kind": "ServiceAccount", "name": "modeldev-step", "namespace": TENANT}]), obj("ConfigMap", name, SYSTEM, data={"fixture.json": encoded(fixture).decode(), "facts.json": encoded(facts).decode(), "binding.json": encoded(binding).decode(), "s3-ca.crt": (private / "s3-ca.crt").read_text(), "kfp-ca.crt": (private / "kfp-ca.crt").read_text()}), obj("PersistentVolumeClaim", "core-flow-evidence", SYSTEM, spec={"storageClassName": "ani-cephfs", "accessModes": ["ReadWriteMany"], "resources": {"requests": {"storage": "1Gi"}}})]
     # Reuse the observed KFP 2.16 namespace provider format, with this task's
@@ -146,15 +150,17 @@ def render(cluster, args):
     manifest = private / (name + "-manifest.json")
     save(manifest, {"apiVersion": "v1", "kind": "List", "items": [*config_rows, job]})
     save(root / "driver-environment.json", proof)
-    state["scenarios"][args.scenario] = {"job_name": name, "execution_id": execution, "operation_id": operation, "manifest_reference": str(manifest), "manifest_sha256": sha(manifest.read_bytes()), "source_commit": source_commit, "release_digest": digest, "phase": "RENDERED_SERVER_DRY_RUN"}
+    state["scenarios"][case_key] = {"scenario": args.scenario, "job_name": name, "execution_id": execution, "operation_id": operation, "manifest_reference": str(manifest), "manifest_sha256": sha(manifest.read_bytes()), "source_commit": source_commit, "release_digest": digest, "phase": "RENDERED_SERVER_DRY_RUN"}
     save(state_path, state)
     print(json.dumps({"phase": "CORE_FLOW_DRIVER_RENDERED", "scenario": args.scenario, "execution_id": execution, "manifest_reference": str(manifest), "business_acceptance": "NOT_RUN"}))
 
 
-def start(cluster, root, scenario):
+def start(cluster, root, scenario, case_name=None):
     state_path = root / ".private/driver-state.json"
     state = json.loads(state_path.read_bytes())
-    original = state["scenarios"][scenario]
+    original = state["scenarios"][case_name or scenario]
+    if original.get("scenario", scenario) != scenario:
+        raise ValueError("original case scenario differs from requested scenario")
     if original["phase"] != "RENDERED_SERVER_DRY_RUN":
         raise ValueError("inspect original Job/DB; do not create another execution after uncertain start")
     manifest = Path(original["manifest_reference"])
@@ -186,6 +192,7 @@ def main():
     parser.add_argument("--driver-image")
     parser.add_argument("--component-image")
     parser.add_argument("--scenario", choices=["a", "b", "stop", "restart", "deadline"])
+    parser.add_argument("--case-name", help="unique task-owned name for an explicit new case; retained cases are never overwritten")
     parser.add_argument("--remaining-seconds", type=int, default=0)
     args = parser.parse_args()
     if not Path("/etc/fedora-release").exists():
@@ -198,7 +205,7 @@ def main():
     elif args.command == "render":
         render(cluster, args)
     else:
-        start(cluster, args.root, args.scenario)
+        start(cluster, args.root, args.scenario, args.case_name)
 
 
 if __name__ == "__main__":
