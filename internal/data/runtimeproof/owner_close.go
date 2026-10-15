@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -84,6 +85,9 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	for i := range pods.Items {
 		pod := &pods.Items[i]
 		if pod.GetAPIVersion() != "v1" || pod.GetKind() != "Pod" || pod.GetNamespace() != environment.NamespaceName {
+			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
+		}
+		if podMatchesServerDeniedNode(workflow, pod) {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 		}
 		owned := workflowOwner(pod, association)
@@ -250,6 +254,9 @@ func ownerWorkflowCompletion(workflow *unstructured.Unstructured, now time.Time)
 		if !ok || err != nil || nodeFinished.IsZero() || nodeFinished.After(at) {
 			return biz.ManagedOwnerTermination{}, nil, biz.ErrRuntimeNotReady
 		}
+		if serverDeniedAdmissionNode(workflow, node) {
+			continue
+		}
 		fulfillablePods[id] = true
 	}
 	encoded, err := json.Marshal(nodes)
@@ -257,6 +264,56 @@ func ownerWorkflowCompletion(workflow *unstructured.Unstructured, now time.Time)
 		return biz.ManagedOwnerTermination{}, nil, biz.ErrRuntimeNotReady
 	}
 	return biz.ManagedOwnerTermination{WorkflowPhase: phase, WorkflowFinishedAt: at.UTC(), WorkflowResourceVersion: workflow.GetResourceVersion(), WorkflowNodesSHA256: contentSHA(encoded)}, fulfillablePods, nil
+}
+
+// Argo records a Pod node before the API create call. The formal ModelDev
+// CREATE-only hook can explicitly deny that create; node.startedAt is then
+// controller initialization, not a process exit. Preserve the unmodified node
+// in WorkflowNodesSHA256 while requiring exits only for actually created Pods.
+// An arbitrary Error, transport timeout or disappeared historical Pod is never
+// evidence of noncreation. This narrow case matches the pinned Argo 3.7.8 and
+// ModelDev admission protocols, not free-form error substrings.
+func serverDeniedAdmissionNode(workflow *unstructured.Unstructured, node map[string]any) bool {
+	if node["type"] != "Pod" || node["phase"] != "Error" || node["templateName"] != "system-container-driver" || node["templateScope"] != "local/"+workflow.GetName() || node["progress"] != "0/1" || node["taskResultSynced"] != true {
+		return false
+	}
+	name, ok := node["name"].(string)
+	id, idOK := node["id"].(string)
+	if !ok || !idOK || !strings.HasPrefix(name, workflow.GetName()+".") || !strings.HasPrefix(id, workflow.GetName()+"-") || workflow.GetNamespace() == "" {
+		return false
+	}
+	expected := "task '" + name + "' errored: admission webhook \"" + workflow.GetNamespace() + ".modeldev.ani.io\" denied the request: ModelDev Pod admission refused: dependency_unavailable"
+	if node["message"] != expected {
+		return false
+	}
+	for _, field := range []string{"hostNodeName", "podIP", "podName", "podUID", "containerID", "containerStatuses", "outputs", "resourcesDuration", "exitCode", "daemoned", "memoizationStatus"} {
+		if _, found := node[field]; found {
+			return false
+		}
+	}
+	started, startedOK := node["startedAt"].(string)
+	finished, finishedOK := node["finishedAt"].(string)
+	start, startErr := time.Parse(time.RFC3339Nano, started)
+	end, endErr := time.Parse(time.RFC3339Nano, finished)
+	return startedOK && finishedOK && startErr == nil && endErr == nil && !start.IsZero() && !start.After(end)
+}
+
+func podMatchesServerDeniedNode(workflow *unstructured.Unstructured, pod *unstructured.Unstructured) bool {
+	nodes, found, err := unstructured.NestedMap(workflow.Object, "status", "nodes")
+	if err != nil || !found {
+		return false
+	}
+	annotations := pod.GetAnnotations()
+	for id, raw := range nodes {
+		node, ok := raw.(map[string]any)
+		if !ok || !serverDeniedAdmissionNode(workflow, node) {
+			continue
+		}
+		if pod.GetName() == id || annotations["workflows.argoproj.io/node-id"] == id || annotations["workflows.argoproj.io/node-name"] == node["name"] {
+			return true
+		}
+	}
+	return false
 }
 
 func ownerWorkspaceReference(pod *unstructured.Unstructured, workspace *biz.WorkspaceBinding) (bool, bool) {
