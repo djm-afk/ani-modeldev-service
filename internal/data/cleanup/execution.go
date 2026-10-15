@@ -464,7 +464,18 @@ func (adapter *Adapter) verifyOriginalSuspendedSets(ctx context.Context, record 
 		if err != nil || set == nil {
 			return biz.ErrCleanupUncertain
 		}
-		if !exactObject(set, expected) || set.GetDeletionTimestamp() != nil || !originalObservedSuspend(set, record.Runtime.CloseRequestedAt) {
+		if !exactObject(set, expected) || set.GetDeletionTimestamp() != nil {
+			return biz.ErrCleanupBlocked
+		}
+		observedSuspend := originalObservedSuspend(set, record.Runtime.CloseRequestedAt)
+		// A naturally completed JobSet may never report Suspended, even after
+		// the original generation2 suspend was copied from its TrainJob. This
+		// automatic-only caller has already committed every exit, log and exact
+		// deletion intent. Accept only its durably successful original terminal
+		// graph and an explicit completion strictly before the close fence;
+		// the TrainJob's own post-fence Suspended report remains mandatory.
+		completedBeforeClose := target.Terminal && expected.Terminal && record.Runtime.Observation != nil && record.Runtime.Observation.Outcome == "SUCCEEDED" && originalCompletedSetBeforeClose(set, record.Runtime.CloseRequestedAt)
+		if !observedSuspend && !completedBeforeClose {
 			return biz.ErrCleanupBlocked
 		}
 		sets++
@@ -473,6 +484,46 @@ func (adapter *Adapter) verifyOriginalSuspendedSets(ctx context.Context, record 
 		return biz.ErrCleanupBlocked
 	}
 	return nil
+}
+
+func originalCompletedSetBeforeClose(object *unstructured.Unstructured, fence time.Time) bool {
+	suspend, found, err := unstructured.NestedBool(object.Object, "spec", "suspend")
+	if err != nil || !found || !suspend || object.GetKind() != "JobSet" || object.GetGeneration() != 2 || fence.IsZero() {
+		return false
+	}
+	conditions, found, err := unstructured.NestedSlice(object.Object, "status", "conditions")
+	if err != nil || !found {
+		return false
+	}
+	seen := false
+	for _, raw := range conditions {
+		condition, ok := raw.(map[string]any)
+		if !ok {
+			return false
+		}
+		kind, valid := condition["type"].(string)
+		if !valid || kind == "Suspended" || kind == "Failed" && condition["status"] != "False" {
+			return false
+		}
+		if kind != "Completed" {
+			continue
+		}
+		if seen || condition["status"] != "True" {
+			return false
+		}
+		seen = true
+		text, _, err := unstructured.NestedString(condition, "lastTransitionTime")
+		at, parseErr := time.Parse(time.RFC3339Nano, text)
+		if err != nil || parseErr != nil || at.IsZero() || !at.Before(fence) || at.After(time.Now().UTC()) {
+			return false
+		}
+		// If supplied, this historical completion must describe the original
+		// generation1 computation, not an invented acknowledgement of Stop.
+		if generation, present, err := unstructured.NestedInt64(condition, "observedGeneration"); err != nil || present && generation != 1 {
+			return false
+		}
+	}
+	return seen
 }
 
 // Only the original create (generation 1) followed by the one supported Stop

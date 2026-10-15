@@ -53,7 +53,7 @@ func newComputeCleanupFixture(t *testing.T, fine bool) *computeCleanupFixture {
 	return newComputeCleanupClosingFixture(t, fine, "")
 }
 
-func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string) *computeCleanupFixture {
+func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string, configureBoundary ...func(*computeCleanupFixture)) *computeCleanupFixture {
 	t.Helper()
 	f := &computeCleanupFixture{objects: map[string]*unstructured.Unstructured{}, pendingReads: map[string]int{}}
 	deadline := []time.Duration{}
@@ -66,6 +66,9 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 		f.step, f.kube = step, kube
 		step.f.workflow.SetResourceVersion("1")
 		step.serveExtra = f.serve
+		for _, configure := range configureBoundary {
+			configure(f)
+		}
 		ctx := context.Background()
 		reserved, err := repository.ReserveTraining(ctx, step.f.authority())
 		if err != nil || !reserved.SendPermit {
