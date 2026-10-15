@@ -72,14 +72,18 @@ explicit namespace UID bindings. The service verifies the live original Workflow
 run association, role, image and mounts before returning field patches.
 After durable CLOSED and full step exit proof, the existing owner worker persists
 a cleanup receipt, conditionally releases only its step finalizer and removes
-the exact terminal step Pods. Training log Pods, PVCs and published objects stay
-retained; the existing explicit controller CleanupPlan remains separate.
+the exact terminal step Pods. It then captures the original training log tail
+and reclaims terminal compute resources under their original UID and creation
+fences. The durable exits and logs, PVCs and published objects remain available;
+workspace and artifact deletion require a separate audited CleanupPlan.
 
 The unified implementation and Fedora integration can be verified without
-registering it. Cluster registration, switching the existing shared webhook and
-target-cluster business tests are explicitly not authorized in this delivery.
-The earlier date-specific manifests and actual records remain historical
-evidence; they are not the deployment path for the formal component.
+registering it. Live admission additionally requires the reviewed formal
+MutatingWebhookConfiguration and explicit namespace UID bindings. This task's
+formal registration and isolated live acceptance have been authorized; existing
+shared webhooks retain their configuration. Registration and subsequent profile
+installations have separate actual receipts in the active task records. Earlier
+date-specific manifests and actual records remain historical evidence.
 
 Live acceptance uses only the verified 172.16.101.10–12 cluster and the task's
 isolated namespaces, database and S3 identities. WORKLOAD checks, PostgreSQL
