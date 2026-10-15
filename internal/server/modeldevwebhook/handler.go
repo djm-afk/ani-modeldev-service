@@ -3,6 +3,7 @@ package modeldevwebhook
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	admissionv1 "k8s.io/api/admission/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -126,6 +128,7 @@ func (handler *Handler) mutate(writer http.ResponseWriter, request *http.Request
 		return
 	}
 	handler.requests.Add(1)
+	started := time.Now()
 	ctx, cancel := context.WithTimeout(request.Context(), handler.requestTimeout)
 	defer cancel()
 	controller := http.NewResponseController(writer)
@@ -139,9 +142,11 @@ func (handler *Handler) mutate(writer http.ResponseWriter, request *http.Request
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	response, decision := handler.admit(ctx, review.Request)
+	var failure admissionFailure
+	response, decision := handler.admit(ctx, review.Request, &failure)
 	if ctx.Err() != nil {
-		response, decision = denied(review.Request, "dependency_unavailable")
+		response, decision = unavailable(review.Request)
+		failure.record("request", started, ctx, ctx.Err())
 	}
 	if !response.Allowed {
 		handler.denied.Add(1)
@@ -150,9 +155,42 @@ func (handler *Handler) mutate(writer http.ResponseWriter, request *http.Request
 		handler.mutated.Add(1)
 	}
 	// Deliberately omit UID, namespace, object, token, API errors and body.
-	handler.logger.Info("modeldev pod admission", "decision", decision, "allowed", response.Allowed)
+	attributes := []any{"decision", decision, "allowed", response.Allowed}
+	if !response.Allowed && failure.stage != "" {
+		attributes = append(attributes, "stage", failure.stage, "error_class", failure.class, "elapsed_ms", failure.elapsedMilliseconds)
+	}
+	handler.logger.Info("modeldev pod admission", attributes...)
 	writer.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(writer).Encode(admissionv1.AdmissionReview{TypeMeta: metav1.TypeMeta{APIVersion: "admission.k8s.io/v1", Kind: "AdmissionReview"}, Response: response})
+}
+
+// Admission diagnostics contain only fixed internal stages, typed classes and
+// durations. Raw API errors and request identities never enter logger fields.
+type admissionFailure struct {
+	stage, class        string
+	elapsedMilliseconds int64
+}
+
+func (failure *admissionFailure) record(stage string, started time.Time, ctx context.Context, err error) {
+	failure.stage, failure.class, failure.elapsedMilliseconds = stage, admissionErrorClass(ctx, err), time.Since(started).Milliseconds()
+}
+
+func admissionErrorClass(ctx context.Context, err error) string {
+	if ctx.Err() != nil {
+		err = ctx.Err()
+	}
+	switch {
+	case errors.Is(err, context.DeadlineExceeded):
+		return "deadline"
+	case errors.Is(err, context.Canceled):
+		return "canceled"
+	case apierrors.IsForbidden(err):
+		return "forbidden"
+	case apierrors.IsNotFound(err):
+		return "not_found"
+	default:
+		return "transport_or_unavailable"
+	}
 }
 
 var _ http.Handler = (*Handler)(nil)

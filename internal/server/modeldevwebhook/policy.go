@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -129,7 +130,14 @@ func denied(request *admissionv1.AdmissionRequest, reason string) (*admissionv1.
 	return &admissionv1.AdmissionResponse{UID: request.UID, Allowed: false, Result: &metav1.Status{Code: 403, Reason: metav1.StatusReasonForbidden, Message: "ModelDev Pod admission refused: " + reason}}, reason
 }
 
-func (handler *Handler) admit(ctx context.Context, request *admissionv1.AdmissionRequest) (*admissionv1.AdmissionResponse, string) {
+// Keep dependency failures transient inside the successful AdmissionReview
+// transport response. The API server preserves this typed rejection status;
+// security and policy refusals continue to use Forbidden.
+func unavailable(request *admissionv1.AdmissionRequest) (*admissionv1.AdmissionResponse, string) {
+	return &admissionv1.AdmissionResponse{UID: request.UID, Allowed: false, Result: &metav1.Status{Code: 503, Reason: metav1.StatusReasonServiceUnavailable, Message: "ModelDev Pod admission refused: dependency_unavailable"}}, "dependency_unavailable"
+}
+
+func (handler *Handler) admit(ctx context.Context, request *admissionv1.AdmissionRequest, failure *admissionFailure) (*admissionv1.AdmissionResponse, string) {
 	allowed := &admissionv1.AdmissionResponse{UID: request.UID, Allowed: true}
 	binding, found := handler.bindings[request.Namespace]
 	if !found || request.Operation != admissionv1.Create || request.Resource != (metav1.GroupVersionResource{Version: "v1", Resource: "pods"}) || request.SubResource != "" {
@@ -156,16 +164,20 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 	}
 	identityCtx, cancel := context.WithTimeout(ctx, handler.dependencyTimeout)
 	defer cancel()
+	started := time.Now()
 	namespace, err := handler.reader.Namespace(identityCtx, binding.Namespace)
 	if err != nil || namespace == nil {
-		return denied(request, "dependency_unavailable")
+		failure.record("namespace", started, identityCtx, err)
+		return unavailable(request)
 	}
 	if string(namespace.UID) != binding.NamespaceUID || namespace.Name != binding.Namespace || namespace.DeletionTimestamp != nil || namespace.Labels[binding.OwnerLabel.Key] != binding.OwnerLabel.Value {
 		return denied(request, "namespace_identity")
 	}
+	started = time.Now()
 	workflow, err := handler.reader.Workflow(identityCtx, binding.Namespace, owner.Name)
 	if err != nil || workflow == nil {
-		return denied(request, "dependency_unavailable")
+		failure.record("workflow", started, identityCtx, err)
+		return unavailable(request)
 	}
 	if workflow.GetAPIVersion() != owner.APIVersion || workflow.GetKind() != owner.Kind || workflow.GetName() != owner.Name || workflow.GetNamespace() != binding.Namespace || workflow.GetUID() != owner.UID || workflow.GetDeletionTimestamp() != nil || workflow.GetLabels()["pipeline/runid"] != labels["pipeline/runid"] {
 		return denied(request, "workflow_identity")

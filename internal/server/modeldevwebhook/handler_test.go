@@ -324,7 +324,11 @@ func TestRefuseUntrustedScopeOwnerProfileImagesAndMounts(t *testing.T) {
 			body := request(t, config, "sft-v1", "export")
 			test.mutate(&body, reader)
 			result := call(t, server, body)
-			if result.Allowed || result.Result == nil || result.Result.Code != 403 || len(result.Patch) != 0 {
+			wantCode, wantReason := int32(403), metav1.StatusReasonForbidden
+			if test.name == "API unavailable" {
+				wantCode, wantReason = 503, metav1.StatusReasonServiceUnavailable
+			}
+			if result.Allowed || result.Result == nil || result.Result.Code != wantCode || result.Result.Reason != wantReason || len(result.Patch) != 0 {
 				t.Fatalf("untrusted target accepted: %+v", result)
 			}
 			if strings.Contains(logs.String(), runID) || strings.Contains(logs.String(), "sensitive token") || strings.Contains(logs.String(), namespaceUID) {
