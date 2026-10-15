@@ -29,6 +29,11 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
 	"google.golang.org/protobuf/encoding/protojson"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 )
 
 // This executable exists only in an explicitly tagged test binary. It replaces
@@ -72,6 +77,106 @@ type coreFlowCloseResult struct {
 	Stop       biz.CloseReceipt
 	StopReplay biz.CloseReceipt
 	Runtime    biz.ExecutionRuntime
+}
+
+type coreFlowTrainingWriter struct {
+	Namespace, NamespaceUID, TrainJobUID, JobSetUID, JobUID, PodUID, PodName, ContainerName, ContainerID string
+	StartedAt, ObservedAt                                                                                time.Time
+}
+
+func coreFlowRunningTrainingWriter(ctx context.Context, client dynamic.Interface, record biz.QueryRecord, clock func() time.Time) (*coreFlowTrainingWriter, bool, error) {
+	state := record.Runtime
+	if state.Training == nil || state.TrainingHandle == nil || state.Observation == nil || state.Observation.Outcome != "RUNNING" {
+		return nil, false, nil
+	}
+	// RUNNING includes an unscheduled or ContainerCreating Pod. Resolve the
+	// durable original chain, then only GET those exact objects with this
+	// existing client; observing a writer must not mutate runtime resources.
+	source, err := biz.TrainingLogSourceFor(record, "")
+	if errors.Is(err, biz.ErrTrainingLogNotFound) {
+		return nil, false, nil
+	}
+	if err != nil || client == nil || clock == nil {
+		return nil, false, biz.ErrRuntimeConflict
+	}
+	namespace, err := client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, source.Namespace, metav1.GetOptions{})
+	if err != nil {
+		return nil, false, nil
+	}
+	if namespace.GetAPIVersion() != "v1" || namespace.GetKind() != "Namespace" || namespace.GetName() != source.Namespace || string(namespace.GetUID()) != source.NamespaceUID {
+		return nil, false, biz.ErrRuntimeConflict
+	}
+	resources := make(map[string]biz.RuntimeResource, len(state.Observation.Resources))
+	for _, resource := range state.Observation.Resources {
+		resources[resource.UID] = resource
+	}
+	podFact := resources[source.PodUID]
+	job := resources[podFact.OwnerUID]
+	set := resources[job.OwnerUID]
+	train := resources[set.OwnerUID]
+	chain := []biz.RuntimeResource{train, set, job, podFact}
+	api := []schema.GroupVersionResource{{Group: "trainer.kubeflow.org", Version: "v1alpha1", Resource: "trainjobs"}, {Group: "jobset.x-k8s.io", Version: "v1alpha2", Resource: "jobsets"}, {Group: "batch", Version: "v1", Resource: "jobs"}, {Version: "v1", Resource: "pods"}}
+	var pod corev1.Pod
+	for index, expected := range chain {
+		actual, err := client.Resource(api[index]).Namespace(source.Namespace).Get(ctx, expected.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, false, nil
+		}
+		if actual.GetAPIVersion() != expected.APIVersion || actual.GetKind() != expected.Kind || actual.GetNamespace() != source.Namespace || actual.GetName() != expected.Name || string(actual.GetUID()) != expected.UID {
+			return nil, false, biz.ErrRuntimeConflict
+		}
+		owner := metav1.GetControllerOf(actual)
+		if index == 0 {
+			annotations := actual.GetAnnotations()
+			if owner != nil || annotations["modeldev.ani.io/tenant-id"] != state.Training.TenantID || annotations["modeldev.ani.io/execution-id"] != state.Training.ExecutionID || annotations["modeldev.ani.io/execution-spec-sha256"] != state.Training.SpecHash {
+				return nil, false, biz.ErrRuntimeConflict
+			}
+		} else {
+			parent := chain[index-1]
+			if owner == nil || string(owner.UID) != parent.UID || owner.APIVersion != parent.APIVersion || owner.Kind != parent.Kind || owner.Name != parent.Name {
+				return nil, false, biz.ErrRuntimeConflict
+			}
+		}
+		if actual.GetDeletionTimestamp() != nil {
+			return nil, false, nil
+		}
+		if index == len(chain)-1 && runtime.DefaultUnstructuredConverter.FromUnstructured(actual.Object, &pod) != nil {
+			return nil, false, biz.ErrRuntimeConflict
+		}
+	}
+	if pod.Status.Phase != corev1.PodRunning {
+		return nil, false, nil
+	}
+	nodeCount := 0
+	for _, container := range pod.Spec.Containers {
+		if container.Name == source.ContainerName {
+			nodeCount++
+		}
+	}
+	if nodeCount != 1 {
+		return nil, false, biz.ErrRuntimeConflict
+	}
+	var writer *coreFlowTrainingWriter
+	for _, status := range pod.Status.ContainerStatuses {
+		if status.Name != source.ContainerName {
+			continue
+		}
+		if writer != nil {
+			return nil, false, biz.ErrRuntimeConflict
+		}
+		running := status.State.Running
+		if running == nil || running.StartedAt.IsZero() || strings.TrimSpace(status.ContainerID) == "" {
+			return nil, false, nil
+		}
+		// Timestamp the successful Pod read, not the beginning of the GET chain.
+		// A deadline crossed during I/O must not become an earlier observation.
+		now := clock().UTC().Truncate(time.Microsecond)
+		if now.IsZero() || running.StartedAt.After(now) {
+			return nil, false, nil
+		}
+		writer = &coreFlowTrainingWriter{Namespace: source.Namespace, NamespaceUID: source.NamespaceUID, TrainJobUID: state.TrainingHandle.TrainJobUID, JobSetUID: set.UID, JobUID: job.UID, PodUID: source.PodUID, PodName: source.PodName, ContainerName: source.ContainerName, ContainerID: status.ContainerID, StartedAt: running.StartedAt.Time.UTC(), ObservedAt: now}
+	}
+	return writer, writer != nil, nil
 }
 
 func coreFlowOriginalStop(f coreFlowFixture) biz.CloseIntent {
@@ -365,6 +470,7 @@ func TestFinetuningCoreFlow(t *testing.T) {
 	factsRepo := lifecycle.New(pool)
 	stopped, restarted := false, false
 	var trainingObservedAt *time.Time
+	var trainingWriter *coreFlowTrainingWriter
 	var final biz.ExecutionRuntime
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -374,10 +480,15 @@ func TestFinetuningCoreFlow(t *testing.T) {
 			t.Fatal("runtime read", err)
 		}
 		if err == nil {
-			if state.TrainingHandle != nil && state.Observation != nil && state.Observation.Outcome == "RUNNING" {
+			writer, running, writerErr := coreFlowRunningTrainingWriter(ctx, clients.kube, biz.QueryRecord{Execution: first.Execution, Runtime: state}, time.Now)
+			if writerErr != nil {
+				t.Fatal("original training writer identity", writerErr)
+			}
+			if running {
 				if trainingObservedAt == nil {
-					observed := time.Now().UTC().Truncate(time.Microsecond)
+					observed := writer.ObservedAt
 					trainingObservedAt = &observed
+					trainingWriter = writer
 				}
 				if f.StopWhenTraining && !stopped {
 					stop := biz.CloseIntent{TenantID: f.TenantID, ExecutionID: f.ExecutionID, OperationID: f.OperationID, SpecHash: resolved.SpecHash, SourceGeneration: 1, Reason: biz.CloseReasonUserStop, RequestedAt: time.Now().UTC().Truncate(time.Microsecond), RequestedActor: f.Actor}
@@ -458,7 +569,7 @@ func TestFinetuningCoreFlow(t *testing.T) {
 	if err := os.MkdirAll(f.EvidenceDirectory, 0o700); err != nil {
 		t.Fatal(err)
 	}
-	record := map[string]any{"scope": "CORE_FLOW", "scenario": f.Scenario, "source_commit": f.SourceCommit, "execution_id": f.ExecutionID, "operation_id": f.OperationID, "spec_hash": resolved.SpecHash, "input_version": ready, "snapshot": resolved.Snapshot, "runtime": final, "closed_replay": closedReplay, "training_observed_at": trainingObservedAt, "upstream_boundary": "isolated application-layer fixture; Gov identity and delivery NOT_RUN", "base_model_boundary": "approved fixed S3 object through read-only Model fixture; Model permissions NOT_RUN", "model_registration": "provider unavailable; no READY", "material_source": f.MaterialSource}
+	record := map[string]any{"scope": "CORE_FLOW", "scenario": f.Scenario, "source_commit": f.SourceCommit, "execution_id": f.ExecutionID, "operation_id": f.OperationID, "spec_hash": resolved.SpecHash, "input_version": ready, "snapshot": resolved.Snapshot, "runtime": final, "closed_replay": closedReplay, "training_observed_at": trainingObservedAt, "training_writer": trainingWriter, "upstream_boundary": "isolated application-layer fixture; Gov identity and delivery NOT_RUN", "base_model_boundary": "approved fixed S3 object through read-only Model fixture; Model permissions NOT_RUN", "model_registration": "provider unavailable; no READY", "material_source": f.MaterialSource}
 	bytes, err := json.MarshalIndent(record, "", "  ")
 	if err != nil {
 		t.Fatal(err)
