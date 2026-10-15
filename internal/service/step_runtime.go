@@ -28,6 +28,9 @@ func (step *Step) GetExecutionConfiguration(ctx context.Context, request *modeld
 		modeldevv1.PipelineStep_PIPELINE_STEP_COLLECT:    "collect",
 		modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH:    "publish",
 		modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE:      "close",
+		modeldevv1.PipelineStep_PIPELINE_STEP_EXPORT:     "export",
+		modeldevv1.PipelineStep_PIPELINE_STEP_VERIFY:     "verify",
+		modeldevv1.PipelineStep_PIPELINE_STEP_REGISTER:   "register",
 	}
 	task, supported := tasks[requestedStep]
 	if !supported {
@@ -99,6 +102,9 @@ func (step *Step) ReportStepResult(ctx context.Context, request *modeldevv1.Repo
 	expected := modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE
 	if request.GetPublication() != nil {
 		expected = modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE
+		if request.GetContext().GetStep() == modeldevv1.PipelineStep_PIPELINE_STEP_REGISTER {
+			expected = modeldevv1.PipelineStep_PIPELINE_STEP_REGISTER
+		}
 	}
 	if request.GetTrainingResult() != nil || request.GetFailure() != nil {
 		expected = request.GetContext().GetStep()
@@ -301,6 +307,14 @@ func runtimeTrainingStatus(result biz.ManagedRuntimeResult, claim biz.BeginManag
 		Identity: runtimeIdentity(result.Execution), CreateState: modeldevv1.ExternalCreateState_EXTERNAL_CREATE_STATE_INTENT_RECORDED,
 		DeterministicTrainjobName: plan.Name, CreateRequestSha256: plan.RequestSHA256, States: states,
 	}
+	if timing := plan.FinetuningTiming; timing != nil {
+		admitted, a := runtimeTimestamp(timing.AdmittedAt)
+		deadline, d := runtimeTimestamp(timing.DeadlineAt)
+		if !a || !d || !timing.DeadlineAt.After(timing.AdmittedAt) {
+			return nil, runtimeError(biz.ErrRuntimeNotReady)
+		}
+		wire.TrainingAdmittedAt, wire.TrainingDeadlineAt = admitted, deadline
+	}
 	if handle := result.Runtime.TrainingHandle; handle != nil {
 		wire.CreateState = modeldevv1.ExternalCreateState_EXTERNAL_CREATE_STATE_CONFIRMED
 		wire.Trainjob = &modeldevv1.ResourceRef{ApiVersion: "trainer.kubeflow.org/v1alpha1", Kind: "TrainJob", NamespaceName: plan.Workspace.NamespaceName, NamespaceUid: handle.NamespaceUID, Name: plan.Name, Uid: handle.TrainJobUID}
@@ -493,6 +507,8 @@ func runtimeError(err error) error {
 		return commandError(codes.Unavailable, modeldevv1.ErrorReason_ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN, "training creation requires reconciliation", "")
 	case errors.Is(err, biz.ErrTrainingRejected):
 		return commandError(codes.Aborted, modeldevv1.ErrorReason_ERROR_REASON_TRAINING_FAILED, "training creation was rejected", "")
+	case errors.Is(err, biz.ErrModelDependencyUnavailable):
+		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_UPSTREAM_UNAVAILABLE, "Model dependency is not connected", "")
 	case errors.Is(err, biz.ErrRuntimeNotReady), errors.Is(err, biz.ErrTrainingNotFound):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_ENVIRONMENT_NOT_READY, "managed runtime prerequisites are not ready", "")
 	default:

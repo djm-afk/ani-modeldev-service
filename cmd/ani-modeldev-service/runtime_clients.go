@@ -136,7 +136,11 @@ func loadRuntimeClients(config *conf.ManagedRuntime) (runtimeClients, error) {
 		TLSClientConfig:     &tls.Config{RootCAs: storageCA, MinVersion: tls.VersionTLS12},
 		TLSHandshakeTimeout: timeout, ResponseHeaderTimeout: timeout, MaxConnsPerHost: 4, MaxIdleConnsPerHost: 2, IdleConnTimeout: 30 * time.Second,
 	}
-	storageHTTP := &http.Client{Transport: storageTransport, Timeout: timeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	streamingTimeout := timeout
+	if config.ObjectStorage.StreamingTimeout != nil {
+		streamingTimeout = config.ObjectStorage.StreamingTimeout.AsDuration()
+	}
+	storageHTTP := &http.Client{Transport: storageTransport, Timeout: streamingTimeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	store := s3.New(s3.Options{
 		Region: config.ObjectStorage.Region, BaseEndpoint: aws.String(config.ObjectStorage.Endpoint), UsePathStyle: true,
 		HTTPClient: storageHTTP, Credentials: credentials, RetryMaxAttempts: 1,

@@ -56,6 +56,8 @@ type completeFixture struct {
 	trainingErr          error
 	trainingLog          []byte
 	workspace            biz.WorkspaceBinding
+	stepDeletes          int
+	archivedStepStates   map[string]string
 }
 
 func newCompleteFixture(t *testing.T) *completeFixture {
@@ -221,6 +223,9 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(job)
 		return
 	}
+	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" && f.handleRetainedPodMutation(w, r) {
+		return
+	}
 	if r.Method != "GET" {
 		f.t.Error("unexpected Kubernetes mutation")
 		w.WriteHeader(405)
@@ -267,6 +272,7 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if object := f.objects[r.URL.Path]; object != nil {
+		f.completeWaitExitLocked(object)
 		_ = json.NewEncoder(w).Encode(object)
 		return
 	}
@@ -274,6 +280,7 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 		items := []any{}
 		for p, o := range f.objects {
 			if strings.HasPrefix(p, r.URL.Path+"/") {
+				f.completeWaitExitLocked(o)
 				items = append(items, o)
 			}
 		}
@@ -407,10 +414,16 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		pod := f.objects["/api/v1/namespaces/"+s.Environment.NamespaceName+"/pods/main-"+step]
-		if pod["status"].(map[string]any)["phase"] == "Succeeded" {
+		if pod == nil {
+			state = f.archivedStepStates[step]
+			if state == "" {
+				f.t.Error("KFP boundary lost task history independently of Pod cleanup")
+				w.WriteHeader(500)
+				return
+			}
+		} else if pod["status"].(map[string]any)["phase"] == "Succeeded" {
 			state = "SUCCEEDED"
-		}
-		if pod["status"].(map[string]any)["phase"] == "Failed" {
+		} else if pod["status"].(map[string]any)["phase"] == "Failed" {
 			state = "FAILED"
 		}
 		tasks = append(tasks, map[string]string{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "pod_name": "main-" + step, "state": state})
@@ -438,6 +451,12 @@ func (f *completeFixture) finishWorkflowNaturally() {
 		nodes["main-"+step] = map[string]any{"id": "main-" + step, "name": "main-flow." + step, "type": "Pod", "phase": "Succeeded", "finishedAt": time.Now().UTC().Format(time.RFC3339Nano)}
 	}
 	f.runSucceededAt = time.Now().UTC().Format(time.RFC3339Nano)
+	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
+		pod := f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-driver"]
+		pod["status"] = map[string]any{"phase": "Succeeded", "containerStatuses": []any{map[string]any{"name": "main", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": 0, "finishedAt": f.runSucceededAt}}}}}
+		f.completeWaitExitLocked(pod)
+		nodes["main-driver"] = map[string]any{"id": "main-driver", "name": "main-flow.driver", "type": "Pod", "phase": "Succeeded", "finishedAt": f.runSucceededAt}
+	}
 	workflow := f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+f.workspace.NamespaceName+"/workflows/main-flow"]
 	workflow["metadata"].(map[string]any)["labels"] = map[string]any{"workflows.argoproj.io/completed": "true"}
 	workflow["metadata"].(map[string]any)["resourceVersion"] = "2"

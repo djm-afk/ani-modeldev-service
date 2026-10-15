@@ -34,6 +34,18 @@ type ModeldevExecution struct {
 	AcceptedAt        pgtype.Timestamptz
 }
 
+type ModeldevExecutionCleanupAudit struct {
+	TenantID    pgtype.UUID
+	ExecutionID pgtype.UUID
+	PlanSha256  string
+	Actor       string
+	Phase       string
+	Plan        []byte
+	Receipt     []byte
+	StartedAt   pgtype.Timestamptz
+	CompletedAt pgtype.Timestamptz
+}
+
 type ModeldevExecutionIdentity struct {
 	TenantID        pgtype.UUID
 	ExecutionID     pgtype.UUID

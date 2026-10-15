@@ -33,3 +33,7 @@ Thumbs.db
 
 # Local task specifications and execution evidence.
 /.scratch/
+
+# Python bytecode produced by task-owned Fedora verification.
+__pycache__/
+*.pyc

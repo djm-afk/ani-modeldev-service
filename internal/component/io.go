@@ -69,6 +69,7 @@ func (runner *Runner) configuration(ctx context.Context) (biz.Execution, *traini
 	// Only the authenticated, canonically checked committed admission can fill
 	// the operation omitted by KFP's execution_id/spec_hash parameters.
 	runner.config.Context.Identity = proto.Clone(admission.Identity).(*trainingv1.ExecutionIdentity)
+	runner.executionKind = snapshot.Kind
 	return execution, response.Workspace, nil
 }
 
@@ -86,6 +87,15 @@ func (runner *Runner) prepare(ctx context.Context) error {
 	execution, _, err := runner.configuration(ctx)
 	if err != nil {
 		return err
+	}
+	if fine := execution.Snapshot.Finetuning; fine != nil {
+		deadline := time.Now().Add(time.Duration(fine.Budgets.PrepareTimeoutSeconds) * time.Second)
+		if execution.Snapshot.DeadlineAt.Before(deadline) {
+			deadline = execution.Snapshot.DeadlineAt
+		}
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, deadline)
+		defer cancel()
 	}
 	environment := execution.Snapshot.Environment
 	namespace, err := runner.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, environment.NamespaceName, metav1.GetOptions{})
@@ -107,7 +117,12 @@ func (runner *Runner) prepare(ctx context.Context) error {
 	if err := ensureWorkspaceDirectories(runner.config.WorkspaceDirectory, want.TrainingSubpath, want.PublicationSubpath); err != nil {
 		return err
 	}
-	prepared, err := workspaceio.PrepareInput(ctx, runner.store, execution, binding, runner.config.WorkspaceDirectory)
+	var prepared biz.WorkspaceBinding
+	if execution.Snapshot.Kind == "FINETUNING" {
+		prepared, err = workspaceio.PrepareFinetuningInput(ctx, runner.store, runner.baseStore, execution, binding, runner.config.WorkspaceDirectory)
+	} else {
+		prepared, err = workspaceio.PrepareInput(ctx, runner.store, execution, binding, runner.config.WorkspaceDirectory)
+	}
 	if err != nil {
 		return err
 	}
@@ -131,10 +146,14 @@ func (runner *Runner) collect(ctx context.Context) error {
 	if err := runner.checkWorkspace(execution, binding); err != nil {
 		return err
 	}
-	if !reportPath(runner.config.InventoryFile, runner.config.WorkspaceDirectory, execution.Snapshot.Workspace.ReportsSubpath) {
+	if !runner.inventoryPath(execution) {
 		return ErrConfiguration
 	}
-	output, err := workspaceio.Collect(ctx, filepath.Join(runner.config.WorkspaceDirectory, binding.TrainingSubpath), execution)
+	directory := filepath.Join(runner.config.WorkspaceDirectory, binding.TrainingSubpath)
+	if execution.Snapshot.Kind == "FINETUNING" {
+		directory = runner.config.WorkspaceDirectory
+	}
+	output, err := workspaceio.Collect(ctx, directory, execution)
 	if err != nil {
 		return err
 	}
@@ -155,20 +174,32 @@ func (runner *Runner) publish(ctx context.Context) error {
 	if err := runner.checkWorkspace(execution, binding); err != nil {
 		return err
 	}
-	if !reportPath(runner.config.InventoryFile, runner.config.WorkspaceDirectory, execution.Snapshot.Workspace.ReportsSubpath) {
+	if !runner.inventoryPath(execution) {
 		return ErrConfiguration
 	}
 	var output biz.CollectedOutput
 	if err := readJSON(runner.config.InventoryFile, &output); err != nil {
 		return err
 	}
-	candidate, err := workspaceio.UploadOutput(ctx, runner.store, execution, filepath.Join(runner.config.WorkspaceDirectory, binding.TrainingSubpath), output)
+	directory := filepath.Join(runner.config.WorkspaceDirectory, binding.TrainingSubpath)
+	if execution.Snapshot.Kind == "FINETUNING" {
+		directory = runner.config.WorkspaceDirectory
+	}
+	candidate, err := workspaceio.UploadOutput(ctx, runner.store, execution, directory, output)
 	if err != nil {
 		return err
 	}
 	a := runner.config.Context.Association
 	candidate.Upload = biz.UploadCompletion{RunID: a.KfpRunId, WorkflowUID: a.WorkflowUid, TaskID: runner.config.TaskID, PodUID: a.PodUid}
 	return writeJSON(runner.config.CandidateFile, candidate)
+}
+
+func (runner *Runner) inventoryPath(execution biz.Execution) bool {
+	subpath := execution.Snapshot.Workspace.ReportsSubpath
+	if execution.Snapshot.Kind == "FINETUNING" {
+		subpath = execution.Snapshot.Workspace.PublicationSubpath
+	}
+	return reportPath(runner.config.InventoryFile, runner.config.WorkspaceDirectory, subpath)
 }
 
 func (runner *Runner) close(ctx context.Context) (firstError error) {
@@ -186,6 +217,21 @@ func (runner *Runner) close(ctx context.Context) (firstError error) {
 		}
 		_, _ = runner.client.RequestExecutionClose(call, &modeldevv1.RequestExecutionCloseRequest{Context: runner.config.Context, Reason: modeldevv1.CloseReason_CLOSE_REASON_STEP_FAILED})
 	}()
+	if runner.config.Context.Identity.OperationId == "" {
+		if _, _, err := runner.configuration(ctx); err != nil {
+			return err
+		}
+	}
+	if runner.executionKind == "FINETUNING" {
+		return runner.requestClose(ctx, modeldevv1.CloseReason_CLOSE_REASON_NATURAL_TERMINAL)
+	}
+	if err := runner.confirmPublication(ctx); err != nil {
+		return err
+	}
+	return runner.requestClose(ctx, modeldevv1.CloseReason_CLOSE_REASON_NATURAL_TERMINAL)
+}
+
+func (runner *Runner) confirmPublication(ctx context.Context) error {
 	if runner.config.Context.Identity.OperationId == "" {
 		if _, _, err := runner.configuration(ctx); err != nil {
 			return err
@@ -218,7 +264,7 @@ func (runner *Runner) close(ctx context.Context) (firstError error) {
 			return err
 		}
 	}
-	return runner.requestClose(ctx, modeldevv1.CloseReason_CLOSE_REASON_NATURAL_TERMINAL)
+	return nil
 }
 
 func (runner *Runner) requestClose(ctx context.Context, reason modeldevv1.CloseReason) error {

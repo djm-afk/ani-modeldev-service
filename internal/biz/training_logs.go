@@ -3,7 +3,9 @@ package biz
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 )
@@ -28,11 +30,120 @@ type TrainingLogResult struct {
 	ObservedAt time.Time
 }
 
+// RecordedTrainingLog retains one bounded tail with its original Pod and Job
+// identities. It is independent of whether those API objects still exist.
+type RecordedTrainingLog struct {
+	Source TrainingLogSource
+	Result TrainingLogResult
+}
+
 type TrainingLogReader interface {
 	ReadTrainingLogs(context.Context, TrainingLogSource, TrainingLogOptions) (TrainingLogResult, error)
 }
 
-// TrainingLogSourceFor resolves only durable observations of the fixed CPU
+// ValidateRecordedTrainingLogs binds each saved tail to the original observed
+// trainer Pod and its complete Job/JobSet/TrainJob chain. A receipt with no
+// training Pods may legitimately contain no logs.
+func ValidateRecordedTrainingLogs(record QueryRecord, logs []RecordedTrainingLog) error {
+	seen := make(map[string]bool, len(logs))
+	for _, log := range logs {
+		source, err := TrainingLogSourceFor(record, log.Source.LogID)
+		if err != nil || source != log.Source || seen[source.LogID] || !validRecordedTrainingLogResult(log.Result) {
+			return ErrTrainingLogsUnavailable
+		}
+		seen[source.LogID] = true
+	}
+	return nil
+}
+
+func validRecordedTrainingLogResult(result TrainingLogResult) bool {
+	validTime := func(value time.Time) bool { return !value.IsZero() && value.Year() >= 1 && value.Year() <= 9999 }
+	if !validTime(result.ObservedAt) || len(result.Lines) == 0 || len(result.Lines) > 1000 {
+		return false
+	}
+	bytes := 0
+	for index, line := range result.Lines {
+		if !validTime(line.Timestamp) || !utf8.ValidString(line.Text) || strings.Contains(line.Text, "\n") {
+			return false
+		}
+		size := trainingLogLineBytes(line)
+		if index > 0 {
+			size++
+		}
+		if size > 65536-bytes {
+			return false
+		}
+		bytes += size
+	}
+	return true
+}
+
+// trainingLogLineBytes accounts for the timestamp and separator from the
+// original reader. A byte-capped final line may have no LF; only separators
+// between returned lines are required when measuring the bounded payload.
+func trainingLogLineBytes(line TrainingLogLine) int {
+	return len(line.Timestamp.Format(time.RFC3339Nano)) + 1 + len(line.Text)
+}
+
+// RecordedTrainingLogsFor returns only a committed, identity-checked log tail.
+// Capture in progress remains eligible for the original live reader. Callers
+// receive a copy so per-request tail limits cannot rewrite the durable receipt.
+func RecordedTrainingLogsFor(record QueryRecord, source TrainingLogSource, options TrainingLogOptions) (TrainingLogResult, bool, error) {
+	if options.TailLines == 0 || options.TailLines > 1000 || options.MaxBytes == 0 || options.MaxBytes > 65536 {
+		return TrainingLogResult{}, false, ErrTrainingLogsUnavailable
+	}
+	expected, err := TrainingLogSourceFor(record, source.LogID)
+	if err != nil || expected != source {
+		return TrainingLogResult{}, false, ErrTrainingLogsUnavailable
+	}
+	receipt := record.Runtime.ComputeCleanup
+	if receipt == nil || !receipt.LogsReady {
+		return TrainingLogResult{}, false, nil
+	}
+	if err := ValidateRecordedTrainingLogs(record, receipt.Logs); err != nil {
+		return TrainingLogResult{}, false, err
+	}
+	for _, log := range receipt.Logs {
+		if log.Source != source {
+			continue
+		}
+		result := log.Result
+		lines := result.Lines
+		if len(lines) > int(options.TailLines) {
+			lines = lines[len(lines)-int(options.TailLines):]
+			result.Truncated = true
+		}
+		result.Lines = append([]TrainingLogLine(nil), lines...)
+		bytes := 0
+		for index, line := range result.Lines {
+			bytes += trainingLogLineBytes(line)
+			if index > 0 {
+				bytes++
+			}
+		}
+		for bytes > int(options.MaxBytes) && len(result.Lines) > 1 {
+			bytes -= trainingLogLineBytes(result.Lines[0]) + 1
+			result.Lines = result.Lines[1:]
+			result.Truncated = true
+		}
+		if bytes > int(options.MaxBytes) {
+			line := &result.Lines[0]
+			budget := int(options.MaxBytes) - len(line.Timestamp.Format(time.RFC3339Nano)) - 1
+			if budget < 0 {
+				return TrainingLogResult{}, false, ErrTrainingLogsUnavailable
+			}
+			line.Text = line.Text[len(line.Text)-budget:]
+			for !utf8.ValidString(line.Text) {
+				line.Text = line.Text[1:]
+			}
+			result.Truncated = true
+		}
+		return result, true, nil
+	}
+	return TrainingLogResult{}, false, nil
+}
+
+// TrainingLogSourceFor resolves only durable observations of the fixed
 // trainer container. A log ID can select a recorded segment, never a Pod name.
 func TrainingLogSourceFor(record QueryRecord, logID string) (TrainingLogSource, error) {
 	state := record.Runtime

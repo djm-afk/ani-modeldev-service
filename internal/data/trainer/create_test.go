@@ -9,6 +9,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -24,6 +25,12 @@ import (
 )
 
 func TestTrainingCompleteRejectionIsDistinctFromUnknownCreate(t *testing.T) {
+	// Public Status captured from the task-only real server dry-run. It is an
+	// external HTTP response fixture, never a manufactured typed domain error.
+	invalid, err := os.ReadFile("testdata/training-create-invalid-422.json")
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, test := range []struct {
 		name                string
 		code                int
@@ -32,6 +39,11 @@ func TestTrainingCompleteRejectionIsDistinctFromUnknownCreate(t *testing.T) {
 	}{
 		{"complete forbidden", 403, `{"apiVersion":"v1","kind":"Status","status":"Failure","reason":"Forbidden","code":403}`, false, true},
 		{"complete bad request", 400, `{"apiVersion":"v1","kind":"Status","status":"Failure","reason":"BadRequest","code":400}`, false, true},
+		{"actual invalid admission response", 422, string(invalid), false, true},
+		{"truncated invalid", 422, string(invalid), true, false},
+		{"invalid wrong reason", 422, strings.Replace(string(invalid), `"reason": "Invalid"`, `"reason": "Forbidden"`, 1), false, false},
+		{"invalid missing kind", 422, strings.Replace(string(invalid), `"kind": "Status",`, ``, 1), false, false},
+		{"invalid wrong version", 422, strings.Replace(string(invalid), `"apiVersion": "v1"`, `"apiVersion": "v2"`, 1), false, false},
 		{"unrecognized forbidden body", 403, `proxy failed`, false, false},
 		{"truncated forbidden", 403, `{"apiVersion":"v1","kind":"Status","status":"Failure","reason":"Forbidden","code":403}`, true, false},
 		{"mismatched status reason", 400, `{"apiVersion":"v1","kind":"Status","status":"Failure","reason":"Forbidden","code":400}`, false, false},

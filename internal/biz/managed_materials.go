@@ -95,6 +95,24 @@ func (m *ManagedMaterials) ImportCSV(ctx context.Context, request InputImport, r
 	request.Scope = facts.InputScope
 	return m.importer.ImportCSV(ctx, request)
 }
+
+func (m *ManagedMaterials) ImportFinetuningDataset(ctx context.Context, request InputImport, releaseID, digest string) (InputVersion, error) {
+	if request.InputFormat() != "JSON" {
+		return InputVersion{}, ErrInvalidInput
+	}
+	if m == nil || m.facts == nil || m.importer == nil {
+		return InputVersion{}, ErrAdmissionEnvironmentNotReady
+	}
+	facts, err := m.facts.ReadAdmissionFacts(ctx, request.TenantID, releaseID, digest)
+	if err != nil {
+		return InputVersion{}, err
+	}
+	if !strings.EqualFold(facts.TenantID, request.TenantID) {
+		return InputVersion{}, ErrAdmissionEnvironmentNotReady
+	}
+	request.Scope = facts.InputScope
+	return m.importer.ImportFinetuningDataset(ctx, request)
+}
 func (m *ManagedMaterials) Releases(ctx context.Context, tenant string) ([]cpup01.ReleaseDocument, error) {
 	if !validAdmissionID(tenant) {
 		return nil, ErrInvalidAdmission

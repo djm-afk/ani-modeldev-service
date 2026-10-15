@@ -21,6 +21,7 @@ class PipelineAssembly(unittest.TestCase):
                 "storage_class": "cpu-workspace-fixture",
                 "workspace_size": "2Gi",
                 "workspace_access_mode": "ReadWriteOnce",
+                "admission_profile": "cpu-v1",
             }
             config = root / "compile.json"
             config.write_text(json.dumps(configuration), encoding="utf-8")
@@ -78,10 +79,33 @@ class PipelineAssembly(unittest.TestCase):
                     self.assertNotIn("{{$.pipeline_task_uuid}}", container["args"])
                 self.assertNotIn("sh", container["command"])
                 k8s = platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][executor]
+                self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/admission-profile"], "cpu-v1")
+                self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/step-role"], name)
                 self.assertEqual(bool(k8s.get("pvcMount")), name in {"prepare", "collect", "publish"})
                 self.assertFalse(k8s.get("secretAsVolume"))
                 self.assertEqual({item["name"] for item in k8s["fieldPathAsEnv"]}, {"ANI_POD_NAME", "ANI_POD_UID", "ANI_POD_NAMESPACE"})
             self.assertNotIn("deletepvc", output.read_text(encoding="utf-8"))
+
+    def test_missing_or_invalid_admission_profile_is_rejected_before_ir_creation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            configuration = {
+                "component_image": "registry.example.test/modeldev-step@sha256:" + "a" * 64,
+                "owner_config_map": "cpu-step-owner-fixture", "storage_class": "cpu-workspace-fixture",
+                "workspace_size": "2Gi", "workspace_access_mode": "ReadWriteOnce",
+            }
+            for index, profile in enumerate((None, "", "UPPER", "../another", "a" * 64)):
+                with self.subTest(profile=profile):
+                    current = dict(configuration)
+                    if profile is not None:
+                        current["admission_profile"] = profile
+                    config, output = root / "compile.json", root / ("rejected-%d.yaml" % index)
+                    config.write_text(json.dumps(current), encoding="utf-8")
+                    result = subprocess.run([sys.executable, str(Path(__file__).with_name("cpu_p01.py")),
+                                             "--config", str(config), "--output", str(output)],
+                                            capture_output=True, text=True, check=False)
+                    self.assertNotEqual(result.returncode, 0, result.stdout)
+                    self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":

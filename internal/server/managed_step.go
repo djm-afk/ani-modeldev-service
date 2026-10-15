@@ -37,7 +37,10 @@ func NewManagedStepServer(c *conf.Server_GRPC, certificate tls.Certificate, step
 				modeldevv1.ModelDevStepService_EnsureTraining_FullMethodName,
 				modeldevv1.ModelDevStepService_GetTrainingStatus_FullMethodName,
 				modeldevv1.ModelDevStepService_ReportStepResult_FullMethodName,
-				modeldevv1.ModelDevStepService_RequestExecutionClose_FullMethodName:
+				modeldevv1.ModelDevStepService_RequestExecutionClose_FullMethodName,
+				modeldevv1.ModelDevStepService_BeginFinetuningStep_FullMethodName,
+				modeldevv1.ModelDevStepService_ReportFinetuningStepResult_FullMethodName,
+				modeldevv1.ModelDevStepService_RegisterModel_FullMethodName:
 				return next(ctx, request)
 			default:
 				return nil, status.Error(codes.PermissionDenied, "managed Step listener does not permit this method")

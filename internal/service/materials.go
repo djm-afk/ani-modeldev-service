@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sort"
+	"strconv"
 
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
@@ -90,7 +91,7 @@ func (m *Management) ImportCSV(ctx context.Context, r *modeldevv1.ImportCSVReque
 	return &modeldevv1.ImportCSVResponse{InputVersion: inputVersionView(value)}, nil
 }
 func inputVersionView(v biz.InputVersion) *modeldevv1.InputVersionView {
-	out := &modeldevv1.InputVersionView{InputVersionId: v.Import.InputVersionID, Format: "CSV", SizeBytes: v.Import.Object.SizeBytes, Sha256: v.Import.Object.SHA256, CreatedAt: timestamppb.New(v.Import.RequestedAt)}
+	out := &modeldevv1.InputVersionView{InputVersionId: v.Import.InputVersionID, Format: v.Import.InputFormat(), SizeBytes: v.Import.Object.SizeBytes, Sha256: v.Import.Object.SHA256, CreatedAt: timestamppb.New(v.Import.RequestedAt)}
 	switch v.State {
 	case biz.InputStateReady:
 		out.State = modeldevv1.InputState_INPUT_STATE_READY
@@ -102,6 +103,9 @@ func inputVersionView(v biz.InputVersion) *modeldevv1.InputVersionView {
 	if v.Verification != nil {
 		out.RowCount = v.Verification.RowCount
 		out.FeatureCount = v.Verification.FeatureCount
+	}
+	if v.AlpacaVerification != nil {
+		out.RowCount = v.AlpacaVerification.RowCount
 	}
 	if v.Failure != nil {
 		out.Failure = &modeldevv1.ErrorDetail{Reason: modeldevv1.ErrorReason_ERROR_REASON_INPUT_NOT_READY, SafeMessage: string(v.Failure.Code)}
@@ -197,12 +201,20 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 	if err != nil {
 		return nil, err
 	}
+	if len(r.ReleaseSelections) > 0 {
+		return q.selectedPresets(ctx, scope, r.ReleaseSelections, limit, after)
+	}
 	releases, err := q.materials.Releases(ctx, scope.TenantID)
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
 	presets := map[string]*modeldevv1.PresetView{}
 	for _, release := range releases {
+		// A fine candidate has no ModelDev current pointer. Its rules are only
+		// returned for Governance's explicit exact Release selection.
+		if release.Kind == "FINETUNING" {
+			continue
+		}
 		p := presets[release.PresetID]
 		if p == nil {
 			p = &modeldevv1.PresetView{PresetId: release.PresetID, Name: presetDisplayName(release.PresetID), Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING}
@@ -253,13 +265,15 @@ func parameterView(p cpup01.Parameter) *trainingv1.Parameter {
 	value := &trainingv1.Parameter{Name: p.Name}
 	// The registered grammar has only integer and decimal parameters.
 	if p.Type == "INTEGER" {
-		if p.Name == "epochs" {
-			value.Value = &trainingv1.Parameter_IntegerValue{IntegerValue: 3}
-		} else {
-			value.Value = &trainingv1.Parameter_IntegerValue{IntegerValue: 64}
+		integer, err := strconv.ParseInt(p.Value, 10, 64)
+		if err != nil || strconv.FormatInt(integer, 10) != p.Value {
+			return nil
 		}
-	} else {
+		value.Value = &trainingv1.Parameter_IntegerValue{IntegerValue: integer}
+	} else if p.Type == "DECIMAL" {
 		value.Value = &trainingv1.Parameter_DecimalValue{DecimalValue: p.Value}
+	} else {
+		return nil
 	}
 	return value
 }
