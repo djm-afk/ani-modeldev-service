@@ -93,7 +93,10 @@ func coreFlowRunningTrainingWriter(ctx context.Context, client dynamic.Interface
 	// durable original chain, then only GET those exact objects with this
 	// existing client; observing a writer must not mutate runtime resources.
 	source, err := biz.TrainingLogSourceFor(record, "")
-	if errors.Is(err, biz.ErrTrainingLogNotFound) {
+	if errors.Is(err, biz.ErrTrainingLogNotFound) || errors.Is(err, biz.ErrTrainingLogsUnavailable) {
+		// The persisted observer can precede the Pod or its complete parent
+		// chain. Incomplete source facts cannot prove a writer or a live UID
+		// conflict; wait for the original observation to become resolvable.
 		return nil, false, nil
 	}
 	if err != nil || client == nil || clock == nil {

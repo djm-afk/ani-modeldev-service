@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -17,6 +18,34 @@ import (
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 	ktesting "k8s.io/client-go/testing"
 )
+
+func TestCoreFlowTrainingTriggerWaitsForPartialDurableObservation(t *testing.T) {
+	// Public subset of the last durable observation (02:30:22.767422782Z)
+	// retained in original Stop374's terminal DB capture at 02:32:54. This is
+	// not a reconstructed snapshot of the helper's 02:30:25 invocation.
+	const partial = `{"Handle":{"PVCUID":"1e22a9af-495c-4737-94ca-8e84227682f3","TrainJobUID":"2a770272-4d97-4192-8056-3f81c5e38a9f","NamespaceUID":"8f79e7cc-769b-4b2d-87d3-a69c53c946f3"},"Outcome":"RUNNING","ObservedAt":"2026-10-15T02:30:22.767422782Z","Resources":[{"APIVersion":"jobset.x-k8s.io/v1alpha2","Kind":"JobSet","Namespace":"ani-ft-core-20261014","Name":"md-a16a03ee-873f-4bcb-8b72-59a0d73aad6a","UID":"1411f225-fca6-4469-a0fd-683f01467d3a","OwnerUID":"2a770272-4d97-4192-8056-3f81c5e38a9f","APIObjectPresent":true},{"APIVersion":"trainer.kubeflow.org/v1alpha1","Kind":"TrainJob","Namespace":"ani-ft-core-20261014","Name":"md-a16a03ee-873f-4bcb-8b72-59a0d73aad6a","UID":"2a770272-4d97-4192-8056-3f81c5e38a9f","APIObjectPresent":true},{"APIVersion":"batch/v1","Kind":"Job","Namespace":"ani-ft-core-20261014","Name":"md-a16a03ee-873f-4bcb-8b72-59a0d73aad6a-node-0","UID":"ea9e9a80-dee7-48b2-a1a5-7a214278a519","OwnerUID":"1411f225-fca6-4469-a0fd-683f01467d3a","APIObjectPresent":true}]}`
+	var observation biz.TrainingRuntimeObservation
+	if err := json.Unmarshal([]byte(partial), &observation); err != nil {
+		t.Fatal(err)
+	}
+	var record biz.QueryRecord
+	record.Execution.ExecutionID = "a16a03ee-873f-4bcb-8b72-59a0d73aad6a"
+	record.Execution.Snapshot.Environment.NamespaceName = "ani-ft-core-20261014"
+	record.Execution.Snapshot.Environment.NamespaceUID = observation.Handle.NamespaceUID
+	record.Runtime.Training = &biz.TrainingPlan{Name: "md-" + record.Execution.ExecutionID}
+	record.Runtime.TrainingHandle, record.Runtime.Observation = &observation.Handle, &observation
+	if _, err := biz.TrainingLogSourceFor(record, ""); !errors.Is(err, biz.ErrTrainingLogsUnavailable) {
+		t.Fatal("original no-Pod observation no longer exercises the source-unavailable branch", err)
+	}
+	client := dynamicfake.NewSimpleDynamicClient(runtime.NewScheme())
+	proof, running, err := coreFlowRunningTrainingWriter(context.Background(), client, record, func() time.Time {
+		t.Fatal("partial durable facts cannot produce a writer timestamp")
+		return time.Time{}
+	})
+	if err != nil || running || proof != nil || len(client.Actions()) != 0 {
+		t.Fatalf("partial durable observation must wait without proof or live actions: running=%v err=%v actions=%d", running, err, len(client.Actions()))
+	}
+}
 
 func TestCoreFlowTrainingTriggerRequiresOriginalRunningNode(t *testing.T) {
 	now := time.Date(2026, 10, 15, 2, 0, 0, 0, time.UTC)
