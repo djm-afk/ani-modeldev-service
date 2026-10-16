@@ -5,8 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"reflect"
-	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
@@ -39,9 +37,15 @@ func (r *Repository) RecordRegistrationUnavailable(ctx context.Context, a biz.Ru
 			return false, err
 		}
 		if existing := current.state.FinetuningRegistration; existing != nil {
+			// Unavailability is the provider boundary for the whole intent. It
+			// cannot be replayed over an intent that already recorded a permit,
+			// and it never carries any in-flight dispatch fact.
+			if existing.State != biz.RegistrationStateUnavailable || len(existing.Dispatches) != 0 {
+				return false, biz.ErrRuntimeConflict
+			}
 			content.RecordedAt, content.DeadlineAt = existing.RecordedAt, existing.DeadlineAt
 			content.State, content.FailureCode = existing.State, existing.FailureCode
-			if !reflect.DeepEqual(content, *existing) {
+			if !registrationIntentUnchanged(content, *existing) {
 				return false, biz.ErrRuntimeConflict
 			}
 			return false, nil
@@ -50,11 +54,8 @@ func (r *Repository) RecordRegistrationUnavailable(ctx context.Context, a biz.Ru
 			return false, err
 		}
 		content.RecordedAt = current.now
-		content.DeadlineAt = current.now.Add(time.Duration(current.execution.Snapshot.Finetuning.Budgets.RPCTimeoutSeconds) * time.Second)
-		if current.execution.Snapshot.DeadlineAt.Before(content.DeadlineAt) {
-			content.DeadlineAt = current.execution.Snapshot.DeadlineAt
-		}
-		content.State = "DEPENDENCY_UNAVAILABLE"
+		content.DeadlineAt = registrationDeadline(current, current.now)
+		content.State = biz.RegistrationStateUnavailable
 		content.FailureCode = "MODEL_DEPENDENCY_UNAVAILABLE"
 		current.state.FinetuningRegistration = &content
 		return true, nil
@@ -70,17 +71,9 @@ func validRegistrationFacts(current *runtimeTransaction) bool {
 	if err != nil {
 		return false
 	}
-	if stored.State != "DEPENDENCY_UNAVAILABLE" || stored.FailureCode != "MODEL_DEPENDENCY_UNAVAILABLE" || stored.RecordedAt.IsZero() || !stored.DeadlineAt.After(stored.RecordedAt) || stored.RecordedAt.After(current.now) {
+	if stored.RecordedAt.IsZero() || !stored.DeadlineAt.After(stored.RecordedAt) || stored.RecordedAt.After(current.now) ||
+		!stored.DeadlineAt.Equal(registrationDeadline(current, stored.RecordedAt)) {
 		return false
 	}
-	deadline := stored.RecordedAt.Add(time.Duration(current.execution.Snapshot.Finetuning.Budgets.RPCTimeoutSeconds) * time.Second)
-	if current.execution.Snapshot.DeadlineAt.Before(deadline) {
-		deadline = current.execution.Snapshot.DeadlineAt
-	}
-	if !stored.DeadlineAt.Equal(deadline) {
-		return false
-	}
-	expected.RecordedAt, expected.DeadlineAt = stored.RecordedAt, stored.DeadlineAt
-	expected.State, expected.FailureCode = stored.State, stored.FailureCode
-	return reflect.DeepEqual(expected, *stored)
+	return validRegistrationDispatches(current, *stored) && registrationIntentUnchanged(expected, *stored)
 }

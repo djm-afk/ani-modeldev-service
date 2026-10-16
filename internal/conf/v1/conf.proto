@@ -62,6 +62,27 @@ message GovernanceCommand {
   // Presence enables candidate resolution from explicitly pinned mounted
   // materials. It does not establish environment or business readiness.
   AdmissionResolution admission_resolution = 6;
+  // Absence keeps FINETUNING disabled and Model reads/writes unavailable.
+  ModelConnection model = 7;
+}
+
+// ModelConnection is the explicit ModelDev -> Model business mTLS dependency.
+// Every material is required when presence is declared; there is no plaintext,
+// ambient or borrowed-Governance fallback. The receiving Model service must
+// separately register this caller identity and allow the exact RPCs used.
+message ModelConnection {
+  // Literal host:port of the Model business mTLS listener.
+  string endpoint = 1;
+  string ca_file = 2;
+  // The client certificate must present exactly this one DNS SAN.
+  string client_dns_name = 3;
+  string certificate_file = 4;
+  string private_key_file = 5;
+  // The exact DNS SAN required on the Model server certificate.
+  string server_name = 6;
+  // Stable audit actor this caller asserts. Authorization never depends on it.
+  string actor = 7;
+  google.protobuf.Duration timeout = 8;
 }
 
 message AdmissionResolution {

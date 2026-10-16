@@ -37,6 +37,11 @@ func (c *Bootstrap) Validate() error {
 				return err
 			}
 		}
+		if c.Command.Model != nil {
+			if err := validateModelConnection(c.Command.Model); err != nil {
+				return err
+			}
+		}
 	}
 	if err := validateListener("grpc", c.Server.Grpc.Network, c.Server.Grpc.Addr, c.Server.Grpc.Timeout); err != nil {
 		return err
@@ -109,6 +114,40 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 }
 
 var commandDNSName = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$`)
+
+// validateModelConnection accepts only a fully specified business mTLS
+// dependency. A partially configured Model block is rejected rather than
+// silently disabling FINETUNING after an operator intended to enable it.
+func validateModelConnection(config *ModelConnection) error {
+	for _, reference := range []string{config.CaFile, config.CertificateFile, config.PrivateKeyFile} {
+		if !filepath.IsAbs(reference) || filepath.Clean(reference) != reference || strings.ContainsRune(reference, 0) {
+			return fmt.Errorf("model connection materials require absolute file references")
+		}
+	}
+	if config.Endpoint == "" || strings.TrimSpace(config.Endpoint) != config.Endpoint || strings.ContainsAny(config.Endpoint, "/\\ \t\r\n") {
+		return fmt.Errorf("model connection requires an explicit host:port endpoint")
+	}
+	host, portText, err := net.SplitHostPort(config.Endpoint)
+	if err != nil || host == "" {
+		return fmt.Errorf("model connection endpoint: %w", err)
+	}
+	port, err := strconv.Atoi(portText)
+	if err != nil || port <= 0 || port > 65535 {
+		return fmt.Errorf("model connection requires a numeric port in 1..65535")
+	}
+	for name, value := range map[string]string{"client DNS identity": config.ClientDnsName, "server DNS identity": config.ServerName} {
+		if len(value) > 253 || value == "unknown" || !commandDNSName.MatchString(value) {
+			return fmt.Errorf("model connection requires an explicit exact %s", name)
+		}
+	}
+	if config.ClientDnsName == config.ServerName {
+		return fmt.Errorf("model client and server DNS identities must be distinct")
+	}
+	if config.Actor == "" || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
+		return fmt.Errorf("model connection requires a bounded audit actor")
+	}
+	return validateDuration("model connection", config.Timeout, maximumTimeout)
+}
 
 func validateAdmissionResolution(config *AdmissionResolution) error {
 	validReference := func(path string) bool {
