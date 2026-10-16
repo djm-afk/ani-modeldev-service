@@ -1,0 +1,2429 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="ani-spec-sha256" content="5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9"><meta name="ani-document-scope" content="DOCUMENT_ONLY"><title>ANI v4.2.2 · 开发与Model对接说明</title><style>
+:root{--bg:#edf1f5;--paper:#fff;--ink:#203044;--muted:#63738a;--line:#dbe3eb;--brand:#16354a;--accent:#097c7d;--soft:#eaf6f5;--warn:#855c15;--code:#122534;--font:16px}
+*{box-sizing:border-box}[hidden]{display:none!important}html{scroll-behavior:smooth;scroll-padding-top:94px}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans CJK SC","Microsoft YaHei",sans-serif;font-size:var(--font);line-height:1.85}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}button,input{font:inherit}button{cursor:pointer}.top{position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;display:flex;gap:18px;align-items:center;justify-content:space-between;padding:13px 24px;box-shadow:0 1px 10px #0002}.top a{color:#cbe9e7}.brand{font-size:14px;font-weight:700;letter-spacing:.04em;white-space:nowrap}.toplinks{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}.top button{border:1px solid #a5bcc755;border-radius:6px;background:transparent;color:#fff;padding:3px 9px}.layout{max-width:1540px;margin:auto;display:grid;grid-template-columns:280px minmax(0,1fr);gap:26px;padding:28px 26px 64px}.sidebar{position:sticky;top:91px;align-self:start;max-height:calc(100vh - 113px);overflow:auto;padding:3px 3px 20px}.sidebar h2{font-size:13px;color:var(--muted);letter-spacing:.1em;margin:0 10px 12px}.search{width:100%;padding:9px 12px;border:1px solid #bbcbd7;border-radius:8px;background:#fff;outline-offset:2px;font-size:14px}.count{font-size:12px;color:var(--muted);padding:5px 10px 12px}.navlink{display:flex;gap:9px;padding:8px 10px;border-radius:7px;color:#415469;font-size:13px;line-height:1.5;margin-bottom:3px}.navlink .num{flex-shrink:0;color:var(--accent);font-weight:700;min-width:32px}.navlink:hover,.navlink.active{background:#dceeea;text-decoration:none;color:#113b46}.sidebottom{margin:22px 10px 0;border-top:1px solid var(--line);padding-top:16px;font-size:12px;color:var(--muted)}.sidebottom a{display:block;margin-top:8px}.main{min-width:0}.hero{background:linear-gradient(115deg,#16354a,#245361);color:white;padding:42px 46px;border-radius:14px;margin-bottom:22px}.eyebrow{font-size:12px;letter-spacing:.17em;font-weight:700;color:#acdcd6;margin:0 0 12px}.hero h1{font-size:30px;line-height:1.5;margin:0 0 16px;letter-spacing:.01em}.hero p{font-size:15px;color:#d8e7ef;max-width:850px;margin:0 0 18px}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid #9bc1cc55;border-radius:20px;padding:3px 11px;font-size:12px;color:#deeeef}.notice{background:#fff6e5;border-left:4px solid #d3a552;border-radius:7px;padding:16px 20px;margin-bottom:20px;color:#644b26;font-size:14px}.chapter{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:30px 38px;margin-bottom:22px;box-shadow:0 2px 5px #17354a04;overflow-wrap:anywhere;scroll-margin-top:91px}.chapter h2{font-size:24px;line-height:1.5;margin:0 0 22px;color:var(--brand)}.chapter h2 small{display:block;color:var(--accent);font-size:12px;letter-spacing:.12em;margin-bottom:7px}.chapter h3{font-size:18px;line-height:1.55;color:#245361;margin:30px 0 14px;border-bottom:1px solid #e6edf0;padding-bottom:9px}.chapter p{margin:12px 0}.chapter p:first-child{margin-top:0}.chapter strong{font-weight:700;color:#143c4b}.chapter li{margin:5px 0}.chapter ul,.chapter ol{padding-left:1.6em}blockquote{margin:18px 0;border-left:3px solid var(--accent);padding:3px 16px;background:#f0f7f6}code{font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#eaf0f4;color:#23415a;border-radius:4px;padding:1px 5px;font-size:.87em;word-break:break-word}.codewrap{position:relative;background:var(--code);border-radius:8px;margin:18px 0;overflow:hidden}.codehead{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;border-bottom:1px solid #ffffff1c;color:#c5d9dd;font-size:11px;letter-spacing:.08em}.copy{background:transparent;border:1px solid #aac1cc66;color:#d5e6eb;border-radius:4px;padding:1px 8px;font-size:12px}.codewrap pre{overflow:auto;margin:0;padding:18px 19px;line-height:1.75}.codewrap code{background:transparent;color:#e1edf0;padding:0;border-radius:0;word-break:normal;white-space:pre;font-size:13px}.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:18px 0}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.75}th,td{padding:11px 13px;text-align:left;vertical-align:top;border-right:1px solid #e4ebef;border-bottom:1px solid #e4ebef}th:last-child,td:last-child{border-right:0}tr:last-child td{border-bottom:0}th{background:#eaf2f4;color:#1a4054;font-weight:700}tbody tr:nth-child(even){background:#f8fafb}td:first-child{min-width:95px}td code{font-size:12px}.endlinks{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);margin-top:27px;padding-top:15px;font-size:13px}.srcmark{font-size:12px;font-weight:600;padding:0 3px}.footer{padding:6px 10px;color:var(--muted);font-size:12px}.empty{display:none;background:white;padding:24px;border-radius:10px}.indexwrap{max-width:1120px;margin:35px auto;padding:0 22px 60px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px}.card h2{margin:8px 0;font-size:24px;color:var(--brand)}.card .tag{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.14em}.card p{font-size:15px}.btn{display:inline-block;background:var(--accent);color:#fff;border-radius:7px;padding:8px 17px;margin-top:9px}.btn:hover{background:#076c6d;text-decoration:none}.downloads{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0}.downloads a{background:white;border:1px solid #bdced7;border-radius:7px;padding:10px 16px;font-size:14px}.indexnote{background:#fff;padding:24px 30px;border:1px solid var(--line);border-radius:12px;margin-top:22px}.indexnote h2{margin-top:0;font-size:20px}.menuBtn{display:none}
+@media(min-width:1500px){.main{max-width:1120px}.hero h1{font-size:34px}}
+@media(max-width:1050px){.layout{grid-template-columns:230px minmax(0,1fr);gap:18px;padding:20px 18px}.chapter{padding:26px}.hero{padding:32px}.hero h1{font-size:27px}}
+@media(max-width:760px){:root{--font:15px}.top{padding:10px 14px;gap:8px;align-items:flex-start}.brand{font-size:12px}.toplinks{gap:8px;font-size:11px;justify-content:flex-end}.menuBtn{display:inline-block}.layout{display:block;padding:15px 12px 38px}.sidebar{display:none;position:static;max-height:none;padding:12px;background:#f1f6f8;border:1px solid var(--line);border-radius:9px;margin-bottom:16px}.sidebar.open{display:block}.chapter{padding:21px 18px}.chapter h2{font-size:21px}.chapter h3{font-size:17px}.hero{padding:25px 23px;border-radius:11px}.hero h1{font-size:25px}.hero p{font-size:14px}.tablewrap table{min-width:610px}table{font-size:13px}.codewrap pre{padding:15px}.codewrap code{font-size:12px}.cards{grid-template-columns:1fr}.indexwrap{margin-top:18px;padding:0 14px}.indexnote{padding:22px}.notice{padding:12px 16px}.toplinks .shortHide{display:none}}
+@media print{.chapter[hidden]{display:block!important}html{scroll-padding-top:0}body{background:white;font-size:10.5pt;line-height:1.65}.top,.sidebar,.copy,.endlinks,.empty,.footer{display:none!important}.layout{display:block;padding:0;max-width:none}.hero{background:white;color:#193448;padding:0 0 20px;border-radius:0;border-bottom:2px solid #193448;break-after:avoid}.hero p,.eyebrow{color:#456}.chip{color:#456;border:1px solid #ccc}.hero h1{font-size:24pt}.chapter{display:block!important;box-shadow:none;border:0;border-radius:0;padding:15px 0;margin:0}.chapter h2{font-size:17pt;break-after:avoid}.chapter h3{font-size:13pt;break-after:avoid}table{font-size:9pt}.tablewrap{overflow:visible}th,td{padding:6px 8px}thead{display:table-header-group}tr{break-inside:avoid}.codewrap{background:#f3f5f6;border:1px solid #ccc;break-inside:avoid}.codewrap code{color:#123;white-space:pre-wrap;overflow-wrap:anywhere;font-size:9pt}.codehead{color:#456;border-color:#ddd}.notice{background:#fafafa;color:#234}.srcmark{color:#345}a{color:#234;text-decoration:none}}
+
+/* v4.1: stable wrapping, nested sections and small status panel. */
+.hero h1{line-height:1.22}.chapter h3,.chapter h4{scroll-margin-top:112px}.chapter h4{font-size:1.03em;color:#355065;margin:1.6em 0 .7em}.chapter p,.chapter li,.chapter td,.chapter th{overflow-wrap:anywhere}.chapter .source-body>p{margin:1em 0}.document-meta{font-size:12px;color:var(--muted);word-break:break-all}.docbadge{display:inline-block;border:1px solid var(--line);background:var(--soft);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700}.auditlink{font-weight:700}.intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.intro-card{background:white;border:1px solid var(--line);border-radius:10px;padding:24px}.intro-card h2{font-size:1.25em;margin:0 0 9px}.intro-card p{margin:8px 0}.task-row{padding:14px 0;border-bottom:1px solid var(--line)}.task-row:last-child{border-bottom:none}body code{overflow-wrap:anywhere}pre{white-space:pre-wrap;word-break:break-word} .hub-layout{max-width:1200px;margin:0 auto;padding:28px 24px 64px}.hub-layout .hero{margin-bottom:22px}.hub-layout .chapter{margin-top:22px}.hub-layout .hero p{max-width:900px}@media(max-width:700px){.intro-grid{grid-template-columns:1fr}.hub-layout{padding:16px 12px 48px}.intro-card{padding:18px}.top{gap:8px}.brand{font-size:12px}.toplinks{gap:7px}}
+@media print{.chapter[hidden]{display:block!important}.empty,.top,.sidebar{display:none!important}.tablewrap{overflow:visible!important} .layout{display:block!important}.hero{break-after:avoid}.chapter{break-inside:auto!important}.chapter h2,.chapter h3,.chapter h4{break-after:avoid}pre{white-space:pre-wrap}.hub-layout{padding:0}.intro-grid{display:block}.intro-card{break-inside:avoid}}
+</style></head><body><header class="top"><div class="brand"><a href="index.html">ANI / MODEL DEVELOPMENT</a></div><div class="toplinks"><a href="ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html">当前开工</a><a href="ANI-CPU受管微调-v4.2.2-业务与流程方案.html">业务方案</a><a href="ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html">开发说明</a><a class="shortHide" href="ANI-CPU受管微调-v4.2.2-变更与自复核.html">变更复核</a><button class="menuBtn" id="menu" aria-label="展开目录">目录</button><button id="fontMinus" aria-label="减小正文字号">A−</button><button id="fontPlus" aria-label="增大正文字号">A+</button><button id="print">打印</button></div></header><div class="layout"><aside class="sidebar"><h2>阅读目录 / 14节</h2><input id="search" class="search" placeholder="筛选本册章节…" aria-label="按关键词筛选章节"><div class="count" id="count"></div><a class="navlink" data-chapter="D01" href="#D01"><span class="num">D01</span><span>实现分类与改动落点：复用不等于重写</span></a><a class="navlink" data-chapter="D02" href="#D02"><span class="num">D02</span><span>请求、受理和接缝字段</span></a><a class="navlink" data-chapter="D03" href="#D03"><span class="num">D03</span><span>Alpaca JSON 导入与物化的确定实现</span></a><a class="navlink" data-chapter="D04" href="#D04"><span class="num">D04</span><span>基模与Model读取接缝</span></a><a class="navlink" data-chapter="D05" href="#D05"><span class="num">D05</span><span>Release与规范快照的最小增量</span></a><a class="navlink" data-chapter="D06" href="#D06"><span class="num">D06</span><span>唯一TrainJob、KFP计算步骤与证明范围</span></a><a class="navlink" data-chapter="D07" href="#D07"><span class="num">D07</span><span>工作区、文件全集、tar与发布</span></a><a class="navlink" data-chapter="D08" href="#D08"><span class="num">D08</span><span>Model需求交接：先留接缝，提供方就绪后接入</span></a><a class="navlink" data-chapter="D09" href="#D09"><span class="num">D09</span><span>运行事实、恢复与查询投影</span></a><a class="navlink" data-chapter="D10" href="#D10"><span class="num">D10</span><span>起测资源与时限：共用机制、微调预算</span></a><a class="navlink" data-chapter="D11" href="#D11"><span class="num">D11</span><span>验收：本版新增用例与原v0.4逐项映射</span></a><a class="navlink" data-chapter="D12" href="#D12"><span class="num">D12</span><span>环境、文档位置与并行工作包</span></a><a class="navlink" data-chapter="D13" href="#D13"><span class="num">D13</span><span>实施前必须锁定的事实与停止条件</span></a><a class="navlink" data-chapter="D14" href="#D14"><span class="num">D14</span><span>版本变更、参数评审采纳与冲突消除清单</span></a><a class="navlink" href="#sources"><span class="num">SRC</span><span>来源与边界</span></a><div class="sidebottom">微调v4.2.2 ≠ 平台v0.4<br>2026-10-14 · DESIGN_UPDATED<br><a href="index.html">完整包入口</a><a href="spec.md">唯一权威正文</a><a href="reference/spec-v4.2.1.md">v4.2.1原件</a></div></aside><main class="main"><div class="hero"><p class="eyebrow">CORE FLOW FIRST / GOVERNED INTEGRATION LATER</p><h1>CPU 受管微调 v4.2.2<br>开发与Model对接说明</h1><p>复用正式合同与现有应用用例；新增登记派发仲裁，任务与验收按当前主链、后续入口分别推进。</p><div class="chips"><span class="chip">先执行与产物主链</span><span class="chip">BFF／前端后接</span><span class="chip">Model分期</span><span class="chip">GPU独立准备</span></div></div><div class="notice"><strong>当前不等真实BFF：</strong>合同先定，M3-A验证真实ModelDev／KFP／Trainer／S3和停止关闭；M3-B补真实BFF／前端。后置事项仍属最终验收，不用夹具冒充上游授权或Model READY。登记具体写派发与Stop的共同仲裁见D09.3。</div><div class="document-meta">正文 SHA256：5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9</div><div class="empty" id="empty">没有匹配章节。<button id="clear">清除筛选</button></div><section class="chapter" data-chapter="D01" id="D01"><h2><small>D01 / v4.2.2</small>实现分类与改动落点：复用不等于重写</h2><div class="source-body" data-source-ref="D01" data-source-sha256="3065dd470d7778b45d88e553f81b8d456b0c45388063f15b3c8317c6f387f960"><p>下列执行公共机制沿用 <strong>ModelDev <code>5b7fd05…</code></strong> 的前轮评审；参数相关补充来自上一轮核对的 <strong><code>c5fd93c…</code></strong>，见S9。两者不是同一轮全仓审核，也不是本次重新读取的最新分支。实施前核实AGENTS/README、现有进度和实际commit，已完成能力先复用。<a class="srcmark" href="#source-s0">S0</a><a class="srcmark" href="#source-s3">S3</a><a class="srcmark" href="#source-s9">S9</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>本次处理</th>
+<th>已知相关位置/边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>继承并回归</td>
+<td>Gov持久受理、重放、Release冻结与可靠投递</td>
+<td>既有BFF、ModelDev client、admission/inbox</td>
+</tr>
+<tr>
+<td>继承并回归</td>
+<td>单TrainJob创建、UID、观察、停止、未知响应恢复</td>
+<td><code>internal/data/trainer/</code>、<code>internal/biz/managed_runtime.go</code></td>
+</tr>
+<tr>
+<td>继承并回归</td>
+<td>正常/异常关闭、owner独立核验</td>
+<td><code>internal/component/io.go</code>、<code>internal/biz/execution_closer.go</code></td>
+</tr>
+<tr>
+<td>继承并回归</td>
+<td>计算/发布/关闭独立事实与投影</td>
+<td><code>internal/biz/execution_state.go</code></td>
+</tr>
+<tr>
+<td>参数链增量</td>
+<td>规则单一来源、真实类型投影、当前Release与原执行展示、entry实际消费</td>
+<td><code>contract/cpup01/{intent,release,snapshot}.go</code>、<code>internal/biz/admission_resolution.go</code>、<code>internal/service/materials.go</code>、公开Proto/相关Gov装配</td>
+</tr>
+<tr>
+<td>微调增量</td>
+<td>Alpaca JSON验证/READY、固定基模物化</td>
+<td><code>managed_input/input_importer/managed_materials</code>、<code>internal/data/input/</code>、<code>objectstore/</code>、<code>workspace/</code></td>
+</tr>
+<tr>
+<td>微调增量</td>
+<td>finetune_entry指标适配、export/verify首次启动与停止共同仲裁，原步骤绑定及结果</td>
+<td><code>internal/component/runner.go</code>、受管step入口、<code>runtimeproof/tasks.go</code>、<code>proof.go</code>、<code>owner_close.go</code></td>
+</tr>
+<tr>
+<td>微调增量</td>
+<td>多级安全文件、HF全集、tar选择、大文件预算</td>
+<td><code>workspace/collector</code>、<code>pipeline_io.go</code>、对象验证器</td>
+</tr>
+<tr>
+<td>微调增量</td>
+<td>register复用publication确认；每个具体登记写派发与Stop/deadline仲裁，迟到结果与原恢复</td>
+<td><code>ManagedRuntime.Publish</code>、<code>VerifyPublication</code>、本域登记记录/原执行锁；不新建许可平台</td>
+</tr>
+<tr>
+<td>Model提供方</td>
+<td>可信接收、唯一目标、固定对象、可靠登记/查证/保护</td>
+<td>Model公开API与本域存储实现；需求见D08，不在本次强行同步开发</td>
+</tr>
+<tr>
+<td>文档澄清</td>
+<td>正常close/前序Task/整体结果/同名语义/验收映射</td>
+<td>不拆成新状态服务、阶段引擎或ID系统</td>
+</tr>
+</tbody>
+</table></div>
+<p>路径是已有评审落点，不是要求新增同名目录。统一意图/快照合同沿用 <code>contract/cpup01</code>；biz 不导入 Kratos/protobuf/存储驱动；data、service/server、composition root按实际分层处理。采用生成工程现有 <code>internal/</code>、<code>cmd/</code> 布局，不为历史示意搬仓。</p>
+<p><strong>既有明确行为：</strong>通用Pipeline没有 Model register；<code>close</code>在确认publication后请求正常关闭；<code>VerifyPublication</code>核验前序publish Task/Pod，而不是整个Run终态；ModelDev已有独立状态投影。微调必须在这些位置做有限适配，不写一份平行实现。<a class="srcmark" href="#source-s3">S3</a></p>
+<h3 id="D01-1-1">1.1 参数扩展必须检查的现有落点</h3>
+<p>上一轮参数源码核对发现：intent公共校验接受最多三个CPU参数，并把epochs/batch固定；Release校验固定MLP命令/模板/参数版本；受理解析限定MLP合同；查询中的<code>parameterView</code>将epochs整数返回3、其他整数返回64。<strong>这些规则对旧CPU合同成立，但不能机械套给FINETUNING。</strong><a class="srcmark" href="#source-s9">S9</a></p>
+<p>W1应建立明确kind/合同分流、复用真实类型解析和规则投影；旧CPU合法请求的结果保持。新增max_steps=20不能误显示64，更不能由前端写死20掩盖投影错误。对非法内部参数返回显式失败，不吞错补默认值。W1同时检查Snapshot验证是否仍重用CPU三参数校验，以及Gov所消费合同版本是否一致。</p>
+<p>以上是本次复核要点，不表示要求重写<code>contract/cpup01</code>、搬迁仓库或修改整个通用训练产品；不通过local replace或复制生成代码绕过跨仓正式依赖。</p>
+<h3 id="D01-1-2">1.2 ModelDev公共接缝核对，不要求提前实现GPU</h3>
+<p>本轮只在已涉及的代码处记录后续资源接入点：W1核对意图/Release/快照及资源摘要查询，W3核对实际训练容器渲染和持久关闭事实，W6维持CPU拒绝GPU及原快照回归。相关位置仍以本仓实际<code>contract/cpup01</code>、受理解析、Trainer adapter和CloseWorker为准，不为文档示意搬目录或新增平行实现。<a class="srcmark" href="#source-s10">S10</a></p>
+<p>当前CPU合同只允许CPU是正确限制；这项限制不能被描述成ModelDev永久不支持其他执行资源。但<strong>核对接缝不等于本轮必须重构所有资源类型</strong>：现有结构足够就只记录；仅当发现同时影响本版CPU正确性或本版正修改逻辑的具体耦合时，才在原任务内做局部修正和回归。纯GPU专属改动留待下一批或隔离试验分支，不改变当前生产请求/快照/启用规则。</p>
+<p>不新增CPU占额记录，不在CPU关闭路径空调GPU退款接口；不以“未来要支持”为由接受未实现GPU字段。仓库分工和验证范围以D10.2为准。</p>
+</div><div class="endlinks"><a href="index.html">← 上一节</a><a href="#D02">下一节 →</a></div></section><section class="chapter" data-chapter="D02" id="D02"><h2><small>D02 / v4.2.2</small>请求、受理和接缝字段</h2><div class="source-body" data-source-ref="D02" data-source-sha256="1046dbeab89b46dfc470a0711374f721b39075d4c482608c459224485fe995bc"><h3 id="D02-2-1">2.1 公网请求</h3>
+<p><strong>正式合同现在固定，真实BFF接线与验收在M3-B完成。</strong>当前测试驱动复用这些codec/解析及正式ModelDev用例，不另写宽松JSON接口；D02.2的Gov真实身份/当前指针/投递事实在被替代时必须标未验证。</p>
+<p>保留 <code>POST /admin/v1/modeldev/executions</code>，在现有合同上增加 FINETUNING 分支。下面是业务示意，不是已发布API或可直接启用的fixture。</p>
+<div class="codewrap"><div class="codehead"><span>JSON</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-json">{
+  "name": "cpu-ft-smoke",
+  "kind": "FINETUNING",
+  "preset_id": "&lt;已启用微调预设UUID&gt;",
+  "dataset_version_id": "&lt;本租户READY Alpaca JSON UUID&gt;",
+  "base_model_version_id": "&lt;已批准固定基模版本UUID&gt;",
+  "finetuning": {"learning_rate": "0.0001", "max_steps": 20},
+  "new_model_name": "cpu-ft-demo",
+  "idempotency_key": "&lt;这次创建的业务键&gt;"
+}
+</code></pre></div>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>合同</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>1–80字符，沿用现有请求校验的字符计数与规范；不另改旧CPU算法</td>
+</tr>
+<tr>
+<td>kind/preset</td>
+<td>FINETUNING必须匹配微调kind预设；不能借切换Release kind改变旧请求含义</td>
+</tr>
+<tr>
+<td>dataset_version_id</td>
+<td>确切本租户READY JSON记录；不得输入S3 URL/key来绕过导入</td>
+</tr>
+<tr>
+<td>base_model_version_id</td>
+<td>确切获准版本；不得选择latest、其他模型家族或加密版本</td>
+</tr>
+<tr>
+<td>finetuning</td>
+<td>FINETUNING必须提供对象且与general_parameters互斥；允许{}使用两项默认，不接受缺失/null；对象内仅learning_rate/max_steps且各自可省略。结构/词法先验，数值及组合在新受理解析时校验，见A07/D05</td>
+</tr>
+<tr>
+<td>target_model_id / new_model_name</td>
+<td>必须二选一；target为Model.id内部UUID；new name遵守Model现有名称规则及create-only语义</td>
+</tr>
+<tr>
+<td>idempotency_key</td>
+<td>沿用原同租户/主体/动作语义；重放优先于解析最新Release</td>
+</tr>
+</tbody>
+</table></div>
+<p>拒绝null、重复键、未知字段、类型截断，以及用户提供tenant/actor、镜像、命令、资源、namespace、storage/URL、证书、Runtime等可信运行配置。<code>source_execution_id</code>继续现有未开放边界。已有公共字段的历史错误字符串不改；新增微调错误在同一映射位置定义，不吞掉领域原因。</p>
+<h3 id="D02-2-2">2.2 受理次序</h3>
+<ol>
+<li>Gov取得真实Principal、映射业务租户，执行当前模块/action校验；不存在“跳过权限的原键重放”。</li>
+<li>先按kind和已公布请求版本选定固定codec，检查结构/词法并规范原意图（保留字段存在性），查原幂等记录。同键同意图返回原记录，异意图冲突；不得为原键重放重读当前参数允许集。</li>
+<li>仅新请求解析当前Release、READY数据和固定基模；按D05合并/校验全部参数和组合；校验目标写权或新建权、名称冲突与必需依赖。未知参数、越界、错误组合在投递和计算前拒绝。</li>
+<li>外部只读解析不置于Gov数据库事务；事务内核对当前绑定generation并原子保存operation/execution、规范快照和待投递命令。</li>
+<li>ModelDev按现有Gov调用合同校验原tenant/operation/intent/spec，原子持久inbox后ACK。ACK不是允许任意KFP请求创建TrainJob的凭据。</li>
+</ol>
+<p>受理前委托可以只有可信tenant/intent与受限选择器，不要求尚不存在的spec_hash。受理后读固定事实和原目标。字段编码优先使用现有公布的结构化合同/附件；缺少的最小字段与提供方共同发布，不发明通用grant生命周期。<a class="srcmark" href="#source-s2">S2</a></p>
+<h3 id="D02-2-3">2.3 两个写操作能力；参数查询复用原查询接口</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>能力</th>
+<th>实施方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ImportFinetuningDataset</code></td>
+<td>窄管理RPC；format明确为JSON；不让用户任意选择schema，详见D03。若尚未发布则按现有API流程生成/发布</td>
+</tr>
+<tr>
+<td>原登记恢复</td>
+<td>拟采用 <code>/admin/v1/modeldev/executions/{id}:register</code>；具体已存在等价入口优先复用；最终选择和wire在API交付时固定，不能同时开放两套别名</td>
+</tr>
+</tbody>
+</table></div>
+<p>这里“拟”表示尚未作为提供方正式API发布，不等于开发时可随意改业务语义。恢复参数不包含新目标、名称、版本或对象路径；只能指定原执行及本次恢复请求的幂等/追踪字段。D08/D09定义真正执行的原内容。</p>
+<h3 id="D02-2-4">2.4 预设与执行查询的安全字段合同</h3>
+<p>本节结构及安全投影现在定义和模块验证；真实当前绑定查询、BFF装配与页面交互后置到M3-B，不阻塞M3-A。没有真实响应时可提供显式回放样例，但不标实际BFF/页面通过。</p>
+<p>本节字段是新增设计语义，<strong>不是已发布Proto或默认已实现方法</strong>。W1以现有<code>ParameterRule/PresetView/ExecutionView</code>与BFF DTO增量映射，确定最终字段名和wire编号；不另开一套参数服务/查询入口。字段存在性必须明确，不能由零值猜“无上限”。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>对象</th>
+<th>必需公开信息</th>
+<th>来源/约束</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前预设视图</td>
+<td>preset_id、kind、active_release_id、release_digest、binding_generation、parameter_contract_version</td>
+<td>Gov读取当前绑定，再取得该确切不可变Release；不能按任意首个历史Release拼规则</td>
+</tr>
+<tr>
+<td>参数规则</td>
+<td>name、INTEGER/DECIMAL类型、required、default、允许枚举或上下界及开闭性、是否可编辑/不可编辑原因</td>
+<td>直接投影Program/Release规则；单值集合可显示固定；不由前端补第二份范围</td>
+</tr>
+<tr>
+<td>允许参数组合</td>
+<td>当前候选使用完整组合列表时返回allowed_parameter_sets，均采用同一类型/值表示；必须与真实受理组合检查一致</td>
+<td>不是任意表达式；单字段合法不代表跨字段组合合法，前端不能只消费独立上下界</td>
+</tr>
+<tr>
+<td>受管配置摘要</td>
+<td>当前已实际锁定的基模/镜像版本标签、CPU/单进程、SFT/LoRA、batch/accumulation/cutoff/rank/alpha及精度等白名单设置</td>
+<td>明确标“平台固定”；不暴露Secret、bucket/key、短期URL、任意命令、Pod路径或原始全快照</td>
+</tr>
+<tr>
+<td>执行详情</td>
+<td>原release_id/digest、parameter_contract_version、用户显式字段存在性、resolved_parameters、安全固定配置及原spec_hash</td>
+<td>原执行Snapshot/Intent投影；无运行结果时不假造effective运行事实</td>
+</tr>
+<tr>
+<td>实际运行摘要</td>
+<td>entry实际消费配置的规范摘要、真实optimizer_steps、实际样本/部分结果</td>
+<td>原运行summary/观察；与请求上限及默认值分开</td>
+</tr>
+</tbody>
+</table></div>
+<p>数值投影必须使用字段真实Value并按目标wire范围检查，不再按名字返回3/64。学习率以规范十进制字符串交互，UI的格式化展示不能改变原键重试请求的值/存在性。</p>
+<h3 id="D02-2-5">2.5 当前生效指针与规则的一致读取</h3>
+<p>Gov保持唯一生效指针。BFF读到<code>release_id + digest + generation</code>后，通过既有目录读取能力取得该确切Release并生成PresetView；ModelDev不另造默认指针。现有ListPresets按多个Release聚合时，只返回与绑定一致的一组规则；其他镜像候选如有不同规则，不能共享一份任意规则。未能取得匹配数据返回明确不可用，不回退到历史第一个。</p>
+<p>无需把跨服务网络调用放数据库事务中。并发切换时用已确定的revision保持一次响应自洽；可做有界重新读取，无法自洽就报可重试错误，不能混合A版本ID和B版本规则。新创建仍按A07.6“受理时当前绑定”处理，事务generation冲突沿既有重解/拒绝规则，不让同一operation落入两个快照。</p>
+<p>查询对新增字段实施原租户/当前scope校验、白名单和有限大小限制。创建成功响应或随后的详情必须可以查询实际解析版本/参数，以便前端确认与提交前预览是否变化。</p>
+<h3 id="D02-2-6">2.6 字段省略与重放</h3>
+<p>保持既有原始意图存在性规则：省略某字段、显式提供默认值是两个可区分意图；补默认值只能发生在新受理生成快照时，不能先改原意图再求hash。前端未修改只读展示时不得在原键重试中自动加入字段。允许省略的两个参数按Release补齐；required=true的字段缺失应拒绝。FINETUNING的finetuning对象必须存在，{}表示无显式训练参数而使用两个默认，null/缺失对象/未知键拒绝；这些约定只针对本次新分支，旧CPU存在性不变。W1固定精确黄金向量，跨服务一致。</p>
+<p>本版不把参数规则摘要、Binding generation当作用户可写的授权令牌。未来需要“按预览版本提交”的产品行为再定义显式条件请求；当前不暗中新增这一语义。</p>
+<h4 id="D02-2-6-1">2.6.1 完整组合与省略默认值的黄金向量</h4>
+<p>下表是解析/拒绝合同测试，前提为一份<strong>仅在对应验证后才可批准</strong>的候选规则：默认A=0.0001/20，允许完整组合只有A与B=0.0002/10。不是本稿批准B，不因为表存在就启用该候选。单字段枚举不能隐含四个组合。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>finetuning对象</th>
+<th>补默认后的值</th>
+<th>结果与意图规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{}</code></td>
+<td>0.0001 / 20</td>
+<td>接受A；原意图中两个字段均省略</td>
+</tr>
+<tr>
+<td><code>{"learning_rate":"0.0001","max_steps":20}</code></td>
+<td>0.0001 / 20</td>
+<td>接受A；与{}的字段存在性不同，不用同一幂等键当相同请求</td>
+</tr>
+<tr>
+<td><code>{"learning_rate":"0.0002"}</code></td>
+<td>0.0002 / 20</td>
+<td>组合未批准，拒绝；不能自动把max_steps改成10</td>
+</tr>
+<tr>
+<td><code>{"max_steps":10}</code></td>
+<td>0.0001 / 10</td>
+<td>组合未批准，拒绝；不能自动把学习率改成0.0002</td>
+</tr>
+<tr>
+<td><code>{"learning_rate":"0.0002","max_steps":10}</code></td>
+<td>0.0002 / 10</td>
+<td>接受B；值进入原快照和真实entry，仍须相应实测</td>
+</tr>
+</tbody>
+</table></div>
+<p>将这些向量加入现有PA03/PA06/PA07，不新增PA11或DSL。当前先测共享解析与持久化；M3-B再验证真实BFF及前端按完整组合展示/提交。后端不得为匹配某组合偷偷修改另一个参数，前端不得在原键重试中补入新字段；不同来源阶段分别留证据。</p>
+<h3 id="D02-2-7">2.7 后续执行资源入口与当前请求的分界</h3>
+<p>本版请求不增加GPU输入；资源/Namespace/Runtime等受管字段继续按2.1拒绝。后续GPU选择属于<strong>与<code>finetuning</code>或<code>general_parameters</code>平级的执行资源合同</strong>，由Gov/ACC现有规范承接，不由算法参数通道透传调度字段。后续具体字段、Proto编号、版本识别和附件关联在GPU批次固定；本段不是可用API示例或当前发布要求。</p>
+<p>创建页当前仅展示真实CPU资源摘要，不能因本补充而显示可提交的假GPU规格。后续资源目录使用ACC并核对租户授权、ModelDev程序/Release与环境支持；历史详情使用原执行冻结的安全资源摘要，不读取最新规格重建旧任务。现在仅记录这些来源和接缝，不要求前端或Model服务增加GPU逻辑。</p>
+</div><div class="endlinks"><a href="#D01">← 上一节</a><a href="#D03">下一节 →</a></div></section><section class="chapter" data-chapter="D03" id="D03"><h2><small>D03 / v4.2.2</small>Alpaca JSON 导入与物化的确定实现</h2><div class="source-body" data-source-ref="D03" data-source-sha256="9e3039dc80af27dba2415664c7b062533afaeb1a0a87064e632c9551be74ff80"><h3 id="D03-3-1">3.1 保留原导入机制，删除多格式负担</h3>
+<p>旧 <code>ImportCSV</code> 继续数值MLP语义。新 <code>ImportFinetuningDataset</code> 管理请求只接受原固定object、来源scope、format=JSON和既有管理请求身份；schema由服务固定为 <code>ani.finetune.alpaca.v1</code>。不接受CSV/JSONL/ShareGPT、自定义列名或用户给出的转换程序。</p>
+<p>按现有状态保存 VALIDATING/READY/REJECTED 及有界错误。首次验证前持久原请求、来源对象和格式；瞬时不可读保留原对象等待受控重试，不当作内容REJECTED，也不换key重新导入。内容非法才REJECTED。</p>
+<h3 id="D03-3-2">3.2 固定与验证</h3>
+<p>先固定S3具体版本/已批准不可覆写对象，再读取实际长度与SHA；不得先哈希一个可变key，再复制它的“当前最新”。来源不具备固定性时复用既有安全导入固化能力；没有可用的固化能力则明确拒绝，不在本次另造存储系统。</p>
+<p>用严格解析验证A05结构，保留字符串原值和行序，计算row_count。源≤32MiB；实际长度超限、摘要不匹配或选错版本都拒绝READY。管理员提交的size/SHA仅是待核对声明。READY、幂等收据及本域保护事实一致持久化，同ID换字节/格式/scope冲突。</p>
+<p><strong>64条在微调Release受理时检查。</strong>合法的其他行数可以导入为READY，但不能交给只批准64条的当前预设；页面/接口返回明确“该预设要求64条”。若运行前数据预处理发现实际有效样本数变化或样本被静默过滤，当前固定配方失败，而不是仍报64条成功。正常多次遍历数据不等于扩大源样本数。</p>
+<h3 id="D03-3-3">3.3 原样物化，不再维护源/派生格式转换系统</h3>
+<p>prepare再次按同一固定引用读取，独立核对长度/SHA后原样写入：</p>
+<div class="codewrap"><div class="codehead"><span>TEXT</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-text">inputs/data/finetune_data.json   = 已READY的原JSON字节
+inputs/data/dataset_info.json   = 由锁定模板生成的配置字节
+</code></pre></div>
+<p><code>inputs/data/finetune_data.json</code> 的本地SHA与原对象SHA必须相同；保持空input、Unicode、转义和空格，不能静默整理。<code>dataset_info.json</code>以固定数据集名 <code>ani_cpu_smoke</code> 映射 instruction/input/output，其模板摘要和实际文件摘要纳入prepared-manifest。</p>
+<p>v4.2继续不新增v3草稿中的CSV normalization_version、源/派生双数据摘要或64MiB派生文件上限；单一原文件≤32MiB足够。公共schema版本、验证实现与已保存对象摘要仍保留。若现有工作树已产生相关微调记录/字段，实施前报差异并按已有合同处理，不擅自删记录。</p>
+<p>这不要求用户按字节做规范序列化：不同空格排列可以是两份合法文件，各自有准确摘要。请求规范化用于execution spec，不与数据文件字节规范化混为一谈。</p>
+</div><div class="endlinks"><a href="#D02">← 上一节</a><a href="#D04">下一节 →</a></div></section><section class="chapter" data-chapter="D04" id="D04"><h2><small>D04 / v4.2.2</small>基模与Model读取接缝</h2><div class="source-body" data-source-ref="D04" data-source-sha256="99011e70e11843b7850118c111e459ca25d9b0d4ffc8cc11b5d8f7e91428f977"><h3 id="D04-4-1">4.1 最小读取合同</h3>
+<p>复用 <code>GetModelVersion</code> / <code>GetModelDownloadURL</code>，方法全名、API模块版本与字段在Model提供方交接中固定。受理前解析固定版本并校验READY、未加密、批准/保护、租户与使用权；冻结以下领域事实：</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>事实</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model内部模型UUID、确切版本UUID</td>
+<td>定位同一资产，不依赖显示名</td>
+</tr>
+<tr>
+<td>provider/reference及固定版本选择器或不可覆写承诺</td>
+<td>后续读取同一对象</td>
+</tr>
+<tr>
+<td>归档size、SHA256、模型format</td>
+<td>实际取回时核验</td>
+</tr>
+<tr>
+<td>基模批准/保护事实及预期HF清单摘要</td>
+<td>确认当前预设允许使用且生命周期安全</td>
+</tr>
+</tbody>
+</table></div>
+<p>不能依赖下载响应里未被实际赋值的默认布尔值判断是否加密；使用版本接口的可靠事实。当前范围拒绝加密、跨租户与未批准基模。Model读取未接入时该真实链路标阻塞，不能把普通body tenant转成Principal。当前M0/M3-A只可使用已批准的固定测试素材与显式读取边界，来源及替代调用按D12.6登记；素材不能冒充正式Model READY/使用权验收。</p>
+<h3 id="D04-4-2">4.2 临近下载时取得短期能力</h3>
+<p>ModelDev使用自己的服务身份和原受理事实申请本次版本的短期只读能力。KFP组件可以通过既有受管步骤接口取得限定原对象的短期能力，或使用已核对的物化流；<strong>不扩一个通用下载代理API</strong>。具体使用哪种既有通路在对接时固定，禁止组件请求任意Model ID/URL。</p>
+<p>URL失效可在原预算内重签同一版本；不重新选择最新版本，不把有效URL写入snapshot、日志或长久manifest。服务间RPC走Gov合同；临时GET数据流不是第二个业务入口。</p>
+<h3 id="D04-4-3">4.3 安全物化</h3>
+<p>下载和哈希流式处理，先写本次staging，再安全解包并核对实际HF文件全集，最后原子发布 <code>inputs/model</code>。起测归档≤2GiB、展开≤4GiB，确切文件数/路径/大小边界由M0锁定。不得对大权重用 <code>io.ReadAll</code>。</p>
+<p>拒绝绝对路径、穿越、反斜杠、重复成员、软硬链接、设备/FIFO、未批准扩展头和超限展开。批准基模实际归档必须在M0验证满足该合同；不靠禁用解包校验适配异常包。</p>
+<p>prepared-manifest包含原JSON、dataset_info、基模归档/文件清单摘要，原PVC UID与spec_hash。半成品目录不作为准备成功；重复准备必须定位原字节，不从网络重新挑选基模。</p>
+</div><div class="endlinks"><a href="#D03">← 上一节</a><a href="#D05">下一节 →</a></div></section><section class="chapter" data-chapter="D05" id="D05"><h2><small>D05 / v4.2.2</small>Release与规范快照的最小增量</h2><div class="source-body" data-source-ref="D05" data-source-sha256="beae46044eb17173bac8bfda93c8af459c774c54d043a0dac8221190702bb587"><div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>合同位置</th>
+<th>增量字段/事实</th>
+<th>限制</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Intent</td>
+<td>FINETUNING、finetuning参数、基模版本、目标分支</td>
+<td>原字段存在性与旧CPU摘要规则不变</td>
+</tr>
+<tr>
+<td>InputRef</td>
+<td>format=JSON、schema、row_count、原固定对象</td>
+<td>不加多格式normalization数组</td>
+</tr>
+<tr>
+<td>Program/Release</td>
+<td>训练Program、ExportProgram、VerifyProgram；参数合同、允许规则/默认/固定配置、映射与镜像/配方摘要</td>
+<td>只一个TrainingPlan；不加Trainer phase列表或规则服务</td>
+</tr>
+<tr>
+<td>Workspace</td>
+<td>export子路径、必要报告布局</td>
+<td>复用原inputs/training/reports/publication；CPU原根语义不变</td>
+</tr>
+<tr>
+<td>OutputContract</td>
+<td>MERGED_HF_MODEL、HF/Adapter/报告角色、in_tar、文件和字节上限</td>
+<td>真实文件全集来自M0，不猜固定“七文件”</td>
+</tr>
+<tr>
+<td>Snapshot</td>
+<td>原参数合同与Release规则引用、完整resolved_parameters/安全固定配置，基模/目标、Gov事实、存储绑定、组件预算</td>
+<td>受理后不变；运行配置回读、UID、输出SHA及registration receipt属于运行事实</td>
+</tr>
+</tbody>
+</table></div>
+<p>Release同时固定KFP PipelineVersion/IR摘要、Runtime内容与target、组件和训练镜像digest、所有程序/配方摘要、CPU池、工作区、资源与deadline。不能只改一个镜像tag就称复现同一Release。</p>
+<p>原CPU v1无微调子结构时必须<strong>真正省略</strong>新增字段，不写零值改变其规范JSON。枚举追加不改旧编号，codec/conformance双向覆盖；旧CPU黄金摘要和拒绝向量原样回归。此要求只约束旧合同；批准新的参数能力必须用明确的新合同/Release路径，不修改旧向量凑兼容，也不把旧拒绝集合当成未来所有程序的永久限制。</p>
+<p>公共 <code>contract/cpup01</code> 是现有唯一维护位置，不复制到Gov手工修改；提供方先正式发布，Gov/ModelDev再固定版本。尚未公布的Model API不能用本地replace充当正式互操作证据。</p>
+<p>W0/W1共同产出完整可解析Release候选及参数/数据/manifest向量。早期M0可以先锁训练程序/配置片段，KFP PipelineVersion真实生成后再组成完整候选，避免“未编Pipeline先要求完整Release”的循环依赖；缺真实ID时明确不是可启用材料。<code>&lt;digest&gt;</code>等占位值不得用于受理或启用，旧环境证据不补本轮PASS。</p>
+<h3 id="D05-5-1">5.1 参数定义与Release规则的最小结构</h3>
+<p>沿用现有<code>ParameterContractVersion</code>、<code>DefaultParameters</code>、<code>ResolvedParameters/ResolvedArgs</code>和公开<code>ParameterRule</code>承载，不新建规则数据库。当前程序合同的受支持字段/类型/硬边界与执行映射由同一受管实现维护；Release在该能力内保存批准规则。名称可映射现有等价字段，但下列信息不能遗漏或多头维护。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>合同内容</th>
+<th>语义与验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>parameter_contract_version</td>
+<td>标识具体程序参数语义，当前微调可采用<code>ani.finetune.lora.parameters.v1</code>；若已正式发布等价ID则沿用并登记，不重命名覆盖</td>
+</tr>
+<tr>
+<td>defaults</td>
+<td>两个当前可输入字段的完整默认；与固定受管配置分开；必须通过程序和Release规则</td>
+</tr>
+<tr>
+<td>rules</td>
+<td>仅程序支持的请求字段；type一致；枚举或区间二选一，区间开闭性显式；规则自身须可校验</td>
+</tr>
+<tr>
+<td>fixed_configuration</td>
+<td>锁定配方中影响运行的受管值及配方/实现摘要；不是可由用户覆盖的参数map</td>
+</tr>
+<tr>
+<td>combination_policy</td>
+<td>与合同版本绑定的有限受管检查：本轮可使用已批准完整组合列表；不执行用户表达式或泛化DSL</td>
+</tr>
+<tr>
+<td>execution_mapping</td>
+<td>每个可输入值的确切框架字段/CLI位置/单位与类型；固定字段来源；受管映射实现与镜像摘要锁定</td>
+</tr>
+</tbody>
+</table></div>
+<p>Release解析时检查：同名重复、无实现参数、默认越界、相互冲突的枚举/范围、错误类型、空允许集、固定字段与可输入字段碰撞均拒绝。程序硬边界不因Release声明更大范围而消失。公开query由该已核验规则投影，不独立手写第二套范围。</p>
+<p>对当前两字段，A07的基准/非默认测试可固定完整允许组合。组合表只是小型发布配置，不是参数搜索/自动调优系统；不要求未来所有连续空间都枚举。</p>
+<h3 id="D05-5-2">5.2 新受理解析与规范化顺序</h3>
+<div class="codewrap"><div class="codehead"><span>TEXT</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-text">按固定kind/request codec解码，校验结构/词法并保留显式字段
+  → 规范原Intent，查原键；命中则按原事实重放
+  → 仅新请求读取本次Gov绑定和确切Release
+  → 检查程序合同、权限、数据/基模与环境能力
+  → 克隆该Release defaults，覆盖合法显式字段
+  → 检查字段硬边界、Release允许集及组合
+  → 加入不可覆盖的受管固定配置
+  → 按受管映射解析实际命令/配置值
+  → 生成规范Snapshot与spec_hash，核对generation后持久受理
+</code></pre></div>
+<p>公共解析不能先调用CPU v1三参数校验再让FINETUNING解释剩余字段。程序/Release语义校验不是幂等键查回的前提，不能因当前允许范围收缩而拒绝原已接受执行的合法原键重放；当前用户访问授权仍需检查。</p>
+<p>取值规范化沿用已公布的整数/精确十进制规则。W1固定省略/显式默认、参数顺序和等值合法数字的黄金向量；对语义不同的新执行参数，resolved配置和其内容摘要必须不同，不能被过滤或模板漏传。真实spec_hash还含其他执行事实，不能把“不同execution hash”单独当作参数生效证据。</p>
+<h3 id="D05-5-3">5.3 快照里的批准值与运行中的实际值</h3>
+<p>原Intent保存用户显式值；Snapshot保存完整解析值、固定设置、参数合同版本、Release digest与程序映射引用。执行不得调用当前目录补值。使用原子快照承载，不新增另一张可独立编辑的前端配置表。</p>
+<p><code>ResolvedArgs</code>可继续用于明确启动向量；若当前框架更适合配置文件，entry在既有受管临时目录生成固定格式文件，路径由W0锁定，W1/W3只实现该已选映射，不同时维护两条后备路线。它必须由同一冻结参数和映射产生，不能以任意用户YAML/环境变量覆盖；不增加无用途的configs业务域。模板文件与最终生效配置不同，摘要各按所指内容记录。</p>
+<p>参数内容摘要统一使用一个明确对象：<code>{parameter_contract_version, parameters, managed_settings}</code>，parameters按名称排序并用固定typed value，managed_settings仅包含W0/W1锁定的执行相关安全白名单；不含URL/密钥、临时路径、时间、UID、执行名称或日志计数。此对象从Snapshot解析得到的摘要称<code>resolved_configuration_sha256</code>；从框架实际解析结果得到的同形对象/摘要称<code>effective_configuration</code>与<code>effective_configuration_sha256</code>。两者同类型同规范字节才可相等比较，不能与整个spec_hash直接比较。</p>
+<p>entry在原summary中扩展保存上述参数合同、resolved摘要、实际effective对象/摘要，W0/W1与现有summary codec一致落实；不改ani.metric.v1，不新建报告服务。锁定框架若对字段作了合法的显式派生，映射合同须预先将同一派生纳入resolved投影；无法预先解释的差异在训练前拒绝，不事后修改Snapshot。</p>
+<p>summary是运行证据，不改写Snapshot。entry无法取得实际解析结果或发现值与原批准配置冲突，应在开始训练前失败；不会读取新默认值“修正”原任务。失败/停止后的步数仍从事实生成。</p>
+<h3 id="D05-5-4">5.4 新能力演进而不重解释旧执行</h3>
+<p>当前CPU v1与微调codec分别解码，提供/消费方固定版本。已经发布且同语义的字段可以在新Release改变默认/范围；新字段、新派生规则或编码语义必须发布清楚可识别的新合同，保留旧请求的解码与重放路径。是否需要新增wire版本字段由后续确实新增字段的批次落实，本版不预放一个无使用者的通用版本选择器。</p>
+<p>公共字段变更只按现有API流程追加或版本化，不复制Proto、不将显式参数变成自由JSON。一个新Release可复用同一PipelineVersion，只要参数输入位置、程序和文件结构没有变；改变Pipeline实现或输出结构时才生成对应新版本。参数取值不同产生新执行，而不是为每个学习率部署新Pipeline。</p>
+</div><div class="endlinks"><a href="#D04">← 上一节</a><a href="#D06">下一节 →</a></div></section><section class="chapter" data-chapter="D06" id="D06"><h2><small>D06 / v4.2.2</small>唯一TrainJob、KFP计算步骤与证明范围</h2><div class="source-body" data-source-ref="D06" data-source-sha256="4a80fb35c6eb3384e907fc3c4ee54370d227b05969180553062e2b1f4efcd290"><h3 id="D06-6-1">6.1 训练入口</h3>
+<p>唯一TrainJob运行受管<code>finetune_entry</code>，调用锁定版本LLaMA-Factory。<strong>本版基准Release的受管固定配置</strong>为SFT/LoRA、target=all、rank8/alpha16、cutoff128、batch1/accumulation1、seed/data_seed42、CPU；关闭混合精度训练、flash attention、外部上报和额外中间checkpoint，保存最终Adapter。这些值归该程序/Release配方，不写成所有未来微调的公共常量；当前API仍不接受用户修改它们。learning_rate/max_steps消费原快照解析值。</p>
+<p>M0以<strong>实际锁定版本</strong>验证所有argv/配置覆盖规则，不能把MLP的 <code>--recipe</code> 直接传给裸CLI。只启动一个训练进程；谁负责进程拉起由受管entry与Runtime共同锁定，不让CLI和Runtime重复启动分布式进程。</p>
+<p>训练实际加载精度、Adapter保存精度、export精度、verify精度分别锁定。关闭fp16/bf16不自动决定导出dtype；本稿不猜填未经测试的版本或峰值。summary记录真实optimizer_steps、实际有效源样本统计及输入/基模/配方/Adapter摘要，不填期望值。<a class="srcmark" href="#source-s0">S0</a></p>
+<p>**指标和summary的唯一生成责任属于TrainJob内的受管 <code>finetune_entry</code>，不是collect/publish。**entry从锁定版本LLaMA-Factory的真实日志或callback采集训练事件，生成符合既有 <code>ani.metric.v1</code> 合同的 <code>reports/train/metrics.jsonl</code>，并将实际采集的结果写入 <code>reports/train/summary.json</code>。M0在两种来源中选定并验证本配方实际使用的一种，固定来源位置/事件、字段和类型映射、步数含义、采样规则、异常处理及实现摘要；不是要求首版同时维护两套采集器。<a class="srcmark" href="#source-s0">S0</a><a class="srcmark" href="#source-s7">S7</a></p>
+<p><code>optimizer_steps</code>来自实际优化器执行事实，不能填请求中的max_steps，也不能直接用metrics.jsonl行数代替。采样点数量与优化步数可以不同，但必须符合锁定采样规则。有效源样本统计、输入/基模/配方/Adapter摘要使用实际事实；失败或取消留下的部分结果如实标明，不补齐期望值。</p>
+<p>指标记录的字段/类型/必填项复用仓库已公布的 <code>ani.metric.v1</code>，本稿不另造字段集。该schema及现有解析器尚未核实时由W0/W1在M0核实并固定，不依据一个示意JSON生成正式合同。训练成功交付必须具备合同所需指标及summary；collect只验证格式、身份/摘要与必需文件并收集，publish只发布，不重新解析不明来源日志、伪造缺失指标或把训练标为成功。新增的指标适配与原CPU指标合同分别回归，见FT11.1–FT11.3。</p>
+<h3 id="D06-6-2">6.2 export / verify不是额外训练作业</h3>
+<p>两个组件同步运行锁定程序，不能调用EnsureTraining，也不新建TrainJob。通过已有受管step入口验证实际workload、权威Run、原Task ID/Pod UID、原spec及D06.3的前序事实。<strong>读取配置或通过一次身份检查，不等于已经受理本次启动，更不是永久或可转交的启动凭据。</strong></p>
+<h4 id="D06-6-2-1">6.2.1 首次启动与停止的共同仲裁</h4>
+<p>ModelDev在现有执行的<strong>同一数据库事务串行化边界</strong>下受理export/verify首次启动和写入停止/关闭标志；使用同一执行记录的行锁或等价的条件原子更新。只在组件内加进程锁、分别读stop再写启动记录，或在两个不相互排斥的事务中操作，都不满足合同。多实例ModelDev同样受这一边界约束。</p>
+<p>身份与前序外部证据按现有可信验证取得；短事务内重新核对原执行/权威绑定、停止/关闭标志、原deadline、本步骤是否已受理，并持久保存首次启动事实。不得在事务中等待Kubernetes/KFP RPC、派生子进程或等待程序结束。只有首次成功提交产生本次启动分支，重复/查询响应不再产生启动分支。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>必须固定的事实</th>
+<th>约束</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tenant + execution + role</td>
+<td>每个执行的export或verify最多一次首次启动受理；复用现有记录，不增加重试attempt树</td>
+</tr>
+<tr>
+<td>spec、权威Run、原Task ID、原Pod UID</td>
+<td>与可信步骤身份一致；另一Pod/Task即使role相同也不能接管或重领启动</td>
+</tr>
+<tr>
+<td>启动受理时间、已观察的关闭generation、步骤有效deadline</td>
+<td>使用本域权威时钟在首次事务中固定；export/verify预算从启动受理时间计，见D10，不从稍后实际spawn重新起算</td>
+</tr>
+<tr>
+<td>实际启动/退出、结果与清单引用</td>
+<td>后续运行事实；不能用“受理已提交”推定进程已运行、已退出或成功</td>
+</tr>
+</tbody>
+</table></div>
+<p>字段名映射到既有等价字段即可，以上语义必须保持。配置读取、结果上报、启动受理和停止不得改变已冻结Release/输入/命令或spec。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>竞争顺序</th>
+<th>明确结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>停止/关闭先提交</td>
+<td>拒绝首次启动，不派生export/verify子进程</td>
+</tr>
+<tr>
+<td>首次启动事务检查时deadline已到</td>
+<td>拒绝首次启动；Pod已存在不能绕过时限</td>
+</tr>
+<tr>
+<td>首次启动先提交，停止随后提交</td>
+<td>原启动已属于在途计算；停止流程必须跟踪该绑定，包括尚未spawn或启动结果不明的原Pod</td>
+</tr>
+<tr>
+<td>首次启动响应丢失、超时或相同请求重放</td>
+<td>只查原记录/原Pod，不再次返回可执行启动分支，不换Pod、不重跑CLI；单次“查不到”也不能排除仍在途的原请求</td>
+</tr>
+<tr>
+<td>原入口退出或owner重启</td>
+<td>从原记录恢复观察/停止，不重新受理或续期；能证明原入口终止且不会再派生时，按实际事实关闭，否则待核实</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>原子仲裁的是启动受理与停止，不是数据库提交与操作系统spawn。</strong>启动已先受理时，停止提交后仍可能短暂观察到原在途启动，必须立即取消/停止并等到真实退出；不得宣称“stop一提交就保证所有进程已消失”。相反，停止在首次启动受理前提交时，实际启动次数必须为零。</p>
+<h4 id="D06-6-2-2">6.2.2 原入口、丢响应与关闭</h4>
+<p>原受管入口只消费首次成功返回的本次启动分支，最多派生一次原命令；查询、响应重放和Pod/服务重启不能再次派生。响应不明确时保持只读查证，不从“已有启动记录”推导可再运行。若因保守处理未启动，记录失败/取消/待核实的真实结果；本版不自动恢复该计算步骤。</p>
+<p>入口在等待与准备派生期间处理取消和剩余deadline；尚未派生时终止该原入口的启动路径，已经派生时将取消/SIGTERM传给进程组并等待退出。owner先持久关闭，再使用原KFP/Pod身份停止/观察，覆盖所有启动已受理、在途或结果不明的记录；不能因当前没有子进程、缺少started_at或单次Pod NotFound而跳过。已经关闭的执行不能被迟到启动响应重新打开；必要的迟到结果仅作为事实记录。</p>
+<p>禁KFP计算cache/自动retry，restartPolicy=Never；不后台遗留权重写者，不以重启计算生成“确定结果”。是否可CLOSED仍由A11的实际控制器/Pod/写者证据决定，不靠启动记录自身推断。</p>
+<p>只扩现有role、绑定、启动/结果和清单事实，<strong>不新增阶段调度器、创建许可平台、分布式事务或多Job生命周期</strong>。本项是必须落到代码并测试的微调增量，不只是注释；FT23.1–FT23.5、FT24.1–FT24.2给出可重复的竞争测试。</p>
+<h3 id="D06-6-3">6.3 具体证明对象</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>动作</th>
+<th>必查对象</th>
+<th>不可复用的错误证明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>开始export</td>
+<td>原TrainingHandle/Observation、实际训练结束/无写者、Adapter与原输入关联；train-wait对应Task完成</td>
+<td>整个KFP Run已完成</td>
+</tr>
+<tr>
+<td>开始verify</td>
+<td>原export Task及Pod零退出，merged-manifest/文件字节属于本次</td>
+<td>export自报一条成功日志</td>
+</tr>
+<tr>
+<td>确认publication</td>
+<td>原publish Task/Pod零退出，候选与实物大小/SHA/tar完全一致</td>
+<td>publish尚在运行时自报“已发布”</td>
+</tr>
+<tr>
+<td>最终CLOSED</td>
+<td>原Run/Workflow、唯一TrainJob控制器历史和全部相关写者，包括export/verify</td>
+<td>某个前序Task成功或当前Pod NotFound</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>runtimeproof/tasks.go</code>等白名单要按执行类型包含新角色；<code>ManagedRuntime.Publish</code>/<code>VerifyPublication</code>对微调只允许register确认，CPU仍只允许原close。不要改成任何已认证Pod都能确认任意publication。</p>
+<p>M0除短推理外，应验证导出确实读取本次Adapter：记录基模/Adapter摘要和真实argv；用固定输入比较“基模+Adapter”与merged的一致性可作为负载验证。它不是模型效果评测，不要求每次跑大型评测集。</p>
+<h3 id="D06-6-4">6.4 参数覆盖与实际框架消费的单一入口</h3>
+<p>W0/W1把“参数→实际框架字段”固定成合同向量。当前两字段直接映射learning_rate/max_steps；受管固定设置也从本次快照/锁定配方取得。entry按D05.3生成最终argv或配置，再核验框架实际解析结果，不能以“命令里出现了值”替代“程序消费了值”。</p>
+<p>优先级只有一条：已冻结的受管固定配置不可覆盖；可输入字段使用已批准的resolved值。镜像内配方仅提供该Release锁定模板，不得二次覆盖合法用户值；冲突失败而非后写者胜。业务不允许的路径/命令/环境变量不进入参数通道；测试失败/慢速配方仍只由受管验收配置触发。</p>
+<p>本版只采用max_steps控制训练长度，不对用户开放epochs。entry固定该控制方式，不同时把另一个训练长度字段作为可调项隐式参与。未来批准epochs时需在新合同中明确模式互斥/优先级，并验证锁定框架行为；不能沿用旧框架默认优先级却不给用户说明。</p>
+<p>基准A与非默认B在同一受管程序上分别验证：请求/快照值、最终解析值、真实optimizer事件、summary和产物对应同一次执行。正常达到上限的结果与提前失败/停止的部分结果分别检查；指标行数不等于步数。首例非默认配置仍使用相同固定基模/JSON语义，不以参数测试为由恢复数据格式或新模型家族。</p>
+<h3 id="D06-6-5">6.5 不新增计算与指标管理体系</h3>
+<p>参数解析在受理和入口各执行其限定校验，不触发额外TrainJob、导出Task或新的阶段记录。D06.2的启动/停止事务关系原样保留；参数数量增多也不能放宽role/Pod绑定或让重放重新spawn。effective配置摘要复用summary与日志/报告通道，不新建指标常驻服务，也不由collect补造缺失配置证据。</p>
+</div><div class="endlinks"><a href="#D05">← 上一节</a><a href="#D07">下一节 →</a></div></section><section class="chapter" data-chapter="D07" id="D07"><h2><small>D07 / v4.2.2</small>工作区、文件全集、tar与发布</h2><div class="source-body" data-source-ref="D07" data-source-sha256="de872d4a775930d071119050b4785ccceb20dd6179a2847e5892ffb8441e0ebb"><h3 id="D07-7-1">7.1 路径与挂载</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>路径</th>
+<th>内容</th>
+<th>正常写入者</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>inputs/data</td>
+<td>原样finetune_data.json、dataset_info.json</td>
+<td>prepare</td>
+</tr>
+<tr>
+<td>inputs/model</td>
+<td>核验后的固定基模</td>
+<td>prepare</td>
+</tr>
+<tr>
+<td>training/adapter</td>
+<td>Adapter权重、配置</td>
+<td>唯一TrainJob</td>
+</tr>
+<tr>
+<td>export/merged</td>
+<td>完整HF模型</td>
+<td>export Pod</td>
+</tr>
+<tr>
+<td>reports/train</td>
+<td>metrics.jsonl、summary.json、Adapter关联清单</td>
+<td>唯一TrainJob内的finetune_entry；collect/publish只读校验与发布</td>
+</tr>
+<tr>
+<td>reports/export</td>
+<td>merged清单与诊断</td>
+<td>export Pod</td>
+</tr>
+<tr>
+<td>reports/verify</td>
+<td>verify报告</td>
+<td>verify Pod</td>
+</tr>
+<tr>
+<td>publication</td>
+<td>inventory、candidate等非权威暂存</td>
+<td>collect/publish</td>
+</tr>
+</tbody>
+</table></div>
+<p>prepare建立本次后续所需的空子目录并写入输入，不写训练/导出权重。TrainJob只读inputs，写training及reports/train；export只读其前序输入，写export与reports/export；verify只读merged，写reports/verify；collect/publish只读产物，写publication与受限spool；register/close只读必要报告，不持Model管理证书。</p>
+<p>不存在“外部TrainJob自动继承KFP卷挂载”的假设；两处分别配置。所有写子路径明确分离，允许合同中故意共享的只读父路径；不要把父目录和子目录的合法只读关系误判成写入重叠。目录创建与K8s subPath存在性在目标CSI中验证。</p>
+<p>UID/GID10001、只读根文件系统、受管缓存/临时写目录与CPU池配置按已验证Runtime/组件材料应用。多租户启用范围依据实际证据，不因设计有两个租户字段就声称任意隔离均通过。</p>
+<h3 id="D07-7-2">7.2 文件全集与主tar</h3>
+<p>微调RequiredFiles相对workspace根；CPU保持原training根和叶文件合同。M0固定当前镜像、基模与批准组合的真实文件结构：config/tokenizer、完整safetensors或实际shards/index；另外收集Adapter、entry实际metrics/summary、verify和清单。summary新增安全参数证据不新建参数存储域。缺文件、未经批准的额外文件、同次读取摘要冲突均拒绝；结构或上限变化要更新相应合同/Release。</p>
+<p><strong>固定的是获准路径/角色/结构及上限，不是首个样例的权重SHA或准确文件长度。</strong>不同参数产生不同权重摘要是正常运行事实；收集器不得要求等于M0基准SHA。非默认测试要核对实际文件结构仍满足合同，或者先修订并验证对应新文件合同；不能直接禁用多文件/上限检查。</p>
+<p>主模型使用<strong>未压缩USTAR tar</strong>，只纳入 <code>in_tar=true</code> 的 <code>export/merged</code> 文件；成员名剥离该前缀，在包根直接出现HF文件，保留必要内层路径。不把export/merged目录套进tar根，不放Adapter、平台output-manifest或诊断报告。</p>
+<p>Adapter权重/配置/关联清单作为独立工件保存。file SHA、manifest SHA、tar SHA分别表示各自字节；Model的checksum为整个tar SHA，format为模型文件格式（本例safetensors），不是把format写成tar。</p>
+<p>不强制重写已稳定的CPU打包规范。微调tar禁止路径碰撞、穿越、link、设备/FIFO及非批准PAX扩展；标准tar尾部零填充允许，非零附加数据拒绝。重放读取原已固定tar，不重新打包并期待随机元数据恰好相同。</p>
+<h3 id="D07-7-3">7.3 发布与确认</h3>
+<p>大文件流式哈希/捕获到磁盘spool，捕获后再上传原执行前缀；检查真实大小、路径和读期间变更。逐级fd/O_NOFOLLOW、受控文件类型和多链接检查沿用并扩展现有安全I/O，不改成简单拼路径。</p>
+<p>publish返回候选，不能自证自己的Pod已经结束。register前半段复用独立核验，验证原publish身份/终态以及远端每个固定对象的实长/SHA、完整manifest和主tar，再事务持久publication。失败不调用Model，不能只上传一个manifest就标PUBLISHED。</p>
+<p><strong>M3-A不等待BFF或Model登记，但不能省略上述发布确认。</strong>保持同一Pipeline/组件顺序与实际proof；Model边界未接入的测试装配应在确认后返回明确依赖不可用，记录PUBLISHED与真实关闭，不能直接跳到正常成功close或写假registration。这个预期失败可满足对应主链测试断言，不满足A10单次业务成功；后续替换为真实Model adapter无需重写发布/关闭路径。独立S3取回校验不挂训练PVC，不等于FT29的Model→Inference验收。</p>
+<p>直接对象引用或必要复制以受理前的绑定确定，详见D08；没有经验证的绑定不得正式启用该Release。不要同时开发两套动态fallback模式。</p>
+</div><div class="endlinks"><a href="#D06">← 上一节</a><a href="#D08">下一节 →</a></div></section><section class="chapter" data-chapter="D08" id="D08"><h2><small>D08 / v4.2.2</small>Model需求交接：先留接缝，提供方就绪后接入</h2><div class="source-body" data-source-ref="D08" data-source-sha256="500c069d590e4bbd12ffeb4911fca66bd2a40ffc49407bc11d932418a7c4c0c6"><p>本节是 <strong>ModelDev向Model提出的具体领域需求</strong>，不是新的服务间调用规范。传输/身份/委托/超时/重放统一引用Gov合同。Model提供方先确认现有API是否足够；不足的窄能力由提供方正式发布，消费方再固定依赖。不得以本节示意方法名复制一套Model Proto。<a class="srcmark" href="#source-s2">S2</a></p>
+<h3 id="D08-8-1">8.1 本次职责与就绪条件</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>Model需要提供/保证</th>
+<th>ModelDev需要完成</th>
+<th>正式联调证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MR01 可信接收</td>
+<td>在已有业务mTLS入口按服务+完整RPC+用途建立可信上下文；检查tenant与资源；不信任body自报Principal</td>
+<td>重建metadata；只从已验证Gov委托/持久受理构造请求；不冒用Gov证书</td>
+<td>无证书、错服务、越权方法、冲突tenant、伪造actor拒绝；合法原范围通过</td>
+</tr>
+<tr>
+<td>MR02 基模读取</td>
+<td>返回已批准精确版本及真实size/SHA/format/加密/固定引用；短期下载始终同版本</td>
+<td>冻结读取事实、临近使用才签发能力、流式核验</td>
+<td>固定版本读回；源同key新版本不替换基模；禁止任意版本读取</td>
+</tr>
+<tr>
+<td>MR03 目标与名称</td>
+<td>Model.id与外部标识明确；目标归属/可写检查；租户内名称唯一，新建重放回原模型</td>
+<td>create-only与existing分支固定；预检仅提示/拒绝，不承担最终唯一性</td>
+<td>同名新执行冲突；原键重放同模型；显式existing新增版本</td>
+</tr>
+<tr>
+<td>MR04 版本登记</td>
+<td>原key+原业务内容幂等；完整登记内容一致性；可靠finalization</td>
+<td>持久原登记意图；具体写派发按D09.3与停止仲裁，不以整份意图代替在途事实</td>
+<td>一次结果；同key异内容拒绝；丢响应/部分提交及停止竞争</td>
+</tr>
+<tr>
+<td>MR05 原结果查证</td>
+<td>限定原tenant/业务键返回未创建、pending/部分完成、READY或冲突及原字段；READY-only旧接口含义不变</td>
+<td>先查证再按合同有限重放；不拿404单独当无副作用</td>
+<td>响应丢失能找回；不会创建第二版本；未完成状态不可当READY</td>
+</tr>
+<tr>
+<td>MR06 固定对象与下载</td>
+<td>固定版本选择器或受管不可覆写key贯穿持久引用、校验、下载和重放</td>
+<td>不将versioned object降成latest；tar SHA/size与原发布一致</td>
+<td>同key后来内容改变，仍下载原内容；长度/SHA不符拒绝</td>
+</tr>
+<tr>
+<td>MR07 存储交接</td>
+<td>明确当前作用域可否接受原publication引用；需上传时票据不另建业务版本</td>
+<td>固定一条经验证绑定；仅必要时复制，不动态切模式</td>
+<td>实際从Model读取同一tar；配置缺失明确未启用</td>
+</tr>
+<tr>
+<td>MR08 删除保护</td>
+<td>批准基模/登记成品的保护在实际删除路径生效；保护建立时机明确</td>
+<td>在批准、引用和记录时使用权威事实；不靠隐藏按钮</td>
+<td>删除与批准/登记竞争时不会删掉受保护资产</td>
+</tr>
+</tbody>
+</table></div>
+<p>本版所需MR能力在当前选定绑定上真实完成，是正式启用及本方案最终验收的必要条件；<strong>不是要求ModelDev开发人员同时实现两个仓库</strong>。Model暂未交付时，这些接口可以先用边界替身进行消费者合同测试，但不能把替身的权限/事务结果算成MR已通过。</p>
+<h3 id="D08-8-2">8.2 实际API优先复用</h3>
+<p>现有方法族包括 <code>GetModel</code>、<code>GetModelVersion</code>、<code>GetModelDownloadURL</code>、<code>CreateModel</code>、<code>CreateModelVersion</code>。复用这些正式API及固定模块版本；名称精确占用检查和pending查证如现有接口无法可靠表达，再由Model补一个限定能力，不新建通用查询系统。<code>GetUploadURL</code>只有当前选定交接确实需要复制时才启用。</p>
+<p>每一项调用登记填入<strong>最终完整RPC全名</strong>、已签发的服务SAN、结构化上下文或既有附件字段；不能把上述用途名称当成已经发布的RPC。原actor用于审计，不独自赋权。普通查询用当前授权；受理后后台完成限于原任务批准内容，不重放长寿命用户JWT。</p>
+<h3 id="D08-8-3">8.3 稳定键、内容与事务</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>操作/记录</th>
+<th>本次规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新建容器操作</td>
+<td><code>md-container:&lt;execution_id&gt;</code>；只有new分支使用；持久保存实际Model.id收据</td>
+</tr>
+<tr>
+<td>输出版本标签</td>
+<td><code>exec-&lt;execution_id&gt;</code>；不是查最大版本再加一</td>
+</tr>
+<tr>
+<td>版本登记操作</td>
+<td><code>md-&lt;execution_id&gt;</code>；同tenant下稳定；请求追踪ID允许变化，业务key不变</td>
+</tr>
+<tr>
+<td>ModelDev原登记内容</td>
+<td>原受理/目标分支、规范Model UUID（或尚待创建的原name）、基模/verify/publication关联、原tar引用/版本/size/SHA/format、加密与engine配置、交接模式</td>
+</tr>
+<tr>
+<td>Model侧内容fingerprint</td>
+<td>以其实际接收合同为准，覆盖影响最终模型版本的全部持久字段：tenant、目标、版本、对象固定引用、size/SHA/format、加密和engine等；不能只比key</td>
+</tr>
+</tbody>
+</table></div>
+<p>ModelDev的来源追溯字段不要求在Model当前Proto中无理由复制；Model回读字段覆盖自身登记内容，ModelDev另外核对本域publication/来源。未传给Model的字段不能声称由Model独立验证。</p>
+<p>在外部首次写入前，ModelDev持久原登记意图；new分支先请求容器、记录/找回原Model UUID，再形成版本请求。<strong>意图存在不等于这些调用都已在途；每个具体写操作取得派发资格按D09.3与Stop/deadline共同仲裁。</strong>容器响应不明按原key查证，不按名复用；其迟到成功也不自动授权下一次版本派发。</p>
+<p>Model先在事务外核验<strong>不可变</strong>对象，随后在本域事务中锁定原登记/版本，核对相同内容，插入或复用唯一Artifact，置READY并持久必须的审计事实；不把对象流和跨服务RPC包在长数据库事务中。已有历史“Artifact完成但READY未写”状态必须可恢复。同key异内容拒绝；READY重放返回原持久字段，不用新请求拼旧结果。<a class="srcmark" href="#source-s4">S4</a></p>
+<p>ModelDev查到原READY并核对确切target/version/object/size/SHA等后才写registration成功；HTTP/gRPC成功或durable ACK不等同于Model READY。是否采用已有查询或新窄方法，由Model在API交接时固定，并保留旧查询语义。</p>
+<h3 id="D08-8-4">8.4 存储只启用当前需要的一条路径</h3>
+<p>优先核对<strong>直接引用原publication固定对象</strong>是否在Model的租户作用域、权限与引用格式内真实可用。兼容则直接引用，不为了格式统一重复复制。</p>
+<p>确实不兼容时，当前环境选择<strong>固定的受控复制绑定</strong>：由ModelDev服务侧从原已发布对象读取，复制到Model批准范围，核对实长/SHA，并固化最终引用。upload票据只管字节传输，不能顺便生成另一个模型版本。</p>
+<p>这两项是受管部署选择，不是每次失败时尝试的双后端。首个环境只交付它实际选择的模式；未实现模式保持不支持，不宣称已通过两套验收。选定后冻结配置，不在执行中切换模式/目标bucket。</p>
+<p>固定VersionID或不可覆写key需被真实下载链消费；不能只在ModelDev记录版本而Model读取latest。既有上传URL未到期不能再覆盖成品；需要staging/final或固定版本的条件由提供方落到实际接口。</p>
+<h3 id="D08-8-5">8.5 依赖不可用的结果</h3>
+<p>Model尚未配置/正式接入：原CPU可继续；FINETUNING保持未启用，模型读取与登记真实验收为BLOCKED，不新建假版本。已经受理后的短暂故障：有限查证/重放，预算耗尽保存失败或UNKNOWN并关闭计算；后续走D09的原登记恢复。</p>
+</div><div class="endlinks"><a href="#D07">← 上一节</a><a href="#D09">下一节 →</a></div></section><section class="chapter" data-chapter="D09" id="D09"><h2><small>D09 / v4.2.2</small>运行事实、恢复与查询投影</h2><div class="source-body" data-source-ref="D09" data-source-sha256="1c1a110ee734c6532c48e17d2e8dfe88447f9f06b39e360002847c71d94b8915"><h3 id="D09-9-1">9.1 本期最小事实，不规定必须新增多少表</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>事实</th>
+<th>持久位置原则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>入站受理、原Intent/Snapshot</td>
+<td>复用现有Governance受理和ModelDev inbox/execution；事务/唯一约束不改</td>
+</tr>
+<tr>
+<td>JSON READY</td>
+<td>复用input记录的类型分支、固定对象、row_count、schema和验证结果</td>
+</tr>
+<tr>
+<td>export/verify</td>
+<td>原role/Task ID/Pod UID绑定，启动受理时间/步骤deadline、实际启动/退出及清单；首次启动与stop共用D06.2的执行级原子仲裁，不能用记录推进DAG</td>
+</tr>
+<tr>
+<td>publication</td>
+<td>扩原输出合同和核验；CPU由close确认，微调由register确认</td>
+</tr>
+<tr>
+<td>registration</td>
+<td>原意图/内容、具体写操作的派发在途事实、收据、fingerprint、状态和有界错误；复用现有记录，不为每个RPC新建平台</td>
+</tr>
+<tr>
+<td>close</td>
+<td>原停止generation、在途资源、控制器/实际写者证明；纳入新增组件</td>
+</tr>
+</tbody>
+</table></div>
+<p>逻辑记录可以由既有表加可选字段或有限新增表承载，由仓库当前模型决定；不要求每一项单建服务/状态机。对外状态由同一事实投影产生，保留旧CPU语义。</p>
+<h3 id="D09-9-2">9.2 原登记恢复</h3>
+<p>仅当真实训练和export/verify成功、publication已确认、原登记事实存在、执行CLOSED且无关闭待核实时，才能接受恢复。Gov核对当前操作者对原执行及原目标的权限，持久一条恢复命令；ModelDev使用其原记录执行，不信任用户body替换业务内容。</p>
+<p>恢复不启动KFP、TrainJob、export或verify，不挂原训练PVC，不改变旧计算deadline。需要原绑定的存储交接时只从已发布对象读取，用原upload/registration key完成；它是有界交付I/O，不是重新训练。</p>
+<p>原正常登记和恢复共享同一记录，用有限租约/CAS防止并发混乱。若Model写入已在途，旧处理者可能仍返回结果，因此仍必须依赖Model原key幂等并核对内容，不能把lease当作跨服务绝对一次执行证明。</p>
+<p>同名/内容冲突停止自动重试；依赖暂不可用允许按原内容有限重试。所有变化只在允许的登记状态发生，不能为了“恢复”重开计算。没有原publication或原登记意图时，不将该接口泛化成手工发布任意文件的入口。</p>
+<h3 id="D09-9-3">9.3 登记具体副作用派发与停止共同仲裁</h3>
+<p>本节是v4.2.1审核R1的必要补齐。<a class="srcmark" href="#source-s11">S11</a> 复用本域执行/登记记录；不增加通用授权服务、许可平台或跨服务事务。<strong>登记意图固定的是原目标和内容，不是后续所有副作用的永久派发资格。登记worker之间的lease/CAS也不能代替它与Stop共同仲裁。</strong></p>
+<h4 id="D09-9-3-1">9.3.1 同一执行级串行化边界</h4>
+<p>正常登记每个具体会产生外部副作用的操作，在取得本次派发资格时，必须与Stop/关闭/deadline共用同一执行记录行锁或等价数据库原子条件。事务内重新核对原执行/spec、登记阶段、业务键/内容、原目标、停止/关闭状态及剩余register/执行预算，记录该具体操作已获准在途；事务外才执行RPC或对象I/O。多实例同样受约束，禁止事务内等待网络或文件传输。</p>
+<p>记录至少能区分“原登记意图已存”“哪项具体操作已获准派发”“其结果未明/已确认”。沿现有字段增量承载，不要求新建一套表。new分支的CreateModel、CreateModelVersion分别仲裁；若当前选定存储交接会真实写目标对象，该有限写操作也明确原key、范围及在途归属。纯只读查证和字段转换不新增派发许可记录。</p>
+<p>每次<strong>新的实际重发</strong>也要检查当时Stop/deadline和原内容；不能凭停止前取得过一次许可，在停止后任意重发。正常登记只对提供方合同允许的瞬时错误有限重放，依赖原key幂等；未知结果优先查证。关闭发生后只允许原结果记录和限定只读查证，不再产生新的正常写派发。</p>
+<h4 id="D09-9-3-2">9.3.2 谁先提交，结果是什么</h4>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>提交顺序/情况</th>
+<th>必须行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stop先于某具体派发提交</td>
+<td>不产生该新的正常外部写调用；已有意图不豁免</td>
+</tr>
+<tr>
+<td>仲裁时执行或register预算已到</td>
+<td>拒绝派发；重放/重签/重启不重置原预算</td>
+</tr>
+<tr>
+<td>该具体派发先获准，Stop随后提交</td>
+<td>保留为原在途请求，响应可迟到；取消可取消的本地等待/I/O，原key查证并保存真实receipt</td>
+</tr>
+<tr>
+<td>CreateModel已完成或迟到成功，版本派发尚未获准</td>
+<td>停止已生效则不得再发CreateModelVersion；容器收据保留，不按同名自动追加或自动删除</td>
+</tr>
+<tr>
+<td>版本写响应丢失/worker重启</td>
+<td>找原操作、原内容/原目标；不换key、不用一次NotFound推定没有写入，不重训</td>
+</tr>
+<tr>
+<td>已CLOSED后用户明确恢复原登记</td>
+<td>走D09.2新的当前授权恢复命令与有限预算；仍用原内容/key，不重开计算，不被误写成永久禁恢复</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>仲裁的是本域“是否获准派发”，不是把本域Stop与远端Model事务变成物理原子操作。</strong>先获准的原RPC可能在Stop之后才真正到达或写成READY；必须如实记录，不能声称Stop撤回了远端写入。迟到响应本身不产生后继写操作的许可。</p>
+<h4 id="D09-9-3-3">9.3.3 在途、重放与关闭的边界</h4>
+<p>原normal handler与恢复worker共用登记记录的有限lease/CAS；仍须依赖Model的原key/内容幂等与查证，不能把lease当绝对一次副作用证明。首次派发资格丢响应、进程重启或传输结果不明时，按原记录处理；查询记录不自动重发，明确重发也必须通过相应原内容和当前时限/停止检查。</p>
+<p>计算CLOSED不以Model READY为前置，也不因远端结果未知而编造成功。原进程/权重写者必须按既有关闭条件结束；远端Model业务结果可在关闭后继续限定查证并作为迟到事实保存。受控复制若仍有本执行服务侧实际写入者，必须取消/收齐或保持未解决，不能借“只是登记”遗漏。清理不得删除未知写入引用或唯一未发布产物。</p>
+<p>W4与现有关闭负责人在允许真实登记写入前实现本节，并把同步竞态加入FT21/FT25；W0/W1及不调用Model的主链开发不等待该提供方上线。已CLOSED恢复不修改旧计算deadline，不扩大目标或数据，原KFP历史不改写。</p>
+<h3 id="D09-9-4">9.4 错误与查询</h3>
+<p>原CPU公开错误、未启用行为不变；新增微调错误在同一服务错误映射定义。查询、下载、日志、恢复重新检查当前权限及数据范围，不从当初创建者身份自动授予现在的访问权。</p>
+<p>当前已支持scope以实际CPU主干为准；若当前仅支持tenant-all，更细SELF/组织scope仍明确拒绝，不降级放大为tenant-all。该拒绝可以证明安全边界，不能标为已支持原v0.4 C02完整产品能力。</p>
+<h3 id="D09-9-5">9.5 有效配置展示与现有前端衔接</h3>
+<p>共享投影/数据合同现在实现，<strong>实际BFF/前端联调在M3-B完成，不作为M3-A前置</strong>。先用真实查询用例和严格回放样例验证本域数据，但不能据此将PA05/PA07/PA10的前端部分标通过。</p>
+<p>创建页继续从预设读取信息，按D02.4显示可编辑值、固定项及原因。不开新的前端配置权威；固定项可见不等于能写入请求。无已批准规则时显示未就绪，不把模板示例当成可运行范围。</p>
+<p>详情页读取原执行的Intent/Snapshot，只返回安全白名单；预设更新后原默认值和参数仍不变。实际指标/summary单独展示“已完成步数”等运行事实；尚未启动的执行不显示伪造effective值。查询权限沿原scope/动作边界，不为查看参数放开完整内部快照。</p>
+<p>创建期间切版采用A07.6唯一规则；收到受理后以返回/详情中的真实release与resolved配置为准。前端可以提示“按受理时版本执行”，不得自动将用户选择改为服务器默认，或使用原幂等键发送一份修改后的请求。范围拒绝需要刷新后由用户形成新意图。</p>
+<p>回归至少覆盖max_steps=20/10等整数正确投影、当前Release匹配、同预设历史Release共存、旧任务在默认值改变后展示不变、只读固定项不进请求、敏感字段未泄露。完整验收见PA01–PA10。</p>
+</div><div class="endlinks"><a href="#D08">← 上一节</a><a href="#D10">下一节 →</a></div></section><section class="chapter" data-chapter="D10" id="D10"><h2><small>D10 / v4.2.2</small>起测资源与时限：共用机制、微调预算</h2><div class="source-body" data-source-ref="D10" data-source-sha256="e2c1532835b4613bb2484846a5e1b39b4c2d1b34addf5289d8af778e970a1df2"><p>数值沿用v3作为<strong>待实测起点</strong>，不是容量保证或已经测试的生产规格。execution_timeout_seconds=10800，受理固定deadline_at；正常预算合计10800秒。<a class="srcmark" href="#source-s0">S0</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>环节</th>
+<th>CPU request/limit</th>
+<th>内存 request/limit</th>
+<th style="text-align:right">预算</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>排队/编排余量</td>
+<td>—</td>
+<td>—</td>
+<td style="text-align:right">900s</td>
+</tr>
+<tr>
+<td>prepare</td>
+<td>2/4</td>
+<td>6Gi/8Gi</td>
+<td style="text-align:right">900s</td>
+</tr>
+<tr>
+<td>TRAIN与train-wait</td>
+<td>训练2/4；等待0.5/1</td>
+<td>训练6Gi/8Gi；等待512Mi/1Gi</td>
+<td style="text-align:right">3600s</td>
+</tr>
+<tr>
+<td>export</td>
+<td>2/4</td>
+<td>6Gi/8Gi</td>
+<td style="text-align:right">1800s</td>
+</tr>
+<tr>
+<td>verify</td>
+<td>2/4</td>
+<td>6Gi/8Gi</td>
+<td style="text-align:right">900s</td>
+</tr>
+<tr>
+<td>collect</td>
+<td>1/2</td>
+<td>1Gi/2Gi</td>
+<td style="text-align:right">600s</td>
+</tr>
+<tr>
+<td>publish</td>
+<td>1/2</td>
+<td>1Gi/2Gi</td>
+<td style="text-align:right">900s</td>
+</tr>
+<tr>
+<td>register含确认/已选交接</td>
+<td>组件0.5/1；服务I/O另预算</td>
+<td>组件512Mi/1Gi；服务流式内存</td>
+<td style="text-align:right">600s</td>
+</tr>
+<tr>
+<td>正常close余量</td>
+<td>0.5/1</td>
+<td>512Mi/1Gi</td>
+<td style="text-align:right">600s</td>
+</tr>
+</tbody>
+</table></div>
+<p>每个步骤沿用现有固定预算与原execution.deadline_at。**export/verify新增的有效deadline在D06.2首次启动受理事务中固定为 <code>min(start_admitted_at + 该步骤预算, execution.deadline_at)</code>，不等待操作系统spawn才起算。**实际started_at仅作观察事实；延迟收到响应、子进程稍后拉起或重放不能续期。其余步骤保持既有首次开始与时限语义；TRAIN负载与train-wait共享一次TRAIN预算，不能分别获得3600秒。查询重放、重签和重启不重置任何已固定的起算点。</p>
+<p>复用已有deadline/取消机制，将预算传到KFP timeout、Runner context、子进程、RPC/I/O；不能只改Snapshot还留下原统一1800秒限制。旧CPU默认值和执行行为保持不变。逐RPC是调用deadline，整个登记多次RPC共同消耗register预算，不每次重新领取600秒。D09.3的每次具体派发及合同允许的重发都使用该原剩余预算；当前后置BFF不放宽任何执行/停止时限。</p>
+<p>CloseWorker在原deadline后使用有限的观察/清理预算，不延长计算或正常登记。600秒是本次目标，不是“超过后自动CLOSED”的条件。无法证明时保持NEEDS_REVIEW/待核实并给出诊断。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>文件/存储预算</th>
+<th>起测值及含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JSON原文件</td>
+<td>≤32MiB；本地准备副本与原字节相同</td>
+</tr>
+<tr>
+<td>基模归档/展开</td>
+<td>≤2GiB / ≤4GiB；具体成员上限M0固定</td>
+</tr>
+<tr>
+<td>collected files</td>
+<td>≤4GiB累计，包含哪些文件由RequiredFiles确定</td>
+</tr>
+<tr>
+<td>主模型tar</td>
+<td>≤3GiB；Model checksum为tar摘要</td>
+</tr>
+<tr>
+<td>全部发布字节</td>
+<td>≤8GiB；merged文件和其tar的双份传输分别计入</td>
+</tr>
+<tr>
+<td>工作区</td>
+<td>20GiB起测；实际需要合计基模、Adapter、merged、清单/缓存等</td>
+</tr>
+<tr>
+<td>publish spool</td>
+<td>≤8GiB磁盘；临时磁盘request10GiB/limit12GiB；不使用内存emptyDir存整模</td>
+</tr>
+</tbody>
+</table></div>
+<p>spool/TMPDIR必须实际挂到足够的受管磁盘，不继续落入原小型16MiB临时目录；capture/打包用量共同受限。export/verify缓存及服务侧复制分别计入实际容量/配额，明确不同生命周期，不把“写了limit”当作CSI/磁盘已验证。</p>
+<p>M0先验证20步基准，再验证A07.4非默认候选及对应预算。只有基准点时不批准更大集合；PA用例记录每个批准组合的时间/内存/磁盘/失败证据。扩大范围前验证，不给运行中任务续期。普通参数开放不自动增加动态资源估算或用户自由改资源能力。</p>
+<h3 id="D10-10-1">10.1 下一批参数的开通清单（暂缓字段，不是隐藏开关）</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>候选项</th>
+<th>批准时需要写明</th>
+<th>本版状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>batch_size / gradient_accumulation_steps</td>
+<td>真实框架字段、每设备与累计含义、允许组合、实际优化步统计</td>
+<td>不作为本版请求字段；固定1/1继续生效</td>
+</tr>
+<tr>
+<td>cutoff_len</td>
+<td>截断语义、数据预处理可见影响及内存/时间预算</td>
+<td>固定128；候选范围尚未批准</td>
+</tr>
+<tr>
+<td>lora_rank / lora_alpha</td>
+<td>分别独立可调，或明确派生规则；规则与派生结果冻结</td>
+<td>固定8/16；不默认alpha=2×任意rank</td>
+</tr>
+<tr>
+<td>epochs</td>
+<td>与max_steps的训练长度模式、互斥/优先级、稳定请求codec</td>
+<td>本版拒绝；后续合同明确后才开放</td>
+</tr>
+<tr>
+<td>scheduler/warmup/weight_decay等</td>
+<td>具体程序是否消费、类型/边界/组合与资源影响</td>
+<td>后续产品决定，不自动透传</td>
+</tr>
+</tbody>
+</table></div>
+<p>下一批批准流程仍是W0/W1/W3/W6的同一小批迭代：支持字段与映射→候选规则→代表性/边界/反例→固定Release→真实查询和执行一致。无需穷举所有连续数值，但高负载组合必须有依据；若只允许完整组合列表，逐项限定，不把独立上下界误当任意组合都能运行。</p>
+<p>镜像/程序、预算和输出合同未变时，可复用PipelineVersion；实际输出结构、程序或组件参数签名变更，发布相应新版本。不得因一组小配方成功承诺所有资源规格/基模/设备支持。</p>
+<h3 id="D10-10-2">10.2 GPU后续接入准备：差异表与隔离验证，非本版交付门槛</h3>
+<h4 id="D10-10-2-1">10.2.1 现在准备什么，下一批实现什么</h4>
+<p><strong>现在的最小产物是“调用/字段对应及差异表”和“适配验证记录”。</strong>现有Gov/ACC合同能够表达的内容直接引用，不另写通用GPU授权或配额规范；不能表达的内容列为明确提供方需求。核对并记录实际仓库/合同commit，不把上一轮源码观察当成当前owner已经获准接入。服务间调用继续遵守A04的Gov规范。<a class="srcmark" href="#source-s10">S10</a></p>
+<p>后续正式闭环的职责方向是：前端经BFF选择获准资源；Gov沿既有机制解析计划并在权威受理中占额一次；ModelDev持久接受原执行/计划，作为唯一训练owner渲染和观察；计算关闭后按GPU批次固定的原账关联可靠通知Gov；ACC负责资源计划和使用/实际绑定观察。<strong>本轮只核对接缝，不实现这条GPU业务链，不增加第二次扣额、额外注册前置或新的退额审批。</strong>释放范围/时机、RPC与重试字段在GPU批次按既有合同定稿，不能从本CPU文档推导即时退额许可。</p>
+<p>下一批首个目标建议为单节点、单进程、一个GPU设备，<strong>整卡和固定共享规格同时纳入</strong>；仅TRAIN使用GPU，train-wait及export/verify等先沿用已验证CPU路径。资源政策沿用整卡按数量、共享按申请显存MiB；不将共享实例自动算作整卡，也不把多卡/QLoRA/多机捆绑进首批。此处是后续目标边界，不是本版支持声明或硬件就绪证明。</p>
+<h4 id="D10-10-2-2">10.2.2 各仓库的当前动作和后续动作</h4>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>当前可做的核对/隔离准备</th>
+<th>下一批正式实现；本轮不提前启用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ani-governance</td>
+<td>核对GPU受理、投递、原占额关联和释放合同，列ModelDev业务binding/身份/字段差异</td>
+<td>ModelDev GPU准入、一次占额、可靠投递及原账退额接收</td>
+</tr>
+<tr>
+<td>ani-accelerator-service</td>
+<td>核对规格/计划能否被Trainer消费，列owner登记、使用关联、观察与验证材料缺口</td>
+<td>仅补真实需要的ModelDev owner及协议适配；足够的已有能力不改</td>
+</tr>
+<tr>
+<td>ani-modeldev-service</td>
+<td>W1/W3定位资源解析/快照/渲染/关闭接点；按需要参加隔离渲染验证</td>
+<td>正式GPU请求与附件接收、固定计划执行、占额关联和可靠关闭通知</td>
+</tr>
+<tr>
+<td>ani-installer / ENV</td>
+<td>读取实际驱动、Volcano/HAMi、Trainer/JobSet及Runtime条件，管理已批准的隔离验证清单</td>
+<td>按单一环境owner落实必要部署变更，不重复安装另一套调度体系</td>
+</tr>
+<tr>
+<td>现有前端</td>
+<td>记录资源区位置、目录和历史摘要来源；本版仍仅真实CPU能力</td>
+<td>ACC受控目录、资源选择与原执行资源详情</td>
+</tr>
+<tr>
+<td>Model / Inference</td>
+<td>本GPU准备不增加改造任务</td>
+<td>继续各自模型/推理职责，不承担训练资源合同</td>
+</tr>
+</tbody>
+</table></div>
+<p>当前不要求四个仓库同时修改生产代码。Gov/ACC先核对并输出需求即可；ModelDev/Installer如需试验代码，使用受控测试路径或独立分支，写明与正式adapter的关系。共享配置仍由ENV统一维护，Git分支不隔离集群；不冒用Inference身份，不越权接管共享组件。</p>
+<h4 id="D10-10-2-3">10.2.3 接缝差异表至少回答的问题</h4>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>要记录的结论；不猜填实际值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>选择与解析</td>
+<td>集群/池/规格/版本等选择由谁授权、谁解析；哪些为用户选择，哪些为受管固定事实</td>
+</tr>
+<tr>
+<td>受理与附件</td>
+<td>原operation/execution、计划摘要、占额关联怎样沿用既有合同传递；不能先CPU受理可执行，再补另一条GPU创建命令</td>
+</tr>
+<tr>
+<td>快照与兼容</td>
+<td>新资源合同怎样识别，原CPU字节/含义怎样保持；现有CPU类型是否可直接保留，而非无理由全局替换</td>
+</tr>
+<tr>
+<td>真实训练对象</td>
+<td>GPU resources、调度及必要metadata落在哪个TrainJob/Runtime/PodTemplate字段和实际训练容器；等待组件不能误占GPU</td>
+</tr>
+<tr>
+<td>结束通知</td>
+<td>原持久计算关闭事实在哪里；下一批原账释放关联、可靠通知及未知结果怎样接入；本轮不补假charge、不调用退款</td>
+</tr>
+<tr>
+<td>查询与目录</td>
+<td>目录来自ACC，支持范围由业务/环境筛选；详情读原计划安全摘要，不暴露密钥或原始内部配置</td>
+</tr>
+</tbody>
+</table></div>
+<p>以上是业务用途和对应关系，不是新Proto/枚举/数据库schema。表中未能确定的项注明实际缺口和负责方，不能通过实现一个总返回成功的GPU adapter来补齐。</p>
+<h4 id="D10-10-2-4">10.2.4 三层验证，分别报告，不能互相抵扣</h4>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>层次</th>
+<th>方法与能证明的事实</th>
+<th>明确不能证明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fedora渲染/模块检查</td>
+<td>尽量调用ModelDev真实渲染/映射函数，或明确标注的候选适配；用锁定计划fixture检查TrainJob/Runtime/目标容器字段</td>
+<td>未经真实ACC解析的fixture不证明ACC接入，离线YAML不证明控制器/设备可用</td>
+</tr>
+<tr>
+<td>目标控制器验证</td>
+<td>在已批准隔离范围观察Trainer→JobSet/Job→实际Pod，逐项比对资源、调度、metadata和挂载；保留ID/UID及版本</td>
+<td>Pod创建或Pending只证明对象/字段传递，不证明GPU计算及额度闭环</td>
+</tr>
+<tr>
+<td>实际设备验证</td>
+<td>具备授权GPU硬件和环境时执行小型真实计算，整卡/共享分别记录设备实际使用与对应限制观察</td>
+<td>不代替BFF权限、占额、幂等、停止退额及微调FT验收，也不证明未测规格可用</td>
+</tr>
+</tbody>
+</table></div>
+<p>手写TrainJob可用于定位环境，但<strong>手写清单成功不等于ModelDev正式渲染已经正确</strong>；报告必须说明是否经过同一渲染代码以及任何候选差异。现有正式CPU渲染拒绝GPU时不为探针放宽它，候选验证保持隔离并明确未启用。未具备硬件时只完成可做的层次，设备部分NOT_RUN/BLOCKED，不把CPU或假设备测试算GPU通过；CPU主线继续。</p>
+<p>验证代码/渲染/编译在既定Fedora完成，控制器与设备行为在有相应能力的目标K8s验证；不猜Fedora具备GPU，不在本机或节点宿主机编译/裸跑负载。测试仅使用获准Namespace、资源和有限身份，不借用生产owner证书，不建立绕过BFF的常驻业务入口；日志脱敏，清理只针对明确归属且可安全清理的资源。本文不自动授权安装驱动、升级共享控制器或执行设备占用。</p>
+<h4 id="D10-10-2-5">10.2.5 两份小产物，不新增GPU管理平台</h4>
+<p>差异表记录核对commit、既有合同字段/方法、当前足够项、待实现项、负责仓库与CPU兼容结论；验证记录标注<code>scope=GPU_PRECHECK</code>、执行层次、代码/材料版本、真实对象与证据、未测项及下一步。沿用现有文档和测试记录位置，不要求新建表、状态服务、GP用例体系或独立执行引擎。</p>
+<p>本轮接缝说明随W1/W3记录即可；隔离验证按条件独立排期。<strong>GPU前置NOT_RUN/BLOCKED不阻塞本版CPU验收；前置通过也不能声称GPU正式业务已交付。</strong>发现同时影响本版CPU的确切缺陷，作为原任务缺陷修复并回归；仅GPU专属缺口交下一批，不借此扩大v4.2范围。</p>
+</div><div class="endlinks"><a href="#D09">← 上一节</a><a href="#D11">下一节 →</a></div></section><section class="chapter" data-chapter="D11" id="D11"><h2><small>D11 / v4.2.2</small>验收：本版新增用例与原v0.4逐项映射</h2><div class="source-body" data-source-ref="D11" data-source-sha256="9644ed366ae79d7d31ab198b9e770149acb47964b79d0bfc77fd6fc1fef8f420"><h3 id="D11-11-1">11.1 证据级别</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>记录</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CODE_READY</td>
+<td>相关代码、合同、测试和fixture已交付；不是测试已经执行</td>
+</tr>
+<tr>
+<td>FEDORA_PASS</td>
+<td>在指定Fedora完成相应生成/编译/模块或真实负载测试；记录真实外部替身边界</td>
+</tr>
+<tr>
+<td>MODEL_INTEGRATION_PASS</td>
+<td>真实Gov规范调用、Model接收/数据库及业务链通过；不是fake Model</td>
+</tr>
+<tr>
+<td>LIVE_PASS</td>
+<td>指定K8s集群上对应真实依赖、资源和行为通过</td>
+</tr>
+<tr>
+<td>NOT_RUN / BLOCKED / FAIL / DEFERRED</td>
+<td>未执行/当前前置缺失/执行失败/明确不在本版；不能互相替换</td>
+</tr>
+</tbody>
+</table></div>
+<p>同一用例可以有Fedora和LIVE两份结果，不能只留一个PASS隐藏环境。历史CPU证据用于回归选择与对比，不补微调通过。没有按本轮依赖范围实际执行的测试保持NOT_RUN。</p>
+<h3 id="D11-11-2">11.2 本版微调用例</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>场景</th>
+<th>必须观察</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FT01</td>
+<td>合法Alpaca JSON导入</td>
+<td>真实授权、固定对象、实际size/SHA、严格解析，事务READY</td>
+</tr>
+<tr>
+<td>FT02</td>
+<td>错格式/超限</td>
+<td>CSV/JSONL/ShareGPT、重复/未知键、null/类型错、坏UTF8、超32MiB拒绝</td>
+</tr>
+<tr>
+<td>FT03</td>
+<td>固定数据</td>
+<td>原key出现新内容不改变READY；prepare本地JSON与原固定字节一致</td>
+</tr>
+<tr>
+<td>FT04</td>
+<td>64条预设</td>
+<td>其他合法行数可READY，但当前预设拒绝；预处理不丢样本</td>
+</tr>
+<tr>
+<td>FT05</td>
+<td>当前权限与租户</td>
+<td>无权基模/目标、跨租户详情/日志/下载/恢复拒绝；窄scope不扩大</td>
+</tr>
+<tr>
+<td>FT06</td>
+<td>原创建重放</td>
+<td>原key同内容回原ID，异内容冲突；切Release/暂停不更换原快照</td>
+</tr>
+<tr>
+<td>FT07</td>
+<td>新建/已有目标</td>
+<td>new分支只建一个容器；existing不CreateModel，增加原容器的新版本</td>
+</tr>
+<tr>
+<td>FT08</td>
+<td>同名与并发</td>
+<td>新执行同名冲突，最多一个新建成功；不按名偷换目标，原重放不误拒绝</td>
+</tr>
+<tr>
+<td>FT09</td>
+<td>Model未接入</td>
+<td>微调新受理未启用，CPU既有能力不被迫失效；分段测试不标完整交付</td>
+</tr>
+<tr>
+<td>FT10</td>
+<td>基模真实固定读取</td>
+<td>读取确切版本/归档，拒绝加密/错家族/越权；流式实长SHA与安全解包</td>
+</tr>
+<tr>
+<td>FT11</td>
+<td>单TrainJob真LoRA与指标适配</td>
+<td>一个权威TrainJob UID；真实优化步数/Adapter，无GPU/重复训练；finetune_entry生成ani.metric.v1与真实summary；细化见FT11.1–FT11.3</td>
+</tr>
+<tr>
+<td>FT12</td>
+<td>未知创建结果</td>
+<td>只找原资源，迟到响应与多Run不导致第二份计算</td>
+</tr>
+<tr>
+<td>FT13</td>
+<td>export正确来源</td>
+<td>基模+本次Adapter导出真实merged；关联摘要/argv完整，不只加载一个基模充数</td>
+</tr>
+<tr>
+<td>FT14</td>
+<td>verify独立加载</td>
+<td>单独进程、锁定精度、greedy短推理与实际报告，失败不得登记READY</td>
+</tr>
+<tr>
+<td>FT15</td>
+<td>前序Task证明</td>
+<td>不等整Run终态；错误前序Task/Pod UID、未退出的publisher不能放行</td>
+</tr>
+<tr>
+<td>FT16</td>
+<td>文件与tar</td>
+<td>缺/多文件、link/穿越、错前缀/非零尾随拒绝；HF根布局、Adapter独立正确</td>
+</tr>
+<tr>
+<td>FT17</td>
+<td>持久发布</td>
+<td>原publisher退出，远端每个固定对象及主tar字节核验后才PUBLISHED</td>
+</tr>
+<tr>
+<td>FT18</td>
+<td>当前存储交接</td>
+<td>实际选定模式正确；Model固定读取原tar；未启用模式不写PASS</td>
+</tr>
+<tr>
+<td>FT19</td>
+<td>Model可信链</td>
+<td>真服务身份/完整RPC/委托范围/tenant检查；拒绝假Principal与越权方法</td>
+</tr>
+<tr>
+<td>FT20</td>
+<td>登记一致性</td>
+<td>原容器/版本，全部业务字段一致；READY重放返回持久真值</td>
+</tr>
+<tr>
+<td>FT21</td>
+<td>登记故障窗口</td>
+<td>容器响应丢失、Artifact写后中断、READY响应丢失；原key恢复不造新版本；与FT25.1–3联合验证逐写派发边界</td>
+</tr>
+<tr>
+<td>FT22</td>
+<td>正常close</td>
+<td>NATURAL_TERMINAL收据后返回，Run自然成功终结；无自等待/无主动杀正常Run</td>
+</tr>
+<tr>
+<td>FT23</td>
+<td>用户停止与首次启动竞态</td>
+<td>各阶段实际停止；stop先提交不启动，先受理启动纳入在途关闭；不新受理/重复派生，见FT23.1–FT23.5</td>
+</tr>
+<tr>
+<td>FT24</td>
+<td>deadline/重启</td>
+<td>首次启动原子检查deadline；owner重启按原启动事实继续观察/关闭，不重跑/续期；见FT24.1–FT24.2</td>
+</tr>
+<tr>
+<td>FT25</td>
+<td>登记派发/停止/恢复</td>
+<td>具体派发与Stop/deadline共同仲裁；先派发的迟到receipt如实保留，未获准的下一写不执行；CLOSED后当前授权恢复，见FT25.1–3</td>
+</tr>
+<tr>
+<td>FT26</td>
+<td>状态与完成层级</td>
+<td>compute成功不盖verify/登记失败；Model READY+CLOSING不全成；单次执行与方案验收分离，见FT26.1</td>
+</tr>
+<tr>
+<td>FT27</td>
+<td>大文件/容量</td>
+<td>实際spool目录、磁盘/内存界限和流式I/O；超限安全失败，旧CPU默认不变</td>
+</tr>
+<tr>
+<td>FT28</td>
+<td>保护与清理</td>
+<td>基模/READY/成品实际删除受限；唯一未发布/未知写者阻断清理，UID plan/apply一致</td>
+</tr>
+<tr>
+<td>FT29</td>
+<td>方案验收：独立新模型使用</td>
+<td>无训练PVC，经Model取本次新tar并通过现有Inference/KServe真实调用；不是每个任务的后继步骤，见FT29.1</td>
+</tr>
+<tr>
+<td>FT30</td>
+<td>原CPU合同回归</td>
+<td>旧CPU v1字节/摘要/错误/拒绝集与相关训练/发布/关闭保持，必要旧48步链通过；不将旧拒绝集作为未来新合同永久限制</td>
+</tr>
+<tr>
+<td>FT31</td>
+<td>自动业务与交接</td>
+<td>正常提交无需人串步骤；非原作者按实际入口完成启用/执行/恢复</td>
+</tr>
+<tr>
+<td>FT32</td>
+<td>来源与范围</td>
+<td>记录真实commit/digest、环境/资源/对象事实，暂缓项不标PASS，凭据不入证据</td>
+</tr>
+</tbody>
+</table></div>
+<p>以上32项是计划，不是本次执行结果。MR提供方未就绪时，FT07/08/18–21/25/29中依赖真实Model的部分为BLOCKED或NOT_RUN；结构替身通过只记录相应消费者测试。FT11/13/14可先做Fedora真实负载，但不冒充LIVE。</p>
+<h3 id="D11-11-2-1">11.2.1 继承v4.1的12项细化子用例</h3>
+<p>保留FT01–FT32编号，以下12项是已有FT11/23/24/26/29下的实施与验收细化，不代替父项的其他检查。初始全部NOT_RUN。export与verify共用FT23/24的同一组测试合同，但两种role都必须实际覆盖，不能只测其中之一。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>子用例</th>
+<th>触发/安排</th>
+<th>必须证据与结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FT11.1</td>
+<td>锁定的20步真实训练，entry按M0选定日志/callback生成文件</td>
+<td>现有ani.metric.v1解析器校验通过；记录来源/映射/采样版本、真实文件与SHA；采样数量不被当成优化步数</td>
+</tr>
+<tr>
+<td>FT11.2</td>
+<td>正常及受控提前失败/停止，比较请求上限与实际执行</td>
+<td>summary如实记录实际步数/样本统计及部分结果；不得填满请求max_steps；保留原错误/停止事实</td>
+</tr>
+<tr>
+<td>FT11.3</td>
+<td>缺指标文件、破坏schema或人为改写summary必需事实</td>
+<td>现有校验/collect拒绝当成完整训练产物，不补造记录；失败证据不冒充成功交付</td>
+</tr>
+<tr>
+<td>FT23.1</td>
+<td>同一执行的stop事务提交后，再进入export/verify首次启动事务</td>
+<td>启动被拒绝，实际子进程次数为0；证明两路径使用同一数据库串行化边界</td>
+</tr>
+<tr>
+<td>FT23.2</td>
+<td>启动受理已提交，在入口spawn前暂停；提交stop后释放同步点</td>
+<td>原启动作为在途计算保留；入口取消或迟到原进程被停止；不能早记CLOSED；无第二次启动</td>
+</tr>
+<tr>
+<td>FT23.3</td>
+<td>并发首次请求、相同请求重放及另Task/Pod UID请求</td>
+<td>每个execution+role最多一次首次受理；不匹配绑定拒绝；重复响应不触发新子进程</td>
+</tr>
+<tr>
+<td>FT23.4</td>
+<td>首次启动事务已提交，丢失返回；随后查询/重放</td>
+<td>只返回/查证原事实，不补发启动能力、不更名重跑；记录无法确认时的待核实/关闭路径</td>
+</tr>
+<tr>
+<td>FT23.5</td>
+<td>export/verify子进程实际运行后提交stop，向原进程组传播取消</td>
+<td>收齐原入口/子进程退出与原Pod/控制器证据；无后台权重写者，不以单次NotFound代替证明</td>
+</tr>
+<tr>
+<td>FT24.1</td>
+<td>首次启动事务检查时已到deadline，另测已受理但延迟收到响应</td>
+<td>到期首次请求不启动；已受理请求仍用原start_admitted_at/deadline，不因响应延迟重置预算</td>
+</tr>
+<tr>
+<td>FT24.2</td>
+<td>启动已受理/已运行时重启owner，或原入口退出未回结果</td>
+<td>恢复原绑定与时限，只观察/停止；不重建计算；有真实退出证明才关闭，未知保持待核实</td>
+</tr>
+<tr>
+<td>FT26.1</td>
+<td>六项执行事实成立但FT29尚未执行，另测停止/登记恢复历史</td>
+<td>记录单次执行结果与单独方案验收状态；不自动创建推理服务，不抹掉历史，不据局部通过正式启用</td>
+</tr>
+<tr>
+<td>FT29.1</td>
+<td>相应Release/Runtime验收使用本次真实微调登记版本独立部署/调用</td>
+<td>ModelVersion、publication/tar SHA和实际Inference请求结果可关联；无训练PVC；使用旧基模或仅fake响应不通过</td>
+</tr>
+</tbody>
+</table></div>
+<p>并发测试使用测试环境中的可控事务/进程同步点，明确stop与启动的提交顺序，不能用随机sleep碰运气。至少覆盖数据库多连接/多owner竞争；同步点只存在测试夹具，不增加生产“暂停/发放启动”管理API。Fedora模块/负载结果与目标集群结果分别记录，原子逻辑自测不代替真实Pod/进程停止证据。</p>
+<h3 id="D11-11-2-2">11.2.2 v4.2新增参数链验收（与原FT编号并存）</h3>
+<p>本版新增PA01–PA10，不重编号FT01–FT32，也不删除v4.1的12项细化。PA是本次明确采纳的参数/展示验收，不代表开放所有候选字段。各项按FEDORA_PASS、实际API/前端联调、LIVE等适用层级分别记录；Model未就绪仅阻塞真实依赖部分。M3-A先完成执行侧参数检查，真实BFF与前端相关断言按D11.6留到M3-B；后置项NOT_RUN，不是DEFERRED，也不能将部分验证升级为整项PASS。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>场景</th>
+<th>必须观察</th>
+<th>关联/责任</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PA01</td>
+<td>参数合同与Release规则自洽</td>
+<td>两字段类型/硬边界/默认/允许集/组合合法；错类型、重复项、无实现字段、默认越界、规则冲突明确拒绝</td>
+<td>FT06/30；W1</td>
+</tr>
+<tr>
+<td>PA02</td>
+<td>预设数值与生效版本投影</td>
+<td>max_steps=20/10正确而非64；十进制值准确；Gov绑定ID/digest/generation与一份规则一致；历史Release共存和切换无混合投影</td>
+<td>FT06/26；W1/W6</td>
+</tr>
+<tr>
+<td>PA03</td>
+<td>原意图、省略与重放</td>
+<td>省略/显式默认按固定向量编码；当前规则收缩/默认改变后原键合法重放仍返回原执行；不同显式意图冲突</td>
+<td>FT06/30；W1</td>
+</tr>
+<tr>
+<td>PA04</td>
+<td>基准与非默认真实负载</td>
+<td>A与经批准B分别经entry实际解析、真实LoRA/导出/verify；至少一个非默认配置，实际消费值、步数、产物有对应证据，不只改argv</td>
+<td>FT11/13/14；W0/W3</td>
+</tr>
+<tr>
+<td>PA05</td>
+<td>BFF到原快照到程序贯通</td>
+<td>非默认合法值经现有BFF受理，冻结相同值并在真实目标执行；Model接入前只分段记录，不用fake冒充正式BFF整链</td>
+<td>FT06/11；W1/W3/W6</td>
+</tr>
+<tr>
+<td>PA06</td>
+<td>拒绝和固定字段保护</td>
+<td>未开放字段、越界、非法组合、固定设置覆盖在计算前拒绝；镜像模板与冻结值冲突不静默覆盖或裁剪</td>
+<td>FT02/06/12；W1/W3</td>
+</tr>
+<tr>
+<td>PA07</td>
+<td>配置详情与历史不漂移</td>
+<td>创建用当前规则，原任务详情读原快照；切版后旧参数/固定摘要不变；运行步数来自实际summary；前端只读展示不改变原请求</td>
+<td>FT06/26；W1/W6</td>
+</tr>
+<tr>
+<td>PA08</td>
+<td>指标、参数和部分结果</td>
+<td>summary有效配置与快照可核对，真实optimizer_steps不同于日志条数/请求值；B配置提前失败/停止不填满上限</td>
+<td>FT11.1–3/23/24；W0/W3</td>
+</tr>
+<tr>
+<td>PA09</td>
+<td>组合预算与文件合同</td>
+<td>批准B及必要边界的时间/内存/spool/输出限制受测；不同权重SHA不被误拒，缺/多文件和真实超限仍拒绝；停止/deadline不改旧语义</td>
+<td>FT16/27/30；W0/W3/W4/W6</td>
+</tr>
+<tr>
+<td>PA10</td>
+<td>能力发布和最终声明</td>
+<td>只有基准证据时不能标参数开放完成；提供/消费方合同固定、原参数规则与新批准Release并存、相关回归与实际前端接口复演完成</td>
+<td>FT31/32；W1/W6</td>
+</tr>
+</tbody>
+</table></div>
+<p>测试A/B使用同一批准数据/基模和明确不同execution；判断参数生效需比对参数内容与实际消费，不能只看两个spec_hash不同。组合表改变后对受影响用例复测，失败值不自动进入允许集。PA01/03模块测试不要求Model就绪；PA05对应的完整LIVE仍受原MR/环境前置约束。</p>
+<p>W1当前先交付正式BFF响应合同、安全投影与显式回放样例，不要求已有真实BFF响应才能完成主链模块。M3-B补真实响应和页面证据；页面代码未在授权范围内时如实保留未执行，不拿手写表格当联调。原A/B与省略默认向量直接复用D02.6.1，当前共享解析与后续BFF/前端分别记录，不新增参数用例体系。</p>
+<h3 id="D11-11-2-3">11.2.3 登记派发仲裁细化（新增3项，挂在原FT25下）</h3>
+<p>下列细化补齐D09.3，不新增主FT编号；原12项细化完整保留，本版合计15项细化。用真实数据库多连接和可控同步点验证本域事务，Model边界替身可观测调用次数但不算MR通过；提供方就绪后补相应真实链证据。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>子用例</th>
+<th>触发/安排</th>
+<th>必须证据与结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FT25.1</td>
+<td>Stop先提交，再让具体CreateModel或CreateModelVersion进入派发仲裁；另测到期分支</td>
+<td>该外部写调用次数为0；原登记意图不放行；所选复制模式如有目标写同样检查，不把只读查证误禁</td>
+</tr>
+<tr>
+<td>FT25.2</td>
+<td>CreateModel成功并保存收据，暂停版本派发；Stop提交后继续</td>
+<td>原模型容器收据保留，CreateModelVersion新调用数为0；不自动换目标/key、不删除已建容器；D09.2显式恢复仍可按原内容另行验</td>
+</tr>
+<tr>
+<td>FT25.3</td>
+<td>版本派发先获准，随后Stop并丢响应；重启/迟到响应与正常重发竞争</td>
+<td>只查证/保存原在途事实；正常后继写和新的正常重发不再获准；不双版本、不重训、不把远端完成改成未发生；CLOSED后当前授权原恢复不冒充正常后台续跑</td>
+</tr>
+</tbody>
+</table></div>
+<p>对当前选定复制绑定，附记具体写操作的在途归属和取消/残留证据；无需为未选模式补一套实现。记录原execution/operation、原业务key、请求内容摘要、派发提交与Stop顺序、原预算、外部调用次数和原receipt。只读对账/字段转换没有副作用，不为它们建立许可记录。R1可在Fedora先验证，真实Model断言仍待M1-B/M3综合，不阻塞无关主链工作。</p>
+<h3 id="D11-11-3">11.3 与平台v0.4的C01–C34对照</h3>
+<p>这里保留原用例含义，不重命名它们来制造“全覆盖”。原表依据v0.4 D16。<a class="srcmark" href="#source-s1">S1</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>原ID</th>
+<th>原范围</th>
+<th>本版处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C01</td>
+<td>两租户权限</td>
+<td>必须验证本次微调及受影响既有查询/恢复</td>
+</tr>
+<tr>
+<td>C02</td>
+<td>SELF/组织与动作</td>
+<td>动作和当前已支持scope验证；未实现SELF/组织仍拒绝并标DEFERRED，<strong>不声明C02全覆盖</strong></td>
+</tr>
+<tr>
+<td>C03</td>
+<td>身份头/旁路</td>
+<td>复用现有接入，新增角色/调用关系需负向回归</td>
+</tr>
+<tr>
+<td>C04</td>
+<td>训练运行身份</td>
+<td>包含新增export/verify；不得带Model管理凭据</td>
+</tr>
+<tr>
+<td>C05</td>
+<td>新受理暂停</td>
+<td>保留并回归新微调kind</td>
+</tr>
+<tr>
+<td>C06</td>
+<td>小JSON/CSV用户上传</td>
+<td><strong>本版DEFERRED</strong>；受管JSON导入不能替代上传</td>
+</tr>
+<tr>
+<td>C07</td>
+<td>超限/错格式/迟到PUT</td>
+<td>导入的内容/固定性验证；上传会话专属部分DEFERRED，不声明全部覆盖</td>
+</tr>
+<tr>
+<td>C08</td>
+<td>受管S3代导入</td>
+<td>本次Alpaca JSON必测；旧MLP导入相关回归</td>
+</tr>
+<tr>
+<td>C09</td>
+<td>创建重放</td>
+<td>必测，含新目标字段</td>
+</tr>
+<tr>
+<td>C10</td>
+<td>Release与在途</td>
+<td>必测，旧快照不改</td>
+</tr>
+<tr>
+<td>C11</td>
+<td>两服务目录一致</td>
+<td>必测，未启用/不匹配明确拒绝</td>
+</tr>
+<tr>
+<td>C12</td>
+<td>KFP提交不明</td>
+<td>继承并对受影响路径回归</td>
+</tr>
+<tr>
+<td>C13</td>
+<td>公共Trainer</td>
+<td>两类任务复用同一个单作业机制</td>
+</tr>
+<tr>
+<td>C14</td>
+<td>工作区</td>
+<td>新组件与TrainJob挂载、互不覆盖必测</td>
+</tr>
+<tr>
+<td>C15</td>
+<td>第二个登记镜像</td>
+<td>是通用训练既有范围，不因微调自动宣布完成；受影响时回归，否则关联其独立证据</td>
+</tr>
+<tr>
+<td>C16</td>
+<td>CPU MLP</td>
+<td>相关回归；原48步主链不被微调破坏</td>
+</tr>
+<tr>
+<td>C17</td>
+<td>CPU LoRA</td>
+<td>本版核心新增</td>
+</tr>
+<tr>
+<td>C18</td>
+<td>导出损坏/缺文件</td>
+<td>本版核心新增</td>
+</tr>
+<tr>
+<td>C19</td>
+<td>真实发布</td>
+<td>微调tar/manifest/远端字节必测</td>
+</tr>
+<tr>
+<td>C20</td>
+<td>新模型版本</td>
+<td>Model正式对接后必测；此前BLOCKED/NOT_RUN</td>
+</tr>
+<tr>
+<td>C21</td>
+<td>登记丢响应/重试</td>
+<td>Model正式对接后必测</td>
+</tr>
+<tr>
+<td>C22</td>
+<td>Model一致性</td>
+<td>Model提供方真实联调必测</td>
+</tr>
+<tr>
+<td>C23</td>
+<td>新HF包推理</td>
+<td>作为本方案最终验收必测；未通过不能宣布方案验收完成；不加入每次微调任务的成功判据</td>
+</tr>
+<tr>
+<td>C24</td>
+<td>停运行/排队</td>
+<td>含export/verify首次启动与停止共同仲裁，以及实际在途/运行进程停止</td>
+</tr>
+<tr>
+<td>C25</td>
+<td>停止/迟到创建</td>
+<td>继承，加入先受理后stop的迟到组件、启动响应丢失及原登记事实</td>
+</tr>
+<tr>
+<td>C26</td>
+<td>重启</td>
+<td>原记录观察/关闭和原登记恢复</td>
+</tr>
+<tr>
+<td>C27</td>
+<td>失败日志</td>
+<td>新阶段有界错误/日志；缺口如实显示</td>
+</tr>
+<tr>
+<td>C28</td>
+<td>发布失败保留</td>
+<td>必测，不误删唯一输出</td>
+</tr>
+<tr>
+<td>C29</td>
+<td>受保护资产删除</td>
+<td>Model/输入实际入口，提供方待就绪则对应阻塞</td>
+</tr>
+<tr>
+<td>C30</td>
+<td>受控清理</td>
+<td>有限既有plan/apply扩新目录，不扩通用GC</td>
+</tr>
+<tr>
+<td>C31</td>
+<td>手册/启用回退</td>
+<td>按本次微调实际入口复演</td>
+</tr>
+<tr>
+<td>C32</td>
+<td>不逐次人工串流程</td>
+<td>完整Model接入后正常自动链通过</td>
+</tr>
+<tr>
+<td>C33</td>
+<td>CPU禁GPU</td>
+<td>请求/渲染/运行三者均验证</td>
+</tr>
+<tr>
+<td>C34</td>
+<td>历史证据隔离</td>
+<td>全程遵守，不将历史或替身替换新验收</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>本版完成声明是“本版CPU受管微调增量与相关CPU回归完成”，不是“平台v0.4的C01–C34全部已实现”。</strong>CSV、ShareGPT、上传等暂缓能力仍不启用；Model对接是分期前置，不是永久删除的目标。</p>
+<h3 id="D11-11-4">11.4 本方案最终验收条件（不是逐任务后继步骤）</h3>
+<p>本版最终验收要求：FT01–FT32、继承的12项细化和D11.2.3新增3项按适用真实层级通过；PA01–PA10包括至少一组非默认真实BFF→原快照→执行贯通、真实当前预设/历史详情及已有前端联调；相关CPU回归完成。Model按MR真实接入，FT29/C23使用本次登记新包完成独立Inference，M4交接。<strong>这是整版终点，不是当前主链前置。</strong>M3-A先按D11.6核验执行/产物子链，M3-B后补上游；不拿CODE_READY或替身抵扣真实断言。</p>
+<p>只完成基准点，可以声明“固定配方分段/负载通过”，不能声明v4.2参数链及本方案最终验收完成；反过来PA通过也不抵扣MR和原微调闭环。范围只扩到本版明确的两个可输入字段、规则承载与展示，新字段候选仍DEFERRED。</p>
+<p><strong>A10判定一项任务是否成功完成，D11.4判定本方案及相应锁定组合是否最终验收完成。</strong>每次正常微调自动执行到模型登记和计算关闭，不必自动上线推理；单次执行已成功但FT29尚未执行时，只能声明该执行或子链通过，方案最终验收仍为NOT_RUN/BLOCKED。FT29失败时方案验收为FAIL，不能倒改已经成立的单次任务事实。</p>
+<p>本条保持A09的正式启用约束：候选负载/受控验证可以逐步进行，必需依赖和正式验收未满足前，不把候选公开宣称为正式可用。原v0.4中明确DEFERRED或部分覆盖的事项继续按D11.3表述，不为了“全通过”改原用例含义，也不扩大本期范围。</p>
+<h3 id="D11-11-5">11.5 GPU前置证据独立，不增加本版验收前置</h3>
+<p>FT01–FT32、原12项细化、PA01–PA10、MR01–MR08及C01–C34映射继续保留，D11.2.3的3项登记细化是本次CPU正确性修订而非GPU验收；C33的CPU拒绝GPU继续必测。D10.2只定义可独立开展的接缝核对和准备，不将GPU渲染、硬件、owner注册或占退额纳入这些用例的通过条件。</p>
+<p>已开展的GPU检查使用独立<code>scope=GPU_PRECHECK</code>记录，逐层保存结果；尚未开展或条件不具备，如实NOT_RUN/BLOCKED，不影响已满足D11.4的CPU交付判断。反之，GPU检查通过不抵扣任何FT/PA/MR，也不证明BFF→Gov→ACC→ModelDev业务已贯通。没有为GPU准备另加一组必须通过的GP用例，不把此准备视为Model真实接入的替代。</p>
+<p>若GPU调查暴露了同时影响当前CPU正确性、隔离或关闭的真实缺陷，仍须按原受影响用例修复回归；不得利用“不阻塞”忽略本版本身的问题。纯GPU支持缺口则进入下一批，不更改本版成功/关闭判定和硬件前置。</p>
+<h3 id="D11-11-6">11.6 当前主链、后续入口与最终验收的执行映射</h3>
+<p>以下scope只写在测试/进度记录中，<strong>不是新的业务状态、API字段或运行模式</strong>。FT/PA/MR保持原编号与完整断言；一项含多段时分记录coverage/未测断言，不以本域测试PASS覆盖整项。按排期后做填NOT_RUN；只有实际前置缺失才BLOCKED；只有本版真正不交付的上传/GPU等才DEFERRED。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>证据范围</th>
+<th>当前或后续的完成条件</th>
+<th>关联用例与尚不能宣称</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WORKLOAD：M0</td>
+<td>Fedora上基准和非默认真实entry/LoRA/export/verify、指标/summary、参数消费与资源材料</td>
+<td>FT11/13/14和PA04/08/09的负载部分；不证KFP/Trainer、Gov授权或Model</td>
+</tr>
+<tr>
+<td>CORE_FLOW：M3-A（当前阶段）</td>
+<td>真实ModelDev应用/数据库、KFP/Trainer、S3；READY/原快照/唯一训练、export/verify、发布确认、脱卷取回；失败/幂等/停止/deadline/重启及相关CPU回归；先基准再非默认</td>
+<td>FT01–04的本域部分、FT11–17、FT22–24、FT26–28/30/32的适用执行部分，以及PA01/03/04/06/08/09执行侧；未验证的Gov/Model/页面子断言单列</td>
+</tr>
+<tr>
+<td>MODEL_INTEGRATION：M1-B及综合</td>
+<td>MR01–08实际使用的正式API/身份/数据库/固定对象与登记查证；登记派发竞态对应真实验证</td>
+<td>FT07/08/10/18–21/25/28中Model断言；不要求先完成页面，也不自动证明Gov用户链</td>
+</tr>
+<tr>
+<td>BFF_INTEGRATION：M3-B（后续阶段）</td>
+<td>真实BFF用户认证、当前绑定/默认值、目标使用/写权、幂等冻结与投递、查询/停止/恢复，实际前端字段行为；候选绑定按D12.7</td>
+<td>PA05及PA02/03/06/07/10的上游/页面断言；FT05/06/09/25/26/31对应入口事实；不得拿测试来件或静态页面抵扣</td>
+</tr>
+<tr>
+<td>SCHEME_FINAL：M3综合/M4</td>
+<td>D11.4全部适用断言与回归、真Model、真实BFF/前端、FT29/C23新模型独立Inference、交接</td>
+<td>保持整版原承诺，不要求每次任务自动部署推理</td>
+</tr>
+<tr>
+<td>GPU_PRECHECK：独立准备</td>
+<td>仅D10.2约定的合同/字段与有条件渲染/设备观察</td>
+<td>不阻塞上述任何CPU阶段，不代替FT/PA/MR</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>M3-A主链阶段最小收尾：</strong>至少一份实际发布的模型tar/Adapter/指标/summary可脱卷取回并核对；真实训练/export/verify前序事实完整；实际停止不遗留计算；原请求重放、重启与deadline不造成重复计算；基准与至少一个非默认配置的实际消费可关联。第一条基准成功可先作为检查点，不要求首次试跑一次满足所有阶段用例，但完成主链阶段前需补相应正确性和非默认检查。</p>
+<p>Model未就绪时，保留register前半段的真实publication确认；后半段明确报依赖未接入，再以原失败/关闭路径收尾。测试可以验证“PUBLISHED + 依赖错误 + CLOSED”这一预期结果而报告CORE_FLOW片段/阶段达标，<strong>不能将该执行写成A10六项齐备的成功或将MR/FT29标PASS</strong>。基模真实读取未接入时使用的批准素材及替代边界另记，FT10真实Model部分保持未测。尚未实际跑KFP/Trainer时只能报WORKLOAD/模块通过，不能报CORE_FLOW完整阶段通过。</p>
+<p>FT22正常收尾的本域收据/自然关闭分支可先做模块验证；Model未就绪导致当前完整Pipeline以依赖错误收尾时，不将该失败路径充当FT22真实正常成功链，完整正常链随Model接入补测。</p>
+<p>真实BFF未就绪不妨碍现有正式合同的解析与本域投影测试；但Gov绑定/权限/可靠投递必须由后续真实链证明。后置事项在<code>records/acceptance-plan.json</code>及实际结果中保留未测，不能因阶段达标而删掉。上述映射用于排期，不变更用例原语义，不能把所有FT标签统一标成CORE_FLOW后整项通过。</p>
+</div><div class="endlinks"><a href="#D10">← 上一节</a><a href="#D12">下一节 →</a></div></section><section class="chapter" data-chapter="D12" id="D12"><h2><small>D12 / v4.2.2</small>环境、文档位置与并行工作包</h2><div class="source-body" data-source-ref="D12" data-source-sha256="c927e3c1cbf5b539b6a8e4cebe61cfbfe961ba78d02648f9115a317b270449fd"><h3 id="D12-12-1">12.1 三类机器，不再混为一处</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>环境</th>
+<th>允许职责</th>
+<th>不能作为哪种证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本机/本地源码工作树</td>
+<td>阅读、编码/文档编辑、Git提交推送、发起受控远程操作与转运制品</td>
+<td>不本机编译、代码生成、单测、容器构建或训练</td>
+</tr>
+<tr>
+<td><strong>Fedora编译/验证机</strong></td>
+<td>既有SSH配置的Fedora；生成/格式化、编译、测试、Pipeline编译、镜像构建、临时数据库模块验证、真实LoRA负载验证</td>
+<td>Fedora边界替身闭环不等于目标K8s业务通过</td>
+</tr>
+<tr>
+<td>172.16.101.10～12所属K8s</td>
+<td>实际部署、KFP/Trainer/存储/权限/停止与独立取模联合验收</td>
+<td>不替代Fedora编译机，不在节点宿主机编辑/构建或裸跑服务</td>
+</tr>
+</tbody>
+</table></div>
+<p>沿用已有 <code>fedora</code> SSH入口及当前批准的工作目录。具体地址/源码路径/测试数据库/镜像缓存引用来自本任务现有受控记录，不能直接把其他installer任务的目录当成modeldev目录。若缺少本任务值，核实已有SSH/任务记录后登记，不猜值、不移到集群规避。</p>
+<p>K8s三节点本机可直连；从现有授权context核对API端点、集群标识和节点InternalIP，不猜<code>.10</code>必是控制节点或API固定6443，不用旧192.168.*环境。远程构建必须检出已推送的明确commit，生成差异回本机审阅后提交。保留已有临时数据库/容器清理流程，只清理本次资源。</p>
+<h3 id="D12-12-2">12.2 方案从哪里读取</h3>
+<p>沿用附件v3给出的单一权威相对路径：</p>
+<div class="codewrap"><div class="codehead"><span>TEXT</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-text">&lt;实际 ani-modeldev-service 工作树&gt;/.scratch/finetuning-cpu/spec.md
+</code></pre></div>
+<p>本交付包<code>spec.md</code>为完整v4.2.2正文；两册HTML、主流程开发手册、参数/前端视图、GPU边界、Model需求、W0–W6及验收计划全部同源。采用前保留v4.2.1与已有实际进度，再将新稿放入已确认唯一权威位置。若<code>.scratch</code>按当前AGENTS属于不入Git目录，遵守仓库规范，不为“提交方案”强行git add -f；正式文档或受管记录按现有约定保存。历史原件放reference，不并行编辑两份规范。当前生成<strong>没有修改用户仓库</strong>。</p>
+<p>如实际任务已改用ANI-doc中的另一个权威位置，先核对并在任务记录登记唯一位置，再更新所有引用；不同时维护<code>.scratch</code>与ANI-doc两份可编辑“主方案”。旧CPU-P01/ENV任务包保留其原路径与职责，本版不是新的总控goal，不应把全套历史goal拼接执行。</p>
+<p>开工记录应包含实际方案绝对路径、文件SHA、各仓branch/commit、Fedora工作路径及集群交接来源。不得把<code>&lt;实际工作树&gt;</code>占位符当作已确认目录，也不能因缺一份环境交接就停止全部编码。</p>
+<h3 id="D12-12-3">12.3 七个工作包：主链先做，入口后接</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>工作包</th>
+<th>当前先交付</th>
+<th>后续真实联调与不阻塞边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W0 负载与材料</td>
+<td>Alpaca JSON、A/B候选entry实际消费、指标/summary、export/verify、文件和预算</td>
+<td>Fedora材料核实后即可做；不等BFF/Model/页面</td>
+</tr>
+<tr>
+<td>W1 合同与受理</td>
+<td>正式kind/codec、规则/默认/组合、意图与快照、共享解析和安全投影；为主链提供确定来件合同</td>
+<td>实际Gov绑定/受理投递与BFF/前端放M3-B；W1这部分未完成不阻塞W0/W2/W3/W4</td>
+</tr>
+<tr>
+<td>W2 输入与准备</td>
+<td>真实JSON验证/持久READY、固定字节与物化、固定基模读取端口</td>
+<td>S3/卷相关条件满足即联调；Model读取未就绪按D12.6限定素材，不冒充MR通过</td>
+</tr>
+<tr>
+<td>W3 执行与关闭</td>
+<td>正式ModelDev持久执行、唯一Trainer、KFP export/verify、参数消费、启动停止原子仲裁、deadline/重启/实际关闭</td>
+<td>目标组件可用即M3-A；不等真实BFF/前端；与W4共用执行停止边界</td>
+</tr>
+<tr>
+<td>W4 产物与ModelDev登记接缝</td>
+<td>HF真实收集/tar/publication确认、原登记记录/接口，D09.3逐副作用派发仲裁及故障测试</td>
+<td>S3主链先通过；Model未就绪不阻塞发布确认/关闭，真实登记等待提供方；不能假成功</td>
+</tr>
+<tr>
+<td>W5 Model提供方</td>
+<td>MR01–08需求和正式接口评估/交付，固定引用/可靠登记/查证/保护</td>
+<td>独立提供方线；不是ModelDev作者必须同步改两仓，不成为主链全局前置</td>
+</tr>
+<tr>
+<td>W6 分段验证与交接</td>
+<td>当前CORE_FLOW用例、竞态/参数组合向量、主链测试驱动边界与证据；保留FT/PA/MR原表</td>
+<td>M3-B再做真实BFF/前端及候选绑定；最终补FT29与交接；GPU独立不阻塞</td>
+</tr>
+</tbody>
+</table></div>
+<p>已完成公共能力先复用。测试驱动由W3/W6在ModelDev现有测试装配中落地，不新增W7、不新增服务。人员与工期另行确定。环境缺项只阻塞相关LIVE动作，继续合同、编码和Fedora测试；不能把“合同先定”扩大成必须等所有上游/页面一起完成。</p>
+<h3 id="D12-12-4">12.4 包内小任务与会合点</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>子任务</th>
+<th>owner</th>
+<th>当前阶段／完成物</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W0-P1</td>
+<td>W0＋W1</td>
+<td>M0：基准/非默认候选、真实框架映射、最终配置覆盖与指标；不等完整BFF</td>
+</tr>
+<tr>
+<td>W1-P1</td>
+<td>W1</td>
+<td>M1-A：两字段程序合同、Release规则自校验、kind分流、旧CPU黄金回归</td>
+</tr>
+<tr>
+<td>W1-P2</td>
+<td>W1</td>
+<td>M1-A：共享默认合并/组合与存在性、原快照/摘要；真实Gov事务/投递接线在M3-B补证</td>
+</tr>
+<tr>
+<td>W1-P3</td>
+<td>W1</td>
+<td>M1-A：修正真实类型投影、预设/详情DTO与安全回放样例；不声称已对接页面</td>
+</tr>
+<tr>
+<td>W1-P4</td>
+<td>W1＋现有前端</td>
+<td>M3-B：真实BFF当前绑定、权限、受理与投递、查询/停止/恢复、页面提交与历史展示</td>
+</tr>
+<tr>
+<td>W3-P1</td>
+<td>W3＋W0</td>
+<td>M1-A/M3-A：entry消费原快照、summary回读、A/B真实训练与新增步骤</td>
+</tr>
+<tr>
+<td>W3-P2</td>
+<td>W3＋W6</td>
+<td>M3-A：D12.6隔离应用层测试驱动、真实持久化/KFP/Trainer/发布确认/停止；不新增生产API</td>
+</tr>
+<tr>
+<td>W4-P1</td>
+<td>W4</td>
+<td>M1-A/M3-A：动态权重SHA与固定文件结构、tar/publication，Model未接入后的明确失败和计算关闭</td>
+</tr>
+<tr>
+<td>W4-P2</td>
+<td>W4＋关闭负责人</td>
+<td>真实登记前：D09.3逐写派发与停止/时限仲裁、原收据/恢复、FT25.1–3</td>
+</tr>
+<tr>
+<td>W6-P1</td>
+<td>W6</td>
+<td>当前：CORE_FLOW适用断言、PA共享解析/实际消费和R3向量；后续：BFF/页面剩余断言及整体汇总</td>
+</tr>
+<tr>
+<td>W6-P2</td>
+<td>W6＋BFF/ENV负责人</td>
+<td>M3-B前：D12.7候选隔离绑定/身份/回退记录；不是M0/M3-A前置</td>
+</tr>
+</tbody>
+</table></div>
+<p>这些是原包内有限拆分，不增加产品范围或新的平台。W0/W1先形成候选合同可并行；完整候选等真实PipelineVersion/镜像生成后拼齐，不填假ID。真实环境先接通ModelDev→KFP/Trainer的主链，再用相同合同接回BFF；不因后置而改旧快照或引入第二默认指针。前端可并行开发，不得要求主链等它验收。</p>
+<p>本机仅编辑/Git，Fedora构建/验证，目标K8s运行。先读AGENTS和工作区状态，使用本人分支或独立worktree；不stash/reset/clean/强推/自动合并，不改ENV agent的installer工作树，不无授权升级共享控制器。</p>
+<h3 id="D12-12-5">12.5 W1/W3的接缝记录与独立GPU准备线</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>责任</th>
+<th>本轮增加的有界说明/核对</th>
+<th>不属于该包新增开发或验收</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W1 合同与受理</td>
+<td>在既有合同工作中记录算法参数/执行资源分界、原快照兼容、Gov/ACC既有附件与查询接点；参见D01.2/D02.7</td>
+<td>不提前发布GPU字段/枚举/表，不开放资源表单，不重做资源或身份系统</td>
+</tr>
+<tr>
+<td>W3 执行与关闭</td>
+<td>记录实际训练容器渲染点、CPU限制所属合同、计算关闭持久事实；可协助D10.2独立试验</td>
+<td>不改CPU配方用GPU，不在CPU路径增加GPU退款RPC，不因预留强制重构全部Trainer/CloseWorker</td>
+</tr>
+<tr>
+<td>W6 故障与交接</td>
+<td>保持C33和FT/PA回归，交接GPU差异/试验记录的引用及未测项</td>
+<td>不给现有用例追加GPU必须通过条件，不等待GPU环境才完成本版</td>
+</tr>
+<tr>
+<td>GPU准备负责人＋ENV</td>
+<td>按D10.2协调Gov/ACC差异、ModelDev测试映射和Installer隔离环境；主线具备对应能力时即可并行</td>
+<td>不是新增W7，不默认要求当前微调作者实现四仓生产接入；无硬件则停止设备层，其他工作继续</td>
+</tr>
+</tbody>
+</table></div>
+<p>这是一条<strong>独立准备线</strong>，不是M0–M4的新前置。主开发线继续按12.3/12.4完成CPU微调和当前参数链；接缝核对发现现有结构已经足够，可以只交记录，不以代码行数衡量完成。生产GPU正式能力待下一批确定范围和验收后再合入启用；局部试验不得修改其他agent的工作树或共享资源。</p>
+<p>最小移交为D10.2.3差异表及已有条件下的分层验证记录。文档由单一<code>spec.md</code>派生的<code>gpu-extension-boundary.md</code>供跨仓阅读，不另外维护一份可独立修改的GPU规范。测试结果只作为证据另存，不反向把文档计划标成运行PASS。</p>
+<h3 id="D12-12-6">12.6 当前主链的隔离测试装配与启动指引</h3>
+<p>本节不是已存在命令清单，也不是生产旁路。<strong>W3/W6先核实现有集成测试入口；不足时只补一次性测试驱动，在同仓测试装配中调用正式ModelDev应用用例。</strong>不得新建常驻服务或公网“测试创建”API，不增加生产allow-direct-access开关。具体测试路径/命令/镜像在代码实现后回填记录，不凭本文猜已有命令。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>动作</th>
+<th>当前可执行做法／约束</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. 定位材料</td>
+<td>记录本包spec的实际绝对路径/SHA、任务仓分支commit、Fedora本任务路径、目标集群交接；只缺BFF资料不停止全部任务</td>
+</tr>
+<tr>
+<td>2. 固定来件合同</td>
+<td>复用正式codec、程序/Release解析与快照验证；测试材料显式选择候选ID/摘要/参数和批准输入，不另写宽松JSON或浮动默认值</td>
+</tr>
+<tr>
+<td>3. 装配上游替代边界</td>
+<td>隔离测试装配提供限定测试上下文/来件，进入真实应用层受理和数据库事务；记录入口在哪层。测试operation/identity不是Gov真实授权/持久受理证据，不能混入正式库或正式租户</td>
+</tr>
+<tr>
+<td>4. 运行真实下游</td>
+<td>KFP/Trainer/实际步骤Pod与训练程序、真实数据库/S3必须是本次被验证层级的实际依赖；既有workload认证、权威Run/Task/UID和写者证明不关闭</td>
+</tr>
+<tr>
+<td>5. 查、停、恢复观察</td>
+<td>测试驱动调用同一查询/停止/对账用例，经过真实持久停止与关闭；不直接删Pod代替业务Stop，不手工改库造状态。BFF动作授权仍未验证</td>
+</tr>
+<tr>
+<td>6. 发布及Model边界</td>
+<td>保留register前半段真实publication核验。Model未接入时仅其明确边界可返回不可用，记录真实错误/关闭，不默认READY；真实Model可用则按已登记调用接入</td>
+</tr>
+<tr>
+<td>7. 独立取回与交接</td>
+<td>以批准的只读测试身份从原持久对象取回校验，不挂训练卷；它证明存储独立性，不证明经BFF下载授权或经Model/Inference使用。后续对应断言再测</td>
+</tr>
+</tbody>
+</table></div>
+<p>代码生成、测试驱动编译、镜像/Pipeline编译在既有Fedora完成，固定已推送commit；需要真实KFP/Trainer的驱动/被测程序部署到获准隔离K8s范围。Fedora临时数据库或边界替身模块测试可以先做，但不计目标集群主链完整通过。测试资源名称/数据库/namespace隔离、凭据引用与清理范围依现有授权，不让测试驱动访问正式资源。</p>
+<p>上游RPC若只接受Gov证书，<strong>保持这个正式拒绝规则</strong>；从应用层测试装配替换上游，不借用Gov证书、不给普通调用方白名单、不把body tenant/actor直接作为正式Principal。测试装配没有经过的认证/委托/可靠投递断言全部NOT_RUN。若现有代码无法隔离装配，先补同仓测试接缝，不能用改库或关认证省事。</p>
+<p>Model读取未接入时，素材必须有获准来源、固定字节/摘要与测试归属。可以用明确的只读Model边界fixture/获准素材适配驱动实际准备，不把虚构ModelVersion写入正式Model，也不声称MR02/FT10整项通过。数据READY则由真实本域导入用例产生，不直接插成功行。</p>
+<p><strong>候选配置不是第二个生效指针。</strong>主链测试输入显式固定一个候选，并通过相同校验；ModelDev不维护新的“当前Release”。Gov正式指针不修改。若现有Pipeline完整材料尚缺，可先做负载/局部adapter测试，补齐真实ID后才做相应主链；不能拿占位符换取受理。</p>
+<p>实施后回填：测试源码/命令、源commit和镜像、入口应用层方法、替代边界、实际/未测依赖、隔离数据库和Namespace UID、候选摘要、Run/TrainJob/Pod/对象事实、停止/取回证据。现有<code>work-progress</code>/<code>acceptance-results</code>可附加这些信息，包内模板仅帮助记录，不要求新增业务表或另一套运维产品。</p>
+<h3 id="D12-12-7">12.7 后续真实BFF联调的候选绑定（不作为当前主链前置）</h3>
+<p><strong>只在准备M3-B时落实本节。</strong>W0/W2/W3/W4和M3-A不等待候选经真实BFF调用的操作说明、页面或上游接线。最终用户入口仍是BFF，这里是阶段安排而非永久删除。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>M3-B前需要记录</th>
+<th>采用规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>候选隔离范围</td>
+<td>选择现有系统实际支持的隔离测试部署或受管绑定；不假定已有逐租户Release开关，不建设新的候选发布平台</td>
+</tr>
+<tr>
+<td>真实入口和身份</td>
+<td>已有BFF及真实认证/权限/租户映射，明确获准测试用户；不增加绕过授权的测试RPC</td>
+</tr>
+<tr>
+<td>固定版本与变更所有权</td>
+<td>候选release/digest/generation、当前指针的原值、具体负责仓库/配置/操作人；指针仍由Gov负责</td>
+</tr>
+<tr>
+<td>参数/查询/停止路径</td>
+<td>PA05及其他含BFF/页面的断言走真实来件和投递；对照原快照与entry实际配置，不仅检查UI显示</td>
+</tr>
+<tr>
+<td>回退与清理</td>
+<td>记录实际回退方式；恢复前核对当前绑定仍为本次值，避免覆盖其他agent新变更；不停止无关历史执行、不删已发布模型</td>
+</tr>
+</tbody>
+</table></div>
+<p>候选在隔离测试环境通过真实BFF验证，不等于向普通用户正式启用；M3-B及最终验收前后记录清楚。已经通过的M3-A记录继续保留，新增上游引发的真实错误仍需修正并回归，不通过宣称“主链已过”跳过整体链。Model若仍未正式接入，只能记相应BFF部分，PA05全链/MR/FT29继续未测。</p>
+</div><div class="endlinks"><a href="#D11">← 上一节</a><a href="#D13">下一节 →</a></div></section><section class="chapter" data-chapter="D13" id="D13"><h2><small>D13 / v4.2.2</small>实施前必须锁定的事实与停止条件</h2><div class="source-body" data-source-ref="D13" data-source-sha256="c249de6547b4e57d32df714c579b35be49ac4a09d0eba2c599490fb96f6c6768"><p><strong>“消除歧义”不等于编造尚未实测的值。</strong>下面的未知项有明确负责人、用途和未就绪行为，不能由agent自行选择另一条架构。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>待锁定事实</th>
+<th>负责人/阶段</th>
+<th>缺少时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>相关工作树/正式API/模板实际commit</td>
+<td>各仓负责人，开工</td>
+<td>可读代码和准备合同；不假定默认分支与评审基线一致</td>
+</tr>
+<tr>
+<td>Fedora实际登录与本任务源码/制品路径</td>
+<td>当前执行负责人，W0前</td>
+<td>只阻塞相应远程动作；不本机运行或把集群当构建机</td>
+</tr>
+<tr>
+<td>LLaMA-Factory/Python/PyTorch/transformers/peft版本、镜像digest、离线材料</td>
+<td>W0/M0</td>
+<td>不发布可启用Release，不猜标签</td>
+</tr>
+<tr>
+<td>CPU训练/保存/导出/verify实际dtype与CLI向量</td>
+<td>W0/M0</td>
+<td>不声称关闭bf16即可保证输出精度</td>
+</tr>
+<tr>
+<td>64条真实样例、有效样本、基准20步与非默认候选的输出结构/真实SHA</td>
+<td>W0/M0</td>
+<td>不用基准权重SHA约束其他合法输出，不预填真实步数和推理结果</td>
+</tr>
+<tr>
+<td>ani.metric.v1实际schema/解析器版本、真实日志/callback来源、字段/采样/summary映射</td>
+<td>W0/W1，M0</td>
+<td>不猜字段，不用请求上限或JSONL行数伪造步数；指标适配验收未通过不发布该配方</td>
+</tr>
+<tr>
+<td>export/verify与stop共用的数据库锁/原子条件、首次受理与重放语义、启动时间/步骤deadline</td>
+<td>W1/W3，首次代码联调前</td>
+<td>配置读取不代替启动仲裁；未实现时不启用计算角色，不以Mock证明并发安全</td>
+</tr>
+<tr>
+<td>Model方法/模块版本、精确SAN、字段映射/查证能力</td>
+<td>W5/M1-B</td>
+<td>Model接入未启用；允许显式消费者替身测试</td>
+</tr>
+<tr>
+<td>直接引用是否可用、否则唯一已选复制绑定</td>
+<td>W4/W5/M1-B</td>
+<td>不临时切模式，不泛化实现两个storage后端</td>
+</tr>
+<tr>
+<td>KFP/Trainer/Runtime/CPU池、StorageClass、受管身份与入口</td>
+<td>ENV交接+W3</td>
+<td>相关LIVE阻塞，业务编码/Fedora检查可继续</td>
+</tr>
+<tr>
+<td>Inference取新包和实际CPU/其他既有推理Runtime支持</td>
+<td>现有Inference负责人，M3综合/FT29前（非M3-A前置）</td>
+<td>FT29/C23未通过不能称本方案最终验收完成；不要求每次任务自动部署，不另造推理后端</td>
+</tr>
+<tr>
+<td>当前参数codec/合同ID、Release规则与执行映射的真实字段</td>
+<td>W1，合同定稿前</td>
+<td>保留typed请求；不套CPU三参数校验，不接受未实现字段</td>
+</tr>
+<tr>
+<td>非默认测试组合与批准依据、参数/固定配置安全投影</td>
+<td>W0/W1/W6，参数验收前</td>
+<td>仅基准PASS不得启用扩大集合；不把候选值当已验证事实</td>
+</tr>
+<tr>
+<td>正式来件codec/测试应用入口、隔离库/命名空间和上游替代范围</td>
+<td>W1/W3/W6，M3-A前</td>
+<td>先核实既有测试装配；缺项只停相应测试，不改生产鉴权、不改库造状态</td>
+</tr>
+<tr>
+<td>具体登记派发与Stop/deadline的同一锁/原子条件、在途记录和重发边界</td>
+<td>W4/关闭负责人，首次真实写入前</td>
+<td>先实现和测试R1；Model依赖不阻塞其他主链，不能声明尚未接入的登记正确性通过</td>
+</tr>
+<tr>
+<td>Gov当前指针查询、候选BFF隔离绑定/回退、实际前端仓库落点</td>
+<td>W1/W6/前端，M3-B前</td>
+<td>BFF/页面断言NOT_RUN；不是W0/W2/W3/W4或M3-A的前置</td>
+</tr>
+<tr>
+<td>公开目标API既有语义是否与本稿冲突</td>
+<td>合同owner，合并前</td>
+<td>明确登记差异，不暗改历史客户或改主键</td>
+</tr>
+</tbody>
+</table></div>
+<p>Model/Gov共同合同足够规定调用规则；本表只补实际接入材料与业务方法，不升级为新信任体系。共同关闭机制发现确切缺陷时，以已复现反例修正和回归，未证实的担心不无边界扩任务。</p>
+<p>所有占位值必须在启用时已被真实受管值替换并验证；缺少的必需值明确失败。代码、合同/替身验证、Model真实联调、目标集群通过分别记账，不“默认通过”。</p>
+<h3 id="D13-13-1">13.1 仅影响GPU准备线的待核实项</h3>
+<p>Gov/ACC实际合同版本、ModelDev owner/API差异、Trainer到Pod的具体字段、GPU硬件/驱动/插件条件和隔离测试授权，只是D10.2相应GPU准备动作的前置，<strong>不追加到本版CPU启用与最终验收的必需事实表</strong>。未知时记录负责方、已尝试动作和恢复条件；不能猜字段/硬件、借用他人凭据，或把全部CPU工作标为BLOCKED。</p>
+</div><div class="endlinks"><a href="#D12">← 上一节</a><a href="#D14">下一节 →</a></div></section><section class="chapter" data-chapter="D14" id="D14"><h2><small>D14 / v4.2.2</small>版本变更、参数评审采纳与冲突消除清单</h2><div class="source-body" data-source-ref="D14" data-source-sha256="e13872f48efcc7b281f03fda68ea3fa309e351e0536bfb828f24da7c857172a2"><h3 id="D14-14-1">14.1 v3到v4的既定收敛（v4.2继续保留）</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>v3位置/旧说法</th>
+<th>v4唯一结论</th>
+<th>性质</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§1/§13“close关闭/停止KFP”未区分正常异常</td>
+<td>正常NATURAL_TERMINAL收据后返回，Run自然终结；异常才主动停止；owner独立完成CLOSED</td>
+<td>继承现有实现，修正歧义</td>
+</tr>
+<tr>
+<td>§8“KFP终态”笼统描述</td>
+<td>前序成功检查是Task/原TrainJob；最终关闭才是Run/Workflow</td>
+<td>证明范围澄清</td>
+</tr>
+<tr>
+<td>§2/§5 JSON与指令型CSV</td>
+<td>仅Alpaca JSON三字段子集；CSV/ShareGPT/自定义暂缓；旧MLP CSV不变</td>
+<td>用户确认的范围缩减</td>
+</tr>
+<tr>
+<td>§5 normalization源/派生双模型</td>
+<td>单格式采用原样物化，原JSON与本地SHA一致；只生成独立dataset_info</td>
+<td>本版明确的简化实现选择</td>
+</tr>
+<tr>
+<td>§5共同校验64条，§3又称Release限制</td>
+<td>导入验证结构并统计；64条由当前Release受理检查</td>
+<td>条件归属澄清</td>
+</tr>
+<tr>
+<td>§11另列大段通用S2S规则</td>
+<td>Gov合同唯一通用规范，本稿仅具体调用关系和Model业务需求</td>
+<td>不新增授权体系</td>
+</tr>
+<tr>
+<td>§11 Model为所有业务开发的同步前置</td>
+<td>ModelDev先端口/记录/测试，Model正式后真实接入；公共微调完整能力仍待依赖齐备</td>
+<td>用户确认的分期开发</td>
+</tr>
+<tr>
+<td>§4 new_model_name跨执行语义空缺</td>
+<td>create-only；重复操作原键；另一轮追加必须target_model_id；并发由Model唯一约束裁决</td>
+<td>必要业务规则</td>
+</tr>
+<tr>
+<td>target/base容易混淆</td>
+<td>target只决定输出容器，base决定读取权重；输出V1不自动成为下次基模</td>
+<td>保持最初平台设计</td>
+</tr>
+<tr>
+<td>对外状态表被误解为新设计缺口</td>
+<td>状态和完整成功条件原已存在；只新增微调事实与统一展示解释</td>
+<td>修正审核分类</td>
+</tr>
+<tr>
+<td>资源预算被误解为微调专用机制</td>
+<td>复用原deadline/取消；传递新步骤预算，旧CPU默认不变</td>
+<td>有界适配</td>
+</tr>
+<tr>
+<td>M1要求真实Model同步全部完成</td>
+<td>分M1-A消费者/主体开发与M1-B真实Model联调，替身只证合同</td>
+<td>前置拆分，不降低最终标准</td>
+</tr>
+<tr>
+<td>§16“完整C01–C34不缩减”</td>
+<td>按D11明确上传、scope等暂缓/部分覆盖；不将导入代替上传</td>
+<td>修正实际范围冲突</td>
+</tr>
+<tr>
+<td>环境执行可能被误读成全放K8s</td>
+<td>本机编辑/Git，Fedora构建/测试/负载验证，K8s真实部署/验收</td>
+<td>恢复用户明确约束</td>
+</tr>
+<tr>
+<td>两种storage交接都被当作首期必建</td>
+<td>环境固定选一条实际必要模式；直接兼容不复制，无运行时fallback</td>
+<td>减少不必要实现</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>开发者不得从历史v3单句恢复已删能力。</strong>本版明确决定优先于v3对应段落；没有变化的公共执行实现继续复用。Gov通用调用规则不因本稿另有示例被覆盖。实际代码差异先记录到任务，再由合同owner决策，不从“留扩展口”推导出新增平台授权。</p>
+<p>本文不重新估算总人天，也不为Model待就绪承诺完成日期；后续任务只针对新增/受影响点估算，不能把公共机制再计为从零开发。</p>
+<h3 id="D14-14-2">14.2 v4到v4.1：继承的三项评审修订</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>评审项</th>
+<th>v4缺口</th>
+<th>v4.1修订与联动</th>
+<th>性质/范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1/P1：启动与停止共同仲裁</td>
+<td>D06仅写检查stop/deadline和保存启动事实，未规定原子关系</td>
+<td>D06.2固定同一执行级数据库串行化边界、首次受理、原Run/Task/Pod绑定、丢响应只查证；A11/D09/D10及W3/FT23/24同步</td>
+<td>现有步骤/关闭中的必要代码增量，不新建许可平台</td>
+</tr>
+<tr>
+<td>R2/P2：指标职责</td>
+<td>D06/D07只要求真实metrics/summary，漏写谁生成平台schema</td>
+<td>finetune_entry从M0锁定真实日志/callback生成ani.metric.v1 metrics.jsonl与实际summary；collect/publish只校验和发布；W0/M0/FT11同步</td>
+<td>恢复v3已存在的训练适配职责，不重建指标系统</td>
+</tr>
+<tr>
+<td>R3/P2：完成标准层级</td>
+<td>A10与C23均使用“完整交付”，容易误读成每任务必部署推理</td>
+<td>A10单次执行成功条件；D11.4本方案最终验收条件，FT29/C23独立Inference验收；A03/A09/D13和Model派生稿一致</td>
+<td>术语与判定层级澄清，不新增每任务自动部署</td>
+</tr>
+</tbody>
+</table></div>
+<p>自复核同时修正两处编辑不一致：D03将孤立的 <code>data.json</code> 改成实际合同路径 <code>inputs/data/finetune_data.json</code>；A09“Model未接收方就绪”改成“Model接收方未就绪”。这些不改变输入字节、对象模型或开发范围。</p>
+<p>P1的预算联动是明确修订：export/verify从首次启动受理事务时间固定有效deadline，实际spawn时间只作观察，不另起一份预算；其他步骤和旧CPU默认值不变。原请求、模型目标、服务规范、单TrainJob、Alpaca JSON、Model分期接入、Fedora职责和C01–C34覆盖边界均不改变。</p>
+<p>当前文档自复核与机器检查见<code>review/self-review.md</code>、<code>review/document-checks.json</code>，只证明文档一致性与呈现；v4.1的原运行状态不转换成本轮结果。所有FT/PA/MR及负载/LIVE记录仍为NOT_RUN。</p>
+<h3 id="D14-14-3">14.3 v4.1到v4.2：参数评审的完整落地</h3>
+<p>以下新增条款是按用户本轮请求采纳上一轮审核后的设计决定，不冒称原v4.1已有实现，也不是新实测结论。<a class="srcmark" href="#source-s9">S9</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>审核项</th>
+<th>本版明确修订</th>
+<th>联动位置/任务</th>
+<th>不扩大什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P-01 规则归属</td>
+<td>公共格式、程序语义、Release批准、原执行快照四层；只一个维护点</td>
+<td>A07、D02、D05；W1</td>
+<td>不新增参数服务/DSL/任意map</td>
+</tr>
+<tr>
+<td>P-02 兼容对象</td>
+<td>旧CPU v1保留；当前kind分流；未来新codec必须明确识别，不用当前Release猜旧编码</td>
+<td>A07.5、D02.2、D05.4、FT30；W1/W6</td>
+<td>本轮不开放可变epochs/batch的通用CPU产品</td>
+</tr>
+<tr>
+<td>P-03 展示</td>
+<td>创建读当前Release、详情读原快照、指标读事实；修正3/64型投影</td>
+<td>D01.1、D02.4/5、D09.5；W1</td>
+<td>不重做前端工作台、不公开敏感全快照</td>
+</tr>
+<tr>
+<td>P-04 真实消费</td>
+<td>冻结参数决定最终配置，模板不能覆盖；summary保留安全解析结果</td>
+<td>D05.3、D06.4；W0/W3</td>
+<td>不开放用户任意YAML、不新增参数权威表</td>
+</tr>
+<tr>
+<td>P-05 组合/预算/文件</td>
+<td>批准完整组合或受管规则；动态权重SHA不是固定结构约束</td>
+<td>A07.4、D07、D10.1；W0/W4</td>
+<td>不自动批准全部组合、不建资源估算器</td>
+</tr>
+<tr>
+<td>W6验收增量</td>
+<td>PA01–10，至少一组非默认贯通、真实查询/前端、历史不漂移</td>
+<td>D11.2.2、D11.4、D12.4；W6</td>
+<td>原32+12项与MR不删除、Model替身不算真实通过</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="D14-14-4">14.4 本版为消除执行歧义作出的具体选择</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>选择</th>
+<th>明确结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前开放字段</td>
+<td>仍learning_rate/max_steps，其他候选先不接受；交付能力包括可变值完整链，不再只做空扩展口</td>
+</tr>
+<tr>
+<td>非默认起测</td>
+<td>基准0.0001/20，B优先0.0002/10；仅为待验证设计向量，失败保留，启用前需实际批准</td>
+</tr>
+<tr>
+<td>当前请求存在性</td>
+<td>finetuning对象必需，{}使用两项默认，null/缺失拒绝；两个子字段可省略。新FINETUNING分支的明确选择，不重解释CPU</td>
+</tr>
+<tr>
+<td>预览到受理切版</td>
+<td>保留“新受理使用当前绑定”，返回实际配置；不增加用户选择旧Release/预览令牌</td>
+</tr>
+<tr>
+<td>运行配置证据</td>
+<td>扩原summary安全字段，不新增常驻服务或独立可编辑配置表</td>
+</tr>
+<tr>
+<td>参数工作交付边界</td>
+<td>先落承载/展示/非默认两字段，下一批新字段另行批准；不无限延后，也不一次复刻参考页全部参数</td>
+</tr>
+<tr>
+<td>文档采用</td>
+<td>完整v4.2取代v4.1正文；所有派生视图重建，原件与已填记录保留，禁止只改一个任务切片</td>
+</tr>
+</tbody>
+</table></div>
+<p>新增参数/前端字段的最终Proto编号和已存在等价方法，由W1基于真实提供方API固定；这不是允许任意变更表中语义。程序/环境尚未核实的值按D13停止相关启用，不用猜测消除歧义。</p>
+<h3 id="D14-14-5">14.5 v4.2到v4.2.1：仅补GPU后续接入边界</h3>
+<p>本次依据完整v4.2和用户随后确认的GPU分期讨论修订。<a class="srcmark" href="#source-s10">S10</a> 原参数链与CPU微调产品范围不变，不代表GPU已经开工或通过。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>讨论点</th>
+<th>并入正文的明确规则</th>
+<th>联动位置</th>
+<th>不扩大什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>现在准备，下一批正式接入</td>
+<td>先核对既有Gov/ACC合同、记录接缝；GPU正式资源/占额/执行/退额另批</td>
+<td>A02.1、D10.2</td>
+<td>不使GPU成为本版完成条件</td>
+</tr>
+<tr>
+<td>涉及哪些项目</td>
+<td>分开Gov/ACC核对、ModelDev映射、Installer/ENV隔离验证；Model/Inference不加任务</td>
+<td>D10.2.2</td>
+<td>不要求四仓同时改生产代码</td>
+</tr>
+<tr>
+<td>ModelDev现在怎样留接缝</td>
+<td>W1/W3记录实际解析/快照/渲染/关闭位置；足够则无需代码改动</td>
+<td>D01.2、D02.7、D12.5</td>
+<td>不强制改名CPUResources、加GPU Proto/表或假charge</td>
+</tr>
+<tr>
+<td>关键验证证明什么</td>
+<td>Fedora渲染、真实控制器Pod字段、实际设备三层分开；手写清单不替代正式adapter证明</td>
+<td>D10.2.4</td>
+<td>不让Mock/CPU结果充当GPU能力；不授权旁路业务入口</td>
+</tr>
+<tr>
+<td>原验收怎样保持</td>
+<td>FT/PA/MR/C表不变，GPU记录独立，NOT_RUN不阻塞CPU，当前CPU缺陷仍修复</td>
+<td>D11.5、D13.1</td>
+<td>不新增GPU硬门槛，不放松CPU禁GPU</td>
+</tr>
+<tr>
+<td>资料与环境</td>
+<td>单一spec派生两册、任务卡和GPU视图；保留Fedora与原路径分工，v4.2原文留存</td>
+<td>D12、S10</td>
+<td>不改仓库/运行配置、不搬构建到K8s</td>
+</tr>
+</tbody>
+</table></div>
+<p>本次只补文档和对应派生视图，没有开启GPU生产接口、修改Gov/ACC allowlist、迁移数据库、建立GPU账本或执行硬件测试。实际GPU批次需核对当时正式合同与环境，不从本补充的用途描述猜测API字段或当前实现状态。</p>
+<h3 id="D14-14-6">14.6 v4.2.1到v4.2.2：两轮审核与主流程优先</h3>
+<p>以下是本次明确采纳的修订，不称原v4.2.1已经完整写明，也不是新代码审计结论。<a class="srcmark" href="#source-s11">S11</a><a class="srcmark" href="#source-s12">S12</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>讨论项</th>
+<th>本版写入的唯一规则</th>
+<th>同步位置/任务</th>
+<th>不改变的边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>421-R1：登记与停止竞争</td>
+<td>每个具体正常写派发与Stop/deadline共同仲裁；整份意图不预授权后继；在途迟到结果真实保留</td>
+<td>D08/D09.3、A11、W4-P2、FT25.1–3</td>
+<td>不新增授权/许可平台或跨服务事务；原CLOSED恢复仍可按授权执行</td>
+</tr>
+<tr>
+<td>421-R2：候选经BFF验收</td>
+<td>改为M3-B启动前的操作交接；当前执行主链不等待BFF/前端/候选上游绑定</td>
+<td>A03/A09/A12、D11.6、D12.6/12.7、W1/W6</td>
+<td>最终BFF仍唯一用户入口，不新增生产测试API或第二指针</td>
+</tr>
+<tr>
+<td>421-R3：组合与默认</td>
+<td>明确A/B完整组合及省略默认的5个黄金向量，不自动修改另一个字段</td>
+<td>D02.6.1、PA03/06/07、W1/W6</td>
+<td>B仍待实测；不新增PA11、DSL或更多可输入字段</td>
+</tr>
+<tr>
+<td>用户：先完成微调主流程</td>
+<td>当前M3-A真实ModelDev/KFP/Trainer/S3/发布确认/停止关闭；BFF和前端在M3-B接回</td>
+<td>A12、D11.6、D12.3/4/6、主流程派生手册</td>
+<td>合同现在固定；后置项NOT_RUN而非删掉/DEFERRED</td>
+</tr>
+<tr>
+<td>Model后接仍不造假</td>
+<td>发布确认在Model写前必须真实完成；Model未接入明确错误+计算关闭，不能伪造READY</td>
+<td>A03/A09/A10、D04/D07/D12.6</td>
+<td>主链阶段结果不等于单次六项成功，MR/FT29仍需真实接入</td>
+</tr>
+<tr>
+<td>完成证据分层</td>
+<td>WORKLOAD/CORE_FLOW/BFF_INTEGRATION等仅为记录scope；本域/上游断言分记录</td>
+<td>D11.6及records模板，W6</td>
+<td>不加业务状态机；原32 FT+12细化+10 PA+8 MR+34映射保留，新增3个登记细化</td>
+</tr>
+</tbody>
+</table></div>
+<p>历史D14.1–14.5保留其版本时点含义；遇到开发次序冲突，以本节及现行A12/D11.6/D12为准。不是让agent在多套矛盾主方案之间自行选择。GPU独立准备、单TrainJob、Alpaca JSON、正式Model目标、正常close、指标、预算数值、Fedora职责均保留。</p>
+</div><div class="endlinks"><a href="#D13">← 上一节</a><a href="#sources">下一节 →</a></div></section><section class="chapter" id="sources"><h2>来源与证据口径</h2><div class="source-body" data-source-ref="sources" data-source-sha256="9e3f6f810452d7b5c3509b147df6fd62749cd94546e888989fd9ec5c377676c4"><p>本稿直接基于用户上传的<strong>完整v4.2.1包</strong>，按两轮审核/讨论改写登记派发仲裁、主链优先顺序和组合测试，见S11/S12。未请求重新调研技术选型或最新代码，因此本次不借外部资料补写未核实实现。历史S0–S10保留其版本来源；本次新增是设计修订，不是当前分支/硬件的审计事实。无业务源码修改、依赖发布、Fedora训练、K8s/Model/Inference/GPU验收；文档检查不写成业务PASS。</p>
+<h3 id="source-s0">S0 · 用户附件《ANI CPU 受管微调方案 v3》</h3>
+<p>沿用原v3附件；内容包括单TrainJob、KFP export/verify、原受理/发布/关闭复用、Model需求、资源预算及原验收映射。原文副本位于 <code>reference/spec-v3.md</code>。其中指标适配职责是v4.1指标意见的原依据，不与本次421-R2候选BFF排期混同；已被v4收窄的CSV等范围不恢复。</p>
+<h3 id="source-s1">S1 · 模型研发平台 v0.4</h3>
+<p>《精简业务与架构方案》《精简开发实施说明》《管理与操作指导手册》是平台范围背景；v4形成时重点核对开发册D16的C01–C34，本次保留其原含义及已明确的覆盖边界。v0.4不是所有内容均已实现的报告。v0.2/v0.4已含target_model_id/new_model_name两个目标分支。</p>
+<h3 id="source-s2">S2 · Governance统一调用合同（沿用v4固定引用）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-governance</code>，固定commit <code>34388cf90d0834da76c9e5701ade5d92a248144f</code>，<code>docs/contracts/service-to-service-calls.md</code>，重点§1–3与§5–6。本规范涵盖三种调用方向，并明确规范入仓不代表存量实现全部符合。本次沿用v4已经固定的合同引用，未重新拉取当前分支，不宣布实现已全部对齐。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-governance/blob/34388cf90d0834da76c9e5701ade5d92a248144f/docs/contracts/service-to-service-calls.md" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-governance/blob/34388cf90d0834da76c9e5701ade5d92a248144f/docs/contracts/service-to-service-calls.md</a></p>
+<h3 id="source-s3">S3 · ModelDev已有机制（沿用前轮固定源码核查）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-modeldev-service</code>，固定commit <code>5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163</code>。主要位置：<code>internal/component/io.go</code>、<code>runner.go</code>、<code>internal/biz/execution_state.go</code>、<code>execution_closer.go</code>、<code>managed_runtime.go</code>、<code>internal/data/runtimeproof/proof.go</code>、<code>tasks.go</code>、<code>owner_close.go</code>、<code>internal/data/workspace/pipeline_io.go</code>、<code>pipelines/cpu_p01.py</code>、<code>README.md</code>。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163</a></p>
+<p>本轮没有重审所有文件或当前默认分支，也没有复跑其测试。涉及正常关闭、Task核验、状态、Fedora职责的事实沿用前轮已读取源码，不作为新增微调已通过的证明。</p>
+<h3 id="source-s4">S4 · Model接口与实现（沿用前轮固定源码核查）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-model-service</code>，固定commit <code>6473f1ec1386067e68dbd1294c10c660da7d1e7b</code>；<code>api/model/v1/model.proto</code>、<code>internal/service/model.go</code>、相关存储与身份实现。已存在方法不等于已满足本次可信接收、pending查证、固定引用和finalization要求；MR项以提供方交接及真实联调为准。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-model-service/tree/6473f1ec1386067e68dbd1294c10c660da7d1e7b" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-model-service/tree/6473f1ec1386067e68dbd1294c10c660da7d1e7b</a></p>
+<h3 id="source-s5">S5 · Model身份和名称唯一性（沿用前轮固定源码核查）</h3>
+<p>同S4：<code>migrations/000001_model_control_plane.sql</code>、<code>000006_external_model_id.sql</code>、<code>internal/data/postgres/model_store.go</code>、<code>queries/model.sql</code>及service错误映射。源码定义tenant内name唯一和外部model_id映射；本轮未连接实际库检查迁移状态。</p>
+<h3 id="source-s6">S6 · 本轮及紧邻对话的已确认决定</h3>
+<p>采用Gov统一S2S合同；Model需求先行、留接缝后对接；新模型/已有目标两分支；Alpaca JSON单格式；复用状态、deadline和正常关闭；不将审核澄清扩大为新系统。用户已有Fedora编译机，本机只编码/Git，172.16.101.10～12是目标集群。未提供或尚未核实的本任务具体环境值按D13处理。</p>
+<h3 id="source-s7">S7 · v4.1历史直接输入：v4与三项评审</h3>
+<p>v4原件在<code>reference/spec-v4.md</code>，v4.1的三项原评审在<code>reference/review-input-v4.1.md</code>。启动/停止仲裁、指标职责、单次执行与方案完成层级已在v4.1并入，本版继续保留D14.2对应正文，不因参数开放重写它们。</p>
+<h3 id="source-s8">S8 · v4.2的历史底稿：用户上传v4.1完整计划包</h3>
+<p>原包名：<code>ANI-CPU受管微调-v4.1-完整计划与复核包(1).zip</code>。其完整spec SHA256为<code>4c8430fc90ed92671ad06120113a909030ee76d70f807074790c5633f0b0de77</code>，本包按原字节保留<code>reference/spec-v4.1.md</code>。旧W0–W6是其派生视图，本版从新spec重新派生，不复制旧视图里已过时规则。</p>
+<h3 id="source-s9">S9 · v4.2参数审核依据与历史代码引用边界</h3>
+<p><code>reference/parameter-review-v4.2.md</code>保留当时《ANI 微调v4.1：面向下一阶段参数开放的评审要点》原文；它是v4.2的历史依据，不是本次重新审核。P-01–P-05及W6六类验收已在D14.3映射；A07.4、D02.5、D05.3、D11.2.2为落实意见而新增的明确设计选择，不宣称来自原包逐字条款。</p>
+<p>上一轮参数代码核对固定于ModelDev <code>c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb</code>，涉及<code>contract/cpup01/intent.go</code>、<code>release.go</code>、<code>snapshot.go</code>，<code>internal/biz/admission_resolution.go</code>、<code>internal/service/materials.go</code>及<code>api/ani/modeldev/v1/modeldev.proto</code>。本轮沿用该审核事实，没有重新拉取/执行最新代码；它与S3较早的执行机制基线分开记录。固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb</a>。</p>
+<p>本轮仅文档生成与一致性/呈现检查；无业务源码、Git、Model发布、Fedora训练、K8s部署或数据库迁移。文档PASS标DOCUMENT_ONLY，不写入FT、PA或MR运行结果。源材料未提供的实际端口/密钥/运行版本/安全范围不猜填。</p>
+<h3 id="source-s10">S10 · v4.2.1所用底稿与当时确认的GPU分期边界</h3>
+<p>底稿为已交付的<code>ANI-CPU受管微调-v4.2-参数扩展完整计划包.zip</code>，原spec按字节保留为<code>reference/spec-v4.2.md</code>，SHA256：<code>22e3c2af2424e4a2e7ef158171922979500229ffba2cf35558e701244a4af16b</code>。本轮用户先确认“GPU正式功能紧接CPU主干，合同与关键适配提前核对”，随后明确要求把“ModelDev公共接入位置/测试、v4.2小段边界说明”加入方案。</p>
+<p>本次落实的原意是：Gov/ACC沿用既有规范，只核对ModelDev具体接入；ModelDev/Installer按条件做隔离渲染与设备前置验证；不强迫多仓当前启用GPU，不给CPU加假charge，不放松CPU限制，GPU未就绪不阻塞CPU微调验收。生成文档不是对远程写入、共享环境变更或设备占用的新授权。</p>
+<p>Gov/ACC具体合同文档、接口字段、owner与证书配置由GPU准备负责人读取其正式仓库并记录确切commit；本轮不据旧讨论宣告当前实现已支持或尚不支持某RPC。<code>gpu-extension-boundary.md</code>只切片本规范，不成为新的GPU协议权威。</p>
+<h3 id="source-s11">S11 · 直接底稿v4.2.1与本次审核意见</h3>
+<p>原上传包：<code>ANI-CPU受管微调-v4.2.1-GPU后续接入边界完整计划包(1).zip</code>，SHA256 <code>5850581e31c29eaaaa8369751ca550302c06757dc3fea8608844701147713e25</code>。权威spec为1375行、SHA256 <code>363016708aef1c22454cbd320effead34b952aadf2bad08ea3a3582dc9e4c8b1</code>，按字节保留<code>reference/spec-v4.2.1.md</code>。审核意见原件保留<code>reference/review-v4.2.1.md</code>：R1具体登记派发仲裁；R2后续候选经BFF验证的操作说明；R3组合/默认黄金向量。本次未重审GitHub最新实现，不能把这些方案缺口说成已复现生产故障。</p>
+<h3 id="source-s12">S12 · 用户随后确认的执行顺序与本轮修订</h3>
+<p>用户明确“现在先完成微调主流程，真实BFF验收放到后面”，并要求据两轮讨论优化整包。落实为A12/D11.6/D12.6–7：合同先定；隔离应用层测试替代上游来件，复用实际后端主链；真实BFF/前端和候选绑定后置但最终仍验收；Model按原分期接入，不伪造READY；GPU独立准备继续不阻塞CPU。<code>review/review-input.md</code>记录这组输入摘要及原审核引用，不虚构对话原件或新增执行授权。</p>
+<p>本次仅在对话工作目录编辑/生成/复核文档，没有连接用户本机、Fedora或K8s。最终代码/API编号、实际测试驱动方法、环境/凭据和有效参数批准仍需按任务验证并记录。本包全部业务计划初始NOT_RUN；历史已填记录应另存保留，不被新模板覆盖。</p>
+</div></section><div class="footer">DOCUMENT_ONLY · 文档检查不代表任何负载、接口、并发或目标环境通过。</div></main></div><script>(function(){
+
+const input=document.getElementById('search');
+const items=[...document.querySelectorAll('.chapter[data-chapter]')];
+const navs=[...document.querySelectorAll('.navlink[data-chapter]')];
+function filter(){const q=(input?.value||'').trim().toLocaleLowerCase();let n=0;items.forEach(el=>{let show=!q||el.textContent.toLocaleLowerCase().includes(q);el.hidden=!show;if(show)n++;const link=navs.find(a=>a.dataset.chapter===el.dataset.chapter);if(link)link.hidden=!show});const count=document.getElementById('count');if(count)count.textContent=q?`匹配 ${n} / ${items.length} 章`:`${items.length} 章 · 按关键词筛选`;const empty=document.getElementById('empty');if(empty)empty.style.display=n?'none':'block'}
+input?.addEventListener('input',filter);filter();
+document.getElementById('clear')?.addEventListener('click',()=>{input.value='';filter();input.focus()});
+document.getElementById('menu')?.addEventListener('click',()=>document.querySelector('.sidebar')?.classList.toggle('open'));
+document.getElementById('print')?.addEventListener('click',()=>window.print());
+let font=16;try{font=Number(localStorage.getItem('ani-ft-v4.2-font'))||16}catch(e){};function setFont(){document.documentElement.style.setProperty('--font',font+'px');try{localStorage.setItem('ani-ft-v4.2-font',String(font))}catch(e){}}setFont();
+document.getElementById('fontMinus')?.addEventListener('click',()=>{font=Math.max(14,font-1);setFont()});document.getElementById('fontPlus')?.addEventListener('click',()=>{font=Math.min(20,font+1);setFont()});
+document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{const text=btn.closest('.codewrap').querySelector('code').textContent;let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}btn.textContent=ok?'已复制':'请选择文本复制';setTimeout(()=>btn.textContent='复制',1800)}));
+function showAnchor(){if(!location.hash)return;let id;try{id=decodeURIComponent(location.hash.slice(1))}catch(e){return}const el=document.getElementById(id);if(el){const sec=el.closest('.chapter');if(sec?.hidden&&input){input.value='';filter()}setTimeout(()=>el.scrollIntoView({block:'start'}),20)}}window.addEventListener('hashchange',showAnchor);showAnchor();
+if('IntersectionObserver' in window){const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){navs.forEach(a=>a.classList.toggle('active',a.dataset.chapter===e.target.id))}})},{rootMargin:'-10% 0px -70% 0px'});items.forEach(el=>obs.observe(el))}
+
+})();</script></body></html>

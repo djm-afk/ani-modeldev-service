@@ -1,0 +1,284 @@
+{
+  "scope": "DOCUMENT_ONLY",
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "desktop:content-loaded:ANI-CPU受管微调-v4.2.2-业务与流程方案.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:no-page-overflow:ANI-CPU受管微调-v4.2.2-业务与流程方案.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "check": "desktop:main-content:ANI-CPU受管微调-v4.2.2-业务与流程方案.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:content-loaded:ANI-CPU受管微调-v4.2.2-业务与流程方案.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:no-page-overflow:ANI-CPU受管微调-v4.2.2-业务与流程方案.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "check": "mobile:main-content:ANI-CPU受管微调-v4.2.2-业务与流程方案.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:content-loaded:ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:no-page-overflow:ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "check": "desktop:main-content:ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:content-loaded:ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:no-page-overflow:ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "check": "mobile:main-content:ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:content-loaded:ANI-CPU受管微调-v4.2.2-变更与自复核.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:no-page-overflow:ANI-CPU受管微调-v4.2.2-变更与自复核.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "check": "desktop:main-content:ANI-CPU受管微调-v4.2.2-变更与自复核.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:content-loaded:ANI-CPU受管微调-v4.2.2-变更与自复核.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:no-page-overflow:ANI-CPU受管微调-v4.2.2-变更与自复核.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "check": "mobile:main-content:ANI-CPU受管微调-v4.2.2-变更与自复核.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:content-loaded:ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:no-page-overflow:ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "check": "desktop:main-content:ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:content-loaded:ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:no-page-overflow:ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "check": "mobile:main-content:ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:content-loaded:index.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "desktop:no-page-overflow:index.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "check": "desktop:main-content:index.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:content-loaded:index.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile:no-page-overflow:index.html",
+      "status": "PASS",
+      "detail": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "check": "mobile:main-content:index.html",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "dispatch-anchor",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "chapter-filter",
+      "status": "PASS",
+      "detail": {
+        "matched": 1,
+        "total": 14
+      }
+    },
+    {
+      "check": "empty-search",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "clear-filter",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "font-plus",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "font-minus",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "copy-button-reports-native-success",
+      "status": "PASS",
+      "detail": "Native clipboard/execCommand path ran; OS clipboard content not read back."
+    },
+    {
+      "check": "print-all-chapters",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "print-hides-navigation",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile-menu-initially-closed",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile-menu-opens",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "mobile-filter",
+      "status": "PASS",
+      "detail": null
+    },
+    {
+      "check": "no-javascript-errors",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "check": "no-external-assets-requested",
+      "status": "PASS",
+      "detail": []
+    }
+  ],
+  "screenshots": [
+    "review/screenshots/index-desktop.png",
+    "review/screenshots/dispatch-desktop.png",
+    "review/screenshots/core-flow-desktop.png",
+    "review/screenshots/core-flow-mobile.png"
+  ],
+  "transport": "local HTML loaded using Playwright set_content; no navigation",
+  "navigation_status": "NOT_RUN",
+  "navigation_limit": "This tool checks rendered content and in-page actions only. Link targets are checked statically; the generation environment blocked the earlier loopback navigation attempt.",
+  "not_validated": [
+    "business code",
+    "Fedora",
+    "BFF/Model",
+    "KFP/Trainer",
+    "Inference",
+    "GPU",
+    "cross-document navigation",
+    "OS clipboard contents"
+  ],
+  "counts": {
+    "checks": 44,
+    "screenshots": 4
+  }
+}

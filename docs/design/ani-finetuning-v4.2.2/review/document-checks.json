@@ -1,0 +1,239 @@
+{
+  "scope": "DOCUMENT_ONLY",
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "current_source_version",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "complete_26_chapters",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "direct_baseline_preserved",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "source_bytes:reference/spec-v3.md",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "source_bytes:reference/spec-v4.md",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "source_bytes:reference/spec-v4.1.md",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "source_bytes:reference/spec-v4.2.md",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "source_bytes:reference/spec-v4.2.1.md",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "source_bytes:reference/review-v4.2.1.md",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "source_bytes:reference/parameter-review-v4.2.md",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "preserved_boundary:A02.1",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "preserved_boundary:D01.2",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "preserved_boundary:D02.7",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "preserved_boundary:D10.2",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "preserved_boundary:D12.5",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "preserved_boundary:D13.1",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "preserved_boundary:D06",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "resource_budget_rows_unchanged",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "normal_budget_sum",
+      "status": "PASS",
+      "detail": "10800"
+    },
+    {
+      "check": "scope_counts",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "original_ft_ids",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "parameter_test_rows_preserved",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "v04_mapping_preserved",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "old_12_refinements_preserved",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "only_3_new_registration_refinements",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "model_provider_requirements_preserved",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "mainflow_and_bff_separated",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "test_boundary_no_production_bypass",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "publication_confirm_retained_when_model_absent",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "registration_dispatch_contract_complete",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "scope_is_not_business_state",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "all_new_business_records_not_run",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "check": "bff_deferred_in_time_not_scope",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "gpu_nonblocking",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "combination_vectors",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "all_markdown_source_slices",
+      "status": "PASS",
+      "detail": {
+        "slices": 89,
+        "failures": []
+      }
+    },
+    {
+      "check": "html_unique_anchors",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "check": "html_local_links_and_anchors",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "check": "html_visible_source_text",
+      "status": "PASS",
+      "detail": {
+        "source_bodies": 38,
+        "failures": []
+      }
+    },
+    {
+      "check": "html_current_source_hash",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "markdown_local_links",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "check": "complete_diff_matches_source",
+      "status": "PASS",
+      "detail": ""
+    }
+  ],
+  "counts": {
+    "checks": 42,
+    "html_files": 5,
+    "source_slices": 89,
+    "visible_bodies": 38
+  },
+  "not_validated": [
+    "business implementation",
+    "Fedora workload",
+    "BFF/Model RPC",
+    "KFP/Trainer deployment",
+    "concurrency correctness",
+    "Inference",
+    "GPU"
+  ]
+}

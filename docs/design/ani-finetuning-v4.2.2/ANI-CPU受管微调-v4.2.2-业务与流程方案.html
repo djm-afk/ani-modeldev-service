@@ -1,0 +1,855 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="ani-spec-sha256" content="5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9"><meta name="ani-document-scope" content="DOCUMENT_ONLY"><title>ANI v4.2.2 · 业务与流程方案</title><style>
+:root{--bg:#edf1f5;--paper:#fff;--ink:#203044;--muted:#63738a;--line:#dbe3eb;--brand:#16354a;--accent:#097c7d;--soft:#eaf6f5;--warn:#855c15;--code:#122534;--font:16px}
+*{box-sizing:border-box}[hidden]{display:none!important}html{scroll-behavior:smooth;scroll-padding-top:94px}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans CJK SC","Microsoft YaHei",sans-serif;font-size:var(--font);line-height:1.85}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}button,input{font:inherit}button{cursor:pointer}.top{position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;display:flex;gap:18px;align-items:center;justify-content:space-between;padding:13px 24px;box-shadow:0 1px 10px #0002}.top a{color:#cbe9e7}.brand{font-size:14px;font-weight:700;letter-spacing:.04em;white-space:nowrap}.toplinks{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}.top button{border:1px solid #a5bcc755;border-radius:6px;background:transparent;color:#fff;padding:3px 9px}.layout{max-width:1540px;margin:auto;display:grid;grid-template-columns:280px minmax(0,1fr);gap:26px;padding:28px 26px 64px}.sidebar{position:sticky;top:91px;align-self:start;max-height:calc(100vh - 113px);overflow:auto;padding:3px 3px 20px}.sidebar h2{font-size:13px;color:var(--muted);letter-spacing:.1em;margin:0 10px 12px}.search{width:100%;padding:9px 12px;border:1px solid #bbcbd7;border-radius:8px;background:#fff;outline-offset:2px;font-size:14px}.count{font-size:12px;color:var(--muted);padding:5px 10px 12px}.navlink{display:flex;gap:9px;padding:8px 10px;border-radius:7px;color:#415469;font-size:13px;line-height:1.5;margin-bottom:3px}.navlink .num{flex-shrink:0;color:var(--accent);font-weight:700;min-width:32px}.navlink:hover,.navlink.active{background:#dceeea;text-decoration:none;color:#113b46}.sidebottom{margin:22px 10px 0;border-top:1px solid var(--line);padding-top:16px;font-size:12px;color:var(--muted)}.sidebottom a{display:block;margin-top:8px}.main{min-width:0}.hero{background:linear-gradient(115deg,#16354a,#245361);color:white;padding:42px 46px;border-radius:14px;margin-bottom:22px}.eyebrow{font-size:12px;letter-spacing:.17em;font-weight:700;color:#acdcd6;margin:0 0 12px}.hero h1{font-size:30px;line-height:1.5;margin:0 0 16px;letter-spacing:.01em}.hero p{font-size:15px;color:#d8e7ef;max-width:850px;margin:0 0 18px}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid #9bc1cc55;border-radius:20px;padding:3px 11px;font-size:12px;color:#deeeef}.notice{background:#fff6e5;border-left:4px solid #d3a552;border-radius:7px;padding:16px 20px;margin-bottom:20px;color:#644b26;font-size:14px}.chapter{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:30px 38px;margin-bottom:22px;box-shadow:0 2px 5px #17354a04;overflow-wrap:anywhere;scroll-margin-top:91px}.chapter h2{font-size:24px;line-height:1.5;margin:0 0 22px;color:var(--brand)}.chapter h2 small{display:block;color:var(--accent);font-size:12px;letter-spacing:.12em;margin-bottom:7px}.chapter h3{font-size:18px;line-height:1.55;color:#245361;margin:30px 0 14px;border-bottom:1px solid #e6edf0;padding-bottom:9px}.chapter p{margin:12px 0}.chapter p:first-child{margin-top:0}.chapter strong{font-weight:700;color:#143c4b}.chapter li{margin:5px 0}.chapter ul,.chapter ol{padding-left:1.6em}blockquote{margin:18px 0;border-left:3px solid var(--accent);padding:3px 16px;background:#f0f7f6}code{font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#eaf0f4;color:#23415a;border-radius:4px;padding:1px 5px;font-size:.87em;word-break:break-word}.codewrap{position:relative;background:var(--code);border-radius:8px;margin:18px 0;overflow:hidden}.codehead{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;border-bottom:1px solid #ffffff1c;color:#c5d9dd;font-size:11px;letter-spacing:.08em}.copy{background:transparent;border:1px solid #aac1cc66;color:#d5e6eb;border-radius:4px;padding:1px 8px;font-size:12px}.codewrap pre{overflow:auto;margin:0;padding:18px 19px;line-height:1.75}.codewrap code{background:transparent;color:#e1edf0;padding:0;border-radius:0;word-break:normal;white-space:pre;font-size:13px}.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:18px 0}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.75}th,td{padding:11px 13px;text-align:left;vertical-align:top;border-right:1px solid #e4ebef;border-bottom:1px solid #e4ebef}th:last-child,td:last-child{border-right:0}tr:last-child td{border-bottom:0}th{background:#eaf2f4;color:#1a4054;font-weight:700}tbody tr:nth-child(even){background:#f8fafb}td:first-child{min-width:95px}td code{font-size:12px}.endlinks{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);margin-top:27px;padding-top:15px;font-size:13px}.srcmark{font-size:12px;font-weight:600;padding:0 3px}.footer{padding:6px 10px;color:var(--muted);font-size:12px}.empty{display:none;background:white;padding:24px;border-radius:10px}.indexwrap{max-width:1120px;margin:35px auto;padding:0 22px 60px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px}.card h2{margin:8px 0;font-size:24px;color:var(--brand)}.card .tag{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.14em}.card p{font-size:15px}.btn{display:inline-block;background:var(--accent);color:#fff;border-radius:7px;padding:8px 17px;margin-top:9px}.btn:hover{background:#076c6d;text-decoration:none}.downloads{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0}.downloads a{background:white;border:1px solid #bdced7;border-radius:7px;padding:10px 16px;font-size:14px}.indexnote{background:#fff;padding:24px 30px;border:1px solid var(--line);border-radius:12px;margin-top:22px}.indexnote h2{margin-top:0;font-size:20px}.menuBtn{display:none}
+@media(min-width:1500px){.main{max-width:1120px}.hero h1{font-size:34px}}
+@media(max-width:1050px){.layout{grid-template-columns:230px minmax(0,1fr);gap:18px;padding:20px 18px}.chapter{padding:26px}.hero{padding:32px}.hero h1{font-size:27px}}
+@media(max-width:760px){:root{--font:15px}.top{padding:10px 14px;gap:8px;align-items:flex-start}.brand{font-size:12px}.toplinks{gap:8px;font-size:11px;justify-content:flex-end}.menuBtn{display:inline-block}.layout{display:block;padding:15px 12px 38px}.sidebar{display:none;position:static;max-height:none;padding:12px;background:#f1f6f8;border:1px solid var(--line);border-radius:9px;margin-bottom:16px}.sidebar.open{display:block}.chapter{padding:21px 18px}.chapter h2{font-size:21px}.chapter h3{font-size:17px}.hero{padding:25px 23px;border-radius:11px}.hero h1{font-size:25px}.hero p{font-size:14px}.tablewrap table{min-width:610px}table{font-size:13px}.codewrap pre{padding:15px}.codewrap code{font-size:12px}.cards{grid-template-columns:1fr}.indexwrap{margin-top:18px;padding:0 14px}.indexnote{padding:22px}.notice{padding:12px 16px}.toplinks .shortHide{display:none}}
+@media print{.chapter[hidden]{display:block!important}html{scroll-padding-top:0}body{background:white;font-size:10.5pt;line-height:1.65}.top,.sidebar,.copy,.endlinks,.empty,.footer{display:none!important}.layout{display:block;padding:0;max-width:none}.hero{background:white;color:#193448;padding:0 0 20px;border-radius:0;border-bottom:2px solid #193448;break-after:avoid}.hero p,.eyebrow{color:#456}.chip{color:#456;border:1px solid #ccc}.hero h1{font-size:24pt}.chapter{display:block!important;box-shadow:none;border:0;border-radius:0;padding:15px 0;margin:0}.chapter h2{font-size:17pt;break-after:avoid}.chapter h3{font-size:13pt;break-after:avoid}table{font-size:9pt}.tablewrap{overflow:visible}th,td{padding:6px 8px}thead{display:table-header-group}tr{break-inside:avoid}.codewrap{background:#f3f5f6;border:1px solid #ccc;break-inside:avoid}.codewrap code{color:#123;white-space:pre-wrap;overflow-wrap:anywhere;font-size:9pt}.codehead{color:#456;border-color:#ddd}.notice{background:#fafafa;color:#234}.srcmark{color:#345}a{color:#234;text-decoration:none}}
+
+/* v4.1: stable wrapping, nested sections and small status panel. */
+.hero h1{line-height:1.22}.chapter h3,.chapter h4{scroll-margin-top:112px}.chapter h4{font-size:1.03em;color:#355065;margin:1.6em 0 .7em}.chapter p,.chapter li,.chapter td,.chapter th{overflow-wrap:anywhere}.chapter .source-body>p{margin:1em 0}.document-meta{font-size:12px;color:var(--muted);word-break:break-all}.docbadge{display:inline-block;border:1px solid var(--line);background:var(--soft);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700}.auditlink{font-weight:700}.intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.intro-card{background:white;border:1px solid var(--line);border-radius:10px;padding:24px}.intro-card h2{font-size:1.25em;margin:0 0 9px}.intro-card p{margin:8px 0}.task-row{padding:14px 0;border-bottom:1px solid var(--line)}.task-row:last-child{border-bottom:none}body code{overflow-wrap:anywhere}pre{white-space:pre-wrap;word-break:break-word} .hub-layout{max-width:1200px;margin:0 auto;padding:28px 24px 64px}.hub-layout .hero{margin-bottom:22px}.hub-layout .chapter{margin-top:22px}.hub-layout .hero p{max-width:900px}@media(max-width:700px){.intro-grid{grid-template-columns:1fr}.hub-layout{padding:16px 12px 48px}.intro-card{padding:18px}.top{gap:8px}.brand{font-size:12px}.toplinks{gap:7px}}
+@media print{.chapter[hidden]{display:block!important}.empty,.top,.sidebar{display:none!important}.tablewrap{overflow:visible!important} .layout{display:block!important}.hero{break-after:avoid}.chapter{break-inside:auto!important}.chapter h2,.chapter h3,.chapter h4{break-after:avoid}pre{white-space:pre-wrap}.hub-layout{padding:0}.intro-grid{display:block}.intro-card{break-inside:avoid}}
+</style></head><body><header class="top"><div class="brand"><a href="index.html">ANI / MODEL DEVELOPMENT</a></div><div class="toplinks"><a href="ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html">当前开工</a><a href="ANI-CPU受管微调-v4.2.2-业务与流程方案.html">业务方案</a><a href="ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html">开发说明</a><a class="shortHide" href="ANI-CPU受管微调-v4.2.2-变更与自复核.html">变更复核</a><button class="menuBtn" id="menu" aria-label="展开目录">目录</button><button id="fontMinus" aria-label="减小正文字号">A−</button><button id="fontPlus" aria-label="增大正文字号">A+</button><button id="print">打印</button></div></header><div class="layout"><aside class="sidebar"><h2>阅读目录 / 12节</h2><input id="search" class="search" placeholder="筛选本册章节…" aria-label="按关键词筛选章节"><div class="count" id="count"></div><a class="navlink" data-chapter="A01" href="#A01"><span class="num">A01</span><span>术语：先分清对象、动作和成功事实</span></a><a class="navlink" data-chapter="A02" href="#A02"><span class="num">A02</span><span>范围与明确决定：本次交付什么、不交付什么</span></a><a class="navlink" data-chapter="A03" href="#A03"><span class="num">A03</span><span>最终业务链与当前先做的执行主链</span></a><a class="navlink" data-chapter="A04" href="#A04"><span class="num">A04</span><span>职责与统一服务间调用：不另造协议</span></a><a class="navlink" data-chapter="A05" href="#A05"><span class="num">A05</span><span>输入与基模：一种结构、固定内容、不同批准条件</span></a><a class="navlink" data-chapter="A06" href="#A06"><span class="num">A06</span><span>模型目标、对象身份与同名规则</span></a><a class="navlink" data-chapter="A07" href="#A07"><span class="num">A07</span><span>参数规则、可调范围与旧合同兼容</span></a><a class="navlink" data-chapter="A08" href="#A08"><span class="num">A08</span><span>每一步完成什么：训练、Task 和 Run 分层判断</span></a><a class="navlink" data-chapter="A09" href="#A09"><span class="num">A09</span><span>Model 未就绪时如何开发，何时才可启用</span></a><a class="navlink" data-chapter="A10" href="#A10"><span class="num">A10</span><span>对外结果：复用事实投影，不创建第二个状态引擎</span></a><a class="navlink" data-chapter="A11" href="#A11"><span class="num">A11</span><span>正常关闭、异常停止与产物保留</span></a><a class="navlink" data-chapter="A12" href="#A12"><span class="num">A12</span><span>主流程优先的开工顺序与阶段声明</span></a><a class="navlink" href="#sources"><span class="num">SRC</span><span>来源与边界</span></a><div class="sidebottom">微调v4.2.2 ≠ 平台v0.4<br>2026-10-14 · DESIGN_UPDATED<br><a href="index.html">完整包入口</a><a href="spec.md">唯一权威正文</a><a href="reference/spec-v4.2.1.md">v4.2.1原件</a></div></aside><main class="main"><div class="hero"><p class="eyebrow">CORE FLOW FIRST / GOVERNED INTEGRATION LATER</p><h1>CPU 受管微调 v4.2.2<br>业务与流程方案</h1><p>保留最终BFF业务架构，先把执行与产物做实；阶段完成、单次执行成功与整版验收各自判断。</p><div class="chips"><span class="chip">先执行与产物主链</span><span class="chip">BFF／前端后接</span><span class="chip">Model分期</span><span class="chip">GPU独立准备</span></div></div><div class="notice"><strong>当前不等真实BFF：</strong>合同先定，M3-A验证真实ModelDev／KFP／Trainer／S3和停止关闭；M3-B补真实BFF／前端。后置事项仍属最终验收，不用夹具冒充上游授权或Model READY。登记具体写派发与Stop的共同仲裁见D09.3。</div><div class="document-meta">正文 SHA256：5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9</div><div class="empty" id="empty">没有匹配章节。<button id="clear">清除筛选</button></div><section class="chapter" data-chapter="A01" id="A01"><h2><small>A01 / v4.2.2</small>术语：先分清对象、动作和成功事实</h2><div class="source-body" data-source-ref="A01" data-source-sha256="0cb728a2328e72c44f809cf16d33be09008667a540a7d0e6e819721345ca97e8"><p>本方案编号是 <strong>微调方案 v4.2.2</strong>，平台范围基线仍是 <strong>模型研发平台 v0.4</strong>。直接底稿是v4.2.1，保留既定关闭/指标/完成层级、参数链和GPU后续边界；本轮调整开发与验收顺序，补齐登记派发仲裁，不发布任何运行能力。文档版本、程序参数合同版本、Release ID和用户执行参数仍是不同对象。<a class="srcmark" href="#source-s0">S0</a><a class="srcmark" href="#source-s1">S1</a><a class="srcmark" href="#source-s7">S7</a><a class="srcmark" href="#source-s8">S8</a><a class="srcmark" href="#source-s11">S11</a><a class="srcmark" href="#source-s12">S12</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>术语</th>
+<th>本文中的唯一含义</th>
+<th>不能混同为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>通用训练 / CPU-P01</td>
+<td>已有单节点 CPU MLP 训练主干及其受理、发布、查询、停止机制</td>
+<td>所有框架、所有拓扑均已支持</td>
+</tr>
+<tr>
+<td>本次微调</td>
+<td>固定基模上的 CPU、单节点单进程 LoRA SFT</td>
+<td>预训练、QLoRA、多机训练或效果评测</td>
+</tr>
+<tr>
+<td>Alpaca</td>
+<td>本次采用的指令样本结构；首期只接受 instruction/input/output 三字段子集</td>
+<td>JSON/CSV 这种文件编码格式</td>
+</tr>
+<tr>
+<td>JSON</td>
+<td>UTF-8 文件编码与结构载体；本期为一个数组</td>
+<td>ShareGPT 或 Alpaca 的业务语义</td>
+</tr>
+<tr>
+<td>数据 READY</td>
+<td>固定文件已授权、已验证，内容与登记事实一致，可供受理选择</td>
+<td>已经训练、质量评分通过或效果良好</td>
+</tr>
+<tr>
+<td>基模版本</td>
+<td>开始训练时读取的确切 ModelVersion 和固定权重</td>
+<td>本次结果要存入的目标模型</td>
+</tr>
+<tr>
+<td>目标模型</td>
+<td>自有 Model 中组织多个输出版本的模型容器</td>
+<td>基模、某一个模型版本、Kubernetes 容器</td>
+</tr>
+<tr>
+<td>模型 UUID / 版本 UUID</td>
+<td>分别标识模型容器与其中一个具体版本</td>
+<td>一个对象被要求重复生成几套身份</td>
+</tr>
+<tr>
+<td>外部 model_id</td>
+<td>Model 已有的对外业务标识，可能不是 UUID；仅在 adapter 边界解释</td>
+<td>一律等同于内部模型 UUID</td>
+</tr>
+<tr>
+<td>execution_id</td>
+<td>一次业务执行；关联原受理、输入、实际流程与结果</td>
+<td>ModelVersion ID、KFP Run ID</td>
+</tr>
+<tr>
+<td>预设 / Release</td>
+<td>预设是业务入口；Release 是平台锁定并验证的实现与配置组合</td>
+<td>用户自行选择的功能套餐版本</td>
+</tr>
+<tr>
+<td>PipelineVersion / Run</td>
+<td>前者是 KFP 流程实现版本；后者是该流程的一次执行</td>
+<td>Trainer 作业</td>
+</tr>
+<tr>
+<td>KFP Task / 组件 Pod</td>
+<td>流程中某一步的执行及其容器；本次 export、verify 在此运行</td>
+<td>独立微服务或额外 TrainJob</td>
+</tr>
+<tr>
+<td>Trainer / TrainJob</td>
+<td>独立训练控制器及其一次作业资源；本次只有训练阶段使用一个 TrainJob</td>
+<td>KFP 的所有步骤或第二套业务编排</td>
+</tr>
+<tr>
+<td>Adapter / merged</td>
+<td>LoRA 增量权重 / 合并后的完整 HF 模型文件集</td>
+<td>两者都能直接按同一种推理接口使用</td>
+</tr>
+<tr>
+<td>verify</td>
+<td>在独立进程加载合并模型并做固定短推理的可用性检查</td>
+<td>模型效果、准确率或业务质量评测</td>
+</tr>
+<tr>
+<td>publication / PUBLISHED</td>
+<td>ModelDev 确认真实文件已经持久发布到受管对象存储的事实</td>
+<td>Model 已登记 READY</td>
+</tr>
+<tr>
+<td>registration / READY</td>
+<td>本次产物按原目标登记为确切 ModelVersion，字段核对通过</td>
+<td>计算已经关闭、原 KFP Run 被改写为成功</td>
+</tr>
+<tr>
+<td>close / CLOSED</td>
+<td>停止创建并确认本次实际计算已结束</td>
+<td>删除 PVC、删除模型、登记成功</td>
+</tr>
+<tr>
+<td>启动已受理 / 实际已启动</td>
+<td>前者是原步骤首次启动通过仲裁并已持久保存；后者是原Pod实际派生子进程的观察事实</td>
+<td>数据库提交已经原子地启动了进程</td>
+</tr>
+<tr>
+<td>单次执行成功完成</td>
+<td>本次训练、导出、验证、发布、登记和关闭满足A10，且按停止/恢复规则展示</td>
+<td>单个Run通过就代表本方案全部验收通过</td>
+</tr>
+<tr>
+<td>本方案最终验收完成</td>
+<td>D11规定的本版用例、相关回归、Model真实接入、独立Inference调用和交接完成</td>
+<td>每次任务必须自动部署推理服务</td>
+</tr>
+<tr>
+<td>合同测试 / 真实联调</td>
+<td>测试边界结构和错误语义 / 实际双方服务、身份与持久化链路验证</td>
+<td>替身通过即真实依赖通过</td>
+</tr>
+<tr>
+<td>公共请求合同 / 程序参数合同</td>
+<td>前者定义结构与规范编码；后者定义具体程序支持字段、语义、硬边界及执行映射</td>
+<td>用首个样例数值永久约束所有训练程序</td>
+</tr>
+<tr>
+<td>Release参数规则</td>
+<td>当前批准的默认值、允许值/范围和固定设置；随不可变Release冻结</td>
+<td>最新镜像中随时变化的默认值</td>
+</tr>
+<tr>
+<td>显式参数 / 解析后参数</td>
+<td>用户实际提供的字段及存在性 / 按本次Release补默认值后的完整结果</td>
+<td>两份可以各自编辑的权威配置</td>
+</tr>
+<tr>
+<td>有效配置展示</td>
+<td>创建时看当前可提交规则；执行详情看原快照；运行结果看实际事实</td>
+<td>用当前预设重建旧任务的配置</td>
+</tr>
+<tr>
+<td>固定配方验证 / 参数链验收</td>
+<td>前者只证基准点；后者证明批准的非默认值确实进入程序</td>
+<td>基准点通过即批准所有字段或连续范围</td>
+</tr>
+<tr>
+<td>主链阶段通过</td>
+<td>按D11.6完成真实执行与产物、参数实际消费及必要停止/关闭检查的阶段成果</td>
+<td>真实BFF授权已通过、Model必已READY或整版已验收</td>
+</tr>
+<tr>
+<td>隔离测试驱动 / 测试来件</td>
+<td>在隔离测试装配中替代上游来件，复用正式应用用例与持久化；边界显式记录</td>
+<td>正式Gov授权事实、生产直连入口或管理员改库</td>
+</tr>
+<tr>
+<td>登记意图 / 具体派发在途</td>
+<td>前者固定交付目标；后者是某一原业务写操作已通过派发仲裁的记录</td>
+<td>一份意图自动批准后续所有写操作</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>“声明了一个事实”“取得了真实证明”“对外展示了一个标签”是三件事。</strong>数据、训练、发布、登记和关闭分别判断；UI 或 API 的整体标签只解释这些事实，不成为第二份权威状态。</p>
+</div><div class="endlinks"><a href="index.html">← 上一节</a><a href="#A02">下一节 →</a></div></section><section class="chapter" data-chapter="A02" id="A02"><h2><small>A02 / v4.2.2</small>范围与明确决定：本次交付什么、不交付什么</h2><div class="source-body" data-source-ref="A02" data-source-sha256="3edaf8cbe7bf4a6c907eda1cdf639ca2b35e8a747264533eb4cf3878dd5de417"><div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>v4.2.2 继承的最终范围与当前执行顺序</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>业务入口</td>
+<td>最终仍经现有BFF/Governance；真实BFF/前端联调后置，不作为当前执行主链的前置；不增加生产旁路</td>
+</tr>
+<tr>
+<td>新服务数量</td>
+<td>不新增常驻服务；在已有 ani-modeldev-service 及相关领域服务内增量实现</td>
+</tr>
+<tr>
+<td>训练方式</td>
+<td>CPU、单节点单进程、LoRA SFT；一个 Trainer TrainJob</td>
+</tr>
+<tr>
+<td>基模</td>
+<td>本租户已批准且受保护的 Qwen2.5-0.5B-Instruct 固定版本；不是 Qwen2-0.5B，也不是任意最新版本</td>
+</tr>
+<tr>
+<td>文件输入</td>
+<td><strong>仅受管 S3 中的 Alpaca JSON 数组</strong>，原文件 ≤32 MiB；不交付浏览器/本机上传</td>
+</tr>
+<tr>
+<td>数据结构</td>
+<td>三个必填字符串 instruction/input/output；instruction/output 非空，input 可为空字符串；不接受其他字段</td>
+</tr>
+<tr>
+<td>样本规模</td>
+<td>首个启用预设要求64条；这是预设条件，不是所有 Alpaca 导入的全局限制</td>
+</tr>
+<tr>
+<td>当前请求可输入项</td>
+<td>当前微调参数合同只接受learning_rate、max_steps；规则归当前合同/Release，不是FINETUNING永久字段上限</td>
+</tr>
+<tr>
+<td>继承的参数交付</td>
+<td>先完成合同、解析、快照及实际程序消费，至少一组非默认真实验证；当前规则查询/真实BFF/前端贯通随后完成，仍属最终范围</td>
+</tr>
+<tr>
+<td>更多参数阶段</td>
+<td>batch、梯度累积、cutoff、LoRA rank/alpha等列为下一批候选，必须另行批准字段/组合/预算后启用；本包不提前接受或静默忽略这些字段</td>
+</tr>
+<tr>
+<td>数据暂缓</td>
+<td>指令型 CSV、JSONL、ShareGPT、自定义字段映射、history/system/tools 扩展</td>
+</tr>
+<tr>
+<td>原通用训练 CSV</td>
+<td>保持 CPU-P01 的数值特征 CSV 原语义；不因微调增加而改变</td>
+</tr>
+<tr>
+<td>模型交付</td>
+<td>合并 HF 未压缩 tar + 独立 Adapter 工件 + 必要运行报告；目标为自有 Model 中的模型版本</td>
+</tr>
+<tr>
+<td>Model 开发顺序</td>
+<td>先提出需求并留调用接缝，提供方正式就绪后再接真实 adapter；不能以此宣布完整微调已交付</td>
+</tr>
+<tr>
+<td>状态和关闭</td>
+<td>复用 CPU-P01 公共机制；只增加微调阶段、文件和登记事实</td>
+</tr>
+<tr>
+<td>推理验收</td>
+<td>复用现有 Inference/KServe 路径独立使用本次新包；不在训练流水线自动上线服务</td>
+</tr>
+<tr>
+<td>页面与管理</td>
+<td>规则/查询合同先定，真实BFF和现有表单/详情在后续联调阶段完成；不作为主链验收前置，不新建工作台/表单引擎/发布管理产品</td>
+</tr>
+<tr>
+<td>不在本次</td>
+<td>GPU/QLoRA、分布式、任意脚本、清洗、效果评测、Hub、自动调参、Direct 双后端、多个 TrainJob、通用 grant/登记/阶段调度系统</td>
+</tr>
+</tbody>
+</table></div>
+<p>继续保留对v3的收敛：CSV暂缓、Model仅阻塞其真实用途与最终验收，一个TrainJob及正常关闭语义不变。<a class="srcmark" href="#source-s0">S0</a> 参数与展示是v4.2已经明确的范围增量。<a class="srcmark" href="#source-s9">S9</a> v4.2.2仅把真实BFF/前端排到主链之后：<strong>后置不是DEFERRED，不从本版删除，也不把接口合同推迟到最后再设计。</strong><a class="srcmark" href="#source-s12">S12</a></p>
+<p><strong>不把“Alpaca 三字段子集”说成 Alpaca 的全部能力。</strong>本期拒绝尚未支持的内容，不能接受后再静默丢弃。暂缓能力没有隐藏开关，不为了将来支持先建立通用插件框架。</p>
+<h3 id="A02-2-1">2.1 GPU后续接入：本轮记录接缝，不并入正式功能</h3>
+<p>当前业务仍为CPU微调。<strong>GPU正式资源选择、Gov占额、ACC的ModelDev owner接入、GPU训练和退额，作为后续独立批次交付，不进入本版产品接口或完成条件。</strong>通用训练与微调将共用执行资源接入，GPU不作为学习率等算法参数塞入<code>finetuning</code>。<a class="srcmark" href="#source-s10">S10</a></p>
+<p>W1/W3在现有工作中核对并记录资源解析、快照、Trainer渲染和计算关闭的接入位置；若结构已经足够，<strong>无需为“留接缝”修改生产代码</strong>。不提前发布GPU Proto/数据库字段，不把<code>CPUResources</code>一律改名，不给CPU执行补零值GPU或假charge，不建设资源插件框架。</p>
+<p>Gov/ACC合同差异核对、Fedora渲染检查及具备条件时的隔离GPU验证可以独立并行。<strong>它们不构成W0–W6开工或本版验收的前置，也不能替代任何FT/PA/MR证据。</strong>缺GPU、缺设备插件或未完成owner注册，只影响相应GPU准备项；当前CPU路径仍严格拒绝GPU。范围和分工见D10.2、D11.5、D12.5。</p>
+</div><div class="endlinks"><a href="#A01">← 上一节</a><a href="#A03">下一节 →</a></div></section><section class="chapter" data-chapter="A03" id="A03"><h2><small>A03 / v4.2.2</small>最终业务链与当前先做的执行主链</h2><div class="source-body" data-source-ref="A03" data-source-sha256="d3ba2555d8cb08f55804be0c9a7579e8423ba5e5b18e30b0c07930e1721ed5f7"><h3 id="A03-3-1">3.1 最终用户业务链（架构不变）</h3>
+<p>下图是最终集成目标，不是要求所有步骤的外部依赖在开工前同时就绪。</p>
+<div class="codewrap"><div class="codehead"><span>TEXT</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-text">管理员把 JSON 放到已批准 S3 范围
+  → 受控导入：固定对象、校验内容、登记 READY
+
+用户经现有 BFF 提交微调
+  → 当前用户/租户/权限校验
+  → 原键重放检查；新请求解析并冻结 Release、输入、基模、目标
+  → 按本次合同/Release解析默认值与显式值，冻结实际配置
+  → Gov 持久受理与可靠投递
+  → ModelDev 持久 inbox，返回受理 ACK
+  → 提交并绑定权威 KFP Run
+      → workspace-name / CreatePVC
+      → prepare：原 JSON、固定基模、安全解包、准备清单
+      → train-wait：由 ModelDev 创建并观察唯一 TrainJob
+      → export：独立 KFP Pod 合并本次 Adapter
+      → verify：独立 KFP Pod 加载 merged 并短推理
+      → collect：检查文件全集及打包选择
+      → publish：上传候选文件和主模型 tar
+      → register：先独立确认 publication，再调用 Model 登记
+      → close：提交 NATURAL_TERMINAL，取得有效持久收据后返回
+  → KFP 自然完成
+  → 独立 owner/CloseWorker 确认计算结束，记录 CLOSED
+
+本方案另行执行验收：经授权从 Model 取得本次新包，无训练 PVC，使用现有 Inference 实际调用
+</code></pre></div>
+<p><strong>正常业务链不能由管理员逐次手工串接。</strong>管理员负责预设、镜像、基模、数据导入和例外处置；每次正常提交后的计算、发布、登记与关闭由程序自动执行。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>边界</th>
+<th>能证明什么</th>
+<th>不能宣布什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model 未正式就绪时的开发/分段验证</td>
+<td>真实负载、模块、发布与关闭及Model消费者合同可逐项验证</td>
+<td>已有可信Model登记；已完成用户完整微调闭环</td>
+</tr>
+<tr>
+<td>当前执行与产物主链</td>
+<td>在隔离装配中复用正式ModelDev持久化、真实KFP/Trainer及原Pipeline；实际训练/export/verify、发布确认、产物取回和关闭通过</td>
+<td>上游真实BFF/前端、未接入的Model或整版验收已通过</td>
+</tr>
+<tr>
+<td>单次执行成功完成</td>
+<td>真实训练/导出/verify，固定远端publication，原ModelVersion READY且一致，最终CLOSED；按A10处理停止与恢复历史</td>
+<td>本方案已全部验收，或用户已自动获得一个新推理服务</td>
+</tr>
+<tr>
+<td>本方案最终验收完成</td>
+<td>本版应交付用例、相关回归与交接完成；FT29/C23从训练卷外独立使用本次新包真实调用</td>
+<td>未做的CSV/上传/多框架/GPU同时已支持</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Model未接入时不增加永久的“只训练不登记”公共微调模式。</strong>公共FINETUNING完整能力保持未启用。内部主链验证可以在发布确认后观察真实的依赖未接入错误和计算关闭，记录“执行与产物主链通过、Model登记未接入”；不能把该执行改为A10六项齐备的业务成功。已受理后的Model临时故障继续走原失败/恢复路径。</p>
+<h3 id="A03-3-2">3.2 当前先验什么（不是第二条生产流程）</h3>
+<div class="codewrap"><div class="codehead"><span>TEXT</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-text">隔离测试驱动：正式codec/程序合同 + 固定候选执行来件
+  → ModelDev正式应用用例和真实数据库持久记录
+  → 原KFP Pipeline → 唯一Trainer TrainJob → 真实LoRA
+  → export → verify → collect → publish
+  → register前半段：真实确认publication
+  → Model可用则真实登记；未接入则明确不可用，不返回假READY
+  → 复用正常或失败关闭路径，确认实际计算关闭
+  → 不挂训练卷，从持久对象取回并校验真实产物
+</code></pre></div>
+<p>上游测试来件不代表Gov已经认证/授权，也不冒充Gov持久账本或生效指针。只有明确声明的上游/外部边界可以替身；原工作负载身份、权威Run绑定、真实写者和对象核验不能用假成功代替。具体测试装配、数据/基模来源和证据分层见D12.6，当前阶段完成清单见D11.6。真实BFF/前端及FT29独立Inference留在随后阶段；原合同应现在固定。</p>
+</div><div class="endlinks"><a href="#A02">← 上一节</a><a href="#A04">下一节 →</a></div></section><section class="chapter" data-chapter="A04" id="A04"><h2><small>A04 / v4.2.2</small>职责与统一服务间调用：不另造协议</h2><div class="source-body" data-source-ref="A04" data-source-sha256="08ee24c252c736950c30e7817853571925fbec80f3e30b30b0ea427dfe3eed77"><p>**Gov 已固定的 <code>docs/contracts/service-to-service-calls.md</code> 是内部业务 RPC 的通用规范。**本文只填写微调的具体调用关系与领域内容，不重新定义身份、委托、传输、重试或授权平台。<a class="srcmark" href="#source-s2">S2</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>责任方</th>
+<th>负责</th>
+<th>不负责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Governance/BFF</td>
+<td>当前用户认证；租户映射；模块/action/数据范围；原意图重放；Release 绑定；持久受理与投递</td>
+<td>搬运权重、推进 KFP DAG、直接写 ModelDev/Model 数据库</td>
+</tr>
+<tr>
+<td>ModelDev</td>
+<td>本域校验与持久事实；权威 Run；唯一 TrainJob owner；准备/产物/Model adapter；执行观察与关闭</td>
+<td>重新实现 IAM、另建工作流引擎或登记中心</td>
+</tr>
+<tr>
+<td>KFP</td>
+<td>正常步骤依赖、Task 执行、原始 Run/Task 与产物关系</td>
+<td>决定用户权限或作为 Model 数据库写入者</td>
+</tr>
+<tr>
+<td>Trainer</td>
+<td>单 TrainJob 的实际训练工作负载</td>
+<td>承担本次 export/verify，或替代 KFP 的完整流程</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>基模/目标业务权威；固定模型引用；新建/版本登记；重放查证、finalization、删除保护</td>
+<td>从普通 body actor/tenant 直接推断可信用户授权</td>
+</tr>
+<tr>
+<td>Installer/环境负责人</td>
+<td>既定版本、Runtime、CPU池、存储、证书、网络和运行身份</td>
+<td>代替每次业务创建 TrainJob 或伪造环境/业务通过</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="A04-4-1">4.1 本次仅登记这些关系</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>调用</th>
+<th>目的</th>
+<th>信任来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gov → ModelDev</td>
+<td>预检、持久命令、当前查询/恢复</td>
+<td>Gov 已认证主体及公布的调用合同</td>
+</tr>
+<tr>
+<td>ModelDev → Model：受理前</td>
+<td>只读解析固定基模、目标与名称冲突</td>
+<td>已验证 Gov 委托及其范围；不要求尚未形成的 execution spec</td>
+</tr>
+<tr>
+<td>ModelDev → Model：受理后</td>
+<td>读取已批准版本；按原产物/原目标登记；查证原操作</td>
+<td>可信受理的持久事实；以 ModelDev 服务身份调用</td>
+</tr>
+<tr>
+<td>用户恢复 → Gov → ModelDev → Model</td>
+<td>原登记的明确恢复</td>
+<td>当前权限 + 原持久登记事实；不能更换目标/内容</td>
+</tr>
+</tbody>
+</table></div>
+<p>每条实际关系补齐“调用方/接收方精确服务身份、完整 RPC、允许用途、租户来源、资源范围、幂等键、超时”。复用接收方公布的固定 API 模块；不复制生成代码、不跨仓导入 internal、不用本地 replace 冒充正式发布。参考代码不是本期新建共享运行时的理由。<a class="srcmark" href="#source-s2">S2</a></p>
+<h3 id="A04-4-2">4.2 两类既有执行协议不要混淆</h3>
+<p>ModelDev → KFP 的受保护可信身份头，以及 KFP 受管步骤 → ModelDev 的既有 workload/TokenReview 证明，是已有执行接入边界；不是让训练 Pod 冒充 Gov。其既有 listener/验证实现仅按新增步骤精确适配，不以本次微调名义重做全平台证书或入口迁移。</p>
+<p>ModelDev → Model 等内部业务 RPC 必须按 Gov 规范接入已有业务 mTLS listener。KFP 组件不获取 Model 管理证书，训练程序不获取控制面凭据。缺依赖时明确未启用或失败，不换普通 listener、不回退明文、不跳过 TLS。</p>
+</div><div class="endlinks"><a href="#A03">← 上一节</a><a href="#A05">下一节 →</a></div></section><section class="chapter" data-chapter="A05" id="A05"><h2><small>A05 / v4.2.2</small>输入与基模：一种结构、固定内容、不同批准条件</h2><div class="source-body" data-source-ref="A05" data-source-sha256="98553da1ff4dc9ea3ed6022c9332d4caec7108e9a7771dad3ae4ec0738a5a0af"><h3 id="A05-5-1">5.1 本版唯一微调输入</h3>
+<p>文件是 <strong>UTF-8、无 BOM 的一个 JSON 数组</strong>。数组非空；每个元素必须是对象，且恰好有 instruction、input、output 三个键，值均为字符串。instruction/output 长度至少为1，input 可以为 <code>""</code>。不裁剪、改写或过滤字符串；本版不额外做空白文本质量判定。重复键、未知键、null、非字符串、无效 UTF-8、JSONL、CSV、消息列表均拒绝。</p>
+<div class="codewrap"><div class="codehead"><span>JSON</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-json">[
+  {"instruction":"概括下面的内容。","input":"上午整理数据，下午完成训练测试。","output":"今天完成了数据整理和训练测试。"},
+  {"instruction":"写一句欢迎语。","input":"","output":"欢迎加入团队。"}
+]
+</code></pre></div>
+<p>上例只说明结构，不是64条验收数据。首个微调 Release 对 READY 数据额外要求 <code>row_count=64</code>；导入器负责文件格式、固定性与统计，不把64条写成所有 Alpaca 数据的永久限制。</p>
+<p><strong>本版单格式物化明确选择“保留原字节”，不是多格式转换。</strong>JSON 经固化和验证后，prepare 按同一对象版本再次核验并原样写到 <code>inputs/data/finetune_data.json</code>。不重排键、不重编码转义、不另建 normalization 版本生命周期。<code>dataset_info.json</code> 是平台按锁定模板生成的独立配置，单独记录其摘要。D03 给出开发规则。</p>
+<p>这是 v4 为减少单格式实现歧义作出的具体实现澄清：删除 v3 的 CSV→JSON 转换及源/派生双数据模型；原文件及工作区文件 SHA 必须相同。将来加格式转换时再发布明确的新 schema/Release，不影响现有记录。</p>
+<h3 id="A05-5-2">5.2 基模与输出模型各自固定</h3>
+<p>基模必须为本租户已批准、未加密、受保护的 Qwen2.5-0.5B-Instruct 精确版本，并有完整存储引用、归档 SHA、大小、format 和预期文件集。批准名称不替代批准版本。</p>
+<p><code>target_model_id</code> 只决定结果进入哪个模型容器，<strong>不会把该模型的最近版本自动变成基模</strong>。当前只允许固定批准基模；使用一次微调的输出再继续训练，是未来另行批准的输入范围。</p>
+<p>导入 READY、Model READY 和 ModelDev PUBLISHED 是不同领域事实；均不能靠管理员直接改数据库产生。</p>
+</div><div class="endlinks"><a href="#A04">← 上一节</a><a href="#A06">下一节 →</a></div></section><section class="chapter" data-chapter="A06" id="A06"><h2><small>A06 / v4.2.2</small>模型目标、对象身份与同名规则</h2><div class="source-body" data-source-ref="A06" data-source-sha256="5ed21a51b1610b9fbf1e1848527a5c826cd60f3f0961e891c398768afecd43e3"><h3 id="A06-6-1">6.1 两个目标分支，与最初平台方案一致</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>请求</th>
+<th>唯一含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>new_model_name</code></td>
+<td><strong>create-only</strong>：本次新建模型容器，再创建一个输出版本</td>
+</tr>
+<tr>
+<td><code>target_model_id</code></td>
+<td>给已存在、已授权可写的模型容器增加本次输出版本</td>
+</tr>
+</tbody>
+</table></div>
+<p>两字段必须且只能出现一个。不按名称在登记时自动切换分支，不新建模型身份映射中心。<a class="srcmark" href="#source-s0">S0</a><a class="srcmark" href="#source-s1">S1</a></p>
+<p>本次新增微调请求中的 <code>target_model_id</code> 明确使用 <strong>Model 返回的内部模型 UUID（Model.id）</strong>；Model 旧 API 允许的外部别名不因此改变。适配器读回 Model.id 后校验固定目标，调用 Model 时也使用该 UUID。若已有消费者已经发布了不同的该字段合同，先登记冲突再对齐，不静默重解释。</p>
+<h3 id="A06-6-2">6.2 同一操作重放与另一轮训练不同</h3>
+<div class="codewrap"><div class="codehead"><span>TEXT</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-text">执行 A：new_model_name = cpu-ft-demo
+  → 以 md-container:A 创建模型 M
+  → 在 M 下以 md-A 登记版本 exec-A
+
+A 的网络重试
+  → 原 key / 原内容，找回同一个 M 和 exec-A
+
+执行 B：target_model_id = M
+  → 不调用 CreateModel
+  → 在 M 下以 md-B 登记版本 exec-B
+
+执行 C：new_model_name = cpu-ft-demo（名称已存在）
+  → 名称冲突；调用者应新建请求，明确选择 target_model_id 或另一个名称
+</code></pre></div>
+<p>基线 Model 迁移已有 <code>UNIQUE(tenant_id,name)</code>，外部标识也有相应唯一约束；是否已在目标库应用，需要部署交接确认。本设计沿用该名称语义，不允许同租户同名堆积。<a class="srcmark" href="#source-s5">S5</a></p>
+<p>新受理时尽早检查名称冲突；<strong>预检不占名</strong>。最终创建仍由 Model 唯一约束判定。受理后出现并发同名竞争时，登记报冲突并保留产物、关闭计算；不自动换目标/名称/key。原执行重放必须先按原键查回，不能被自己的已建名称误拒绝。</p>
+<p>若必须给已失败执行改投另一目标，本版没有该操作；管理员不能通过改库或重试参数暗中实现。普通用户改目标要新建业务请求，并承认那不是“原登记恢复”。</p>
+<h3 id="A06-6-3">6.3 不增加多余 UUID</h3>
+<p>模型 UUID、版本 UUID、execution_id 分别是模型容器、具体版本、来源执行。外部 model_id 可能是普通字符串；version 标签 <code>exec-&lt;execution_id&gt;</code> 和登记键也不是额外模型对象。ModelDev 只保存必要关联与收据；不再给同一个 Model 容器生成另一套本域身份。</p>
+</div><div class="endlinks"><a href="#A05">← 上一节</a><a href="#A07">下一节 →</a></div></section><section class="chapter" data-chapter="A07" id="A07"><h2><small>A07 / v4.2.2</small>参数规则、可调范围与旧合同兼容</h2><div class="source-body" data-source-ref="A07" data-source-sha256="98e8e10e78b9014c9cbb30075810dbaa658d3e8f7d31dbaecb7d10d2ef8cb928"><p>本节完整规则现在定义。当前优先实现合同/默认解析/快照与entry实际消费；实际BFF取规则、页面提交及端到端权限验证后置到M3-B，不阻塞M1-A/M3-A。A07.4非默认真实负载仍属主链必要参数验证，不能随页面一起全部后推。</p>
+<h3 id="A07-7-1">7.1 本次到底开放多少</h3>
+<p><strong>本轮正式实现的可输入训练字段仍是learning_rate与max_steps；本轮必须把承载/展示/执行做成完整参数链。</strong>固定基准配方可先通过，但仅一个参数点通过不能宣称本版参数能力已完成。至少一个经验证的非默认配置需要完成D11.2.2对应检查；批次/序列长度/LoRA结构等新可输入字段不因此自动启用。</p>
+<p>首个基准点为learning_rate=0.0001、max_steps=20，其余配置见D06。规则阶段分开：只有基准点验证时，候选Release允许集只能是该点；经过非默认验证后，发布新的、包含实际批准值的Release。不原地改旧Release，不把单点证据变成整个范围的保证。</p>
+<h3 id="A07-7-2">7.2 四层规则，一份事实来源</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>层次</th>
+<th>权威职责</th>
+<th>明确不做</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>公共解码/意图规范化</td>
+<td>kind与结构、类型、字段存在性、数字词法、重复键/未知字段、大小限制及稳定编码</td>
+<td>在所有kind共享函数里写epochs=3、batch=64或微调max_steps=20</td>
+</tr>
+<tr>
+<td>受管程序参数合同</td>
+<td>支持字段、语义/单位、程序硬边界、类型转换、执行映射与必要组合语义</td>
+<td>任意透传框架参数、运行期猜参数名称</td>
+</tr>
+<tr>
+<td>不可变Release</td>
+<td>在程序支持能力内批准默认值、允许枚举或范围、固定配置、预算与验证引用</td>
+<td>修改已受理任务；为每个用户输入值生成新Release</td>
+</tr>
+<tr>
+<td>执行快照</td>
+<td>本次合同/Release及完整解析参数、受管固定配置；供执行与历史查询</td>
+<td>执行时重读最新默认值；建立第二份可编辑参数权威</td>
+</tr>
+</tbody>
+</table></div>
+<p>公共维护点仍是现有<code>contract/cpup01</code>及对应程序适配，不新建参数服务、DSL、通用插件系统。typed <code>finetuning</code>保留，不要求换成任意map。细化字段见D05.1。<a class="srcmark" href="#source-s9">S9</a></p>
+<h3 id="A07-7-3">7.3 当前参数合同与启用规则</h3>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>参数</th>
+<th>当前程序合同的硬边界（不是已批准运行范围）</th>
+<th>Release负责</th>
+<th>实际框架映射</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>learning_rate</td>
+<td>DECIMAL；沿既有有限精度无指数十进制字符串，值(0,1]；不经二进制浮点计算意图摘要</td>
+<td>默认0.0001；批准枚举或区间必须位于硬边界内</td>
+<td>learning_rate</td>
+</tr>
+<tr>
+<td>max_steps</td>
+<td>INTEGER；JSON整数1–200，拒绝小数截断和字符串冒充；规范值按合同转十进制字符串</td>
+<td>默认20；初始仅20，非默认及边界通过后逐批扩大</td>
+<td>max_steps，表示优化器更新步数上限</td>
+</tr>
+<tr>
+<td>row_count</td>
+<td>READY中的实际统计，不来自用户训练参数</td>
+<td>当前Release要求64，预处理不得静默丢样本</td>
+<td>数据实际消费与有效样本统计</td>
+</tr>
+<tr>
+<td>rank/alpha/cutoff/batch/accumulation等</td>
+<td>当前仅为程序受管固定设置，不是公开请求字段</td>
+<td>固定值和镜像/映射绑定；以只读摘要展示</td>
+<td>D06及D05.3锁定的受管映射</td>
+</tr>
+</tbody>
+</table></div>
+<p>请求硬边界属于当前程序合同，不属于所有未来程序的通用上限。Release的枚举与范围二选一；默认值必须属于实际允许集合；不得只验证字段存在就放过值。固定集合只有一个取值时，前端可显示只读，但当前可输入字段同值显式提交仍按合同接受；从未开放的受管字段即使填相同值也拒绝。</p>
+<h3 id="A07-7-4">7.4 基准与非默认值的验收决定</h3>
+<p>为避免继续只验固定样例，<strong>本版新增设计测试向量</strong>：A为0.0001/20，B优先为0.0002/10。B只是待实测候选，不是已批准值；同一批准基模/数据/固定配方下验证。A/B均通过相应层级后，候选Release可以明确批准这两个完整组合；不得仅把两个字段各列两个值就默认另外两种组合也通过。实际范围批准和组合限制一起固化。</p>
+<p>B失败应保留失败结果，修复或由W0/W1明确修订候选，再按新摘要复测；不能隐藏失败、直接把允许范围写成(0,1]/[1,200]。至少有一组非默认合法配置完成参数链验收前，只能声明固定配方进度。本版不要求穷举连续数值所有组合，但不能没有边界/代表性依据。</p>
+<h3 id="A07-7-5">7.5 兼容的是旧合同，不是永久固定样例</h3>
+<p>原CPU-P01请求/快照codec、规范字节/摘要、枚举编号和错误语义保持；微调子结构在旧CPU编码中真正省略。当前微调开发不放宽旧CPU v1拒绝集合。FT30只约束旧合同及其相关行为，不代表未来GENERAL_TRAINING永远拒绝epochs=5或batch=32。</p>
+<p>本轮的入口分流明确为：GENERAL_TRAINING使用已公布CPU codec；FINETUNING使用新增且固定的微调codec。不能先经过CPU三参数校验再进入微调Release。现有微调版本如已在工作树正式发布，应先核实并沿用，不擅自重解释。</p>
+<p>当前两个字段的取值/默认变化，若仍在同一请求与程序合同中，可用新Release表达。新增字段、单位、派生关系或规范化语义时必须交付相应API/codec/程序合同；<strong>新codec应能由请求自身的明确版本或独立已公布方法确定，不能靠可能已经切换的当前Release猜旧请求编码</strong>。未来具体wire变更属于那一批任务，不在本版预先开放隐藏字段。</p>
+<h3 id="A07-7-6">7.6 用户不选择技术版本，切版行为仍须明确</h3>
+<p>用户仍选择预设；Gov是当前启用指针唯一权威。创建页得到一组一致的当前Release规则，受理新请求使用受理时当前有效绑定；原键命中不重新解析。两次操作间发生切版时：新值仍合法则按新绑定解析并返回实际release/有效配置；不合法则明确拒绝、刷新规则，禁止静默裁剪或重试成别的值。这里保留既有“受理时解析当前版本”语义，不新增用户任意选择历史Release的入口。</p>
+<p>UI展示的默认值尚不是执行承诺。用户实际修改的字段应显式提交；未修改字段不在原键重试时偷偷补入。已受理详情只看原快照；安全配置摘要与精确查询组合见D02.4和D09.5。</p>
+</div><div class="endlinks"><a href="#A06">← 上一节</a><a href="#A08">下一节 →</a></div></section><section class="chapter" data-chapter="A08" id="A08"><h2><small>A08 / v4.2.2</small>每一步完成什么：训练、Task 和 Run 分层判断</h2><div class="source-body" data-source-ref="A08" data-source-sha256="35b74b74c4254592661b32a705b634eecde8e6b6b031c62c21bafc0ff276b26a"><div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>输入/动作</th>
+<th>成功事实与后继条件</th>
+<th>失败时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>prepare</td>
+<td>固定 JSON、固定基模；安全物化；生成准备清单</td>
+<td>原字节/基模完整，原 PVC UID、spec 与清单一致</td>
+<td>不启动训练；保存诊断并进入关闭</td>
+</tr>
+<tr>
+<td>train-wait</td>
+<td>请求 ModelDev 唯一 Trainer adapter；等实际训练</td>
+<td>原 TrainJob 成功，真实优化步数/Adapter，训练写者已退出</td>
+<td>不导出；不得以创建成功代替训练成功</td>
+</tr>
+<tr>
+<td>export</td>
+<td>按D06.2仲裁首次启动；只读取固定基模及本次Adapter，同步运行导出</td>
+<td>export Task/Pod 成功退出，merged 完整且可关联本次 Adapter</td>
+<td>不 verify/登记；留下失败阶段</td>
+</tr>
+<tr>
+<td>verify</td>
+<td>按D06.2仲裁首次启动；独立进程读merged，greedy固定短输入，最多16 token</td>
+<td>verify Task/Pod 成功，实际加载/生成和摘要报告完整</td>
+<td>不交付 READY 模型；不是效果不佳判定</td>
+</tr>
+<tr>
+<td>collect</td>
+<td>读取原执行所有规定输出</td>
+<td>精确文件全集、摘要和 in_tar 规则通过</td>
+<td>不继续上传；保留唯一输出</td>
+</tr>
+<tr>
+<td>publish</td>
+<td>捕获文件到磁盘 spool，上传候选</td>
+<td>返回原对象 candidate；<strong>尚不能自证 PUBLISHED</strong></td>
+<td>保留输出，关闭计算</td>
+</tr>
+<tr>
+<td>register：前半段</td>
+<td>核验前序 publish Task/Pod 与固定远端对象</td>
+<td>事务持久 publication 后，才允许调用 Model</td>
+<td>未确认不得调用 Model</td>
+</tr>
+<tr>
+<td>register：后半段</td>
+<td>原目标、原 key、原 tar 调 Model 并查证</td>
+<td>原 ModelVersion READY 且字段匹配，持久登记结果</td>
+<td>保留 PUBLISHED，不重训；有界查证/恢复</td>
+</tr>
+<tr>
+<td>close（正常）</td>
+<td>请求 NATURAL_TERMINAL</td>
+<td>有效持久 CLOSING 收据后返回，让 Run 自然完成</td>
+<td>独立 owner 继续对账，不假 CLOSED</td>
+</tr>
+<tr>
+<td>owner/CloseWorker</td>
+<td>独立观察整个执行及计算写者</td>
+<td>Run/Workflow 终结与实际无写者，CLOSED</td>
+<td>UNKNOWN/NEEDS_REVIEW，保留停止限制</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>前序成功检查只针对前序 Task/原 TrainJob，绝不要求整个 Run 已结束。</strong>否则后继任务会等待自己尚未完成的 Run。最终 CLOSED 才检查整个 Run/Workflow。普通通用训练已有“close 核验前序 publish”范例，本次按执行类型扩展到 register，不新建通用阶段引擎。<a class="srcmark" href="#source-s3">S3</a></p>
+<p>KFP 决定正常下一步。查询、配置读取、结果上报的重放不能重新拉起训练/export/verify；正常计算禁自动重试。需要重训时新建 execution；原结果不明先查原资源。</p>
+</div><div class="endlinks"><a href="#A07">← 上一节</a><a href="#A09">下一节 →</a></div></section><section class="chapter" data-chapter="A09" id="A09"><h2><small>A09 / v4.2.2</small>Model 未就绪时如何开发，何时才可启用</h2><div class="source-body" data-source-ref="A09" data-source-sha256="ba322b22522c78329eba3e9bd166c39c68bf805008c47d8f2beb28577d561813"><p><strong>Model和真实BFF都不是所有微调编码及执行主链验证的全局前置。</strong>Model仅阻塞其真实基模调用/模型登记和相应单次执行成功事实；真实BFF/前端仅阻塞其接入用例。两者仍是本方案最终验收及相应正式启用的必要条件。先主链、后BFF，不降低最终成功标准。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>可以做</th>
+<th>必须标明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>接口需求先行</td>
+<td>ModelDev 领域端口、输入输出约定、原登记记录、显式错误、测试替身；Model 提供方评估已有 API</td>
+<td>仅结构/行为合同测试；不是 Model 权限/持久化通过</td>
+</tr>
+<tr>
+<td>Model 接收方未就绪</td>
+<td>Fedora验证获准固定负载；隔离环境验证ModelDev执行/发布确认/关闭</td>
+<td>按D12.6逐项标明测试素材、替代调用及未验证权限；不写Model READY</td>
+</tr>
+<tr>
+<td>真实BFF/前端未就绪</td>
+<td>正式输入合同先固定；使用隔离测试装配验证真实执行与产物；可以并行编码BFF但不等待其完成</td>
+<td>不伪造Gov身份，不放宽正式listener；PA05及真实页面相关断言NOT_RUN</td>
+</tr>
+<tr>
+<td>读取能力先就绪</td>
+<td>真实接入基模/目标只读解析，验证身份和固定内容；登记继续独立开发</td>
+<td>读取通过不等于写登记通过</td>
+</tr>
+<tr>
+<td>Model 完整就绪</td>
+<td>发布正式 API；ModelDev 固定消费版本；验证真实读写、重放与失败窗口</td>
+<td>对应代码/服务/数据库不替身，独立合同验收</td>
+</tr>
+<tr>
+<td>微调正式启用</td>
+<td>相应Release必需依赖、目标验证及本方案最终验收要求满足后，按原批准流程启用</td>
+<td>一次提交自动完成本次微调与模型登记，不靠管理员每次补登记；不自动部署推理服务</td>
+</tr>
+</tbody>
+</table></div>
+<p>公共FINETUNING仍只在本Release必需依赖及既定正式验收满足后启用。此限制不禁止D12.6的隔离候选测试；候选测试不更改Gov全局当前指针，不给普通用户开放未验收能力。Model可选装配缺失不影响原CPU；正式路径不能明知无Model还受理并承诺自动登记。</p>
+<p>已受理后临时失联不改变原快照。到预算后保存登记失败/UNKNOWN并关闭计算；在原产物仍存在且已 CLOSED 时，用户可经当前授权触发原登记恢复。它不是新的交付模式，也不是按名字重新发现目标。</p>
+<p>具体对接需求集中在 D08，并派生为单独的 Model 需求交接稿；<strong>派生稿不是另一份可以独立修改的合同</strong>。不先实现所有备选 API；优先复用已公布方法，只有不能表达必要查证时才由 Model 补一个窄接口。</p>
+</div><div class="endlinks"><a href="#A08">← 上一节</a><a href="#A10">下一节 →</a></div></section><section class="chapter" data-chapter="A10" id="A10"><h2><small>A10 / v4.2.2</small>对外结果：复用事实投影，不创建第二个状态引擎</h2><div class="source-body" data-source-ref="A10" data-source-sha256="96233a90c644ef3d5c44b9339ef22dd69b1ddf5dd9816f0347537f195fd1fe43"><p>当前通用训练已有 compute/delivery/close/resource 分离机制。本次沿用其枚举含义，增加微调 export/verify 和 registration 必要事实；<code>current_step</code> 反映实际步骤，不负责调度。<a class="srcmark" href="#source-s3">S3</a></p>
+<p><strong>下表是展示判定规则，不是新增的数据库权威状态。</strong>代码枚举和 RPC wire 通过现有合同映射，不因本表中文标签重新生成一套全局状态机。</p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>已验证事实</th>
+<th>应当展示</th>
+<th>不得展示</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练已成功，export 正在运行</td>
+<td>处理中：导出模型；训练已完成</td>
+<td>完整微调成功</td>
+</tr>
+<tr>
+<td>训练成功，verify 失败，关闭完成</td>
+<td>失败：模型加载校验失败；计算已关闭</td>
+<td>登记成功、已评测通过</td>
+</tr>
+<tr>
+<td>publication 已确认，登记失败，CLOSED</td>
+<td>已发布，登记失败/待原登记恢复</td>
+<td>把 PUBLISHED 清空，或把训练改成失败</td>
+</tr>
+<tr>
+<td>Model READY，但 close=CLOSING</td>
+<td>模型已登记，计算关闭中</td>
+<td>全部完成</td>
+</tr>
+<tr>
+<td>Model READY，但 close=NEEDS_REVIEW</td>
+<td>模型已登记，计算关闭待核实</td>
+<td>全部完成、可以清理工作区</td>
+</tr>
+<tr>
+<td>原登记恢复成功，CLOSED</td>
+<td>本次产物登记恢复完成；保留停止/失败及恢复记录</td>
+<td>改写原KFP Run历史，或把曾被停止的任务改写成无异常正常成功</td>
+</tr>
+<tr>
+<td>用户停止，Model 写入在途后返回成功</td>
+<td>保留“用户停止”与“已确认模型版本”两项事实</td>
+<td>假装 Model 从未执行或自动删掉版本</td>
+</tr>
+<tr>
+<td>Model 未配置且无新受理</td>
+<td>功能未启用/依赖未接入</td>
+<td>一个虚构的已成功任务</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="A10-10-1">10.1 单次执行成功完成条件</h3>
+<p><strong>真实训练结果 + export成功 + verify成功 + 持久publication + 原ModelVersion READY且一致 + CLOSED</strong>。这六项是本次微调及模型登记的成功事实条件；判定还必须遵守本节的停止、失败和登记恢复规则，不能用结果集合覆盖历史异常。raw KFP/Task状态与原错误保留，READY不能覆盖用户停止，停止也不能抹掉已发生的Model写入。</p>
+<p>该条件用于本次任务的查询与展示，不要求每次自动部署Inference/KServe。受控任务六项事实实际成立时，可记录执行结果，但BFF未接入不得声称Gov授权通过。仅有PUBLISHED+CLOSED而Model未登记时，只能按D11.6报告主链阶段成果，不满足本节单次成功条件。测试范围和最终验收另记，不新增业务状态枚举，也不据阶段结果放宽正式启用条件。</p>
+<h3 id="A10-10-2">10.2 关闭、执行成功与方案验收各自独立</h3>
+<p>失败/被停止的任务也可能CLOSED；CLOSED只说明实际计算关闭，不单独等于成功。原登记恢复后可以显示本次产物登记已完成，同时保留原Run失败/停止和恢复事实，不改写历史。</p>
+<p><strong>阶段边界见D11.6，最终验收条件见D11.4。</strong>阶段顺序为负载与合同、真实执行/产物主链、真实BFF/前端及Model对应接入、整版独立使用与交接。主链阶段不需要全部FT/PA先通过；最终仍包括真实BFF、前端、Model、FT29/原C23及相关回归。FT29不添加为每个Run的后继步骤。</p>
+<p>在存在停止意图、明确步骤失败或关闭待核实时，展示必须优先显露这一事实；不能仅凭 compute=SUCCEEDED 显示绿色整体成功。原 CPU 没有 Model 登记，不要求给其添加 registration 才能判定原交付。</p>
+</div><div class="endlinks"><a href="#A09">← 上一节</a><a href="#A11">下一节 →</a></div></section><section class="chapter" data-chapter="A11" id="A11"><h2><small>A11 / v4.2.2</small>正常关闭、异常停止与产物保留</h2><div class="source-body" data-source-ref="A11" data-source-sha256="2f7f476216b93900624e3eca6d05f2b0f1f1adab0274bab1e7309c12bda35137"><h3 id="A11-11-1">11.1 正常路径：继承现有实现</h3>
+<div class="codewrap"><div class="codehead"><span>TEXT</span><button aria-label="复制示例" class="copy" type="button">复制</button></div><pre><code class="language-text">register 成功
+  → close 请求 NATURAL_TERMINAL
+  → owner 持久化关闭意图并返回有效收据
+  → close 组件返回，不等待自己退出
+  → KFP/Argo 自然结束
+  → 独立 CloseWorker 核验全部计算结束
+  → CLOSED
+</code></pre></div>
+<p>正常 close <strong>不主动终止一个正在正常收尾的 Run</strong>。退出 finalizer 是幂等兜底：已有正常/用户停止原因不能被无条件改写成 STEP_FAILED；未建立正常关闭事实且前序失败时，按原失败路径请求关闭。<a class="srcmark" href="#source-s3">S3</a></p>
+<h3 id="A11-11-2">11.2 用户停止、deadline、真实失败</h3>
+<p>先持久保存停止/关闭标志，禁止其后新受理的业务计算及新获准的正常登记派发，再停止KFP与唯一TrainJob并核对在途请求、原UID和全部写者。export/verify首次启动按D06.2仲裁；登记中每个具体外部写操作按D09.3仲裁，整份登记意图不是后续写操作的通行证。启动/派发先受理的请求即使稍后才真正执行也须保留并处理；不能只检查当前运行进程，不能用Stop提交宣称所有远端副作用已撤销。</p>
+<p>“关闭标志生效”“发送停止请求”“实际无计算写者”不等价。NotFound、请求超时或 KFP Failed 不能独自证明 CLOSED。继续复用现有确定性命名、UID历史、结果不明对账和关闭条件；发现共性缺陷时单列修复及反例，不删安全检查来通过测试。</p>
+<p>关闭 worker 使用独立的有限清理时限，可以在原计算 deadline 之后继续<strong>观察/停止</strong>，不能继续训练、导出或正常登记。无法证明时 NEEDS_REVIEW，不无限循环重启程序。对已在途 Model 调用只保存/查证事实；副作用重发遵守原登记恢复规则。</p>
+<h3 id="A11-11-3">11.3 清理不等于关闭</h3>
+<p>CLOSED 不自动删 PVC。唯一未发布输出、未知写者、未确认创建、未解决关闭均阻止相关清理。已登记模型、READY输入与批准基模的保护由各自权威服务落实到删除入口，不只是隐藏按钮。</p>
+<p>首期固定基模应在批准给 Release 使用之前建立 Model 侧保护；删除与保护检查在其本域一致实现，不增加跨服务 TCC。已有 READY/登记事实对应保护要保持一致。安全解除合同未实现时受保护对象先禁止删除。</p>
+</div><div class="endlinks"><a href="#A10">← 上一节</a><a href="#A12">下一节 →</a></div></section><section class="chapter" data-chapter="A12" id="A12"><h2><small>A12 / v4.2.2</small>主流程优先的开工顺序与阶段声明</h2><div class="source-body" data-source-ref="A12" data-source-sha256="1b2d84deb2873621cdce6da3fbf0d9404ac2d8ccc05abcc93378223f808c6cd8"><p><strong>当前先交付“微调执行与产物主链通过”。真实BFF、前端、候选经BFF进入验收的操作说明后置，不是W0/W2/W3/W4开工或M3-A通过条件。</strong>W1现在必须交付正式结构、参数语义/解析和快照合同，不能最后再考虑上游兼容。后置工作可并行编码，但不能反过来阻塞主链。<a class="srcmark" href="#source-s12">S12</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>交付目标</th>
+<th>当前不等待什么／可声明什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M0 负载与合同候选</td>
+<td>Fedora先跑基准，再跑一组非默认候选；锁entry/指标/配置/文件/预算；W0/W1协作</td>
+<td>不等完整BFF、Model或前端；只证真实负载与相应合同</td>
+</tr>
+<tr>
+<td>M1-A ModelDev增量</td>
+<td>正式应用用例、真实数据库、输入/参数解析/原快照、KFP/Trainer适配、export/verify、发布确认、查询投影、关闭；测试装配</td>
+<td>不等BFF listener/页面验收；Model边界可显式替身但不标MR通过</td>
+</tr>
+<tr>
+<td>M1-B Model对接（独立依赖线）</td>
+<td>提供方正式API；Gov规范调用、固定对象、具体登记派发仲裁及真实读取/登记/查证</td>
+<td>按能力逐项接入；不阻塞不依赖Model的M0/M1-A/M3-A片段；没有真登记不声称单次成功</td>
+</tr>
+<tr>
+<td>M2 当前正确性与兼容</td>
+<td>主链幂等、启动/停止/deadline/重启、实际指标、参数拒绝/组合、产物保留；R1在登记实现前落地；相关CPU回归</td>
+<td>与开发同步，不等BFF最后一轮才测；上游权限与真实Model的未测断言单列</td>
+</tr>
+<tr>
+<td>M3-A 当前目标集群主链</td>
+<td>.10～.12真实ModelDev、数据库、KFP/Trainer、S3和实际进程；基准及非默认真实执行、发布确认、脱卷取回、停止关闭</td>
+<td>按D11.6报告CORE_FLOW阶段证据；不要求BFF/前端或FT29先通过；Model缺失按D12.6明确报依赖错误并保留发布结果</td>
+</tr>
+<tr>
+<td>M3-B 后续真实BFF/前端</td>
+<td>已有BFF认证授权/当前绑定/持久投递/查询/停止、两参数实际透传、已有页面；此时落实候选绑定和回退说明</td>
+<td>复用主链，不重写训练；补PA05及其他含BFF/页面的断言，不拿夹具代替</td>
+</tr>
+<tr>
+<td>M3综合／M4最终</td>
+<td>所有本版适用FT/PA/MR与相关回归、FT29/C23真实Inference、非原作者交接及正式启用材料</td>
+<td>按D11.4报告SCHEME_FINAL；不删除后置项，不把单次/阶段通过当整版通过</td>
+</tr>
+</tbody>
+</table></div>
+<p>这些名称表示研发阶段和证据范围，不是增加业务状态机或新的产品发布系统。M0/M1/M2与M3-A可按具体能力迭代合流；不要求先写完所有模块才联调。Model就绪可提前接入，不要求人为等到BFF阶段。</p>
+<p><strong>三类机器保持：</strong>本机只阅读/编码/文档/Git及受控转运；既有<code>fedora</code>编译机负责生成、编译、模块测试、镜像/Pipeline构建和真实负载；172.16.101.10～12所属K8s运行实际部署、KFP/Trainer及集成驱动/独立取回作业。具体入口/路径按D12核实，不猜Fedora IP或把构建搬到训练节点宿主机。</p>
+<p>管理员准备批准材料、配置和测试范围；测试驱动只触发一次业务应用用例，不逐Task手工建Job或搬权重。最终正常用户链仍一次提交后由程序自动运行。</p>
+<p>文档版本v4.2.2不是新增代码、Fedora负载、主链、BFF、Model、GPU或方案验收通过。计划初始NOT_RUN；当前仅更新文档与派生检查。</p>
+</div><div class="endlinks"><a href="#A11">← 上一节</a><a href="#sources">下一节 →</a></div></section><section class="chapter" id="sources"><h2>来源与证据口径</h2><div class="source-body" data-source-ref="sources" data-source-sha256="9e3f6f810452d7b5c3509b147df6fd62749cd94546e888989fd9ec5c377676c4"><p>本稿直接基于用户上传的<strong>完整v4.2.1包</strong>，按两轮审核/讨论改写登记派发仲裁、主链优先顺序和组合测试，见S11/S12。未请求重新调研技术选型或最新代码，因此本次不借外部资料补写未核实实现。历史S0–S10保留其版本来源；本次新增是设计修订，不是当前分支/硬件的审计事实。无业务源码修改、依赖发布、Fedora训练、K8s/Model/Inference/GPU验收；文档检查不写成业务PASS。</p>
+<h3 id="source-s0">S0 · 用户附件《ANI CPU 受管微调方案 v3》</h3>
+<p>沿用原v3附件；内容包括单TrainJob、KFP export/verify、原受理/发布/关闭复用、Model需求、资源预算及原验收映射。原文副本位于 <code>reference/spec-v3.md</code>。其中指标适配职责是v4.1指标意见的原依据，不与本次421-R2候选BFF排期混同；已被v4收窄的CSV等范围不恢复。</p>
+<h3 id="source-s1">S1 · 模型研发平台 v0.4</h3>
+<p>《精简业务与架构方案》《精简开发实施说明》《管理与操作指导手册》是平台范围背景；v4形成时重点核对开发册D16的C01–C34，本次保留其原含义及已明确的覆盖边界。v0.4不是所有内容均已实现的报告。v0.2/v0.4已含target_model_id/new_model_name两个目标分支。</p>
+<h3 id="source-s2">S2 · Governance统一调用合同（沿用v4固定引用）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-governance</code>，固定commit <code>34388cf90d0834da76c9e5701ade5d92a248144f</code>，<code>docs/contracts/service-to-service-calls.md</code>，重点§1–3与§5–6。本规范涵盖三种调用方向，并明确规范入仓不代表存量实现全部符合。本次沿用v4已经固定的合同引用，未重新拉取当前分支，不宣布实现已全部对齐。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-governance/blob/34388cf90d0834da76c9e5701ade5d92a248144f/docs/contracts/service-to-service-calls.md" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-governance/blob/34388cf90d0834da76c9e5701ade5d92a248144f/docs/contracts/service-to-service-calls.md</a></p>
+<h3 id="source-s3">S3 · ModelDev已有机制（沿用前轮固定源码核查）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-modeldev-service</code>，固定commit <code>5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163</code>。主要位置：<code>internal/component/io.go</code>、<code>runner.go</code>、<code>internal/biz/execution_state.go</code>、<code>execution_closer.go</code>、<code>managed_runtime.go</code>、<code>internal/data/runtimeproof/proof.go</code>、<code>tasks.go</code>、<code>owner_close.go</code>、<code>internal/data/workspace/pipeline_io.go</code>、<code>pipelines/cpu_p01.py</code>、<code>README.md</code>。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163</a></p>
+<p>本轮没有重审所有文件或当前默认分支，也没有复跑其测试。涉及正常关闭、Task核验、状态、Fedora职责的事实沿用前轮已读取源码，不作为新增微调已通过的证明。</p>
+<h3 id="source-s4">S4 · Model接口与实现（沿用前轮固定源码核查）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-model-service</code>，固定commit <code>6473f1ec1386067e68dbd1294c10c660da7d1e7b</code>；<code>api/model/v1/model.proto</code>、<code>internal/service/model.go</code>、相关存储与身份实现。已存在方法不等于已满足本次可信接收、pending查证、固定引用和finalization要求；MR项以提供方交接及真实联调为准。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-model-service/tree/6473f1ec1386067e68dbd1294c10c660da7d1e7b" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-model-service/tree/6473f1ec1386067e68dbd1294c10c660da7d1e7b</a></p>
+<h3 id="source-s5">S5 · Model身份和名称唯一性（沿用前轮固定源码核查）</h3>
+<p>同S4：<code>migrations/000001_model_control_plane.sql</code>、<code>000006_external_model_id.sql</code>、<code>internal/data/postgres/model_store.go</code>、<code>queries/model.sql</code>及service错误映射。源码定义tenant内name唯一和外部model_id映射；本轮未连接实际库检查迁移状态。</p>
+<h3 id="source-s6">S6 · 本轮及紧邻对话的已确认决定</h3>
+<p>采用Gov统一S2S合同；Model需求先行、留接缝后对接；新模型/已有目标两分支；Alpaca JSON单格式；复用状态、deadline和正常关闭；不将审核澄清扩大为新系统。用户已有Fedora编译机，本机只编码/Git，172.16.101.10～12是目标集群。未提供或尚未核实的本任务具体环境值按D13处理。</p>
+<h3 id="source-s7">S7 · v4.1历史直接输入：v4与三项评审</h3>
+<p>v4原件在<code>reference/spec-v4.md</code>，v4.1的三项原评审在<code>reference/review-input-v4.1.md</code>。启动/停止仲裁、指标职责、单次执行与方案完成层级已在v4.1并入，本版继续保留D14.2对应正文，不因参数开放重写它们。</p>
+<h3 id="source-s8">S8 · v4.2的历史底稿：用户上传v4.1完整计划包</h3>
+<p>原包名：<code>ANI-CPU受管微调-v4.1-完整计划与复核包(1).zip</code>。其完整spec SHA256为<code>4c8430fc90ed92671ad06120113a909030ee76d70f807074790c5633f0b0de77</code>，本包按原字节保留<code>reference/spec-v4.1.md</code>。旧W0–W6是其派生视图，本版从新spec重新派生，不复制旧视图里已过时规则。</p>
+<h3 id="source-s9">S9 · v4.2参数审核依据与历史代码引用边界</h3>
+<p><code>reference/parameter-review-v4.2.md</code>保留当时《ANI 微调v4.1：面向下一阶段参数开放的评审要点》原文；它是v4.2的历史依据，不是本次重新审核。P-01–P-05及W6六类验收已在D14.3映射；A07.4、D02.5、D05.3、D11.2.2为落实意见而新增的明确设计选择，不宣称来自原包逐字条款。</p>
+<p>上一轮参数代码核对固定于ModelDev <code>c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb</code>，涉及<code>contract/cpup01/intent.go</code>、<code>release.go</code>、<code>snapshot.go</code>，<code>internal/biz/admission_resolution.go</code>、<code>internal/service/materials.go</code>及<code>api/ani/modeldev/v1/modeldev.proto</code>。本轮沿用该审核事实，没有重新拉取/执行最新代码；它与S3较早的执行机制基线分开记录。固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb</a>。</p>
+<p>本轮仅文档生成与一致性/呈现检查；无业务源码、Git、Model发布、Fedora训练、K8s部署或数据库迁移。文档PASS标DOCUMENT_ONLY，不写入FT、PA或MR运行结果。源材料未提供的实际端口/密钥/运行版本/安全范围不猜填。</p>
+<h3 id="source-s10">S10 · v4.2.1所用底稿与当时确认的GPU分期边界</h3>
+<p>底稿为已交付的<code>ANI-CPU受管微调-v4.2-参数扩展完整计划包.zip</code>，原spec按字节保留为<code>reference/spec-v4.2.md</code>，SHA256：<code>22e3c2af2424e4a2e7ef158171922979500229ffba2cf35558e701244a4af16b</code>。本轮用户先确认“GPU正式功能紧接CPU主干，合同与关键适配提前核对”，随后明确要求把“ModelDev公共接入位置/测试、v4.2小段边界说明”加入方案。</p>
+<p>本次落实的原意是：Gov/ACC沿用既有规范，只核对ModelDev具体接入；ModelDev/Installer按条件做隔离渲染与设备前置验证；不强迫多仓当前启用GPU，不给CPU加假charge，不放松CPU限制，GPU未就绪不阻塞CPU微调验收。生成文档不是对远程写入、共享环境变更或设备占用的新授权。</p>
+<p>Gov/ACC具体合同文档、接口字段、owner与证书配置由GPU准备负责人读取其正式仓库并记录确切commit；本轮不据旧讨论宣告当前实现已支持或尚不支持某RPC。<code>gpu-extension-boundary.md</code>只切片本规范，不成为新的GPU协议权威。</p>
+<h3 id="source-s11">S11 · 直接底稿v4.2.1与本次审核意见</h3>
+<p>原上传包：<code>ANI-CPU受管微调-v4.2.1-GPU后续接入边界完整计划包(1).zip</code>，SHA256 <code>5850581e31c29eaaaa8369751ca550302c06757dc3fea8608844701147713e25</code>。权威spec为1375行、SHA256 <code>363016708aef1c22454cbd320effead34b952aadf2bad08ea3a3582dc9e4c8b1</code>，按字节保留<code>reference/spec-v4.2.1.md</code>。审核意见原件保留<code>reference/review-v4.2.1.md</code>：R1具体登记派发仲裁；R2后续候选经BFF验证的操作说明；R3组合/默认黄金向量。本次未重审GitHub最新实现，不能把这些方案缺口说成已复现生产故障。</p>
+<h3 id="source-s12">S12 · 用户随后确认的执行顺序与本轮修订</h3>
+<p>用户明确“现在先完成微调主流程，真实BFF验收放到后面”，并要求据两轮讨论优化整包。落实为A12/D11.6/D12.6–7：合同先定；隔离应用层测试替代上游来件，复用实际后端主链；真实BFF/前端和候选绑定后置但最终仍验收；Model按原分期接入，不伪造READY；GPU独立准备继续不阻塞CPU。<code>review/review-input.md</code>记录这组输入摘要及原审核引用，不虚构对话原件或新增执行授权。</p>
+<p>本次仅在对话工作目录编辑/生成/复核文档，没有连接用户本机、Fedora或K8s。最终代码/API编号、实际测试驱动方法、环境/凭据和有效参数批准仍需按任务验证并记录。本包全部业务计划初始NOT_RUN；历史已填记录应另存保留，不被新模板覆盖。</p>
+</div></section><div class="footer">DOCUMENT_ONLY · 文档检查不代表任何负载、接口、并发或目标环境通过。</div></main></div><script>(function(){
+
+const input=document.getElementById('search');
+const items=[...document.querySelectorAll('.chapter[data-chapter]')];
+const navs=[...document.querySelectorAll('.navlink[data-chapter]')];
+function filter(){const q=(input?.value||'').trim().toLocaleLowerCase();let n=0;items.forEach(el=>{let show=!q||el.textContent.toLocaleLowerCase().includes(q);el.hidden=!show;if(show)n++;const link=navs.find(a=>a.dataset.chapter===el.dataset.chapter);if(link)link.hidden=!show});const count=document.getElementById('count');if(count)count.textContent=q?`匹配 ${n} / ${items.length} 章`:`${items.length} 章 · 按关键词筛选`;const empty=document.getElementById('empty');if(empty)empty.style.display=n?'none':'block'}
+input?.addEventListener('input',filter);filter();
+document.getElementById('clear')?.addEventListener('click',()=>{input.value='';filter();input.focus()});
+document.getElementById('menu')?.addEventListener('click',()=>document.querySelector('.sidebar')?.classList.toggle('open'));
+document.getElementById('print')?.addEventListener('click',()=>window.print());
+let font=16;try{font=Number(localStorage.getItem('ani-ft-v4.2-font'))||16}catch(e){};function setFont(){document.documentElement.style.setProperty('--font',font+'px');try{localStorage.setItem('ani-ft-v4.2-font',String(font))}catch(e){}}setFont();
+document.getElementById('fontMinus')?.addEventListener('click',()=>{font=Math.max(14,font-1);setFont()});document.getElementById('fontPlus')?.addEventListener('click',()=>{font=Math.min(20,font+1);setFont()});
+document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{const text=btn.closest('.codewrap').querySelector('code').textContent;let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}btn.textContent=ok?'已复制':'请选择文本复制';setTimeout(()=>btn.textContent='复制',1800)}));
+function showAnchor(){if(!location.hash)return;let id;try{id=decodeURIComponent(location.hash.slice(1))}catch(e){return}const el=document.getElementById(id);if(el){const sec=el.closest('.chapter');if(sec?.hidden&&input){input.value='';filter()}setTimeout(()=>el.scrollIntoView({block:'start'}),20)}}window.addEventListener('hashchange',showAnchor);showAnchor();
+if('IntersectionObserver' in window){const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){navs.forEach(a=>a.classList.toggle('active',a.dataset.chapter===e.target.id))}})},{rootMargin:'-10% 0px -70% 0px'});items.forEach(el=>obs.observe(el))}
+
+})();</script></body></html>

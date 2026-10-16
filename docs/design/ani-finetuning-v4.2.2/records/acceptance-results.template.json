@@ -1,0 +1,25 @@
+{
+  "template_only": true,
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "note": "scope是证据范围，不是新业务状态；后置BFF断言NOT_RUN。每条result附case_id/assertion/scope/environment/evidence。",
+  "results": [],
+  "single_execution_results": [],
+  "core_flow_stage": {
+    "status": "NOT_RUN",
+    "evidence": [],
+    "model_scope": null,
+    "bff_scope": "NOT_RUN",
+    "unverified_assertions": []
+  },
+  "scheme_final_acceptance": {
+    "status": "NOT_RUN",
+    "bff": null,
+    "frontend": null,
+    "model": null,
+    "ft29_c23": null,
+    "regression": null,
+    "handover": null
+  }
+}

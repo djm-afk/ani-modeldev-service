@@ -1,0 +1,53 @@
+{
+  "template_only": true,
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "scope": "CORE_FLOW",
+  "entry": {
+    "source_path": null,
+    "method_or_command": null,
+    "application_layer": null,
+    "source_commit": null,
+    "image_digest": null
+  },
+  "isolation": {
+    "database_reference": null,
+    "namespace_uid": null,
+    "approval_reference": null
+  },
+  "upstream_replacement": {
+    "description": null,
+    "not_gov_authorization": true,
+    "not_tested_assertions": []
+  },
+  "candidate": {
+    "id": null,
+    "digest": null,
+    "snapshot_hash": null,
+    "contract_version": null,
+    "not_current_gov_binding": true
+  },
+  "inputs": {
+    "ready_ref": null,
+    "base_model_source": null,
+    "base_model_read_boundary": null
+  },
+  "real_dependencies": [],
+  "replaced_dependencies": [],
+  "execution_id": null,
+  "resource_refs": [],
+  "publication_evidence": [],
+  "detached_retrieval_evidence": [],
+  "registration": {
+    "status": "NOT_RUN",
+    "dependency_error": null,
+    "receipt": null
+  },
+  "close_evidence": [],
+  "not_claimed": [
+    "BFF_AUTHORIZATION",
+    "MODEL_READY_WITHOUT_REAL_INTEGRATION",
+    "FT29_WITHOUT_INFERENCE"
+  ]
+}

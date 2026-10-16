@@ -1,0 +1,29 @@
+{
+  "template_only": true,
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "case_id": null,
+  "scope": null,
+  "mode": "NORMAL_OR_AUTHORIZED_RECOVERY_TO_BE_RECORDED",
+  "execution_id": null,
+  "operation_id": null,
+  "registration_key": null,
+  "write_operation": null,
+  "request_fingerprint": null,
+  "original_target": null,
+  "original_publication_ref": null,
+  "database_serialization_boundary": null,
+  "transaction_order": {
+    "dispatch_commit": null,
+    "stop_commit": null,
+    "observed_generation": null
+  },
+  "original_deadlines": null,
+  "external_call_count": null,
+  "late_receipts": [],
+  "readback_evidence": [],
+  "replay_evidence": [],
+  "model_boundary_is_real": null,
+  "evidence": []
+}

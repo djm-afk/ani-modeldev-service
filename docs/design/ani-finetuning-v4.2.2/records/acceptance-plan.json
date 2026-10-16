@@ -1,0 +1,644 @@
+{
+  "scope": "BUSINESS_PLAN_NOT_EXECUTED",
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "note": "主FT32和PA10/MR8/C34原范围保留；12项原细化加FT25.1–3。BFF/前端后置不是DEFERRED；部分断言通过不得标整项PASS。",
+  "cases": [
+    {
+      "id": "FT01",
+      "name": "合法Alpaca JSON导入",
+      "required_evidence": "真实授权、固定对象、实际size/SHA、严格解析，事务READY",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT02",
+      "name": "错格式/超限",
+      "required_evidence": "CSV/JSONL/ShareGPT、重复/未知键、null/类型错、坏UTF8、超32MiB拒绝",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT03",
+      "name": "固定数据",
+      "required_evidence": "原key出现新内容不改变READY；prepare本地JSON与原固定字节一致",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT04",
+      "name": "64条预设",
+      "required_evidence": "其他合法行数可READY，但当前预设拒绝；预处理不丢样本",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT05",
+      "name": "当前权限与租户",
+      "required_evidence": "无权基模/目标、跨租户详情/日志/下载/恢复拒绝；窄scope不扩大",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT06",
+      "name": "原创建重放",
+      "required_evidence": "原key同内容回原ID，异内容冲突；切Release/暂停不更换原快照",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT07",
+      "name": "新建/已有目标",
+      "required_evidence": "new分支只建一个容器；existing不CreateModel，增加原容器的新版本",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT08",
+      "name": "同名与并发",
+      "required_evidence": "新执行同名冲突，最多一个新建成功；不按名偷换目标，原重放不误拒绝",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT09",
+      "name": "Model未接入",
+      "required_evidence": "微调新受理未启用，CPU既有能力不被迫失效；分段测试不标完整交付",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT10",
+      "name": "基模真实固定读取",
+      "required_evidence": "读取确切版本/归档，拒绝加密/错家族/越权；流式实长SHA与安全解包",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT11",
+      "name": "单TrainJob真LoRA与指标适配",
+      "required_evidence": "一个权威TrainJob UID；真实优化步数/Adapter，无GPU/重复训练；finetune_entry生成ani.metric.v1与真实summary；细化见FT11.1–FT11.3",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT12",
+      "name": "未知创建结果",
+      "required_evidence": "只找原资源，迟到响应与多Run不导致第二份计算",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT13",
+      "name": "export正确来源",
+      "required_evidence": "基模+本次Adapter导出真实merged；关联摘要/argv完整，不只加载一个基模充数",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT14",
+      "name": "verify独立加载",
+      "required_evidence": "单独进程、锁定精度、greedy短推理与实际报告，失败不得登记READY",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT15",
+      "name": "前序Task证明",
+      "required_evidence": "不等整Run终态；错误前序Task/Pod UID、未退出的publisher不能放行",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT16",
+      "name": "文件与tar",
+      "required_evidence": "缺/多文件、link/穿越、错前缀/非零尾随拒绝；HF根布局、Adapter独立正确",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT17",
+      "name": "持久发布",
+      "required_evidence": "原publisher退出，远端每个固定对象及主tar字节核验后才PUBLISHED",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT18",
+      "name": "当前存储交接",
+      "required_evidence": "实际选定模式正确；Model固定读取原tar；未启用模式不写PASS",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT19",
+      "name": "Model可信链",
+      "required_evidence": "真服务身份/完整RPC/委托范围/tenant检查；拒绝假Principal与越权方法",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT20",
+      "name": "登记一致性",
+      "required_evidence": "原容器/版本，全部业务字段一致；READY重放返回持久真值",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT21",
+      "name": "登记故障窗口",
+      "required_evidence": "容器响应丢失、Artifact写后中断、READY响应丢失；原key恢复不造新版本；与FT25.1–3联合验证逐写派发边界",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT22",
+      "name": "正常close",
+      "required_evidence": "NATURAL_TERMINAL收据后返回，Run自然成功终结；无自等待/无主动杀正常Run",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT23",
+      "name": "用户停止与首次启动竞态",
+      "required_evidence": "各阶段实际停止；stop先提交不启动，先受理启动纳入在途关闭；不新受理/重复派生，见FT23.1–FT23.5",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT24",
+      "name": "deadline/重启",
+      "required_evidence": "首次启动原子检查deadline；owner重启按原启动事实继续观察/关闭，不重跑/续期；见FT24.1–FT24.2",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT25",
+      "name": "登记派发/停止/恢复",
+      "required_evidence": "具体派发与Stop/deadline共同仲裁；先派发的迟到receipt如实保留，未获准的下一写不执行；CLOSED后当前授权恢复，见FT25.1–3",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT26",
+      "name": "状态与完成层级",
+      "required_evidence": "compute成功不盖verify/登记失败；Model READY+CLOSING不全成；单次执行与方案验收分离，见FT26.1",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT27",
+      "name": "大文件/容量",
+      "required_evidence": "实際spool目录、磁盘/内存界限和流式I/O；超限安全失败，旧CPU默认不变",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT28",
+      "name": "保护与清理",
+      "required_evidence": "基模/READY/成品实际删除受限；唯一未发布/未知写者阻断清理，UID plan/apply一致",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT29",
+      "name": "方案验收：独立新模型使用",
+      "required_evidence": "无训练PVC，经Model取本次新tar并通过现有Inference/KServe真实调用；不是每个任务的后继步骤，见FT29.1",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT30",
+      "name": "原CPU合同回归",
+      "required_evidence": "旧CPU v1字节/摘要/错误/拒绝集与相关训练/发布/关闭保持，必要旧48步链通过；不将旧拒绝集作为未来新合同永久限制",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT31",
+      "name": "自动业务与交接",
+      "required_evidence": "正常提交无需人串步骤；非原作者按实际入口完成启用/执行/恢复",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "FT32",
+      "name": "来源与范围",
+      "required_evidence": "记录真实commit/digest、环境/资源/对象事实，暂缓项不标PASS，凭据不入证据",
+      "status": "NOT_RUN"
+    }
+  ],
+  "subcases": [
+    {
+      "id": "FT11.1",
+      "parent": "FT11",
+      "arrangement": "锁定的20步真实训练，entry按M0选定日志/callback生成文件",
+      "required_evidence": "现有ani.metric.v1解析器校验通过；记录来源/映射/采样版本、真实文件与SHA；采样数量不被当成优化步数",
+      "status": "NOT_RUN",
+      "roles": []
+    },
+    {
+      "id": "FT11.2",
+      "parent": "FT11",
+      "arrangement": "正常及受控提前失败/停止，比较请求上限与实际执行",
+      "required_evidence": "summary如实记录实际步数/样本统计及部分结果；不得填满请求max_steps；保留原错误/停止事实",
+      "status": "NOT_RUN",
+      "roles": []
+    },
+    {
+      "id": "FT11.3",
+      "parent": "FT11",
+      "arrangement": "缺指标文件、破坏schema或人为改写summary必需事实",
+      "required_evidence": "现有校验/collect拒绝当成完整训练产物，不补造记录；失败证据不冒充成功交付",
+      "status": "NOT_RUN",
+      "roles": []
+    },
+    {
+      "id": "FT23.1",
+      "parent": "FT23",
+      "arrangement": "同一执行的stop事务提交后，再进入export/verify首次启动事务",
+      "required_evidence": "启动被拒绝，实际子进程次数为0；证明两路径使用同一数据库串行化边界",
+      "status": "NOT_RUN",
+      "roles": [
+        "export",
+        "verify"
+      ]
+    },
+    {
+      "id": "FT23.2",
+      "parent": "FT23",
+      "arrangement": "启动受理已提交，在入口spawn前暂停；提交stop后释放同步点",
+      "required_evidence": "原启动作为在途计算保留；入口取消或迟到原进程被停止；不能早记CLOSED；无第二次启动",
+      "status": "NOT_RUN",
+      "roles": [
+        "export",
+        "verify"
+      ]
+    },
+    {
+      "id": "FT23.3",
+      "parent": "FT23",
+      "arrangement": "并发首次请求、相同请求重放及另Task/Pod UID请求",
+      "required_evidence": "每个execution+role最多一次首次受理；不匹配绑定拒绝；重复响应不触发新子进程",
+      "status": "NOT_RUN",
+      "roles": [
+        "export",
+        "verify"
+      ]
+    },
+    {
+      "id": "FT23.4",
+      "parent": "FT23",
+      "arrangement": "首次启动事务已提交，丢失返回；随后查询/重放",
+      "required_evidence": "只返回/查证原事实，不补发启动能力、不更名重跑；记录无法确认时的待核实/关闭路径",
+      "status": "NOT_RUN",
+      "roles": [
+        "export",
+        "verify"
+      ]
+    },
+    {
+      "id": "FT23.5",
+      "parent": "FT23",
+      "arrangement": "export/verify子进程实际运行后提交stop，向原进程组传播取消",
+      "required_evidence": "收齐原入口/子进程退出与原Pod/控制器证据；无后台权重写者，不以单次NotFound代替证明",
+      "status": "NOT_RUN",
+      "roles": [
+        "export",
+        "verify"
+      ]
+    },
+    {
+      "id": "FT24.1",
+      "parent": "FT24",
+      "arrangement": "首次启动事务检查时已到deadline，另测已受理但延迟收到响应",
+      "required_evidence": "到期首次请求不启动；已受理请求仍用原start_admitted_at/deadline，不因响应延迟重置预算",
+      "status": "NOT_RUN",
+      "roles": [
+        "export",
+        "verify"
+      ]
+    },
+    {
+      "id": "FT24.2",
+      "parent": "FT24",
+      "arrangement": "启动已受理/已运行时重启owner，或原入口退出未回结果",
+      "required_evidence": "恢复原绑定与时限，只观察/停止；不重建计算；有真实退出证明才关闭，未知保持待核实",
+      "status": "NOT_RUN",
+      "roles": [
+        "export",
+        "verify"
+      ]
+    },
+    {
+      "id": "FT26.1",
+      "parent": "FT26",
+      "arrangement": "六项执行事实成立但FT29尚未执行，另测停止/登记恢复历史",
+      "required_evidence": "记录单次执行结果与单独方案验收状态；不自动创建推理服务，不抹掉历史，不据局部通过正式启用",
+      "status": "NOT_RUN",
+      "roles": []
+    },
+    {
+      "id": "FT29.1",
+      "parent": "FT29",
+      "arrangement": "相应Release/Runtime验收使用本次真实微调登记版本独立部署/调用",
+      "required_evidence": "ModelVersion、publication/tar SHA和实际Inference请求结果可关联；无训练PVC；使用旧基模或仅fake响应不通过",
+      "status": "NOT_RUN",
+      "roles": []
+    },
+    {
+      "id": "FT25.1",
+      "parent": "FT25",
+      "arrangement": "Stop先提交，再让具体CreateModel或CreateModelVersion进入派发仲裁；另测到期分支",
+      "required_evidence": "该外部写调用次数为0；原登记意图不放行；所选复制模式如有目标写同样检查，不把只读查证误禁",
+      "status": "NOT_RUN",
+      "roles": []
+    },
+    {
+      "id": "FT25.2",
+      "parent": "FT25",
+      "arrangement": "CreateModel成功并保存收据，暂停版本派发；Stop提交后继续",
+      "required_evidence": "原模型容器收据保留，CreateModelVersion新调用数为0；不自动换目标/key、不删除已建容器；D09.2显式恢复仍可按原内容另行验",
+      "status": "NOT_RUN",
+      "roles": []
+    },
+    {
+      "id": "FT25.3",
+      "parent": "FT25",
+      "arrangement": "版本派发先获准，随后Stop并丢响应；重启/迟到响应与正常重发竞争",
+      "required_evidence": "只查证/保存原在途事实；正常后继写和新的正常重发不再获准；不双版本、不重训、不把远端完成改成未发生；CLOSED后当前授权原恢复不冒充正常后台续跑",
+      "status": "NOT_RUN",
+      "roles": []
+    }
+  ],
+  "parameter_cases": [
+    {
+      "id": "PA01",
+      "name": "参数合同与Release规则自洽",
+      "required_evidence": "两字段类型/硬边界/默认/允许集/组合合法；错类型、重复项、无实现字段、默认越界、规则冲突明确拒绝",
+      "related_and_owners": "FT06/30；W1",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA02",
+      "name": "预设数值与生效版本投影",
+      "required_evidence": "max_steps=20/10正确而非64；十进制值准确；Gov绑定ID/digest/generation与一份规则一致；历史Release共存和切换无混合投影",
+      "related_and_owners": "FT06/26；W1/W6",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA03",
+      "name": "原意图、省略与重放",
+      "required_evidence": "省略/显式默认按固定向量编码；当前规则收缩/默认改变后原键合法重放仍返回原执行；不同显式意图冲突",
+      "related_and_owners": "FT06/30；W1",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA04",
+      "name": "基准与非默认真实负载",
+      "required_evidence": "A与经批准B分别经entry实际解析、真实LoRA/导出/verify；至少一个非默认配置，实际消费值、步数、产物有对应证据，不只改argv",
+      "related_and_owners": "FT11/13/14；W0/W3",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA05",
+      "name": "BFF到原快照到程序贯通",
+      "required_evidence": "非默认合法值经现有BFF受理，冻结相同值并在真实目标执行；Model接入前只分段记录，不用fake冒充正式BFF整链",
+      "related_and_owners": "FT06/11；W1/W3/W6",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA06",
+      "name": "拒绝和固定字段保护",
+      "required_evidence": "未开放字段、越界、非法组合、固定设置覆盖在计算前拒绝；镜像模板与冻结值冲突不静默覆盖或裁剪",
+      "related_and_owners": "FT02/06/12；W1/W3",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA07",
+      "name": "配置详情与历史不漂移",
+      "required_evidence": "创建用当前规则，原任务详情读原快照；切版后旧参数/固定摘要不变；运行步数来自实际summary；前端只读展示不改变原请求",
+      "related_and_owners": "FT06/26；W1/W6",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA08",
+      "name": "指标、参数和部分结果",
+      "required_evidence": "summary有效配置与快照可核对，真实optimizer_steps不同于日志条数/请求值；B配置提前失败/停止不填满上限",
+      "related_and_owners": "FT11.1–3/23/24；W0/W3",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA09",
+      "name": "组合预算与文件合同",
+      "required_evidence": "批准B及必要边界的时间/内存/spool/输出限制受测；不同权重SHA不被误拒，缺/多文件和真实超限仍拒绝；停止/deadline不改旧语义",
+      "related_and_owners": "FT16/27/30；W0/W3/W4/W6",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "PA10",
+      "name": "能力发布和最终声明",
+      "required_evidence": "只有基准证据时不能标参数开放完成；提供/消费方合同固定、原参数规则与新批准Release并存、相关回归与实际前端接口复演完成",
+      "related_and_owners": "FT31/32；W1/W6",
+      "status": "NOT_RUN"
+    }
+  ],
+  "v04_mapping": [
+    {
+      "id": "C01",
+      "original_scope": "两租户权限",
+      "coverage": "必须验证本次微调及受影响既有查询/恢复"
+    },
+    {
+      "id": "C02",
+      "original_scope": "SELF/组织与动作",
+      "coverage": "动作和当前已支持scope验证；未实现SELF/组织仍拒绝并标DEFERRED，**不声明C02全覆盖**"
+    },
+    {
+      "id": "C03",
+      "original_scope": "身份头/旁路",
+      "coverage": "复用现有接入，新增角色/调用关系需负向回归"
+    },
+    {
+      "id": "C04",
+      "original_scope": "训练运行身份",
+      "coverage": "包含新增export/verify；不得带Model管理凭据"
+    },
+    {
+      "id": "C05",
+      "original_scope": "新受理暂停",
+      "coverage": "保留并回归新微调kind"
+    },
+    {
+      "id": "C06",
+      "original_scope": "小JSON/CSV用户上传",
+      "coverage": "**本版DEFERRED**；受管JSON导入不能替代上传"
+    },
+    {
+      "id": "C07",
+      "original_scope": "超限/错格式/迟到PUT",
+      "coverage": "导入的内容/固定性验证；上传会话专属部分DEFERRED，不声明全部覆盖"
+    },
+    {
+      "id": "C08",
+      "original_scope": "受管S3代导入",
+      "coverage": "本次Alpaca JSON必测；旧MLP导入相关回归"
+    },
+    {
+      "id": "C09",
+      "original_scope": "创建重放",
+      "coverage": "必测，含新目标字段"
+    },
+    {
+      "id": "C10",
+      "original_scope": "Release与在途",
+      "coverage": "必测，旧快照不改"
+    },
+    {
+      "id": "C11",
+      "original_scope": "两服务目录一致",
+      "coverage": "必测，未启用/不匹配明确拒绝"
+    },
+    {
+      "id": "C12",
+      "original_scope": "KFP提交不明",
+      "coverage": "继承并对受影响路径回归"
+    },
+    {
+      "id": "C13",
+      "original_scope": "公共Trainer",
+      "coverage": "两类任务复用同一个单作业机制"
+    },
+    {
+      "id": "C14",
+      "original_scope": "工作区",
+      "coverage": "新组件与TrainJob挂载、互不覆盖必测"
+    },
+    {
+      "id": "C15",
+      "original_scope": "第二个登记镜像",
+      "coverage": "是通用训练既有范围，不因微调自动宣布完成；受影响时回归，否则关联其独立证据"
+    },
+    {
+      "id": "C16",
+      "original_scope": "CPU MLP",
+      "coverage": "相关回归；原48步主链不被微调破坏"
+    },
+    {
+      "id": "C17",
+      "original_scope": "CPU LoRA",
+      "coverage": "本版核心新增"
+    },
+    {
+      "id": "C18",
+      "original_scope": "导出损坏/缺文件",
+      "coverage": "本版核心新增"
+    },
+    {
+      "id": "C19",
+      "original_scope": "真实发布",
+      "coverage": "微调tar/manifest/远端字节必测"
+    },
+    {
+      "id": "C20",
+      "original_scope": "新模型版本",
+      "coverage": "Model正式对接后必测；此前BLOCKED/NOT_RUN"
+    },
+    {
+      "id": "C21",
+      "original_scope": "登记丢响应/重试",
+      "coverage": "Model正式对接后必测"
+    },
+    {
+      "id": "C22",
+      "original_scope": "Model一致性",
+      "coverage": "Model提供方真实联调必测"
+    },
+    {
+      "id": "C23",
+      "original_scope": "新HF包推理",
+      "coverage": "作为本方案最终验收必测；未通过不能宣布方案验收完成；不加入每次微调任务的成功判据"
+    },
+    {
+      "id": "C24",
+      "original_scope": "停运行/排队",
+      "coverage": "含export/verify首次启动与停止共同仲裁，以及实际在途/运行进程停止"
+    },
+    {
+      "id": "C25",
+      "original_scope": "停止/迟到创建",
+      "coverage": "继承，加入先受理后stop的迟到组件、启动响应丢失及原登记事实"
+    },
+    {
+      "id": "C26",
+      "original_scope": "重启",
+      "coverage": "原记录观察/关闭和原登记恢复"
+    },
+    {
+      "id": "C27",
+      "original_scope": "失败日志",
+      "coverage": "新阶段有界错误/日志；缺口如实显示"
+    },
+    {
+      "id": "C28",
+      "original_scope": "发布失败保留",
+      "coverage": "必测，不误删唯一输出"
+    },
+    {
+      "id": "C29",
+      "original_scope": "受保护资产删除",
+      "coverage": "Model/输入实际入口，提供方待就绪则对应阻塞"
+    },
+    {
+      "id": "C30",
+      "original_scope": "受控清理",
+      "coverage": "有限既有plan/apply扩新目录，不扩通用GC"
+    },
+    {
+      "id": "C31",
+      "original_scope": "手册/启用回退",
+      "coverage": "按本次微调实际入口复演"
+    },
+    {
+      "id": "C32",
+      "original_scope": "不逐次人工串流程",
+      "coverage": "完整Model接入后正常自动链通过"
+    },
+    {
+      "id": "C33",
+      "original_scope": "CPU禁GPU",
+      "coverage": "请求/渲染/运行三者均验证"
+    },
+    {
+      "id": "C34",
+      "original_scope": "历史证据隔离",
+      "coverage": "全程遵守，不将历史或替身替换新验收"
+    }
+  ],
+  "stage_plan": [
+    {
+      "scope": "WORKLOAD",
+      "stage": "WORKLOAD：M0",
+      "requirements": "Fedora上基准和非默认真实entry/LoRA/export/verify、指标/summary、参数消费与资源材料",
+      "coverage_limit": "FT11/13/14和PA04/08/09的负载部分；不证KFP/Trainer、Gov授权或Model",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "CORE_FLOW",
+      "stage": "CORE_FLOW：M3-A（当前阶段）",
+      "requirements": "真实ModelDev应用/数据库、KFP/Trainer、S3；READY/原快照/唯一训练、export/verify、发布确认、脱卷取回；失败/幂等/停止/deadline/重启及相关CPU回归；先基准再非默认",
+      "coverage_limit": "FT01–04的本域部分、FT11–17、FT22–24、FT26–28/30/32的适用执行部分，以及PA01/03/04/06/08/09执行侧；未验证的Gov/Model/页面子断言单列",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "MODEL_INTEGRATION",
+      "stage": "MODEL_INTEGRATION：M1-B及综合",
+      "requirements": "MR01–08实际使用的正式API/身份/数据库/固定对象与登记查证；登记派发竞态对应真实验证",
+      "coverage_limit": "FT07/08/10/18–21/25/28中Model断言；不要求先完成页面，也不自动证明Gov用户链",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "BFF_INTEGRATION",
+      "stage": "BFF_INTEGRATION：M3-B（后续阶段）",
+      "requirements": "真实BFF用户认证、当前绑定/默认值、目标使用/写权、幂等冻结与投递、查询/停止/恢复，实际前端字段行为；候选绑定按D12.7",
+      "coverage_limit": "PA05及PA02/03/06/07/10的上游/页面断言；FT05/06/09/25/26/31对应入口事实；不得拿测试来件或静态页面抵扣",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "SCHEME_FINAL",
+      "stage": "SCHEME_FINAL：M3综合/M4",
+      "requirements": "D11.4全部适用断言与回归、真Model、真实BFF/前端、FT29/C23新模型独立Inference、交接",
+      "coverage_limit": "保持整版原承诺，不要求每次任务自动部署推理",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "GPU_PRECHECK",
+      "stage": "GPU_PRECHECK：独立准备",
+      "requirements": "仅D10.2约定的合同/字段与有条件渲染/设备观察",
+      "coverage_limit": "不阻塞上述任何CPU阶段，不代替FT/PA/MR",
+      "status": "NOT_RUN"
+    }
+  ],
+  "bff_scheduling": {
+    "phase": "M3-B",
+    "blocks_core_flow": false,
+    "retained_in_final_acceptance": true,
+    "status": "NOT_RUN"
+  },
+  "gpu_preparation": {
+    "scope": "GPU_PRECHECK",
+    "blocks_cpu_acceptance": false,
+    "status": "NOT_RUN",
+    "formal_delivery": "DEFERRED"
+  }
+}
