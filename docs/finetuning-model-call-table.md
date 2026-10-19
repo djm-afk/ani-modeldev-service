@@ -16,14 +16,14 @@
 
 前置事实（集群读回）：Model **已部署**（`ani-system/ani-model-service`，1/1，helm v5，gRPC `:19090`）、部署版本 **`a21e0a7`**、与 ModelDev **共用同一个 RustFS**（仅 bucket 不同）。
 
-**当前确认的四个真实缺口**（详见 §4）：
+**当前确认的真实缺口**（详见 §4；缺口 2/4 的本地实现部分已在本轮解决，仅余接线与部署）：
 
 1. **Model 侧未登记 ModelDev 身份**——部署版本 `a21e0a7` 的策略里**依然只有 Governance / Inference 两个身份**（`git grep modeldev a21e0a7 -- cmd/ internal/` 无匹配），ModelDev 的 DNS SAN 不在其中 → 必被 `PermissionDenied`。
-2. **ModelDev 侧根本没有配置 Model 端点**——部署的 `config.yaml` 只有 grpc/db/kfp/rustfs/dispatch，**没有任何 model service endpoint**；即调用方代码与配置都还没有。
+2. ~~ModelDev 侧根本没有配置 Model 端点~~ **（已部分解决）** ModelDev 侧**已加 Model 连接配置位**（endpoint / CA / 双向身份 / actor / 超时）与业务 mTLS 适配器、7 个 RPC 封装；**部署的 `config.yaml` 仍未填值**（未部署）。
 3. **产物 format 与 Model 枚举不匹配**（`MERGED_HF_MODEL` vs `safetensors|gguf|pytorch`）——部署版本未改，仍成立。
-4. **ModelDev 的登记派发仲裁（D09.3）未实现**——[RegisterModel](../internal/biz/finetuning_registration.go#L31-L51) 仍只返回 `ErrModelDependencyUnavailable`。
+4. ~~ModelDev 的登记派发仲裁（D09.3）未实现~~ **（已解决）** D09.3 仲裁与写入编排**均已实现并通过验证**；但**顶层 `RegisterModel` 尚未接入该编排**、生产装配未接线、C1/C2 读路径未实现。
 
-缺口 1 只能由 **Model 提供方**解决；缺口 3 需 **Model 定映射**；缺口 2/4 是**本地可写**的部分（但无缺口 1 就无法真实验收）。
+缺口 1 只能由 **Model 提供方**解决；缺口 3 需 **Model 定映射**；缺口 2/4 的本地实现部分**已完成**，但**无缺口 1 仍无法真实验收**。
 
 ---
 
@@ -114,7 +114,7 @@ Gov《服务间调用规则》§5 明文：*"协议只消费接收方公布的�
 | 业务键 | spec D08.3：`md-container:<execution_id>` | ✅ 设计已定 |
 | `model_id` 传参语义 | 为空**默认取 `name`**——若直接传 `md-container:<exec_id>` 会写进 external id 列 | ⚠️ 待确认承载方式 |
 | 名称唯一性 | ≤63、仅 `a-z0-9-.`；DB `UNIQUE(tenant_id,name)` | ✅ |
-| 预算/仲裁 | 需与 Stop/deadline 共同仲裁（D09.3.1）；**ModelDev 无该实现** | **缺口，见 §4.5** |
+| 预算/仲裁 | 需与 Stop/deadline 共同仲裁（D09.3.1）；**本域已实现**（§4.5），待接入顶层入口 | **已实现，待接线** |
 
 ### C4 · 版本登记（MR04）
 
@@ -200,13 +200,23 @@ Gov《服务间调用规则》§5 明文：*"协议只消费接收方公布的�
 - `CreateModelVersion` 建版本时也只 `FOR KEY SHARE` 锁父模型**存在性**（[model.sql:88-101](https://github.com/zhangzhe-ctrl/ani-model-service/blob/a21e0a7/queries/model.sql#L88-L101)），**没有任何"该目标允许追加版本"的判定**。
 - 结论：**"可写检查"当前完全不存在**（不是"没看到"，是没有）。需 Model 确认是复用现有字段还是补受限能力。
 
-### 4.5 【缺口·本地可写】ModelDev 侧登记派发仲裁（D09.3）未实现
+### 4.5 【已实现·待真实接线】ModelDev 侧登记派发仲裁（D09.3）与写入编排
 
-- [RegisterModel](../internal/biz/finetuning_registration.go#L31-L51) 仍只 `RecordRegistrationUnavailable` + 返回 `ErrModelDependencyUnavailable`。
+**状态：本地实现已完成并通过验证（未部署、未发起真实 Model 调用）。**
+
+- **派发仲裁（D09.3）已实现**：`internal/biz/finetuning_dispatch.go` + `internal/data/lifecycle/finetuning_dispatch.go`。与 Stop/关闭/deadline **共用同一执行行锁**；事务内重核 spec/阶段/业务键/内容/原目标/停止状态/剩余预算，**事务外**才发 RPC；区分"意图已存 / 已获准派发 / 结果未明"，`UNKNOWN` **不当失败**。6 例真实 PostgreSQL 单测（含"Stop 先于派发 → 该写次数为 0""派发先于 Stop → 容器收据保留、版本写为 0"）。
+- **写入编排已实现**：`internal/biz/finetuning_registration_write.go`。窄出站端口 `FinetuningModelRegistry`（`CreateContainer` / `RegisterVersion` / `FindContainer` / `FindVersion`）；先仲裁落事实、**事务外**发 RPC；`CONFIRMED` 唯凭精确读回。8 例单测（可观测替身）。
+- **适配器与配置位已加**：`internal/data/modelclient/`（TLS 1.3 强制、精确 DNS SAN、每次调用重建 metadata、7 个 RPC）；`conf.proto` 新增 `ModelConnection`，**缺省或部分配置一律拒绝**。
+- **消费基线已定**：`go.mod` pin `github.com/liangzai006/ani-model-service v0.0.0-20261013092523-8951c85bc150`（与 Gov 同款、无 `replace`）。
+
+**仍未完成（本地待办）**：
+
+- 顶层 [RegisterModel](../internal/biz/finetuning_registration.go#L47-L67) **仍返回** `ErrModelDependencyUnavailable`——**编排尚未接入该入口**。
 - [FinetuningModelFactsReader](../internal/biz/finetuning_admission.go#L14-L20) 生产装配未接线（`NewManagedAdmissionResolver` 不含 models → `resolver.models == nil` → `ErrFinetuningNotEnabled`）。
-- **新证据（部署读回）**：`ani-modeldev` 的 `config.yaml` **完全没有 model service endpoint**——连配置位都没留。可见调用方与配置都尚未开始。
-- 需新增：与 Stop/deadline **共用执行行锁**的派发资格记录、事务外才做 RPC/I/O、区分"意图已存/已获准派发/结果未明"。
-- **本地可写、可单测，但不能标通过**（无 §4.1）。
+- C1/C2 基模只读解析未实现（依赖提供方身份）。
+- 部署 `config.yaml` 未填 Model 连接值（未部署）。
+
+- **本域可写、可单测，但不能标通过**（无 §4.1）。
 
 ### 4.6 【源码已定】存储交接只能走受控复制（C7）
 
@@ -232,9 +242,9 @@ Gov《服务间调用规则》§5 明文：*"协议只消费接收方公布的�
 | T7 | 目标"可写"检查承载方式 | **仍需**（源码确认当前完全不存在，见 §4.4） | Model |
 | T8 | 存储交接模式（源码已定只能 C7，见 §4.6） | **仅需确认** bucket/配额约束 | 双方 + 环境 owner |
 | T10 | Model 的 tenant UUID 与 Gov 租户映射 | **仍需** | Gov + Model owner |
-| T11 | ModelDev 为何未配置 model endpoint | **仍需**（是未开始，还是另有接缝？） | ModelDev 负责人 |
+| T11 | ModelDev 侧 Model 连接配置 | **已解决**（配置位 + 适配器已加；部署填值待部署时进行） | ModelDev |
 | T12 | MR05 查证：是否把已有 `ListModelVersions` 放行给 ModelDev | **仍需**（点查只答 READY/无；列表已能答 pending，见 §4.3） | Model |
-| T13 | **Model API 模块版本与 proto 消费方式**（见 §2 前置项 C0） | **仍需**（Gov §5 要求消费已公布模块、不复制 Proto、不用本地 replace；ModelDev go.mod 当前无该依赖） | Model 发布 + ModelDev 消费 |
+| T13 | **Model API 模块版本与 proto 消费方式**（见 §2 前置项 C0） | **消费侧已落地**（已 pin `v0.0.0-20261013092523-8951c85bc150`、无 `replace`）；**仅需 Model 确认该 pin** | Model 确认 |
 
 > 编号说明：**T4、T9 为保留号**（历史断层，无对应待确认项）。
 > 已确认项（不再列为待定）：Model 服务器 DNS SAN = `ani-model.ani.internal`；部署版本 = `a21e0a7`（对幂等/format 无影响）。
@@ -249,19 +259,21 @@ spec 派生稿把 Model 源码固定在 commit `6473f1e`（[model-integration-re
 
 ## 6. 建议的推进顺序
 
-1. **把 §3 + §5 发给 Model owner**，回填 T1/T2/T3/T5/T6/T7/T10/T12/T13、确认 T8 倾向 C7。这是**当前唯一不依赖 Fedora/容量**的推进动作。
-2. Model 回填后，ModelDev 侧写：
-   - `FinetuningModelFactsReader` 真实实现（C1/C2）+ 配置位（T11）；
-   - 登记派发仲裁 D09.3 + `CreateModel`/`CreateModelVersion`/`GetModelVersion`/`ListModelVersions` 客户端（C3/C4/C5）；
-   - 单测覆盖"同键同内容重放 / 同键异内容拒绝 / Stop 先于派发 / 派发先于 Stop"。
-3. **真实联调（M1-B）** 需同时满足：Fedora 构建、集群容量（当前 **PVC 19/19 满**）、Model 侧身份签发。
+> **进度更新（本轮实现后）**：下第 2 步的"登记派发仲裁 D09.3 + 客户端"**已完成**（见 §4.5）。当前剩余动作如下。
+
+1. **把 §3 + §5 发给 Model owner**，回填 T1/T2/T3/T5/T6/T7/T10/T12，确认 T8 倾向 C7、确认 T13 的 pin。这是**当前唯一不依赖集群容量的推进动作**。
+2. Model 回填后，ModelDev 侧继续：
+   - `FinetuningModelFactsReader` 真实实现（C1/C2）；
+   - 把 §4.5 已实现的写入编排**接入顶层 `RegisterModel`** 与生产装配。
+3. **真实联调（M1-B）** 需同时满足：集群容量（当前 **PVC 19/19 满**）、Model 侧身份签发、环境稳定。
 
 ---
 
 ## 7. 声明
 
 - 本文静态结论来自**本机源码阅读**；部署结论来自**目标集群只读读回**（`kubectl get` / 证书 SAN 解析）。
-- **未部署任何东西、未发起任何 mTLS 调用、未运行任何测试**。Model 侧调用**从未实际尝试**。
+- **本文未部署任何东西、未发起任何 mTLS 调用**。
+- §4.5 所述的 ModelDev 侧实现与单测均由**独立验证宿主**（隔离 PostgreSQL，与生产集群无关）跑通；**该结果不构成 MR/FT 通过**——真实 Model 调用**从未实际尝试**。
 - 未对 FT/MR/PA 任一项做 PASS/BLOCKED 判定。
 - 标 `TBD` 的项**未经确认**，不得当作已定合同引用。
 - 本文不替代 spec；如与 spec 冲突，以 spec（SHA256 `5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9`）为准。

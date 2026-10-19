@@ -1,6 +1,6 @@
 # 微调登记链接入 Model：需要 model-service owner 拍板的几个点
 
-日期：2026-10-16  
+日期：2026-10-16（**本轮实现后更新**：ModelDev 侧 D09.3 仲裁、写入编排、消费基线均已落地，Q2/Q3/Q4/Q6 已按实现收敛为"确认"）  
 发起方：ModelDev 微调（P0 / MR01–MR08 最小真实登记链）
 
 ---
@@ -79,7 +79,7 @@ ModelDev 的调用身份要给什么值？
 
 ### Q2【允许方法·阻塞】
 
-申请放行以下 7 条：
+申请放行以下 7 条（ModelDev 侧已按此清单实现客户端，**只要放行即可直接使用**）：
 
 ```
 /model.v1.ModelService/GetModel
@@ -95,35 +95,52 @@ ModelDev 的调用身份要给什么值？
 
 ### Q3【Principal 分支怎么加·阻塞】
 
-按 E，ModelDev 需要一个**新的 principal 构造分支**。需 model-service owner 确认它长什么样：
+按 E，ModelDev 需要一个**新的 principal 构造分支**。ModelDev 侧**已按 governance 风格实现**（可复用现有 governance 分支的形状，仅换身份常量）：
 
-- `x-ani-tenant-id`、`x-ani-request-id` ModelDev 照传（和 governance 一样）。
-- **`x-ani-actor` 填什么？** governance 那边强制 `governance:` 前缀，ModelDev 是否也要一个自己的前缀（比如 `modeldev:`）？
-- Principal 的 `Workload` 填什么值？
+- 每次调用**重建** metadata（不转发入站元数据）：`x-ani-tenant-id`、`x-ani-actor`、`x-ani-request-id`；tenant 侧强制规范 UUID。
+- **`x-ani-actor` 的取值请指定**：governance 分支强制 `governance:` 前缀，ModelDev 是否也要求一个自己的前缀（如 `modeldev:`）？还是用其它固定值？
+- **Principal 的 `Workload` 填什么值？**（`Principal.Valid()` 要求 `TenantID`/`Actor`/`Workload` 三者非空）
+
+即：请给出该分支的 **actor 前缀规则**与 **Workload 常量**，ModelDev 侧按此填配置即可。
 
 ### Q4【超时与预算】
 
-登记类 RPC 单次超时、重试预算建议多少？需要跟 Release 总预算对齐吗？
+ModelDev 侧**已定单次 RPC 超时上限 30 秒**（配置可小于该值，不可大于；超过即拒绝启动）。请确认：
+
+- 30 秒上限**是否与 Model 侧接受范围一致**？若 Model 有更长/更短的期望，请给出上限。
+- 登记类写入是否需要**额外重试预算**？（ModelDev 侧当前策略是**不自行重试**——同键重放只做原结果查证，靠 Model 的 `idempotency_key` 幂等兜底。）
 
 ### Q5【租户映射】
 
 Model 的 `tenant_id`（UUID）和 Gov / ModelDev 的租户体系怎么对应？这一点源码里看不出来，需 model-service owner 给出目标环境的映射关系或来源。
 
-### Q6【API 模块版本与消费方式】
+### Q6【API 模块版本与消费方式·已落地，待确认】
 
-Gov《服务间调用规则》§5 要求：只消费接收方公布的**固定版本 API 模块**，不复制 Proto/生成代码，不用本地 `replace`。ModelDev 当前 go.mod 里没有 `ani-model-service` 依赖、全仓也没有 `model.v1` 的生成代码，所以需要确认消费基线。
+Gov《服务间调用规则》§5 要求：只消费接收方公布的**固定版本 API 模块**，不复制 Proto/生成代码，不用本地 `replace`。
 
-Gov 已有可运行的消费先例：`github.com/liangzai006/ani-model-service v0.0.0-20261013092523-8951c85bc150`，go.sum 有校验和、生产码真实 import `api/model/v1`、且无 `replace`。注意该模块**没有语义化 tag，只有 pseudo-version**。
+ModelDev **已按 Gov 同一先例落地**：`go.mod` pin 了 `github.com/liangzai006/ani-model-service v0.0.0-20261013092523-8951c85bc150`（Gov 同款），go.sum 有校验和、生产码真实 import `api/model/v1`、**无任何 `replace`**。注意该模块**没有语义化 tag，只有 pseudo-version**。
 
-需 model-service owner 确认：
+需 model-service owner **确认**（不再是"请给出方案"）：
 
-- ModelDev 沿用 Gov 同一消费方式是否可行？请指定 **pin 的 SHA**（建议不早于部署版 `a21e0a7`）。
-- module 路径按 go.mod 声明的 `github.com/liangzai006/ani-model-service` 解析（而非仓库 remote `zhangzhe-ctrl/...`），请确认以 module 路径为准。
+- 该 pin **是否合适**？若应改用别的 SHA，请指定（建议不早于部署版 `a21e0a7`）。
+- module 路径确认为 go.mod 声明的 `github.com/liangzai006/ani-model-service`（而非仓库 remote `zhangzhe-ctrl/...`）。
 
-## 四、ModelDev 侧不受阻塞的进度（非提问）
+## 四、ModelDev 侧进展（非提问）
 
-- ModelDev 侧读路径（C1/C2）、登记派发与 Stop/deadline 仲裁（D09.3）**尚未开发**，不阻塞 model-service owner 回复；
-- 但**真联调必须等 Q1/Q2**，否则调用会被直接拒；Q6 只需确认消费基线。
+截至本文更新，ModelDev 侧已完成以下与 Model 对接直接相关的实现（**全部在独立验证宿主上通过，未部署、未发起任何真实 Model 调用**）：
+
+- **登记派发仲裁（D09.3）已实现**：与 Stop/关闭/deadline **共用同一执行行锁**，先持久化派发资格、**事务外**才发 RPC；区分"意图已存 / 已获准派发 / 结果未明"，`UNKNOWN` 不当失败（含 6 例真实 PostgreSQL 单测）。
+- **登记写入编排已实现**：`CreateModel` / `CreateModelVersion` / `GetModelVersion` / `ListModelVersions` 的调用编排与"原结果精确读回"验证已落地（8 例单测，用可观测替身，**尚未接真实 mTLS**）。
+- **Model 消费基线已定**：`go.mod` 已 pin `github.com/liangzai006/ani-model-service v0.0.0-20261013092523-8951c85bc150`（与 Gov 同款、无 `replace`），并已按该模块实现 Q2 所列 7 个 RPC 的客户端。
+- **调用配置位已加**：新增 Model 连接配置（endpoint / CA / 客户端身份 / 服务端身份 / actor / 超时），**缺省或部分配置一律拒绝**，不回退明文或环境凭据。
+
+仍未完成（ModelDev 本地待办，不阻塞 owner 回复）：
+
+- **受理前的基模只读解析（C1/C2）**——其真实实现依赖 Q1/Q2/Q3，无身份会被 `PermissionDenied` 直接拒。
+- 顶层 `RegisterModel` 接入上述编排；生产装配接线。
+- 部署侧配置填值（尚未部署）。
+
+**故 Q6 的消费方式已按 Gov 先例自行落地，仅需确认 pin 是否合适（见 Q6）。真联调仍必须等 Q1/Q2/Q3。**
 
 ## 五、回复方式
 
