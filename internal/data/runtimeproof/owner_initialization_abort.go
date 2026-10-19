@@ -12,6 +12,12 @@ import (
 // Kubernetes v1.35.8 TerminatePod deliberately retains PodInitializing for the
 // unstarted init suffix and regular containers. It does not supply a main exit.
 func ownerInitializationAbort(pod *unstructured.Unstructured, now time.Time) *biz.PodInitializationAbort {
+	return observeInitializationAbort(pod, now, true)
+}
+
+// After its independently verified abort was persisted, removing our own
+// finalizer must not erase the proof. This branch is used only with that receipt.
+func observeInitializationAbort(pod *unstructured.Unstructured, now time.Time, requireRetention bool) *biz.PodInitializationAbort {
 	if pod == nil || pod.GetDeletionTimestamp() == nil || pod.GetResourceVersion() == "" || pod.GetGeneration() <= 0 {
 		return nil
 	}
@@ -22,7 +28,7 @@ func ownerInitializationAbort(pod *unstructured.Unstructured, now time.Time) *bi
 	phase, _ := textAt(pod, "status", "phase")
 	policy, _ := textAt(pod, "spec", "restartPolicy")
 	node, _ := textAt(pod, "spec", "nodeName")
-	if !retained || phase != "Failed" || policy != "Never" || node == "" {
+	if requireRetention && !retained || phase != "Failed" || policy != "Never" || node == "" {
 		return nil
 	}
 	for _, fields := range [][]string{{"spec", "ephemeralContainers"}, {"status", "ephemeralContainerStatuses"}} {

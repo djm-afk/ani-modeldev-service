@@ -14,6 +14,22 @@ service ModelDevManagementService {
   rpc ImportRelease(ImportReleaseRequest) returns (ImportReleaseResponse);
   rpc ValidateRelease(ValidateReleaseRequest) returns (ValidateReleaseResponse);
   rpc ImportCSV(ImportCSVRequest) returns (ImportCSVResponse);
+  rpc ImportFinetuningDataset(ImportFinetuningDatasetRequest) returns (ImportFinetuningDatasetResponse);
+}
+
+// Only the fixed JSON Alpaca schema is supported. The importer independently
+// reads original object bytes; callers cannot submit READY or row statistics.
+message ImportFinetuningDatasetRequest {
+  string input_version_id = 1;
+  string release_id = 2;
+  string release_digest = 3;
+  ani.training.v1.FixedObjectRef object = 4;
+  google.protobuf.Timestamp requested_at = 5;
+  string format = 6;
+}
+
+message ImportFinetuningDatasetResponse {
+  InputVersionView input_version = 1;
 }
 
 message ImportReleaseRequest {

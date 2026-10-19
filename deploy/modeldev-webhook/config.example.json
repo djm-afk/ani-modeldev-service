@@ -1,0 +1,46 @@
+{
+  "schema_version": "ani.modeldev.webhook.v1",
+  "listen_address": ":8443",
+  "certificate_file": "/tls/tls.crt",
+  "private_key_file": "/tls/tls.key",
+  "max_body_bytes": 1048576,
+  "max_concurrent_requests": 32,
+  "request_timeout_milliseconds": 5000,
+  "dependency_timeout_milliseconds": 2000,
+  "bindings": [{
+    "namespace": "example-modeldev-tenant",
+    "namespace_uid": "11111111-1111-4111-8111-111111111111",
+    "owner_label": {"key": "ani.io/managed-by", "value": "modeldev-example"},
+    "argo_creator": "system:serviceaccount:kubeflow:argo",
+    "step_service_account": "modeldev-step",
+    "profiles": ["general-training-example", "finetuning-example"],
+    "driver": {
+      "image": "example.invalid/kfp-driver@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "command": ["driver"],
+      "allowed_support_images": ["example.invalid/argoexec@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]
+    }
+  }],
+  "profiles": [{
+    "id": "general-training-example", "kind": "GENERAL_TRAINING",
+    "release_file": "/operator-materials/general-training.canonical.json",
+    "release_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "component_image": "example.invalid/modeldev-step@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "allowed_support_images": [
+      "example.invalid/argoexec@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "example.invalid/kfp-launcher@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    ],
+    "run_as_user": 10001, "run_as_group": 10001, "fs_group": 10001,
+    "ephemeral_storage_request": "1Gi", "ephemeral_storage_limit": "2Gi"
+  }, {
+    "id": "finetuning-example", "kind": "FINETUNING",
+    "release_file": "/operator-materials/finetuning.canonical.json",
+    "release_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "component_image": "example.invalid/modeldev-finetuning-step@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "allowed_support_images": [
+      "example.invalid/argoexec@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "example.invalid/kfp-launcher@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    ],
+    "run_as_user": 10001, "run_as_group": 10001, "fs_group": 10001,
+    "ephemeral_storage_request": "10Gi", "ephemeral_storage_limit": "12Gi"
+  }]
+}

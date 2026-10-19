@@ -55,12 +55,20 @@ func TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed(t *testing.T) {
 	runCompleteMainFlow(t, false)
 }
 
+func TestMainFlowUnifiedWebhookActualMLPToDurableExitCleanup(t *testing.T) {
+	t.Setenv("ANI_MODELDEV_WEBHOOK_MAINFLOW", "1")
+	runCompleteMainFlow(t, false)
+}
+
 func TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication(t *testing.T) {
 	runCompleteMainFlow(t, true)
 }
 
 func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	f := newCompleteFixture(t)
+	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
+		f.admitModelDevSteps(t)
+	}
 	open := postgres.Prepare(t)
 	pool := open()
 	admissions := execution.New(pool)
@@ -230,6 +238,16 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		t.Fatalf("prepare replay failed: %v", err)
 	}
 	t.Log("MAIN_FLOW: fixed S3 CSV actual bytes verified and prepared workspace committed")
+	if _, err := client.EnsureTraining(call("train-wait"), &modeldevv1.EnsureTrainingRequest{Context: f.stepContext("train-wait")}); err == nil {
+		t.Fatal("Prepared callback authorized training before the original prepare exited")
+	}
+	f.mu.Lock()
+	earlyCreates := f.creates
+	f.mu.Unlock()
+	if earlyCreates != 0 {
+		t.Fatal("running prepare created training")
+	}
+	f.finishStep("prepare")
 	for _, subpath := range []string{f.workspace.TrainingSubpath, f.workspace.PublicationSubpath} {
 		if err := os.MkdirAll(filepath.Join(f.root, subpath), 0700); err != nil {
 			t.Fatal(err)
@@ -331,6 +349,9 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	stored, err := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
 	if err != nil || stored.ClosedAt == nil || stored.Publication == nil || stored.TrainingHandle == nil || stored.CloseReason != "NATURAL_TERMINAL" || stored.CloseEvidence == nil || stored.CloseEvidence.OwnerTermination == nil || stored.CloseEvidence.OwnerTermination.RunState != "SUCCEEDED" || stored.CloseEvidence.OwnerTermination.WorkflowPhase != "Succeeded" {
 		t.Fatalf("reconnected owner lost runtime: %v", err)
+	}
+	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
+		f.assertStepExitCleanup(t, ctx, pool)
 	}
 	restartedSubmitter, err := biz.NewPipelineSubmitter(dispatch, runs, 3*time.Second)
 	if err != nil {

@@ -44,10 +44,11 @@ type ownerConfig struct {
 }
 
 type storageConfig struct {
-	Endpoint        string `json:"endpoint"`
-	Region          string `json:"region"`
-	CAFile          string `json:"ca_file"`
-	CredentialsFile string `json:"credentials_file"`
+	Endpoint                string `json:"endpoint"`
+	Region                  string `json:"region"`
+	CAFile                  string `json:"ca_file"`
+	CredentialsFile         string `json:"credentials_file"`
+	StreamingTimeoutSeconds int    `json:"streaming_timeout_seconds,omitempty"`
 }
 
 func main() {
@@ -101,6 +102,7 @@ func execute(ctx context.Context, args []string) error {
 	}
 	stepClient := modeldevv1.NewModelDevStepServiceClient(connection)
 	var objects *s3.Client
+	var baseObjects *s3.Client
 	if step == "prepare" || step == "publish" {
 		provider, providerErr := stepStorageCredentials(stepClient, config.TenantID, config.TokenFile, claim)
 		if providerErr != nil {
@@ -111,7 +113,17 @@ func execute(ctx context.Context, args []string) error {
 			return stageFailure("storage-client", err)
 		}
 	}
-	runner, err := component.New(component.Config{TenantID: config.TenantID, Context: claim, TokenFile: config.TokenFile, WorkspaceDirectory: config.WorkspaceDirectory, PVCName: config.PVCName, InventoryFile: config.InventoryFile, CandidateFile: config.CandidateFile, CloseOnly: invocation.closeOnly, TaskID: config.TaskID, PollInterval: time.Duration(config.PollIntervalSeconds) * time.Second}, stepClient, kube, objects)
+	if step == "prepare" {
+		provider, providerErr := stepStorageCredentials(stepClient, config.TenantID, config.TokenFile, claim, true)
+		if providerErr != nil {
+			return stageFailure("storage-client", providerErr)
+		}
+		baseObjects, err = storageClient(config.S3, provider)
+		if err != nil {
+			return stageFailure("storage-client", err)
+		}
+	}
+	runner, err := component.New(component.Config{TenantID: config.TenantID, Context: claim, TokenFile: config.TokenFile, WorkspaceDirectory: config.WorkspaceDirectory, PVCName: config.PVCName, InventoryFile: config.InventoryFile, CandidateFile: config.CandidateFile, CloseOnly: invocation.closeOnly, TaskID: config.TaskID, PollInterval: time.Duration(config.PollIntervalSeconds) * time.Second}, stepClient, kube, objects, baseObjects)
 	if err != nil {
 		return stageFailure("runner", err)
 	}
@@ -121,7 +133,7 @@ func execute(ctx context.Context, args []string) error {
 }
 
 func storageClient(config *storageConfig, provider aws.CredentialsProvider) (*s3.Client, error) {
-	if config == nil || config.Region == "" || config.CredentialsFile != "" || provider == nil {
+	if config == nil || config.Region == "" || config.CredentialsFile != "" || provider == nil || config.StreamingTimeoutSeconds < 0 || config.StreamingTimeoutSeconds > 900 {
 		return nil, component.ErrConfiguration
 	}
 	endpoint, err := url.Parse(config.Endpoint)
@@ -133,7 +145,12 @@ func storageClient(config *storageConfig, provider aws.CredentialsProvider) (*s3
 		return nil, err
 	}
 	transport := &http.Transport{Proxy: nil, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: roots}, TLSHandshakeTimeout: 10 * time.Second, ResponseHeaderTimeout: 30 * time.Second}
-	client := &http.Client{Transport: transport, Timeout: 2 * time.Minute, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	streamingTimeout := 2 * time.Minute
+	if config.StreamingTimeoutSeconds > 0 {
+		streamingTimeout = time.Duration(config.StreamingTimeoutSeconds) * time.Second
+		transport.ResponseHeaderTimeout = streamingTimeout
+	}
+	client := &http.Client{Transport: transport, Timeout: streamingTimeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	return s3.New(s3.Options{Region: config.Region, BaseEndpoint: aws.String(config.Endpoint), Credentials: provider, UsePathStyle: true, HTTPClient: client, RetryMaxAttempts: 1, RequestChecksumCalculation: aws.RequestChecksumCalculationWhenRequired, ResponseChecksumValidation: aws.ResponseChecksumValidationWhenRequired}), nil
 }
 

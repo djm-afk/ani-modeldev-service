@@ -194,6 +194,8 @@ def forward():
    except subprocess.TimeoutExpired:p.kill();p.wait()
 def main():
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('command',choices=['prepare','pipeline','render','forward','kubectl']);parser.add_argument('args',nargs=argparse.REMAINDER);a=parser.parse_args()
+ if a.command in ('prepare','render'):
+  parser.error('Legacy date-bound deployment rendering is retired. Use deploy/modeldev-webhook and docs/modeldev-webhook.md for the unified component; retained code and manifests are historical evidence. No cluster registration is performed.')
  if a.command=='kubectl':
   guard();sys.stdout.buffer.write(kube(a.args));return
  if a.command=='prepare':prepare()

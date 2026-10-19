@@ -1,0 +1,1085 @@
+{
+  "provenance": {
+    "observed_at": "2026-10-14T12:29:07.614090+00:00",
+    "actual_execution_id": "97685b2c-1aa9-4683-8398-f327caee4f08",
+    "original_raw_sha256": {
+      "kfp-run-actual.json": "42039d326b8e294e71f6cd36c05048d4bebdf69bbe4ca2599d300159d6bac1cb",
+      "workflow-actual.json": "40566b154d674ee51f61c209269840fae517c4735a91785bde300acecd18cd9f",
+      "pods-actual.json": "5f392959d04cf3fa407c327828a301ab5beeb5fbd5383b78830c2968a7ec1144"
+    },
+    "scope": "actual native KFP2.16/Argo3.7.3 metadata-label executor graph; inputs/outputs and unrelated Pods omitted"
+  },
+  "Workflow": {
+    "apiVersion": "argoproj.io/v1alpha1",
+    "kind": "Workflow",
+    "metadata": {
+      "name": "ft-7jsv6",
+      "namespace": "ani-ft-core-20261014",
+      "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+    },
+    "status": {
+      "nodes": {
+        "ft-7jsv6": {
+          "children": [
+            "ft-7jsv6-3843652055"
+          ],
+          "displayName": "ft-7jsv6",
+          "finishedAt": "2026-10-14T12:25:22Z",
+          "id": "ft-7jsv6",
+          "name": "ft-7jsv6",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:23:28Z",
+          "templateName": "entrypoint",
+          "type": "DAG"
+        },
+        "ft-7jsv6-1053678308": {
+          "boundaryID": "ft-7jsv6-3527917490",
+          "children": [
+            "ft-7jsv6-1162023635"
+          ],
+          "displayName": "exit-handler-1-driver",
+          "finishedAt": "2026-10-14T12:23:43Z",
+          "id": "ft-7jsv6-1053678308",
+          "name": "ft-7jsv6.root.exit-handler-1-driver",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:23:38Z",
+          "templateName": "system-dag-driver",
+          "type": "Pod"
+        },
+        "ft-7jsv6-1119869779": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-1646593371"
+          ],
+          "displayName": "collect",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-1119869779",
+          "name": "ft-7jsv6.root.exit-handler-1.collect",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-1162023635": {
+          "boundaryID": "ft-7jsv6-3527917490",
+          "children": [
+            "ft-7jsv6-2511079253",
+            "ft-7jsv6-3064818266"
+          ],
+          "displayName": "exit-handler-1",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-1162023635",
+          "name": "ft-7jsv6.root.exit-handler-1",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:23:48Z",
+          "templateName": "comp-exit-handler-1",
+          "type": "DAG"
+        },
+        "ft-7jsv6-1320666794": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-850686052"
+          ],
+          "displayName": "verify",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-1320666794",
+          "name": "ft-7jsv6.root.exit-handler-1.verify",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-1331012883": {
+          "boundaryID": "ft-7jsv6-279933000",
+          "children": [
+            "ft-7jsv6-2759475230"
+          ],
+          "displayName": "executor",
+          "finishedAt": "2026-10-14T12:24:08Z",
+          "id": "ft-7jsv6-1331012883",
+          "name": "ft-7jsv6.root.exit-handler-1.workspace-name.executor",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:23:58Z",
+          "templateName": "metadata-0-2-retry-system-container-impl",
+          "type": "Retry"
+        },
+        "ft-7jsv6-1401945334": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-2135514133"
+          ],
+          "displayName": "export-driver",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-1401945334",
+          "name": "ft-7jsv6.root.exit-handler-1.export-driver",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "system-container-driver",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-1646593371": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-2016210414"
+          ],
+          "displayName": "publish-driver",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-1646593371",
+          "name": "ft-7jsv6.root.exit-handler-1.publish-driver",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "system-container-driver",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-1822190239": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-1320666794"
+          ],
+          "displayName": "verify-driver",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-1822190239",
+          "name": "ft-7jsv6.root.exit-handler-1.verify-driver",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "system-container-driver",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-2000756818": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-378398329"
+          ],
+          "displayName": "prepare",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-2000756818",
+          "name": "ft-7jsv6.root.exit-handler-1.prepare",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:24:28Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "DAG"
+        },
+        "ft-7jsv6-2016210414": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-3562044479",
+            "ft-7jsv6-3001963150"
+          ],
+          "displayName": "publish",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-2016210414",
+          "name": "ft-7jsv6.root.exit-handler-1.publish",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-2135514133": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-1822190239"
+          ],
+          "displayName": "export",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-2135514133",
+          "name": "ft-7jsv6.root.exit-handler-1.export",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-2173733704": {
+          "boundaryID": "ft-7jsv6-3064818266",
+          "children": [
+            "ft-7jsv6-3650723551"
+          ],
+          "displayName": "finalize-close-driver",
+          "finishedAt": "2026-10-14T12:24:56Z",
+          "id": "ft-7jsv6-2173733704",
+          "name": "ft-7jsv6.root.exit-handler-1.onExit.finalize-close-driver",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "system-container-driver",
+          "type": "Pod"
+        },
+        "ft-7jsv6-2221377610": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-3001963150"
+          ],
+          "displayName": "register",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-2221377610",
+          "name": "ft-7jsv6.root.exit-handler-1.register",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-2419089179": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-1401945334"
+          ],
+          "displayName": "train-wait",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-2419089179",
+          "name": "ft-7jsv6.root.exit-handler-1.train-wait",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-2511079253": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-279933000"
+          ],
+          "displayName": "workspace-name-driver",
+          "finishedAt": "2026-10-14T12:23:53Z",
+          "id": "ft-7jsv6-2511079253",
+          "name": "ft-7jsv6.root.exit-handler-1.workspace-name-driver",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:23:48Z",
+          "templateName": "system-container-driver",
+          "type": "Pod"
+        },
+        "ft-7jsv6-2514105504": {
+          "boundaryID": "ft-7jsv6-2000756818",
+          "children": [
+            "ft-7jsv6-3425525116"
+          ],
+          "displayName": "executor(0)",
+          "finishedAt": "2026-10-14T12:24:48Z",
+          "id": "ft-7jsv6-2514105504",
+          "name": "ft-7jsv6.root.exit-handler-1.prepare.executor(0)",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:24:28Z",
+          "templateName": "metadata-0-2-retry-system-container-impl",
+          "type": "Pod"
+        },
+        "ft-7jsv6-2759475230": {
+          "boundaryID": "ft-7jsv6-279933000",
+          "children": [
+            "ft-7jsv6-3233992678"
+          ],
+          "displayName": "executor(0)",
+          "finishedAt": "2026-10-14T12:24:04Z",
+          "id": "ft-7jsv6-2759475230",
+          "name": "ft-7jsv6.root.exit-handler-1.workspace-name.executor(0)",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:23:58Z",
+          "templateName": "metadata-0-2-retry-system-container-impl",
+          "type": "Pod"
+        },
+        "ft-7jsv6-279933000": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-1331012883"
+          ],
+          "displayName": "workspace-name",
+          "finishedAt": "2026-10-14T12:24:08Z",
+          "id": "ft-7jsv6-279933000",
+          "name": "ft-7jsv6.root.exit-handler-1.workspace-name",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:23:58Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "DAG"
+        },
+        "ft-7jsv6-2929180653": {
+          "boundaryID": "ft-7jsv6-3650723551",
+          "displayName": "executor(0)",
+          "finishedAt": "2026-10-14T12:25:13Z",
+          "id": "ft-7jsv6-2929180653",
+          "name": "ft-7jsv6.root.exit-handler-1.onExit.finalize-close.executor(0)",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:25:00Z",
+          "templateName": "metadata-0-2-retry-system-container-impl",
+          "type": "Pod"
+        },
+        "ft-7jsv6-3001963150": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-3334624317"
+          ],
+          "displayName": "close-driver",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-3001963150",
+          "name": "ft-7jsv6.root.exit-handler-1.close-driver",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "system-container-driver",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-3064818266": {
+          "boundaryID": "ft-7jsv6-3527917490",
+          "children": [
+            "ft-7jsv6-2173733704"
+          ],
+          "displayName": "exit-handler-1.onExit",
+          "finishedAt": "2026-10-14T12:25:22Z",
+          "id": "ft-7jsv6-3064818266",
+          "name": "ft-7jsv6.root.exit-handler-1.onExit",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "exit-hook-root-finalize-close",
+          "type": "DAG"
+        },
+        "ft-7jsv6-3233992678": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-3638159991",
+            "ft-7jsv6-1401945334",
+            "ft-7jsv6-1822190239",
+            "ft-7jsv6-850686052",
+            "ft-7jsv6-1646593371"
+          ],
+          "displayName": "createpvc",
+          "finishedAt": "2026-10-14T12:24:14Z",
+          "id": "ft-7jsv6-3233992678",
+          "name": "ft-7jsv6.root.exit-handler-1.createpvc",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:24:08Z",
+          "templateName": "system-container-driver",
+          "type": "Pod"
+        },
+        "ft-7jsv6-3334624317": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "displayName": "close",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-3334624317",
+          "name": "ft-7jsv6.root.exit-handler-1.close",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-3425525116": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-2419089179"
+          ],
+          "displayName": "train-wait-driver",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-3425525116",
+          "name": "ft-7jsv6.root.exit-handler-1.train-wait-driver",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "system-container-driver",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-3527917490": {
+          "boundaryID": "ft-7jsv6",
+          "children": [
+            "ft-7jsv6-1053678308"
+          ],
+          "displayName": "root",
+          "finishedAt": "2026-10-14T12:25:22Z",
+          "id": "ft-7jsv6-3527917490",
+          "name": "ft-7jsv6.root",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:23:38Z",
+          "templateName": "root",
+          "type": "DAG"
+        },
+        "ft-7jsv6-3562044479": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-2221377610"
+          ],
+          "displayName": "register-driver",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-3562044479",
+          "name": "ft-7jsv6.root.exit-handler-1.register-driver",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "system-container-driver",
+          "type": "Skipped"
+        },
+        "ft-7jsv6-3638159991": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-2000756818"
+          ],
+          "displayName": "prepare-driver",
+          "finishedAt": "2026-10-14T12:24:24Z",
+          "id": "ft-7jsv6-3638159991",
+          "name": "ft-7jsv6.root.exit-handler-1.prepare-driver",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:24:18Z",
+          "templateName": "system-container-driver",
+          "type": "Pod"
+        },
+        "ft-7jsv6-3650723551": {
+          "boundaryID": "ft-7jsv6-3064818266",
+          "children": [
+            "ft-7jsv6-4233054398"
+          ],
+          "displayName": "finalize-close",
+          "finishedAt": "2026-10-14T12:25:22Z",
+          "id": "ft-7jsv6-3650723551",
+          "name": "ft-7jsv6.root.exit-handler-1.onExit.finalize-close",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:25:00Z",
+          "templateName": "metadata-0-2-retry-system-container-executor",
+          "type": "DAG"
+        },
+        "ft-7jsv6-378398329": {
+          "boundaryID": "ft-7jsv6-2000756818",
+          "children": [
+            "ft-7jsv6-2514105504"
+          ],
+          "displayName": "executor",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-378398329",
+          "name": "ft-7jsv6.root.exit-handler-1.prepare.executor",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:24:28Z",
+          "templateName": "metadata-0-2-retry-system-container-impl",
+          "type": "Retry"
+        },
+        "ft-7jsv6-3843652055": {
+          "boundaryID": "ft-7jsv6",
+          "children": [
+            "ft-7jsv6-3527917490"
+          ],
+          "displayName": "root-driver",
+          "finishedAt": "2026-10-14T12:23:35Z",
+          "id": "ft-7jsv6-3843652055",
+          "name": "ft-7jsv6.root-driver",
+          "phase": "Succeeded",
+          "startedAt": "2026-10-14T12:23:28Z",
+          "templateName": "system-dag-driver",
+          "type": "Pod"
+        },
+        "ft-7jsv6-4233054398": {
+          "boundaryID": "ft-7jsv6-3650723551",
+          "children": [
+            "ft-7jsv6-2929180653"
+          ],
+          "displayName": "executor",
+          "finishedAt": "2026-10-14T12:25:22Z",
+          "id": "ft-7jsv6-4233054398",
+          "name": "ft-7jsv6.root.exit-handler-1.onExit.finalize-close.executor",
+          "phase": "Failed",
+          "startedAt": "2026-10-14T12:25:00Z",
+          "templateName": "metadata-0-2-retry-system-container-impl",
+          "type": "Retry"
+        },
+        "ft-7jsv6-850686052": {
+          "boundaryID": "ft-7jsv6-1162023635",
+          "children": [
+            "ft-7jsv6-1119869779"
+          ],
+          "displayName": "collect-driver",
+          "finishedAt": "2026-10-14T12:24:50Z",
+          "id": "ft-7jsv6-850686052",
+          "name": "ft-7jsv6.root.exit-handler-1.collect-driver",
+          "phase": "Omitted",
+          "startedAt": "2026-10-14T12:24:50Z",
+          "templateName": "system-container-driver",
+          "type": "Skipped"
+        }
+      }
+    }
+  },
+  "Pods": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-metadata-0-2-retry-system-container-impl-2514105504",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "cf2f4ecf-a8c1-4a93-864a-fc6c8ae5f936",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-2514105504",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root.exit-handler-1.prepare.executor(0)"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-metadata-0-2-retry-system-container-impl-2759475230",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "2ae7dbc7-d59a-40d8-9971-b5cd9a8d4a66",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-2759475230",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root.exit-handler-1.workspace-name.executor(0)"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-metadata-0-2-retry-system-container-impl-2929180653",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "8b5d9c02-7da4-4cc9-925d-9f4e5ae5af31",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-2929180653",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root.exit-handler-1.onExit.finalize-close.executor(0)"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-system-container-driver-2173733704",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "9ebcd1f7-0712-4e46-b3e1-b1acdef00152",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-2173733704",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root.exit-handler-1.onExit.finalize-close-driver"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-system-container-driver-2511079253",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "23446a79-5281-4eae-a260-f4b53216d44c",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-2511079253",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root.exit-handler-1.workspace-name-driver"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-system-container-driver-3233992678",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "278ca6d5-ded7-4e41-a02b-fcccd898841d",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-3233992678",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root.exit-handler-1.createpvc"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-system-container-driver-3638159991",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "c6c6e4fa-f674-48dc-805b-1634c8f07f3c",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-3638159991",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root.exit-handler-1.prepare-driver"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-system-dag-driver-1053678308",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "be2c1a35-42c1-41c3-80d1-7a6586884fe9",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-1053678308",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root.exit-handler-1-driver"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "ft-7jsv6-system-dag-driver-3843652055",
+        "namespace": "ani-ft-core-20261014",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "ft-7jsv6",
+            "uid": "fa1c15be-65f0-46ca-b0eb-f2aad315d1f5"
+          }
+        ],
+        "uid": "e0bae933-0bb8-470f-bc23-689233b95b99",
+        "annotations": {
+          "workflows.argoproj.io/node-id": "ft-7jsv6-3843652055",
+          "workflows.argoproj.io/node-name": "ft-7jsv6.root-driver"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "modeldev-step"
+      }
+    }
+  ],
+  "Run": {
+    "run_details": {
+      "task_details": [
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "0661d9a6-39f9-4664-896b-3a0dea5a0267",
+          "display_name": "executor",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2514105504"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "07c213af-a2bc-48ca-b921-d58558c4d03e",
+          "display_name": "train-wait-driver",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2419089179"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "0e569390-5c58-4771-b22a-b0e70e27da26",
+          "display_name": "executor(0)",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3233992678"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "13d5d835-ddd6-44ed-81ba-cd09055e3fc9",
+          "display_name": "workspace-name-driver",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-279933000"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "1a933ef4-574c-4920-a1a6-c7b330772dbc",
+          "display_name": "exit-handler-1-driver",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-1162023635"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "1b28c37e-b1e1-4ad7-a502-161851d9fc32",
+          "display_name": "register",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3001963150"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "33d29057-266e-4d82-9b4e-da5928c16055",
+          "display_name": "executor",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2759475230"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "33fed169-e925-412c-829d-b26913ea0f6a",
+          "display_name": "exit-handler-1",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2511079253"
+            },
+            {
+              "pod_name": "ft-7jsv6-3064818266"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "3a83141a-4431-4ec7-bf6a-e0d9d80c1f98",
+          "display_name": "close"
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "4bf67459-ae17-4760-942f-55f4f7d3511f",
+          "display_name": "export-driver",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2135514133"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "4cc18b65-32ff-4dc0-9b94-e5f7194ab7db",
+          "display_name": "executor(0)",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3425525116"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "4d030298-e8db-4827-977c-d50043cb62d1",
+          "display_name": "root",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-1053678308"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "53be1407-1e9d-498e-8e27-4a67709b0936",
+          "display_name": "exit-handler-1.onExit",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2173733704"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "5a7d5d1e-9ed8-41cb-b7e0-da0948e4f240",
+          "display_name": "publish",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3562044479"
+            },
+            {
+              "pod_name": "ft-7jsv6-3001963150"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "6224631f-8f1f-4e7e-b7d1-253be1f4f4b1",
+          "display_name": "publish-driver",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2016210414"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "70a7a412-4ee8-4ce1-a5e7-3728650470a8",
+          "display_name": "ft-7jsv6",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3843652055"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "83b2e159-18bb-4571-84b0-7f0cc5df36a6",
+          "display_name": "collect",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-1646593371"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "885a0952-0513-4204-8aa4-f6350e41c508",
+          "display_name": "export",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-1822190239"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "8bc193b5-8db8-40a7-9644-4f5c5a5784e6",
+          "display_name": "prepare-driver",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2000756818"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "8e1da602-f308-426b-b176-34032f8c35d1",
+          "display_name": "executor(0)",
+          "state": "FAILED"
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "b2b165d9-994c-4e50-84fc-82bde48888d1",
+          "display_name": "collect-driver",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-1119869779"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "b702008e-22db-4c1a-9ae5-0165109ea2b1",
+          "display_name": "workspace-name",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-1331012883"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "bb0777f5-9ea2-4e36-bd33-4ff952c9f268",
+          "display_name": "root-driver",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3527917490"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "bd0e2b1b-3c7f-4429-9cab-d7da6d4f3012",
+          "display_name": "executor",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2929180653"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "c09cb156-2934-4fb3-8f33-dfaf238dc683",
+          "display_name": "createpvc",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3638159991"
+            },
+            {
+              "pod_name": "ft-7jsv6-1401945334"
+            },
+            {
+              "pod_name": "ft-7jsv6-1822190239"
+            },
+            {
+              "pod_name": "ft-7jsv6-850686052"
+            },
+            {
+              "pod_name": "ft-7jsv6-1646593371"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "c247c931-f219-47b8-bf97-06608811448e",
+          "display_name": "finalize-close-driver",
+          "state": "SUCCEEDED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3650723551"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "e9c880f4-07bc-4642-8c66-779d0558700e",
+          "display_name": "verify",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-850686052"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "ea48b4c0-ec1b-4c05-8e38-54f710a7122b",
+          "display_name": "verify-driver",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-1320666794"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "ef722f3e-132c-4de3-9d55-9d7cf18aae6f",
+          "display_name": "register-driver",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-2221377610"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "f07bc9c6-36db-49d5-9383-845870c34799",
+          "display_name": "prepare",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-378398329"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "f9417c25-3582-450a-b911-4ec857f79ff8",
+          "display_name": "close-driver",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-3334624317"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "fc1fffee-7909-472f-a814-1274d429fda2",
+          "display_name": "train-wait",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-1401945334"
+            }
+          ]
+        },
+        {
+          "run_id": "431929d8-2256-4996-a2f5-e725b8647b24",
+          "task_id": "ff299bda-f821-4232-b724-cbb5077c8fb2",
+          "display_name": "finalize-close",
+          "state": "FAILED",
+          "child_tasks": [
+            {
+              "pod_name": "ft-7jsv6-4233054398"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -651,13 +651,16 @@ var ModelDevCommandService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ModelDevStepService_BeginExecution_FullMethodName            = "/ani.modeldev.v1.ModelDevStepService/BeginExecution"
-	ModelDevStepService_GetExecutionConfiguration_FullMethodName = "/ani.modeldev.v1.ModelDevStepService/GetExecutionConfiguration"
-	ModelDevStepService_GetStorageCredentials_FullMethodName     = "/ani.modeldev.v1.ModelDevStepService/GetStorageCredentials"
-	ModelDevStepService_EnsureTraining_FullMethodName            = "/ani.modeldev.v1.ModelDevStepService/EnsureTraining"
-	ModelDevStepService_GetTrainingStatus_FullMethodName         = "/ani.modeldev.v1.ModelDevStepService/GetTrainingStatus"
-	ModelDevStepService_ReportStepResult_FullMethodName          = "/ani.modeldev.v1.ModelDevStepService/ReportStepResult"
-	ModelDevStepService_RequestExecutionClose_FullMethodName     = "/ani.modeldev.v1.ModelDevStepService/RequestExecutionClose"
+	ModelDevStepService_BeginExecution_FullMethodName             = "/ani.modeldev.v1.ModelDevStepService/BeginExecution"
+	ModelDevStepService_GetExecutionConfiguration_FullMethodName  = "/ani.modeldev.v1.ModelDevStepService/GetExecutionConfiguration"
+	ModelDevStepService_GetStorageCredentials_FullMethodName      = "/ani.modeldev.v1.ModelDevStepService/GetStorageCredentials"
+	ModelDevStepService_EnsureTraining_FullMethodName             = "/ani.modeldev.v1.ModelDevStepService/EnsureTraining"
+	ModelDevStepService_GetTrainingStatus_FullMethodName          = "/ani.modeldev.v1.ModelDevStepService/GetTrainingStatus"
+	ModelDevStepService_ReportStepResult_FullMethodName           = "/ani.modeldev.v1.ModelDevStepService/ReportStepResult"
+	ModelDevStepService_RequestExecutionClose_FullMethodName      = "/ani.modeldev.v1.ModelDevStepService/RequestExecutionClose"
+	ModelDevStepService_BeginFinetuningStep_FullMethodName        = "/ani.modeldev.v1.ModelDevStepService/BeginFinetuningStep"
+	ModelDevStepService_ReportFinetuningStepResult_FullMethodName = "/ani.modeldev.v1.ModelDevStepService/ReportFinetuningStepResult"
+	ModelDevStepService_RegisterModel_FullMethodName              = "/ani.modeldev.v1.ModelDevStepService/RegisterModel"
 )
 
 // ModelDevStepServiceClient is the client API for ModelDevStepService service.
@@ -677,6 +680,13 @@ type ModelDevStepServiceClient interface {
 	GetTrainingStatus(ctx context.Context, in *GetTrainingStatusRequest, opts ...grpc.CallOption) (*GetTrainingStatusResponse, error)
 	ReportStepResult(ctx context.Context, in *ReportStepResultRequest, opts ...grpc.CallOption) (*ReportStepResultResponse, error)
 	RequestExecutionClose(ctx context.Context, in *RequestExecutionCloseRequest, opts ...grpc.CallOption) (*RequestExecutionCloseResponse, error)
+	// EXPORT/VERIFY startup shares execution-level arbitration with stop.
+	// Replays return the original bounds and never grant another launch.
+	BeginFinetuningStep(ctx context.Context, in *BeginFinetuningStepRequest, opts ...grpc.CallOption) (*BeginFinetuningStepResponse, error)
+	ReportFinetuningStepResult(ctx context.Context, in *ReportFinetuningStepResultRequest, opts ...grpc.CallOption) (*ReportFinetuningStepResultResponse, error)
+	// Confirms the original publish completion and object bytes before Model
+	// registration. A dependency error preserves PUBLISHED and closes compute.
+	RegisterModel(ctx context.Context, in *RegisterModelRequest, opts ...grpc.CallOption) (*RegisterModelResponse, error)
 }
 
 type modelDevStepServiceClient struct {
@@ -757,6 +767,36 @@ func (c *modelDevStepServiceClient) RequestExecutionClose(ctx context.Context, i
 	return out, nil
 }
 
+func (c *modelDevStepServiceClient) BeginFinetuningStep(ctx context.Context, in *BeginFinetuningStepRequest, opts ...grpc.CallOption) (*BeginFinetuningStepResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BeginFinetuningStepResponse)
+	err := c.cc.Invoke(ctx, ModelDevStepService_BeginFinetuningStep_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modelDevStepServiceClient) ReportFinetuningStepResult(ctx context.Context, in *ReportFinetuningStepResultRequest, opts ...grpc.CallOption) (*ReportFinetuningStepResultResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportFinetuningStepResultResponse)
+	err := c.cc.Invoke(ctx, ModelDevStepService_ReportFinetuningStepResult_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modelDevStepServiceClient) RegisterModel(ctx context.Context, in *RegisterModelRequest, opts ...grpc.CallOption) (*RegisterModelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegisterModelResponse)
+	err := c.cc.Invoke(ctx, ModelDevStepService_RegisterModel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ModelDevStepServiceServer is the server API for ModelDevStepService service.
 // All implementations must embed UnimplementedModelDevStepServiceServer
 // for forward compatibility.
@@ -774,6 +814,13 @@ type ModelDevStepServiceServer interface {
 	GetTrainingStatus(context.Context, *GetTrainingStatusRequest) (*GetTrainingStatusResponse, error)
 	ReportStepResult(context.Context, *ReportStepResultRequest) (*ReportStepResultResponse, error)
 	RequestExecutionClose(context.Context, *RequestExecutionCloseRequest) (*RequestExecutionCloseResponse, error)
+	// EXPORT/VERIFY startup shares execution-level arbitration with stop.
+	// Replays return the original bounds and never grant another launch.
+	BeginFinetuningStep(context.Context, *BeginFinetuningStepRequest) (*BeginFinetuningStepResponse, error)
+	ReportFinetuningStepResult(context.Context, *ReportFinetuningStepResultRequest) (*ReportFinetuningStepResultResponse, error)
+	// Confirms the original publish completion and object bytes before Model
+	// registration. A dependency error preserves PUBLISHED and closes compute.
+	RegisterModel(context.Context, *RegisterModelRequest) (*RegisterModelResponse, error)
 	mustEmbedUnimplementedModelDevStepServiceServer()
 }
 
@@ -804,6 +851,15 @@ func (UnimplementedModelDevStepServiceServer) ReportStepResult(context.Context, 
 }
 func (UnimplementedModelDevStepServiceServer) RequestExecutionClose(context.Context, *RequestExecutionCloseRequest) (*RequestExecutionCloseResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RequestExecutionClose not implemented")
+}
+func (UnimplementedModelDevStepServiceServer) BeginFinetuningStep(context.Context, *BeginFinetuningStepRequest) (*BeginFinetuningStepResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BeginFinetuningStep not implemented")
+}
+func (UnimplementedModelDevStepServiceServer) ReportFinetuningStepResult(context.Context, *ReportFinetuningStepResultRequest) (*ReportFinetuningStepResultResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportFinetuningStepResult not implemented")
+}
+func (UnimplementedModelDevStepServiceServer) RegisterModel(context.Context, *RegisterModelRequest) (*RegisterModelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RegisterModel not implemented")
 }
 func (UnimplementedModelDevStepServiceServer) mustEmbedUnimplementedModelDevStepServiceServer() {}
 func (UnimplementedModelDevStepServiceServer) testEmbeddedByValue()                             {}
@@ -952,6 +1008,60 @@ func _ModelDevStepService_RequestExecutionClose_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ModelDevStepService_BeginFinetuningStep_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BeginFinetuningStepRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevStepServiceServer).BeginFinetuningStep(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevStepService_BeginFinetuningStep_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevStepServiceServer).BeginFinetuningStep(ctx, req.(*BeginFinetuningStepRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModelDevStepService_ReportFinetuningStepResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportFinetuningStepResultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevStepServiceServer).ReportFinetuningStepResult(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevStepService_ReportFinetuningStepResult_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevStepServiceServer).ReportFinetuningStepResult(ctx, req.(*ReportFinetuningStepResultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModelDevStepService_RegisterModel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterModelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevStepServiceServer).RegisterModel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevStepService_RegisterModel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevStepServiceServer).RegisterModel(ctx, req.(*RegisterModelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ModelDevStepService_ServiceDesc is the grpc.ServiceDesc for ModelDevStepService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -986,6 +1096,18 @@ var ModelDevStepService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RequestExecutionClose",
 			Handler:    _ModelDevStepService_RequestExecutionClose_Handler,
+		},
+		{
+			MethodName: "BeginFinetuningStep",
+			Handler:    _ModelDevStepService_BeginFinetuningStep_Handler,
+		},
+		{
+			MethodName: "ReportFinetuningStepResult",
+			Handler:    _ModelDevStepService_ReportFinetuningStepResult_Handler,
+		},
+		{
+			MethodName: "RegisterModel",
+			Handler:    _ModelDevStepService_RegisterModel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

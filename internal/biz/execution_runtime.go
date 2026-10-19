@@ -36,6 +36,15 @@ type TrainingPlan struct {
 	Name, RequestSHA256                          string
 	Snapshot                                     cpup01.Snapshot
 	Workspace                                    WorkspaceBinding
+	FinetuningTiming                             *TrainingBudgetTiming `json:",omitempty"`
+}
+
+// TrainingBudgetTiming is fixed by the first database-backed reservation. A
+// TrainJob lookup, status replay, or delayed process start cannot renew it.
+// The optional field preserves the exact historical CPU request hash.
+type TrainingBudgetTiming struct {
+	AdmittedAt time.Time
+	DeadlineAt time.Time
 }
 
 type TrainingHandle struct {
@@ -150,17 +159,21 @@ type RuntimePublication struct {
 // ExecutionRuntime contains committed facts; no state value reconstructs an
 // outbound creation permit. Normal step advancement belongs to KFP.
 type ExecutionRuntime struct {
-	Workspace         *WorkspaceBinding
-	Training          *TrainingPlan
-	TrainingRejection *TrainingCreationRejection `json:",omitempty"`
-	TrainingHandle    *TrainingHandle
-	Observation       *TrainingRuntimeObservation
-	Publication       *RuntimePublication
-	CloseGeneration   uint64
-	CloseReason       string
-	CloseRequestedAt  time.Time
-	ClosedAt          *time.Time
-	CloseEvidence     *ManagedCloseEvidence
+	ComputeCleanup         *ComputeCleanupReceipt  `json:",omitempty"`
+	StepExitCleanup        *StepExitCleanupReceipt `json:",omitempty"`
+	FinetuningRegistration *FinetuningRegistration `json:",omitempty"`
+	Workspace              *WorkspaceBinding
+	Training               *TrainingPlan
+	TrainingRejection      *TrainingCreationRejection `json:",omitempty"`
+	TrainingHandle         *TrainingHandle
+	Observation            *TrainingRuntimeObservation
+	Publication            *RuntimePublication
+	FinetuningSteps        []FinetuningStepStart `json:",omitempty"`
+	CloseGeneration        uint64
+	CloseReason            string
+	CloseRequestedAt       time.Time
+	ClosedAt               *time.Time
+	CloseEvidence          *ManagedCloseEvidence
 	// CloseAuthority is an owner-only recovery association. It cannot authorize
 	// managed steps or recreate a consumed submission permit.
 	CloseAuthority    *RunAuthorityCandidate
@@ -192,6 +205,7 @@ type TrainingRuntime interface {
 
 type PreparedWorkspaceVerifier interface {
 	VerifyPrepared(context.Context, Execution, ManagedStepAssociation, WorkspaceBinding) error
+	VerifyPreparedCompletion(context.Context, Execution, ManagedStepAssociation, WorkspaceBinding) error
 }
 
 type PublicationVerifier interface {
@@ -218,24 +232,60 @@ type ManagedOwnerTermination struct {
 	WorkflowPhase           string
 	WorkflowFinishedAt      time.Time
 	WorkflowResourceVersion string
+	WorkflowNodesSHA256     string `json:",omitempty"`
+}
+
+// StepExitCleanupReceipt is recorded before releasing or deleting an original
+// Workflow Pod. Its complete owner evidence includes control/close Pods which
+// were still running when a managed close task confirmed data-plane closure.
+// Training Pods and their controllers are deliberately outside this receipt.
+type StepExitCleanupReceipt struct {
+	CloseGeneration  uint64
+	Evidence         ManagedCloseEvidence
+	StartedAt        time.Time
+	RemovedResources []RuntimeResource
+	CompletedAt      *time.Time `json:",omitempty"`
 }
 
 type ManagedSkippedTask struct {
 	TaskName, TaskID string
 }
 
-func FreezeTrainingPlan(execution Execution, workspace WorkspaceBinding) (TrainingPlan, error) {
+// ValidateWorkspaceBinding checks only the immutable workspace contract. It
+// cannot construct or renew the separate first-admission training deadline.
+func ValidateWorkspaceBinding(execution Execution, workspace WorkspaceBinding) error {
 	if _, _, err := execution.CanonicalPayloads(); err != nil {
-		return TrainingPlan{}, ErrInvalidAdmission
+		return ErrInvalidAdmission
 	}
 	want := execution.Snapshot.Workspace
 	if workspace.Mode != want.Mode || workspace.NamespaceName != execution.Snapshot.Environment.NamespaceName || workspace.NamespaceUID != execution.Snapshot.Environment.NamespaceUID ||
 		workspace.PVCName == "" || workspace.PVCUID == "" || workspace.InputSubpath != want.InputSubpath || workspace.TrainingSubpath != want.TrainingSubpath ||
 		workspace.ReportsSubpath != want.ReportsSubpath || workspace.PublicationSubpath != want.PublicationSubpath || workspace.PreparedManifestBytes <= 0 || !closeSpecHashPattern.MatchString(workspace.PreparedManifestSHA256) {
-		return TrainingPlan{}, ErrRuntimeConflict
+		return ErrRuntimeConflict
+	}
+	return nil
+}
+
+func FreezeTrainingPlan(execution Execution, workspace WorkspaceBinding, admittedAt ...time.Time) (TrainingPlan, error) {
+	if err := ValidateWorkspaceBinding(execution, workspace); err != nil {
+		return TrainingPlan{}, err
 	}
 	plan := TrainingPlan{TenantID: execution.TenantID, OperationID: execution.OperationID, ExecutionID: execution.ExecutionID, SpecHash: execution.SpecHash,
 		Name: "md-" + strings.ToLower(execution.ExecutionID), Snapshot: execution.Snapshot, Workspace: workspace}
+	if execution.Snapshot.Kind == "FINETUNING" {
+		fine := execution.Snapshot.Finetuning
+		if fine == nil || fine.Budgets.TrainingTimeoutSeconds == 0 || len(admittedAt) != 1 || admittedAt[0].IsZero() || !admittedAt[0].Before(execution.Snapshot.DeadlineAt) {
+			return TrainingPlan{}, ErrRuntimeConflict
+		}
+		start := admittedAt[0].UTC()
+		deadline := start.Add(time.Duration(fine.Budgets.TrainingTimeoutSeconds) * time.Second)
+		if execution.Snapshot.DeadlineAt.Before(deadline) {
+			deadline = execution.Snapshot.DeadlineAt.UTC()
+		}
+		plan.FinetuningTiming = &TrainingBudgetTiming{AdmittedAt: start, DeadlineAt: deadline}
+	} else if len(admittedAt) > 1 {
+		return TrainingPlan{}, ErrRuntimeConflict
+	}
 	encoded, err := json.Marshal(plan)
 	if err != nil {
 		return TrainingPlan{}, ErrInvalidAdmission

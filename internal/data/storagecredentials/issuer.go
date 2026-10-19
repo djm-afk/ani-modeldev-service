@@ -61,7 +61,7 @@ func New(config Config) (*Issuer, error) {
 	seen := make(map[Binding]bool)
 	for _, binding := range config.Bindings {
 		id, err := uuid.Parse(binding.TenantID)
-		if err != nil || id == uuid.Nil || id.String() != binding.TenantID || (binding.Purpose != "prepare" && binding.Purpose != "publish") ||
+		if err != nil || id == uuid.Nil || id.String() != binding.TenantID || (binding.Purpose != "prepare" && binding.Purpose != "prepare-base-model" && binding.Purpose != "publish") ||
 			!biz.ValidStorageReference(binding.ConnectionID) || !bucketName.MatchString(binding.Bucket) || !safePolicyKey(binding.Prefix) || seen[binding] {
 			return nil, ErrUnavailable
 		}
@@ -97,9 +97,13 @@ func (issuer *Issuer) IssueForExecution(ctx context.Context, execution biz.Execu
 		return failure()
 	}
 	statement := policyStatement{Effect: "Allow", Action: actions, Resource: []string{resource}}
-	if purpose == "prepare" && execution.Snapshot.Input.Object.VersionID != nil {
+	object := execution.Snapshot.Input.Object
+	if purpose == "prepare-base-model" {
+		object = execution.Snapshot.Finetuning.BaseModel.Object
+	}
+	if (purpose == "prepare" || purpose == "prepare-base-model") && object.VersionID != nil {
 		statement.Action = []string{"s3:GetObjectVersion"}
-		statement.Condition = map[string]map[string][]string{"StringEquals": {"s3:VersionId": {*execution.Snapshot.Input.Object.VersionID}}}
+		statement.Condition = map[string]map[string][]string{"StringEquals": {"s3:VersionId": {*object.VersionID}}}
 	}
 	policy, err := json.Marshal(struct {
 		Version   string            `json:"Version"`
@@ -191,6 +195,12 @@ func (issuer *Issuer) scope(execution biz.Execution, purpose string) (biz.Tempor
 	case "prepare":
 		input := execution.Snapshot.Input.Object
 		connection, bucket, key = input.StorageConnectionID, input.Bucket, input.Key
+	case "prepare-base-model":
+		if execution.Snapshot.Kind != "FINETUNING" || execution.Snapshot.Finetuning == nil {
+			return biz.TemporaryStorageCredentials{}, nil, "", false
+		}
+		base := execution.Snapshot.Finetuning.BaseModel.Object
+		connection, bucket, key = base.StorageConnectionID, base.Bucket, base.Key
 	case "publish":
 		scope := execution.Snapshot.PublicationScope
 		connection, bucket, prefix = scope.StorageConnectionID, scope.Bucket, scope.ApprovedPrefix+"/"+execution.ExecutionID

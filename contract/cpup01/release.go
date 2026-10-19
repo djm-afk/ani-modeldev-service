@@ -20,20 +20,21 @@ const MaxReleaseBytes = 64 * 1024
 // a current binding. Loading it proves no environment or publication readiness.
 // Its digest is external: SHA256 of the complete canonical file bytes.
 type ReleaseDocument struct {
-	SchemaVersion           string            `json:"schema_version"`
-	ReleaseID               string            `json:"release_id"`
-	PresetID                string            `json:"preset_id"`
-	Kind                    string            `json:"kind"`
-	DeliveryMode            string            `json:"delivery_mode"`
-	PipelineID              string            `json:"pipeline_id"`
-	PipelineVersionID       string            `json:"pipeline_version_id"`
-	PipelineIRSHA256        string            `json:"pipeline_ir_sha256"`
-	Runtime                 RuntimeRef        `json:"runtime"`
-	Program                 ReleaseProgram    `json:"program"`
-	Resources               CPUResources      `json:"resources"`
-	Workspace               WorkspaceContract `json:"workspace"`
-	OutputContract          OutputContract    `json:"output_contract"`
-	ExecutionTimeoutSeconds uint32            `json:"execution_timeout_seconds"`
+	SchemaVersion           string             `json:"schema_version"`
+	ReleaseID               string             `json:"release_id"`
+	PresetID                string             `json:"preset_id"`
+	Kind                    string             `json:"kind"`
+	DeliveryMode            string             `json:"delivery_mode"`
+	PipelineID              string             `json:"pipeline_id"`
+	PipelineVersionID       string             `json:"pipeline_version_id"`
+	PipelineIRSHA256        string             `json:"pipeline_ir_sha256"`
+	Runtime                 RuntimeRef         `json:"runtime"`
+	Program                 ReleaseProgram     `json:"program"`
+	Resources               CPUResources       `json:"resources"`
+	Workspace               WorkspaceContract  `json:"workspace"`
+	OutputContract          OutputContract     `json:"output_contract"`
+	ExecutionTimeoutSeconds uint32             `json:"execution_timeout_seconds"`
+	Finetuning              *FinetuningRelease `json:"finetuning,omitempty"`
 }
 
 // ReleaseProgram is the single registered CPU MLP program in this Release.
@@ -45,6 +46,8 @@ type ReleaseProgram struct {
 	ArgsTemplate             []ReleaseArgument `json:"args_template"`
 	ParameterContractVersion string            `json:"parameter_contract_version"`
 	DefaultParameters        []Parameter       `json:"default_parameters"`
+	ParameterRules           []ParameterRule   `json:"parameter_rules,omitempty"`
+	AllowedParameterSets     [][]Parameter     `json:"allowed_parameter_sets,omitempty"`
 }
 
 // ReleaseArgument is exactly one literal or one whole-argument source token.
@@ -77,17 +80,7 @@ func ParseRelease(raw []byte) (ReleaseDocument, string, error) {
 	}
 	// Exact re-encoding also rejects duplicate keys, nulls, alternate key case,
 	// omitted required zero-valued fields and noncanonical integer spellings.
-	document.ReleaseID = strings.ToLower(document.ReleaseID)
-	document.PresetID = strings.ToLower(document.PresetID)
-	document.PipelineID = strings.ToLower(document.PipelineID)
-	document.PipelineVersionID = strings.ToLower(document.PipelineVersionID)
-	document.Program.ImageVersionID = strings.ToLower(document.Program.ImageVersionID)
-	sort.Strings(document.Runtime.TargetJobs)
-	document.Program.DefaultParameters = canonicalParameters(document.Program.DefaultParameters)
-	sort.Slice(document.OutputContract.RequiredFiles, func(i, j int) bool {
-		return document.OutputContract.RequiredFiles[i].RelativePath < document.OutputContract.RequiredFiles[j].RelativePath
-	})
-	canonical, err := encodeCanonicalJSON(document)
+	canonical, err := document.Canonical()
 	if err != nil || !bytes.Equal(raw, canonical) {
 		return invalid("noncanonical bytes")
 	}
@@ -95,11 +88,75 @@ func ParseRelease(raw []byte) (ReleaseDocument, string, error) {
 	return document, hex.EncodeToString(digest[:]), nil
 }
 
+// Canonical validates and orders a new immutable catalogue document. It does
+// not publish the document, approve a candidate or mutate caller-owned slices.
+func (document ReleaseDocument) Canonical() ([]byte, error) {
+	if field := invalidReleaseDocument(document); field != "" {
+		return nil, fmt.Errorf("%w: release %s", ErrInvalidArgument, field)
+	}
+	document.ReleaseID = strings.ToLower(document.ReleaseID)
+	document.PresetID = strings.ToLower(document.PresetID)
+	document.PipelineID = strings.ToLower(document.PipelineID)
+	document.PipelineVersionID = strings.ToLower(document.PipelineVersionID)
+	document.Program.ImageVersionID = strings.ToLower(document.Program.ImageVersionID)
+	document.Runtime.TargetJobs = append([]string{}, document.Runtime.TargetJobs...)
+	sort.Strings(document.Runtime.TargetJobs)
+	document.Program.DefaultParameters = canonicalParameters(document.Program.DefaultParameters)
+	document.Program.ParameterRules = canonicalParameterRules(document.Program.ParameterRules)
+	if document.Program.AllowedParameterSets != nil {
+		sets := make([][]Parameter, len(document.Program.AllowedParameterSets))
+		for i, set := range document.Program.AllowedParameterSets {
+			sets[i] = canonicalParameters(set)
+		}
+		sort.Slice(sets, func(i, j int) bool {
+			a, _ := encodeCanonicalJSON(sets[i])
+			b, _ := encodeCanonicalJSON(sets[j])
+			return bytes.Compare(a, b) < 0
+		})
+		document.Program.AllowedParameterSets = sets
+	}
+	document.OutputContract.RequiredFiles = append([]RequiredOutput{}, document.OutputContract.RequiredFiles...)
+	sort.Slice(document.OutputContract.RequiredFiles, func(i, j int) bool {
+		return document.OutputContract.RequiredFiles[i].RelativePath < document.OutputContract.RequiredFiles[j].RelativePath
+	})
+	if document.Finetuning != nil {
+		fine := *document.Finetuning
+		fine.BaseModelVersionID = strings.ToLower(fine.BaseModelVersionID)
+		fine.ExportProgram.ImageVersionID = strings.ToLower(fine.ExportProgram.ImageVersionID)
+		fine.VerifyProgram.ImageVersionID = strings.ToLower(fine.VerifyProgram.ImageVersionID)
+		document.Finetuning = &fine
+	}
+	return encodeCanonicalJSON(document)
+}
+
+func canonicalParameterRules(values []ParameterRule) []ParameterRule {
+	if values == nil {
+		return nil
+	}
+	rules := append([]ParameterRule{}, values...)
+	for i := range rules {
+		rules[i].AllowedValues = canonicalParameters(rules[i].AllowedValues)
+		if rules[i].Minimum != nil {
+			value := *rules[i].Minimum
+			value.Value = canonicalDecimal(value.Value)
+			rules[i].Minimum = &value
+		}
+		if rules[i].Maximum != nil {
+			value := *rules[i].Maximum
+			value.Value = canonicalDecimal(value.Value)
+			rules[i].Maximum = &value
+		}
+		sort.Slice(rules[i].AllowedValues, func(a, b int) bool { return rules[i].AllowedValues[a].Value < rules[i].AllowedValues[b].Value })
+	}
+	sort.Slice(rules, func(i, j int) bool { return rules[i].Name < rules[j].Name })
+	return rules
+}
+
 func invalidReleaseDocument(document ReleaseDocument) string {
 	if document.SchemaVersion != ReleaseSchemaVersion {
 		return "schema_version"
 	}
-	if document.Kind != "GENERAL_TRAINING" || document.DeliveryMode != "SAVE_ARTIFACTS" {
+	if (document.Kind != "GENERAL_TRAINING" && document.Kind != "FINETUNING") || document.DeliveryMode != "SAVE_ARTIFACTS" {
 		return "capability"
 	}
 	for _, value := range []string{document.ReleaseID, document.PresetID, document.PipelineID, document.PipelineVersionID, document.Program.ImageVersionID} {
@@ -112,6 +169,12 @@ func invalidReleaseDocument(document ReleaseDocument) string {
 	}
 	if field := invalidRuntimeRef(document.Runtime); field != "" {
 		return field
+	}
+	if document.Kind == "FINETUNING" {
+		return invalidFinetuningRelease(document)
+	}
+	if document.Finetuning != nil || len(document.Program.ParameterRules) != 0 || len(document.Program.AllowedParameterSets) != 0 {
+		return "capability"
 	}
 	program := document.Program
 	if !validSnapshotImage(program.ImageDigest) {

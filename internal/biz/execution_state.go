@@ -101,7 +101,7 @@ func ProjectRuntimeStates(base ExecutionStates, runtime ExecutionRuntime) (Execu
 		rejected := runtime.TrainingRejection
 		if runtime.Training == nil || runtime.TrainingHandle != nil || runtime.Observation != nil || runtime.Publication != nil ||
 			rejected.RequestSHA256 != runtime.Training.RequestSHA256 || rejected.NamespaceUID != runtime.Training.Workspace.NamespaceUID ||
-			(rejected.StatusCode != 400 && rejected.StatusCode != 403) || rejected.ObservedAt.IsZero() {
+			(rejected.StatusCode != 400 && rejected.StatusCode != 403 && rejected.StatusCode != 422) || rejected.ObservedAt.IsZero() {
 			return ExecutionStates{}, ErrInvalidExecutionStateFacts
 		}
 		states.Compute = ComputeStateFailed

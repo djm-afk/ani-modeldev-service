@@ -30,7 +30,7 @@ type VerifiedCSV struct {
 func (verified VerifiedCSV) ValidateFor(request InputImport) error {
 	object, expected := verified.Object, request.Object
 	when := verified.VerifiedAt.UTC()
-	if request.Validate() != nil || when.IsZero() || when.Year() < 1 || when.Year() > 9999 || when.Before(request.RequestedAt) ||
+	if request.Validate() != nil || request.InputFormat() != "CSV" || when.IsZero() || when.Year() < 1 || when.Year() > 9999 || when.Before(request.RequestedAt) ||
 		verified.SchemaVersion != "ani.cpu.csv.v1" || verified.RowCount != 1024 || verified.FeatureCount != 16 ||
 		object.StorageConnectionID != expected.StorageConnectionID || object.Bucket != expected.Bucket || object.Key != expected.Key ||
 		object.VersionID == nil || expected.VersionID == nil || *object.VersionID != *expected.VersionID || object.ImmutableCopy != nil ||
@@ -44,6 +44,7 @@ func (verified VerifiedCSV) ValidateFor(request InputImport) error {
 // actor and storage scope must come from the managed import authorization path.
 // Neither a request nor its durable receipt establishes a READY input.
 type InputImport struct {
+	Format         string
 	TenantID       string
 	RequestID      string
 	InputVersionID string
@@ -85,15 +86,19 @@ func (failure InputValidationFailure) ValidateFor(request InputImport) error {
 }
 
 type InputVersion struct {
-	Import       InputImport
-	State        InputState
-	Verification *VerifiedCSV
-	Failure      *InputValidationFailure
+	Import             InputImport
+	State              InputState
+	Verification       *VerifiedCSV
+	AlpacaVerification *VerifiedAlpaca
+	Failure            *InputValidationFailure
 }
 
 // Validate checks the immutable request's structure, not source permissions or
 // remote content. An explicit object version is required before validation starts.
 func (request InputImport) Validate() error {
+	if request.InputFormat() != "CSV" && request.InputFormat() != "JSON" {
+		return ErrInvalidInput
+	}
 	if !validAdmissionID(request.TenantID) || !validAdmissionID(request.RequestID) || !validAdmissionID(request.InputVersionID) || !validAuditActor(request.Actor) {
 		return ErrInvalidInput
 	}
@@ -112,4 +117,12 @@ func (request InputImport) Validate() error {
 		return ErrInvalidInput
 	}
 	return nil
+}
+
+// Empty format retains the original CSV import contract for existing callers.
+func (request InputImport) InputFormat() string {
+	if request.Format == "" {
+		return "CSV"
+	}
+	return request.Format
 }

@@ -73,7 +73,7 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 	if config.Step == nil || config.Kubernetes == nil || config.Pipeline == nil || config.ObjectStorage == nil {
 		return fmt.Errorf("managed runtime requires step, Kubernetes, pipeline and storage configuration")
 	}
-	if err := validateListener("managed step", config.Step.Network, config.Step.Addr, config.Step.Timeout); err != nil {
+	if err := validateBoundedListener("managed step", config.Step.Network, config.Step.Addr, config.Step.Timeout, 10*time.Minute); err != nil {
 		return err
 	}
 	_, portText, _ := net.SplitHostPort(config.Step.Addr)
@@ -100,6 +100,11 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 	}
 	if err := validateDuration("managed API", config.ApiTimeout, maximumTimeout); err != nil {
 		return err
+	}
+	if config.ObjectStorage.StreamingTimeout != nil {
+		if err := validateDuration("managed storage streaming", config.ObjectStorage.StreamingTimeout, 10*time.Minute); err != nil {
+			return err
+		}
 	}
 	if err := validateDuration("dispatch interval", config.DispatchInterval, time.Minute); err != nil {
 		return err
@@ -131,6 +136,10 @@ func validateAdmissionResolution(config *AdmissionResolution) error {
 }
 
 func validateListener(name, network, address string, timeout *durationpb.Duration) error {
+	return validateBoundedListener(name, network, address, timeout, maximumTimeout)
+}
+
+func validateBoundedListener(name, network, address string, timeout *durationpb.Duration, maximum time.Duration) error {
 	if network != "tcp" {
 		return fmt.Errorf("%s network must be tcp", name)
 	}
@@ -146,7 +155,7 @@ func validateListener(name, network, address string, timeout *durationpb.Duratio
 	if err != nil || port <= 0 || port > 65535 {
 		return fmt.Errorf("%s address requires a numeric port in 1..65535", name)
 	}
-	return validateDuration(name, timeout, maximumTimeout)
+	return validateDuration(name, timeout, maximum)
 }
 
 func validateDuration(name string, value *durationpb.Duration, maximum time.Duration) error {

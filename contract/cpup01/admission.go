@@ -69,7 +69,38 @@ func (a AdmissionEnvelope) CanonicalPayloads() ([]byte, []byte, error) {
 			}
 		}
 	}
+	if a.Intent.Kind == "FINETUNING" {
+		fine := a.Snapshot.Finetuning
+		if fine == nil || a.Intent.Finetuning == nil || a.Intent.BaseModelVersionID == nil || !strings.EqualFold(*a.Intent.BaseModelVersionID, fine.BaseModel.VersionID) || !sameOptionalUUID(a.Intent.TargetModelID, fine.TargetModelID) || !sameOptionalString(a.Intent.NewModelName, fine.NewModelName) {
+			return nil, nil, ErrInvalidArgument
+		}
+		for _, parameter := range a.Snapshot.Program.ResolvedParameters {
+			switch parameter.Name {
+			case "learning_rate":
+				if a.Intent.Finetuning.LearningRate != nil && canonicalDecimal(*a.Intent.Finetuning.LearningRate) != canonicalDecimal(parameter.Value) {
+					return nil, nil, ErrInvalidArgument
+				}
+			case "max_steps":
+				if a.Intent.Finetuning.MaxSteps != nil && new(big.Int).SetInt64(*a.Intent.Finetuning.MaxSteps).String() != parameter.Value {
+					return nil, nil, ErrInvalidArgument
+				}
+			}
+		}
+	}
 	return intent, snapshot, nil
+}
+
+func sameOptionalString(left, right *string) bool {
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
+	return *left == *right
+}
+func sameOptionalUUID(left, right *string) bool {
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
+	return strings.EqualFold(*left, *right)
 }
 
 // ValidAuditActor validates an immutable audit label, not current authorization.

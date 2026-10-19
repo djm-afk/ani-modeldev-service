@@ -43,13 +43,15 @@ type Config struct {
 }
 
 type Runner struct {
-	config Config
-	client modeldevv1.ModelDevStepServiceClient
-	kube   dynamic.Interface
-	store  *s3.Client
+	config        Config
+	client        modeldevv1.ModelDevStepServiceClient
+	kube          dynamic.Interface
+	store         *s3.Client
+	baseStore     *s3.Client
+	executionKind string
 }
 
-func New(config Config, client modeldevv1.ModelDevStepServiceClient, kube dynamic.Interface, store *s3.Client) (*Runner, error) {
+func New(config Config, client modeldevv1.ModelDevStepServiceClient, kube dynamic.Interface, store *s3.Client, baseStores ...*s3.Client) (*Runner, error) {
 	if client == nil || config.Context == nil || config.Context.Identity == nil || config.Context.Association == nil || config.TenantID == "" || config.TokenFile == "" {
 		return nil, ErrConfiguration
 	}
@@ -79,21 +81,35 @@ func New(config Config, client modeldevv1.ModelDevStepServiceClient, kube dynami
 		return nil, ErrConfiguration
 	}
 	config.Context = proto.Clone(config.Context).(*modeldevv1.StepContext)
-	return &Runner{config: config, client: client, kube: kube, store: store}, nil
+	if len(baseStores) > 1 {
+		return nil, ErrConfiguration
+	}
+	var baseStore *s3.Client
+	if len(baseStores) == 1 {
+		baseStore = baseStores[0]
+	}
+	return &Runner{config: config, client: client, kube: kube, store: store, baseStore: baseStore}, nil
 }
 
 func (runner *Runner) Run(ctx context.Context, step string) error {
 	if runner == nil || ctx == nil {
 		return ErrConfiguration
 	}
-	wanted, ok := map[string]modeldevv1.PipelineStep{"prepare": modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE, "train-wait": modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT, "collect": modeldevv1.PipelineStep_PIPELINE_STEP_COLLECT, "publish": modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH, "close": modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE}[step]
+	wanted, ok := map[string]modeldevv1.PipelineStep{"prepare": modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE, "train-wait": modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT, "collect": modeldevv1.PipelineStep_PIPELINE_STEP_COLLECT, "publish": modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH, "close": modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE, "export": modeldevv1.PipelineStep_PIPELINE_STEP_EXPORT, "verify": modeldevv1.PipelineStep_PIPELINE_STEP_VERIFY, "register": modeldevv1.PipelineStep_PIPELINE_STEP_REGISTER}[step]
 	if !ok || runner.config.Context.Step != wanted {
 		return ErrConfiguration
 	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
+	if step == "train-wait" {
+		return runner.trainWait(ctx)
+	}
+	budget, err := runner.invocationBudget(ctx, step)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
 	switch step {
 	case "prepare":
@@ -104,6 +120,10 @@ func (runner *Runner) Run(ctx context.Context, step string) error {
 		return runner.collect(ctx)
 	case "publish":
 		return runner.publish(ctx)
+	case "export", "verify":
+		return runner.finetuningCompute(ctx, step)
+	case "register":
+		return runner.register(ctx)
 	case "close":
 		if runner.config.CloseOnly {
 			// RequestExecutionClose verifies the current workload and Run even
@@ -130,6 +150,39 @@ func (runner *Runner) callContext(ctx context.Context) (context.Context, error) 
 }
 
 func (runner *Runner) trainWait(ctx context.Context) error {
+	parent := ctx
+	legacyDeadline := time.Now().Add(30 * time.Minute)
+	ctx, cancel := context.WithDeadline(parent, legacyDeadline)
+	defer func() { cancel() }()
+	var admittedAt, trainingDeadline time.Time
+	bindBudget := func(training *modeldevv1.TrainingStatus) error {
+		if training == nil {
+			return ErrConfiguration
+		}
+		if training.TrainingAdmittedAt == nil && training.TrainingDeadlineAt == nil {
+			if !trainingDeadline.IsZero() {
+				return ErrConfiguration
+			}
+			return nil
+		}
+		if training.TrainingAdmittedAt == nil || training.TrainingDeadlineAt == nil || training.TrainingAdmittedAt.CheckValid() != nil || training.TrainingDeadlineAt.CheckValid() != nil {
+			return ErrConfiguration
+		}
+		start, deadline := training.TrainingAdmittedAt.AsTime(), training.TrainingDeadlineAt.AsTime()
+		if !deadline.After(start) || deadline.Sub(start) > time.Hour {
+			return ErrConfiguration
+		}
+		if !trainingDeadline.IsZero() {
+			if !trainingDeadline.Equal(deadline) || !admittedAt.Equal(start) {
+				return ErrConfiguration
+			}
+			return nil
+		}
+		admittedAt, trainingDeadline = start, deadline
+		cancel()
+		ctx, cancel = context.WithDeadline(parent, deadline)
+		return ctx.Err()
+	}
 	if runner.config.Context.Identity.OperationId == "" {
 		if _, _, err := runner.configuration(ctx); err != nil {
 			return err
@@ -144,6 +197,9 @@ func (runner *Runner) trainWait(ctx context.Context) error {
 		return err
 	}
 	if err == nil {
+		if err := bindBudget(ensured.GetStatus()); err != nil {
+			return err
+		}
 		done, err := runner.trainingResult(ensured.GetStatus())
 		if done || err != nil {
 			return err
@@ -162,6 +218,9 @@ func (runner *Runner) trainWait(ctx context.Context) error {
 			if retryObservation(err) {
 				continue
 			}
+			return err
+		}
+		if err := bindBudget(observed.GetStatus()); err != nil {
 			return err
 		}
 		done, err := runner.trainingResult(observed.GetStatus())

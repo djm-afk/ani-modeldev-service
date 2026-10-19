@@ -73,9 +73,23 @@ LEFT JOIN modeldev_execution_runtimes AS runtime
  AND runtime.execution_id = admitted.execution_id
 WHERE admitted.tenant_id = sqlc.arg(tenant_id)::uuid
   AND (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'environment') = sqlc.arg(environment)::jsonb
-  AND runtime.closed_at IS NULL
-  AND (identity.close_generation > 0 OR
-       (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz <= clock_timestamp())
+  AND ((runtime.closed_at IS NULL AND
+        (identity.close_generation > 0 OR
+         (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz <= clock_timestamp()))
+       OR (runtime.closed_at IS NOT NULL
+           AND COALESCE(runtime.facts -> 'CloseEvidence' ->> 'NoDispatch', 'false') <> 'true'
+           AND (runtime.facts -> 'StepExitCleanup' ->> 'CompletedAt' IS NULL
+                OR runtime.facts -> 'ComputeCleanup' IS NULL
+                OR (runtime.facts -> 'ComputeCleanup' ->> 'phase' <> 'APPLIED'
+                    AND (COALESCE((runtime.facts -> 'ComputeCleanup' ->> 'attempts')::integer, 0) < 3
+                         OR runtime.facts -> 'ComputeCleanup' ->> 'phase' = 'STARTED')))))
   AND (sqlc.narg(after_execution_id)::uuid IS NULL OR admitted.execution_id > sqlc.narg(after_execution_id)::uuid)
 ORDER BY admitted.execution_id
 LIMIT sqlc.arg(batch_size)::integer;
+
+-- name: HasUnresolvedManualCleanup :one
+SELECT EXISTS (
+    SELECT 1 FROM modeldev_execution_cleanup_audits
+    WHERE tenant_id = sqlc.arg(tenant_id)::uuid AND execution_id = sqlc.arg(execution_id)::uuid
+      AND phase IN ('STARTED', 'NEEDS_REVIEW')
+) AS blocked;

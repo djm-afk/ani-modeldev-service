@@ -25,7 +25,7 @@ func (v *Verifier) currentTasks(ctx context.Context, execution biz.Execution, as
 	if plan.Plan.TenantID != execution.TenantID || plan.Plan.ExecutionID != execution.ExecutionID || plan.Plan.OperationID != execution.OperationID || plan.Plan.SpecHash != execution.SpecHash {
 		return nil, biz.ErrRuntimeConflict
 	}
-	return v.tasksForPlan(ctx, plan.Plan, association)
+	return v.tasksForPlanKind(ctx, plan.Plan, association, execution.Snapshot.Kind)
 }
 
 // VerifyManagedRun combines authenticated KFP membership with current controller
@@ -36,7 +36,11 @@ func (v *Verifier) VerifyManagedRun(ctx context.Context, plan biz.PipelineDispat
 }
 
 func (v *Verifier) ResolveManagedTaskID(ctx context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation, taskName string) (string, error) {
-	tasks, err := v.tasksForPlan(ctx, plan, association)
+	kind := "GENERAL_TRAINING"
+	if taskName == "export" || taskName == "verify" || taskName == "register" {
+		kind = "FINETUNING"
+	}
+	tasks, err := v.tasksForPlanKind(ctx, plan, association, kind)
 	if err != nil {
 		return "", err
 	}
@@ -61,6 +65,10 @@ func (v *Verifier) ResolveManagedTaskID(ctx context.Context, plan biz.PipelineDi
 }
 
 func (v *Verifier) tasksForPlan(ctx context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation) ([]kfp.ManagedTask, error) {
+	return v.tasksForPlanKind(ctx, plan, association, "GENERAL_TRAINING")
+}
+
+func (v *Verifier) tasksForPlanKind(ctx context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation, kind string) ([]kfp.ManagedTask, error) {
 	if v == nil || v.kube == nil || v.runs == nil || ctx == nil || ctx.Err() != nil {
 		return nil, biz.ErrRuntimeNotReady
 	}
@@ -84,7 +92,7 @@ func (v *Verifier) tasksForPlan(ctx context.Context, plan biz.PipelineDispatchPl
 	if err != nil || pods == nil || pods.GetContinue() != "" {
 		return nil, biz.ErrRuntimeNotReady
 	}
-	return resolvedManagedTasks(workflow, tasks, pods.Items)
+	return resolvedManagedTasksForKind(workflow, tasks, pods.Items, kind)
 }
 
 func oneTask(tasks []kfp.ManagedTask, name string) (kfp.ManagedTask, error) {

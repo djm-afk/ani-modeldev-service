@@ -50,6 +50,9 @@ message ObjectStorageConnection {
   string credentials_file = 4;
   string connection_id = 5;
   int64 max_object_bytes = 6;
+  // Optional explicit streaming I/O budget. Absence preserves api_timeout.
+  // Every request still consumes its original caller/stage deadline.
+  google.protobuf.Duration streaming_timeout = 7;
 }
 
 message GovernanceCommand {

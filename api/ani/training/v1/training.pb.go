@@ -28,6 +28,7 @@ type ExecutionKind int32
 const (
 	ExecutionKind_EXECUTION_KIND_UNSPECIFIED      ExecutionKind = 0
 	ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING ExecutionKind = 1
+	ExecutionKind_EXECUTION_KIND_FINETUNING       ExecutionKind = 2
 )
 
 // Enum value maps for ExecutionKind.
@@ -35,10 +36,12 @@ var (
 	ExecutionKind_name = map[int32]string{
 		0: "EXECUTION_KIND_UNSPECIFIED",
 		1: "EXECUTION_KIND_GENERAL_TRAINING",
+		2: "EXECUTION_KIND_FINETUNING",
 	}
 	ExecutionKind_value = map[string]int32{
 		"EXECUTION_KIND_UNSPECIFIED":      0,
 		"EXECUTION_KIND_GENERAL_TRAINING": 1,
+		"EXECUTION_KIND_FINETUNING":       2,
 	}
 )
 
@@ -118,8 +121,9 @@ func (DeliveryMode) EnumDescriptor() ([]byte, []int) {
 type OutputKind int32
 
 const (
-	OutputKind_OUTPUT_KIND_UNSPECIFIED OutputKind = 0
-	OutputKind_OUTPUT_KIND_CHECKPOINT  OutputKind = 1
+	OutputKind_OUTPUT_KIND_UNSPECIFIED     OutputKind = 0
+	OutputKind_OUTPUT_KIND_CHECKPOINT      OutputKind = 1
+	OutputKind_OUTPUT_KIND_MERGED_HF_MODEL OutputKind = 2
 )
 
 // Enum value maps for OutputKind.
@@ -127,10 +131,12 @@ var (
 	OutputKind_name = map[int32]string{
 		0: "OUTPUT_KIND_UNSPECIFIED",
 		1: "OUTPUT_KIND_CHECKPOINT",
+		2: "OUTPUT_KIND_MERGED_HF_MODEL",
 	}
 	OutputKind_value = map[string]int32{
-		"OUTPUT_KIND_UNSPECIFIED": 0,
-		"OUTPUT_KIND_CHECKPOINT":  1,
+		"OUTPUT_KIND_UNSPECIFIED":     0,
+		"OUTPUT_KIND_CHECKPOINT":      1,
+		"OUTPUT_KIND_MERGED_HF_MODEL": 2,
 	}
 )
 
@@ -316,19 +322,29 @@ const (
 	FileRole_FILE_ROLE_INPUT_MANIFEST     FileRole = 5
 	FileRole_FILE_ROLE_EXECUTION_MANIFEST FileRole = 6
 	FileRole_FILE_ROLE_LOG                FileRole = 7
+	FileRole_FILE_ROLE_HF_MODEL           FileRole = 8
+	FileRole_FILE_ROLE_LORA_ADAPTER       FileRole = 9
+	FileRole_FILE_ROLE_EXPORT_REPORT      FileRole = 10
+	FileRole_FILE_ROLE_VERIFY_REPORT      FileRole = 11
+	FileRole_FILE_ROLE_SOURCE_METADATA    FileRole = 12
 )
 
 // Enum value maps for FileRole.
 var (
 	FileRole_name = map[int32]string{
-		0: "FILE_ROLE_UNSPECIFIED",
-		1: "FILE_ROLE_CHECKPOINT",
-		2: "FILE_ROLE_MODEL_CONFIG",
-		3: "FILE_ROLE_METRICS",
-		4: "FILE_ROLE_SUMMARY",
-		5: "FILE_ROLE_INPUT_MANIFEST",
-		6: "FILE_ROLE_EXECUTION_MANIFEST",
-		7: "FILE_ROLE_LOG",
+		0:  "FILE_ROLE_UNSPECIFIED",
+		1:  "FILE_ROLE_CHECKPOINT",
+		2:  "FILE_ROLE_MODEL_CONFIG",
+		3:  "FILE_ROLE_METRICS",
+		4:  "FILE_ROLE_SUMMARY",
+		5:  "FILE_ROLE_INPUT_MANIFEST",
+		6:  "FILE_ROLE_EXECUTION_MANIFEST",
+		7:  "FILE_ROLE_LOG",
+		8:  "FILE_ROLE_HF_MODEL",
+		9:  "FILE_ROLE_LORA_ADAPTER",
+		10: "FILE_ROLE_EXPORT_REPORT",
+		11: "FILE_ROLE_VERIFY_REPORT",
+		12: "FILE_ROLE_SOURCE_METADATA",
 	}
 	FileRole_value = map[string]int32{
 		"FILE_ROLE_UNSPECIFIED":        0,
@@ -339,6 +355,11 @@ var (
 		"FILE_ROLE_INPUT_MANIFEST":     5,
 		"FILE_ROLE_EXECUTION_MANIFEST": 6,
 		"FILE_ROLE_LOG":                7,
+		"FILE_ROLE_HF_MODEL":           8,
+		"FILE_ROLE_LORA_ADAPTER":       9,
+		"FILE_ROLE_EXPORT_REPORT":      10,
+		"FILE_ROLE_VERIFY_REPORT":      11,
+		"FILE_ROLE_SOURCE_METADATA":    12,
 	}
 )
 
@@ -1210,6 +1231,7 @@ type RequiredOutput struct {
 	Role          FileRole               `protobuf:"varint,1,opt,name=role,proto3,enum=ani.training.v1.FileRole" json:"role,omitempty"`
 	RelativePath  string                 `protobuf:"bytes,2,opt,name=relative_path,json=relativePath,proto3" json:"relative_path,omitempty"`
 	MaxSizeBytes  int64                  `protobuf:"varint,3,opt,name=max_size_bytes,json=maxSizeBytes,proto3" json:"max_size_bytes,omitempty"`
+	InTar         *bool                  `protobuf:"varint,4,opt,name=in_tar,json=inTar,proto3,oneof" json:"in_tar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1265,6 +1287,13 @@ func (x *RequiredOutput) GetMaxSizeBytes() int64 {
 	return 0
 }
 
+func (x *RequiredOutput) GetInTar() bool {
+	if x != nil && x.InTar != nil {
+		return *x.InTar
+	}
+	return false
+}
+
 type OutputContract struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	SchemaVersion   string                 `protobuf:"bytes,1,opt,name=schema_version,json=schemaVersion,proto3" json:"schema_version,omitempty"`
@@ -1274,6 +1303,7 @@ type OutputContract struct {
 	MaxFileCount    uint32                 `protobuf:"varint,5,opt,name=max_file_count,json=maxFileCount,proto3" json:"max_file_count,omitempty"`
 	MaxTotalBytes   int64                  `protobuf:"varint,6,opt,name=max_total_bytes,json=maxTotalBytes,proto3" json:"max_total_bytes,omitempty"`
 	CreateTarBundle bool                   `protobuf:"varint,7,opt,name=create_tar_bundle,json=createTarBundle,proto3" json:"create_tar_bundle,omitempty"`
+	MaxTarBytes     *int64                 `protobuf:"varint,8,opt,name=max_tar_bytes,json=maxTarBytes,proto3,oneof" json:"max_tar_bytes,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1355,6 +1385,13 @@ func (x *OutputContract) GetCreateTarBundle() bool {
 		return x.CreateTarBundle
 	}
 	return false
+}
+
+func (x *OutputContract) GetMaxTarBytes() int64 {
+	if x != nil && x.MaxTarBytes != nil {
+		return *x.MaxTarBytes
+	}
+	return 0
 }
 
 // A hash always describes actual file bytes, not an object-store ETag.
@@ -1940,11 +1977,13 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\rinput_subpath\x18\x06 \x01(\tR\finputSubpath\x12)\n" +
 	"\x10training_subpath\x18\a \x01(\tR\x0ftrainingSubpath\x12'\n" +
 	"\x0freports_subpath\x18\b \x01(\tR\x0ereportsSubpath\x12/\n" +
-	"\x13publication_subpath\x18\t \x01(\tR\x12publicationSubpath\"\x8a\x01\n" +
+	"\x13publication_subpath\x18\t \x01(\tR\x12publicationSubpath\"\xb1\x01\n" +
 	"\x0eRequiredOutput\x12-\n" +
 	"\x04role\x18\x01 \x01(\x0e2\x19.ani.training.v1.FileRoleR\x04role\x12#\n" +
 	"\rrelative_path\x18\x02 \x01(\tR\frelativePath\x12$\n" +
-	"\x0emax_size_bytes\x18\x03 \x01(\x03R\fmaxSizeBytes\"\xfb\x02\n" +
+	"\x0emax_size_bytes\x18\x03 \x01(\x03R\fmaxSizeBytes\x12\x1a\n" +
+	"\x06in_tar\x18\x04 \x01(\bH\x00R\x05inTar\x88\x01\x01B\t\n" +
+	"\a_in_tar\"\xb6\x03\n" +
 	"\x0eOutputContract\x12%\n" +
 	"\x0eschema_version\x18\x01 \x01(\tR\rschemaVersion\x12<\n" +
 	"\voutput_kind\x18\x02 \x01(\x0e2\x1b.ani.training.v1.OutputKindR\n" +
@@ -1953,7 +1992,9 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\x0erequired_files\x18\x04 \x03(\v2\x1f.ani.training.v1.RequiredOutputR\rrequiredFiles\x12$\n" +
 	"\x0emax_file_count\x18\x05 \x01(\rR\fmaxFileCount\x12&\n" +
 	"\x0fmax_total_bytes\x18\x06 \x01(\x03R\rmaxTotalBytes\x12*\n" +
-	"\x11create_tar_bundle\x18\a \x01(\bR\x0fcreateTarBundle\"\x96\x01\n" +
+	"\x11create_tar_bundle\x18\a \x01(\bR\x0fcreateTarBundle\x12'\n" +
+	"\rmax_tar_bytes\x18\b \x01(\x03H\x00R\vmaxTarBytes\x88\x01\x01B\x10\n" +
+	"\x0e_max_tar_bytes\"\x96\x01\n" +
 	"\tFileEntry\x12#\n" +
 	"\rrelative_path\x18\x01 \x01(\tR\frelativePath\x12-\n" +
 	"\x04role\x18\x02 \x01(\x0e2\x19.ani.training.v1.FileRoleR\x04role\x12\x1d\n" +
@@ -2002,17 +2043,19 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	" \x01(\v2\x1c.ani.training.v1.ManifestRefR\bmanifest\x121\n" +
 	"\ametrics\x18\v \x03(\v2\x17.ani.training.v1.MetricR\ametrics\x12+\n" +
 	"\x04logs\x18\f \x03(\v2\x17.ani.training.v1.LogRefR\x04logs\x12%\n" +
-	"\x0efailure_reason\x18\r \x01(\tR\rfailureReason*T\n" +
+	"\x0efailure_reason\x18\r \x01(\tR\rfailureReason*s\n" +
 	"\rExecutionKind\x12\x1e\n" +
 	"\x1aEXECUTION_KIND_UNSPECIFIED\x10\x00\x12#\n" +
-	"\x1fEXECUTION_KIND_GENERAL_TRAINING\x10\x01*O\n" +
+	"\x1fEXECUTION_KIND_GENERAL_TRAINING\x10\x01\x12\x1d\n" +
+	"\x19EXECUTION_KIND_FINETUNING\x10\x02*O\n" +
 	"\fDeliveryMode\x12\x1d\n" +
 	"\x19DELIVERY_MODE_UNSPECIFIED\x10\x00\x12 \n" +
-	"\x1cDELIVERY_MODE_SAVE_ARTIFACTS\x10\x01*E\n" +
+	"\x1cDELIVERY_MODE_SAVE_ARTIFACTS\x10\x01*f\n" +
 	"\n" +
 	"OutputKind\x12\x1b\n" +
 	"\x17OUTPUT_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
-	"\x16OUTPUT_KIND_CHECKPOINT\x10\x01*p\n" +
+	"\x16OUTPUT_KIND_CHECKPOINT\x10\x01\x12\x1f\n" +
+	"\x1bOUTPUT_KIND_MERGED_HF_MODEL\x10\x02*p\n" +
 	"\x0fTrainingOutcome\x12 \n" +
 	"\x1cTRAINING_OUTCOME_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aTRAINING_OUTCOME_SUCCEEDED\x10\x01\x12\x1b\n" +
@@ -2023,7 +2066,7 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\rWorkspaceMode\x12\x1e\n" +
 	"\x1aWORKSPACE_MODE_UNSPECIFIED\x10\x00\x12$\n" +
 	" WORKSPACE_MODE_KFP_RUN_WORKSPACE\x10\x01\x12 \n" +
-	"\x1cWORKSPACE_MODE_EXECUTION_PVC\x10\x02*\xdc\x01\n" +
+	"\x1cWORKSPACE_MODE_EXECUTION_PVC\x10\x02*\xe9\x02\n" +
 	"\bFileRole\x12\x19\n" +
 	"\x15FILE_ROLE_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14FILE_ROLE_CHECKPOINT\x10\x01\x12\x1a\n" +
@@ -2032,7 +2075,13 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\x11FILE_ROLE_SUMMARY\x10\x04\x12\x1c\n" +
 	"\x18FILE_ROLE_INPUT_MANIFEST\x10\x05\x12 \n" +
 	"\x1cFILE_ROLE_EXECUTION_MANIFEST\x10\x06\x12\x11\n" +
-	"\rFILE_ROLE_LOG\x10\aBNZLgithub.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1;trainingv1b\x06proto3"
+	"\rFILE_ROLE_LOG\x10\a\x12\x16\n" +
+	"\x12FILE_ROLE_HF_MODEL\x10\b\x12\x1a\n" +
+	"\x16FILE_ROLE_LORA_ADAPTER\x10\t\x12\x1b\n" +
+	"\x17FILE_ROLE_EXPORT_REPORT\x10\n" +
+	"\x12\x1b\n" +
+	"\x17FILE_ROLE_VERIFY_REPORT\x10\v\x12\x1d\n" +
+	"\x19FILE_ROLE_SOURCE_METADATA\x10\fBNZLgithub.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1;trainingv1b\x06proto3"
 
 var (
 	file_ani_training_v1_training_proto_rawDescOnce sync.Once
@@ -2126,6 +2175,8 @@ func file_ani_training_v1_training_proto_init() {
 		(*FixedObjectRef_VersionId)(nil),
 		(*FixedObjectRef_ImmutableCopy)(nil),
 	}
+	file_ani_training_v1_training_proto_msgTypes[9].OneofWrappers = []any{}
+	file_ani_training_v1_training_proto_msgTypes[10].OneofWrappers = []any{}
 	file_ani_training_v1_training_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

@@ -67,6 +67,7 @@ func importCommand(request biz.InputImport) (inputsql.InsertFrozenImportParams, 
 		return inputsql.InsertFrozenImportParams{}, err
 	}
 	return inputsql.InsertFrozenImportParams{
+		Format:   request.InputFormat(),
 		TenantID: tenant, InputVersionID: inputID, RequestID: requestID,
 		Actor: request.Actor, RequestedAt: pgtype.Timestamptz{Time: request.RequestedAt.UTC(), Valid: true},
 		StorageConnectionID: request.Scope.StorageConnectionID, Bucket: request.Scope.Bucket, ApprovedPrefix: request.Scope.ApprovedPrefix,
@@ -79,7 +80,7 @@ func sameImport(row inputsql.ModeldevInputVersion, command inputsql.InsertFrozen
 	return row.TenantID == command.TenantID && row.InputVersionID == command.InputVersionID && row.RequestID == command.RequestID &&
 		row.Actor == command.Actor && row.RequestedAt.Valid && row.RequestedAt.InfinityModifier == pgtype.Finite && row.RequestedAt.Time.Equal(command.RequestedAt.Time) &&
 		row.StorageConnectionID == command.StorageConnectionID && row.Bucket == command.Bucket && row.ApprovedPrefix == command.ApprovedPrefix && row.CredentialReference == command.CredentialReference &&
-		row.ObjectKey == command.ObjectKey && row.ObjectVersionID == command.ObjectVersionID && row.SizeBytes == command.SizeBytes && row.Sha256 == command.Sha256
+		row.ObjectKey == command.ObjectKey && row.ObjectVersionID == command.ObjectVersionID && row.SizeBytes == command.SizeBytes && row.Sha256 == command.Sha256 && row.Format == command.Format
 }
 
 func (r *Repository) Get(ctx context.Context, tenantID, inputVersionID string) (biz.InputVersion, error) {
@@ -120,9 +121,13 @@ func versionFromRow(row inputsql.ModeldevInputVersion) (biz.InputVersion, error)
 		return biz.InputVersion{}, biz.ErrPersistence
 	}
 	request := biz.InputImport{
+		Format:   row.Format,
 		TenantID: row.TenantID.String(), RequestID: row.RequestID.String(), InputVersionID: row.InputVersionID.String(), Actor: row.Actor, RequestedAt: row.RequestedAt.Time.UTC(),
 		Scope:  cpup01.StorageScope{StorageConnectionID: row.StorageConnectionID, Bucket: row.Bucket, ApprovedPrefix: row.ApprovedPrefix, CredentialReference: row.CredentialReference},
 		Object: cpup01.FixedObjectRef{StorageConnectionID: row.StorageConnectionID, Bucket: row.Bucket, Key: row.ObjectKey, VersionID: &row.ObjectVersionID, SizeBytes: row.SizeBytes, SHA256: row.Sha256},
+	}
+	if request.Format == "CSV" {
+		request.Format = ""
 	}
 	if request.Validate() != nil {
 		return biz.InputVersion{}, biz.ErrPersistence
@@ -152,6 +157,17 @@ func versionFromRow(row inputsql.ModeldevInputVersion) (biz.InputVersion, error)
 	case biz.InputStateReady:
 		if version.Failure != nil || !row.VerifiedAt.Valid || row.VerifiedAt.InfinityModifier != pgtype.Finite || !row.VerifiedSchemaVersion.Valid || !row.VerifiedRowCount.Valid || !row.VerifiedFeatureCount.Valid {
 			return biz.InputVersion{}, biz.ErrPersistence
+		}
+		if request.InputFormat() == "JSON" {
+			proof := biz.VerifiedAlpaca{
+				VerifiedObject: biz.VerifiedObject{Object: request.Object, VerifiedAt: row.VerifiedAt.Time.UTC()},
+				SchemaVersion:  row.VerifiedSchemaVersion.String, RowCount: uint32(row.VerifiedRowCount.Int32),
+			}
+			if row.VerifiedFeatureCount.Int32 != 0 || row.VerifiedRowCount.Int32 <= 0 || proof.ValidateFor(request) != nil {
+				return biz.InputVersion{}, biz.ErrPersistence
+			}
+			version.AlpacaVerification = &proof
+			break
 		}
 		proof := biz.VerifiedCSV{
 			VerifiedObject: biz.VerifiedObject{Object: request.Object, VerifiedAt: row.VerifiedAt.Time.UTC()},
