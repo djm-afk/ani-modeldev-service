@@ -20,13 +20,13 @@ type QueryRecord struct {
 
 type ArtifactQueryRepository interface {
 	GetQueryRecord(context.Context, string, string) (QueryRecord, error)
-	ListQueryRecords(context.Context, string, ExecutionQuery) ([]QueryRecord, string, error)
+	ListQueryRecords(context.Context, string, ExecutionQuery) ([]QueryRecord, error)
 	CountQueryRecords(context.Context, string, ExecutionQuery) (uint64, error)
 	FindPublishedArtifact(context.Context, string, string) (QueryRecord, PublishedRuntimeFile, error)
 }
 
 type ExecutionQuery struct {
-	AfterID  string
+	Offset   int
 	Limit    int
 	Compute  ComputeState
 	Delivery DeliveryState

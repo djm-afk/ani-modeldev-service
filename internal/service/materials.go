@@ -123,18 +123,41 @@ func presetDisplayName(presetID string) string {
 	}
 	return base + " · " + presetID[:8]
 }
-func materialPage(p *modeldevv1.PageRequest) (int, string, error) {
-	limit, after := 20, ""
+// modelDevMaxOffset saturates the derived window offset so an out-of-range high
+// page cannot overflow into an earlier window; such a page simply yields no rows.
+const modelDevMaxOffset = 1<<31 - 1
+
+// resolveModelDevPage resolves the independent page/pageSize defaults and
+// validates them against Governance's frontend page contract. An absent field
+// keeps its own default (1 or 20); an explicit zero or a size above 100 is
+// rejected rather than silently corrected.
+func resolveModelDevPage(p *modeldevv1.PageRequest) (uint32, uint32, error) {
+	page, size := uint32(1), uint32(20)
 	if p != nil {
-		if !validMaterialMessage(p) || p.Limit > 100 || len(p.Cursor) > 2048 {
-			return 0, "", status.Error(codes.InvalidArgument, "invalid material page")
+		if !validMaterialMessage(p) {
+			return 0, 0, status.Error(codes.InvalidArgument, "invalid page window")
 		}
-		if p.Limit > 0 {
-			limit = int(p.Limit)
+		if p.Page != nil {
+			page = *p.Page
 		}
-		after = p.Cursor
+		if p.PageSize != nil {
+			size = *p.PageSize
+		}
 	}
-	return limit, after, nil
+	if page == 0 || size == 0 || size > 100 {
+		return 0, 0, status.Error(codes.InvalidArgument, "invalid page window")
+	}
+	return page, size, nil
+}
+
+// modelDevPageWindow derives the zero-based offset and size for a validated
+// page/pageSize pair.
+func modelDevPageWindow(page, pageSize uint32) (int, int) {
+	offset := (uint64(page) - 1) * uint64(pageSize)
+	if offset > modelDevMaxOffset {
+		return modelDevMaxOffset, int(pageSize)
+	}
+	return int(offset), int(pageSize)
 }
 func (q *Query) GetInputVersion(ctx context.Context, r *modeldevv1.GetInputVersionRequest) (*modeldevv1.GetInputVersionResponse, error) {
 	scope, err := queryScope(ctx, modeldevv1.ModelDevQueryService_GetInputVersion_FullMethodName)
@@ -158,7 +181,7 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 	if r == nil || !validMaterialMessage(r) {
 		return nil, status.Error(codes.InvalidArgument, "invalid input query")
 	}
-	limit, cursorToken, err := materialPage(r.Page)
+	page, pageSize, err := resolveModelDevPage(r.Page)
 	if err != nil {
 		return nil, err
 	}
@@ -175,13 +198,8 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 			return nil, status.Error(codes.InvalidArgument, "invalid input state")
 		}
 	}
-	binding := biz.CursorBinding{Kind: biz.CursorKindInputVersions, TenantID: scope.TenantID,
-		FilterKey: biz.CursorFilterKey(string(state))}
-	after, err := q.listCursor(binding, cursorToken)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid input page")
-	}
-	values, next, err := q.materials.Inputs(ctx, scope.TenantID, state, after, limit)
+	offset, limit := modelDevPageWindow(page, pageSize)
+	values, err := q.materials.Inputs(ctx, scope.TenantID, state, offset, limit)
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
@@ -190,10 +208,6 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 		return nil, materialsError(err, scope.RequestID)
 	}
 	response := &modeldevv1.ListInputVersionsResponse{Total: total}
-	response.NextCursor, err = q.nextListCursor(binding, next)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid input page")
-	}
 	for _, value := range values {
 		response.InputVersions = append(response.InputVersions, inputVersionView(value))
 	}
@@ -207,18 +221,12 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 	if r == nil || !validMaterialMessage(r) {
 		return nil, status.Error(codes.InvalidArgument, "invalid preset query")
 	}
-	limit, cursorToken, err := materialPage(r.Page)
+	page, pageSize, err := resolveModelDevPage(r.Page)
 	if err != nil {
 		return nil, err
 	}
-	binding := biz.CursorBinding{Kind: biz.CursorKindPresets, TenantID: scope.TenantID,
-		FilterKey: biz.CursorFilterKey("")}
-	after, err := q.listCursor(binding, cursorToken)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid preset page")
-	}
 	if len(r.ReleaseSelections) > 0 {
-		return q.selectedPresets(ctx, scope, r.ReleaseSelections, limit, after)
+		return q.selectedPresets(ctx, scope, r.ReleaseSelections, page, pageSize)
 	}
 	releases, err := q.materials.Releases(ctx, scope.TenantID)
 	if err != nil {
@@ -258,20 +266,18 @@ func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsReques
 	}
 	ids := make([]string, 0, len(presets))
 	for id := range presets {
-		if id > after {
-			ids = append(ids, id)
-		}
+		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 	// total is every distinct preset for this tenant, independent of the window;
 	// presets are aggregated from the approved catalogue rather than a table.
 	response := &modeldevv1.ListPresetsResponse{Total: uint64(len(presets))}
-	if len(ids) > limit {
-		ids = ids[:limit]
-		response.NextCursor, err = q.nextListCursor(binding, ids[len(ids)-1])
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "invalid preset page")
-		}
+	offset, limit := modelDevPageWindow(page, pageSize)
+	if offset < len(ids) {
+		end := min(offset+limit, len(ids))
+		ids = ids[offset:end]
+	} else {
+		ids = nil
 	}
 	for _, id := range ids {
 		p := presets[id]

@@ -1407,12 +1407,13 @@ func (x *ExecutionStates) GetCloseState() CloseState {
 	return CloseState_CLOSE_STATE_UNSPECIFIED
 }
 
-// Cursor pagination aligned with the Governance limit/cursor baseline:
-// the first page omits cursor and later pages replay the previous next_cursor.
+// Page-window pagination aligned with the Governance page/pageSize baseline.
+// An absent page or page_size resolves independently to 1 or 20; lists use a
+// deterministic order and callers may jump to any valid page.
 type PageRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Limit         uint32                 `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
-	Cursor        string                 `protobuf:"bytes,2,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	Page          *uint32                `protobuf:"varint,3,opt,name=page,proto3,oneof" json:"page,omitempty"`
+	PageSize      *uint32                `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3,oneof" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1447,18 +1448,18 @@ func (*PageRequest) Descriptor() ([]byte, []int) {
 	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *PageRequest) GetLimit() uint32 {
-	if x != nil {
-		return x.Limit
+func (x *PageRequest) GetPage() uint32 {
+	if x != nil && x.Page != nil {
+		return *x.Page
 	}
 	return 0
 }
 
-func (x *PageRequest) GetCursor() string {
-	if x != nil {
-		return x.Cursor
+func (x *PageRequest) GetPageSize() uint32 {
+	if x != nil && x.PageSize != nil {
+		return *x.PageSize
 	}
-	return ""
+	return 0
 }
 
 type ParameterRule struct {
@@ -1833,9 +1834,8 @@ func (x *ListPresetsRequest) GetReleaseSelections() []*PresetReleaseSelection {
 }
 
 type ListPresetsResponse struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	Presets    []*PresetView          `protobuf:"bytes,1,rep,name=presets,proto3" json:"presets,omitempty"`
-	NextCursor string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Presets []*PresetView          `protobuf:"bytes,1,rep,name=presets,proto3" json:"presets,omitempty"`
 	// Matching total under the same tenant and filters, independent of the window.
 	Total         uint64 `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1877,13 +1877,6 @@ func (x *ListPresetsResponse) GetPresets() []*PresetView {
 		return x.Presets
 	}
 	return nil
-}
-
-func (x *ListPresetsResponse) GetNextCursor() string {
-	if x != nil {
-		return x.NextCursor
-	}
-	return ""
 }
 
 func (x *ListPresetsResponse) GetTotal() uint64 {
@@ -2145,7 +2138,6 @@ func (x *ListInputVersionsRequest) GetState() InputState {
 type ListInputVersionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	InputVersions []*InputVersionView    `protobuf:"bytes,1,rep,name=input_versions,json=inputVersions,proto3" json:"input_versions,omitempty"`
-	NextCursor    string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
 	// Matching total under the same tenant and filters, independent of the window.
 	Total         uint64 `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -2187,13 +2179,6 @@ func (x *ListInputVersionsResponse) GetInputVersions() []*InputVersionView {
 		return x.InputVersions
 	}
 	return nil
-}
-
-func (x *ListInputVersionsResponse) GetNextCursor() string {
-	if x != nil {
-		return x.NextCursor
-	}
-	return ""
 }
 
 func (x *ListInputVersionsResponse) GetTotal() uint64 {
@@ -2582,7 +2567,6 @@ func (x *ListExecutionsRequest) GetCloseState() CloseState {
 type ListExecutionsResponse struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	Executions []*ExecutionView       `protobuf:"bytes,1,rep,name=executions,proto3" json:"executions,omitempty"`
-	NextCursor string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
 	// Matching total under the same tenant and filters, independent of the window.
 	Total         uint64 `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -2624,13 +2608,6 @@ func (x *ListExecutionsResponse) GetExecutions() []*ExecutionView {
 		return x.Executions
 	}
 	return nil
-}
-
-func (x *ListExecutionsResponse) GetNextCursor() string {
-	if x != nil {
-		return x.NextCursor
-	}
-	return ""
 }
 
 func (x *ListExecutionsResponse) GetTotal() uint64 {
@@ -2982,9 +2959,8 @@ func (x *ListExecutionArtifactsRequest) GetPage() *PageRequest {
 }
 
 type ListExecutionArtifactsResponse struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	Artifacts  []*ArtifactView        `protobuf:"bytes,1,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
-	NextCursor string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Artifacts []*ArtifactView        `protobuf:"bytes,1,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
 	// Matching total under the same tenant and filters, independent of the window.
 	Total         uint64 `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -3026,13 +3002,6 @@ func (x *ListExecutionArtifactsResponse) GetArtifacts() []*ArtifactView {
 		return x.Artifacts
 	}
 	return nil
-}
-
-func (x *ListExecutionArtifactsResponse) GetNextCursor() string {
-	if x != nil {
-		return x.NextCursor
-	}
-	return ""
 }
 
 func (x *ListExecutionArtifactsResponse) GetTotal() uint64 {
@@ -6963,10 +6932,13 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x0edelivery_state\x18\x02 \x01(\x0e2\x1e.ani.modeldev.v1.DeliveryStateR\rdeliveryState\x12E\n" +
 	"\x0eresource_state\x18\x03 \x01(\x0e2\x1e.ani.modeldev.v1.ResourceStateR\rresourceState\x12<\n" +
 	"\vclose_state\x18\x04 \x01(\x0e2\x1b.ani.modeldev.v1.CloseStateR\n" +
-	"closeState\";\n" +
-	"\vPageRequest\x12\x14\n" +
-	"\x05limit\x18\x01 \x01(\rR\x05limit\x12\x16\n" +
-	"\x06cursor\x18\x02 \x01(\tR\x06cursor\"\xbf\x04\n" +
+	"closeState\"z\n" +
+	"\vPageRequest\x12\x17\n" +
+	"\x04page\x18\x03 \x01(\rH\x00R\x04page\x88\x01\x01\x12 \n" +
+	"\tpage_size\x18\x04 \x01(\rH\x01R\bpageSize\x88\x01\x01B\a\n" +
+	"\x05_pageB\f\n" +
+	"\n" +
+	"_page_sizeJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03R\x05limitR\x06cursor\"\xbf\x04\n" +
 	"\rParameterRule\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x122\n" +
 	"\x04type\x18\x02 \x01(\x0e2\x1e.ani.modeldev.v1.ParameterTypeR\x04type\x12\x1a\n" +
@@ -7004,12 +6976,10 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x12binding_generation\x18\x04 \x01(\x04R\x11bindingGeneration\"\x9e\x01\n" +
 	"\x12ListPresetsRequest\x120\n" +
 	"\x04page\x18\x01 \x01(\v2\x1c.ani.modeldev.v1.PageRequestR\x04page\x12V\n" +
-	"\x12release_selections\x18\x02 \x03(\v2'.ani.modeldev.v1.PresetReleaseSelectionR\x11releaseSelections\"\x83\x01\n" +
+	"\x12release_selections\x18\x02 \x03(\v2'.ani.modeldev.v1.PresetReleaseSelectionR\x11releaseSelections\"u\n" +
 	"\x13ListPresetsResponse\x125\n" +
-	"\apresets\x18\x01 \x03(\v2\x1b.ani.modeldev.v1.PresetViewR\apresets\x12\x1f\n" +
-	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\x12\x14\n" +
-	"\x05total\x18\x03 \x01(\x04R\x05total\"\xf3\x02\n" +
+	"\apresets\x18\x01 \x03(\v2\x1b.ani.modeldev.v1.PresetViewR\apresets\x12\x14\n" +
+	"\x05total\x18\x03 \x01(\x04R\x05totalJ\x04\b\x02\x10\x03R\vnext_cursor\"\xf3\x02\n" +
 	"\x10InputVersionView\x12(\n" +
 	"\x10input_version_id\x18\x01 \x01(\tR\x0einputVersionId\x121\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x1b.ani.modeldev.v1.InputStateR\x05state\x12\x16\n" +
@@ -7029,12 +6999,10 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x18ListInputVersionsRequest\x120\n" +
 	"\x04page\x18\x01 \x01(\v2\x1c.ani.modeldev.v1.PageRequestR\x04page\x126\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x1b.ani.modeldev.v1.InputStateH\x00R\x05state\x88\x01\x01B\b\n" +
-	"\x06_state\"\x9c\x01\n" +
+	"\x06_state\"\x8e\x01\n" +
 	"\x19ListInputVersionsResponse\x12H\n" +
-	"\x0einput_versions\x18\x01 \x03(\v2!.ani.modeldev.v1.InputVersionViewR\rinputVersions\x12\x1f\n" +
-	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\x12\x14\n" +
-	"\x05total\x18\x03 \x01(\x04R\x05total\"\x89\n" +
+	"\x0einput_versions\x18\x01 \x03(\v2!.ani.modeldev.v1.InputVersionViewR\rinputVersions\x12\x14\n" +
+	"\x05total\x18\x03 \x01(\x04R\x05totalJ\x04\b\x02\x10\x03R\vnext_cursor\"\x89\n" +
 	"\n" +
 	"\rExecutionView\x12>\n" +
 	"\bidentity\x18\x01 \x01(\v2\".ani.training.v1.ExecutionIdentityR\bidentity\x12\x12\n" +
@@ -7078,14 +7046,12 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"closeState\x88\x01\x01B\x10\n" +
 	"\x0e_compute_stateB\x11\n" +
 	"\x0f_delivery_stateB\x0e\n" +
-	"\f_close_state\"\x8f\x01\n" +
+	"\f_close_state\"\x81\x01\n" +
 	"\x16ListExecutionsResponse\x12>\n" +
 	"\n" +
 	"executions\x18\x01 \x03(\v2\x1e.ani.modeldev.v1.ExecutionViewR\n" +
-	"executions\x12\x1f\n" +
-	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\x12\x14\n" +
-	"\x05total\x18\x03 \x01(\x04R\x05total\"\x9f\x01\n" +
+	"executions\x12\x14\n" +
+	"\x05total\x18\x03 \x01(\x04R\x05totalJ\x04\b\x02\x10\x03R\vnext_cursor\"\x9f\x01\n" +
 	"\x17GetExecutionLogsRequest\x12!\n" +
 	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\x12\x1a\n" +
 	"\x06log_id\x18\x02 \x01(\tH\x00R\x05logId\x88\x01\x01\x12\x1d\n" +
@@ -7116,12 +7082,10 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"verifiedAt\"t\n" +
 	"\x1dListExecutionArtifactsRequest\x12!\n" +
 	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\x120\n" +
-	"\x04page\x18\x02 \x01(\v2\x1c.ani.modeldev.v1.PageRequestR\x04page\"\x94\x01\n" +
+	"\x04page\x18\x02 \x01(\v2\x1c.ani.modeldev.v1.PageRequestR\x04page\"\x86\x01\n" +
 	"\x1eListExecutionArtifactsResponse\x12;\n" +
-	"\tartifacts\x18\x01 \x03(\v2\x1d.ani.modeldev.v1.ArtifactViewR\tartifacts\x12\x1f\n" +
-	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\x12\x14\n" +
-	"\x05total\x18\x03 \x01(\x04R\x05total\"C\n" +
+	"\tartifacts\x18\x01 \x03(\v2\x1d.ani.modeldev.v1.ArtifactViewR\tartifacts\x12\x14\n" +
+	"\x05total\x18\x03 \x01(\x04R\x05totalJ\x04\b\x02\x10\x03R\vnext_cursor\"C\n" +
 	" AuthorizeArtifactDownloadRequest\x12\x1f\n" +
 	"\vartifact_id\x18\x01 \x01(\tR\n" +
 	"artifactId\"\xbc\x01\n" +
@@ -7944,6 +7908,7 @@ func file_ani_modeldev_v1_modeldev_proto_init() {
 	}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[8].OneofWrappers = []any{}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[9].OneofWrappers = []any{}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[12].OneofWrappers = []any{}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[13].OneofWrappers = []any{}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[21].OneofWrappers = []any{}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[23].OneofWrappers = []any{}

@@ -23,18 +23,10 @@ type Query struct {
 	signer     biz.ArtifactSigner
 	logs       biz.TrainingLogReader
 	materials  *biz.ManagedMaterials
-	cursors    *biz.CursorCodec
 }
 
 func (query *Query) WithMaterials(materials *biz.ManagedMaterials) *Query {
 	query.materials = materials
-	return query
-}
-
-// WithCursorCodec wires the list-cursor signer. List pagination is fail-closed
-// without it, so every assembled query listener supplies one.
-func (query *Query) WithCursorCodec(codec *biz.CursorCodec) *Query {
-	query.cursors = codec
 	return query
 }
 
@@ -44,32 +36,6 @@ func NewQuery(repository biz.ArtifactQueryRepository, signer biz.ArtifactSigner,
 		query.logs = logs[0]
 	}
 	return query
-}
-
-// listCursor verifies an inbound cursor against its binding and returns the raw
-// boundary key to resume from. An empty token is the first page. A missing
-// codec or any integrity/binding failure is rejected rather than treated as a
-// fresh first page.
-func (query *Query) listCursor(binding biz.CursorBinding, token string) (string, error) {
-	if query == nil || query.cursors == nil {
-		return "", biz.ErrInvalidCursor
-	}
-	if token == "" {
-		return "", nil
-	}
-	return query.cursors.Decode(token, binding)
-}
-
-// nextListCursor signs the raw boundary key of the next page. An empty key
-// yields an empty token (last page).
-func (query *Query) nextListCursor(binding biz.CursorBinding, last string) (string, error) {
-	if last == "" {
-		return "", nil
-	}
-	if query == nil || query.cursors == nil {
-		return "", biz.ErrInvalidCursor
-	}
-	return query.cursors.Encode(binding, last)
 }
 
 type governanceQueryKey struct{}
@@ -262,15 +228,12 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 		return nil, status.Error(codes.InvalidArgument, "invalid execution query")
 	}
 	filter := biz.ExecutionQuery{Limit: 20}
-	cursorToken := ""
 	if page := request.Page; page != nil {
-		if len(page.ProtoReflect().GetUnknown()) != 0 || page.Limit > 100 || len(page.Cursor) > 2048 {
-			return nil, status.Error(codes.InvalidArgument, "invalid execution page")
+		resolvedPage, pageSize, err := resolveModelDevPage(page)
+		if err != nil {
+			return nil, err
 		}
-		if page.Limit > 0 {
-			filter.Limit = int(page.Limit)
-		}
-		cursorToken = page.Cursor
+		filter.Offset, filter.Limit = modelDevPageWindow(resolvedPage, pageSize)
 	}
 	if request.ComputeState != nil {
 		name, known := modeldevv1.ComputeState_name[int32(*request.ComputeState)]
@@ -296,13 +259,7 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 	if query == nil || query.repository == nil {
 		return nil, queryError(biz.ErrPersistence, scope.RequestID)
 	}
-	binding := biz.CursorBinding{Kind: biz.CursorKindExecutions, TenantID: scope.TenantID,
-		FilterKey: biz.CursorFilterKey(string(filter.Compute), string(filter.Delivery), string(filter.Close))}
-	filter.AfterID, err = query.listCursor(binding, cursorToken)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid execution cursor")
-	}
-	records, next, err := query.repository.ListQueryRecords(ctx, scope.TenantID, filter)
+	records, err := query.repository.ListQueryRecords(ctx, scope.TenantID, filter)
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
@@ -311,10 +268,6 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 		return nil, queryError(err, scope.RequestID)
 	}
 	response := &modeldevv1.ListExecutionsResponse{Total: total}
-	response.NextCursor, err = query.nextListCursor(binding, next)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid execution cursor")
-	}
 	for _, record := range records {
 		view, err := executionView(record)
 		if err != nil {
@@ -337,25 +290,16 @@ func (query *Query) ListExecutionArtifacts(ctx context.Context, request *modelde
 	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 {
 		return nil, status.Error(codes.InvalidArgument, "invalid artifact query")
 	}
-	size := uint32(20)
-	cursorToken := ""
-	if page := request.Page; page != nil {
-		if len(page.ProtoReflect().GetUnknown()) != 0 || page.Limit > 100 || len(page.Cursor) > 2048 {
-			return nil, status.Error(codes.InvalidArgument, "invalid artifact page")
+	page, pageSize := uint32(1), uint32(20)
+	if request.Page != nil {
+		resolvedPage, resolvedSize, err := resolveModelDevPage(request.Page)
+		if err != nil {
+			return nil, err
 		}
-		if page.Limit > 0 {
-			size = page.Limit
-		}
-		cursorToken = page.Cursor
+		page, pageSize = resolvedPage, resolvedSize
 	}
 	if query == nil || query.repository == nil {
 		return nil, queryError(biz.ErrDownloadUnavailable, scope.RequestID)
-	}
-	binding := biz.CursorBinding{Kind: biz.CursorKindArtifacts, TenantID: scope.TenantID,
-		FilterKey: biz.CursorFilterKey(request.ExecutionId)}
-	cursor, err := query.listCursor(binding, cursorToken)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid artifact cursor")
 	}
 	record, err := query.repository.GetQueryRecord(ctx, scope.TenantID, request.ExecutionId)
 	if err != nil {
@@ -370,17 +314,14 @@ func (query *Query) ListExecutionArtifacts(ctx context.Context, request *modelde
 	// total is every published artifact of this execution, independent of the
 	// pagination window.
 	response.Total = uint64(len(files))
+	offset, limit := modelDevPageWindow(page, pageSize)
+	if offset < len(files) {
+		end := min(offset+limit, len(files))
+		files = files[offset:end]
+	} else {
+		files = nil
+	}
 	for _, file := range files {
-		if file.ArtifactID <= cursor {
-			continue
-		}
-		if len(response.Artifacts) == int(size) {
-			response.NextCursor, err = query.nextListCursor(binding, response.Artifacts[len(response.Artifacts)-1].ArtifactId)
-			if err != nil {
-				return nil, status.Error(codes.InvalidArgument, "invalid artifact cursor")
-			}
-			break
-		}
 		response.Artifacts = append(response.Artifacts, artifactView(record, file))
 	}
 	return response, nil

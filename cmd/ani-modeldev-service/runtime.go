@@ -86,11 +86,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed execution operations configuration invalid")
 	}
-	codec, err := newCursorCodec(config.CursorSigningKey)
-	if err != nil {
-		return failed("managed command cursor signing key invalid")
-	}
-	command, err := buildCommandServerWithCapabilities(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), operations, codec, middlewares...)
+	command, err := buildCommandServerWithCapabilities(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), operations, middlewares...)
 	if err != nil {
 		return failed("managed command listener configuration invalid")
 	}

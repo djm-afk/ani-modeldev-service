@@ -52,14 +52,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*application, error) {
 	if bc.Command == nil {
 		grpcServer = server.NewGRPCServer(bc.Server.Grpc, middlewares...)
 	} else {
-		codec, codecErr := newCursorCodec(bc.CursorSigningKey)
-		if codecErr != nil {
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-			_ = observability.Shutdown(ctx)
-			return nil, codecErr
-		}
-		grpcServer, cleanup, err = buildCommandServer(bc.Server.Grpc, bc.Command, codec, middlewares...)
+		grpcServer, cleanup, err = buildCommandServer(bc.Server.Grpc, bc.Command, middlewares...)
 		if err != nil {
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
