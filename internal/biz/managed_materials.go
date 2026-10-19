@@ -21,7 +21,7 @@ type ManagedReleaseStore interface {
 }
 type ManagedInputQuery interface {
 	AdmissionInputReader
-	List(context.Context, string, InputState, string, int) ([]InputVersion, string, error)
+	List(context.Context, string, InputState, int, int) ([]InputVersion, error)
 	Count(context.Context, string, InputState) (uint64, error)
 }
 
@@ -143,11 +143,11 @@ func (m *ManagedMaterials) Input(ctx context.Context, tenant, id string) (InputV
 	}
 	return m.inputs.Get(ctx, tenant, id)
 }
-func (m *ManagedMaterials) Inputs(ctx context.Context, tenant string, state InputState, after string, limit int) ([]InputVersion, string, error) {
+func (m *ManagedMaterials) Inputs(ctx context.Context, tenant string, state InputState, offset, limit int) ([]InputVersion, error) {
 	if m == nil || m.inputs == nil {
-		return nil, "", ErrPersistence
+		return nil, ErrPersistence
 	}
-	return m.inputs.List(ctx, tenant, state, after, limit)
+	return m.inputs.List(ctx, tenant, state, offset, limit)
 }
 func (m *ManagedMaterials) InputsCount(ctx context.Context, tenant string, state InputState) (uint64, error) {
 	if m == nil || m.inputs == nil {

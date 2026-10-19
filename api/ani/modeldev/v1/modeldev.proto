@@ -261,11 +261,14 @@ message ExecutionStates {
   CloseState close_state = 4;
 }
 
-// Cursor pagination aligned with the Governance limit/cursor baseline:
-// the first page omits cursor and later pages replay the previous next_cursor.
+// Page-window pagination aligned with the Governance page/pageSize baseline.
+// An absent page or page_size resolves independently to 1 or 20; lists use a
+// deterministic order and callers may jump to any valid page.
 message PageRequest {
-  uint32 limit = 1;
-  string cursor = 2;
+  reserved 1, 2;
+  reserved "limit", "cursor";
+  optional uint32 page = 3;
+  optional uint32 page_size = 4;
 }
 
 message ParameterRule {
@@ -313,7 +316,8 @@ message ListPresetsRequest {
 
 message ListPresetsResponse {
   repeated PresetView presets = 1;
-  string next_cursor = 2;
+  reserved 2;
+  reserved "next_cursor";
   // Matching total under the same tenant and filters, independent of the window.
   uint64 total = 3;
 }
@@ -346,7 +350,8 @@ message ListInputVersionsRequest {
 
 message ListInputVersionsResponse {
   repeated InputVersionView input_versions = 1;
-  string next_cursor = 2;
+  reserved 2;
+  reserved "next_cursor";
   // Matching total under the same tenant and filters, independent of the window.
   uint64 total = 3;
 }
@@ -394,7 +399,8 @@ message ListExecutionsRequest {
 
 message ListExecutionsResponse {
   repeated ExecutionView executions = 1;
-  string next_cursor = 2;
+  reserved 2;
+  reserved "next_cursor";
   // Matching total under the same tenant and filters, independent of the window.
   uint64 total = 3;
 }
@@ -437,7 +443,8 @@ message ListExecutionArtifactsRequest {
 
 message ListExecutionArtifactsResponse {
   repeated ArtifactView artifacts = 1;
-  string next_cursor = 2;
+  reserved 2;
+  reserved "next_cursor";
   // Matching total under the same tenant and filters, independent of the window.
   uint64 total = 3;
 }

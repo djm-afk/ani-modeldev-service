@@ -145,7 +145,7 @@ func TestFinetuningSelectedQueryRejectsConflictingAndIncompleteBinding(t *testin
 	query := NewQuery(nil, nil)
 	scope := GovernanceDelivery{TenantID: "11111111-2222-4333-8444-555555555555", RequestID: uuid.NewString()}
 	for _, selections := range [][]*modeldevv1.PresetReleaseSelection{{nil}, {{PresetId: release.PresetID, ReleaseId: release.ReleaseID, ReleaseDigest: "invalid", BindingGeneration: 1}}, {{PresetId: release.PresetID, ReleaseId: release.ReleaseID, ReleaseDigest: conformance.ReleaseSHA256V1, BindingGeneration: 0}}} {
-		if response, err := query.selectedPresets(context.Background(), scope, selections, 20, ""); status.Code(err) != codes.InvalidArgument || response != nil {
+		if response, err := query.selectedPresets(context.Background(), scope, selections, 1, 20); status.Code(err) != codes.InvalidArgument || response != nil {
 			t.Fatal("invalid explicit selector was accepted")
 		}
 	}
@@ -184,10 +184,10 @@ func TestSelectedPresetPaginationKeepsTotalAndDistinctGeneralNames(t *testing.T)
 	}
 	query := NewQuery(nil, nil).WithMaterials(biz.NewManagedMaterials(catalogue.NewReader(directory), facts, nil, nil))
 	authorized := WithVerifiedGovernanceQuery(ctx, GovernanceDelivery{TenantID: facts.tenant, Actor: "governance:user:pagination-fixture", RequestID: uuid.NewString()}, modeldevv1.ModelDevQueryService_ListPresets_FullMethodName)
-	cursor := ""
 	names := make([]string, 0, len(presetIDs))
 	for index, presetID := range presetIDs {
-		response, err := query.ListPresets(authorized, &modeldevv1.ListPresetsRequest{Page: &modeldevv1.PageRequest{Limit: 1, Cursor: cursor}, ReleaseSelections: selections})
+		requestPage, requestSize := uint32(index+1), uint32(1)
+		response, err := query.ListPresets(authorized, &modeldevv1.ListPresetsRequest{Page: &modeldevv1.PageRequest{Page: &requestPage, PageSize: &requestSize}, ReleaseSelections: selections})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -195,14 +195,6 @@ func TestSelectedPresetPaginationKeepsTotalAndDistinctGeneralNames(t *testing.T)
 			t.Fatalf("selected page %d lost the full total or stable ordering: %+v", index, response)
 		}
 		names = append(names, response.Presets[0].Name)
-		wantNext := presetID
-		if index == len(presetIDs)-1 {
-			wantNext = ""
-		}
-		if response.NextCursor != wantNext {
-			t.Fatalf("selected page %d next_cursor=%q, want %q", index, response.NextCursor, wantNext)
-		}
-		cursor = response.NextCursor
 	}
 	if names[0] != "General CPU MLP · aaaaaaaa" || names[1] != "General CPU MLP · cccccccc" || names[0] == names[1] {
 		t.Fatalf("selected general presets lost their distinguishing names: %v", names[:2])
@@ -210,8 +202,9 @@ func TestSelectedPresetPaginationKeepsTotalAndDistinctGeneralNames(t *testing.T)
 	if names[2] != "Managed CPU LoRA SFT" {
 		t.Fatalf("selected fine-tuning preset name changed: %q", names[2])
 	}
-	response, err := query.ListPresets(authorized, &modeldevv1.ListPresetsRequest{Page: &modeldevv1.PageRequest{Limit: 1, Cursor: presetIDs[len(presetIDs)-1]}, ReleaseSelections: selections})
-	if err != nil || response.Total != uint64(len(presetIDs)) || len(response.Presets) != 0 || response.NextCursor != "" {
+	beyondPage, beyondSize := uint32(len(presetIDs)+1), uint32(1)
+	response, err := query.ListPresets(authorized, &modeldevv1.ListPresetsRequest{Page: &modeldevv1.PageRequest{Page: &beyondPage, PageSize: &beyondSize}, ReleaseSelections: selections})
+	if err != nil || response.Total != uint64(len(presetIDs)) || len(response.Presets) != 0 {
 		t.Fatalf("empty selected page lost matching total: %+v, %v", response, err)
 	}
 	if facts.lists != 0 {

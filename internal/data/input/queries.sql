@@ -27,9 +27,9 @@ FOR UPDATE;
 SELECT * FROM modeldev_input_versions
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND (sqlc.arg(state_filter)::text = '' OR state = sqlc.arg(state_filter)::text)
-  AND (sqlc.narg(after_id)::uuid IS NULL OR input_version_id > sqlc.narg(after_id)::uuid)
 ORDER BY input_version_id
-LIMIT sqlc.arg(row_limit)::integer;
+LIMIT sqlc.arg(row_limit)::integer
+OFFSET sqlc.arg(row_offset)::integer;
 
 -- name: CountInputVersions :one
 SELECT count(*) FROM modeldev_input_versions

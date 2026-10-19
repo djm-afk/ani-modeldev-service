@@ -441,7 +441,7 @@ token/request 文件应使用绝对路径、regular file、权限 0600，并满�
 | GET | `/admin/v1/modeldev/executions/{id}/artifacts` |
 | GET | `/admin/v1/modeldev/artifacts/{artifact_id}/content` |
 
-请求携带 `Authorization: Bearer <access-token>`。列表支持 `limit`（最多 100）与 `cursor`，返回 `next_cursor` 与 `total`；日志最多 1000 行、65536 字节，限时读取实际关联训练 Pod。
+请求携带 `Authorization: Bearer <access-token>`。列表支持 `page`（默认 1）与 `pageSize`（默认 20，最多 100），返回 `items` 与 `total`；日志最多 1000 行、65536 字节，限时读取实际关联训练 Pod。
 
 从 preset 和 READY 输入列表取得 ID 后，创建示例：
 
