@@ -123,6 +123,7 @@ func presetDisplayName(presetID string) string {
 	}
 	return base + " · " + presetID[:8]
 }
+
 // modelDevMaxOffset saturates the derived window offset so an out-of-range high
 // page cannot overflow into an earlier window; such a page simply yields no rows.
 const modelDevMaxOffset = 1<<31 - 1
