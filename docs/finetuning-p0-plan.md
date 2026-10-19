@@ -162,7 +162,7 @@ P0 卡的不是"Model 没部署"，也不是"ModelDev 缺代码"，而是**两�
 | B11 | ~~ani-01 验证宿主未就绪~~ | `make verify`、真实 PG 测试 | 我方 | **已解除（2026-10-16）**：宿主已建成，完整 `make verify` exit=0，见 §7 |
 | B12 | **集群正在装 GPU 卡，环境波动**（节点 15:12 重启；`ani-model`/`ani-inference`/`ani-resource` 一度 CrashLoopBackOff，Model 失败于 RustFS/PG 超时） | Phase 3 全部真实联调 | 环境 owner | 阻塞（用户 2026-10-16 告知）；**非代码问题**，须等环境稳定后重测 |
 | B13 | **ModelDev 的 k8s/protobuf 依赖被 pin 被动抬升**：引入 Model 模块后 `k8s.io/*` 0.34.1→0.36.0、`protobuf` → 伪版本、`json-patch.v4` → v4.13.0 | 1.2 的依赖影响面 | 双方 | **新发现**，见 §7.2；`make verify` 已通过，但升级幅度需确认 |
-| B14 | **`BaseModelRef.Files`/`Object` 无对应 Model RPC**：Model 只返回单个 `storage_path` + 整包 `size/SHA`，**不返回逐文件清单** | MR02 基模读取、C1 | Model | **新发现**，见 §7.3；这是比 format 更靠前的真实缺口 |
+| B14 | **`BaseModelRef.Files`/`Object` 无对应 Model RPC**：Model 只返回单个 `storage_path` + 整包 `size/SHA`，**不返回逐文件清单** | MR02 基模读取、C1 | Model | **新发现**，见 §7.3；这是比 format 更靠前的真实缺口。**已纳入 owner 提问函 Q7**（优先级标注高于 format） |
 | B15 | ~~D09.3 登记派发仲裁未实现~~ | 本地实现（G4） | ModelDev | **已解除（2026-10-16）**：领域类型 + 持久化 + 6 例真实 PG 单测，`make verify` exit=0，见 §7.5 |
 | B16 | ~~登记 RPC 编排（C3–C5 调用编排）未实现~~ | 本地实现（G4 的编排部分） | ModelDev | **已解除（2026-10-16）**：biz 层 orchestrator + 窄端口 + 8 例单测，`make verify` exit=0，见 §7.6。**真实 `modelclient` 接线仍等 G1/G3/§4.6** |
 

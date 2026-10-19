@@ -125,6 +125,23 @@ ModelDev **已按 Gov 同一先例落地**：`go.mod` pin 了 `github.com/liangz
 - 该 pin **是否合适**？若应改用别的 SHA，请指定（建议不早于部署版 `a21e0a7`）。
 - module 路径确认为 go.mod 声明的 `github.com/liangzai006/ani-model-service`（而非仓库 remote `zhangzhe-ctrl/...`）。
 
+### Q7【基模逐文件清单 · 阻塞 · **优先级高于 Q3/format**】
+
+微调受理前要冻结基模的**逐文件字节清单**，用于 prepare 阶段逐文件核验并解 tar。本仓契约 `BaseModelRef` 要求：
+
+- `Files []BaseModelFile`——每项含 `path` / `size_bytes` / `sha256`，**1–128 个文件**，且**必须包含** `config.json`、`model.safetensors`、`tokenizer_config.json`、`tokenizer.json`；
+- `Object FixedObjectRef`——含**固定版本**（`VersionID`，或等价的不可变副本标记）、整包 `size_bytes` / `sha256`；
+- `Scope`——存储连接 / bucket / 已批准前缀 / 凭据引用。
+
+**而 Model 现有的 `GetModelVersion` 只返回单个 `storage_path` + 整包 `size_bytes` / `checksum_sha256`，没有任何逐文件字段**（`ModelVersion` 无 files 字段，`ModelArtifact` 只有整包 provider/reference/sha256）。
+
+即：**这里缺的不是权限，是数据形状。** 请二选一并明确：
+
+1. **Model 补一个窄接口**，能返回"固定版本 + 逐文件 path/size/sha256 清单"；或
+2. **确认 ModelDev 改为只按整包 tar 读取**——但那需要同步修改本仓 prepare 阶段的逐文件核验契约（属本仓改动，但会放宽现有完整性约束，需双方认可）。
+
+> **为什么它比 format 更靠前**：format（见上文 §二·C）只影响**登记写入**，而逐文件清单影响**受理入口**——拿不到清单，`BaseModelRef` 无法冻结，整条链从第一步就走不通。这也是本仓 `BaseModelRef` 与 Model 现有 RPC 之间的**唯一硬形状缺口**。
+
 ## 四、ModelDev 侧进展（非提问）
 
 截至本文更新，ModelDev 侧已完成以下与 Model 对接直接相关的实现（**全部在独立验证宿主上通过，未部署、未发起任何真实 Model 调用**）：
@@ -144,8 +161,10 @@ ModelDev **已按 Gov 同一先例落地**：`go.mod` pin 了 `github.com/liangz
 
 ## 五、回复方式
 
-Q1–Q6 逐条回复即可。**不确定的直接标注"待定"**，本文档不做假设性实现。  
+**Q1–Q7 逐条回复即可。不确定的直接标注"待定"**，本文档不做假设性实现。  
 第二节（A–E）如哪条理解有误，请指出。
+
+**阻塞优先级**：Q1（身份）与 Q7（基模逐文件清单）是硬阻塞——前者卡住所有调用，后者卡住受理入口。Q2/Q3 紧随其后（身份确定后即可放行）。Q4/Q5/Q6 为确认项。
 
 ---
 
