@@ -42,7 +42,7 @@
 
 ### B. 「按 (model_id, version) 点查」只返回 ready；「列表版本」能看到 pending
 
-[GetVersionByExternalRef](https://github.com/zhangzhe-ctrl/ani-model-service/blob/a21e0a7/internal/data/postgres/version_store.go#L44-L60) + `GetReadyModelVersionByExternalRef`：用 `(external_model_id, version)` 点查，**SQL 带 `ready` 过滤，只返回已 ready 的版本**。
+[GetVersionByExternalRef](https://github.com/zhangzhe-ctrl/ani-model-service/blob/a21e0a7/internal/data/postgres/version_store.go#L44-L60)（Go 方法）→ SQL 查询 `GetReadyModelVersionByExternalRef`（[model.sql:29](https://github.com/zhangzhe-ctrl/ani-model-service/blob/a21e0a7/queries/model.sql#L29)）：用 `(external_model_id, version)` 点查，**SQL 带 `v.status='ready'` 过滤，只返回已 ready 的版本**。
 
 但 [ListModelVersions](https://github.com/zhangzhe-ctrl/ani-model-service/blob/a21e0a7/queries/model.sql#L148-L162)（已注册的对外 RPC）按 `model_id` 列版本时**只过滤 `status <> 'deleted'`、不过滤 ready**，返回体含 `status` 字段——**pending 是能看到的**。微调版本号固定为 `exec-<execution_id>`，可据此反查。该 RPC 目前只授权给 Governance，未给 Inference/ModelDev。
 
@@ -93,6 +93,8 @@ ModelDev 的调用身份要给什么值？
 
 现状：`GetModel`/`GetModelVersion`/`GetModelDownloadURL` 是 **Inference 与 Governance 共有**；`CreateModel`/`CreateModelVersion`/`GetUploadURL` **仅 Governance**；`ListModelVersions` **仅 Governance**。这些方法 ModelDev 一条都没有。上面 7 条能放给 ModelDev 吗？还是有别的建议方法？
 
+> **为何必须要 `ListModelVersions`**：它是**唯一能看见 `pending` 状态的接口**——`GetModelVersion`（含 `(external_model_id, version)` 变体）的 SQL 带 `v.status='ready'` 过滤，只返回已 ready 的版本；而 `ListModelVersions` 只过滤 `status <> 'deleted'`，返回体含 `status` 字段。微调版本号固定为 `exec-<execution_id>`，可据此反查。缺它就无法区分"未创建"与"写入进行中"。
+
 ### Q3【Principal 分支怎么加·阻塞】
 
 按 E，ModelDev 需要一个**新的 principal 构造分支**。ModelDev 侧**已按 governance 风格实现**（可复用现有 governance 分支的形状，仅换身份常量）：
@@ -105,10 +107,18 @@ ModelDev 的调用身份要给什么值？
 
 ### Q4【超时与预算】
 
-ModelDev 侧**已定单次 RPC 超时上限 30 秒**（配置可小于该值，不可大于；超过即拒绝启动）。请确认：
+ModelDev 侧**已定单次 RPC 超时上限 30 秒**（配置可小于、不可大于；超过即拒绝启动）。已核对**三方当前一致**：
 
-- 30 秒上限**是否与 Model 侧接受范围一致**？若 Model 有更长/更短的期望，请给出上限。
-- 登记类写入是否需要**额外重试预算**？（ModelDev 侧当前策略是**不自行重试**——同键重放只做原结果查证，靠 Model 的 `idempotency_key` 幂等兜底。）
+| 侧 | 超时 |
+| --- | --- |
+| ModelDev 客户端（我方） | 30s（上限 30s） |
+| Gov 客户端（现有先例） | 30s（上限 45s） |
+| Model 服务端 | chart 部署显式设 `ANI_SERVER_GRPC_TIMEOUT=30s` |
+
+请确认：
+
+- 三方 30 秒一致是否可接受？Model 侧**是否还有其它隐含上限**（如负载均衡、Ingress、代理层）需要我方低于 30s？
+- 登记类写入是否需要**额外重试预算**？（ModelDev 侧**不自行重试**——同键重放只做原结果查证，靠 Model 的 `idempotency_key` 幂等兜底。）
 
 ### Q5【租户映射】
 
