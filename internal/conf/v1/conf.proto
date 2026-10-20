@@ -64,6 +64,18 @@ message GovernanceCommand {
   AdmissionResolution admission_resolution = 6;
   // Absence keeps FINETUNING disabled and Model reads/writes unavailable.
   ModelConnection model = 7;
+  // Presence enables an explicitly pinned read-only Model boundary substitute
+  // for isolated FINETUNING candidacy. It never proves a Model permission,
+  // approval or protected status, and is not a public capability enablement.
+  ControlledModelFacts controlled_model_facts = 8;
+}
+
+// ControlledModelFacts pins a read-only base-model boundary substitute used
+// only for isolated candidacy. It cannot manufacture tenant rights, approval,
+// protected status or fixed bytes beyond the explicitly reviewed documents.
+message ControlledModelFacts {
+  // Explicitly pinned 1..64 controlled documents; no directory scanning.
+  repeated AdmissionFactsFile files = 1;
 }
 
 // ModelConnection is the explicit ModelDev -> Model business mTLS dependency.

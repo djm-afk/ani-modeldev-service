@@ -302,6 +302,77 @@ P0 卡的不是"Model 没部署"，也不是"ModelDev 缺代码"，而是**两�
 
 ---
 
+## 8. 2026-10-19 实施记录（微调经 BFF 对接 + ModelDev 受理启用）
+
+本节记录本轮**已实际执行并验证**的动作，与 §3 的计划项区分。目标是让「微调经 Governance BFF 到前端」与「ModelDev 侧 FINETUNING 可受理」两条链路具备真实实现，**Model 登记作为已知缺口保留**。
+
+### 8.1 Governance BFF：解除三处微调硬编码门禁（t2）
+
+BFF 之前对 `kind` 与输入 `format` 有 CPU 专属硬编码，会把微调预设/执行/数据集误判为不可用（`503 MODELDEV_QUERY_UNAVAILABLE`）。本轮放开为「两 kind 白名单 + 按格式分支」：
+
+| 文件 | 位置 | 改动 |
+| --- | --- | --- |
+| `internal/data/modeldev_catalogue_client.go` | `ListPresets` 循环 | `preset.Kind != GENERAL_TRAINING` → `!modelDevSupportedExecutionKind(preset.Kind)` |
+| `internal/data/modeldev_query_client.go` | `modelDevValidExecution` + 新增 `modelDevSupportedExecutionKind` | 执行 kind 放开为 `GENERAL_TRAINING \| FINETUNING` |
+| `internal/data/modeldev_catalogue_client.go` | `modelDevValidInput` | `format=="CSV"` 写死 → 按格式分支：`CSV`→1024x16、`JSON`→64x0；未就绪态不校验形状 |
+
+创建执行链路本身（`modeldev_service.go` / `modeldev_http.go`）**本就 kind-agnostic 透传，无需改动**。
+
+### 8.2 Governance CLI：补微调数据集导入入口（t3）
+
+管理员原先只能经 `modeldev-import-csv` 导入 CSV；微调 JSON/Alpaca 数据集缺少入口（下游 `ImportFinetuningDataset` RPC 已存在）。
+
+| 文件 | 改动 |
+| --- | --- |
+| `cmd/admin/main.go` | 命令分发加入 `modeldev-import-finetuning-dataset` |
+| `cmd/admin/modeldev_management.go` | 新增 `ImportFinetuningDatasetRequest` 消息映射 |
+| `internal/data/modeldev_management_client.go` | `ManagedOperation` 增加该校验分支、RPC 分派与幂等 request-id（独立命名空间 `ani:modeldev:finetuning-import:v1`） |
+| `cmd/admin/modeldev_management_test.go` | 命令清单纳入新命令 |
+| `docs/interface-integration-register.md` | S2S 方法清单补 `ImportFinetuningDataset` |
+
+**跨仓依赖升级**：`ImportFinetuningDataset` 由 ModelDev `76bb4a8` 引入，Governance 原 pin 的 `v0.0.0-20261014073039-acd8a5cb2b25` **不含**该 RPC。本轮将 `go.mod` 升级到 `v0.0.0-20261015105500-ee46246cfe2c`（`origin/main` HEAD），实测该版本含目标 RPC。升级只改动 modeldev 一行、go.sum 两行，无其他依赖波及。
+
+### 8.3 ModelDev：受控基模事实 + 三态接线（t4）
+
+`FinetuningModelFactsReader` 是 FINETUNING 受理的硬边界，此前生产装配恒为 `nil`，导致 `ErrFinetuningNotEnabled`。本轮按「**真实 / 受控 / 缺省禁用**」三态实现：
+
+- **缺省禁用**：不配置任何基模来源时，`models` 为 `nil`，FINETUNING 恒返回 `ErrFinetuningNotEnabled`——**公共能力保持未启用，符合 spec A04「Model 未接入时不增加永久的'只训练不登记'公共微调模式」**。
+- **受控素材**：新增配置项 `command.controlled_model_facts`（pinned 1..64 文件，绝对路径 + 小写 SHA256），对应新增 `internal/data/finetuningmodel` reader。它从受控 pin 文件读取 `BaseModelRef`，**明确标注为只读边界替身**，不冒充 Model 权限/审批/保护状态。
+- **真实 Model**：因 Q7（Model 无法返回逐文件清单）尚未解除，**未接线**；`buildFinetuningModelFacts` 的注释已如实说明。
+
+| 文件 | 改动 |
+| --- | --- |
+| `internal/conf/v1/conf.proto` | 新增 `ControlledModelFacts{ repeated AdmissionFactsFile files = 1 }`，`GovernanceCommand.controlled_model_facts = 8` |
+| `internal/conf/v1/conf.pb.go` | 重新生成（`buf lint/build/generate` 全过） |
+| `internal/conf/v1/validate.go` | 新增 `validateControlledModelFacts`：绝对路径 + 小写 64 位 SHA256 + 1..64 项；不完整一律拒绝启动 |
+| `internal/conf/v1/model_test.go` | 新增合法/非法 pin 用例 + 缺省仍有效用例 |
+| `internal/data/finetuningmodel/reader.go` | 新增受控 reader：`Load` + `ResolveFinetuningModelFacts`，严格 JSON（禁重复键/null/超深）、文件安全约束（`O_NOFOLLOW`/单链接/前后 stat 一致）、SHA256 校验 |
+| `internal/data/finetuningmodel/reader_test.go` | 新增：冻结值返回且调用方变更不泄漏、未知租户/版本拒绝、无 reader 时 `ErrFinetuningNotEnabled`、篡改摘要/未知字段拒绝、空/重复来源拒绝 |
+| `cmd/ani-modeldev-service/command.go` | `NewManagedAdmissionResolver`（三参）→ `NewFinetuningAdmissionResolver`（四参）；新增 `buildFinetuningModelFacts` 选择 reader |
+
+### 8.4 验证结果（ani-01 验证宿主）
+
+全部在既有 P0 验证宿主上跑，**未部署、未发起任何真实 Model 调用**：
+
+| 检查 | 结果 |
+| --- | --- |
+| ModelDev `gofmt` / `go build ./...` / `go vet`（交叉编译 linux） | 干净 |
+| ModelDev 新增单测 `./internal/data/finetuningmodel/` `./internal/conf/v1/` | `ok` |
+| ModelDev 完整 `make verify`（含生成一致性、mod tidy -diff、真实 PG 测试套件、revision-upgrade） | **exit=0** |
+| Governance `go build`（data/service/cmd/admin） | 通过 |
+| Governance `go test ./app/admin/service/internal/data/...` `./internal/server/` `./internal/service/` | `ok` |
+
+**已知环境性失败（与本轮改动无关）**：Governance `cmd/admin` 的 `TestModelDevPauseConfigErrorsDoNotExposeSecrets` 在 Windows 上失败（依赖文件 mode 0600，NTFS 不生效）；已用 `git stash` 在干净树上复现同样失败，确认非本轮引入。
+
+### 8.5 本轮未做（诚实标注）
+
+- **未部署到 ani-01 集群**（用户本轮选择先本地验证）。Governance 镜像构建与 `md-fixed-config` 配置注入未执行。
+- **未填 `md-fixed-config` 的 `controlled_model_facts` 段**：启用受控基模需要一份真实 pin 文件（含基模逐文件清单），属部署侧数据准备。
+- **Model 真实登记未接线**：`FinetuningModelRegistry` 无 modelclient 实现、顶层 `RegisterModel` 仍返回 `ErrModelDependencyUnavailable`。仍等 Q1（身份）+ Q3（principal 分支）+ Q7（逐文件清单）+ G3（format 映射）。
+- 前端文档已同步（`ani-governance/docs/frontend-cpu-training-handoff.md` §9/§10）。
+
+---
+
 ## 声明
 
 - 本文只做排期与责任划分，**不含 PASS/BLOCKED 判定**，不替代唯一 spec。

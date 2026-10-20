@@ -42,6 +42,11 @@ func (c *Bootstrap) Validate() error {
 				return err
 			}
 		}
+		if c.Command.ControlledModelFacts != nil {
+			if err := validateControlledModelFacts(c.Command.ControlledModelFacts); err != nil {
+				return err
+			}
+		}
 	}
 	if err := validateListener("grpc", c.Server.Grpc.Network, c.Server.Grpc.Addr, c.Server.Grpc.Timeout); err != nil {
 		return err
@@ -147,6 +152,22 @@ func validateModelConnection(config *ModelConnection) error {
 		return fmt.Errorf("model connection requires a bounded audit actor")
 	}
 	return validateDuration("model connection", config.Timeout, maximumTimeout)
+}
+
+// validateControlledModelFacts accepts only explicitly pinned, shape-checked
+// references. Its presence enables an isolated boundary substitute, not a
+// production Model dependency or a public capability.
+func validateControlledModelFacts(config *ControlledModelFacts) error {
+	if len(config.Files) == 0 || len(config.Files) > 64 {
+		return fmt.Errorf("controlled model facts require 1..64 explicitly pinned files")
+	}
+	for _, file := range config.Files {
+		if file == nil || !filepath.IsAbs(file.Path) || filepath.Clean(file.Path) != file.Path || strings.ContainsRune(file.Path, 0) ||
+			len(file.Sha256) != 64 || strings.Trim(file.Sha256, "0123456789abcdef") != "" {
+			return fmt.Errorf("controlled model facts require absolute file references and lowercase SHA256 pins")
+		}
+	}
+	return nil
 }
 
 func validateAdmissionResolution(config *AdmissionResolution) error {
