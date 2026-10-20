@@ -36,7 +36,7 @@ const (
 )
 
 var (
-	ErrInvalidModelFacts = errors.New("INVALID_CONTROLLED_MODEL_FACTS")
+	ErrInvalidModelFacts     = errors.New("INVALID_CONTROLLED_MODEL_FACTS")
 	ErrModelFactsUnavailable = errors.New("CONTROLLED_MODEL_FACTS_UNAVAILABLE")
 )
 
@@ -50,9 +50,9 @@ type FileSource struct {
 // document is the private pinned file format. It carries only the frozen base
 // model reference the admission must copy into the Snapshot.
 type document struct {
-	SchemaVersion string             `json:"schema_version"`
-	TenantID      string             `json:"tenant_id"`
-	VersionID     string             `json:"version_id"`
+	SchemaVersion string              `json:"schema_version"`
+	TenantID      string              `json:"tenant_id"`
+	VersionID     string              `json:"version_id"`
 	BaseModel     cpup01.BaseModelRef `json:"base_model"`
 }
 
