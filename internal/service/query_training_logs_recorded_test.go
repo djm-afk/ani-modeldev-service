@@ -21,8 +21,8 @@ func (r recordedLogQueryRepository) GetQueryRecord(_ context.Context, tenant, ex
 	return r.record, nil
 }
 
-func (recordedLogQueryRepository) ListQueryRecords(context.Context, string, biz.ExecutionQuery) ([]biz.QueryRecord, string, error) {
-	return nil, "", biz.ErrPersistence
+func (recordedLogQueryRepository) ListQueryRecords(context.Context, string, biz.ExecutionQuery) ([]biz.QueryRecord, error) {
+	return nil, biz.ErrPersistence
 }
 
 func (recordedLogQueryRepository) CountQueryRecords(context.Context, string, biz.ExecutionQuery) (uint64, error) {

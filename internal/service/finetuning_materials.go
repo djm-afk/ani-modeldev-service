@@ -11,7 +11,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
-func (q *Query) selectedPresets(ctx context.Context, scope GovernanceDelivery, selections []*modeldevv1.PresetReleaseSelection, limit int, after string) (*modeldevv1.ListPresetsResponse, error) {
+func (q *Query) selectedPresets(ctx context.Context, scope GovernanceDelivery, selections []*modeldevv1.PresetReleaseSelection, page, pageSize uint32) (*modeldevv1.ListPresetsResponse, error) {
 	if len(selections) > 100 {
 		return nil, materialsError(biz.ErrInvalidAdmission, scope.RequestID)
 	}
@@ -34,15 +34,16 @@ func (q *Query) selectedPresets(ctx context.Context, scope GovernanceDelivery, s
 	}
 	ids := make([]string, 0, len(presets))
 	for id := range presets {
-		if id > after {
-			ids = append(ids, id)
-		}
+		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 	response := &modeldevv1.ListPresetsResponse{Total: uint64(len(presets))}
-	if len(ids) > limit {
-		ids = ids[:limit]
-		response.NextCursor = ids[len(ids)-1]
+	offset, limit := modelDevPageWindow(page, pageSize)
+	if offset < len(ids) {
+		end := min(offset+limit, len(ids))
+		ids = ids[offset:end]
+	} else {
+		ids = nil
 	}
 	for _, id := range ids {
 		response.Presets = append(response.Presets, presets[id])
