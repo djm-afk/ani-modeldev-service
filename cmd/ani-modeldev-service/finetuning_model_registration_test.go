@@ -360,12 +360,23 @@ func TestFinetuningModelRegistration(t *testing.T) {
 		t.Fatal("fixture object is outside the declared scope bucket")
 	}
 	prepare := registrationPrepare(f.Prepare)
+	// The frozen object is the only source of the declared bytes. The provider
+	// echoes the declared size and digest back in the ticket, so a prepare that
+	// omitted them would fail the ticket check for a reason that has nothing to
+	// do with the environment under test.
+	prepare.SizeBytes = object.SizeBytes
+	prepare.ChecksumSHA256 = object.SHA256
 
 	record := map[string]any{
 		"scope": "MODEL_REGISTRATION", "source_commit": f.SourceCommit,
 		"tenant_id": f.TenantID, "actor": f.Actor,
 		"provider_endpoint": f.Model.Endpoint, "provider_server_name": f.Model.ServerName,
 		"client_identity": f.Model.ClientDNSName,
+		// The identity this run presents is recorded explicitly: the lab Model
+		// build authorises only the Governance SAN for these three RPCs, so this
+		// isolated driver borrows that certificate. It is not the production
+		// ModelDev runtime identity and must not be read as MR01 acceptance.
+		"client_identity_scope": "ISOLATED_TEST: borrowed Governance client certificate, not production ModelDev identity",
 		"batch_key":       f.Prepare.IdempotencyKey, "version": f.Prepare.Version,
 		"object": map[string]any{"bucket": object.Bucket, "key": object.Key, "size_bytes": object.SizeBytes, "sha256": object.SHA256, "version_id": f.SourceObject.VersionID},
 		"boundary": map[string]any{
