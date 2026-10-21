@@ -386,8 +386,14 @@ type GovernanceCommand struct {
 	// Presence enables candidate resolution from explicitly pinned mounted
 	// materials. It does not establish environment or business readiness.
 	AdmissionResolution *AdmissionResolution `protobuf:"bytes,6,opt,name=admission_resolution,json=admissionResolution,proto3" json:"admission_resolution,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Absence keeps FINETUNING disabled and Model reads/writes unavailable.
+	Model *ModelConnection `protobuf:"bytes,7,opt,name=model,proto3" json:"model,omitempty"`
+	// Presence enables an explicitly pinned read-only Model boundary substitute
+	// for isolated FINETUNING candidacy. It never proves a Model permission,
+	// approval or protected status, and is not a public capability enablement.
+	ControlledModelFacts *ControlledModelFacts `protobuf:"bytes,8,opt,name=controlled_model_facts,json=controlledModelFacts,proto3" json:"controlled_model_facts,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *GovernanceCommand) Reset() {
@@ -462,6 +468,176 @@ func (x *GovernanceCommand) GetAdmissionResolution() *AdmissionResolution {
 	return nil
 }
 
+func (x *GovernanceCommand) GetModel() *ModelConnection {
+	if x != nil {
+		return x.Model
+	}
+	return nil
+}
+
+func (x *GovernanceCommand) GetControlledModelFacts() *ControlledModelFacts {
+	if x != nil {
+		return x.ControlledModelFacts
+	}
+	return nil
+}
+
+// ControlledModelFacts pins a read-only base-model boundary substitute used
+// only for isolated candidacy. It cannot manufacture tenant rights, approval,
+// protected status or fixed bytes beyond the explicitly reviewed documents.
+type ControlledModelFacts struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Explicitly pinned 1..64 controlled documents; no directory scanning.
+	Files         []*AdmissionFactsFile `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ControlledModelFacts) Reset() {
+	*x = ControlledModelFacts{}
+	mi := &file_conf_v1_conf_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ControlledModelFacts) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ControlledModelFacts) ProtoMessage() {}
+
+func (x *ControlledModelFacts) ProtoReflect() protoreflect.Message {
+	mi := &file_conf_v1_conf_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ControlledModelFacts.ProtoReflect.Descriptor instead.
+func (*ControlledModelFacts) Descriptor() ([]byte, []int) {
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ControlledModelFacts) GetFiles() []*AdmissionFactsFile {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+// ModelConnection is the explicit ModelDev -> Model business mTLS dependency.
+// Every material is required when presence is declared; there is no plaintext,
+// ambient or borrowed-Governance fallback. The receiving Model service must
+// separately register this caller identity and allow the exact RPCs used.
+type ModelConnection struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Literal host:port of the Model business mTLS listener.
+	Endpoint string `protobuf:"bytes,1,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	CaFile   string `protobuf:"bytes,2,opt,name=ca_file,json=caFile,proto3" json:"ca_file,omitempty"`
+	// The client certificate must present exactly this one DNS SAN.
+	ClientDnsName   string `protobuf:"bytes,3,opt,name=client_dns_name,json=clientDnsName,proto3" json:"client_dns_name,omitempty"`
+	CertificateFile string `protobuf:"bytes,4,opt,name=certificate_file,json=certificateFile,proto3" json:"certificate_file,omitempty"`
+	PrivateKeyFile  string `protobuf:"bytes,5,opt,name=private_key_file,json=privateKeyFile,proto3" json:"private_key_file,omitempty"`
+	// The exact DNS SAN required on the Model server certificate.
+	ServerName string `protobuf:"bytes,6,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
+	// Stable audit actor this caller asserts. Authorization never depends on it.
+	Actor         string               `protobuf:"bytes,7,opt,name=actor,proto3" json:"actor,omitempty"`
+	Timeout       *durationpb.Duration `protobuf:"bytes,8,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ModelConnection) Reset() {
+	*x = ModelConnection{}
+	mi := &file_conf_v1_conf_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModelConnection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModelConnection) ProtoMessage() {}
+
+func (x *ModelConnection) ProtoReflect() protoreflect.Message {
+	mi := &file_conf_v1_conf_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModelConnection.ProtoReflect.Descriptor instead.
+func (*ModelConnection) Descriptor() ([]byte, []int) {
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ModelConnection) GetEndpoint() string {
+	if x != nil {
+		return x.Endpoint
+	}
+	return ""
+}
+
+func (x *ModelConnection) GetCaFile() string {
+	if x != nil {
+		return x.CaFile
+	}
+	return ""
+}
+
+func (x *ModelConnection) GetClientDnsName() string {
+	if x != nil {
+		return x.ClientDnsName
+	}
+	return ""
+}
+
+func (x *ModelConnection) GetCertificateFile() string {
+	if x != nil {
+		return x.CertificateFile
+	}
+	return ""
+}
+
+func (x *ModelConnection) GetPrivateKeyFile() string {
+	if x != nil {
+		return x.PrivateKeyFile
+	}
+	return ""
+}
+
+func (x *ModelConnection) GetServerName() string {
+	if x != nil {
+		return x.ServerName
+	}
+	return ""
+}
+
+func (x *ModelConnection) GetActor() string {
+	if x != nil {
+		return x.Actor
+	}
+	return ""
+}
+
+func (x *ModelConnection) GetTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.Timeout
+	}
+	return nil
+}
+
 type AdmissionResolution struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	CatalogueDirectory string                 `protobuf:"bytes,1,opt,name=catalogue_directory,json=catalogueDirectory,proto3" json:"catalogue_directory,omitempty"`
@@ -472,7 +648,7 @@ type AdmissionResolution struct {
 
 func (x *AdmissionResolution) Reset() {
 	*x = AdmissionResolution{}
-	mi := &file_conf_v1_conf_proto_msgTypes[5]
+	mi := &file_conf_v1_conf_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -484,7 +660,7 @@ func (x *AdmissionResolution) String() string {
 func (*AdmissionResolution) ProtoMessage() {}
 
 func (x *AdmissionResolution) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[5]
+	mi := &file_conf_v1_conf_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -497,7 +673,7 @@ func (x *AdmissionResolution) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmissionResolution.ProtoReflect.Descriptor instead.
 func (*AdmissionResolution) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{5}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AdmissionResolution) GetCatalogueDirectory() string {
@@ -524,7 +700,7 @@ type AdmissionFactsFile struct {
 
 func (x *AdmissionFactsFile) Reset() {
 	*x = AdmissionFactsFile{}
-	mi := &file_conf_v1_conf_proto_msgTypes[6]
+	mi := &file_conf_v1_conf_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -536,7 +712,7 @@ func (x *AdmissionFactsFile) String() string {
 func (*AdmissionFactsFile) ProtoMessage() {}
 
 func (x *AdmissionFactsFile) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[6]
+	mi := &file_conf_v1_conf_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -549,7 +725,7 @@ func (x *AdmissionFactsFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmissionFactsFile.ProtoReflect.Descriptor instead.
 func (*AdmissionFactsFile) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{6}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AdmissionFactsFile) GetPath() string {
@@ -577,7 +753,7 @@ type Server struct {
 
 func (x *Server) Reset() {
 	*x = Server{}
-	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	mi := &file_conf_v1_conf_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -589,7 +765,7 @@ func (x *Server) String() string {
 func (*Server) ProtoMessage() {}
 
 func (x *Server) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	mi := &file_conf_v1_conf_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -602,7 +778,7 @@ func (x *Server) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server.ProtoReflect.Descriptor instead.
 func (*Server) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Server) GetGrpc() *Server_GRPC {
@@ -637,7 +813,7 @@ type Server_GRPC struct {
 
 func (x *Server_GRPC) Reset() {
 	*x = Server_GRPC{}
-	mi := &file_conf_v1_conf_proto_msgTypes[8]
+	mi := &file_conf_v1_conf_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -649,7 +825,7 @@ func (x *Server_GRPC) String() string {
 func (*Server_GRPC) ProtoMessage() {}
 
 func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[8]
+	mi := &file_conf_v1_conf_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -662,7 +838,7 @@ func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server_GRPC.ProtoReflect.Descriptor instead.
 func (*Server_GRPC) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7, 0}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9, 0}
 }
 
 func (x *Server_GRPC) GetNetwork() string {
@@ -697,7 +873,7 @@ type Server_Admin struct {
 
 func (x *Server_Admin) Reset() {
 	*x = Server_Admin{}
-	mi := &file_conf_v1_conf_proto_msgTypes[9]
+	mi := &file_conf_v1_conf_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -709,7 +885,7 @@ func (x *Server_Admin) String() string {
 func (*Server_Admin) ProtoMessage() {}
 
 func (x *Server_Admin) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[9]
+	mi := &file_conf_v1_conf_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -722,7 +898,7 @@ func (x *Server_Admin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server_Admin.ProtoReflect.Descriptor instead.
 func (*Server_Admin) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7, 1}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9, 1}
 }
 
 func (x *Server_Admin) GetNetwork() string {
@@ -784,14 +960,28 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"\x10credentials_file\x18\x04 \x01(\tR\x0fcredentialsFile\x12#\n" +
 	"\rconnection_id\x18\x05 \x01(\tR\fconnectionId\x12(\n" +
 	"\x10max_object_bytes\x18\x06 \x01(\x03R\x0emaxObjectBytes\x12F\n" +
-	"\x11streaming_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\x10streamingTimeout\"\xbb\x02\n" +
+	"\x11streaming_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\x10streamingTimeout\"\xc0\x03\n" +
 	"\x11GovernanceCommand\x12*\n" +
 	"\x11database_url_file\x18\x01 \x01(\tR\x0fdatabaseUrlFile\x12$\n" +
 	"\x0eclient_ca_file\x18\x02 \x01(\tR\fclientCaFile\x12)\n" +
 	"\x10certificate_file\x18\x03 \x01(\tR\x0fcertificateFile\x12(\n" +
 	"\x10private_key_file\x18\x04 \x01(\tR\x0eprivateKeyFile\x12.\n" +
 	"\x13governance_dns_name\x18\x05 \x01(\tR\x11governanceDnsName\x12O\n" +
-	"\x14admission_resolution\x18\x06 \x01(\v2\x1c.conf.v1.AdmissionResolutionR\x13admissionResolution\"\x84\x01\n" +
+	"\x14admission_resolution\x18\x06 \x01(\v2\x1c.conf.v1.AdmissionResolutionR\x13admissionResolution\x12.\n" +
+	"\x05model\x18\a \x01(\v2\x18.conf.v1.ModelConnectionR\x05model\x12S\n" +
+	"\x16controlled_model_facts\x18\b \x01(\v2\x1d.conf.v1.ControlledModelFactsR\x14controlledModelFacts\"I\n" +
+	"\x14ControlledModelFacts\x121\n" +
+	"\x05files\x18\x01 \x03(\v2\x1b.conf.v1.AdmissionFactsFileR\x05files\"\xaf\x02\n" +
+	"\x0fModelConnection\x12\x1a\n" +
+	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x17\n" +
+	"\aca_file\x18\x02 \x01(\tR\x06caFile\x12&\n" +
+	"\x0fclient_dns_name\x18\x03 \x01(\tR\rclientDnsName\x12)\n" +
+	"\x10certificate_file\x18\x04 \x01(\tR\x0fcertificateFile\x12(\n" +
+	"\x10private_key_file\x18\x05 \x01(\tR\x0eprivateKeyFile\x12\x1f\n" +
+	"\vserver_name\x18\x06 \x01(\tR\n" +
+	"serverName\x12\x14\n" +
+	"\x05actor\x18\a \x01(\tR\x05actor\x123\n" +
+	"\atimeout\x18\b \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\x84\x01\n" +
 	"\x13AdmissionResolution\x12/\n" +
 	"\x13catalogue_directory\x18\x01 \x01(\tR\x12catalogueDirectory\x12<\n" +
 	"\vfacts_files\x18\x02 \x03(\v2\x1b.conf.v1.AdmissionFactsFileR\n" +
@@ -824,43 +1014,49 @@ func file_conf_v1_conf_proto_rawDescGZIP() []byte {
 	return file_conf_v1_conf_proto_rawDescData
 }
 
-var file_conf_v1_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_conf_v1_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_conf_v1_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),               // 0: conf.v1.Bootstrap
 	(*ManagedRuntime)(nil),          // 1: conf.v1.ManagedRuntime
 	(*HTTPSWorkloadConnection)(nil), // 2: conf.v1.HTTPSWorkloadConnection
 	(*ObjectStorageConnection)(nil), // 3: conf.v1.ObjectStorageConnection
 	(*GovernanceCommand)(nil),       // 4: conf.v1.GovernanceCommand
-	(*AdmissionResolution)(nil),     // 5: conf.v1.AdmissionResolution
-	(*AdmissionFactsFile)(nil),      // 6: conf.v1.AdmissionFactsFile
-	(*Server)(nil),                  // 7: conf.v1.Server
-	(*Server_GRPC)(nil),             // 8: conf.v1.Server.GRPC
-	(*Server_Admin)(nil),            // 9: conf.v1.Server.Admin
-	(*durationpb.Duration)(nil),     // 10: google.protobuf.Duration
+	(*ControlledModelFacts)(nil),    // 5: conf.v1.ControlledModelFacts
+	(*ModelConnection)(nil),         // 6: conf.v1.ModelConnection
+	(*AdmissionResolution)(nil),     // 7: conf.v1.AdmissionResolution
+	(*AdmissionFactsFile)(nil),      // 8: conf.v1.AdmissionFactsFile
+	(*Server)(nil),                  // 9: conf.v1.Server
+	(*Server_GRPC)(nil),             // 10: conf.v1.Server.GRPC
+	(*Server_Admin)(nil),            // 11: conf.v1.Server.Admin
+	(*durationpb.Duration)(nil),     // 12: google.protobuf.Duration
 }
 var file_conf_v1_conf_proto_depIdxs = []int32{
-	7,  // 0: conf.v1.Bootstrap.server:type_name -> conf.v1.Server
+	9,  // 0: conf.v1.Bootstrap.server:type_name -> conf.v1.Server
 	4,  // 1: conf.v1.Bootstrap.command:type_name -> conf.v1.GovernanceCommand
 	1,  // 2: conf.v1.Bootstrap.runtime:type_name -> conf.v1.ManagedRuntime
-	8,  // 3: conf.v1.ManagedRuntime.step:type_name -> conf.v1.Server.GRPC
+	10, // 3: conf.v1.ManagedRuntime.step:type_name -> conf.v1.Server.GRPC
 	2,  // 4: conf.v1.ManagedRuntime.kubernetes:type_name -> conf.v1.HTTPSWorkloadConnection
 	2,  // 5: conf.v1.ManagedRuntime.pipeline:type_name -> conf.v1.HTTPSWorkloadConnection
 	3,  // 6: conf.v1.ManagedRuntime.object_storage:type_name -> conf.v1.ObjectStorageConnection
-	10, // 7: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
-	10, // 8: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
-	10, // 9: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
-	5,  // 10: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
-	6,  // 11: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
-	8,  // 12: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
-	9,  // 13: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
-	10, // 14: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
-	10, // 15: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	10, // 16: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	17, // [17:17] is the sub-list for method output_type
-	17, // [17:17] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	12, // 7: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
+	12, // 8: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
+	12, // 9: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
+	7,  // 10: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
+	6,  // 11: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
+	5,  // 12: conf.v1.GovernanceCommand.controlled_model_facts:type_name -> conf.v1.ControlledModelFacts
+	8,  // 13: conf.v1.ControlledModelFacts.files:type_name -> conf.v1.AdmissionFactsFile
+	12, // 14: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
+	8,  // 15: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
+	10, // 16: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
+	11, // 17: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
+	12, // 18: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
+	12, // 19: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	12, // 20: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	21, // [21:21] is the sub-list for method output_type
+	21, // [21:21] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_conf_v1_conf_proto_init() }
@@ -874,7 +1070,7 @@ func file_conf_v1_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conf_v1_conf_proto_rawDesc), len(file_conf_v1_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

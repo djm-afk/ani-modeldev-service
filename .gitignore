@@ -31,6 +31,9 @@ Thumbs.db
 
 .private/
 
+# Local agent memory produced while working in this checkout.
+.workbuddy/
+
 # Local task specifications and execution evidence.
 /.scratch/
 

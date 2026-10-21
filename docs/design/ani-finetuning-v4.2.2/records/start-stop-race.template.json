@@ -1,0 +1,31 @@
+{
+  "template_only": true,
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "case_id": null,
+  "scope": null,
+  "role": null,
+  "execution_id": null,
+  "spec_hash": null,
+  "run_id": null,
+  "task_id": null,
+  "pod_uid": null,
+  "environment": null,
+  "transaction_order": {
+    "start_admission_commit": null,
+    "stop_commit": null,
+    "observed_close_generation": null
+  },
+  "deadlines": {
+    "original_execution_deadline": null,
+    "start_admitted_at": null,
+    "step_deadline": null
+  },
+  "process_evidence": {
+    "spawn_count": null,
+    "spawn_and_exit_records": [],
+    "in_flight_resolved": null
+  },
+  "evidence": []
+}

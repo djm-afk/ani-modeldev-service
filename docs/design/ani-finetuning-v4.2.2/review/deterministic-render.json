@@ -1,0 +1,8 @@
+{
+  "scope": "DOCUMENT_ONLY",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "PASS",
+  "files_checked": 32,
+  "changed_files": [],
+  "check": "Rendering again from the same source produces identical derived views and plans; no business execution."
+}

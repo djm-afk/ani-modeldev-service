@@ -1,0 +1,43 @@
+{
+  "scope": "DOCUMENT_ONLY",
+  "document_version": "v4.2.2",
+  "source_section": "D14.6",
+  "actions": [
+    {
+      "topic": "421-R1：登记与停止竞争",
+      "decision": "每个具体正常写派发与Stop/deadline共同仲裁；整份意图不预授权后继；在途迟到结果真实保留",
+      "locations": "D08/D09.3、A11、W4-P2、FT25.1–3",
+      "limit": "不新增授权/许可平台或跨服务事务；原CLOSED恢复仍可按授权执行"
+    },
+    {
+      "topic": "421-R2：候选经BFF验收",
+      "decision": "改为M3-B启动前的操作交接；当前执行主链不等待BFF/前端/候选上游绑定",
+      "locations": "A03/A09/A12、D11.6、D12.6/12.7、W1/W6",
+      "limit": "最终BFF仍唯一用户入口，不新增生产测试API或第二指针"
+    },
+    {
+      "topic": "421-R3：组合与默认",
+      "decision": "明确A/B完整组合及省略默认的5个黄金向量，不自动修改另一个字段",
+      "locations": "D02.6.1、PA03/06/07、W1/W6",
+      "limit": "B仍待实测；不新增PA11、DSL或更多可输入字段"
+    },
+    {
+      "topic": "用户：先完成微调主流程",
+      "decision": "当前M3-A真实ModelDev/KFP/Trainer/S3/发布确认/停止关闭；BFF和前端在M3-B接回",
+      "locations": "A12、D11.6、D12.3/4/6、主流程派生手册",
+      "limit": "合同现在固定；后置项NOT_RUN而非删掉/DEFERRED"
+    },
+    {
+      "topic": "Model后接仍不造假",
+      "decision": "发布确认在Model写前必须真实完成；Model未接入明确错误+计算关闭，不能伪造READY",
+      "locations": "A03/A09/A10、D04/D07/D12.6",
+      "limit": "主链阶段结果不等于单次六项成功，MR/FT29仍需真实接入"
+    },
+    {
+      "topic": "完成证据分层",
+      "decision": "WORKLOAD/CORE_FLOW/BFF_INTEGRATION等仅为记录scope；本域/上游断言分记录",
+      "locations": "D11.6及records模板，W6",
+      "limit": "不加业务状态机；原32 FT+12细化+10 PA+8 MR+34映射保留，新增3个登记细化"
+    }
+  ]
+}

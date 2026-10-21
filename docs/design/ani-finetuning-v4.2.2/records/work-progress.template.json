@@ -1,0 +1,32 @@
+{
+  "template_only": true,
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "authoritative_spec_path": null,
+  "work_package": null,
+  "current_phase": null,
+  "scope": null,
+  "repositories": [],
+  "fedora": {
+    "ssh_alias": "fedora",
+    "approved_source_path": null,
+    "artifact_path": null
+  },
+  "cluster": {
+    "expected_node_internal_ips": [
+      "172.16.101.10",
+      "172.16.101.11",
+      "172.16.101.12"
+    ],
+    "context": null,
+    "identity": null,
+    "handoff_ref": null
+  },
+  "test_entry_layer": null,
+  "replaced_boundaries": [],
+  "evidence": [],
+  "untested_assertions": [],
+  "remaining_dependencies": [],
+  "next_action": null
+}

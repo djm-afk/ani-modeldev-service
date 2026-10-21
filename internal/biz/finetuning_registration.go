@@ -19,7 +19,23 @@ type FinetuningRegistration struct {
 	ContentSHA256                        string
 	State, FailureCode                   string
 	RecordedAt, DeadlineAt               time.Time
+	// Dispatches holds one in-flight fact per concrete external write. The
+	// intent above is not itself a permit for any of them.
+	Dispatches []FinetuningRegistrationDispatch `json:",omitempty"`
 }
+
+// Registration states. PENDING carries a persisted original intent whose
+// concrete dispatches are still being arbitrated; READY means the target
+// version write is a verified original result. UNKNOWN is never a synonym for
+// success and never proves that no write happened.
+const (
+	RegistrationStatePending     = "PENDING"
+	RegistrationStateReady       = "READY"
+	RegistrationStateUnavailable = "DEPENDENCY_UNAVAILABLE"
+	// RegistrationUnavailableFailureCode is the only failure code that a
+	// whole-intent unavailability record may carry.
+	RegistrationUnavailableFailureCode = "MODEL_DEPENDENCY_UNAVAILABLE"
+)
 
 type FinetuningRegistrationRepository interface {
 	RecordRegistrationUnavailable(context.Context, RunAuthorityCandidate) (ExecutionRuntime, bool, error)
