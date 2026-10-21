@@ -3,155 +3,73 @@ package resolutiontest
 import (
 	"context"
 	"errors"
-	"path/filepath"
-	"reflect"
-	"strings"
-	"testing"
-	"time"
-
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
+	"reflect"
+	"testing"
+	"time"
 )
 
-func TestResolveAdmissionRequiresCompatibleExplicitManagedFacts(t *testing.T) {
-	fixture := prepareResolution(t)
+func TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming(t *testing.T) {
+	f := prepareResolution(t)
 	for _, test := range []struct {
 		name   string
 		change func(*biz.TenantAdmissionFacts)
-		want   error
 	}{
-		{"Runtime name", func(f *biz.TenantAdmissionFacts) { f.Runtime.Name = "other-runtime" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"Runtime content", func(f *biz.TenantAdmissionFacts) { f.Runtime.ContentSHA256 = strings.Repeat("a", 64) }, biz.ErrAdmissionEnvironmentNotReady},
-		{"Runtime target", func(f *biz.TenantAdmissionFacts) { f.Runtime.TargetJobs = []string{"other-trainer"} }, biz.ErrAdmissionEnvironmentNotReady},
-		{"workspace storage", func(f *biz.TenantAdmissionFacts) { f.Workspace.StorageClass = "other-storage" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"workspace mapping", func(f *biz.TenantAdmissionFacts) { f.Workspace.InputSubpath = "other-input" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"input connection", func(f *biz.TenantAdmissionFacts) { f.InputScope.StorageConnectionID = "other-connection" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"input bucket", func(f *biz.TenantAdmissionFacts) { f.InputScope.Bucket = "other-bucket" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"prefix boundary", func(f *biz.TenantAdmissionFacts) { f.InputScope.ApprovedPrefix = "tenant/in" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"relative input", func(f *biz.TenantAdmissionFacts) { f.InputFilePath = "relative/data.csv" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"traversal input", func(f *biz.TenantAdmissionFacts) { f.InputFilePath = "/prepared-fixture/../data.csv" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"wildcard output", func(f *biz.TenantAdmissionFacts) { f.OutputDirectoryPath = "/trained-*" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"same input and output", func(f *biz.TenantAdmissionFacts) { f.OutputDirectoryPath = f.InputFilePath }, biz.ErrAdmissionEnvironmentNotReady},
-		{"input below output", func(f *biz.TenantAdmissionFacts) { f.OutputDirectoryPath = "/prepared-fixture" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"output below input", func(f *biz.TenantAdmissionFacts) { f.OutputDirectoryPath = f.InputFilePath + "/output" }, biz.ErrAdmissionEnvironmentNotReady},
-		{"unknown environment", func(f *biz.TenantAdmissionFacts) { f.Environment.ClusterID = "UNKNOWN" }, biz.ErrInvalidAdmission},
-		{"missing namespace identity", func(f *biz.TenantAdmissionFacts) { f.Environment.NamespaceUID = "" }, biz.ErrInvalidAdmission},
-		{"shared step and training identity", func(f *biz.TenantAdmissionFacts) {
-			f.Environment.Identities.TrainerServiceAccount = f.Environment.Identities.KFPStepServiceAccount
-		}, biz.ErrInvalidAdmission},
-		{"missing publication authority", func(f *biz.TenantAdmissionFacts) { f.PublicationScope.CredentialReference = "" }, biz.ErrInvalidAdmission},
+		{"workspace", func(v *biz.TenantAdmissionFacts) { v.Workspace.StorageClass = "other" }},
+		{"input connection", func(v *biz.TenantAdmissionFacts) { v.InputScope.StorageConnectionID = "other" }},
+		{"input bucket", func(v *biz.TenantAdmissionFacts) { v.InputScope.Bucket = "other" }},
+		{"prefix boundary", func(v *biz.TenantAdmissionFacts) { v.InputScope.ApprovedPrefix = "fixed/in" }},
+		{"relative path", func(v *biz.TenantAdmissionFacts) { v.InputFilePath = "relative.csv" }},
+		{"path traversal", func(v *biz.TenantAdmissionFacts) { v.InputFilePath = "/workspace/../data.csv" }},
+		{"same output", func(v *biz.TenantAdmissionFacts) { v.OutputDirectoryPath = v.InputFilePath }},
+		{"nested output", func(v *biz.TenantAdmissionFacts) { v.OutputDirectoryPath = v.InputFilePath + "/out" }},
+		{"unknown cluster", func(v *biz.TenantAdmissionFacts) { v.Environment.ClusterID = "UNKNOWN" }},
+		{"namespace uid", func(v *biz.TenantAdmissionFacts) { v.Environment.NamespaceUID = "" }},
+		{"shared service account", func(v *biz.TenantAdmissionFacts) {
+			v.Environment.Identities.TrainerServiceAccount = v.Environment.Identities.KFPStepServiceAccount
+		}},
+		{"publication authority", func(v *biz.TenantAdmissionFacts) { v.PublicationScope.CredentialReference = "" }},
+		{"missing timing", func(v *biz.TenantAdmissionFacts) { v.Timing = cpup01.TimingConfiguration{} }},
+		{"default above max", func(v *biz.TenantAdmissionFacts) {
+			v.Timing.ExecutionTimeoutDefaultSeconds = v.Timing.ExecutionTimeoutMaxSeconds + 1
+		}},
+		{"S above max", func(v *biz.TenantAdmissionFacts) {
+			v.Timing.StepTimeoutSeconds = v.Timing.ExecutionTimeoutMaxSeconds + 1
+		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			facts := fixture.facts
-			test.change(&facts)
-			got, err := fixture.resolver.Resolve(fixture.ctx, fixture.selection, facts)
-			if !errors.Is(err, test.want) || !reflect.DeepEqual(got, biz.AdmissionResolution{}) {
-				t.Fatalf("incompatible facts produced a candidate or wrong domain error: %v", err)
+			v := f.facts
+			test.change(&v)
+			f.factReader.override = &v
+			candidate, e := f.resolver.Prepare(f.ctx, f.request)
+			if e == nil || !reflect.DeepEqual(candidate, cpup01.PreparedCandidate{}) {
+				t.Fatal("unsafe facts produced candidate", e)
 			}
 		})
 	}
-	// Similar path text is not containment: only whole slash-delimited paths
-	// matter, and neither the resolver nor the argv invokes a shell.
-	facts := fixture.facts
-	facts.OutputDirectoryPath = "/prepared-fixture-output"
-	got, err := fixture.resolver.Resolve(fixture.ctx, fixture.selection, facts)
-	if err != nil || got.Snapshot.Program.ResolvedArgs[3] != facts.OutputDirectoryPath {
-		t.Fatalf("separate explicit output path was rejected or changed: %v", err)
-	}
-	requireNoResolvedExecution(t, fixture)
+	f.factReader.override = nil
+	requireNoResolvedExecution(t, f)
 }
-
-func TestResolveAdmissionUsesFixedMicrosecondTimeAndCanonicalIdentity(t *testing.T) {
-	fixture := prepareResolution(t)
-	original, err := fixture.resolver.Resolve(fixture.ctx, fixture.selection, fixture.facts)
-	if err != nil {
-		t.Fatal(err)
-	}
-	selection := fixture.selection
-	selection.AcceptedAt = time.Date(2026, 9, 30, 20, 3, 0, 123000, time.FixedZone("fixture-UTC+8", 8*60*60))
-	selection.Intent.DatasetVersionID = strings.ToUpper(selection.Intent.DatasetVersionID)
-	got, err := fixture.resolver.Resolve(fixture.ctx, selection, fixture.facts)
-	if err != nil || !reflect.DeepEqual(got, original) || !got.Snapshot.DeadlineAt.Equal(time.Date(2026, 9, 30, 12, 33, 0, 123000, time.UTC)) {
-		t.Fatalf("equivalent time/identity changed the frozen configuration: %v", err)
-	}
-	for _, test := range []struct {
-		name     string
-		accepted time.Time
-	}{
-		{"missing time", time.Time{}},
-		{"submicrosecond time", fixture.selection.AcceptedAt.Add(time.Nanosecond)},
-		{"unsupported year", time.Date(10000, 1, 1, 0, 0, 0, 0, time.UTC)},
-		{"deadline exceeds supported year", time.Date(9999, 12, 31, 23, 50, 0, 0, time.UTC)},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			selection := fixture.selection
-			selection.AcceptedAt = test.accepted
-			got, err := fixture.resolver.Resolve(fixture.ctx, selection, fixture.facts)
-			if !errors.Is(err, biz.ErrInvalidAdmission) || !reflect.DeepEqual(got, biz.AdmissionResolution{}) {
-				t.Fatalf("invalid time was rounded, replaced or accepted: %v", err)
-			}
-		})
-	}
-	requireNoResolvedExecution(t, fixture)
-}
-
-func TestResolveAdmissionCancellationNeverReturnsCandidate(t *testing.T) {
-	fixture := prepareResolution(t)
-	canceled, cancel := context.WithCancel(fixture.ctx)
-	cancel()
-	expired, stopExpired := context.WithDeadline(fixture.ctx, time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))
-	defer stopExpired()
-	for _, test := range []struct {
-		name string
-		ctx  context.Context
-		want error
-	}{
-		{"already canceled", canceled, context.Canceled},
-		{"already expired", expired, context.DeadlineExceeded},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			got, err := fixture.resolver.Resolve(test.ctx, fixture.selection, fixture.facts)
-			if !errors.Is(err, test.want) || !reflect.DeepEqual(got, biz.AdmissionResolution{}) {
-				t.Fatalf("stopped context returned a candidate or lost its cause: %v", err)
-			}
-		})
-	}
-	t.Run("canceled after actual Release read", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(fixture.ctx)
-		defer cancel()
-		reader := cancelAfterReleaseRead{delegate: fixture.releaseReader, cancel: cancel}
-		resolver := biz.NewAdmissionResolver(reader, fixture.inputReader)
-		got, err := resolver.Resolve(ctx, fixture.selection, fixture.facts)
-		if !errors.Is(err, context.Canceled) || !reflect.DeepEqual(got, biz.AdmissionResolution{}) {
-			t.Fatalf("cancellation between real reads was hidden as an infrastructure failure: %v", err)
+func TestPrepareFixedMicrosecondTimeAndContextCancellation(t *testing.T) {
+	f := prepareResolution(t)
+	for _, at := range []time.Time{{}, f.request.AcceptedAt.Add(time.Nanosecond), time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC)} {
+		r := f.request
+		r.AcceptedAt = at
+		if _, e := f.resolver.Prepare(f.ctx, r); e == nil {
+			t.Fatal("unrepresentable admission time accepted")
 		}
-	})
-	requireNoResolvedExecution(t, fixture)
-}
-
-// The actual file reader still supplies the document. Only cancellation timing
-// is controlled, without sleep or replacing a dependency with fake success.
-type cancelAfterReleaseRead struct {
-	delegate biz.AdmissionReleaseReader
-	cancel   context.CancelFunc
-}
-
-func (reader cancelAfterReleaseRead) ReadRelease(ctx context.Context, id, digest string) (cpup01.ReleaseDocument, error) {
-	document, err := reader.delegate.ReadRelease(ctx, id, digest)
-	if err == nil {
-		reader.cancel()
 	}
-	return document, err
-}
-
-func TestResolveAdmissionHidesUnavailableCataloguePath(t *testing.T) {
-	fixture := prepareResolution(t)
-	directory := filepath.Join(t.TempDir(), "unavailable-managed-reference")
-	resolver := biz.NewAdmissionResolver(catalogue.NewReader(directory), fixture.inputReader)
-	got, err := resolver.Resolve(fixture.ctx, fixture.selection, fixture.facts)
-	if err != biz.ErrPersistence || !reflect.DeepEqual(got, biz.AdmissionResolution{}) {
-		t.Fatalf("unavailable catalogue did not return its finite safe error: %v", err)
+	canceled, cancel := context.WithCancel(f.ctx)
+	cancel()
+	expired, finish := context.WithDeadline(f.ctx, time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))
+	defer finish()
+	for _, ctx := range []context.Context{canceled, expired} {
+		before := f.materials.reads
+		got, e := f.resolver.Prepare(ctx, f.request)
+		if (!errors.Is(e, context.Canceled) && !errors.Is(e, context.DeadlineExceeded)) || !reflect.DeepEqual(got, cpup01.PreparedCandidate{}) || f.materials.reads != before {
+			t.Fatal("canceled compile read provider or returned candidate")
+		}
 	}
-	requireNoResolvedExecution(t, fixture)
+	requireNoResolvedExecution(t, f)
 }

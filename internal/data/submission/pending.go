@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	submissionsql "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission/sqlc"
 )
@@ -40,7 +41,10 @@ func (repository *Repository) ListPendingAdmissions(ctx context.Context, binding
 			return nil, biz.ErrPersistence
 		}
 		admission := biz.Admission{TenantID: row.TenantID.String(), ExecutionID: row.ExecutionID.String(), OperationID: row.OperationID.String(), Actor: row.Actor, IntentHash: row.IntentHash, SpecHash: row.SpecHash, AcceptedAt: row.AcceptedAt.Time.UTC()}
-		if json.Unmarshal(row.IntentCanonical, &admission.Intent) != nil || json.Unmarshal(row.SnapshotCanonical, &admission.Snapshot) != nil {
+		var intentErr, snapshotErr error
+		admission.Intent, intentErr = cpup01.DecodeCanonicalIntent(row.IntentCanonical)
+		admission.Snapshot, snapshotErr = cpup01.DecodeCanonicalSnapshot(row.SnapshotCanonical)
+		if intentErr != nil || snapshotErr != nil {
 			return nil, biz.ErrPersistence
 		}
 		intent, snapshot, err := admission.CanonicalPayloads()

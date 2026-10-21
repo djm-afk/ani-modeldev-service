@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"errors"
+	"reflect"
 	"regexp"
 	"time"
 
@@ -18,7 +19,7 @@ var (
 
 // Admission is the trusted, immutable command accepted by Governance. TenantID
 // and Actor come from authenticated context, never from a user request body.
-// Snapshot has no execution identity; this envelope supplies that binding.
+// Snapshot freezes the same original candidate identity as this envelope.
 type Admission struct {
 	TenantID    string
 	Actor       string
@@ -32,11 +33,15 @@ type Admission struct {
 }
 
 // CanonicalPayloads validates the immutable envelope and returns the exact
-// bytes to persist. It never resolves a current Release or compares with the
+// bytes to persist. It never resolves current materials or compares with the
 // wall clock: a delayed delivery retains its original accepted_at/deadline.
 func (a Admission) CanonicalPayloads() ([]byte, []byte, error) {
 	intent, snapshot, err := cpup01.AdmissionEnvelope(a).CanonicalPayloads()
 	if err != nil {
+		return nil, nil, ErrInvalidAdmission
+	}
+	compiled, compileErr := CompileRuntimePlan(a.Snapshot)
+	if compileErr != nil || !reflect.DeepEqual(compiled, a.Snapshot.RuntimePlan) {
 		return nil, nil, ErrInvalidAdmission
 	}
 	return intent, snapshot, nil

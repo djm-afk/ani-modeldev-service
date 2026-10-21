@@ -2,24 +2,8 @@ package cpup01
 
 import "strings"
 
-// These field-level checks are shared by the immutable Release and the accepted
-// Snapshot. They preserve Snapshot's existing field errors and do no resolution.
-func invalidRuntimeRef(runtime RuntimeRef) string {
-	if !validSnapshotDNSName(runtime.Name) || (runtime.Kind != "ClusterTrainingRuntime" && runtime.Kind != "TrainingRuntime") || runtime.APIGroup != "trainer.kubeflow.org" {
-		return "runtime reference"
-	}
-	if len(runtime.TargetJobs) == 0 {
-		return "runtime targets"
-	}
-	targets := make(map[string]bool, len(runtime.TargetJobs))
-	for _, target := range runtime.TargetJobs {
-		if !validSnapshotDNSLabel(target) || targets[target] {
-			return "runtime targets"
-		}
-		targets[target] = true
-	}
-	return ""
-}
+// These finite checks are shared by installed software materials and immutable
+// execution snapshots. They do not select current configuration or providers.
 
 func invalidCPUResources(resources CPUResources) string {
 	if resources.Nodes != 1 || resources.ProcessesPerNode != 1 || resources.RequestMillicpu <= 0 || resources.LimitMillicpu < resources.RequestMillicpu || resources.RequestMemoryBytes <= 0 || resources.LimitMemoryBytes < resources.RequestMemoryBytes {

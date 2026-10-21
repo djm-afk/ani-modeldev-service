@@ -1,5 +1,4 @@
-// Package cpup01 defines the versioned CPU-P01 admission contract shared by
-// Governance and ModelDev. It contains no transport, persistence or runtime.
+// Package cpup01 owns the single active typed ModelDev execution contract.
 package cpup01
 
 import (
@@ -10,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,107 +18,188 @@ import (
 
 var ErrInvalidArgument = errors.New("INVALID_ARGUMENT")
 
-// Parameter is an explicitly supplied, typed registered-program parameter.
-// Value uses a decimal string even for integer values; it never contains JSON.
+const IntentSchemaVersion = "ani.modeldev.intent.v2.1"
+
 type Parameter struct {
 	Name  string `json:"name"`
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
-// Intent preserves optional-field presence before any Release defaults resolve.
-// Tenant, actor and idempotency key belong to the trusted admission scope, not
-// the intent. In particular this object cannot select a namespace or command.
 type Intent struct {
 	Name               string                `json:"name"`
 	Kind               string                `json:"kind"`
-	PresetID           string                `json:"preset_id"`
+	ImplementationID   string                `json:"implementation_id"`
+	ComputePresetID    string                `json:"compute_preset_id"`
 	DatasetVersionID   string                `json:"dataset_version_id"`
-	ImageVersionID     *string               `json:"image_version_id,omitempty"`
-	GeneralParameters  *[]Parameter          `json:"general_parameters,omitempty"`
-	SourceExecutionID  *string               `json:"source_execution_id,omitempty"`
+	MLP                *MLPParameters        `json:"-"`
+	Finetuning         *FinetuningParameters `json:"-"`
+	TimeoutSeconds     *uint64               `json:"timeout_seconds,omitempty"`
 	BaseModelVersionID *string               `json:"base_model_version_id,omitempty"`
-	Finetuning         *FinetuningParameters `json:"finetuning,omitempty"`
 	TargetModelID      *string               `json:"target_model_id,omitempty"`
 	NewModelName       *string               `json:"new_model_name,omitempty"`
 }
 
-// ParseIntent rejects ambiguous JSON before computing an admission hash.
-func ParseIntent(raw []byte) (Intent, error) {
-	if len(raw) > 16384 || !utf8.Valid(raw) || !validUnicodeEscapes(raw) {
-		return Intent{}, fmt.Errorf("%w: intent encoding or size", ErrInvalidArgument)
+type MLPParameters struct {
+	LearningRate *string `json:"learning_rate,omitempty"`
+	Epochs       *int64  `json:"epochs,omitempty"`
+	BatchSize    *int64  `json:"batch_size,omitempty"`
+	Seed         *uint32 `json:"seed,omitempty"`
+}
+
+type intentWire struct {
+	Name               string          `json:"name"`
+	Kind               string          `json:"kind"`
+	ImplementationID   string          `json:"implementation_id"`
+	ComputePresetID    string          `json:"compute_preset_id"`
+	DatasetVersionID   string          `json:"dataset_version_id"`
+	Parameters         json.RawMessage `json:"parameters"`
+	TimeoutSeconds     *uint64         `json:"timeout_seconds,omitempty"`
+	BaseModelVersionID *string         `json:"base_model_version_id,omitempty"`
+	TargetModelID      *string         `json:"target_model_id,omitempty"`
+	NewModelName       *string         `json:"new_model_name,omitempty"`
+}
+
+func (i Intent) MarshalJSON() ([]byte, error) {
+	var parameters any = i.MLP
+	if i.Kind == "FINETUNING" {
+		parameters = i.Finetuning
 	}
-	var selector struct {
-		Kind string `json:"kind"`
+	p, err := json.Marshal(parameters)
+	if err != nil {
+		return nil, err
 	}
-	if err := json.Unmarshal(raw, &selector); err == nil && selector.Kind == "FINETUNING" {
-		return ParseFinetuningIntent(raw)
+	return json.Marshal(intentWire{Name: i.Name, Kind: i.Kind, ImplementationID: i.ImplementationID, ComputePresetID: i.ComputePresetID, DatasetVersionID: i.DatasetVersionID, Parameters: p, TimeoutSeconds: i.TimeoutSeconds, BaseModelVersionID: i.BaseModelVersionID, TargetModelID: i.TargetModelID, NewModelName: i.NewModelName})
+}
+
+func (i *Intent) UnmarshalJSON(raw []byte) error {
+	parsed, err := parseIntent(raw)
+	if err == nil {
+		*i = parsed
 	}
-	if len(raw) > 16384 || !utf8.Valid(raw) || !validUnicodeEscapes(raw) {
-		return Intent{}, fmt.Errorf("%w: intent encoding or size", ErrInvalidArgument)
+	return err
+}
+func ParseIntent(raw []byte) (Intent, error) { return parseIntent(raw) }
+
+// DecodeCanonicalIntent is the sole stored-intent decoder. The schema marker
+// is verified here and cannot be submitted in the user-facing request body.
+func DecodeCanonicalIntent(raw []byte) (Intent, error) {
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(raw, &fields) != nil {
+		return Intent{}, ErrInvalidArgument
 	}
-	scanner := json.NewDecoder(bytes.NewReader(raw))
-	if err := checkJSONValue(scanner, 0); err != nil {
+	var schema string
+	if json.Unmarshal(fields["schema"], &schema) != nil || schema != IntentSchemaVersion {
+		return Intent{}, ErrInvalidArgument
+	}
+	delete(fields, "schema")
+	body, err := encodeCanonicalJSON(fields)
+	if err != nil {
 		return Intent{}, err
 	}
-	if _, err := scanner.Token(); err != io.EOF {
-		return Intent{}, fmt.Errorf("%w: trailing JSON", ErrInvalidArgument)
-	}
-	var intent Intent
-	decoder := json.NewDecoder(bytes.NewReader(raw))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&intent); err != nil {
-		return Intent{}, fmt.Errorf("%w: intent JSON", ErrInvalidArgument)
-	}
-	if err := validateIntent(intent); err != nil {
+	intent, err := ParseIntent(body)
+	if err != nil {
 		return Intent{}, err
+	}
+	canonical, _, err := CanonicalIntent(intent)
+	if err != nil || !bytes.Equal(canonical, raw) {
+		return Intent{}, ErrInvalidArgument
 	}
 	return intent, nil
 }
 
-// CanonicalIntent returns the versioned, deterministic intent JSON and its
-// lowercase SHA256. It does not resolve or read a current Release.
-func CanonicalIntent(intent Intent) ([]byte, string, error) {
-	if err := validateIntent(intent); err != nil {
+func parseIntent(raw []byte) (Intent, error) {
+	invalid := func() (Intent, error) { return Intent{}, fmt.Errorf("%w: intent JSON", ErrInvalidArgument) }
+	if len(raw) == 0 || len(raw) > 16384 || !utf8.Valid(raw) || !validUnicodeEscapes(raw) {
+		return invalid()
+	}
+	scanner := json.NewDecoder(bytes.NewReader(raw))
+	scanner.UseNumber()
+	if checkJSONValue(scanner, 0) != nil {
+		return invalid()
+	}
+	if _, err := scanner.Token(); err != io.EOF {
+		return invalid()
+	}
+	var w intentWire
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.DisallowUnknownFields()
+	if d.Decode(&w) != nil {
+		return invalid()
+	}
+	if len(w.Parameters) == 0 || w.Parameters[0] != '{' {
+		return invalid()
+	}
+	i := Intent{Name: w.Name, Kind: w.Kind, ImplementationID: w.ImplementationID, ComputePresetID: w.ComputePresetID, DatasetVersionID: w.DatasetVersionID, TimeoutSeconds: w.TimeoutSeconds, BaseModelVersionID: w.BaseModelVersionID, TargetModelID: w.TargetModelID, NewModelName: w.NewModelName}
+	p := json.NewDecoder(bytes.NewReader(w.Parameters))
+	p.DisallowUnknownFields()
+	switch i.Kind {
+	case "GENERAL_TRAINING":
+		i.MLP = &MLPParameters{}
+		if p.Decode(i.MLP) != nil {
+			return invalid()
+		}
+	case "FINETUNING":
+		i.Finetuning = &FinetuningParameters{}
+		if p.Decode(i.Finetuning) != nil {
+			return invalid()
+		}
+	default:
+		return invalid()
+	}
+	if err := validateIntent(i); err != nil {
+		return Intent{}, err
+	}
+	return i, nil
+}
+
+func CanonicalIntent(i Intent) ([]byte, string, error) {
+	if err := validateIntent(i); err != nil {
 		return nil, "", err
 	}
-	intent.PresetID = strings.ToLower(intent.PresetID)
-	intent.DatasetVersionID = strings.ToLower(intent.DatasetVersionID)
-	if intent.ImageVersionID != nil {
-		value := strings.ToLower(*intent.ImageVersionID)
-		intent.ImageVersionID = &value
+	i.ComputePresetID = strings.ToLower(i.ComputePresetID)
+	i.DatasetVersionID = strings.ToLower(i.DatasetVersionID)
+	if i.BaseModelVersionID != nil {
+		v := strings.ToLower(*i.BaseModelVersionID)
+		i.BaseModelVersionID = &v
 	}
-	if intent.SourceExecutionID != nil {
-		value := strings.ToLower(*intent.SourceExecutionID)
-		intent.SourceExecutionID = &value
+	if i.TargetModelID != nil {
+		v := strings.ToLower(*i.TargetModelID)
+		i.TargetModelID = &v
 	}
-	if intent.BaseModelVersionID != nil {
-		value := strings.ToLower(*intent.BaseModelVersionID)
-		intent.BaseModelVersionID = &value
-	}
-	if intent.TargetModelID != nil {
-		value := strings.ToLower(*intent.TargetModelID)
-		intent.TargetModelID = &value
-	}
-	if intent.Finetuning != nil {
-		parameters := *intent.Finetuning
-		if parameters.LearningRate != nil {
-			value := canonicalDecimal(*parameters.LearningRate)
-			parameters.LearningRate = &value
+	if i.MLP != nil {
+		p := *i.MLP
+		if p.LearningRate != nil {
+			v := canonicalDecimal(*p.LearningRate)
+			p.LearningRate = &v
 		}
-		intent.Finetuning = &parameters
+		i.MLP = &p
 	}
-	if intent.GeneralParameters != nil {
-		parameters := canonicalParameters(*intent.GeneralParameters)
-		intent.GeneralParameters = &parameters
+	if i.Finetuning != nil {
+		p := *i.Finetuning
+		if p.LearningRate != nil {
+			v := canonicalDecimal(*p.LearningRate)
+			p.LearningRate = &v
+		}
+		if p.LoraDropout != nil {
+			v := canonicalDecimal(*p.LoraDropout)
+			p.LoraDropout = &v
+		}
+		i.Finetuning = &p
 	}
-	value := struct {
-		Schema string `json:"schema"`
-		Intent
-	}{Schema: intentSchema(intent.Kind), Intent: intent}
-	canonical, err := encodeCanonicalJSON(value)
+	raw, err := i.MarshalJSON()
 	if err != nil {
-		return nil, "", fmt.Errorf("%w: intent encoding", ErrInvalidArgument)
+		return nil, "", err
+	}
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(raw, &fields) != nil {
+		return nil, "", ErrInvalidArgument
+	}
+	schema, _ := json.Marshal(IntentSchemaVersion)
+	fields["schema"] = schema
+	canonical, err := encodeCanonicalJSON(fields)
+	if err != nil {
+		return nil, "", err
 	}
 	digest := sha256.Sum256(canonical)
 	return canonical, hex.EncodeToString(digest[:]), nil
@@ -129,143 +208,92 @@ func CanonicalIntent(intent Intent) ([]byte, string, error) {
 var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 var decimalPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`)
 
-func validUUID(value string) bool {
-	return uuidPattern.MatchString(value) && value != "00000000-0000-0000-0000-000000000000"
+func validUUID(v string) bool {
+	return uuidPattern.MatchString(v) && v != "00000000-0000-0000-0000-000000000000"
 }
 
-func validateIntent(intent Intent) error {
-	invalid := func(field string) error { return fmt.Errorf("%w: %s", ErrInvalidArgument, field) }
-	if !utf8.ValidString(intent.Name) || utf8.RuneCountInString(intent.Name) < 1 || utf8.RuneCountInString(intent.Name) > 80 || strings.TrimSpace(intent.Name) != intent.Name {
-		return invalid("name")
+func validateIntent(i Intent) error {
+	bad := func(field string) error { return fmt.Errorf("%w: %s", ErrInvalidArgument, field) }
+	if !utf8.ValidString(i.Name) || utf8.RuneCountInString(i.Name) < 1 || utf8.RuneCountInString(i.Name) > 80 || strings.TrimSpace(i.Name) != i.Name {
+		return bad("name")
 	}
-	for _, r := range intent.Name {
+	for _, r := range i.Name {
 		if unicode.IsControl(r) {
-			return invalid("name")
+			return bad("name")
 		}
 	}
-	if intent.Kind == "FINETUNING" {
-		return validateFinetuningIntent(intent)
+	if !validUUID(i.ComputePresetID) || !validUUID(i.DatasetVersionID) {
+		return bad("required identity")
 	}
-	if intent.Kind != "GENERAL_TRAINING" {
-		return invalid("kind")
+	if i.TimeoutSeconds != nil && *i.TimeoutSeconds == 0 {
+		return bad("timeout_seconds")
 	}
-	if intent.Finetuning != nil || intent.BaseModelVersionID != nil || intent.TargetModelID != nil || intent.NewModelName != nil {
-		return invalid("kind")
-	}
-	if !validUUID(intent.PresetID) || !validUUID(intent.DatasetVersionID) {
-		return invalid("required version ID")
-	}
-	if intent.ImageVersionID != nil && !validUUID(*intent.ImageVersionID) {
-		return invalid("image_version_id")
-	}
-	if intent.SourceExecutionID != nil && !validUUID(*intent.SourceExecutionID) {
-		return invalid("source_execution_id")
-	}
-	if intent.GeneralParameters == nil {
-		return nil
-	}
-	return validateRegisteredParameters(*intent.GeneralParameters)
-}
-
-func validateRegisteredParameters(parameters []Parameter) error {
-	invalid := func(field string) error { return fmt.Errorf("%w: %s", ErrInvalidArgument, field) }
-	if len(parameters) > 3 {
-		return invalid("general_parameters")
-	}
-	seen := make(map[string]bool)
-	for _, parameter := range parameters {
-		if seen[parameter.Name] {
-			return invalid("duplicate parameter")
+	switch i.Kind {
+	case "GENERAL_TRAINING":
+		if i.ImplementationID != "builtin.mlp" || i.MLP == nil || i.Finetuning != nil || i.BaseModelVersionID != nil || i.TargetModelID != nil || i.NewModelName != nil {
+			return bad("implementation")
 		}
-		seen[parameter.Name] = true
-		switch parameter.Name {
-		case "epochs":
-			if parameter.Type != "INTEGER" || parameter.Value != "3" {
-				return invalid("epochs")
-			}
-		case "batch_size":
-			if parameter.Type != "INTEGER" || parameter.Value != "64" {
-				return invalid("batch_size")
-			}
-		case "learning_rate":
-			if parameter.Type != "DECIMAL" || len(parameter.Value) > 32 || !decimalPattern.MatchString(parameter.Value) {
-				return invalid("learning_rate")
-			}
-			value, ok := new(big.Rat).SetString(parameter.Value)
-			if !ok || value.Sign() <= 0 || value.Cmp(big.NewRat(1, 10)) > 0 {
-				return invalid("learning_rate")
-			}
-		default:
-			return invalid("unregistered parameter")
+	case "FINETUNING":
+		if i.ImplementationID != "builtin.sft_lora" || i.Finetuning == nil || i.MLP != nil || i.BaseModelVersionID == nil || !validUUID(*i.BaseModelVersionID) || (i.TargetModelID == nil) == (i.NewModelName == nil) {
+			return bad("implementation or model target")
 		}
-	}
-	return nil
-}
-
-// encoding/json alone accepts duplicate keys and nulls. A bounded token pass
-// rejects those ambiguities before the ordinary typed decoder handles shape.
-func checkJSONValue(decoder *json.Decoder, depth int) error {
-	invalid := func() error { return fmt.Errorf("%w: ambiguous JSON", ErrInvalidArgument) }
-	if depth > 8 {
-		return invalid()
-	}
-	token, err := decoder.Token()
-	if err != nil || token == nil {
-		return invalid()
-	}
-	delimiter, composite := token.(json.Delim)
-	if !composite {
-		return nil
-	}
-	switch delimiter {
-	case '{':
-		seen := make(map[string]bool)
-		for decoder.More() {
-			keyToken, err := decoder.Token()
-			key, ok := keyToken.(string)
-			if err != nil || !ok || seen[key] {
-				return invalid()
-			}
-			if !validIntentKey(depth, key) {
-				return invalid()
-			}
-			seen[key] = true
-			if err := checkJSONValue(decoder, depth+1); err != nil {
-				return err
-			}
-		}
-		closing, err := decoder.Token()
-		if err != nil || closing != json.Delim('}') {
-			return invalid()
-		}
-	case '[':
-		for decoder.More() {
-			if err := checkJSONValue(decoder, depth+1); err != nil {
-				return err
-			}
-		}
-		closing, err := decoder.Token()
-		if err != nil || closing != json.Delim(']') {
-			return invalid()
+		if i.TargetModelID != nil && !validUUID(*i.TargetModelID) || i.NewModelName != nil && !validModelName(*i.NewModelName) {
+			return bad("model target")
 		}
 	default:
-		return invalid()
+		return bad("kind")
+	}
+	_, err := i.ExplicitParameters()
+	return err
+}
+
+func checkJSONValue(d *json.Decoder, depth int) error {
+	bad := func() error { return fmt.Errorf("%w: ambiguous JSON", ErrInvalidArgument) }
+	if depth > 8 {
+		return bad()
+	}
+	token, err := d.Token()
+	if err != nil || token == nil {
+		return bad()
+	}
+	delim, ok := token.(json.Delim)
+	if !ok {
+		return nil
+	}
+	switch delim {
+	case '{':
+		seen := map[string]bool{}
+		for d.More() {
+			key, err := d.Token()
+			s, ok := key.(string)
+			if err != nil || !ok || seen[s] {
+				return bad()
+			}
+			seen[s] = true
+			if err := checkJSONValue(d, depth+1); err != nil {
+				return err
+			}
+		}
+		end, err := d.Token()
+		if err != nil || end != json.Delim('}') {
+			return bad()
+		}
+	case '[':
+		for d.More() {
+			if err := checkJSONValue(d, depth+1); err != nil {
+				return err
+			}
+		}
+		end, err := d.Token()
+		if err != nil || end != json.Delim(']') {
+			return bad()
+		}
+	default:
+		return bad()
 	}
 	return nil
 }
 
-func validIntentKey(depth int, key string) bool {
-	if depth == 0 {
-		switch key {
-		case "name", "kind", "preset_id", "dataset_version_id", "image_version_id", "general_parameters", "source_execution_id":
-			return true
-		}
-	}
-	return depth == 2 && (key == "name" || key == "type" || key == "value")
-}
-
-// Go's JSON decoder replaces unpaired UTF-16 escapes with U+FFFD. Reject them
-// so malformed input cannot acquire the identity of a different valid string.
 func validUnicodeEscapes(raw []byte) bool {
 	for i := 0; i < len(raw); i++ {
 		if raw[i] != '\\' {
@@ -281,22 +309,22 @@ func validUnicodeEscapes(raw []byte) bool {
 		if i+4 >= len(raw) {
 			return false
 		}
-		value, err := strconv.ParseUint(string(raw[i+1:i+5]), 16, 16)
-		if err != nil {
+		v, e := strconv.ParseUint(string(raw[i+1:i+5]), 16, 16)
+		if e != nil {
 			return false
 		}
 		i += 4
-		if value >= 0xdc00 && value <= 0xdfff {
+		if v >= 0xdc00 && v <= 0xdfff {
 			return false
 		}
-		if value < 0xd800 || value > 0xdbff {
+		if v < 0xd800 || v > 0xdbff {
 			continue
 		}
 		if i+6 >= len(raw) || raw[i+1] != '\\' || raw[i+2] != 'u' {
 			return false
 		}
-		low, err := strconv.ParseUint(string(raw[i+3:i+7]), 16, 16)
-		if err != nil || low < 0xdc00 || low > 0xdfff {
+		low, e := strconv.ParseUint(string(raw[i+3:i+7]), 16, 16)
+		if e != nil || low < 0xdc00 || low > 0xdfff {
 			return false
 		}
 		i += 6

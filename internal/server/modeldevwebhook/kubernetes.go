@@ -55,4 +55,17 @@ func (reader *KubernetesReader) Workflow(ctx context.Context, namespace, name st
 	return reader.dynamic.Resource(schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
+func (reader *KubernetesReader) TrainingObject(ctx context.Context, namespace, kind, name string) (*unstructured.Unstructured, error) {
+	resource := map[string]schema.GroupVersionResource{
+		"Job":             {Group: "batch", Version: "v1", Resource: "jobs"},
+		"JobSet":          {Group: "jobset.x-k8s.io", Version: "v1alpha2", Resource: "jobsets"},
+		"TrainJob":        {Group: "trainer.kubeflow.org", Version: "v1alpha1", Resource: "trainjobs"},
+		"TrainingRuntime": {Group: "trainer.kubeflow.org", Version: "v1alpha1", Resource: "trainingruntimes"},
+	}[kind]
+	if resource.Resource == "" {
+		return nil, ErrConfiguration
+	}
+	return reader.dynamic.Resource(resource).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
 var _ IdentityReader = (*KubernetesReader)(nil)

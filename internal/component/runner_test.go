@@ -9,9 +9,14 @@ import (
 
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // This is only a component/RPC-boundary test. Complete-flow integration uses
@@ -28,6 +33,7 @@ func TestComponentTrainWaitUsesOnlyEnsureAndStatusWithRotatedToken(t *testing.T)
 		Association: &modeldevv1.RunAssociation{KfpRunId: "44444444-4444-4444-8444-444444444444", NamespaceName: "cpu-execution", NamespaceUid: "55555555-5555-4555-8555-555555555555", WorkflowName: "main-flow", WorkflowUid: "66666666-6666-4666-8666-666666666666", PodName: "main-train-wait", PodUid: "77777777-7777-4777-8777-777777777777"},
 		Step:        modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT,
 	}}
+	client.configuration = taskConfigurationResponse(t, config)
 	runner, err := component.New(config, client, nil, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -56,26 +62,98 @@ func TestComponentRejectsDifferentStepBeforeRPC(t *testing.T) {
 	}
 }
 
+func TestComponentTrainWaitRetriesOriginalEnsureAfterLostReplyWithinFrozenWindow(t *testing.T) {
+	config := taskConfiguration(t, modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT)
+	config.PollInterval = time.Millisecond
+	if err := os.WriteFile(config.TokenFile, []byte("first-projected-token"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	client := &trainingRPC{t: t, tokenFile: config.TokenFile, transientEnsure: true}
+	timing, err := (cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 62}).Resolve(time.Now().UTC().Truncate(time.Microsecond).Add(-time.Minute), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.configuration = timedConfigurationResponse(t, config, timing)
+	runner, err := component.New(config, client, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := runner.Run(ctx, "train-wait"); err != nil {
+		t.Fatal("original Ensure never recovered", err)
+	}
+	if client.ensure != 2 || client.status != 1 || client.configurationCalls < 2 {
+		t.Fatalf("Ensure must recover before status-only observation: ensure=%d status=%d configuration=%d", client.ensure, client.status, client.configurationCalls)
+	}
+	if client.retryDeadline.IsZero() || !client.retryDeadline.Equal(client.originalDeadline) {
+		t.Fatal("uncertain Ensure renewed its original TRAIN window")
+	}
+}
+
 type trainingRPC struct {
 	modeldevv1.ModelDevStepServiceClient
-	t              *testing.T
-	tokenFile      string
-	ensure, status int
+	t                               *testing.T
+	tokenFile                       string
+	ensure, status                  int
+	configuration                   *modeldevv1.GetExecutionConfigurationResponse
+	transientEnsure                 bool
+	configurationCalls              int
+	originalIdentity                *trainingv1.ExecutionIdentity
+	originalDeadline, retryDeadline time.Time
+}
+
+func (client *trainingRPC) GetExecutionConfiguration(ctx context.Context, r *modeldevv1.GetExecutionConfigurationRequest, _ ...grpc.CallOption) (*modeldevv1.GetExecutionConfigurationResponse, error) {
+	client.configurationCalls++
+	token := "first-projected-token"
+	if client.ensure > 0 {
+		token = "rotated-projected-token"
+	}
+	client.check(ctx, token, r.Context)
+	response := proto.Clone(client.configuration).(*modeldevv1.GetExecutionConfigurationResponse)
+	if client.ensure > 0 {
+		timing := client.trainingStatus(r.Context, modeldevv1.ComputeState_COMPUTE_STATE_TRAINING)
+		response.Timing = &modeldevv1.StepTiming{Role: modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT, AdmittedAt: timing.TrainingAdmittedAt, DeadlineAt: timing.TrainingDeadlineAt}
+	}
+	return response, nil
+}
+func (client *trainingRPC) trainingStatus(request *modeldevv1.StepContext, state modeldevv1.ComputeState) *modeldevv1.TrainingStatus {
+	timing := client.configuration.Snapshot.Timing
+	start := timing.AcceptedAt.AsTime()
+	deadline := start.Add(time.Duration(timing.StepTimeoutSeconds) * time.Second)
+	return &modeldevv1.TrainingStatus{Identity: request.Identity, States: &modeldevv1.ExecutionStates{ComputeState: state}, TrainingAdmittedAt: timestamppb.New(start), TrainingDeadlineAt: timestamppb.New(deadline)}
 }
 
 func (client *trainingRPC) EnsureTraining(ctx context.Context, request *modeldevv1.EnsureTrainingRequest, _ ...grpc.CallOption) (*modeldevv1.EnsureTrainingResponse, error) {
 	client.ensure++
-	client.check(ctx, "first-projected-token", request.Context)
+	token := "first-projected-token"
+	if client.ensure > 1 {
+		token = "rotated-projected-token"
+	}
+	client.check(ctx, token, request.Context)
+	if client.originalIdentity == nil {
+		client.originalIdentity = proto.Clone(request.Context.Identity).(*trainingv1.ExecutionIdentity)
+	} else if !proto.Equal(client.originalIdentity, request.Context.Identity) {
+		client.t.Fatal("uncertain Ensure changed original identity")
+	}
+	clock := client.trainingStatus(request.Context, modeldevv1.ComputeState_COMPUTE_STATE_TRAINING)
+	client.originalDeadline = clock.TrainingDeadlineAt.AsTime()
+	if client.ensure > 1 {
+		client.retryDeadline, _ = ctx.Deadline()
+	}
 	if err := os.WriteFile(client.tokenFile, []byte("rotated-projected-token"), 0600); err != nil {
 		client.t.Fatal(err)
 	}
-	return &modeldevv1.EnsureTrainingResponse{Status: &modeldevv1.TrainingStatus{Identity: request.Context.Identity, States: &modeldevv1.ExecutionStates{ComputeState: modeldevv1.ComputeState_COMPUTE_STATE_TRAINING}}}, nil
+	if client.transientEnsure && client.ensure == 1 {
+		return nil, status.Error(codes.Unavailable, "original response lost at external RPC boundary")
+	}
+	return &modeldevv1.EnsureTrainingResponse{Status: client.trainingStatus(request.Context, modeldevv1.ComputeState_COMPUTE_STATE_TRAINING)}, nil
 }
 
 func (client *trainingRPC) GetTrainingStatus(ctx context.Context, request *modeldevv1.GetTrainingStatusRequest, _ ...grpc.CallOption) (*modeldevv1.GetTrainingStatusResponse, error) {
 	client.status++
 	client.check(ctx, "rotated-projected-token", request.Context)
-	return &modeldevv1.GetTrainingStatusResponse{Status: &modeldevv1.TrainingStatus{Identity: request.Context.Identity, States: &modeldevv1.ExecutionStates{ComputeState: modeldevv1.ComputeState_COMPUTE_STATE_SUCCEEDED}}}, nil
+	return &modeldevv1.GetTrainingStatusResponse{Status: client.trainingStatus(request.Context, modeldevv1.ComputeState_COMPUTE_STATE_SUCCEEDED)}, nil
 }
 
 func (client *trainingRPC) check(ctx context.Context, token string, claim *modeldevv1.StepContext) {

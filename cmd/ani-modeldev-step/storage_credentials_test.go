@@ -14,6 +14,7 @@ import (
 
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
@@ -122,7 +123,15 @@ func (peer *credentialRPCPeer) GetStorageCredentials(ctx context.Context, reques
 func storageRPCFixture(t *testing.T, mode string) (modeldevv1.ModelDevStepServiceClient, *modeldevv1.StepContext, string, *credentialRPCPeer) {
 	t.Helper()
 	snapshot := conformance.SnapshotV1()
-	snapshot.DeadlineAt = time.Now().Add(30 * time.Minute).UTC().Truncate(time.Microsecond)
+	timing, err := (cpup01.TimingConfiguration{
+		ExecutionTimeoutDefaultSeconds: snapshot.Timing.ExecutionTimeoutSeconds,
+		ExecutionTimeoutMaxSeconds:     snapshot.Timing.ExecutionTimeoutMaxSeconds,
+		StepTimeoutSeconds:             snapshot.Timing.StepTimeoutSeconds,
+	}).Resolve(time.Now().UTC().Truncate(time.Microsecond), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot.Timing, snapshot.DeadlineAt = timing, timing.ExecutionDeadlineAt
 	digest, err := snapshot.Digest()
 	if err != nil {
 		t.Fatal(err)

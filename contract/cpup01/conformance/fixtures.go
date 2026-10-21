@@ -1,65 +1,68 @@
-// Package conformance exposes synthetic CPU-P01 vectors to consumer tests.
-// Production packages must not use these fixtures as defaults or ENV facts.
+// Package conformance contains synthetic current-contract fixtures only.
 package conformance
 
 import (
-	_ "embed"
-	"encoding/json"
-
+	"crypto/sha256"
+	"encoding/hex"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	"strings"
+	"time"
 )
 
-const IntentSHA256V1 = "152ed6b8e0a392be5697ee138e5a22be4183139c2954f009d6d85483cdf4a01a"
-const SnapshotSHA256V1 = "972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9"
-const ReleaseSHA256V1 = "388c7687614c92a2b50a14c8ee29df04f4d8934cf1dbf88d7b31258efc9f3dae"
+const IntentRequest = `{"name":"CPU training","kind":"GENERAL_TRAINING","implementation_id":"builtin.mlp","compute_preset_id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","dataset_version_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","parameters":{}}`
 
-//go:embed intent-input-v1.json
-var intentInputV1 []byte
-
-//go:embed intent-canonical-v1.json
-var intentCanonicalV1 []byte
-
-//go:embed snapshot-v1.json
-var snapshotCanonicalV1 []byte
-
-//go:embed release-v1.json
-var releaseCanonicalV1 []byte
-
-func IntentInputV1() []byte { return append([]byte{}, intentInputV1...) }
-
-func IntentCanonicalV1() []byte { return append([]byte{}, intentCanonicalV1...) }
-
-func SnapshotCanonicalV1() []byte { return append([]byte{}, snapshotCanonicalV1...) }
-
-func ReleaseCanonicalV1() []byte { return append([]byte{}, releaseCanonicalV1...) }
-
+func IntentInputV1() []byte { return []byte(IntentRequest) }
 func IntentV1() cpup01.Intent {
-	intent, err := cpup01.ParseIntent(intentInputV1)
-	if err != nil {
-		panic("invalid embedded CPU-P01 intent conformance fixture")
+	i, e := cpup01.ParseIntent(IntentInputV1())
+	if e != nil {
+		panic(e)
 	}
-	return intent
+	return i
 }
+func IntentCanonicalV1() []byte {
+	b, _, e := cpup01.CanonicalIntent(IntentV1())
+	if e != nil {
+		panic(e)
+	}
+	return b
+}
+func SnapshotCanonicalV1() []byte {
+	b, e := SnapshotV1().Canonical()
+	if e != nil {
+		panic(e)
+	}
+	return b
+}
+func sum(raw []byte) string { s := sha256.Sum256(raw); return hex.EncodeToString(s[:]) }
 
-// SnapshotV1 returns fresh fixture values on each call, including all slices
-// and optional object-reference fields. None identify a real environment.
 func SnapshotV1() cpup01.Snapshot {
-	var snapshot cpup01.Snapshot
-	if err := json.Unmarshal(snapshotCanonicalV1, &snapshot); err != nil {
-		panic("invalid embedded CPU-P01 snapshot conformance fixture")
+	i := IntentV1()
+	_, hash, _ := cpup01.CanonicalIntent(i)
+	parameters, _ := i.ResolveParameters()
+	version := "input-version-1"
+	accepted := time.Date(2026, 10, 22, 0, 0, 0, 0, time.UTC)
+	timing, _ := (cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}).Resolve(accepted, nil)
+	selection := `{"schema_version":1,"preset_id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","code":"cpu-small","name":"CPU small","compute_type":"cpu","cpu_millis":1000,"memory_mib":1024,"gpu":null}`
+	namespaceUID := "33333333-3333-4333-8333-333333333333"
+	executionID := "99999999-9999-4999-8999-999999999999"
+	expected := []byte(`{"template":{"spec":{"replicatedJobs":[]}}}`)
+	return cpup01.Snapshot{
+		SchemaVersion: cpup01.SnapshotSchemaVersion, Kind: "GENERAL_TRAINING", DeliveryMode: "SAVE_ARTIFACTS",
+		IdentityRef:    cpup01.IdentityRef{TenantID: "77777777-7777-4777-8777-777777777777", Actor: "governance:user:contract-test", ExecutionID: executionID, OperationID: "88888888-8888-4888-8888-888888888888", IntentHash: hash},
+		Implementation: cpup01.ImplementationSnapshot{ImplementationID: "builtin.mlp", Version: "1", ParameterContractVersion: cpup01.MLPParameterContractVersion, PipelineID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", PipelineVersionID: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", PipelineIRSHA256: strings.Repeat("b", 64)},
+		ComputeOrigin:  cpup01.ComputeOrigin{ComputePresetID: i.ComputePresetID, SelectionDigest: sum([]byte("compute-selection-v1\n" + selection)), SelectionJSON: selection, CPUMillis: 1000, MemoryMiB: 1024, DeviceMode: "cpu"}, Timing: timing,
+		RuntimePlan:      cpup01.RuntimePlan{GeneratorVersion: "contract-fixture-v1", APIGroup: "trainer.kubeflow.org", Kind: "TrainingRuntime", Namespace: "cpu-contract-fixture", Name: cpup01.RuntimeName(namespaceUID, executionID), ExpectedSpec: expected, ExpectedSpecSHA256: sum(expected), DefaultingRules: "trainer-v2.1-explicit-v1", TargetJobs: []string{"node"}},
+		Input:            cpup01.InputRef{InputVersionID: i.DatasetVersionID, Object: cpup01.FixedObjectRef{StorageConnectionID: "input-store-v1", Bucket: "cpu-inputs", Key: "fixed/input/data.csv", VersionID: &version, SizeBytes: 192456, SHA256: strings.Repeat("d", 64)}, Format: "CSV", SchemaVersion: "ani.cpu.csv.v1", RowCount: 1027, FeatureCount: 16},
+		Program:          cpup01.ProgramRef{ImageVersionID: "ffffffff-ffff-4fff-8fff-ffffffffffff", ImageDigest: "registry.example.test/cpu/mlp@sha256:" + strings.Repeat("e", 64), Command: []string{"python", "/opt/mlp/train.py"}, ResolvedArgs: []string{"--data", "/inputs/data.csv", "--output", "/outputs"}, ResolvedParameters: parameters},
+		Resources:        cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: 1000, LimitMillicpu: 1000, RequestMemoryBytes: 1073741824, LimitMemoryBytes: 1073741824},
+		Environment:      cpup01.EnvironmentBindingSnapshot{BindingID: "11111111-1111-4111-8111-111111111111", BindingDigest: strings.Repeat("f", 64), ClusterID: "22222222-2222-4222-8222-222222222222", NamespaceName: "cpu-contract-fixture", NamespaceUID: namespaceUID, KFPConnectionRef: "kfp-managed-v1", ExperimentID: "44444444-4444-4444-8444-444444444444", Identities: cpup01.RuntimeIdentityRefs{ModeldevControlIdentityRef: "modeldev-control-v1", KFPStepServiceAccount: "cpu-managed-step", TrainerServiceAccount: "cpu-training", VerifierServiceAccount: "cpu-verifier", TenantProxyIdentity: "tenant:contract-fixture"}},
+		Workspace:        cpup01.WorkspaceContract{Mode: "EXECUTION_PVC", StorageClass: "task-workspace", CapacityBytes: 2147483648, InputSubpath: "inputs", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication"},
+		PublicationScope: cpup01.StorageScope{StorageConnectionID: "artifact-store-v1", Bucket: "cpu-artifacts", ApprovedPrefix: "tenant-fixed/executions", CredentialReference: "modeldev-publish-v1"},
+		OutputContract:   cpup01.OutputContract{SchemaVersion: "ani.cpu.output.v1", OutputKind: "CHECKPOINT", DeliveryMode: "SAVE_ARTIFACTS", RequiredFiles: []cpup01.RequiredOutput{{Role: "SUMMARY", RelativePath: "summary.json", MaxSizeBytes: 4096}, {Role: "CHECKPOINT", RelativePath: "model.pt", MaxSizeBytes: 1048576}, {Role: "MODEL_CONFIG", RelativePath: "model_config.json", MaxSizeBytes: 4096}, {Role: "METRICS", RelativePath: "metrics.jsonl", MaxSizeBytes: 65536}}, MaxFileCount: 16, MaxTotalBytes: 2097152, CreateTarBundle: true}, DeadlineAt: timing.ExecutionDeadlineAt,
 	}
-	if err := snapshot.Validate(); err != nil {
-		panic("embedded CPU-P01 snapshot violates its contract")
-	}
-	return snapshot
 }
 
-// ReleaseV1 returns fresh synthetic catalogue values for consumer tests only.
-// It does not establish a real or enabled Release, image, PipelineVersion or ENV.
-func ReleaseV1() cpup01.ReleaseDocument {
-	var release cpup01.ReleaseDocument
-	if err := json.Unmarshal(releaseCanonicalV1, &release); err != nil {
-		panic("invalid embedded CPU-P01 release conformance fixture")
-	}
-	return release
+func MaterialV21() cpup01.ImplementationMaterial {
+	s := SnapshotV1()
+	return cpup01.ImplementationMaterial{SchemaVersion: cpup01.MaterialSchemaVersion, Implementation: s.Implementation, Program: cpup01.MaterialProgram{ImageVersionID: s.Program.ImageVersionID, ImageDigest: s.Program.ImageDigest, Command: s.Program.Command, ArgsTemplate: []cpup01.MaterialArgument{{Literal: "--data"}, {Source: "INPUT_PATH"}, {Literal: "--output"}, {Source: "OUTPUT_PATH"}, {Literal: "--learning-rate"}, {Source: "LEARNING_RATE"}, {Literal: "--epochs"}, {Source: "EPOCHS"}, {Literal: "--batch-size"}, {Source: "BATCH_SIZE"}, {Literal: "--seed"}, {Source: "SEED"}}}, Workspace: s.Workspace, OutputContract: s.OutputContract}
 }

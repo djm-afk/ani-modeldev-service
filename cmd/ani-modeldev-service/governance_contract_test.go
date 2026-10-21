@@ -28,14 +28,14 @@ func TestGovernanceContractProvider(t *testing.T) {
 	if err != nil {
 		t.Fatal("GOVERNANCE_CONTRACT_PREFLIGHT: fixed fixture intent invalid")
 	}
-	handshake := governanceContractHandshake{Schema: "ani.cpu-p01.governance-resolve-fixture.v1", Address: fixture.config.Server.Grpc.Addr, Intent: intent, AcceptedAt: fixture.request.AcceptedAt.AsTime()}
+	handshake := governanceContractHandshake{Schema: "ani.modeldev.governance-admission-fixture.v2.1", Address: fixture.config.Server.Grpc.Addr, Intent: intent, AcceptedAt: fixture.request.AcceptedAt.AsTime()}
 	handshake.TLS.CAFile = filepath.Join(directory, "ca.pem")
 	handshake.TLS.CertFile = filepath.Join(directory, "governance.pem")
 	handshake.TLS.KeyFile = filepath.Join(directory, "governance.key")
 	handshake.Scope.ResourceTenantID, handshake.Scope.Actor = fixture.tenantID, "governance:user:42"
-	handshake.Release.ReleaseID = fixture.request.Release.ReleaseId
-	handshake.Release.ReleaseDigest = fixture.request.Release.ReleaseDigest
-	handshake.Release.BindingGeneration = fixture.request.Release.BindingGeneration
+	handshake.IdentityRef = fixture.wantSnapshot.IdentityRef
+	handshake.ComputeSelectionCanonical = string(fixture.request.ComputeSelectionCanonical)
+	handshake.SelectionDigest = fixture.request.SelectionDigest
 	raw, err := json.Marshal(handshake)
 	if err != nil || len(raw) > 16384 {
 		t.Fatal("GOVERNANCE_CONTRACT_PREFLIGHT: bounded handshake encoding failed")
@@ -56,7 +56,7 @@ func TestGovernanceContractProvider(t *testing.T) {
 	observer := fixture.openPool()
 	stored, err := input.New(observer).Get(ctx, fixture.tenantID, fixture.ready.Import.InputVersionID)
 	if err != nil || !reflect.DeepEqual(stored, fixture.ready) {
-		t.Fatal("GOVERNANCE_CONTRACT_BEHAVIOR: Resolve changed the durable READY input")
+		t.Fatal("GOVERNANCE_CONTRACT_BEHAVIOR: Prepare/Finalize changed the durable READY input")
 	}
 	var identities, executions, closes, submissions int
 	err = observer.QueryRow(ctx, `SELECT
@@ -65,7 +65,7 @@ func TestGovernanceContractProvider(t *testing.T) {
 		(SELECT count(*) FROM modeldev_close_intents),
 		(SELECT count(*) FROM modeldev_pipeline_dispatches)`).Scan(&identities, &executions, &closes, &submissions)
 	if err != nil || identities != 0 || executions != 0 || closes != 0 || submissions != 0 {
-		t.Fatal("GOVERNANCE_CONTRACT_BEHAVIOR: Resolve wrote execution/close/submission facts or observer failed")
+		t.Fatal("GOVERNANCE_CONTRACT_BEHAVIOR: Prepare/Finalize wrote execution/close/submission facts or observer failed")
 	}
 	requireAdmissionMaterialPoolReleased(t, observer, fixture.applicationName)
 	t.Log("GOVERNANCE_CONTRACT_BEHAVIOR PASS: READY unchanged, no execution-side facts, configured app stopped")
@@ -140,13 +140,11 @@ type governanceContractHandshake struct {
 		ResourceTenantID string `json:"resource_tenant_id"`
 		Actor            string `json:"actor"`
 	} `json:"scope"`
-	Intent  cpup01.Intent `json:"intent"`
-	Release struct {
-		ReleaseID         string `json:"release_id"`
-		ReleaseDigest     string `json:"release_digest"`
-		BindingGeneration uint64 `json:"binding_generation"`
-	} `json:"release"`
-	AcceptedAt time.Time `json:"accepted_at"`
+	Intent                    cpup01.Intent      `json:"intent"`
+	IdentityRef               cpup01.IdentityRef `json:"identity_ref"`
+	ComputeSelectionCanonical string             `json:"compute_selection_canonical"`
+	SelectionDigest           string             `json:"selection_digest"`
+	AcceptedAt                time.Time          `json:"accepted_at"`
 }
 
 func waitGovernanceContractStop(t *testing.T, directory string) {

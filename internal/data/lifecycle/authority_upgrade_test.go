@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"reflect"
 	"strings"
 	"testing"
@@ -27,16 +28,15 @@ func TestRuntimeAuthorityUpgradePreservesFactsAndRejectsUnboundCompute(t *testin
 	snapshot := conformance.SnapshotV1()
 	accepted := time.Now().UTC().Truncate(time.Microsecond)
 	snapshot.DeadlineAt = accepted.Add(time.Hour)
-	intent := cpup01.Intent{Name: "upgrade-close", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := cpup01.Intent{Name: "upgrade-close", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
+	specHash := ""
 	admission := biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: accepted}
+	admission = admissionfixture.Bind(t, admission)
+	snapshot = admission.Snapshot
 	if _, err := execution.New(pool).Accept(ctx, admission); err != nil {
 		t.Fatal(err)
 	}
@@ -49,6 +49,7 @@ func TestRuntimeAuthorityUpgradePreservesFactsAndRejectsUnboundCompute(t *testin
 		t.Fatal(err)
 	}
 	workspace := biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "upgrade-workspace", PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	startManagedRoleV21(t, lifecycle.New(pool), authority, "prepare")
 	before, _, err := lifecycle.New(pool).RecordPrepared(ctx, authority, workspace)
 	if err != nil {
 		t.Fatal(err)
@@ -62,6 +63,7 @@ func TestRuntimeAuthorityUpgradePreservesFactsAndRejectsUnboundCompute(t *testin
 	}
 	other := admission
 	other.OperationID, other.ExecutionID = "bbbbbbbb-cccc-4ddd-8eee-111111111111", "aaaaaaaa-bbbb-4ccc-8ddd-111111111111"
+	other = admissionfixture.Bind(t, other)
 	if _, err := execution.New(pool).Accept(ctx, other); err != nil {
 		t.Fatal(err)
 	}

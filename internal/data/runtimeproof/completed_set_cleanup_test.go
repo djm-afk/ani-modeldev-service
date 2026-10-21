@@ -84,7 +84,7 @@ func TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport(t 
 				return
 			}
 			state, readErr := lifecycle.New(f.step.open()).GetRuntime(context.Background(), f.step.f.execution.TenantID, f.step.f.execution.ExecutionID)
-			if err != nil || readErr != nil || result.Unresolved != 0 || state.ComputeCleanup == nil || state.ComputeCleanup.Phase != "APPLIED" || !state.ComputeCleanup.LogsReady || len(state.ComputeCleanup.ConfirmedAbsent) != 5 || len(f.deleted) != 5 || f.logReads != 1 || state.Workspace == nil {
+			if err != nil || readErr != nil || result.Unresolved != 0 || state.ComputeCleanup == nil || state.ComputeCleanup.Phase != "APPLIED" || !state.ComputeCleanup.LogsReady || len(state.ComputeCleanup.ConfirmedAbsent) != 7 || len(f.deleted) != 7 || f.logReads != 1 || state.Workspace == nil {
 				t.Fatal("completed original set could not finish bounded automatic cleanup", result, err, readErr, "logs", f.logReads, "deletes", len(f.deleted))
 			}
 			for _, resource := range state.Observation.Resources {

@@ -4,13 +4,13 @@ package execution
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	executionsql "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution/sqlc"
 )
@@ -221,7 +221,10 @@ func executionFromRow(row executionsql.ModeldevExecution) (biz.Execution, error)
 	}}
 	// CanonicalIntent's schema field is checked by canonical byte comparison
 	// below. Unknown or noncanonical stored fields cannot silently disappear.
-	if json.Unmarshal(row.IntentCanonical, &execution.Intent) != nil || json.Unmarshal(row.SnapshotCanonical, &execution.Snapshot) != nil {
+	var intentErr, snapshotErr error
+	execution.Intent, intentErr = cpup01.DecodeCanonicalIntent(row.IntentCanonical)
+	execution.Snapshot, snapshotErr = cpup01.DecodeCanonicalSnapshot(row.SnapshotCanonical)
+	if intentErr != nil || snapshotErr != nil {
 		return biz.Execution{}, biz.ErrPersistence
 	}
 	intent, snapshot, err := execution.Admission.CanonicalPayloads()

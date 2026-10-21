@@ -7,14 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"path"
-	"reflect"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,9 +27,9 @@ func (a *Adapter) CreateTraining(ctx context.Context, plan biz.TrainingPlan) (bi
 	if ctx == nil {
 		return biz.TrainingHandle{}, biz.ErrRuntimeConflict
 	}
-	if plan.FinetuningTiming != nil {
+	if plan.Timing != nil {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithDeadline(ctx, plan.FinetuningTiming.DeadlineAt)
+		ctx, cancel = context.WithDeadline(ctx, plan.Timing.DeadlineAt)
 		defer cancel()
 		if err := ctx.Err(); err != nil {
 			return biz.TrainingHandle{}, err
@@ -93,7 +90,7 @@ func (a *Adapter) currentTraining(ctx context.Context, plan biz.TrainingPlan) (*
 }
 
 func (a *Adapter) StopTraining(ctx context.Context, plan biz.TrainingPlan, handle biz.TrainingHandle) error {
-	actual, current, err := a.currentTraining(ctx, plan)
+	actual, current, err := a.readBoundTrainingForClose(ctx, plan, handle)
 	if err != nil {
 		return err
 	}
@@ -131,6 +128,46 @@ func (a *Adapter) StopTraining(ctx context.Context, plan biz.TrainingPlan, handl
 	return nil
 }
 
+// readBoundTrainingForClose identifies the original computation independently
+// of the current Runtime and PVC. Those objects govern new computation; their
+// deletion or drift must not prevent revoking an already bound TrainJob.
+func (a *Adapter) readBoundTrainingForClose(ctx context.Context, plan biz.TrainingPlan, handle biz.TrainingHandle) (*unstructured.Unstructured, biz.TrainingHandle, error) {
+	if a == nil || a.client == nil || ctx == nil || ctx.Err() != nil || !validTrainingPlan(plan) ||
+		handle.TrainJobUID == "" || handle.NamespaceUID != plan.Workspace.NamespaceUID || handle.PVCUID != plan.Workspace.PVCUID {
+		return nil, biz.TrainingHandle{}, biz.ErrRuntimeConflict
+	}
+	namespace, err := a.client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, plan.Workspace.NamespaceName, metav1.GetOptions{})
+	if err != nil {
+		return nil, biz.TrainingHandle{}, biz.ErrTrainingUnavailable
+	}
+	if !liveIdentity(namespace, "v1", "Namespace", "", plan.Workspace.NamespaceName, handle.NamespaceUID) {
+		return nil, biz.TrainingHandle{}, biz.ErrRuntimeConflict
+	}
+	actual, err := a.client.Resource(trainJobs).Namespace(plan.Workspace.NamespaceName).Get(ctx, plan.Name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return nil, biz.TrainingHandle{}, biz.ErrTrainingNotFound
+	}
+	if err != nil {
+		return nil, biz.TrainingHandle{}, biz.ErrTrainingUnavailable
+	}
+	if actual == nil || actual.GetAPIVersion() != "trainer.kubeflow.org/v1alpha1" || actual.GetKind() != "TrainJob" ||
+		actual.GetNamespace() != plan.Workspace.NamespaceName || actual.GetName() != plan.Name || string(actual.GetUID()) != handle.TrainJobUID {
+		return nil, biz.TrainingHandle{}, biz.ErrRuntimeConflict
+	}
+	for key, expected := range map[string]string{
+		"modeldev.ani.io/tenant-id":               plan.TenantID,
+		"modeldev.ani.io/execution-id":            plan.ExecutionID,
+		"modeldev.ani.io/execution-spec-sha256":   plan.SpecHash,
+		"modeldev.ani.io/training-request-sha256": plan.RequestSHA256,
+		"modeldev.ani.io/workspace-uid":           handle.PVCUID,
+	} {
+		if actual.GetAnnotations()[key] != expected {
+			return nil, biz.TrainingHandle{}, biz.ErrRuntimeConflict
+		}
+	}
+	return actual, handle, nil
+}
+
 func (a *Adapter) trainingRequest(ctx context.Context, plan biz.TrainingPlan, requireExitRetention bool) (*unstructured.Unstructured, error) {
 	if a == nil || a.client == nil || ctx == nil || ctx.Err() != nil || !validTrainingPlan(plan) {
 		return nil, biz.ErrRuntimeConflict
@@ -152,72 +189,45 @@ func (a *Adapter) trainingRequest(ctx context.Context, plan biz.TrainingPlan, re
 	if !liveIdentity(pvc, "v1", "PersistentVolumeClaim", workspace.NamespaceName, workspace.PVCName, workspace.PVCUID) || phase != "Bound" || storageClass != snapshot.Workspace.StorageClass {
 		return nil, biz.ErrRuntimeConflict
 	}
-	runtimeResource := schema.GroupVersionResource{Group: "trainer.kubeflow.org", Version: "v1alpha1", Resource: "clustertrainingruntimes"}
-	runtimeNamespace := ""
-	if snapshot.Release.Runtime.Kind == "TrainingRuntime" {
-		runtimeResource.Resource = "trainingruntimes"
-		runtimeNamespace = workspace.NamespaceName
+	wantedRuntime, err := a.runtimeRequest(ctx, plan, false)
+	if err != nil {
+		return nil, err
 	}
-	runtime, err := a.client.Resource(runtimeResource).Namespace(runtimeNamespace).Get(ctx, snapshot.Release.Runtime.Name, metav1.GetOptions{})
+	runtime, err := a.client.Resource(trainingRuntimes).Namespace(workspace.NamespaceName).Get(ctx, snapshot.RuntimePlan.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, biz.ErrTrainingUnavailable
 	}
-	if runtime == nil || runtime.GetAPIVersion() != "trainer.kubeflow.org/v1alpha1" || runtime.GetKind() != snapshot.Release.Runtime.Kind || runtime.GetName() != snapshot.Release.Runtime.Name || runtime.GetNamespace() != runtimeNamespace || runtime.GetDeletionTimestamp() != nil || !safeRuntime(runtime, snapshot.Release.Runtime.ContentSHA256, snapshot.Release.Runtime.TargetJobs[0], requireExitRetention) {
-		return nil, biz.ErrRuntimeConflict
-	}
-	if snapshot.Kind == "FINETUNING" && !safeFinetuningRuntime(runtime, snapshot.Finetuning.Budgets.TrainingTimeoutSeconds) {
+	binding, err := verifyRuntimeTemplate(plan, wantedRuntime, runtime)
+	if err != nil || binding != plan.RuntimeBinding {
 		return nil, biz.ErrRuntimeConflict
 	}
 
-	annotations := map[string]any{"modeldev.ani.io/tenant-id": plan.TenantID, "modeldev.ani.io/execution-id": plan.ExecutionID, "modeldev.ani.io/execution-spec-sha256": plan.SpecHash, "modeldev.ani.io/training-request-sha256": plan.RequestSHA256, "modeldev.ani.io/workspace-uid": workspace.PVCUID, "modeldev.ani.io/runtime-spec-sha256": snapshot.Release.Runtime.ContentSHA256}
+	vector, vectorErr := biz.TrainingResourceVector(snapshot)
+	if vectorErr != nil {
+		return nil, biz.ErrRuntimeConflict
+	}
+	resources := map[string]any{}
+	for key, value := range vector {
+		resources[key] = value
+	}
+	annotations := map[string]any{"modeldev.ani.io/tenant-id": plan.TenantID, "modeldev.ani.io/execution-id": plan.ExecutionID, "modeldev.ani.io/execution-spec-sha256": plan.SpecHash, "modeldev.ani.io/training-request-sha256": plan.RequestSHA256, "modeldev.ani.io/workspace-uid": workspace.PVCUID, "modeldev.ani.io/runtime-spec-sha256": snapshot.RuntimePlan.ExpectedSpecSHA256}
 	wanted := &unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "trainer.kubeflow.org/v1alpha1", "kind": "TrainJob",
 		"metadata": map[string]any{"name": plan.Name, "namespace": workspace.NamespaceName, "annotations": annotations},
 		"spec": map[string]any{
-			"runtimeRef": map[string]any{"name": snapshot.Release.Runtime.Name, "kind": snapshot.Release.Runtime.Kind, "apiGroup": "trainer.kubeflow.org"},
+			"runtimeRef": map[string]any{"name": snapshot.RuntimePlan.Name, "kind": snapshot.RuntimePlan.Kind, "apiGroup": "trainer.kubeflow.org"},
 			"managedBy":  "trainer.kubeflow.org/trainjob-controller", "suspend": false,
 			"trainer": map[string]any{"image": snapshot.Program.ImageDigest, "command": stringValues(snapshot.Program.Command), "args": stringValues(snapshot.Program.ResolvedArgs), "numNodes": int64(1), "numProcPerNode": int64(1), "resourcesPerNode": map[string]any{
-				"requests": map[string]any{"cpu": resource.NewMilliQuantity(snapshot.Resources.RequestMillicpu, resource.DecimalSI).String(), "memory": resource.NewQuantity(snapshot.Resources.RequestMemoryBytes, resource.BinarySI).String()},
-				"limits":   map[string]any{"cpu": resource.NewMilliQuantity(snapshot.Resources.LimitMillicpu, resource.DecimalSI).String(), "memory": resource.NewQuantity(snapshot.Resources.LimitMemoryBytes, resource.BinarySI).String()},
+				"requests": resources,
+				"limits":   resources,
 			}},
-			"podTemplateOverrides": []any{map[string]any{"targetJobs": []any{map[string]any{"name": snapshot.Release.Runtime.TargetJobs[0]}}, "spec": map[string]any{
-				"serviceAccountName": snapshot.Environment.Identities.TrainerServiceAccount,
-				"volumes":            []any{map[string]any{"name": "input", "persistentVolumeClaim": map[string]any{"claimName": workspace.PVCName}}, map[string]any{"name": "output", "persistentVolumeClaim": map[string]any{"claimName": workspace.PVCName}}},
-				"containers": []any{map[string]any{"name": "node", "volumeMounts": []any{
-					map[string]any{"name": "input", "mountPath": "/inputs", "subPath": workspace.InputSubpath, "readOnly": true},
-					map[string]any{"name": "output", "mountPath": "/outputs", "subPath": workspace.TrainingSubpath, "readOnly": false},
-				}}},
-			}}},
 		},
 	}}
-	if snapshot.Kind == "FINETUNING" {
-		annotations["modeldev.ani.io/training-admitted-at"] = plan.FinetuningTiming.AdmittedAt.Format(time.RFC3339Nano)
-		annotations["modeldev.ani.io/training-deadline-at"] = plan.FinetuningTiming.DeadlineAt.Format(time.RFC3339Nano)
-		// Trainer 2.1 supports env/volumeMounts only on container overrides.
-		// UID, read-only root, restart policy and the Job deadline are verified
-		// in the exact frozen Runtime, never written as unsupported overrides.
-		override := map[string]any{
-			"targetJobs": []any{map[string]any{"name": snapshot.Release.Runtime.TargetJobs[0]}},
-			"spec": map[string]any{
-				"serviceAccountName": snapshot.Environment.Identities.TrainerServiceAccount,
-				"volumes": []any{
-					map[string]any{"name": "ft-input", "persistentVolumeClaim": map[string]any{"claimName": workspace.PVCName}},
-					map[string]any{"name": "ft-adapter", "persistentVolumeClaim": map[string]any{"claimName": workspace.PVCName}},
-					map[string]any{"name": "ft-report", "persistentVolumeClaim": map[string]any{"claimName": workspace.PVCName}},
-					map[string]any{"name": "ft-tmp", "emptyDir": map[string]any{"sizeLimit": "4Gi"}},
-				},
-				"containers": []any{map[string]any{"name": "node", "volumeMounts": []any{
-					map[string]any{"name": "ft-input", "mountPath": "/workspace/inputs", "subPath": workspace.InputSubpath, "readOnly": true},
-					map[string]any{"name": "ft-adapter", "mountPath": "/workspace/training/adapter", "subPath": path.Join(workspace.TrainingSubpath, "adapter"), "readOnly": false},
-					map[string]any{"name": "ft-report", "mountPath": "/workspace/reports/train", "subPath": path.Join(workspace.ReportsSubpath, "train"), "readOnly": false},
-					map[string]any{"name": "ft-tmp", "mountPath": "/tmp", "readOnly": false},
-				}}},
-			},
-		}
-		if err := unstructured.SetNestedSlice(wanted.Object, []any{override}, "spec", "podTemplateOverrides"); err != nil {
-			return nil, biz.ErrRuntimeConflict
-		}
-	}
+	annotations["modeldev.ani.io/training-admitted-at"] = plan.Timing.AdmittedAt.Format(time.RFC3339Nano)
+	annotations["modeldev.ani.io/training-deadline-at"] = plan.Timing.DeadlineAt.Format(time.RFC3339Nano)
+	annotations["modeldev.ani.io/runtime-uid"] = plan.RuntimeBinding.UID
+	annotations["modeldev.ani.io/create-operation-id"] = plan.OperationID
+
 	return wanted, nil
 }
 
@@ -267,165 +277,40 @@ func validTrainingPlan(plan biz.TrainingPlan) bool {
 			return false
 		}
 	}
-	if s.Release.Runtime.APIGroup != "trainer.kubeflow.org" || (s.Release.Runtime.Kind != "TrainingRuntime" && s.Release.Runtime.Kind != "ClusterTrainingRuntime") || len(validation.IsDNS1123Subdomain(s.Release.Runtime.Name)) != 0 || len(s.Release.Runtime.TargetJobs) != 1 || len(validation.IsDNS1123Label(s.Release.Runtime.TargetJobs[0])) != 0 {
+	if s.RuntimePlan.APIGroup != "trainer.kubeflow.org" || s.RuntimePlan.Kind != "TrainingRuntime" || len(validation.IsDNS1123Subdomain(s.RuntimePlan.Name)) != 0 || len(s.RuntimePlan.TargetJobs) != 1 || len(validation.IsDNS1123Label(s.RuntimePlan.TargetJobs[0])) != 0 {
 		return false
 	}
 	if len(s.Program.Command) == 0 || !strings.Contains(s.Program.ImageDigest, "@sha256:") || s.Resources.Nodes != 1 || s.Resources.ProcessesPerNode != 1 || s.Resources.RequestMillicpu <= 0 || s.Resources.LimitMillicpu < s.Resources.RequestMillicpu || s.Resources.RequestMemoryBytes <= 0 || s.Resources.LimitMemoryBytes < s.Resources.RequestMemoryBytes {
 		return false
 	}
-	if s.Kind == "FINETUNING" {
-		if s.Finetuning == nil || plan.FinetuningTiming == nil || s.Finetuning.Budgets.TrainingTimeoutSeconds == 0 || plan.FinetuningTiming.AdmittedAt.IsZero() || !plan.FinetuningTiming.DeadlineAt.After(plan.FinetuningTiming.AdmittedAt) || w.InputSubpath != "inputs" || w.TrainingSubpath != "training" || w.ReportsSubpath != "reports" || w.PublicationSubpath != "publication" {
-			return false
-		}
-		deadline := plan.FinetuningTiming.AdmittedAt.Add(time.Duration(s.Finetuning.Budgets.TrainingTimeoutSeconds) * time.Second)
-		if s.DeadlineAt.Before(deadline) {
-			deadline = s.DeadlineAt
-		}
-		if !plan.FinetuningTiming.DeadlineAt.Equal(deadline) {
-			return false
-		}
-	} else if plan.FinetuningTiming != nil {
+	if plan.Timing == nil || plan.Timing.AdmittedAt.IsZero() || plan.RuntimeBinding.UID == "" || plan.RuntimeBinding.NamespaceUID != w.NamespaceUID || plan.RuntimeBinding.Name != s.RuntimePlan.Name || plan.RuntimeBinding.ObservedSpecSHA256 != s.RuntimePlan.ExpectedSpecSHA256 {
 		return false
 	}
-	return true
-}
-
-func safeFinetuningRuntime(runtime *unstructured.Unstructured, seconds uint32) bool {
-	jobs, found, err := unstructured.NestedSlice(runtime.Object, "spec", "template", "spec", "replicatedJobs")
-	if err != nil || !found || len(jobs) != 1 {
+	deadline, err := s.Timing.DeadlineFor(plan.Timing.AdmittedAt)
+	if err != nil || !deadline.Equal(plan.Timing.DeadlineAt) || !deadline.After(plan.Timing.AdmittedAt) {
 		return false
 	}
-	job, ok := jobs[0].(map[string]any)
-	if !ok {
+	if s.Kind == "FINETUNING" && (s.Finetuning == nil || w.InputSubpath != "inputs" || w.TrainingSubpath != "training" || w.ReportsSubpath != "reports" || w.PublicationSubpath != "publication") {
 		return false
 	}
-	deadline, found, err := unstructured.NestedInt64(job, "template", "spec", "activeDeadlineSeconds")
-	if err != nil || !found || seconds == 0 || deadline != int64(seconds) {
+	if s.IdentityRef.TenantID != plan.TenantID || s.IdentityRef.ExecutionID != plan.ExecutionID || s.IdentityRef.OperationID != plan.OperationID {
 		return false
 	}
-	pod, found, err := unstructured.NestedMap(job, "template", "spec", "template", "spec")
-	if err != nil || !found {
+	specHash, err := s.Digest()
+	if err != nil || specHash != plan.SpecHash {
 		return false
 	}
-	for _, key := range []string{"runAsUser", "runAsGroup", "fsGroup"} {
-		value, present, err := unstructured.NestedInt64(pod, "securityContext", key)
-		if err != nil || !present || value != 10001 {
-			return false
-		}
-	}
-	containers, found, err := unstructured.NestedSlice(pod, "containers")
-	if err != nil || !found || len(containers) != 1 {
-		return false
-	}
-	container, ok := containers[0].(map[string]any)
-	if !ok {
-		return false
-	}
-	readOnly, present, err := unstructured.NestedBool(container, "securityContext", "readOnlyRootFilesystem")
-	return err == nil && present && readOnly
-}
-
-func safeRuntime(runtime *unstructured.Unstructured, expectedSHA, targetJob string, requireExitRetention bool) bool {
-	spec, found, err := unstructured.NestedMap(runtime.Object, "spec")
-	if err != nil || !found {
-		return false
-	}
-	encoded, err := json.Marshal(spec)
+	expected := plan
+	expected.RequestSHA256 = ""
+	raw, err := json.Marshal(expected)
 	if err != nil {
 		return false
 	}
-	digest := sha256.Sum256(encoded)
-	if hex.EncodeToString(digest[:]) != expectedSHA {
+	digest := sha256.Sum256(raw)
+	if hex.EncodeToString(digest[:]) != plan.RequestSHA256 {
 		return false
 	}
-	if _, present, _ := unstructured.NestedFieldNoCopy(spec, "mlPolicy", "torch", "elasticPolicy"); present {
-		return false
-	}
-	if _, present, _ := unstructured.NestedFieldNoCopy(spec, "mlPolicy", "mpi"); present {
-		return false
-	}
-	maxRestarts, present, err := unstructured.NestedInt64(spec, "template", "spec", "failurePolicy", "maxRestarts")
-	if err != nil || !present || maxRestarts != 0 {
-		return false
-	}
-	jobs, found, err := unstructured.NestedSlice(spec, "template", "spec", "replicatedJobs")
-	if err != nil || !found || len(jobs) != 1 {
-		return false
-	}
-	job, ok := jobs[0].(map[string]any)
-	// The frozen target names the Job; its ancestor-step label below identifies
-	// the training role independently of that name.
-	if !ok || job["name"] != targetJob {
-		return false
-	}
-	for _, fields := range [][]string{{"replicas"}, {"template", "spec", "parallelism"}, {"template", "spec", "completions"}} {
-		number, present, err := unstructured.NestedInt64(job, fields...)
-		if err != nil || !present || number != 1 {
-			return false
-		}
-	}
-	backoff, present, err := unstructured.NestedInt64(job, "template", "spec", "backoffLimit")
-	if err != nil || !present || backoff != 0 {
-		return false
-	}
-	label, _, _ := unstructured.NestedString(job, "template", "metadata", "labels", "trainer.kubeflow.org/trainjob-ancestor-step")
-	if label != "trainer" {
-		return false
-	}
-	if requireExitRetention {
-		// Trainer v2.1.0 overrides merge labels/annotations only. Retention must
-		// be frozen in the Runtime's real Pod template before first creation.
-		finalizers, found, err := unstructured.NestedStringSlice(job, "template", "spec", "template", "metadata", "finalizers")
-		if err != nil || !found || !slices.Contains(finalizers, trainingExitEvidenceFinalizer) {
-			return false
-		}
-	}
-	pod, found, err := unstructured.NestedMap(job, "template", "spec", "template", "spec")
-	if err != nil || !found || pod["restartPolicy"] != "Never" || pod["automountServiceAccountToken"] != false {
-		return false
-	}
-	for _, field := range []string{"initContainers", "volumes"} {
-		values, _, err := unstructured.NestedSlice(pod, field)
-		if err != nil || len(values) != 0 {
-			return false
-		}
-	}
-	for _, field := range []string{"hostNetwork", "hostPID", "hostIPC"} {
-		value, _, err := unstructured.NestedBool(pod, field)
-		if err != nil || value {
-			return false
-		}
-	}
-	nonRoot, _, _ := unstructured.NestedBool(pod, "securityContext", "runAsNonRoot")
-	if !nonRoot {
-		return false
-	}
-	containers, found, err := unstructured.NestedSlice(pod, "containers")
-	if err != nil || !found || len(containers) != 1 {
-		return false
-	}
-	container, ok := containers[0].(map[string]any)
-	if !ok || container["name"] != "node" {
-		return false
-	}
-	escalation, present, err := unstructured.NestedBool(container, "securityContext", "allowPrivilegeEscalation")
-	if err != nil || !present || escalation {
-		return false
-	}
-	privileged, _, err := unstructured.NestedBool(container, "securityContext", "privileged")
-	if err != nil || privileged {
-		return false
-	}
-	dropped, _, err := unstructured.NestedStringSlice(container, "securityContext", "capabilities", "drop")
-	if err != nil || !reflect.DeepEqual(dropped, []string{"ALL"}) {
-		return false
-	}
-	for _, field := range []string{"volumeMounts", "envFrom"} {
-		values, _, err := unstructured.NestedSlice(container, field)
-		if err != nil || len(values) != 0 {
-			return false
-		}
-	}
+
 	return true
 }
 

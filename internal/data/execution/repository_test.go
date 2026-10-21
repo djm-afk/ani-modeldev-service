@@ -2,6 +2,7 @@ package execution_test
 
 import (
 	"context"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"testing"
 	"time"
 
@@ -120,20 +121,17 @@ func validAdmission(t *testing.T) biz.Admission {
 	intent := cpup01.Intent{
 		Name:             "durable-cpu-execution",
 		Kind:             "GENERAL_TRAINING",
-		PresetID:         snapshot.Release.PresetID,
+		ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{},
 		DatasetVersionID: snapshot.Input.InputVersionID,
 	}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatalf("intent fixture: %v", err)
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatalf("snapshot fixture: %v", err)
-	}
-	return biz.Admission{
+	specHash := ""
+	return admissionfixture.Bind(t, biz.Admission{
 		TenantID:    "11111111-2222-4333-8444-555555555555",
-		Actor:       "governance:user:66666666-7777-4888-8999-aaaaaaaaaaaa",
+		Actor:       "governance:user:42",
 		OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff",
 		ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
 		Intent:      intent,
@@ -141,7 +139,7 @@ func validAdmission(t *testing.T) biz.Admission {
 		Snapshot:    snapshot,
 		SpecHash:    specHash,
 		AcceptedAt:  snapshot.DeadlineAt.Add(-time.Hour).UTC(),
-	}
+	})
 }
 
 func preparePostgreSQL(t *testing.T) func() *pgxpool.Pool {

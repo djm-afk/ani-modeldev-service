@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"reflect"
 	"strings"
 	"testing"
@@ -82,10 +83,12 @@ func TestReservationRejectsDifferentCompleteAdmissionBeforeAndAfterFirstPermit(t
 		{"actor", func(a *biz.Admission) { a.Actor = "governance:user:43" }},
 		{"accepted_at", func(a *biz.Admission) { a.AcceptedAt = a.AcceptedAt.Add(time.Microsecond) }},
 		{"intent", func(a *biz.Admission) { a.Intent.Name = "different-training" }},
-		{"intent presence", func(a *biz.Admission) { empty := []cpup01.Parameter{}; a.Intent.GeneralParameters = &empty }},
-		{"release digest", func(a *biz.Admission) { a.Snapshot.Release.ReleaseDigest = strings.Repeat("9", 64) }},
-		{"pipeline", func(a *biz.Admission) { a.Snapshot.Release.PipelineID = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa" }},
-		{"pipeline version", func(a *biz.Admission) { a.Snapshot.Release.PipelineVersionID = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa" }},
+		{"intent presence", func(a *biz.Admission) { seed := uint32(42); a.Intent.MLP = &cpup01.MLPParameters{Seed: &seed} }},
+		{"release digest", func(a *biz.Admission) { a.Snapshot.Implementation.PipelineIRSHA256 = strings.Repeat("9", 64) }},
+		{"pipeline", func(a *biz.Admission) { a.Snapshot.Implementation.PipelineID = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa" }},
+		{"pipeline version", func(a *biz.Admission) {
+			a.Snapshot.Implementation.PipelineVersionID = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"
+		}},
 		{"experiment", func(a *biz.Admission) { a.Snapshot.Environment.ExperimentID = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa" }},
 		{"service account", func(a *biz.Admission) { a.Snapshot.Environment.Identities.KFPStepServiceAccount = "other-managed-step" }},
 		{"deadline", func(a *biz.Admission) { a.Snapshot.DeadlineAt = a.Snapshot.DeadlineAt.Add(time.Minute) }},
@@ -153,6 +156,7 @@ func TestReservationAndGetKeepTenantBoundaryAndCanonicalUUIDAliases(t *testing.T
 	openPool := postgres.Prepare(t)
 	request := validDispatchRequest(t)
 	request.Admission.TenantID = "aaaaaaaa-2222-4333-8444-555555555555"
+	refreshDispatchHashes(t, &request.Admission)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	repository := submission.New(openPool())
@@ -176,6 +180,7 @@ func TestReservationAndGetKeepTenantBoundaryAndCanonicalUUIDAliases(t *testing.T
 	assertDispatchReplay(t, ctx, submission.New(openPool()), alias, first.Dispatch)
 	wrongTenant := request
 	wrongTenant.Admission.TenantID = otherDispatchTenant
+	refreshDispatchHashes(t, &wrongTenant.Admission)
 	got, err = repository.Reserve(ctx, wrongTenant)
 	assertRejectedReservation(t, got, err, biz.ErrExecutionNotFound)
 	assertNoDispatch(t, ctx, repository, otherDispatchTenant, request.Admission.ExecutionID)
@@ -240,15 +245,7 @@ func assertDispatchReplay(t *testing.T, ctx context.Context, repository *submiss
 
 func refreshDispatchHashes(t *testing.T, admission *biz.Admission) {
 	t.Helper()
-	_, intentHash, err := cpup01.CanonicalIntent(admission.Intent)
-	if err != nil {
-		t.Fatalf("intent fixture: %v", err)
-	}
-	specHash, err := admission.Snapshot.Digest()
-	if err != nil {
-		t.Fatalf("snapshot fixture: %v", err)
-	}
-	admission.IntentHash, admission.SpecHash = intentHash, specHash
+	*admission = admissionfixture.Bind(t, *admission)
 }
 
 func assertSameDispatchAdmission(t *testing.T, got, original biz.Admission) {

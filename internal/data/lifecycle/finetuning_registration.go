@@ -53,6 +53,9 @@ func (r *Repository) RecordRegistrationUnavailable(ctx context.Context, a biz.Ru
 		if err := requireOpen(current); err != nil {
 			return false, err
 		}
+		if err := requireRoleWindow(current, "register"); err != nil {
+			return false, err
+		}
 		content.RecordedAt = current.now
 		content.DeadlineAt = registrationDeadline(current, current.now)
 		content.State = biz.RegistrationStateUnavailable

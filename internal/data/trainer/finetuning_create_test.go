@@ -10,30 +10,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 )
 
 func newFinetuningTrainingFixture(t *testing.T) *trainingFixture {
 	t.Helper()
 	f := newTrainingFixture(t)
-	start := time.Now().UTC().Truncate(time.Microsecond)
-	f.plan.Snapshot.Kind = "FINETUNING"
-	f.plan.Snapshot.DeadlineAt = start.Add(3 * time.Hour)
-	f.plan.Snapshot.Finetuning = &cpup01.FinetuningSnapshot{Budgets: cpup01.ComponentBudgets{TrainingTimeoutSeconds: 3600}}
-	f.plan.FinetuningTiming = &biz.TrainingBudgetTiming{AdmittedAt: start, DeadlineAt: start.Add(time.Hour)}
-	f.plan.Snapshot.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/finetuning/finetune_entry.py"}
-	f.plan.Snapshot.Program.ResolvedArgs = []string{"train", "--configuration", "/workspace/inputs/finetune_configuration.json", "--workspace", "/workspace"}
-	f.plan.Snapshot.Resources.RequestMillicpu, f.plan.Snapshot.Resources.LimitMillicpu = 2000, 4000
-	f.plan.Snapshot.Resources.RequestMemoryBytes, f.plan.Snapshot.Resources.LimitMemoryBytes = 6<<30, 8<<30
-	pod := runtimePodTemplate(f)["spec"].(map[string]any)
-	pod["securityContext"] = map[string]any{"runAsNonRoot": true, "runAsUser": float64(10001), "runAsGroup": float64(10001), "fsGroup": float64(10001)}
-	container := pod["containers"].([]any)[0].(map[string]any)
-	container["securityContext"].(map[string]any)["readOnlyRootFilesystem"] = true
-	job := f.runtime["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["replicatedJobs"].([]any)[0].(map[string]any)
-	job["template"].(map[string]any)["spec"].(map[string]any)["activeDeadlineSeconds"] = float64(3600)
-	freezeFinetuningFixtureRuntime(t, f)
+	seed := conformance.FinetuningSnapshotV1()
+	seed.Environment = f.plan.Snapshot.Environment
+	seed.DeadlineAt = f.plan.Snapshot.DeadlineAt
+	a := admissionfixture.Bind(t, biz.Admission{TenantID: f.plan.TenantID, OperationID: f.plan.OperationID, ExecutionID: f.plan.ExecutionID, Actor: "governance:user:trainer-fixture", Intent: conformance.FinetuningIntentV1(), Snapshot: seed, AcceptedAt: f.plan.Snapshot.Timing.AcceptedAt})
+	plan, err := biz.FreezeTrainingPlan(biz.Execution{Admission: a}, f.plan.Workspace, f.plan.Timing.AdmittedAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	binding := f.plan.RuntimeBinding
+	binding.Name, binding.ObservedSpecSHA256 = a.Snapshot.RuntimePlan.Name, a.Snapshot.RuntimePlan.ExpectedSpecSHA256
+	f.plan, err = biz.BindTrainingRuntime(plan, binding)
+	if err != nil {
+		t.Fatal(err)
+	}
+	installFixtureRuntime(t, f)
 	return f
 }
 
@@ -44,7 +43,7 @@ func freezeFinetuningFixtureRuntime(t *testing.T, f *trainingFixture) {
 		t.Fatal(err)
 	}
 	digest := sha256.Sum256(encoded)
-	f.plan.Snapshot.Release.Runtime.ContentSHA256 = hex.EncodeToString(digest[:])
+	f.plan.Snapshot.RuntimePlan.ExpectedSpecSHA256 = hex.EncodeToString(digest[:])
 }
 
 func TestFinetuningTrainingPartitionsWritesAndPreservesOriginalLookupDeadline(t *testing.T) {
@@ -68,10 +67,8 @@ func TestFinetuningTrainingPartitionsWritesAndPreservesOriginalLookupDeadline(t 
 	if err != nil || !reflect.DeepEqual(original, current) {
 		t.Fatal("lookup changed the original deadline or template")
 	}
-	overrides, _, _ := unstructured.NestedSlice(f.train, "spec", "podTemplateOverrides")
-	ov := overrides[0].(map[string]any)
-	spec := ov["spec"].(map[string]any)
-	if len(spec) != 3 || spec["serviceAccountName"] != "cpu-training" {
+	spec := runtimePodTemplate(f)["spec"].(map[string]any)
+	if spec["serviceAccountName"] != "cpu-training" {
 		t.Fatalf("unsupported/unsafe override: %v", spec)
 	}
 	volumes := spec["volumes"].([]any)
@@ -96,7 +93,7 @@ func TestFinetuningTrainingPartitionsWritesAndPreservesOriginalLookupDeadline(t 
 		}
 	}
 	container := spec["containers"].([]any)[0].(map[string]any)
-	if len(container) != 2 {
+	if len(container) != 8 {
 		t.Fatal("container overrides include credentials or unsupported security fields")
 	}
 	mounts := container["volumeMounts"].([]any)
@@ -121,7 +118,7 @@ func TestFinetuningTrainingPartitionsWritesAndPreservesOriginalLookupDeadline(t 
 		t.Fatal("managed finetune entry paths are not mounted")
 	}
 	annotations := f.train["metadata"].(map[string]any)["annotations"].(map[string]any)
-	if annotations["modeldev.ani.io/training-deadline-at"] != f.plan.FinetuningTiming.DeadlineAt.Format(time.RFC3339Nano) {
+	if annotations["modeldev.ani.io/training-deadline-at"] != f.plan.Timing.DeadlineAt.Format(time.RFC3339Nano) {
 		t.Fatal("lookup did not retain the original admitted deadline")
 	}
 }
@@ -134,9 +131,9 @@ func TestFinetuningTrainingRejectsUnsafeRuntimeBudgetAndWriterMaterial(t *testin
 			job := f.runtime["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["replicatedJobs"].([]any)[0].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)
 			switch mode {
 			case "missing timing":
-				f.plan.FinetuningTiming = nil
+				f.plan.Timing = nil
 			case "renewed deadline":
-				f.plan.FinetuningTiming.DeadlineAt = f.plan.FinetuningTiming.DeadlineAt.Add(time.Minute)
+				f.plan.Timing.DeadlineAt = f.plan.Timing.DeadlineAt.Add(time.Minute)
 			case "missing Job deadline":
 				delete(job, "activeDeadlineSeconds")
 			case "wrong Job budget":

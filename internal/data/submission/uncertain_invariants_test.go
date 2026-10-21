@@ -131,6 +131,7 @@ func TestUncertaintyAcceptsCanonicalUUIDAndUTCOffsetAliases(t *testing.T) {
 	openPool := postgres.Prepare(t)
 	request := validDispatchRequest(t)
 	request.Admission.TenantID = "aaaaaaaa-2222-4333-8444-555555555555"
+	refreshDispatchHashes(t, &request.Admission)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	first := reserveUncertaintyAttempt(t, ctx, openPool(), request)

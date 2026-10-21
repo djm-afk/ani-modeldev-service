@@ -24,6 +24,7 @@ func TestManagedRunLegacyFieldStillRequiresFrozenRun(t *testing.T) {
 	// Legacy direct-name compatibility only. The captured-response test below
 	// demonstrates why production must resolve real Workflow node references.
 	valid := `{"run_id":"55555555-6666-4777-8888-999999999999","experiment_id":"44444444-4444-4444-8444-444444444444","display_name":"md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","pipeline_version_reference":{"pipeline_id":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","pipeline_version_id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd"},"runtime_config":{"parameters":{"execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","spec_hash":"972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9"},"pipeline_root":"s3://fixture-kfp-artifacts/managed-root"},"service_account":"cpu-managed-step","run_details":{"task_details":[{"run_id":"55555555-6666-4777-8888-999999999999","task_id":"managed-prepare-task","display_name":"prepare","pod_name":"managed-prepare"}]}}`
+	valid = strings.ReplaceAll(valid, "972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9", input.Plan.SpecHash)
 	var body atomic.Value
 	body.Store(valid)
 	var calls atomic.Int32

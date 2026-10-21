@@ -10,7 +10,7 @@ option go_package = "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/model
 // BFF-facing internal RPCs. Each call requires current actor authorization;
 // the actor saved at admission is audit data, not permanent access permission.
 service ModelDevQueryService {
-  rpc ListPresets(ListPresetsRequest) returns (ListPresetsResponse);
+  rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse);
   rpc GetInputVersion(GetInputVersionRequest) returns (GetInputVersionResponse);
   rpc ListInputVersions(ListInputVersionsRequest) returns (ListInputVersionsResponse);
   rpc GetExecution(GetExecutionRequest) returns (GetExecutionResponse);
@@ -22,9 +22,10 @@ service ModelDevQueryService {
 
 // Only authenticated Governance may resolve a candidate after current actor
 // authorization and an original-key miss. This service does not accept an
-// execution, allocate command IDs or choose Governance's current Release.
+// execution or allocate command identities.
 service ModelDevAdmissionService {
-  rpc ResolveAdmission(ResolveAdmissionRequest) returns (ResolveAdmissionResponse);
+  rpc PrepareAdmission(PrepareAdmissionRequest) returns (PrepareAdmissionResponse);
+  rpc FinalizeAdmission(FinalizeAdmissionRequest) returns (FinalizeAdmissionResponse);
 }
 
 // Only the authenticated Governance delivery identity may call this service.
@@ -39,6 +40,9 @@ service ModelDevCommandService {
 // identity; labels or caller-supplied IDs alone never authorize a callback.
 service ModelDevStepService {
   rpc BeginExecution(BeginExecutionRequest) returns (BeginExecutionResponse);
+  // Limited to COLLECT, PUBLISH and REGISTER. The execution owner persists
+  // the first role window; replay never grants another business budget.
+  rpc BeginManagedStep(BeginManagedStepRequest) returns (BeginManagedStepResponse);
   rpc GetExecutionConfiguration(GetExecutionConfigurationRequest) returns (GetExecutionConfigurationResponse);
   // Temporary object access is derived from the current execution snapshot.
   // Every refresh repeats the same workload and Run authority verification.
@@ -183,7 +187,8 @@ enum ErrorReason {
   ERROR_REASON_RESOURCE_NOT_FOUND = 4;
   ERROR_REASON_IDEMPOTENCY_CONFLICT = 5;
   ERROR_REASON_ENVIRONMENT_NOT_READY = 6;
-  ERROR_REASON_NO_COMPATIBLE_RELEASE = 7;
+  reserved 7;
+  reserved "ERROR_REASON_NO_COMPATIBLE_RELEASE";
   ERROR_REASON_UPSTREAM_UNAVAILABLE = 8;
   ERROR_REASON_SUBMISSIONS_PAUSED = 9;
   ERROR_REASON_CAPABILITY_NOT_ENABLED = 10;
@@ -199,6 +204,9 @@ enum ErrorReason {
   ERROR_REASON_DEADLINE_EXCEEDED = 20;
   ERROR_REASON_INPUT_TOO_LARGE = 21;
   ERROR_REASON_INPUT_NOT_READY = 22;
+  ERROR_REASON_IMPLEMENTATION_UNAVAILABLE = 23;
+  ERROR_REASON_UNSUPPORTED_DEVICE = 24;
+  ERROR_REASON_ADMISSION_PLAN_MISMATCH = 25;
 }
 
 message FieldViolation {
@@ -218,41 +226,36 @@ message ErrorDetail {
 
 // Shared typed intent, not a new HTTP facade. Governance owns CreateExecution
 // and StopExecution at the existing BFF. Its strict JSON adapter keeps the
-// external general_parameters array and maps original JSON field presence to
+// implementation-specific parameters object and maps field presence to
 // this message; direct proto-JSON translation is not the external API contract.
 // Tenant, actor, action, and idempotency key belong to the trusted admission
 // scope and do not participate in the canonical intent object.
 message UserIntent {
+  reserved 3, 5, 6, 7, 9;
+  reserved "preset_id", "image_version_id", "general_parameters", "source_execution_id", "finetuning";
   string name = 1;
   ani.training.v1.ExecutionKind kind = 2;
-  string preset_id = 3;
   string dataset_version_id = 4;
-  optional string image_version_id = 5;
-  // Sort by name for intent hashing; reject duplicate names and missing values.
-  // CPU-P01 accepts epochs INTEGER=3, batch_size INTEGER=64, and
-  // learning_rate DECIMAL in (0, 0.1]. Missing entries retain intent presence
-  // differences from explicit defaults; only snapshot resolution adds defaults.
-  ParameterSelection general_parameters = 6;
-  // Presence participates in intent hashing. Explicit empty is invalid.
-  optional string source_execution_id = 7;
   optional string base_model_version_id = 8;
-  FinetuningParameters finetuning = 9;
   optional string target_model_id = 10;
   optional string new_model_name = 11;
+  string implementation_id = 12;
+  string compute_preset_id = 13;
+  oneof parameters { MLPParameters mlp = 14; FinetuningParameters sft_lora = 15; }
+  optional uint64 timeout_seconds = 16;
 }
 
-// An absent message is invalid for FINETUNING. A present empty object uses
-// immutable Release defaults. Scalar presence remains part of original intent.
+message MLPParameters {
+ optional string learning_rate = 1; optional int64 epochs = 2; optional int64 batch_size = 3; optional uint32 seed = 4;
+}
 message FinetuningParameters {
-  optional string learning_rate = 1;
-  optional int64 max_steps = 2;
+ optional string learning_rate = 1; optional int64 max_steps = 2;
+ optional int64 per_device_train_batch_size = 3; optional int64 gradient_accumulation_steps = 4;
+ optional int64 cutoff_len = 5; optional int64 lora_rank = 6; optional int64 lora_alpha = 7;
+ optional string lora_dropout = 8; optional uint32 seed = 9;
 }
 
-// An absent message means omitted general_parameters. A present message with
-// zero values means the explicit JSON array []; these have different hashes.
-message ParameterSelection {
-  repeated ani.training.v1.Parameter values = 1;
-}
+message ParameterSelection { repeated ani.training.v1.Parameter values = 1; }
 
 message ExecutionStates {
   ComputeState compute_state = 1;
@@ -283,44 +286,18 @@ message ParameterRule {
   optional bool maximum_inclusive = 9;
   bool editable = 10;
   string non_editable_reason = 11;
+  string numeric_representation = 12;
+  string validation_description = 13;
 }
 
-message PresetView {
-  string preset_id = 1;
-  string name = 2;
-  ani.training.v1.ExecutionKind kind = 3;
-  // Resolved from Governance's authority; never a second ModelDev default.
-  string active_release_id = 4;
-  repeated string image_version_ids = 5;
-  repeated ParameterRule parameter_rules = 6;
-  string release_digest = 7;
-  uint64 binding_generation = 8;
-  string parameter_contract_version = 9;
-  repeated ParameterSelection allowed_parameter_sets = 10;
-  FinetuningManagedSettings managed_settings = 11;
+message ImplementationView {
+ string implementation_id = 1; string name = 2; ani.training.v1.ExecutionKind kind = 3;
+ string version = 4; string parameter_contract_version = 5; repeated ParameterRule parameter_rules = 6;
+ repeated string supported_device_modes = 7; bool available = 8;
+ uint64 execution_timeout_default_seconds = 9; uint64 execution_timeout_max_seconds = 10; uint64 step_timeout_seconds = 11;
 }
-
-// Governance supplies its exact current binding. ModelDev may not replace it
-// with the first catalogue Release or maintain a second active pointer.
-message PresetReleaseSelection {
-  string preset_id = 1;
-  string release_id = 2;
-  string release_digest = 3;
-  uint64 binding_generation = 4;
-}
-
-message ListPresetsRequest {
-  PageRequest page = 1;
-  repeated PresetReleaseSelection release_selections = 2;
-}
-
-message ListPresetsResponse {
-  repeated PresetView presets = 1;
-  reserved 2;
-  reserved "next_cursor";
-  // Matching total under the same tenant and filters, independent of the window.
-  uint64 total = 3;
-}
+message ListImplementationsRequest { PageRequest page = 1; }
+message ListImplementationsResponse { repeated ImplementationView implementations = 1; uint64 total = 2; }
 
 // Public metadata omits backend object keys and credentials.
 message InputVersionView {
@@ -360,8 +337,8 @@ message ExecutionView {
   ani.training.v1.ExecutionIdentity identity = 1;
   string name = 2;
   ani.training.v1.ExecutionKind kind = 3;
-  string preset_id = 4;
-  string release_id = 5;
+  reserved 4, 5;
+  reserved "preset_id", "release_id";
   string input_version_id = 6;
   string image_version_id = 7;
   ExecutionStates states = 8;
@@ -373,13 +350,18 @@ message ExecutionView {
   google.protobuf.Timestamp observed_at = 14;
   ErrorDetail failure = 15;
   repeated ani.training.v1.Metric metrics = 16;
-  optional string source_execution_id = 17;
-  string release_digest = 18;
+  reserved 17, 18;
+  reserved "source_execution_id", "release_digest";
   string parameter_contract_version = 19;
   FinetuningParameters explicit_finetuning = 20;
   repeated ani.training.v1.Parameter resolved_parameters = 21;
   FinetuningManagedSettings managed_settings = 22;
   string resolved_configuration_sha256 = 23;
+  string implementation_id = 24;
+  string compute_preset_id = 25;
+  ComputeOrigin compute_origin = 26;
+  ExecutionTiming timing = 27;
+  MLPParameters explicit_mlp = 28;
 }
 
 message GetExecutionRequest {
@@ -487,17 +469,6 @@ message StorageScope {
   string credential_reference = 4;
 }
 
-message ReleaseSnapshot {
-  string release_id = 1;
-  string release_digest = 2;
-  string preset_id = 3;
-  uint64 accepted_binding_generation = 4;
-  string pipeline_id = 5;
-  string pipeline_version_id = 6;
-  string pipeline_ir_sha256 = 7;
-  ani.training.v1.RuntimeRef runtime = 8;
-}
-
 // Immutable after Governance admission. Runtime IDs generated afterwards
 // (Run, Workflow, Pod, PVC, TrainJob, JobSet) are deliberately absent.
 // Hash canonicalization is a versioned business contract, not proto wire bytes.
@@ -505,7 +476,8 @@ message ExecutionSnapshot {
   string schema_version = 1;
   ani.training.v1.ExecutionKind kind = 2;
   ani.training.v1.DeliveryMode delivery_mode = 3;
-  ReleaseSnapshot release = 4;
+  reserved 4;
+  reserved "release";
   ani.training.v1.InputRef input = 5;
   ani.training.v1.ProgramRef program = 6;
   ani.training.v1.CPUResources resources = 7;
@@ -515,6 +487,34 @@ message ExecutionSnapshot {
   ani.training.v1.OutputContract output_contract = 11;
   google.protobuf.Timestamp deadline_at = 12;
   FinetuningSnapshot finetuning = 13;
+  ImplementationSnapshot implementation = 14;
+  IdentityRef identity_ref = 15;
+  ComputeOrigin compute_origin = 16;
+  ExecutionTiming timing = 17;
+  RuntimePlan runtime_plan = 18;
+  GPUPlan gpu = 19;
+}
+
+message StringPair { string key = 1; string value = 2; }
+message GPUExecutionSnapshot {
+  string scheduler_name = 1;
+  string queue_name = 2;
+  string runtime_class_name = 3;
+  repeated StringPair node_selector = 4;
+  repeated StringPair pod_annotations = 5;
+  repeated StringPair resources = 6;
+  string execution_digest = 7;
+}
+message GPUDisplaySnapshot {
+  string profile_id = 1;
+  uint64 profile_version = 2;
+  string profile_name = 3;
+  string model_key = 4;
+  string mode = 5;
+}
+message GPUPlan {
+  GPUExecutionSnapshot execution = 1;
+  GPUDisplaySnapshot display = 2;
 }
 
 message FinetuningManagedSettings {
@@ -564,16 +564,12 @@ message BaseModelRef {
 }
 
 message ComponentBudgets {
-  uint32 prepare_timeout_seconds = 1;
-  uint32 export_timeout_seconds = 2;
-  uint32 verify_timeout_seconds = 3;
-  uint32 collect_timeout_seconds = 4;
-  uint32 publish_timeout_seconds = 5;
+  reserved 1, 2, 3, 4, 5, 10;
+  reserved "prepare_timeout_seconds", "export_timeout_seconds", "verify_timeout_seconds", "collect_timeout_seconds", "publish_timeout_seconds", "training_timeout_seconds";
   uint32 rpc_timeout_seconds = 6;
   int64 max_base_model_bytes = 7;
   int64 max_spool_bytes = 8;
   int64 max_base_model_expanded_bytes = 9;
-  uint32 training_timeout_seconds = 10;
 }
 
 message FinetuningSnapshot {
@@ -590,29 +586,36 @@ message FinetuningSnapshot {
   ComponentBudgets budgets = 11;
 }
 
-// One explicit Governance binding observation, never a request to resolve the
-// latest or default Release. The owner preserves this generation in the result.
-message AdmissionReleaseSelection {
-  string release_id = 1;
-  string release_digest = 2;
-  uint64 binding_generation = 3;
+message IdentityRef {
+ string tenant_id = 1; string actor = 2; string execution_id = 3; string operation_id = 4; string intent_hash = 5;
 }
-
-message ResolveAdmissionRequest {
-  UserIntent intent = 1;
-  AdmissionReleaseSelection release = 2;
-  // Governance fixes this once. Require a valid, nonzero, microsecond-precise
-  // value; resolution and retries cannot extend the resulting deadline.
-  google.protobuf.Timestamp accepted_at = 3;
+message ImplementationSnapshot {
+ string implementation_id = 1; string version = 2; string parameter_contract_version = 3;
+ string pipeline_id = 4; string pipeline_version_id = 5; string pipeline_ir_sha256 = 6;
 }
-
-// Unpersisted candidate only. Governance must independently check this snapshot
-// and hash, then commit its idempotency and binding-generation checks before ACK.
-// Tenant/actor come from authenticated metadata; callers cannot supply facts.
-message ResolveAdmissionResponse {
-  ExecutionSnapshot snapshot = 1;
-  string execution_spec_hash = 2;
+message ComputeOrigin {
+ string compute_preset_id = 1; string selection_digest = 2; bytes selection_canonical = 3;
+ int64 cpu_millis = 4; int64 memory_mib = 5; string device_mode = 6;
 }
+message ExecutionTiming {
+ google.protobuf.Timestamp accepted_at = 1; uint64 execution_timeout_seconds = 2;
+ uint64 execution_timeout_max_seconds = 3; uint64 step_timeout_seconds = 4;
+ google.protobuf.Timestamp execution_deadline_at = 5;
+}
+message RuntimePlan {
+ string generator_version = 1; string api_group = 2; string kind = 3; string namespace = 4; string name = 5;
+ bytes expected_spec_canonical = 6; string expected_spec_sha256 = 7; string defaulting_rules = 8; repeated string target_jobs = 9;
+}
+message PrepareAdmissionRequest {
+ UserIntent intent = 1; IdentityRef identity_ref = 2; google.protobuf.Timestamp accepted_at = 3;
+ bytes compute_selection_canonical = 4; string selection_digest = 5;
+}
+message PrepareAdmissionResponse { bytes candidate_canonical = 1; string candidate_hash = 2; }
+message FinalizeAdmissionRequest {
+ bytes candidate_canonical = 1; string candidate_hash = 2;
+ optional bytes gpu_execution_canonical = 3; optional bytes gpu_display_canonical = 4;
+}
+message FinalizeAdmissionResponse { ExecutionSnapshot snapshot = 1; string execution_spec_hash = 2; }
 
 message AcceptExecutionRequest {
   ani.training.v1.ExecutionIdentity identity = 1;
@@ -696,6 +699,22 @@ message BeginExecutionResponse {
   AuthorityBinding authority = 1;
   ExecutionStates states = 2;
   bool replayed = 3;
+  StepTiming timing = 4;
+}
+
+message StepTiming {
+  PipelineStep role = 1;
+  google.protobuf.Timestamp admitted_at = 2;
+  google.protobuf.Timestamp deadline_at = 3;
+}
+
+message BeginManagedStepRequest {
+  StepContext context = 1;
+}
+
+message BeginManagedStepResponse {
+  StepTiming timing = 1;
+  bool replayed = 2;
 }
 
 message GetExecutionConfigurationRequest {
@@ -715,6 +734,8 @@ message GetExecutionConfigurationResponse {
   // Actual KFP logical task ID resolved from the authenticated current Pod,
   // frozen Run and Workflow membership; never supplied by a callback claim.
   string kfp_task_id = 7;
+  // Read-only original role window; absent before this role was admitted.
+  StepTiming timing = 8;
 }
 
 message GetStorageCredentialsRequest {

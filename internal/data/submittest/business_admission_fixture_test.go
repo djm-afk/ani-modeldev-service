@@ -52,8 +52,8 @@ func prepareMainFlowAdmission(t *testing.T, ctx context.Context, f *completeFixt
 	release := conformance.ReleaseV1()
 	release.ReleaseID, release.PresetID = snapshot.Release.ReleaseID, snapshot.Release.PresetID
 	release.Kind, release.DeliveryMode = snapshot.Kind, snapshot.DeliveryMode
-	release.PipelineID, release.PipelineVersionID = snapshot.Release.PipelineID, snapshot.Release.PipelineVersionID
-	release.PipelineIRSHA256, release.Runtime = snapshot.Release.PipelineIRSHA256, snapshot.Release.Runtime
+	release.PipelineID, release.PipelineVersionID = snapshot.Implementation.PipelineID, snapshot.Implementation.PipelineVersionID
+	release.PipelineIRSHA256, release.Runtime = snapshot.Implementation.PipelineIRSHA256, snapshot.RuntimePlan.Reference()
 	release.Program.ImageVersionID, release.Program.ImageDigest = snapshot.Program.ImageVersionID, f.image
 	release.Program.Command = snapshot.Program.Command
 	// Only this registered test-fixture recipe is selectable here. The user

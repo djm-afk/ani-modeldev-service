@@ -22,8 +22,8 @@
   }],
   "profiles": [{
     "id": "general-training-example", "kind": "GENERAL_TRAINING",
-    "release_file": "/operator-materials/general-training.canonical.json",
-    "release_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "material_file": "/operator-materials/general-training.canonical.json",
+    "material_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "component_image": "example.invalid/modeldev-step@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "allowed_support_images": [
       "example.invalid/argoexec@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -33,8 +33,8 @@
     "ephemeral_storage_request": "1Gi", "ephemeral_storage_limit": "2Gi"
   }, {
     "id": "finetuning-example", "kind": "FINETUNING",
-    "release_file": "/operator-materials/finetuning.canonical.json",
-    "release_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "material_file": "/operator-materials/finetuning.canonical.json",
+    "material_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
     "component_image": "example.invalid/modeldev-finetuning-step@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "allowed_support_images": [
       "example.invalid/argoexec@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",

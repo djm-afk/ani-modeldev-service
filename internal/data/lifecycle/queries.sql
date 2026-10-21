@@ -15,6 +15,22 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid AND execution_id = sqlc.arg(executio
 SELECT facts FROM modeldev_execution_runtimes
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid AND execution_id = sqlc.arg(execution_id)::uuid;
 
+-- name: GetGPUReleaseAnchor :one
+SELECT gpu_release_sealed_at, gpu_release_scope_sha256
+FROM modeldev_execution_runtimes
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid AND execution_id = sqlc.arg(execution_id)::uuid;
+
+-- Called under the original identity lock, after durable close and cleanup.
+-- Anchor and full JSON facts commit in this same first-seal statement.
+-- name: SealGPUReleaseFacts :execrows
+UPDATE modeldev_execution_runtimes
+SET gpu_release_sealed_at = sqlc.arg(sealed_at)::timestamptz,
+    gpu_release_scope_sha256 = sqlc.arg(scope_sha256)::text,
+    facts = sqlc.arg(facts)::jsonb
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid AND execution_id = sqlc.arg(execution_id)::uuid
+  AND gpu_release_sealed_at IS NULL AND gpu_release_scope_sha256 IS NULL
+  AND closed_at IS NOT NULL;
+
 -- The shared close fence and DB deadline are checked again in the statement
 -- that persists a new workspace or training creation intent.
 -- name: SaveRuntimeFacts :execrows
@@ -75,14 +91,39 @@ WHERE admitted.tenant_id = sqlc.arg(tenant_id)::uuid
   AND (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'environment') = sqlc.arg(environment)::jsonb
   AND ((runtime.closed_at IS NULL AND
         (identity.close_generation > 0 OR
-         (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz <= clock_timestamp()))
+         (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz <= clock_timestamp()
+         OR ((runtime.facts -> 'TrainingWindow' ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
+             AND (COALESCE(runtime.facts -> 'Observation' ->> 'WritersAbsent', 'false') <> 'true'
+                  OR COALESCE(runtime.facts -> 'Observation' ->> 'Outcome', 'UNKNOWN') IN ('UNKNOWN', 'RUNNING')))
+         OR EXISTS (
+           SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS step
+           WHERE (step ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
+             AND CASE step -> 'Binding' ->> 'Role'
+               WHEN 'prepare' THEN runtime.facts -> 'TrainingWindow' IS NULL
+               WHEN 'collect' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'publish')
+               WHEN 'publish' THEN CASE WHEN convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'kind' = 'FINETUNING'
+                 THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'register')
+                 ELSE runtime.facts -> 'Publication' = 'null'::jsonb OR runtime.facts -> 'Publication' IS NULL END
+               WHEN 'register' THEN COALESCE(runtime.facts -> 'FinetuningRegistration' ->> 'State', 'PENDING') NOT IN ('READY', 'DEPENDENCY_UNAVAILABLE')
+               ELSE false END)
+         OR EXISTS (
+           SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'FinetuningSteps', '[]'::jsonb)) AS step
+           WHERE (step ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
+             AND CASE step -> 'Binding' ->> 'Role'
+               WHEN 'export' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'FinetuningSteps', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'verify')
+               WHEN 'verify' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'collect')
+               ELSE false END)))
        OR (runtime.closed_at IS NOT NULL
            AND COALESCE(runtime.facts -> 'CloseEvidence' ->> 'NoDispatch', 'false') <> 'true'
            AND (runtime.facts -> 'StepExitCleanup' ->> 'CompletedAt' IS NULL
                 OR runtime.facts -> 'ComputeCleanup' IS NULL
                 OR (runtime.facts -> 'ComputeCleanup' ->> 'phase' <> 'APPLIED'
                     AND (COALESCE((runtime.facts -> 'ComputeCleanup' ->> 'attempts')::integer, 0) < 3
-                         OR runtime.facts -> 'ComputeCleanup' ->> 'phase' = 'STARTED')))))
+                         OR runtime.facts -> 'ComputeCleanup' ->> 'phase' = 'STARTED'))))
+       OR (runtime.closed_at IS NOT NULL
+           AND convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'gpu' IS NOT NULL
+           AND convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'gpu' <> 'null'::jsonb
+           AND runtime.facts -> 'GPURelease' -> 'outbox' ->> 'delivered_at' IS NULL))
   AND (sqlc.narg(after_execution_id)::uuid IS NULL OR admitted.execution_id > sqlc.narg(after_execution_id)::uuid)
 ORDER BY admitted.execution_id
 LIMIT sqlc.arg(batch_size)::integer;

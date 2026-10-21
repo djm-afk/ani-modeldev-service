@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"os"
 	"strconv"
 	"strings"
@@ -34,11 +35,10 @@ func finetuningRuntimeFixture(t *testing.T, lifetime time.Duration) (func() *pgx
 	if err != nil {
 		t.Fatal(err)
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
+	specHash := ""
 	admission := biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:synthetic-fixture", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: accepted}
+	admission = admissionfixture.Bind(t, admission)
+	snapshot = admission.Snapshot
 	pool := open()
 	ctx := context.Background()
 	if _, err := execution.New(pool).Accept(ctx, admission); err != nil {
@@ -54,11 +54,12 @@ func finetuningRuntimeFixture(t *testing.T, lifetime time.Duration) (func() *pgx
 	}
 	repository := lifecycle.New(pool)
 	w := snapshot.Workspace
-	workspace := biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, PVCName: "finetuning-fixture-workspace", PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	startManagedRoleV21(t, repository, authority, "prepare")
 	if _, _, err := repository.RecordPrepared(ctx, authority, workspace); err != nil {
 		t.Fatal(err)
 	}
-	training, err := repository.ReserveTraining(ctx, authority)
+	training, err := reserveTrainingV21(t, repository, ctx, authority)
 	if err != nil || !training.SendPermit {
 		t.Fatal(err)
 	}
@@ -299,7 +300,7 @@ func TestFinetuningStepMultiOwnerGrantsEachRoleExactlyOnce(t *testing.T) {
 	if permits != 1 {
 		t.Fatal("multiple owners granted", permits)
 	}
-	want := original.AdmittedAt.Add(time.Duration(admission.Snapshot.Finetuning.Budgets.ExportTimeoutSeconds) * time.Second)
+	want := original.AdmittedAt.Add(time.Duration(admission.Snapshot.Timing.StepTimeoutSeconds) * time.Second)
 	if !original.DeadlineAt.Equal(want) {
 		t.Fatal("step budget was not frozen from DB admission time")
 	}

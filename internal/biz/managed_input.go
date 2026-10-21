@@ -31,7 +31,7 @@ func (verified VerifiedCSV) ValidateFor(request InputImport) error {
 	object, expected := verified.Object, request.Object
 	when := verified.VerifiedAt.UTC()
 	if request.Validate() != nil || request.InputFormat() != "CSV" || when.IsZero() || when.Year() < 1 || when.Year() > 9999 || when.Before(request.RequestedAt) ||
-		verified.SchemaVersion != "ani.cpu.csv.v1" || verified.RowCount != 1024 || verified.FeatureCount != 16 ||
+		verified.SchemaVersion != "ani.cpu.csv.v1" || verified.RowCount == 0 || verified.FeatureCount != 16 ||
 		object.StorageConnectionID != expected.StorageConnectionID || object.Bucket != expected.Bucket || object.Key != expected.Key ||
 		object.VersionID == nil || expected.VersionID == nil || *object.VersionID != *expected.VersionID || object.ImmutableCopy != nil ||
 		object.SizeBytes != expected.SizeBytes || object.SHA256 != expected.SHA256 {

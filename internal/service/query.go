@@ -151,23 +151,39 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if !valid {
 		return nil, biz.ErrPersistence
 	}
-	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, PresetId: value.Snapshot.Release.PresetID, ReleaseId: value.Snapshot.Release.ReleaseID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: value.Snapshot.Program.ImageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: value.Snapshot.Program.ImageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	view.ParameterContractVersion = value.Snapshot.Implementation.ParameterContractVersion
+	encoded, err := contractpb.EncodeSnapshot(value.Snapshot)
+	if err != nil {
+		return nil, biz.ErrPersistence
+	}
+	view.ComputeOrigin = encoded.ComputeOrigin
+	view.Timing = encoded.Timing
+	if value.Intent.MLP != nil {
+		typed, err := contractpb.EncodeIntent(value.Intent)
+		if err != nil {
+			return nil, biz.ErrPersistence
+		}
+		view.ExplicitMlp = typed.GetMlp()
+		for _, p := range value.Snapshot.Program.ResolvedParameters {
+			wire := parameterView(p)
+			if wire == nil {
+				return nil, biz.ErrPersistence
+			}
+			view.ResolvedParameters = append(view.ResolvedParameters, wire)
+		}
+	}
 	if fine := value.Snapshot.Finetuning; fine != nil {
 		if value.Snapshot.Kind != "FINETUNING" || value.Intent.Finetuning == nil {
 			return nil, biz.ErrPersistence
 		}
 		view.Kind = trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING
-		view.ReleaseDigest = value.Snapshot.Release.ReleaseDigest
 		view.ParameterContractVersion = cpup01.FinetuningParameterContractVersion
-		view.ExplicitFinetuning = &modeldevv1.FinetuningParameters{}
-		if p := value.Intent.Finetuning.LearningRate; p != nil {
-			v := *p
-			view.ExplicitFinetuning.LearningRate = &v
+		typedIntent, err := contractpb.EncodeIntent(value.Intent)
+		if err != nil {
+			return nil, biz.ErrPersistence
 		}
-		if p := value.Intent.Finetuning.MaxSteps; p != nil {
-			v := *p
-			view.ExplicitFinetuning.MaxSteps = &v
-		}
+		view.ExplicitFinetuning = typedIntent.GetSftLora()
 		for _, p := range value.Snapshot.Program.ResolvedParameters {
 			wire := parameterView(p)
 			if wire == nil {

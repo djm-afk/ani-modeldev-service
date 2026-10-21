@@ -48,7 +48,7 @@ func registrationReadyFixture(t *testing.T) (func() *pgxpool.Pool, biz.Admission
 			t.Fatal("step result", err)
 		}
 	}
-	if _, _, err := repository.RecordPublication(ctx, authority, publicationFixture(t, admission, authority)); err != nil {
+	if _, _, err := recordPublicationV21(t, repository, ctx, authority, publicationFixture(t, admission, authority)); err != nil {
 		t.Fatal("publication", err)
 	}
 	if _, replayed, err := repository.RecordRegistrationIntent(ctx, authority); err != nil || replayed {
@@ -76,9 +76,16 @@ func TestRegistrationIntentIsFixedBeforeFirstWrite(t *testing.T) {
 	if intent.State != biz.RegistrationStatePending || intent.FailureCode != "" || len(intent.Dispatches) != 0 || intent.ContentSHA256 == "" {
 		t.Fatalf("intent is not a bare original fact: %+v", intent)
 	}
-	// The whole registration budget is fixed once, at intent time, and is never
-	// re-claimed by a later dispatch.
-	want := intent.RecordedAt.Add(time.Duration(admission.Snapshot.Finetuning.Budgets.RPCTimeoutSeconds) * time.Second)
+	// Each write consumes the original REGISTER window; an RPC limit cannot
+	// replace or renew that window at intent/dispatch time.
+	window := biz.TimingForManagedRole(state, "register")
+	if window == nil {
+		t.Fatal("missing original REGISTER window")
+	}
+	want, err := admission.Snapshot.Timing.DeadlineFor(window.AdmittedAt)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !intent.DeadlineAt.Equal(want) {
 		t.Fatalf("registration budget was not frozen at intent time: %v != %v", intent.DeadlineAt, want)
 	}

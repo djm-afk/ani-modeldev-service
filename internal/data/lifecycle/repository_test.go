@@ -3,6 +3,7 @@ package lifecycle_test
 import (
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"strings"
 	"testing"
 	"time"
@@ -27,16 +28,15 @@ func runtimeFixture(t *testing.T, lifetime ...time.Duration) (func() *pgxpool.Po
 	if len(lifetime) != 0 {
 		snapshot.DeadlineAt = accepted.Add(lifetime[0])
 	}
-	intent := cpup01.Intent{Name: "main-runtime", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := cpup01.Intent{Name: "main-runtime", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
+	specHash := ""
 	admission := biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: accepted}
+	admission = admissionfixture.Bind(t, admission)
+	snapshot = admission.Snapshot
 	pool := open()
 	ctx := context.Background()
 	if _, err = execution.New(pool).Accept(ctx, admission); err != nil {
@@ -51,7 +51,8 @@ func runtimeFixture(t *testing.T, lifetime ...time.Duration) (func() *pgxpool.Po
 	if _, err = repository.BindRunAuthority(ctx, authority); err != nil {
 		t.Fatal("runtime preflight authority", err)
 	}
-	workspace := biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "main-runtime-workspace", PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	startManagedRoleV21(t, lifecycle.New(pool), authority, "prepare")
 	t.Log("RUNTIME_PREFLIGHT PASS: real restricted PostgreSQL admission, dispatch and Run authority")
 	return open, admission, authority, workspace
 }
@@ -69,13 +70,13 @@ func TestRuntimePersistsPrepareTrainingPublicationAndCloseAcrossReconnect(t *tes
 	if replayed || prepared.Workspace == nil || *prepared.Workspace != workspace {
 		t.Fatal("prepared receipt mismatch")
 	}
-	reserved, err := repository.ReserveTraining(ctx, authority)
+	reserved, err := reserveTrainingV21(t, repository, ctx, authority)
 	if err != nil || !reserved.SendPermit || reserved.State.Training == nil || reserved.State.Training.RequestSHA256 == "" {
 		t.Fatalf("first training creation did not receive committed intent and unique permit: %v", err)
 	}
 	pool.Close()
 	repository = lifecycle.New(open())
-	repeated, err := repository.ReserveTraining(ctx, authority)
+	repeated, err := reserveTrainingV21(t, repository, ctx, authority)
 	if err != nil || repeated.SendPermit || repeated.State.Training == nil || repeated.State.Training.RequestSHA256 != reserved.State.Training.RequestSHA256 {
 		t.Fatalf("reconnect repeated training permission or changed frozen plan: %v", err)
 	}
@@ -89,11 +90,11 @@ func TestRuntimePersistsPrepareTrainingPublicationAndCloseAcrossReconnect(t *tes
 		t.Fatal(err)
 	}
 	publication := publicationFixture(t, admission, authority)
-	published, replayed, err := repository.RecordPublication(ctx, authority, publication)
+	published, replayed, err := recordPublicationV21(t, repository, ctx, authority, publication)
 	if err != nil || replayed || published.Publication == nil {
 		t.Fatalf("verified publication was not committed: %v", err)
 	}
-	if _, replayed, err = repository.RecordPublication(ctx, authority, publication); err != nil || !replayed {
+	if _, replayed, err = recordPublicationV21(t, repository, ctx, authority, publication); err != nil || !replayed {
 		t.Fatalf("publication replay changed the main publication: %v", err)
 	}
 	closing, replayed, err := repository.RequestRuntimeClose(ctx, authority, "NATURAL_TERMINAL")
@@ -133,7 +134,7 @@ func TestRuntimeCloseBeforeTrainingRejectsCreationPermit(t *testing.T) {
 	if _, err := execution.New(pool).ApplyCloseIntent(ctx, biz.CloseIntent{TenantID: admission.TenantID, ExecutionID: admission.ExecutionID, OperationID: admission.OperationID, SpecHash: admission.SpecHash, SourceGeneration: 1, Reason: biz.CloseReasonUserStop, RequestedAt: time.Now().UTC().Truncate(time.Microsecond), RequestedActor: admission.Actor}); err != nil {
 		t.Fatal(err)
 	}
-	receipt, err := repository.ReserveTraining(ctx, authority)
+	receipt, err := reserveTrainingV21(t, repository, ctx, authority)
 	if !errors.Is(err, biz.ErrPipelineDispatchBlocked) || receipt.SendPermit {
 		t.Fatalf("stop-before-create granted a new training permit: %v", err)
 	}

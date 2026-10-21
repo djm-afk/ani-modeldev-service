@@ -19,6 +19,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,9 +33,10 @@ import (
 func newClosedRecoveryCleanupFixture(t *testing.T) (*computeCleanupFixture, biz.ExecutionRuntime) {
 	t.Helper()
 	f := newOwnerCloseFixture(t)
-	runtimeObject := computeRuntime(t, f)
 	f.execution.AcceptedAt = time.Now().UTC().Truncate(time.Microsecond)
 	f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(time.Hour)
+	f.execution.Admission = admissionfixture.Bind(t, f.execution.Admission)
+	runtimeObject := computeRuntime(t, f)
 	var err error
 	f.execution.SpecHash, err = f.execution.Snapshot.Digest()
 	if err != nil {

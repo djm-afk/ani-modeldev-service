@@ -112,17 +112,22 @@ def empty_output(path):
     return path
 
 
-def runtime():
+def runtime(device="cpu"):
     versions = {package: importlib.metadata.version(package) for package in RUNTIME}
-    if versions != RUNTIME:
+    expected = dict(RUNTIME)
+    if versions["torch"] == "2.6.0+cu124":
+        expected["torch"] = "2.6.0+cu124"
+    if versions != expected:
         raise ValueError(f"runtime versions differ from the locked mapping: {versions}")
     if os.environ.get("WORLD_SIZE", "1") != "1":
-        raise ValueError("CPU LoRA requires one process")
+        raise ValueError("LoRA requires one process")
     import torch
 
-    if torch.cuda.is_available():
-        raise ValueError("this managed recipe is CPU only")
-    torch.set_num_threads(4)
+    if device == "cuda" and (
+        not torch.cuda.is_available() or torch.cuda.device_count() != 1
+    ):
+        raise ValueError("CUDA LoRA requires exactly one available CUDA device")
+    torch.set_num_threads(2)
     return versions
 
 
@@ -137,8 +142,8 @@ def inputs(args):
     ):
         raise ValueError("selected data does not match frozen bytes/SHA")
     rows = json.loads(contents)
-    if not isinstance(rows, list) or len(rows) != 64:
-        raise ValueError("this Release requires exactly 64 Alpaca samples")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("LoRA requires a nonempty Alpaca array")
     for row in rows:
         if not isinstance(row, dict) or set(row) != {"instruction", "input", "output"}:
             raise ValueError(
@@ -212,7 +217,7 @@ def factory_arguments(workspace, configuration, output):
             "learning_rate": float(p["learning_rate"]),
             "max_steps": int(p["max_steps"]),
             "do_train": True,
-            "use_cpu": True,
+            "use_cpu": managed["device"] == "cpu",
             "overwrite_output_dir": False,
             "trust_remote_code": False,
             "preprocessing_num_workers": 1,
@@ -258,12 +263,33 @@ def effective_projection(parsed):
     actual["lora_dropout"] = decimal_text(finetuning.lora_dropout)
     actual["train_dtype"] = str(model.compute_dtype).removeprefix("torch.")
     # export/verify have their own separately enforced float32 loaders.
-    return projection(training.learning_rate, training.max_steps, actual)
+    parameters = {
+        key: actual[key]
+        for key in actual
+        if key in MANAGED
+        and key
+        in {
+            "per_device_train_batch_size",
+            "gradient_accumulation_steps",
+            "cutoff_len",
+            "lora_rank",
+            "lora_alpha",
+            "lora_dropout",
+            "seed",
+        }
+    }
+    return projection(
+        training.learning_rate,
+        training.max_steps,
+        actual,
+        parameters=parameters,
+        device=actual["device"],
+    )
 
 
 def train(args):
     workspace, configuration, source_samples = inputs(args)
-    versions = runtime()
+    versions = runtime(configuration["managed_settings"]["device"])
     reports = empty_output(workspace / "reports/train")
     adapter = empty_output(workspace / "training/adapter")
     from transformers import TrainerCallback
@@ -272,8 +298,12 @@ def train(args):
     from llamafactory.model.patcher import patch_config
     from llamafactory.train.sft import workflow as sft_workflow
     from llamafactory.train.sft import run_sft
+    from llamafactory.data.processor import supervised as supervised_processor
 
     started, steps, samples, dtypes, losses = time.monotonic(), 0, None, [], []
+    token_lengths = []
+    actual_device = None
+    truncated_samples, truncated_tokens = 0, 0
     effective = None
     status, error = "FAILED", None
     with tempfile.TemporaryDirectory(prefix="ani-finetune-") as factory_output:
@@ -285,9 +315,21 @@ def train(args):
         # before loading weights, then pass the same parsed objects to run_sft.
         # No dtype is guessed from fp16/bf16 flags or copied from the request.
         tokenizer = load_tokenizer(parsed[0])["tokenizer"]
-        patch_config(
-            load_config(parsed[0]), tokenizer, parsed[0], {}, is_trainable=True
-        )
+        model_configuration = load_config(parsed[0])
+        cutoff = configuration["managed_settings"]["cutoff_len"]
+        context_limits = [
+            value
+            for value in (
+                getattr(model_configuration, "max_position_embeddings", None),
+                getattr(tokenizer, "model_max_length", None),
+            )
+            if isinstance(value, int) and 0 < value < 9223372036854775807
+        ]
+        if not context_limits or cutoff > min(context_limits):
+            raise ValueError(
+                "cutoff_len exceeds the resolved model/tokenizer context limit"
+            )
+        patch_config(model_configuration, tokenizer, parsed[0], {}, is_trainable=True)
         effective = effective_projection(parsed)
         if canonical(effective) != canonical(configuration):
             raise ValueError(
@@ -307,18 +349,22 @@ def train(args):
                     train_dataloader=None,
                     **kwargs,
                 ):
-                    nonlocal samples, dtypes
+                    nonlocal samples, dtypes, actual_device
                     dtypes = sorted(
                         {
                             str(p.dtype).removeprefix("torch.")
                             for p in model.parameters()
                         }
                     )
-                    if samples != source_samples or dtypes != [
+                    devices = sorted({p.device.type for p in model.parameters()})
+                    if devices != [configuration["managed_settings"]["device"]]:
+                        raise ValueError("actual model parameters are on a different device")
+                    actual_device = devices[0]
+                    if not samples or dtypes != [
                         configuration["managed_settings"]["train_dtype"]
                     ]:
                         raise ValueError(
-                            "preprocessing dropped rows or model dtype differs from the locked recipe"
+                            "no effective samples or model dtype differs from the frozen implementation"
                         )
 
                 def on_optimizer_step(self, args, state, control, **kwargs):
@@ -360,16 +406,34 @@ def train(args):
                 # result exactly once, forwarding that same object unchanged
                 # to its Trainer. This is observation, never a dataset double.
                 original_get_dataset = sft_workflow.get_dataset
+                original_infer_seqlen = supervised_processor.infer_seqlen
+
+                def observe_truncation(source_length, target_length, cutoff_length):
+                    nonlocal truncated_samples, truncated_tokens
+                    lengths = original_infer_seqlen(
+                        source_length, target_length, cutoff_length
+                    )
+                    removed = source_length + target_length - sum(lengths)
+                    truncated_samples += int(removed > 0)
+                    truncated_tokens += removed
+                    return lengths
 
                 def observe_dataset(*dataset_args, **dataset_kwargs):
-                    nonlocal samples
+                    nonlocal samples, token_lengths
                     datasets = original_get_dataset(*dataset_args, **dataset_kwargs)
-                    samples = len(datasets["train_dataset"])
-                    if samples != source_samples:
-                        raise ValueError("framework preprocessing dropped source rows")
+                    actual_dataset = datasets["train_dataset"]
+                    samples = len(actual_dataset)
+                    token_lengths = [len(row["input_ids"]) for row in actual_dataset]
+                    if not samples or any(
+                        length < 1 or length > cutoff for length in token_lengths
+                    ):
+                        raise ValueError(
+                            "preprocessed training data is empty or violates cutoff_len"
+                        )
                     return datasets
 
                 sft_workflow.get_dataset = observe_dataset
+                supervised_processor.infer_seqlen = observe_truncation
                 run_sft(*parsed, callbacks=[Callback()])
                 if steps != parsed[2].max_steps or not losses:
                     raise ValueError(
@@ -409,11 +473,23 @@ def train(args):
                 raise
             finally:
                 sft_workflow.get_dataset = original_get_dataset
+                supervised_processor.infer_seqlen = original_infer_seqlen
                 summary = {
                     "schema": "ani.finetune.summary.v1",
                     "status": status,
                     "samples": samples,
                     "source_samples": source_samples,
+                    "dropped_samples": None
+                    if samples is None
+                    else source_samples - samples,
+                    "effective_token_count": sum(token_lengths),
+                    "samples_at_cutoff": sum(
+                        length == configuration["managed_settings"]["cutoff_len"]
+                        for length in token_lengths
+                    ),
+                    "max_effective_tokens": max(token_lengths, default=0),
+                    "truncated_samples": truncated_samples,
+                    "truncated_tokens": truncated_tokens,
                     "optimizer_steps": steps,
                     "steps": steps,
                     "metric_samples": len(losses),
@@ -426,7 +502,7 @@ def train(args):
                     "resolved_configuration_sha256": digest(configuration),
                     "effective_configuration": effective,
                     "effective_configuration_sha256": digest(effective),
-                    "device": "cpu",
+                    "device": actual_device,
                     "train_dtypes": dtypes,
                     "adapter_dtype": "float32" if status == "SUCCEEDED" else None,
                     "runtime_versions": versions,
@@ -436,8 +512,11 @@ def train(args):
                     ),
                     "error": error,
                 }
-                summary["learning_rate"] = effective["parameters"][0]["value"]
-                summary["max_steps"] = int(effective["parameters"][1]["value"])
+                effective_parameters = {
+                    p["name"]: p["value"] for p in effective["parameters"]
+                }
+                summary["learning_rate"] = effective_parameters["learning_rate"]
+                summary["max_steps"] = int(effective_parameters["max_steps"])
                 summary["recipe_sha256"] = digest(configuration["managed_settings"])
                 summary["adapter_files"] = (
                     inventory(adapter) if status == "SUCCEEDED" else []
@@ -466,6 +545,10 @@ def export(args):
     if (
         summary["status"] != "SUCCEEDED"
         or summary["resolved_configuration_sha256"] != digest(configuration)
+        or summary["input_sha256"] != args.expected_input_sha256
+        or association["input_sha256"] != args.expected_input_sha256
+        or association["resolved_configuration_sha256"] != digest(configuration)
+        or summary["adapter_files"] != inventory(workspace / "training/adapter")
         or association["files"] != inventory(workspace / "training/adapter")
         or association["base_manifest_sha256"] != args.expected_base_manifest_sha256
     ):
@@ -507,6 +590,12 @@ def export(args):
         reports / "merged_manifest.json",
         {
             "schema": "ani.finetune.merged-manifest.v1",
+            "input_sha256": args.expected_input_sha256,
+            "base_manifest_sha256": args.expected_base_manifest_sha256,
+            "adapter_manifest_sha256": file_digest(
+                workspace / "reports/train/adapter_manifest.json"
+            )["sha256"],
+            "adapter_files": inventory(workspace / "training/adapter"),
             "resolved_configuration_sha256": digest(configuration),
             "dtype": "float32",
             "files": inventory(merged),
@@ -535,9 +624,15 @@ def verify(args):
     manifest = json.loads(
         read_regular(workspace / "reports/export/merged_manifest.json", 65536)
     )
-    if manifest["files"] != inventory(merged) or manifest[
-        "resolved_configuration_sha256"
-    ] != digest(configuration):
+    if (
+        manifest["files"] != inventory(merged)
+        or manifest["resolved_configuration_sha256"] != digest(configuration)
+        or manifest["input_sha256"] != args.expected_input_sha256
+        or manifest["base_manifest_sha256"] != args.expected_base_manifest_sha256
+        or manifest["adapter_manifest_sha256"]
+        != file_digest(workspace / "reports/train/adapter_manifest.json")["sha256"]
+        or manifest["adapter_files"] != inventory(workspace / "training/adapter")
+    ):
         raise ValueError("merged files differ from this execution's export evidence")
     reports = empty_output(workspace / "reports/verify")
     import torch

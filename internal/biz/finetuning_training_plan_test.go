@@ -1,84 +1,66 @@
 package biz_test
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
 func trainingPlanAdmission(t *testing.T, fine bool) (biz.Execution, biz.WorkspaceBinding) {
 	t.Helper()
-	snapshot, intent := conformance.SnapshotV1(), conformance.IntentV1()
+	s, i := conformance.SnapshotV1(), conformance.IntentV1()
 	if fine {
-		snapshot, intent = conformance.FinetuningSnapshotV1(), conformance.FinetuningIntentV1()
-	} else {
-		intent = cpup01.Intent{Name: "training-plan-fixture", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+		s, i = conformance.FinetuningSnapshotV1(), conformance.FinetuningIntentV1()
 	}
-	_, intentHash, err := cpup01.CanonicalIntent(intent)
-	if err != nil {
-		t.Fatal(err)
-	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
-	execution := biz.Execution{Admission: biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:synthetic-fixture", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: snapshot.DeadlineAt.Add(-3 * time.Hour)}}
-	w := snapshot.Workspace
-	workspace := biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "training-plan-fixture", PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
-	return execution, workspace
+	id := s.IdentityRef
+	a := admissionfixture.Bind(t, biz.Admission{TenantID: id.TenantID, Actor: id.Actor, OperationID: id.OperationID, ExecutionID: id.ExecutionID, Intent: i, Snapshot: s, AcceptedAt: s.DeadlineAt.Add(-3 * time.Hour)})
+	w := s.Workspace
+	return biz.Execution{Admission: a}, biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: s.Environment.NamespaceName, NamespaceUID: s.Environment.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(a.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 }
 
-func TestFinetuningTrainingPlanNeedsOneOriginalAdmittedTime(t *testing.T) {
-	execution, workspace := trainingPlanAdmission(t, true)
-	if _, err := biz.FreezeTrainingPlan(execution, workspace); err == nil {
-		t.Fatal("TRAIN started without an admitted database time")
-	}
-	start := execution.Snapshot.DeadlineAt.Add(-2 * time.Hour)
-	plan, err := biz.FreezeTrainingPlan(execution, workspace, start)
-	if err != nil || plan.FinetuningTiming == nil || !plan.FinetuningTiming.AdmittedAt.Equal(start) || !plan.FinetuningTiming.DeadlineAt.Equal(start.Add(time.Hour)) {
-		t.Fatalf("incorrect shared TRAIN budget: %+v / %v", plan, err)
-	}
-	replayed, err := biz.FreezeTrainingPlan(execution, workspace, plan.FinetuningTiming.AdmittedAt)
-	if err != nil || replayed.RequestSHA256 != plan.RequestSHA256 {
-		t.Fatal("original admission did not recreate the immutable lookup shape", err)
-	}
-	late, err := biz.FreezeTrainingPlan(execution, workspace, start.Add(time.Minute))
-	if err != nil || late.RequestSHA256 == plan.RequestSHA256 {
-		t.Fatal("renewed timing did not change the request identity", err)
+func TestEveryTrainingPlanNeedsAnOriginalAdmittedTimeAndUsesTheFrozenStepWindow(t *testing.T) {
+	for _, fine := range []bool{false, true} {
+		execution, workspace := trainingPlanAdmission(t, fine)
+		if _, err := biz.FreezeTrainingPlan(execution, workspace); err == nil {
+			t.Fatal("TRAIN started without its original admitted time")
+		}
+		start := execution.AcceptedAt.Add(time.Minute)
+		plan, err := biz.FreezeTrainingPlan(execution, workspace, start)
+		want, _ := execution.Snapshot.Timing.DeadlineFor(start)
+		if err != nil || plan.Timing == nil || !plan.Timing.AdmittedAt.Equal(start) || !plan.Timing.DeadlineAt.Equal(want) {
+			t.Fatalf("incorrect common TRAIN budget: %+v / %v", plan, err)
+		}
+		replay, err := biz.FreezeTrainingPlan(execution, workspace, start)
+		if err != nil || replay.RequestSHA256 != plan.RequestSHA256 {
+			t.Fatal("original timing changed request identity", err)
+		}
+		renewed, err := biz.FreezeTrainingPlan(execution, workspace, start.Add(time.Second))
+		if err != nil || renewed.RequestSHA256 == plan.RequestSHA256 {
+			t.Fatal("different timing escaped the request digest", err)
+		}
 	}
 }
 
-func TestCPUTrainingPlanOptionalTimingPreservesHistoricalPayloadAndHash(t *testing.T) {
-	execution, workspace := trainingPlanAdmission(t, false)
-	plan, err := biz.FreezeTrainingPlan(execution, workspace)
-	if err != nil || plan.FinetuningTiming != nil {
-		t.Fatal(err)
-	}
-	// Encode the exact pre-feature struct, rather than pinning a newly generated
-	// hash that could silently bless an accidental CPU serialization change.
-	legacy := struct {
-		TenantID, OperationID, ExecutionID, SpecHash string
-		Name, RequestSHA256                          string
-		Snapshot                                     cpup01.Snapshot
-		Workspace                                    biz.WorkspaceBinding
-	}{plan.TenantID, plan.OperationID, plan.ExecutionID, plan.SpecHash, plan.Name, "", plan.Snapshot, plan.Workspace}
-	bytes, err := json.Marshal(legacy)
+func TestObservedRuntimeBindingChangesOnlyInternalRequestIdentity(t *testing.T) {
+	e, w := trainingPlanAdmission(t, false)
+	plan, err := biz.FreezeTrainingPlan(e, w, e.AcceptedAt)
 	if err != nil {
 		t.Fatal(err)
 	}
-	hash := sha256.Sum256(bytes)
-	if plan.RequestSHA256 != hex.EncodeToString(hash[:]) {
-		t.Fatal("new optional timing changed the legacy CPU request hash")
+	binding := biz.RuntimeTemplateBinding{NamespaceUID: w.NamespaceUID, Name: e.Snapshot.RuntimePlan.Name, UID: "eeeeeeee-ffff-4111-8222-333333333333", ObservedSpecSHA256: e.Snapshot.RuntimePlan.ExpectedSpecSHA256}
+	bound, err := biz.BindTrainingRuntime(plan, binding)
+	if err != nil || bound.RequestSHA256 == plan.RequestSHA256 || bound.SpecHash != plan.SpecHash {
+		t.Fatal("Runtime UID was not separated from frozen spec", err)
 	}
-	replayed, err := biz.FreezeTrainingPlan(execution, workspace, execution.AcceptedAt)
-	if err != nil || replayed.RequestSHA256 != plan.RequestSHA256 || replayed.FinetuningTiming != nil {
-		t.Fatal("repository clock changed a CPU plan", err)
+	hash, err := bound.Snapshot.Digest()
+	if err != nil || hash != e.SpecHash {
+		t.Fatal("observed binding rewrote immutable snapshot", err)
+	}
+	binding.ObservedSpecSHA256 = strings.Repeat("0", 64)
+	if _, err := biz.BindTrainingRuntime(plan, binding); err == nil {
+		t.Fatal("drifted Runtime was bound")
 	}
 }

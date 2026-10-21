@@ -7,13 +7,25 @@ import (
 	"strings"
 )
 
-// encodeCanonicalJSON preserves v1 UTF-8 JSON bytes without HTML escapes or a
-// trailing newline. Callers validate and order their own contract fields first.
+// encodeCanonicalJSON writes lexical object keys and UTF-8 JSON without HTML
+// escapes or a trailing newline. Callers validate their finite contract first.
 func encodeCanonicalJSON(value any) ([]byte, error) {
+	// Decode with UseNumber so all nested objects use lexical key order without
+	// rounding int64 values through float64. This is shared with Python vectors.
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var normalized any
+	if err := decoder.Decode(&normalized); err != nil {
+		return nil, err
+	}
 	var buffer bytes.Buffer
 	encoder := json.NewEncoder(&buffer)
 	encoder.SetEscapeHTML(false)
-	if err := encoder.Encode(value); err != nil {
+	if err := encoder.Encode(normalized); err != nil {
 		return nil, err
 	}
 	return bytes.TrimSuffix(buffer.Bytes(), []byte("\n")), nil

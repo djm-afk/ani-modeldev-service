@@ -44,7 +44,7 @@ func TestFinetuningMissingProviderRequiresPublicationAndKeepsOriginalIntent(t *t
 		}
 	}
 	publication := publicationFixture(t, admission, authority)
-	if _, _, err := repository.RecordPublication(ctx, authority, publication); err != nil {
+	if _, _, err := recordPublicationV21(t, repository, ctx, authority, publication); err != nil {
 		t.Fatal(err)
 	}
 	first, replayed, err := repository.RecordRegistrationUnavailable(ctx, authority)

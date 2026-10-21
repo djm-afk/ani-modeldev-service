@@ -50,7 +50,7 @@ func TestAdmissionMaterialsOmittedKeepsDurableCommandsWithoutAdmission(t *testin
 	if err != nil || stored.OperationID != request.Identity.OperationId || stored.SpecHash != request.Identity.ExecutionSpecHash || stored.SourceGeneration != 41 || stored.Generation != 1 {
 		t.Fatalf("ADMISSION_MATERIAL_BEHAVIOR: command ACK lacks the independently visible original close: %v", err)
 	}
-	response, err := modeldevv1.NewModelDevAdmissionServiceClient(connection).ResolveAdmission(rpcContext, &modeldevv1.ResolveAdmissionRequest{})
+	response, err := modeldevv1.NewModelDevAdmissionServiceClient(connection).PrepareAdmission(rpcContext, &modeldevv1.PrepareAdmissionRequest{})
 	if response != nil || status.Code(err) != codes.Unimplemented || status.Convert(err).Message() != "unknown service ani.modeldev.v1.ModelDevAdmissionService" {
 		t.Fatalf("ADMISSION_MATERIAL_BEHAVIOR: omitted admission was registered or request failed outside the live command listener (code=%s)", status.Code(err))
 	}
@@ -130,10 +130,10 @@ func TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak(t *testing.T) {
 	}
 }
 
-func TestAdmissionMaterialsEmptyCatalogueStartsButCannotResolveRelease(t *testing.T) {
+func TestAdmissionMaterialsEmptyDirectoryStartsButCannotPrepareImplementation(t *testing.T) {
 	fixture := prepareConfiguredAdmission(t)
 	// Facts and READY input remain real and pinned. Only the explicitly
-	// configured catalogue is empty; startup must not invent a Release.
+	// configured directory is empty; startup must not invent software facts.
 	fixture.config.Command.AdmissionResolution.CatalogueDirectory = t.TempDir()
 	connection, _ := startConfiguredAdmissionApp(t, fixture)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -142,19 +142,19 @@ func TestAdmissionMaterialsEmptyCatalogueStartsButCannotResolveRelease(t *testin
 	rpcContext := metadata.NewOutgoingContext(ctx, metadata.Pairs(
 		"x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", requestID,
 	))
-	response, err := modeldevv1.NewModelDevAdmissionServiceClient(connection).ResolveAdmission(rpcContext, fixture.request)
-	if response != nil || status.Code(err) != codes.FailedPrecondition {
-		t.Fatalf("ADMISSION_MATERIAL_BEHAVIOR: missing Release returned a candidate or wrong rejection (code=%s)", status.Code(err))
+	response, err := modeldevv1.NewModelDevAdmissionServiceClient(connection).PrepareAdmission(rpcContext, fixture.request)
+	if response != nil || status.Code(err) != codes.Unavailable {
+		t.Fatalf("ADMISSION_MATERIAL_BEHAVIOR: missing software returned a candidate or wrong rejection (code=%s)", status.Code(err))
 	}
 	failure := status.Convert(err)
 	details := failure.Details()
 	if len(details) != 1 {
-		t.Fatal("ADMISSION_MATERIAL_BEHAVIOR: missing Release did not return one typed safe detail")
+		t.Fatal("ADMISSION_MATERIAL_BEHAVIOR: missing software did not return one typed safe detail")
 	}
 	detail, ok := details[0].(*modeldevv1.ErrorDetail)
-	const safeMessage = "selected Release is unavailable or incompatible"
-	if !ok || detail.Reason != modeldevv1.ErrorReason_ERROR_REASON_NO_COMPATIBLE_RELEASE || detail.CorrelationId != requestID || detail.SafeMessage != safeMessage || failure.Message() != safeMessage || len(detail.Violations) != 0 {
-		t.Fatal("ADMISSION_MATERIAL_BEHAVIOR: missing Release changed its finite reason, correlation or safe message")
+	const safeMessage = "managed environment is not ready"
+	if !ok || detail.Reason != modeldevv1.ErrorReason_ERROR_REASON_ENVIRONMENT_NOT_READY || detail.CorrelationId != requestID || detail.SafeMessage != safeMessage || failure.Message() != safeMessage || len(detail.Violations) != 0 {
+		t.Fatal("ADMISSION_MATERIAL_BEHAVIOR: missing software changed its finite reason, correlation or safe message")
 	}
 	observer := fixture.openPool()
 	stored, err := input.New(observer).Get(ctx, fixture.tenantID, fixture.ready.Import.InputVersionID)

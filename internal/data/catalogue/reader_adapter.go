@@ -9,18 +9,10 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
-// Reader keeps the managed catalogue directory out of admission requests.
-// It delegates all fixed-ID, byte-digest and filesystem checks to ReadRelease.
-type Reader struct {
-	directory string
-}
+// Reader keeps the installed software material directory out of business requests.
+type Reader struct{ directory string }
 
-func NewReader(trustedDirectory string) *Reader {
-	return &Reader{directory: trustedDirectory}
-}
-
-// Check verifies only that the trusted catalogue directory can be opened now.
-// It does not select a Release, inspect its contents or certify readiness.
+func NewReader(trustedDirectory string) *Reader { return &Reader{directory: trustedDirectory} }
 func (reader *Reader) Check(ctx context.Context) error {
 	root, err := openCatalogue(ctx, reader.directory)
 	if err != nil {
@@ -31,21 +23,20 @@ func (reader *Reader) Check(ctx context.Context) error {
 	}
 	return ctx.Err()
 }
-
-func (reader *Reader) ReadRelease(ctx context.Context, releaseID, expectedDigest string) (cpup01.ReleaseDocument, error) {
-	document, err := ReadRelease(ctx, reader.directory, releaseID, expectedDigest)
+func (reader *Reader) ReadImplementationMaterial(ctx context.Context, implementationID, deviceMode string) (cpup01.ImplementationMaterial, error) {
+	document, err := ReadImplementationMaterial(ctx, reader.directory, implementationID, deviceMode)
 	switch {
 	case err == nil:
 		return document, nil
 	case errors.Is(err, context.Canceled):
-		return cpup01.ReleaseDocument{}, context.Canceled
+		return cpup01.ImplementationMaterial{}, context.Canceled
 	case errors.Is(err, context.DeadlineExceeded):
-		return cpup01.ReleaseDocument{}, context.DeadlineExceeded
+		return cpup01.ImplementationMaterial{}, context.DeadlineExceeded
 	case errors.Is(err, cpup01.ErrInvalidArgument):
-		return cpup01.ReleaseDocument{}, biz.ErrInvalidAdmission
-	case errors.Is(err, ErrReleaseNotFound), errors.Is(err, ErrInvalidRelease):
-		return cpup01.ReleaseDocument{}, biz.ErrNoCompatibleRelease
+		return cpup01.ImplementationMaterial{}, biz.ErrInvalidAdmission
+	case errors.Is(err, ErrMaterialNotFound), errors.Is(err, ErrInvalidMaterial):
+		return cpup01.ImplementationMaterial{}, biz.ErrAdmissionEnvironmentNotReady
 	default:
-		return cpup01.ReleaseDocument{}, biz.ErrPersistence
+		return cpup01.ImplementationMaterial{}, biz.ErrPersistence
 	}
 }

@@ -13,10 +13,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"slices"
-	"sort"
 	"strings"
 	"syscall"
+	"time"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
@@ -25,7 +24,7 @@ import (
 )
 
 const (
-	schemaVersion = "ani.modeldev.managed-admission-facts.v1"
+	schemaVersion = "ani.modeldev.managed-admission-facts.v2.1"
 	maxFiles      = 64
 	maxFileBytes  = 64 * 1024
 	maxJSONDepth  = 16
@@ -37,7 +36,7 @@ var (
 )
 
 // FileSource comes only from trusted startup configuration. SHA256 identifies
-// the actual file bytes and is neither an ENV binding nor a Release digest.
+// the actual file bytes and is neither an ENV binding nor an environment authorization.
 type FileSource struct {
 	Path   string
 	SHA256 string
@@ -49,12 +48,11 @@ type FileSource struct {
 type document struct {
 	SchemaVersion       string                            `json:"schema_version"`
 	ResourceTenantID    string                            `json:"resource_tenant_id"`
-	ReleaseID           string                            `json:"release_id"`
-	ReleaseDigest       string                            `json:"release_digest"`
+	ImplementationID    string                            `json:"implementation_id"`
 	Environment         cpup01.EnvironmentBindingSnapshot `json:"environment"`
 	InputScope          cpup01.StorageScope               `json:"input_scope"`
 	PublicationScope    cpup01.StorageScope               `json:"publication_scope"`
-	Runtime             cpup01.RuntimeRef                 `json:"runtime"`
+	Timing              cpup01.TimingConfiguration        `json:"timing"`
 	Workspace           cpup01.WorkspaceContract          `json:"workspace"`
 	InputFilePath       string                            `json:"input_file_path"`
 	OutputDirectoryPath string                            `json:"output_directory_path"`
@@ -67,36 +65,15 @@ type evidenceReference struct {
 	SHA256    string `json:"sha256"`
 }
 
-// Reader owns immutable loaded facts, indexed by tenant and explicit Release.
-// It does not maintain a current Release pointer or perform environment probes.
+// Reader owns immutable loaded facts, indexed by tenant and implementation.
+// It never approves parameter combinations or performs environment probes.
 type Reader struct {
 	documents map[documentKey]document
 }
 
 type documentKey struct {
-	tenantID      string
-	releaseID     string
-	releaseDigest string
-}
-
-func (reader *Reader) ListReleaseSelections(ctx context.Context, tenantID string) ([]biz.ManagedReleaseSelection, error) {
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	if !canonicalID(tenantID) {
-		return nil, biz.ErrInvalidAdmission
-	}
-	if reader == nil {
-		return nil, biz.ErrAdmissionEnvironmentNotReady
-	}
-	result := make([]biz.ManagedReleaseSelection, 0)
-	for key := range reader.documents {
-		if key.tenantID == tenantID {
-			result = append(result, biz.ManagedReleaseSelection{ReleaseID: key.releaseID, ReleaseDigest: key.releaseDigest})
-		}
-	}
-	sort.Slice(result, func(i, j int) bool { return result[i].ReleaseID < result[j].ReleaseID })
-	return result, nil
+	tenantID         string
+	implementationID string
 }
 
 var _ biz.AdmissionFactsReader = (*Reader)(nil)
@@ -109,12 +86,19 @@ func Load(ctx context.Context, sources []FileSource) (*Reader, error) {
 		return nil, ErrInvalidFacts
 	}
 	documents := make(map[documentKey]document, len(sources))
+	var globalTiming *cpup01.TimingConfiguration
 	for _, source := range sources {
 		value, err := readDocument(ctx, source)
 		if err != nil {
 			return nil, err
 		}
-		key := documentKey{value.ResourceTenantID, value.ReleaseID, value.ReleaseDigest}
+		if globalTiming == nil {
+			valueTiming := value.Timing
+			globalTiming = &valueTiming
+		} else if *globalTiming != value.Timing {
+			return nil, ErrInvalidFacts
+		}
+		key := documentKey{value.ResourceTenantID, value.ImplementationID}
 		if _, exists := documents[key]; exists {
 			return nil, ErrInvalidFacts
 		}
@@ -126,29 +110,21 @@ func Load(ctx context.Context, sources []FileSource) (*Reader, error) {
 	return &Reader{documents: documents}, nil
 }
 
-func (reader *Reader) ReadAdmissionFacts(ctx context.Context, tenantID, releaseID, releaseDigest string) (biz.TenantAdmissionFacts, error) {
+func (reader *Reader) ReadAdmissionFacts(ctx context.Context, tenantID, implementationID string) (biz.TenantAdmissionFacts, error) {
 	if err := ctx.Err(); err != nil {
 		return biz.TenantAdmissionFacts{}, err
 	}
-	tenantID, releaseID = strings.ToLower(tenantID), strings.ToLower(releaseID)
-	if !canonicalID(tenantID) || !canonicalID(releaseID) || !validDigest(releaseDigest) {
+	if !canonicalID(tenantID) || (implementationID != "builtin.mlp" && implementationID != "builtin.sft_lora") {
 		return biz.TenantAdmissionFacts{}, biz.ErrInvalidAdmission
 	}
 	if reader == nil {
 		return biz.TenantAdmissionFacts{}, biz.ErrAdmissionEnvironmentNotReady
 	}
-	value, found := reader.documents[documentKey{tenantID, releaseID, releaseDigest}]
+	value, found := reader.documents[documentKey{tenantID, implementationID}]
 	if !found {
 		return biz.TenantAdmissionFacts{}, biz.ErrAdmissionEnvironmentNotReady
 	}
-	runtime := value.Runtime
-	runtime.TargetJobs = slices.Clone(runtime.TargetJobs)
-	return biz.TenantAdmissionFacts{
-		TenantID: value.ResourceTenantID, Environment: value.Environment,
-		InputScope: value.InputScope, PublicationScope: value.PublicationScope,
-		Runtime: runtime, Workspace: value.Workspace,
-		InputFilePath: value.InputFilePath, OutputDirectoryPath: value.OutputDirectoryPath,
-	}, nil
+	return biz.TenantAdmissionFacts{TenantID: value.ResourceTenantID, Environment: value.Environment, InputScope: value.InputScope, PublicationScope: value.PublicationScope, Workspace: value.Workspace, InputFilePath: value.InputFilePath, OutputDirectoryPath: value.OutputDirectoryPath, Timing: value.Timing}, nil
 }
 
 func readDocument(ctx context.Context, source FileSource) (document, error) {
@@ -199,8 +175,11 @@ func readDocument(ctx context.Context, source FileSource) (document, error) {
 	decoder := json.NewDecoder(bytes.NewReader(raw))
 	decoder.DisallowUnknownFields()
 	if decoder.Decode(&value) != nil || !hasRequiredDocumentFields(raw, reflect.TypeOf(value)) || value.SchemaVersion != schemaVersion ||
-		!canonicalID(value.ResourceTenantID) || !canonicalID(value.ReleaseID) || !validDigest(value.ReleaseDigest) ||
+		!canonicalID(value.ResourceTenantID) || (value.ImplementationID != "builtin.mlp" && value.ImplementationID != "builtin.sft_lora") ||
 		!validEvidence(value.EnvironmentEvidence) || !validEvidence(value.ApplicationEvidence) {
+		return document{}, ErrInvalidFacts
+	}
+	if _, err := value.Timing.Resolve(time.Now().UTC().Truncate(time.Microsecond), nil); err != nil {
 		return document{}, ErrInvalidFacts
 	}
 	if err := ctx.Err(); err != nil {

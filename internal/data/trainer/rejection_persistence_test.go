@@ -15,6 +15,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
 )
 
@@ -29,23 +30,22 @@ func TestTrainingActual422PersistsAndClosesWithoutSecondPost(t *testing.T) {
 	}
 	f.createStatusCode, f.createStatusBody = 422, string(raw)
 	snapshot := conformance.SnapshotV1()
-	snapshot.Release.Runtime = f.plan.Snapshot.Release.Runtime
+	snapshot.RuntimePlan = f.plan.Snapshot.RuntimePlan
 	snapshot.Environment.NamespaceName = f.plan.Workspace.NamespaceName
 	snapshot.Environment.NamespaceUID = f.plan.Workspace.NamespaceUID
 	snapshot.Environment.Identities.TrainerServiceAccount = f.plan.Snapshot.Environment.Identities.TrainerServiceAccount
 	snapshot.Workspace.StorageClass = f.plan.Snapshot.Workspace.StorageClass
 	accepted := time.Now().UTC().Truncate(time.Microsecond)
 	snapshot.DeadlineAt = accepted.Add(time.Hour)
-	intent := cpup01.Intent{Name: "actual-422-refusal", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := cpup01.Intent{Name: "actual-422-refusal", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
+	specHash := ""
 	admission := biz.Admission{TenantID: f.plan.TenantID, ExecutionID: f.plan.ExecutionID, OperationID: f.plan.OperationID, Actor: "governance:user:422-fixture", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: accepted}
+	admission = admissionfixture.Bind(t, admission)
+	snapshot, specHash = admission.Snapshot, admission.SpecHash
 	open := postgres.Prepare(t)
 	pool := open()
 	ctx := context.Background()
@@ -64,14 +64,30 @@ func TestTrainingActual422PersistsAndClosesWithoutSecondPost(t *testing.T) {
 	workspace := f.plan.Workspace
 	workspace.PreparedManifestSHA256, workspace.PreparedManifestBytes = strings.Repeat("1", 64), 256
 	facts := lifecycle.New(pool)
+	step := biz.FinetuningStepBinding{Role: "prepare", SpecHash: specHash, RunID: authority.RunID, WorkflowUID: authority.WorkflowUID, TaskID: "prepare-refusal", PodName: "prepare-refusal", PodUID: "77777777-aaaa-4bbb-8ccc-dddddddddddd"}
+	if _, _, err := facts.ReserveManagedStep(ctx, authority, step); err != nil {
+		t.Fatal(err)
+	}
+
 	if _, _, err := facts.RecordPrepared(ctx, authority, workspace); err != nil {
 		t.Fatal(err)
 	}
+	rt, err := facts.ReserveRuntime(ctx, authority)
+	if err != nil || !rt.SendPermit {
+		t.Fatal(err)
+	}
+	binding := f.plan.RuntimeBinding
+	binding.Name, binding.ObservedSpecSHA256 = snapshot.RuntimePlan.Name, snapshot.RuntimePlan.ExpectedSpecSHA256
+	if _, err := facts.RecordRuntimeBinding(ctx, authority, binding); err != nil {
+		t.Fatal(err)
+	}
+
 	reserved, err := facts.ReserveTraining(ctx, authority)
 	if err != nil || !reserved.SendPermit || reserved.State.Training == nil {
 		t.Fatal("original permit", err)
 	}
 	f.plan = *reserved.State.Training
+	installFixtureRuntime(t, f)
 	_, err = f.adapter(t).CreateTraining(ctx, f.plan)
 	var rejected *biz.TrainingCreationRejection
 	if !errors.As(err, &rejected) || rejected.StatusCode != 422 || rejected.RequestSHA256 != f.plan.RequestSHA256 || rejected.NamespaceUID != workspace.NamespaceUID {

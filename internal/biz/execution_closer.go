@@ -190,6 +190,27 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 	if state.CloseReason != "NATURAL_TERMINAL" {
 		runErr = errors.Join(runErr, closer.runs.StopManagedRun(ctx, plan, owner))
 	}
+	if fact := state.RuntimeTemplate; fact != nil && fact.Binding == nil && len(fact.Attempts) > 0 && fact.Attempts[len(fact.Attempts)-1].NotSentAt == nil {
+		if state.Workspace == nil || state.TrainingWindow == nil {
+			return ManagedRuntimeResult{}, ErrRuntimeConflict
+		}
+		original, err := FreezeTrainingPlan(admitted, *state.Workspace, state.TrainingWindow.AdmittedAt)
+		if err != nil {
+			return ManagedRuntimeResult{}, err
+		}
+		binding, findErr := runtime.trainer.FindRuntime(ctx, original)
+		if findErr != nil {
+			if _, err := runtime.repository.RecordRuntimeReview(ctx, owner); err != nil {
+				return ManagedRuntimeResult{}, errors.Join(runErr, findErr, err)
+			}
+			return ManagedRuntimeResult{}, errors.Join(runErr, ErrTrainingUncertain, findErr)
+		}
+		state, err = runtime.repository.RecordRuntimeBinding(ctx, owner, binding)
+		if err != nil {
+			return ManagedRuntimeResult{}, errors.Join(runErr, err)
+		}
+		result.Runtime = state
+	}
 	if state.TrainingRejection != nil {
 		if err := runtime.verifyRejectedTrainingAbsent(ctx, state); err != nil {
 			return ManagedRuntimeResult{}, closer.review(ctx, tenant, execution, "TRAINJOB_CREATE_UNRESOLVED", errors.Join(runErr, err))

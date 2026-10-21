@@ -104,15 +104,28 @@ func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution
 		if err != nil || !sameObject(current, target.APIVersion, target.Kind, target.Namespace, target.Name, target.UID) {
 			return removed, biz.ErrCleanupConflict
 		}
-		if target.Kind != "Workflow" && target.Kind != "Pod" {
+		if target.Kind != "Workflow" && target.Kind != "Pod" && target.Kind != "PodGroup" && target.Kind != "TrainingRuntime" {
 			if err := controllers.DeleteRecordedComputeController(ctx, record, target); err != nil {
 				return removed, err
 			}
 		} else {
+			if target.Kind == "TrainingRuntime" {
+				jobs, listErr := verifier.kube.Resource(schema.GroupVersionResource{Group: "trainer.kubeflow.org", Version: "v1alpha1", Resource: "trainjobs"}).Namespace(owner.NamespaceName).List(ctx, metav1.ListOptions{})
+				if listErr != nil || jobs == nil || jobs.GetContinue() != "" {
+					return removed, biz.ErrCleanupUncertain
+				}
+				for _, job := range jobs.Items {
+					name, _, _ := unstructured.NestedString(job.Object, "spec", "runtimeRef", "name")
+					kind, _, _ := unstructured.NestedString(job.Object, "spec", "runtimeRef", "kind")
+					if name == target.Name && kind == "TrainingRuntime" {
+						return removed, biz.ErrCleanupBlocked
+					}
+				}
+			}
 			if len(current.GetFinalizers()) != 0 || current.GetResourceVersion() == "" {
 				return removed, biz.ErrCleanupBlocked
 			}
-			if target.Kind == "Pod" {
+			if target.Kind == "Pod" || target.Kind == "PodGroup" {
 				if err := verifier.computeParentsAbsent(ctx, receipt.Targets, target); err != nil {
 					return removed, err
 				}
@@ -173,7 +186,7 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 			return biz.ErrCleanupConflict
 		}
 		object, err := verifier.kube.Resource(resource).Namespace(target.Namespace).Get(ctx, target.Name, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) && removalIntent {
+		if apierrors.IsNotFound(err) && (removalIntent || target.Kind == "TrainingRuntime") {
 			continue
 		}
 		if err != nil || !sameObject(object, target.APIVersion, target.Kind, target.Namespace, target.Name, target.UID) || object.GetResourceVersion() == "" {
@@ -193,6 +206,12 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 		}
 		if target.Kind == "Workflow" {
 			continue // Complete node hash/state/UID checked independently above.
+		}
+		if target.Kind == "TrainingRuntime" {
+			if len(object.GetOwnerReferences()) != 0 || object.GetAnnotations()["modeldev.ani.io/execution-id"] != execution.ExecutionID || object.GetAnnotations()["modeldev.ani.io/tenant-id"] != execution.TenantID || object.GetAnnotations()["modeldev.ani.io/execution-spec-sha256"] != execution.SpecHash {
+				return biz.ErrCleanupConflict
+			}
+			continue
 		}
 		ownerUID := ""
 		for _, reference := range object.GetOwnerReferences() {
@@ -216,12 +235,12 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 			if account != execution.Snapshot.Environment.Identities.TrainerServiceAccount || len(object.GetFinalizers()) != 0 {
 				return biz.ErrCleanupBlocked
 			}
-		} else if !computeControllerStopped(object) {
+		} else if target.Kind != "PodGroup" && !computeControllerStopped(object) {
 			return biz.ErrCleanupBlocked
 		}
 	}
 	// Lists cannot hide an additional historical child or unrelated PVC writer.
-	for _, resource := range []schema.GroupVersionResource{{Version: "v1", Resource: "pods"}, {Group: "batch", Version: "v1", Resource: "jobs"}, {Group: "jobset.x-k8s.io", Version: "v1alpha2", Resource: "jobsets"}} {
+	for _, resource := range []schema.GroupVersionResource{{Version: "v1", Resource: "pods"}, {Group: "batch", Version: "v1", Resource: "jobs"}, {Group: "jobset.x-k8s.io", Version: "v1alpha2", Resource: "jobsets"}, {Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}} {
 		objects, err := verifier.kube.Resource(resource).Namespace(owner.NamespaceName).List(ctx, metav1.ListOptions{})
 		if err != nil || objects == nil || objects.GetContinue() != "" {
 			return biz.ErrRuntimeNotReady
@@ -369,8 +388,12 @@ func computeResource(target biz.RuntimeResource) (schema.GroupVersionResource, b
 		return schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}, target.APIVersion == "argoproj.io/v1alpha1"
 	case "TrainJob":
 		return schema.GroupVersionResource{Group: "trainer.kubeflow.org", Version: "v1alpha1", Resource: "trainjobs"}, target.APIVersion == "trainer.kubeflow.org/v1alpha1"
+	case "TrainingRuntime":
+		return schema.GroupVersionResource{Group: "trainer.kubeflow.org", Version: "v1alpha1", Resource: "trainingruntimes"}, target.APIVersion == "trainer.kubeflow.org/v1alpha1"
 	case "JobSet":
 		return schema.GroupVersionResource{Group: "jobset.x-k8s.io", Version: "v1alpha2", Resource: "jobsets"}, target.APIVersion == "jobset.x-k8s.io/v1alpha2"
+	case "PodGroup":
+		return schema.GroupVersionResource{Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}, target.APIVersion == "scheduling.volcano.sh/v1beta1"
 	case "Job":
 		return schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}, target.APIVersion == "batch/v1"
 	case "Pod":

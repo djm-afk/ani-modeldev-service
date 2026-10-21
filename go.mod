@@ -12,6 +12,8 @@ require (
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/liangzai006/ani-model-service v0.0.0-20261013092523-8951c85bc150
 	github.com/prometheus/client_golang v1.24.1
+	github.com/zhangzhe-ctrl/ani-accelerator-service v0.0.0-20261018033121-4f084c9f5f25
+	github.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261019174951-733f625995f8
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.66.0
 	go.opentelemetry.io/otel/metric v1.45.0
@@ -20,7 +22,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/sys v0.48.0
 	google.golang.org/grpc v1.83.2
-	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
+	google.golang.org/protobuf v1.36.12
 	gopkg.in/evanphx/json-patch.v4 v4.13.0
 	k8s.io/api v0.36.0
 	k8s.io/apimachinery v0.36.0

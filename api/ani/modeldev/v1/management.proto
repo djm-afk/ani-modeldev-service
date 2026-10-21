@@ -11,8 +11,6 @@ option go_package = "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/model
 // Governance checks the current management permission and delegates this exact
 // method over its authenticated mTLS connection. No user identity is in a body.
 service ModelDevManagementService {
-  rpc ImportRelease(ImportReleaseRequest) returns (ImportReleaseResponse);
-  rpc ValidateRelease(ValidateReleaseRequest) returns (ValidateReleaseResponse);
   rpc ImportCSV(ImportCSVRequest) returns (ImportCSVResponse);
   rpc ImportFinetuningDataset(ImportFinetuningDatasetRequest) returns (ImportFinetuningDatasetResponse);
 }
@@ -21,8 +19,9 @@ service ModelDevManagementService {
 // reads original object bytes; callers cannot submit READY or row statistics.
 message ImportFinetuningDatasetRequest {
   string input_version_id = 1;
-  string release_id = 2;
-  string release_digest = 3;
+  reserved 2, 3;
+  reserved "release_id", "release_digest";
+  string implementation_id = 7;
   ani.training.v1.FixedObjectRef object = 4;
   google.protobuf.Timestamp requested_at = 5;
   string format = 6;
@@ -32,37 +31,12 @@ message ImportFinetuningDatasetResponse {
   InputVersionView input_version = 1;
 }
 
-message ImportReleaseRequest {
-  string preset_id = 1;
-  string release_id = 2;
-  string release_digest = 3;
-  bytes canonical_release = 4;
-}
-
-message ImportReleaseResponse {
-  string preset_id = 1;
-  string release_id = 2;
-  string release_digest = 3;
-  bool created = 4;
-}
-
-message ValidateReleaseRequest {
-  string preset_id = 1;
-  string release_id = 2;
-  string release_digest = 3;
-}
-
-message ValidateReleaseResponse {
-  string preset_id = 1;
-  string release_id = 2;
-  string release_digest = 3;
-}
-
 message ImportCSVRequest {
   string input_version_id = 1;
   // Selects owner-approved input scope, never an arbitrary bucket prefix.
-  string release_id = 2;
-  string release_digest = 3;
+  reserved 2, 3;
+  reserved "release_id", "release_digest";
+  string implementation_id = 7;
   ani.training.v1.FixedObjectRef object = 4;
   // Immutable import fact; retries keep the original time and request identity.
   google.protobuf.Timestamp requested_at = 5;

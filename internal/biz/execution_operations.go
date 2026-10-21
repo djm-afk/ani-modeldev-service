@@ -42,6 +42,10 @@ type ExecutionInspect struct {
 	DispatchState          PipelineDispatchState `json:"dispatch_state,omitempty"`
 	RunCreateInFlight      bool                  `json:"run_create_in_flight"`
 	TrainingCreateInFlight bool                  `json:"training_create_in_flight"`
+	RuntimeCreateInFlight  bool                  `json:"runtime_create_in_flight"`
+	RuntimeReviewReason    string                `json:"runtime_review_reason,omitempty"`
+	RuntimeNextAction      string                `json:"runtime_next_action,omitempty"`
+	CloseOperationID       string                `json:"close_operation_id,omitempty"`
 	CloseGeneration        uint64                `json:"close_generation"`
 	CloseReason            string                `json:"close_reason,omitempty"`
 	CloseReviewReason      string                `json:"close_review_reason,omitempty"`
@@ -99,6 +103,14 @@ func (operations *ExecutionOperations) Inspect(ctx context.Context, tenant, exec
 		view.RunCreateInFlight = record.Dispatch.State == PipelineDispatchSubmitting || record.Dispatch.State == PipelineDispatchUncertain
 	}
 	view.TrainingCreateInFlight = runtime.Training != nil && runtime.TrainingHandle == nil
+	view.CloseOperationID = runtime.CloseOperationID
+	if fact := runtime.RuntimeTemplate; fact != nil {
+		view.RuntimeCreateInFlight = fact.Binding == nil && len(fact.Attempts) > 0 && fact.Attempts[len(fact.Attempts)-1].NotSentAt == nil
+		view.RuntimeReviewReason, view.RuntimeNextAction = fact.ReviewReason, fact.NextAction
+		if fact.Binding != nil {
+			view.Resources = append(view.Resources, RuntimeResource{APIVersion: "trainer.kubeflow.org/v1alpha1", Kind: "TrainingRuntime", Namespace: view.NamespaceName, Name: fact.Binding.Name, UID: fact.Binding.UID})
+		}
+	}
 	if runtime.Workspace != nil {
 		view.PVCUID = runtime.Workspace.PVCUID
 	}

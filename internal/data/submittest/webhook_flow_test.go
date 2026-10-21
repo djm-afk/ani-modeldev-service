@@ -67,8 +67,8 @@ func (f *completeFixture) admitModelDevSteps(t *testing.T) {
 	snapshot := f.request.Admission.Snapshot
 	release := conformance.ReleaseV1()
 	release.ReleaseID, release.PresetID = snapshot.Release.ReleaseID, snapshot.Release.PresetID
-	release.PipelineID, release.PipelineVersionID, release.PipelineIRSHA256 = snapshot.Release.PipelineID, snapshot.Release.PipelineVersionID, snapshot.Release.PipelineIRSHA256
-	release.Runtime, release.Resources, release.Workspace, release.OutputContract = snapshot.Release.Runtime, snapshot.Resources, snapshot.Workspace, snapshot.OutputContract
+	release.PipelineID, release.PipelineVersionID, release.PipelineIRSHA256 = snapshot.Implementation.PipelineID, snapshot.Implementation.PipelineVersionID, snapshot.Implementation.PipelineIRSHA256
+	release.Runtime, release.Resources, release.Workspace, release.OutputContract = snapshot.RuntimePlan.Reference(), snapshot.Resources, snapshot.Workspace, snapshot.OutputContract
 	release.Program.ImageVersionID, release.Program.ImageDigest, release.Program.Command = snapshot.Program.ImageVersionID, f.image, snapshot.Program.Command
 	raw, err := release.Canonical()
 	if err != nil {

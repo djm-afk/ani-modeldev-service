@@ -149,6 +149,9 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 		return denied(request, "invalid_pod")
 	}
 	labels := pod.Labels
+	if binding.Training != nil && pod.Spec.ServiceAccountName == binding.Training.ServiceAccount {
+		return handler.admitTraining(ctx, request, &pod, raw, binding, failure)
+	}
 	if labels["pipelines.kubeflow.org/v2_component"] != "true" {
 		if labels[ProfileLabel] != "" || labels[RoleLabel] != "" {
 			return denied(request, "invalid_target")
@@ -200,7 +203,7 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 	if !ok {
 		return denied(request, "unknown_role")
 	}
-	if profile.PipelineVersionLabel != "" && workflow.GetLabels()[profile.PipelineVersionLabel] != profile.release.PipelineVersionID || profile.PipelineVersionAnnotation != "" && workflow.GetAnnotations()[profile.PipelineVersionAnnotation] != profile.release.PipelineVersionID {
+	if profile.PipelineVersionLabel != "" && workflow.GetLabels()[profile.PipelineVersionLabel] != profile.material.Implementation.PipelineVersionID || profile.PipelineVersionAnnotation != "" && workflow.GetAnnotations()[profile.PipelineVersionAnnotation] != profile.material.Implementation.PipelineVersionID {
 		return denied(request, "pipeline_version")
 	}
 	if pod.Spec.HostNetwork || pod.Spec.HostPID || pod.Spec.HostIPC || len(pod.Spec.EphemeralContainers) != 0 || len(pod.Spec.Containers) != 2 || len(pod.Spec.InitContainers) > 4 {

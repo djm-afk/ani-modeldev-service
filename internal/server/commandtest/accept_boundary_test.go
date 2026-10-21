@@ -16,6 +16,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
 	"google.golang.org/grpc/codes"
@@ -41,7 +42,7 @@ func TestGovernanceAcceptRejectsInvalidWireBeforePersistence(t *testing.T) {
 		{"missing intent", func(r *modeldevv1.AcceptExecutionRequest) { r.Intent = nil }},
 		{"missing snapshot", func(r *modeldevv1.AcceptExecutionRequest) { r.Snapshot = nil }},
 		{"missing accepted time", func(r *modeldevv1.AcceptExecutionRequest) { r.AcceptedAt = nil }},
-		{"missing nested Runtime", func(r *modeldevv1.AcceptExecutionRequest) { r.Snapshot.Release.Runtime = nil }},
+		{"missing nested Runtime", func(r *modeldevv1.AcceptExecutionRequest) { r.Snapshot.RuntimePlan = nil }},
 		{"missing object immutability", func(r *modeldevv1.AcceptExecutionRequest) { r.Snapshot.Input.Object.Immutability = nil }},
 		{"unknown outer field", func(r *modeldevv1.AcceptExecutionRequest) { r.ProtoReflect().SetUnknown([]byte{0xa0, 0x06, 0x01}) }},
 		{"unknown identity field", func(r *modeldevv1.AcceptExecutionRequest) {
@@ -101,6 +102,7 @@ func TestGovernanceAcceptBodyCannotReplaceVerifiedTenantOrActor(t *testing.T) {
 			}
 			// The body remains a valid immutable command: only its authority
 			// differs. InvalidArgument or Unimplemented cannot satisfy this test.
+			freezeAcceptBoundaryBody(t, body)
 			requireValidAcceptBoundaryBody(t, body)
 			delivery := acceptCommandContext(ctx, original)
 			response, err := client.AcceptExecution(delivery, body)
@@ -152,6 +154,7 @@ func TestGovernanceAcceptConflictsRetainTheOriginalAdmission(t *testing.T) {
 				}
 				body.IntentHash = digest
 			}
+			freezeAcceptBoundaryBody(t, body)
 			requireValidAcceptBoundaryBody(t, body)
 			delivery := acceptCommandContext(ctx, body)
 			response, err := client.AcceptExecution(delivery, body)
@@ -267,4 +270,22 @@ func assertAcceptBoundaryError(t *testing.T, response *modeldevv1.AcceptExecutio
 	if !ok || detail.Reason != reason || detail.CorrelationId != correlation || detail.SafeMessage == "" || detail.SafeMessage != failure.Message() {
 		t.Error("Accept boundary lost its exact reason, verified correlation or safe message")
 	}
+}
+
+func freezeAcceptBoundaryBody(t *testing.T, r *modeldevv1.AcceptExecutionRequest) {
+	t.Helper()
+	intent, err := contractpb.DecodeIntent(r.Intent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := contractpb.DecodeSnapshot(r.Snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := admissionfixture.Bind(t, biz.Admission{TenantID: r.ResourceTenantId, Actor: r.AdmittedActorId, OperationID: r.Identity.OperationId, ExecutionID: r.Identity.ExecutionId, Intent: intent, Snapshot: snapshot, AcceptedAt: r.AcceptedAt.AsTime()})
+	r.Snapshot, err = contractpb.EncodeSnapshot(a.Snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.Identity.ExecutionSpecHash, r.IntentHash = a.SpecHash, a.IntentHash
 }

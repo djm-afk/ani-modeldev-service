@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"math"
 	"os"
 	"path"
 	"sort"
@@ -294,6 +293,15 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		Status                       string             `json:"status"`
 		Samples                      int64              `json:"samples"`
 		SourceSamples                int64              `json:"source_samples"`
+		DroppedSamples               *int64             `json:"dropped_samples"`
+		EffectiveTokenCount          int64              `json:"effective_token_count"`
+		MaxEffectiveTokens           int64              `json:"max_effective_tokens"`
+		SamplesAtCutoff              *int64             `json:"samples_at_cutoff"`
+		TruncatedSamples             *int64             `json:"truncated_samples"`
+		TruncatedTokens              *int64             `json:"truncated_tokens"`
+		Device                       string             `json:"device"`
+		TrainDtypes                  []string           `json:"train_dtypes"`
+		AdapterDtype                 string             `json:"adapter_dtype"`
 		OptimizerSteps               int64              `json:"optimizer_steps"`
 		Steps                        int64              `json:"steps"`
 		MetricSamples                int64              `json:"metric_samples"`
@@ -313,7 +321,14 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 	if err != nil || decodeFinetuningReport(raw, &summary) != nil {
 		return invalid
 	}
-	if summary.Schema != "ani.finetune.summary.v1" || summary.Status != "SUCCEEDED" || summary.Samples != int64(execution.Snapshot.Input.RowCount) || summary.SourceSamples != summary.Samples || summary.OptimizerSteps <= 0 || summary.Steps != summary.OptimizerSteps || summary.InputSHA256 != execution.Snapshot.Input.Object.SHA256 || summary.InputBytes != execution.Snapshot.Input.Object.SizeBytes || summary.BaseManifestSHA256 != baseHash || summary.ParameterContractVersion != fine.ParameterContractVersion || summary.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || summary.EffectiveConfigurationSHA256 != fine.ResolvedConfigurationSHA256 {
+	if summary.Schema != "ani.finetune.summary.v1" || summary.Status != "SUCCEEDED" || summary.SourceSamples != int64(execution.Snapshot.Input.RowCount) || summary.Samples < 1 || summary.Samples > summary.SourceSamples || summary.DroppedSamples == nil || *summary.DroppedSamples != summary.SourceSamples-summary.Samples || summary.OptimizerSteps <= 0 || summary.Steps != summary.OptimizerSteps || summary.InputSHA256 != execution.Snapshot.Input.Object.SHA256 || summary.InputBytes != execution.Snapshot.Input.Object.SizeBytes || summary.BaseManifestSHA256 != baseHash || summary.ParameterContractVersion != fine.ParameterContractVersion || summary.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || summary.EffectiveConfigurationSHA256 != fine.ResolvedConfigurationSHA256 {
+		return invalid
+	}
+	if summary.Device != fine.ManagedSettings.Device || len(summary.TrainDtypes) != 1 || summary.TrainDtypes[0] != fine.ManagedSettings.TrainDtype || summary.AdapterDtype != "float32" ||
+		summary.EffectiveTokenCount < summary.Samples || summary.MaxEffectiveTokens < 1 || summary.MaxEffectiveTokens > fine.ManagedSettings.CutoffLen || summary.MaxEffectiveTokens > summary.EffectiveTokenCount || (summary.EffectiveTokenCount-1)/summary.MaxEffectiveTokens+1 > summary.Samples ||
+		summary.SamplesAtCutoff == nil || *summary.SamplesAtCutoff < 0 || *summary.SamplesAtCutoff > summary.Samples ||
+		summary.TruncatedSamples == nil || *summary.TruncatedSamples < 0 || *summary.TruncatedSamples > summary.Samples ||
+		summary.TruncatedTokens == nil || *summary.TruncatedTokens < 0 || (*summary.TruncatedSamples == 0) != (*summary.TruncatedTokens == 0) {
 		return invalid
 	}
 	var effective cpup01.FinetuningConfiguration
@@ -339,8 +354,8 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 			}
 		}
 	}
-	settingsBytes, err := json.Marshal(fine.ManagedSettings)
-	if err != nil || pipelineContentHash(settingsBytes) != summary.RecipeSHA256 {
+	var projection map[string]json.RawMessage
+	if json.Unmarshal(resolvedBytes, &projection) != nil || pipelineContentHash(projection["managed_settings"]) != summary.RecipeSHA256 {
 		return invalid
 	}
 	adapter := reportMembers(files, "training/adapter/")
@@ -358,14 +373,19 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 	if err != nil || decodeFinetuningReport(raw, &association) != nil || association.Schema != "ani.finetune.adapter-manifest.v1" || association.InputSHA256 != summary.InputSHA256 || association.BaseManifestSHA256 != baseHash || association.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || !sameFinetuningMembers(association.Files, adapter) {
 		return invalid
 	}
+	adapterManifestHash := pipelineContentHash(raw)
 	var merged struct {
 		Schema                      string             `json:"schema"`
 		ResolvedConfigurationSHA256 string             `json:"resolved_configuration_sha256"`
 		Dtype                       string             `json:"dtype"`
+		InputSHA256                 string             `json:"input_sha256"`
+		BaseManifestSHA256          string             `json:"base_manifest_sha256"`
+		AdapterManifestSHA256       string             `json:"adapter_manifest_sha256"`
+		AdapterFiles                []finetuningMember `json:"adapter_files"`
 		Files                       []finetuningMember `json:"files"`
 	}
 	raw, err = readFinetuningReport(ctx, root, "reports/export/merged_manifest.json", files)
-	if err != nil || decodeFinetuningReport(raw, &merged) != nil || merged.Schema != "ani.finetune.merged-manifest.v1" || merged.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || merged.Dtype != fine.ManagedSettings.ExportDtype || !sameFinetuningMembers(merged.Files, reportMembers(files, "export/merged/")) {
+	if err != nil || decodeFinetuningReport(raw, &merged) != nil || merged.Schema != "ani.finetune.merged-manifest.v1" || merged.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || merged.Dtype != fine.ManagedSettings.ExportDtype || merged.InputSHA256 != summary.InputSHA256 || merged.BaseManifestSHA256 != baseHash || merged.AdapterManifestSHA256 != adapterManifestHash || !sameFinetuningMembers(merged.AdapterFiles, adapter) || !sameFinetuningMembers(merged.Files, reportMembers(files, "export/merged/")) {
 		return invalid
 	}
 	mergedHash := pipelineContentHash(raw)
@@ -396,13 +416,17 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 }
 
 func verifyFinetuningMetrics(ctx context.Context, root int, files []cpup01.OutputFile, steps, samples int64) error {
+	return verifyMetricFile(ctx, root, files, "reports/train/metrics.jsonl", steps, samples)
+}
+
+func verifyMetricFile(ctx context.Context, root int, files []cpup01.OutputFile, name string, steps, samples int64) error {
 	var expected cpup01.OutputFile
 	for _, file := range files {
-		if file.RelativePath == "reports/train/metrics.jsonl" {
+		if file.RelativePath == name {
 			expected = file
 		}
 	}
-	if expected.SizeBytes <= 0 || expected.SizeBytes > 1<<20 {
+	if expected.SizeBytes <= 0 || steps < 1 || samples != steps {
 		return biz.ErrInvalidWorkspaceOutput
 	}
 	captured, err := capturePipelineFile(ctx, root, expected)
@@ -422,7 +446,7 @@ func verifyFinetuningMetrics(ctx context.Context, root int, files []cpup01.Outpu
 			Rank      int64     `json:"rank"`
 			Timestamp time.Time `json:"timestamp"`
 		}
-		if decodeFinetuningReport(scanner.Bytes(), &metric) != nil || metric.Schema != "ani.metric.v1" || metric.Name != "train.loss" || metric.Step <= lastStep || metric.Step > steps || metric.Rank != 0 || metric.Timestamp.IsZero() || math.IsNaN(metric.Value) || math.IsInf(metric.Value, 0) {
+		if decodeFinetuningReport(scanner.Bytes(), &metric) != nil || metric.Schema != "ani.metric.v1" || metric.Name != "train.loss" || metric.Step != lastStep+1 || metric.Step > steps || metric.Rank != 0 || metric.Timestamp.IsZero() || !finiteLoss(metric.Value) {
 			return biz.ErrInvalidWorkspaceOutput
 		}
 		count++

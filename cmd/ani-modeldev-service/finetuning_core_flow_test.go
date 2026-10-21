@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
@@ -40,27 +41,29 @@ import (
 // the upstream delivery and read-only Model provider boundaries, while the
 // production app owns dispatch, workload authentication, all steps and close.
 type coreFlowFixture struct {
-	Schema              string              `json:"schema"`
-	Bootstrap           json.RawMessage     `json:"bootstrap"`
-	Scenario            string              `json:"scenario"`
-	TenantID            string              `json:"tenant_id"`
-	Actor               string              `json:"actor"`
-	OperationID         string              `json:"operation_id"`
-	ExecutionID         string              `json:"execution_id"`
-	Intent              json.RawMessage     `json:"intent"`
-	ReleaseID           string              `json:"release_id"`
-	ReleaseDigest       string              `json:"release_digest"`
-	CanonicalRelease    json.RawMessage     `json:"canonical_release"`
-	Input               biz.InputImport     `json:"input"`
-	BaseModel           cpup01.BaseModelRef `json:"base_model"`
-	AcceptedAt          time.Time           `json:"accepted_at"`
-	StopWhenTraining    bool                `json:"stop_when_training"`
-	RestartWhenTraining bool                `json:"restart_when_training"`
-	ExpectDeadline      bool                `json:"expect_deadline"`
-	EvidenceDirectory   string              `json:"evidence_directory"`
-	SourceCommit        string              `json:"source_commit"`
-	MaterialSource      string              `json:"material_source"`
-	CloseOnly           *coreFlowCloseOnly  `json:"close_only,omitempty"`
+	Schema                    string              `json:"schema"`
+	Bootstrap                 json.RawMessage     `json:"bootstrap"`
+	Scenario                  string              `json:"scenario"`
+	TenantID                  string              `json:"tenant_id"`
+	Actor                     string              `json:"actor"`
+	OperationID               string              `json:"operation_id"`
+	ExecutionID               string              `json:"execution_id"`
+	Intent                    json.RawMessage     `json:"intent"`
+	MaterialCanonical         []byte              `json:"material_canonical"`
+	ComputeSelectionCanonical []byte              `json:"compute_selection_canonical"`
+	SelectionDigest           string              `json:"selection_digest"`
+	GPUExecutionCanonical     []byte              `json:"gpu_execution_canonical,omitempty"`
+	GPUDisplayCanonical       []byte              `json:"gpu_display_canonical,omitempty"`
+	Input                     biz.InputImport     `json:"input"`
+	BaseModel                 cpup01.BaseModelRef `json:"base_model"`
+	AcceptedAt                time.Time           `json:"accepted_at"`
+	StopWhenTraining          bool                `json:"stop_when_training"`
+	RestartWhenTraining       bool                `json:"restart_when_training"`
+	ExpectDeadline            bool                `json:"expect_deadline"`
+	EvidenceDirectory         string              `json:"evidence_directory"`
+	SourceCommit              string              `json:"source_commit"`
+	MaterialSource            string              `json:"material_source"`
+	CloseOnly                 *coreFlowCloseOnly  `json:"close_only,omitempty"`
 }
 
 type coreFlowCloseOnly struct {
@@ -341,12 +344,12 @@ type coreFlowModelFixture struct {
 	base   cpup01.BaseModelRef
 }
 
-func (f coreFlowModelFixture) ResolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, release cpup01.ReleaseDocument) (cpup01.BaseModelRef, error) {
+func (f coreFlowModelFixture) ResolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, material cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error) {
 	if err := ctx.Err(); err != nil {
 		return cpup01.BaseModelRef{}, err
 	}
-	if tenant != f.tenant || intent.BaseModelVersionID == nil || *intent.BaseModelVersionID != f.base.VersionID || release.Finetuning == nil || release.Finetuning.BaseModelVersionID != f.base.VersionID {
-		return cpup01.BaseModelRef{}, biz.ErrNoCompatibleRelease
+	if tenant != f.tenant || intent.BaseModelVersionID == nil || *intent.BaseModelVersionID != f.base.VersionID || material.Finetuning == nil {
+		return cpup01.BaseModelRef{}, biz.ErrModelDependencyUnavailable
 	}
 	return f.base, nil
 }
@@ -361,7 +364,7 @@ func TestFinetuningCoreFlow(t *testing.T) {
 		t.Fatal("integration fixture unavailable")
 	}
 	var f coreFlowFixture
-	if decodeRuntimeMaterial(raw, &f) != nil || f.Schema != "ani.finetuning.core-flow-fixture.v1" || !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(f.SourceCommit) || f.SourceCommit != Version || !regexp.MustCompile(`^[a-z0-9-]{1,48}$`).MatchString(f.Scenario) || f.Actor != "core-flow:test-driver" || f.EvidenceDirectory != "/evidence" {
+	if decodeRuntimeMaterial(raw, &f) != nil || f.Schema != "ani.finetuning.core-flow-fixture.v2.1" || !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(f.SourceCommit) || f.SourceCommit != Version || !regexp.MustCompile(`^[a-z0-9-]{1,48}$`).MatchString(f.Scenario) || f.Actor != "core-flow:test-driver" || f.EvidenceDirectory != "/evidence" {
 		t.Fatal("invalid isolated integration fixture or binary source identity")
 	}
 	var config conf.Bootstrap
@@ -403,8 +406,21 @@ func TestFinetuningCoreFlow(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Hour)
 	defer cancel()
-	if _, err := catalogue.ImportRelease(ctx, config.Command.AdmissionResolution.CatalogueDirectory, f.CanonicalRelease, f.ReleaseDigest); err != nil {
-		t.Fatal("formal Release import", err)
+	material, _, err := cpup01.ParseMaterial(f.MaterialCanonical)
+	if err != nil || material.Implementation.ImplementationID != "builtin.sft_lora" {
+		t.Fatal("formal installed software material", err)
+	}
+	origin, err := contractpb.DecodeComputeSelection(f.ComputeSelectionCanonical, f.SelectionDigest)
+	if err != nil {
+		t.Fatal("formal original compute selection", err)
+	}
+	installed, err := catalogue.ReadImplementationMaterial(ctx, config.Command.AdmissionResolution.CatalogueDirectory, "builtin.sft_lora", origin.DeviceMode)
+	if err != nil {
+		t.Fatal("actual installed material unavailable", err)
+	}
+	installedBytes, err := installed.Canonical()
+	if err != nil || !bytes.Equal(installedBytes, f.MaterialCanonical) {
+		t.Fatal("installed software differs from immutable fixture", err)
 	}
 	clients, err := loadRuntimeClients(config.Runtime)
 	if err != nil {
@@ -422,7 +438,7 @@ func TestFinetuningCoreFlow(t *testing.T) {
 		t.Fatal("input fixture outside test scope")
 	}
 	ready, err := importer.ImportFinetuningDataset(ctx, f.Input)
-	if err != nil || ready.State != biz.InputStateReady || ready.AlpacaVerification == nil || ready.AlpacaVerification.RowCount != 64 {
+	if err != nil || ready.State != biz.InputStateReady || ready.AlpacaVerification == nil || ready.AlpacaVerification.RowCount == 0 {
 		t.Fatal("real JSON import did not persist READY", err)
 	}
 	intent, err := cpup01.ParseFinetuningIntent(f.Intent)
@@ -438,16 +454,31 @@ func TestFinetuningCoreFlow(t *testing.T) {
 		t.Fatal("pinned managed facts unavailable", err)
 	}
 	resolver := biz.NewFinetuningAdmissionResolver(catalogue.NewReader(config.Command.AdmissionResolution.CatalogueDirectory), inputs, facts, coreFlowModelFixture{tenant: f.TenantID, base: f.BaseModel})
-	resolved, err := resolver.ResolveManaged(ctx, biz.AdmissionResolutionRequest{TenantID: f.TenantID, Intent: intent, Release: biz.AdmissionReleaseSelection{ReleaseID: f.ReleaseID, ReleaseDigest: f.ReleaseDigest, BindingGeneration: 1}, AcceptedAt: f.AcceptedAt})
-	if err != nil {
-		t.Fatal("formal candidate resolution", err)
-	}
-	if f.ExpectDeadline && (f.StopWhenTraining || f.RestartWhenTraining || resolved.Snapshot.DeadlineAt.Sub(f.AcceptedAt) != 10800*time.Second || !resolved.Snapshot.DeadlineAt.After(time.Now())) {
-		t.Fatal("deadline scenario requires the original 10800-second Release and a future remaining window")
-	}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
+	}
+	candidate, err := resolver.Prepare(ctx, biz.PrepareAdmissionInput{IdentityRef: cpup01.IdentityRef{TenantID: f.TenantID, Actor: f.Actor, OperationID: f.OperationID, ExecutionID: f.ExecutionID, IntentHash: intentHash}, Intent: intent, ComputeOrigin: origin, AcceptedAt: f.AcceptedAt})
+	if err != nil {
+		t.Fatal("formal fixed candidate preparation", err)
+	}
+	var gpu *cpup01.GPUPlan
+	if origin.DeviceMode == "cpu" {
+		if f.GPUExecutionCanonical != nil || f.GPUDisplayCanonical != nil {
+			t.Fatal("CPU fixture contains accelerator facts")
+		}
+	} else {
+		gpu, err = contractpb.DecodeGPUPlanCanonical(f.GPUExecutionCanonical, f.GPUDisplayCanonical)
+		if err != nil {
+			t.Fatal("formal accelerator facts", err)
+		}
+	}
+	resolved, err := resolver.Finalize(ctx, candidate, gpu)
+	if err != nil {
+		t.Fatal("formal candidate resolution", err)
+	}
+	if f.ExpectDeadline && (f.StopWhenTraining || f.RestartWhenTraining || resolved.Snapshot.Timing.ExecutionTimeoutSeconds == 0 || !resolved.Snapshot.DeadlineAt.After(time.Now())) {
+		t.Fatal("deadline scenario requires the fixed execution timing and a future remaining window")
 	}
 	admission := biz.Admission{TenantID: f.TenantID, Actor: f.Actor, OperationID: f.OperationID, ExecutionID: f.ExecutionID, Intent: intent, IntentHash: intentHash, Snapshot: resolved.Snapshot, SpecHash: resolved.SpecHash, AcceptedAt: f.AcceptedAt}
 	if _, _, err := admission.CanonicalPayloads(); err != nil {

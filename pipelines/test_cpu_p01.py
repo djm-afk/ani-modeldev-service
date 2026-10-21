@@ -22,6 +22,7 @@ class PipelineAssembly(unittest.TestCase):
                 "workspace_size": "2Gi",
                 "workspace_access_mode": "ReadWriteOnce",
                 "admission_profile": "cpu-v1",
+                "execution_timeout_max_seconds": 7200,
             }
             config = root / "compile.json"
             config.write_text(json.dumps(configuration), encoding="utf-8")
@@ -79,6 +80,7 @@ class PipelineAssembly(unittest.TestCase):
                     self.assertNotIn("{{$.pipeline_task_uuid}}", container["args"])
                 self.assertNotIn("sh", container["command"])
                 k8s = platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][executor]
+                self.assertEqual(int(k8s["activeDeadlineSeconds"]), configuration["execution_timeout_max_seconds"])
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/admission-profile"], "cpu-v1")
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/step-role"], name)
                 self.assertEqual(bool(k8s.get("pvcMount")), name in {"prepare", "collect", "publish"})
@@ -93,6 +95,7 @@ class PipelineAssembly(unittest.TestCase):
                 "component_image": "registry.example.test/modeldev-step@sha256:" + "a" * 64,
                 "owner_config_map": "cpu-step-owner-fixture", "storage_class": "cpu-workspace-fixture",
                 "workspace_size": "2Gi", "workspace_access_mode": "ReadWriteOnce",
+                "execution_timeout_max_seconds": 7200,
             }
             for index, profile in enumerate((None, "", "UPPER", "../another", "a" * 64)):
                 with self.subTest(profile=profile):

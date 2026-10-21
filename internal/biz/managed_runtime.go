@@ -192,6 +192,9 @@ func (runtime *ManagedRuntime) Ensure(ctx context.Context, token string, request
 	if err := runtime.workspaces.VerifyPreparedCompletion(ctx, result.Execution, request.Association, *result.Runtime.Workspace); err != nil {
 		return ManagedRuntimeResult{}, err
 	}
+	if err := runtime.materializeRuntime(ctx, result); err != nil {
+		return ManagedRuntimeResult{}, err
+	}
 	reservation, err := runtime.repository.ReserveTraining(ctx, result.Authority.RunAuthorityCandidate)
 	if err != nil {
 		return ManagedRuntimeResult{}, err
@@ -245,6 +248,67 @@ func (runtime *ManagedRuntime) Ensure(ctx context.Context, token string, request
 	return runtimeResult(result, state, !reservation.SendPermit)
 }
 
+// materializeRuntime belongs to ModelDev's authenticated EnsureTraining path.
+// KFP never receives Kubernetes authority. Persisted dispatch and bound UID
+// facts survive the owner process; neither lease expiry nor 404 recreates them.
+func (runtime *ManagedRuntime) materializeRuntime(ctx context.Context, result ManagedRuntimeResult) error {
+	authority := result.Authority.RunAuthorityCandidate
+	reserved, err := runtime.repository.ReserveRuntime(ctx, authority)
+	if err != nil {
+		return err
+	}
+	state := reserved.State
+	if state.Workspace == nil || state.TrainingWindow == nil || state.RuntimeTemplate == nil {
+		return ErrRuntimeNotReady
+	}
+	plan, err := FreezeTrainingPlan(result.Execution, *state.Workspace, state.TrainingWindow.AdmittedAt)
+	if err != nil {
+		return err
+	}
+	creationContext, cancel := context.WithDeadline(ctx, state.TrainingWindow.DeadlineAt)
+	defer cancel()
+	var binding RuntimeTemplateBinding
+	if reserved.SendPermit {
+		binding, err = runtime.trainer.CreateRuntime(creationContext, plan)
+	} else {
+		binding, err = runtime.trainer.FindRuntime(creationContext, plan)
+	}
+	if err != nil {
+		write, done := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer done()
+		var notSent *RuntimeCreationNotSent
+		if reserved.SendPermit && errors.As(err, &notSent) {
+			proof := *notSent
+			proof.AttemptDispatchedAt = state.RuntimeTemplate.Attempts[len(state.RuntimeTemplate.Attempts)-1].DispatchedAt
+			if _, recordErr := runtime.repository.RecordRuntimeNotSent(write, authority, proof); recordErr != nil {
+				return recordErr
+			}
+		} else if state.RuntimeTemplate.Binding == nil && errors.Is(err, ErrTrainingNotFound) {
+			if _, recordErr := runtime.repository.RecordRuntimeReview(write, authority); recordErr != nil {
+				return recordErr
+			}
+			return ErrTrainingUncertain
+		} else if state.RuntimeTemplate.Binding != nil && (errors.Is(err, ErrRuntimeConflict) || errors.Is(err, ErrTrainingNotFound)) {
+			// Drift prevents new computation, but the normal owner closes already
+			// bound computation using its original TrainJob UID and writer graph.
+			if _, _, closeErr := runtime.repository.RequestRuntimeClose(write, authority, "STEP_FAILED"); closeErr != nil {
+				return closeErr
+			}
+		}
+		return err
+	}
+	if state.RuntimeTemplate.Binding != nil && *state.RuntimeTemplate.Binding != binding {
+		write, done := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer done()
+		_, _, _ = runtime.repository.RequestRuntimeClose(write, authority, "STEP_FAILED")
+		return ErrRuntimeConflict
+	}
+	write, done := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	defer done()
+	_, err = runtime.repository.RecordRuntimeBinding(write, authority, binding)
+	return err
+}
+
 // observe recovers a lost creation response by deterministic lookup only. It
 // does not reissue creation and retains all previously observed writer UIDs.
 func (runtime *ManagedRuntime) observe(ctx context.Context, result ManagedRuntimeResult) (ExecutionRuntime, error) {
@@ -273,7 +337,17 @@ func (runtime *ManagedRuntime) observe(ctx context.Context, result ManagedRuntim
 	if err != nil {
 		return state, err
 	}
-	return runtime.repository.RecordTrainingObservation(ctx, result.Authority.RunAuthorityCandidate, observation)
+	state, err = runtime.repository.RecordTrainingObservation(ctx, result.Authority.RunAuthorityCandidate, observation)
+	if err != nil {
+		return state, err
+	}
+	if observation.SpecificationMismatch {
+		state, _, err = runtime.repository.RequestRuntimeClose(ctx, result.Authority.RunAuthorityCandidate, "STEP_FAILED")
+		if err == nil {
+			err = ErrRuntimeConflict
+		}
+	}
+	return state, err
 }
 func (runtime *ManagedRuntime) Status(ctx context.Context, token string, request BeginManagedExecutionRequest) (ManagedRuntimeResult, error) {
 	result, err := runtime.authenticate(ctx, token, request, "train-wait")

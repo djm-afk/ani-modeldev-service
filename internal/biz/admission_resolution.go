@@ -2,12 +2,8 @@ package biz
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"path"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -16,296 +12,236 @@ import (
 )
 
 var (
-	ErrNoCompatibleRelease          = errors.New("NO_COMPATIBLE_RELEASE")
+	ErrImplementationUnavailable    = errors.New("IMPLEMENTATION_UNAVAILABLE")
 	ErrAdmissionInputNotReady       = errors.New("INPUT_NOT_READY")
 	ErrAdmissionEnvironmentNotReady = errors.New("ENVIRONMENT_NOT_READY")
+	ErrAdmissionPlanMismatch        = errors.New("ADMISSION_PLAN_MISMATCH")
+	ErrUnsupportedDevice            = errors.New("UNSUPPORTED_DEVICE")
 )
 
-// AdmissionReleaseSelection is one explicit Governance pointer observation.
-// ModelDev must preserve its generation and never choose a current Release.
-type AdmissionReleaseSelection struct {
-	ReleaseID         string
-	ReleaseDigest     string
-	BindingGeneration uint64
+type PrepareAdmissionInput struct {
+	IdentityRef   cpup01.IdentityRef
+	Intent        cpup01.Intent
+	ComputeOrigin cpup01.ComputeOrigin
+	AcceptedAt    time.Time
 }
 
-// AdmissionResolutionRequest follows current authorization and an original-key
-// miss in Governance. AcceptedAt is fixed by Governance, not this resolver.
-type AdmissionResolutionRequest struct {
-	TenantID   string
-	Intent     cpup01.Intent
-	Release    AdmissionReleaseSelection
-	AcceptedAt time.Time
-}
-
-// TenantAdmissionFacts is explicit managed configuration, never user JSON.
-// The supplying owner must establish the tenant association, revision digest,
-// actual identities, storage authority and Runtime/workspace mount evidence.
-// A typed value or a matching shape alone establishes none of those facts.
 type TenantAdmissionFacts struct {
 	TenantID            string
 	Environment         cpup01.EnvironmentBindingSnapshot
 	PublicationScope    cpup01.StorageScope
 	InputScope          cpup01.StorageScope
-	Runtime             cpup01.RuntimeRef
 	Workspace           cpup01.WorkspaceContract
 	InputFilePath       string
 	OutputDirectoryPath string
+	Timing              cpup01.TimingConfiguration
 }
 
-// AdmissionResolution is an unpersisted candidate, not an acceptance receipt.
-// Governance must bind real command IDs and commit its generation/key checks.
 type AdmissionResolution struct {
 	Snapshot cpup01.Snapshot
 	SpecHash string
 }
-
-// AdmissionReleaseReader returns a validated canonical Release whose actual
-// bytes match the selected ID and digest, or a finite domain error.
-type AdmissionReleaseReader interface {
-	ReadRelease(context.Context, string, string) (cpup01.ReleaseDocument, error)
+type AdmissionMaterialReader interface {
+	ReadImplementationMaterial(context.Context, string, string) (cpup01.ImplementationMaterial, error)
 }
-
 type AdmissionInputReader interface {
 	Get(context.Context, string, string) (InputVersion, error)
 }
-
-// AdmissionFactsReader returns managed facts for one explicit tenant/Release
-// combination. Governance's current binding generation never selects this data.
-// The reader fixes actual configured bytes; it does not certify ENV readiness.
 type AdmissionFactsReader interface {
-	ReadAdmissionFacts(context.Context, string, string, string) (TenantAdmissionFacts, error)
+	ReadAdmissionFacts(context.Context, string, string) (TenantAdmissionFacts, error)
 }
-
-// AdmissionResolver owns fixed-fact composition, not authentication, current
-// pointers, environment discovery, command identity allocation or persistence.
 type AdmissionResolver struct {
-	releases AdmissionReleaseReader
-	inputs   AdmissionInputReader
-	facts    AdmissionFactsReader
-	models   FinetuningModelFactsReader
+	materials AdmissionMaterialReader
+	inputs    AdmissionInputReader
+	facts     AdmissionFactsReader
+	models    FinetuningModelFactsReader
 }
 
-func NewAdmissionResolver(releases AdmissionReleaseReader, inputs AdmissionInputReader) *AdmissionResolver {
-	return &AdmissionResolver{releases: releases, inputs: inputs}
+func NewAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader) *AdmissionResolver {
+	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts}
 }
 
-// NewManagedAdmissionResolver binds a real managed facts owner. Callers of its
-// managed entry point cannot supply environment or storage facts in a request.
-func NewManagedAdmissionResolver(releases AdmissionReleaseReader, inputs AdmissionInputReader, facts AdmissionFactsReader) *AdmissionResolver {
-	return &AdmissionResolver{releases: releases, inputs: inputs, facts: facts}
-}
-
-func (resolver *AdmissionResolver) ResolveManaged(ctx context.Context, request AdmissionResolutionRequest) (AdmissionResolution, error) {
+func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissionInput) (cpup01.PreparedCandidate, error) {
 	if err := ctx.Err(); err != nil {
-		return AdmissionResolution{}, err
-	}
-	if resolver == nil || resolver.facts == nil {
-		return AdmissionResolution{}, ErrAdmissionEnvironmentNotReady
-	}
-	facts, err := resolver.facts.ReadAdmissionFacts(ctx, request.TenantID, request.Release.ReleaseID, request.Release.ReleaseDigest)
-	if err := ctx.Err(); err != nil {
-		return AdmissionResolution{}, err
-	}
-	if err != nil {
-		return AdmissionResolution{}, err
-	}
-	return resolver.Resolve(ctx, request, facts)
-}
-
-func (resolver *AdmissionResolver) Resolve(ctx context.Context, request AdmissionResolutionRequest, facts TenantAdmissionFacts) (AdmissionResolution, error) {
-	if err := ctx.Err(); err != nil {
-		return AdmissionResolution{}, err
+		return cpup01.PreparedCandidate{}, err
 	}
 	intent, err := canonicalResolutionIntent(request.Intent)
 	if err != nil {
-		return AdmissionResolution{}, err
+		return cpup01.PreparedCandidate{}, err
 	}
-	acceptedAt := request.AcceptedAt.UTC()
-	if !validAdmissionID(request.TenantID) || !validAdmissionID(request.Release.ReleaseID) ||
-		!closeSpecHashPattern.MatchString(request.Release.ReleaseDigest) || request.Release.BindingGeneration == 0 ||
-		acceptedAt.IsZero() || acceptedAt.Year() < 1 || acceptedAt.Year() > 9999 || acceptedAt.Nanosecond()%1000 != 0 {
-		return AdmissionResolution{}, ErrInvalidAdmission
+	_, intentHash, err := cpup01.CanonicalIntent(intent)
+	identity := request.IdentityRef
+	if err != nil || identity.IntentHash != intentHash || !validAdmissionID(identity.TenantID) || !validAdmissionID(identity.OperationID) || !validAdmissionID(identity.ExecutionID) || !cpup01.ValidAuditActor(identity.Actor) || request.ComputeOrigin.Validate() != nil || request.ComputeOrigin.ComputePresetID != intent.ComputePresetID {
+		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
 	}
-	if !strings.EqualFold(facts.TenantID, request.TenantID) {
-		return AdmissionResolution{}, ErrAdmissionEnvironmentNotReady
+	if r == nil || r.materials == nil || r.inputs == nil || r.facts == nil {
+		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
 	}
-	if resolver == nil || resolver.releases == nil || resolver.inputs == nil {
-		return AdmissionResolution{}, ErrPersistence
-	}
-	release, err := resolver.releases.ReadRelease(ctx, strings.ToLower(request.Release.ReleaseID), request.Release.ReleaseDigest)
-	if err := ctx.Err(); err != nil {
-		return AdmissionResolution{}, err
-	}
+	material, err := r.materials.ReadImplementationMaterial(ctx, intent.ImplementationID, request.ComputeOrigin.DeviceMode)
 	if err != nil {
-		return AdmissionResolution{}, err
+		return cpup01.PreparedCandidate{}, err
 	}
-	if release.ReleaseID != strings.ToLower(request.Release.ReleaseID) || release.PresetID != intent.PresetID ||
-		release.Kind != intent.Kind || !supportedAdmissionProgram(release) ||
-		release.ExecutionTimeoutSeconds == 0 ||
-		(intent.ImageVersionID != nil && *intent.ImageVersionID != release.Program.ImageVersionID) {
-		return AdmissionResolution{}, ErrNoCompatibleRelease
+	if _, err := material.Canonical(); err != nil || material.Implementation.ImplementationID != intent.ImplementationID {
+		return cpup01.PreparedCandidate{}, ErrImplementationUnavailable
 	}
-	version, err := resolver.inputs.Get(ctx, strings.ToLower(request.TenantID), intent.DatasetVersionID)
-	if err := ctx.Err(); err != nil {
-		return AdmissionResolution{}, err
-	}
+	facts, err := r.facts.ReadAdmissionFacts(ctx, identity.TenantID, intent.ImplementationID)
 	if err != nil {
-		return AdmissionResolution{}, err
+		return cpup01.PreparedCandidate{}, err
 	}
-	if !strings.EqualFold(version.Import.TenantID, request.TenantID) || version.Import.InputVersionID != intent.DatasetVersionID {
-		return AdmissionResolution{}, ErrPersistence
+	if !strings.EqualFold(facts.TenantID, identity.TenantID) || facts.Workspace != material.Workspace {
+		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
+	}
+	timing, err := facts.Timing.Resolve(request.AcceptedAt, intent.TimeoutSeconds)
+	if err != nil {
+		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
+	}
+	version, err := r.inputs.Get(ctx, identity.TenantID, intent.DatasetVersionID)
+	if err != nil {
+		return cpup01.PreparedCandidate{}, err
+	}
+	if version.Import.TenantID != identity.TenantID || version.Import.InputVersionID != intent.DatasetVersionID {
+		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
 	}
 	input, err := verifiedAdmissionInput(version, intent.Kind)
 	if err != nil {
-		return AdmissionResolution{}, err
+		return cpup01.PreparedCandidate{}, err
 	}
-	if !compatibleAdmissionFacts(facts, release, version.Import.Object) {
-		return AdmissionResolution{}, ErrAdmissionEnvironmentNotReady
+	if !compatibleAdmissionFacts(facts, input.Object, intent.Kind) {
+		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
 	}
-	// Parsed Release defaults and canonical explicit parameters share the same
-	// registered grammar. Merge copies, preserving the original Intent presence.
-	parameters := slices.Clone(release.Program.DefaultParameters)
-	var finetuning *cpup01.FinetuningSnapshot
+	parameters, err := intent.ResolveParameters()
+	if err != nil {
+		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
+	}
+	var fine *cpup01.FinetuningSnapshot
 	if intent.Kind == "FINETUNING" {
-		if resolver.models == nil {
-			return AdmissionResolution{}, ErrFinetuningNotEnabled
-		}
-		parameters, err = cpup01.ResolveFinetuningParameters(release.Program, *intent.Finetuning)
+		fine, err = r.resolveFinetuningModelFacts(ctx, identity.TenantID, intent, material, parameters, input.Object, request.ComputeOrigin.DeviceMode)
 		if err != nil {
-			return AdmissionResolution{}, err
-		}
-		finetuning, err = resolver.resolveFinetuningModelFacts(ctx, request.TenantID, intent, release, parameters, input.Object)
-		if err != nil {
-			return AdmissionResolution{}, err
+			return cpup01.PreparedCandidate{}, err
 		}
 	}
-	if intent.GeneralParameters != nil {
-		for _, selected := range *intent.GeneralParameters {
-			matched := false
-			for index := range parameters {
-				if parameters[index].Name == selected.Name {
-					parameters[index] = selected
-					matched = true
-					break
-				}
-			}
-			if !matched {
-				return AdmissionResolution{}, ErrNoCompatibleRelease
-			}
-		}
-	}
-	var arguments []string
-	if finetuning != nil {
-		arguments, err = resolveFinetuningArguments(release.Program.ArgsTemplate, input.Object, finetuning.BaseModel)
+	var args []string
+	if fine != nil {
+		args, err = resolveFinetuningArguments(material.Program.ArgsTemplate, input.Object, fine.BaseModel)
 	} else {
-		arguments, err = resolveAdmissionArguments(release.Program.ArgsTemplate, parameters, facts, version.Import.Object)
+		args, err = resolveAdmissionArguments(material.Program.ArgsTemplate, parameters, facts, input.Object)
 	}
 	if err != nil {
-		return AdmissionResolution{}, err
+		return cpup01.PreparedCandidate{}, err
 	}
-	deadline := acceptedAt.Add(time.Duration(release.ExecutionTimeoutSeconds) * time.Second)
-	if !deadline.After(acceptedAt) || deadline.Year() > 9999 {
-		return AdmissionResolution{}, ErrInvalidAdmission
-	}
-	snapshot := cpup01.Snapshot{
-		SchemaVersion: cpup01.SnapshotSchemaVersion, Kind: release.Kind, DeliveryMode: release.DeliveryMode,
-		Release: cpup01.ReleaseSnapshot{
-			ReleaseID: release.ReleaseID, ReleaseDigest: request.Release.ReleaseDigest, PresetID: release.PresetID,
-			AcceptedBindingGeneration: request.Release.BindingGeneration,
-			PipelineID:                release.PipelineID, PipelineVersionID: release.PipelineVersionID,
-			PipelineIRSHA256: release.PipelineIRSHA256, Runtime: release.Runtime,
-		},
-		Input: input,
-		Program: cpup01.ProgramRef{
-			ImageVersionID: release.Program.ImageVersionID, ImageDigest: release.Program.ImageDigest,
-			Command: release.Program.Command, ResolvedArgs: arguments, ResolvedParameters: parameters,
-		},
-		Resources: release.Resources, Environment: facts.Environment, Workspace: release.Workspace,
-		PublicationScope: facts.PublicationScope, OutputContract: release.OutputContract, DeadlineAt: deadline,
-		Finetuning: finetuning,
-	}
-	canonical, err := snapshot.Canonical()
+	memory := request.ComputeOrigin.MemoryMiB * 1024 * 1024
+	snapshot := cpup01.Snapshot{SchemaVersion: cpup01.SnapshotSchemaVersion, Kind: intent.Kind, DeliveryMode: "SAVE_ARTIFACTS", IdentityRef: identity, Implementation: material.Implementation, ComputeOrigin: request.ComputeOrigin, Timing: timing, Input: input, Program: cpup01.ProgramRef{ImageVersionID: material.Program.ImageVersionID, ImageDigest: material.Program.ImageDigest, Command: append([]string{}, material.Program.Command...), ResolvedArgs: args, ResolvedParameters: parameters}, Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: request.ComputeOrigin.CPUMillis, LimitMillicpu: request.ComputeOrigin.CPUMillis, RequestMemoryBytes: memory, LimitMemoryBytes: memory}, Environment: facts.Environment, Workspace: facts.Workspace, PublicationScope: facts.PublicationScope, OutputContract: material.OutputContract, DeadlineAt: timing.ExecutionDeadlineAt, Finetuning: fine}
+	gpuRequest, err := cpup01.GPURequestFor(request.ComputeOrigin)
 	if err != nil {
-		return AdmissionResolution{}, ErrInvalidAdmission
+		return cpup01.PreparedCandidate{}, ErrUnsupportedDevice
 	}
-	// Decode only our validated canonical bytes to return a fully independent,
-	// normalized typed value. No caller-owned slice or optional pointer escapes.
-	var normalized cpup01.Snapshot
-	if json.Unmarshal(canonical, &normalized) != nil {
-		return AdmissionResolution{}, ErrInvalidAdmission
+	candidate := cpup01.PreparedCandidate{SchemaVersion: cpup01.CandidateSchemaVersion, Intent: intent, Snapshot: snapshot, GPURequest: gpuRequest}
+	if err := candidate.Validate(); err != nil {
+		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
+	}
+	if err := ctx.Err(); err != nil {
+		return cpup01.PreparedCandidate{}, err
+	}
+	// Detach every slice and optional object reference from provider-owned facts.
+	raw, err := candidate.Canonical()
+	if err != nil {
+		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
+	}
+	hash, err := candidate.Digest()
+	if err != nil {
+		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
+	}
+	normalized, err := cpup01.DecodePreparedCandidate(raw, hash)
+	if err != nil {
+		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
+	}
+	return normalized, nil
+}
+
+func (r *AdmissionResolver) Finalize(ctx context.Context, candidate cpup01.PreparedCandidate, gpu *cpup01.GPUPlan) (AdmissionResolution, error) {
+	if r == nil {
+		return AdmissionResolution{}, ErrAdmissionEnvironmentNotReady
 	}
 	if err := ctx.Err(); err != nil {
 		return AdmissionResolution{}, err
 	}
-	digest := sha256.Sum256(canonical)
-	return AdmissionResolution{Snapshot: normalized, SpecHash: hex.EncodeToString(digest[:])}, nil
+	if candidate.Validate() != nil {
+		return AdmissionResolution{}, ErrAdmissionPlanMismatch
+	}
+	// Finalize consumes the original candidate and already-validated formal ACC facts only.
+	snapshot := candidate.Snapshot
+	if snapshot.ComputeOrigin.DeviceMode == "cpu" {
+		if gpu != nil {
+			return AdmissionResolution{}, ErrAdmissionPlanMismatch
+		}
+	} else {
+		if gpu == nil || gpu.ValidateFor(snapshot.ComputeOrigin) != nil {
+			return AdmissionResolution{}, ErrAdmissionPlanMismatch
+		}
+		snapshot.GPU = gpu
+	}
+	plan, err := CompileRuntimePlan(snapshot)
+	if err != nil {
+		return AdmissionResolution{}, err
+	}
+	snapshot.RuntimePlan = plan
+	hash, err := snapshot.Digest()
+	if err != nil {
+		return AdmissionResolution{}, ErrAdmissionPlanMismatch
+	}
+	raw, err := snapshot.Canonical()
+	if err != nil {
+		return AdmissionResolution{}, ErrAdmissionPlanMismatch
+	}
+	normalized, err := cpup01.DecodeCanonicalSnapshot(raw)
+	if err != nil {
+		return AdmissionResolution{}, ErrAdmissionPlanMismatch
+	}
+	return AdmissionResolution{Snapshot: normalized, SpecHash: hash}, nil
 }
 
 func canonicalResolutionIntent(original cpup01.Intent) (cpup01.Intent, error) {
-	canonical, _, err := cpup01.CanonicalIntent(original)
+	raw, _, err := cpup01.CanonicalIntent(original)
 	if err != nil {
 		return cpup01.Intent{}, ErrInvalidAdmission
 	}
-	var value struct {
-		Schema string `json:"schema"`
-		cpup01.Intent
-	}
-	if json.Unmarshal(canonical, &value) != nil {
+	intent, err := cpup01.DecodeCanonicalIntent(raw)
+	if err != nil {
 		return cpup01.Intent{}, ErrInvalidAdmission
 	}
-	return value.Intent, nil
+	return intent, nil
 }
-
-func compatibleAdmissionFacts(facts TenantAdmissionFacts, release cpup01.ReleaseDocument, object cpup01.FixedObjectRef) bool {
-	want, actual := release.Runtime, facts.Runtime
-	wantTargets, actualTargets := slices.Clone(want.TargetJobs), slices.Clone(actual.TargetJobs)
-	slices.Sort(wantTargets)
-	slices.Sort(actualTargets)
-	if want.Name != actual.Name || want.Kind != actual.Kind || want.APIGroup != actual.APIGroup ||
-		want.ContentSHA256 != actual.ContentSHA256 || !slices.Equal(wantTargets, actualTargets) || release.Workspace != facts.Workspace {
+func compatibleAdmissionFacts(f TenantAdmissionFacts, object cpup01.FixedObjectRef, kind string) bool {
+	if kind == "GENERAL_TRAINING" && (f.InputFilePath != "/inputs/data.csv" || f.OutputDirectoryPath != "/outputs") {
 		return false
 	}
-	scope := facts.InputScope
-	if scope.StorageConnectionID != object.StorageConnectionID || scope.Bucket != object.Bucket ||
-		!ValidStorageKey(scope.ApprovedPrefix) || !strings.HasPrefix(object.Key, scope.ApprovedPrefix+"/") {
+	if kind == "FINETUNING" && (f.InputFilePath != "/workspace/inputs/data/finetune_data.json" || f.OutputDirectoryPath != "/workspace/training") {
 		return false
 	}
-	input, output := facts.InputFilePath, facts.OutputDirectoryPath
-	return validAdmissionContainerPath(input) && validAdmissionContainerPath(output) &&
-		input != output && !strings.HasPrefix(input, output+"/") && !strings.HasPrefix(output, input+"/")
+	scope := f.InputScope
+	return scope.StorageConnectionID == object.StorageConnectionID && scope.Bucket == object.Bucket && ValidStorageKey(scope.ApprovedPrefix) && strings.HasPrefix(object.Key, scope.ApprovedPrefix+"/") && validAdmissionContainerPath(f.InputFilePath) && validAdmissionContainerPath(f.OutputDirectoryPath) && f.InputFilePath != f.OutputDirectoryPath && !strings.HasPrefix(f.InputFilePath, f.OutputDirectoryPath+"/") && !strings.HasPrefix(f.OutputDirectoryPath, f.InputFilePath+"/")
 }
-
 func validAdmissionContainerPath(value string) bool {
-	return path.IsAbs(value) && path.Clean(value) == value &&
-		ValidStorageKey(strings.TrimPrefix(value, "/")) && !strings.ContainsAny(value, "*?[]")
+	return path.IsAbs(value) && path.Clean(value) == value && ValidStorageKey(strings.TrimPrefix(value, "/")) && !strings.ContainsAny(value, "*?[]")
 }
-
-func resolveAdmissionArguments(template []cpup01.ReleaseArgument, parameters []cpup01.Parameter, facts TenantAdmissionFacts, object cpup01.FixedObjectRef) ([]string, error) {
-	learningRate := ""
-	for _, parameter := range parameters {
-		if parameter.Name == "learning_rate" {
-			learningRate = parameter.Value
-		}
+func resolveAdmissionArguments(template []cpup01.MaterialArgument, parameters []cpup01.Parameter, facts TenantAdmissionFacts, object cpup01.FixedObjectRef) ([]string, error) {
+	values := map[string]string{"INPUT_PATH": facts.InputFilePath, "OUTPUT_PATH": facts.OutputDirectoryPath, "INPUT_SHA256": object.SHA256, "INPUT_BYTES": strconv.FormatInt(object.SizeBytes, 10)}
+	for _, p := range parameters {
+		values[strings.ToUpper(p.Name)] = p.Value
 	}
-	values := map[string]string{
-		"INPUT_PATH": facts.InputFilePath, "OUTPUT_PATH": facts.OutputDirectoryPath,
-		"INPUT_SHA256": object.SHA256, "INPUT_BYTES": strconv.FormatInt(object.SizeBytes, 10), "LEARNING_RATE": learningRate,
-	}
-	arguments := make([]string, 0, len(template))
-	for _, argument := range template {
-		if (argument.Literal == "") == (argument.Source == "") {
-			return nil, ErrNoCompatibleRelease
+	args := make([]string, 0, len(template))
+	for _, a := range template {
+		if (a.Literal == "") == (a.Source == "") {
+			return nil, ErrImplementationUnavailable
 		}
-		value := argument.Literal
-		if argument.Source != "" {
-			var found bool
-			value, found = values[argument.Source]
-			if !found || value == "" {
-				return nil, ErrNoCompatibleRelease
+		value := a.Literal
+		if a.Source != "" {
+			value = values[a.Source]
+			if value == "" {
+				return nil, ErrImplementationUnavailable
 			}
 		}
-		arguments = append(arguments, value)
+		args = append(args, value)
 	}
-	return arguments, nil
+	return args, nil
 }

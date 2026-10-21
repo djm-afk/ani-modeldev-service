@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
@@ -15,90 +14,59 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 )
 
-func TestReadReleaseRetainsExplicitOldVersionAcrossFreshReads(t *testing.T) {
-	directory := t.TempDir()
-	oldID := "11111111-1111-4111-8111-111111111111"
-	newID := "22222222-2222-4222-8222-222222222222"
-	oldRaw := []byte(releaseFixtureV1)
-	newRaw := []byte(strings.ReplaceAll(strings.ReplaceAll(releaseFixtureV1, oldID, newID),
-		"55555555-5555-4555-8555-555555555555", "77777777-7777-4777-8777-777777777777"))
-	for id, raw := range map[string][]byte{oldID: oldRaw, newID: newRaw} {
-		if err := os.WriteFile(filepath.Join(directory, id+".json"), raw, 0600); err != nil {
-			t.Fatalf("CPU04_CATALOGUE_PREFLIGHT: fixture write failed; behavior NOT_RUN: %v", err)
-		}
-	}
-	oldHash := sha256.Sum256(oldRaw)
-	newHash := sha256.Sum256(newRaw)
-	want := releaseFixtureDocument()
-
-	first, err := catalogue.ReadRelease(context.Background(), directory, oldID, hex.EncodeToString(oldHash[:]))
+func materialFixture(t *testing.T) (cpup01.ImplementationMaterial, []byte) {
+	t.Helper()
+	m := conformance.MaterialV21()
+	raw, err := m.Canonical()
 	if err != nil {
-		t.Fatalf("read explicitly selected old Release: %v", err)
+		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(first, want) {
-		t.Fatalf("old Release lost its fixed program/runtime/output contract: got %+v", first)
+	return m, raw
+}
+func writeMaterial(t *testing.T, directory, id, mode string, raw []byte) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(directory, id+"."+mode+".json"), raw, 0600); err != nil {
+		t.Fatal(err)
 	}
-	newRelease, err := catalogue.ReadRelease(context.Background(), directory, newID, hex.EncodeToString(newHash[:]))
-	if err != nil || newRelease.ReleaseID != newID || newRelease.PipelineVersionID != "77777777-7777-4777-8777-777777777777" {
-		t.Fatalf("read explicitly selected new Release: got %+v, err %v", newRelease, err)
+}
+
+func TestInstalledFiniteImplementationMaterialHasExactBytesAndFreshCopies(t *testing.T) {
+	want, raw := materialFixture(t)
+	directory := t.TempDir()
+	writeMaterial(t, directory, "builtin.mlp", "cpu", raw)
+	parsed, digest, err := cpup01.ParseMaterial(raw)
+	sum := sha256.Sum256(raw)
+	if err != nil || digest != hex.EncodeToString(sum[:]) || !reflect.DeepEqual(parsed, want) {
+		t.Fatal("fixed software material lost bytes", err)
 	}
-	// A fresh read has no earlier return value or process-local current pointer.
-	// Caller mutation must not change the immutable file or a later result.
-	first.Program.Command[0] = "caller-local-mutation"
-	again, err := catalogue.ReadRelease(context.Background(), directory, oldID, hex.EncodeToString(oldHash[:]))
+	reader := catalogue.NewReader(directory)
+	if err := reader.Check(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	first, err := reader.ReadImplementationMaterial(context.Background(), "builtin.mlp", "cpu")
+	if err != nil || !reflect.DeepEqual(first, want) {
+		t.Fatal(err)
+	}
+	first.Program.Command[0] = "caller-mutation"
+	first.OutputContract.RequiredFiles[0].RelativePath = "caller-mutation"
+	again, err := catalogue.ReadImplementationMaterial(context.Background(), directory, "builtin.mlp", "cpu")
 	if err != nil || !reflect.DeepEqual(again, want) {
-		t.Fatalf("new version or caller mutation displaced old Release: got %+v, err %v", again, err)
+		t.Fatal("caller mutated installed material", err)
+	}
+	// Installing another finite device file cannot replace the CPU selection.
+	other := conformance.MaterialV21()
+	other.Program.ImageVersionID = "66666666-6666-4666-8666-666666666666"
+	otherRaw, err := other.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeMaterial(t, directory, "builtin.mlp", "gpu", otherRaw)
+	again, err = reader.ReadImplementationMaterial(context.Background(), "builtin.mlp", "cpu")
+	if err != nil || !reflect.DeepEqual(again, want) {
+		t.Fatal("device selection changed existing material", err)
+	}
+	gpu, err := reader.ReadImplementationMaterial(context.Background(), "builtin.mlp", "gpu")
+	if err != nil || !reflect.DeepEqual(gpu, other) {
+		t.Fatal("finite GPU software source not selected", err)
 	}
 }
-
-// These authored module-only values identify no real PipelineVersion, image,
-// Runtime, StorageClass or approved catalogue. They are never production data.
-func releaseFixtureDocument() cpup01.ReleaseDocument {
-	return cpup01.ReleaseDocument{
-		SchemaVersion: cpup01.ReleaseSchemaVersion,
-		ReleaseID:     "11111111-1111-4111-8111-111111111111",
-		PresetID:      "33333333-3333-4333-8333-333333333333",
-		Kind:          "GENERAL_TRAINING", DeliveryMode: "SAVE_ARTIFACTS",
-		PipelineID:        "44444444-4444-4444-8444-444444444444",
-		PipelineVersionID: "55555555-5555-4555-8555-555555555555",
-		PipelineIRSHA256:  strings.Repeat("a", 64),
-		Runtime: cpup01.RuntimeRef{
-			Name: "cpu-module-fixture", Kind: "ClusterTrainingRuntime", APIGroup: "trainer.kubeflow.org",
-			ContentSHA256: strings.Repeat("b", 64), TargetJobs: []string{"trainer"},
-		},
-		Program: cpup01.ReleaseProgram{
-			ImageVersionID: "66666666-6666-4666-8666-666666666666",
-			ImageDigest:    "registry.example.test/cpu-mlp@sha256:" + strings.Repeat("c", 64),
-			Command:        []string{"/opt/venv/bin/python", "-I", "/opt/cpu03/train_mlp.py"},
-			ArgsTemplate: []cpup01.ReleaseArgument{
-				{Literal: "--data"}, {Source: "INPUT_PATH"},
-				{Literal: "--output"}, {Source: "OUTPUT_PATH"},
-				{Literal: "--expected-input-sha256"}, {Source: "INPUT_SHA256"},
-				{Literal: "--expected-input-bytes"}, {Source: "INPUT_BYTES"},
-				{Literal: "--learning-rate"}, {Source: "LEARNING_RATE"},
-			},
-			ParameterContractVersion: "ani.cpu.mlp.parameters.v1",
-			DefaultParameters: []cpup01.Parameter{
-				{Name: "batch_size", Type: "INTEGER", Value: "64"},
-				{Name: "epochs", Type: "INTEGER", Value: "3"},
-				{Name: "learning_rate", Type: "DECIMAL", Value: "0.01"},
-			},
-		},
-		Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1,
-			RequestMillicpu: 1000, LimitMillicpu: 2000, RequestMemoryBytes: 1073741824, LimitMemoryBytes: 2147483648},
-		Workspace: cpup01.WorkspaceContract{Mode: "EXECUTION_PVC", StorageClass: "module-fixture-sc", CapacityBytes: 1073741824,
-			InputSubpath: "input", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication"},
-		OutputContract: cpup01.OutputContract{SchemaVersion: "ani.cpu.output.v1", OutputKind: "CHECKPOINT", DeliveryMode: "SAVE_ARTIFACTS",
-			RequiredFiles: []cpup01.RequiredOutput{
-				{Role: "METRICS", RelativePath: "metrics.jsonl", MaxSizeBytes: 16777216},
-				{Role: "CHECKPOINT", RelativePath: "model.pt", MaxSizeBytes: 33554432},
-				{Role: "MODEL_CONFIG", RelativePath: "model_config.json", MaxSizeBytes: 1048576},
-				{Role: "SUMMARY", RelativePath: "summary.json", MaxSizeBytes: 1048576},
-			},
-			MaxFileCount: 4, MaxTotalBytes: 104857600, CreateTarBundle: false,
-		},
-		ExecutionTimeoutSeconds: 1800,
-	}
-}
-
-var releaseFixtureV1 = string(conformance.ReleaseCanonicalV1())

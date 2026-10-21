@@ -8,6 +8,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -28,6 +29,8 @@ func finetuningPredecessorFixture(t *testing.T) (*ownerCloseFixture, biz.Managed
 	}
 	f.execution.Snapshot, f.execution.Intent = snapshot, intent
 	f.execution.SpecHash, f.execution.IntentHash = specHash, intentHash
+	f.execution.Admission = admissionfixture.Bind(t, f.execution.Admission)
+	snapshot, specHash = f.execution.Snapshot, f.execution.SpecHash
 	plan, err := (biz.PipelineDispatchRequest{Admission: f.execution.Admission, Owner: f.dispatch.Plan.Owner}).Freeze()
 	if err != nil {
 		t.Fatal(err)

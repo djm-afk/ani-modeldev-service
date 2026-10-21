@@ -35,6 +35,9 @@ func (repository *Repository) RecordRegistrationIntent(ctx context.Context, auth
 		if err := requireOpen(current); err != nil {
 			return false, err
 		}
+		if err := requireRoleWindow(current, "register"); err != nil {
+			return false, err
+		}
 		content.RecordedAt = current.now
 		content.DeadlineAt = registrationDeadline(current, current.now)
 		content.State = biz.RegistrationStatePending
@@ -80,6 +83,9 @@ func (repository *Repository) PermitRegistrationDispatch(ctx context.Context, au
 			}
 		}
 		if err := requireOpen(current); err != nil {
+			return false, err
+		}
+		if err := requireRoleWindow(current, "register"); err != nil {
 			return false, err
 		}
 		permit := biz.FinetuningRegistrationDispatch{Operation: operation, State: biz.DispatchInFlight,
@@ -201,11 +207,11 @@ func validRegistrationDispatches(current *runtimeTransaction, stored biz.Finetun
 // registrationDeadline fixes the single registration budget at the database
 // time the intent was recorded. It is never re-claimed by a later dispatch.
 func registrationDeadline(current *runtimeTransaction, recordedAt time.Time) time.Time {
-	deadline := recordedAt.Add(time.Duration(current.execution.Snapshot.Finetuning.Budgets.RPCTimeoutSeconds) * time.Second)
-	if current.execution.Snapshot.DeadlineAt.Before(deadline) {
-		deadline = current.execution.Snapshot.DeadlineAt
+	timing := biz.TimingForManagedRole(current.state, "register")
+	if timing == nil || recordedAt.Before(timing.AdmittedAt) || !recordedAt.Before(timing.DeadlineAt) {
+		return time.Time{}
 	}
-	return deadline
+	return timing.DeadlineAt
 }
 
 func registrationIntentUnchanged(expected, stored biz.FinetuningRegistration) bool {

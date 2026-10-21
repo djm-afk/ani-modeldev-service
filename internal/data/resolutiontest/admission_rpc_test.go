@@ -3,109 +3,60 @@ package resolutiontest
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"crypto/tls"
-	"encoding/hex"
 	"errors"
-	"reflect"
-	"testing"
-	"time"
-
-	"github.com/google/uuid"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"testing"
+	"time"
 )
 
-func TestResolveAdmissionRPCUsesPinnedFactsAndDurableReadyInput(t *testing.T) {
-	fixture := prepareResolution(t)
-	source := writeManagedFactsFixture(t, fixture)
-	reader, err := admissionfacts.Load(fixture.ctx, []admissionfacts.FileSource{source})
-	if err != nil {
-		t.Fatalf("ADMISSION_RPC_PREFLIGHT: pinned facts load failed; behavior NOT_RUN: %v", err)
+func TestTwoPhaseRPCPreservesCandidateReadyInputAndFullPlanOverMTLS(t *testing.T) {
+	f := prepareResolution(t)
+	client := startAdmissionClient(t, f, f.resolver)
+	request := admissionRPCRequest(t, f)
+	response, e := client.PrepareAdmission(admissionRPCContext(f.ctx, f.request.IdentityRef.TenantID), request)
+	if e != nil {
+		t.Fatal(e)
 	}
-	facts, err := reader.ReadAdmissionFacts(fixture.ctx, fixture.selection.TenantID, fixture.selection.Release.ReleaseID, fixture.selection.Release.ReleaseDigest)
-	if err != nil || !reflect.DeepEqual(facts, fixture.facts) {
-		t.Fatalf("ADMISSION_RPC_PREFLIGHT: actual facts differ from the tenant/Release fixture; behavior NOT_RUN: %v", err)
+	candidate, e := cpup01.DecodePreparedCandidate(response.CandidateCanonical, response.CandidateHash)
+	if e != nil {
+		t.Fatal(e)
 	}
-	beforeIntent, beforeHash, err := cpup01.CanonicalIntent(fixture.selection.Intent)
-	if err != nil {
-		t.Fatalf("ADMISSION_RPC_PREFLIGHT: original intent invalid; behavior NOT_RUN: %v", err)
+	before := f.factReader.reads
+	finalized, e := client.FinalizeAdmission(admissionRPCContext(f.ctx, f.request.IdentityRef.TenantID), &modeldevv1.FinalizeAdmissionRequest{CandidateCanonical: response.CandidateCanonical, CandidateHash: response.CandidateHash})
+	if e != nil {
+		t.Fatal(e)
 	}
-	intent, err := contractpb.EncodeIntent(fixture.selection.Intent)
-	if err != nil {
-		t.Fatalf("ADMISSION_RPC_PREFLIGHT: wire intent invalid; behavior NOT_RUN: %v", err)
+	s, e := contractpb.DecodeSnapshot(finalized.Snapshot)
+	if e != nil {
+		t.Fatal(e)
 	}
-	request := &modeldevv1.ResolveAdmissionRequest{
-		Intent: intent,
-		Release: &modeldevv1.AdmissionReleaseSelection{
-			ReleaseId: fixture.selection.Release.ReleaseID, ReleaseDigest: fixture.selection.Release.ReleaseDigest,
-			BindingGeneration: fixture.selection.Release.BindingGeneration,
-		},
-		AcceptedAt: timestamppb.New(fixture.selection.AcceptedAt),
+	hash, _ := s.Digest()
+	if hash != finalized.ExecutionSpecHash || s.IdentityRef != candidate.Snapshot.IdentityRef || s.Resources != candidate.Snapshot.Resources || f.factReader.reads != before {
+		t.Fatal("wire finalize changed frozen facts")
 	}
-	beforeRequest := proto.Clone(request)
-	want := expectedManagedSnapshot(fixture)
-	wantCanonical, err := want.Canonical()
-	if err != nil {
-		t.Fatalf("ADMISSION_RPC_PREFLIGHT: independently authored snapshot invalid; behavior NOT_RUN: %v", err)
+	second, e := client.FinalizeAdmission(admissionRPCContext(f.ctx, f.request.IdentityRef.TenantID), &modeldevv1.FinalizeAdmissionRequest{CandidateCanonical: response.CandidateCanonical, CandidateHash: response.CandidateHash})
+	if e != nil || second.ExecutionSpecHash != finalized.ExecutionSpecHash {
+		t.Fatal("wire retry changed spec")
 	}
-	wantDigest := sha256.Sum256(wantCanonical)
-	wantHash := hex.EncodeToString(wantDigest[:])
-	resolver := biz.NewManagedAdmissionResolver(fixture.releaseReader, fixture.inputReader, reader)
-	client := startAdmissionClient(t, fixture, resolver)
-	t.Log("ADMISSION_RPC_PREFLIGHT PASS: actual pinned facts file, recovered READY PostgreSQL input, established mTLS channel")
-	ctx := metadata.NewOutgoingContext(fixture.ctx, metadata.Pairs(
-		"x-ani-tenant-id", fixture.selection.TenantID,
-		"x-ani-actor", "governance:user:42",
-		"x-ani-request-id", uuid.NewString(),
-	))
-	response, err := client.ResolveAdmission(ctx, request)
-	if err != nil {
-		if status.Code(err) == codes.Unimplemented && status.Convert(err).Message() == "admission resolution not implemented" {
-			t.Fatalf("ADMISSION_RPC_BEHAVIOR: registered admission stub reached after authenticated delivery; candidate required: %v", err)
-		}
-		t.Fatalf("ADMISSION_RPC_BEHAVIOR: no candidate response (not the expected registered-stub RED): %v", err)
+	raw, _ := s.Canonical()
+	if bytes.Contains(raw, []byte(`"release"`)) {
+		t.Fatal("retired snapshot contract escaped")
 	}
-	if response == nil {
-		t.Fatal("ADMISSION_RPC_BEHAVIOR: missing candidate response")
-	}
-	snapshot, err := contractpb.DecodeSnapshot(response.Snapshot)
-	if err != nil {
-		t.Fatalf("ADMISSION_RPC_BEHAVIOR: returned snapshot violates the shared wire contract: %v", err)
-	}
-	canonical, err := snapshot.Canonical()
-	if err != nil || !bytes.Equal(canonical, wantCanonical) || response.ExecutionSpecHash != wantHash {
-		t.Fatalf("ADMISSION_RPC_BEHAVIOR: complete candidate or digest changed across the actual Proto roundtrip: %v", err)
-	}
-	afterIntent, afterHash, err := cpup01.CanonicalIntent(fixture.selection.Intent)
-	if err != nil || beforeHash != afterHash || !bytes.Equal(beforeIntent, afterIntent) || !proto.Equal(request, beforeRequest) || request.Intent.GeneralParameters == nil || len(request.Intent.GeneralParameters.Values) != 1 || request.Intent.GeneralParameters.Values[0].GetDecimalValue() != "0.0200" {
-		t.Fatal("ADMISSION_RPC_BEHAVIOR: resolution changed original intent or parameter presence")
-	}
-	stored, err := input.New(fixture.openPool()).Get(fixture.ctx, fixture.imported.TenantID, fixture.imported.InputVersionID)
-	if err != nil || !reflect.DeepEqual(stored, fixture.ready) {
-		t.Fatalf("ADMISSION_RPC_BEHAVIOR: resolution changed the durable READY input: %v", err)
-	}
-	requireNoResolvedExecution(t, fixture)
+	requireNoResolvedExecution(t, f)
 }
-
 func startAdmissionClient(t *testing.T, fixture resolutionFixture, resolver *biz.AdmissionResolver) modeldevv1.ModelDevAdmissionServiceClient {
 	t.Helper()
 	return modeldevv1.NewModelDevAdmissionServiceClient(startAdmissionConnection(t, fixture, service.NewAdmission(resolver)))

@@ -95,7 +95,7 @@ func encodeFinetuningSnapshot(value cpup01.FinetuningSnapshot) *modeldevv1.Finet
 	return &modeldevv1.FinetuningSnapshot{
 		ParameterContractVersion: value.ParameterContractVersion, BaseModel: &modeldevv1.BaseModelRef{ModelId: value.BaseModel.ModelID, VersionId: value.BaseModel.VersionID, Family: value.BaseModel.Family, Format: value.BaseModel.Format, Object: encodeFixedObject(value.BaseModel.Object), Scope: &modeldevv1.StorageScope{StorageConnectionId: value.BaseModel.Scope.StorageConnectionID, Bucket: value.BaseModel.Scope.Bucket, ApprovedPrefix: value.BaseModel.Scope.ApprovedPrefix, CredentialReference: value.BaseModel.Scope.CredentialReference}, Files: files},
 		TargetModelId: cloneString(value.TargetModelID), NewModelName: cloneString(value.NewModelName), ManagedSettings: EncodeManagedSettings(value.ManagedSettings), ResolvedConfigurationSha256: value.ResolvedConfigurationSHA256, ExportProgram: encodeProgram(value.ExportProgram), VerifyProgram: encodeProgram(value.VerifyProgram), RecipeSha256: value.RecipeSHA256, MappingSha256: value.MappingSHA256,
-		Budgets: &modeldevv1.ComponentBudgets{TrainingTimeoutSeconds: value.Budgets.TrainingTimeoutSeconds, PrepareTimeoutSeconds: value.Budgets.PrepareTimeoutSeconds, ExportTimeoutSeconds: value.Budgets.ExportTimeoutSeconds, VerifyTimeoutSeconds: value.Budgets.VerifyTimeoutSeconds, CollectTimeoutSeconds: value.Budgets.CollectTimeoutSeconds, PublishTimeoutSeconds: value.Budgets.PublishTimeoutSeconds, RpcTimeoutSeconds: value.Budgets.RPCTimeoutSeconds, MaxBaseModelBytes: value.Budgets.MaxBaseModelBytes, MaxBaseModelExpandedBytes: value.Budgets.MaxBaseModelExpandedBytes, MaxSpoolBytes: value.Budgets.MaxSpoolBytes},
+		Budgets: &modeldevv1.ComponentBudgets{RpcTimeoutSeconds: value.Budgets.RPCTimeoutSeconds, MaxBaseModelBytes: value.Budgets.MaxBaseModelBytes, MaxBaseModelExpandedBytes: value.Budgets.MaxBaseModelExpandedBytes, MaxSpoolBytes: value.Budgets.MaxSpoolBytes},
 	}
 }
 
@@ -125,50 +125,6 @@ func decodeFinetuningSnapshot(message *modeldevv1.FinetuningSnapshot) (cpup01.Fi
 	return cpup01.FinetuningSnapshot{
 		ParameterContractVersion: message.ParameterContractVersion, BaseModel: cpup01.BaseModelRef{ModelID: message.BaseModel.ModelId, VersionID: message.BaseModel.VersionId, Family: message.BaseModel.Family, Format: message.BaseModel.Format, Object: object, Scope: cpup01.StorageScope{StorageConnectionID: message.BaseModel.Scope.StorageConnectionId, Bucket: message.BaseModel.Scope.Bucket, ApprovedPrefix: message.BaseModel.Scope.ApprovedPrefix, CredentialReference: message.BaseModel.Scope.CredentialReference}, Files: files},
 		TargetModelID: cloneString(message.TargetModelId), NewModelName: cloneString(message.NewModelName), ManagedSettings: decodeManagedSettings(message.ManagedSettings), ResolvedConfigurationSHA256: message.ResolvedConfigurationSha256, ExportProgram: export, VerifyProgram: verify, RecipeSHA256: message.RecipeSha256, MappingSHA256: message.MappingSha256,
-		Budgets: cpup01.ComponentBudgets{TrainingTimeoutSeconds: message.Budgets.TrainingTimeoutSeconds, PrepareTimeoutSeconds: message.Budgets.PrepareTimeoutSeconds, ExportTimeoutSeconds: message.Budgets.ExportTimeoutSeconds, VerifyTimeoutSeconds: message.Budgets.VerifyTimeoutSeconds, CollectTimeoutSeconds: message.Budgets.CollectTimeoutSeconds, PublishTimeoutSeconds: message.Budgets.PublishTimeoutSeconds, RPCTimeoutSeconds: message.Budgets.RpcTimeoutSeconds, MaxBaseModelBytes: message.Budgets.MaxBaseModelBytes, MaxBaseModelExpandedBytes: message.Budgets.MaxBaseModelExpandedBytes, MaxSpoolBytes: message.Budgets.MaxSpoolBytes},
+		Budgets: cpup01.ComponentBudgets{RPCTimeoutSeconds: message.Budgets.RpcTimeoutSeconds, MaxBaseModelBytes: message.Budgets.MaxBaseModelBytes, MaxBaseModelExpandedBytes: message.Budgets.MaxBaseModelExpandedBytes, MaxSpoolBytes: message.Budgets.MaxSpoolBytes},
 	}, nil
-}
-
-// EncodeFinetuningParameterRules derives a safe view from the validated exact
-// Release. A single-value rule is read-only; its explicit value remains legal.
-func EncodeFinetuningParameterRules(program cpup01.ReleaseProgram) ([]*modeldevv1.ParameterRule, error) {
-	if err := cpup01.ValidateFinetuningProgramParameters(program); err != nil {
-		return nil, err
-	}
-	result := make([]*modeldevv1.ParameterRule, 0, len(program.ParameterRules))
-	for _, rule := range program.ParameterRules {
-		allowed, err := encodeParameters(rule.AllowedValues)
-		if err != nil {
-			return nil, err
-		}
-		view := &modeldevv1.ParameterRule{Name: rule.Name, Type: modeldevv1.ParameterType(modeldevv1.ParameterType_value["PARAMETER_TYPE_"+rule.Type]), Required: rule.Required, AllowedValues: allowed, MinimumInclusive: cloneBool(rule.MinimumInclusive), MaximumInclusive: cloneBool(rule.MaximumInclusive), Editable: len(rule.AllowedValues) != 1}
-		if !view.Editable {
-			view.NonEditableReason = "PLATFORM_FIXED"
-		}
-		for _, parameter := range program.DefaultParameters {
-			if parameter.Name == rule.Name {
-				values, err := encodeParameters([]cpup01.Parameter{parameter})
-				if err != nil {
-					return nil, err
-				}
-				view.DefaultValue = values[0]
-			}
-		}
-		if rule.Minimum != nil {
-			values, err := encodeParameters([]cpup01.Parameter{*rule.Minimum})
-			if err != nil {
-				return nil, err
-			}
-			view.Minimum = values[0]
-		}
-		if rule.Maximum != nil {
-			values, err := encodeParameters([]cpup01.Parameter{*rule.Maximum})
-			if err != nil {
-				return nil, err
-			}
-			view.Maximum = values[0]
-		}
-		result = append(result, view)
-	}
-	return result, nil
 }

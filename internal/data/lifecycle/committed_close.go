@@ -15,6 +15,9 @@ func validateCommittedClose(ctx context.Context, current *runtimeTransaction) er
 	if state.CloseGeneration == 0 || state.CloseRequestedAt.IsZero() || state.ClosedAt.Before(state.CloseRequestedAt) || state.CloseEvidence == nil || state.CloseReviewReason != "" {
 		return biz.ErrPersistence
 	}
+	if !runtimeCreationSettled(state) {
+		return biz.ErrPersistence
+	}
 	dispatch, err := submission.ReadInTransaction(ctx, current.transaction, admitted.TenantID, admitted.ExecutionID)
 	if state.CloseEvidence.NoDispatch {
 		if !errors.Is(err, biz.ErrExecutionNotFound) || state.CloseReason == "NATURAL_TERMINAL" || state.Workspace != nil || state.Training != nil || state.TrainingHandle != nil || state.Observation != nil || state.Publication != nil || state.CloseAuthority != nil || state.StepExitCleanup != nil || state.ComputeCleanup != nil || state.CloseEvidence.RunID != "" || state.CloseEvidence.WorkflowUID != "" || state.CloseEvidence.ObservedAt.IsZero() || len(state.CloseEvidence.Resources) != 0 || len(state.CloseEvidence.SkippedTasks) != 0 || state.CloseEvidence.OwnerTermination != nil {

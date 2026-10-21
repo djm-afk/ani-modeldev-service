@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
@@ -63,7 +64,7 @@ func inspectAlpacaJSON(stream io.Reader) (uint32, error) {
 			seen[key] = true
 			token, err = d.Token()
 			value, ok := token.(string)
-			if err != nil || !ok || (key != "input" && value == "") {
+			if err != nil || !ok || (key != "input" && strings.TrimSpace(value) == "") {
 				return 0, biz.ErrInputVerification
 			}
 		}

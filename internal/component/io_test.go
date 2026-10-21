@@ -15,7 +15,9 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -78,15 +80,40 @@ type taskConfigurationRPC struct {
 	response                        *modeldevv1.GetExecutionConfigurationResponse
 	err                             error
 	configurationCalls, ensureCalls int
+	timingOverride                  *modeldevv1.StepTiming
+	configurationDeadline           time.Time
 }
 
-func (p *taskConfigurationRPC) GetExecutionConfiguration(context.Context, *modeldevv1.GetExecutionConfigurationRequest, ...grpc.CallOption) (*modeldevv1.GetExecutionConfigurationResponse, error) {
+func (p *taskConfigurationRPC) GetExecutionConfiguration(ctx context.Context, _ *modeldevv1.GetExecutionConfigurationRequest, _ ...grpc.CallOption) (*modeldevv1.GetExecutionConfigurationResponse, error) {
 	p.configurationCalls++
+	p.configurationDeadline, _ = ctx.Deadline()
 	return p.response, p.err
 }
 func (p *taskConfigurationRPC) EnsureTraining(context.Context, *modeldevv1.EnsureTrainingRequest, ...grpc.CallOption) (*modeldevv1.EnsureTrainingResponse, error) {
 	p.ensureCalls++
 	return nil, taskConfigurationStop
+}
+func (p *taskConfigurationRPC) BeginManagedStep(_ context.Context, r *modeldevv1.BeginManagedStepRequest, _ ...grpc.CallOption) (*modeldevv1.BeginManagedStepResponse, error) {
+	if p.timingOverride != nil {
+		return &modeldevv1.BeginManagedStepResponse{Timing: p.timingOverride}, nil
+	}
+	if p.response == nil {
+		return &modeldevv1.BeginManagedStepResponse{}, nil
+	}
+	timing := p.response.Snapshot.Timing
+	start := timing.AcceptedAt.AsTime()
+	deadline := start.Add(time.Duration(timing.StepTimeoutSeconds) * time.Second)
+	if timing.ExecutionDeadlineAt.AsTime().Before(deadline) {
+		deadline = timing.ExecutionDeadlineAt.AsTime()
+	}
+	return &modeldevv1.BeginManagedStepResponse{Timing: &modeldevv1.StepTiming{Role: r.Context.Step, AdmittedAt: timestamppb.New(start), DeadlineAt: timestamppb.New(deadline)}}, nil
+}
+func (p *taskConfigurationRPC) BeginExecution(ctx context.Context, r *modeldevv1.BeginExecutionRequest, opts ...grpc.CallOption) (*modeldevv1.BeginExecutionResponse, error) {
+	response, err := p.BeginManagedStep(ctx, &modeldevv1.BeginManagedStepRequest{Context: r.Context}, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &modeldevv1.BeginExecutionResponse{Timing: response.Timing}, nil
 }
 
 func taskConfiguration(t *testing.T, step modeldevv1.PipelineStep) component.Config {
@@ -101,13 +128,28 @@ func taskConfiguration(t *testing.T, step modeldevv1.PipelineStep) component.Con
 
 func taskConfigurationResponse(t *testing.T, config component.Config) *modeldevv1.GetExecutionConfigurationResponse {
 	t.Helper()
-	snapshot, err := contractpb.EncodeSnapshot(conformance.SnapshotV1())
+	start := time.Now().UTC().Truncate(time.Microsecond).Add(-time.Minute)
+	timing, err := (cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}).Resolve(start, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	return timedConfigurationResponse(t, config, timing)
+}
+func timedConfigurationResponse(t *testing.T, config component.Config, timing cpup01.Timing) *modeldevv1.GetExecutionConfigurationResponse {
+	t.Helper()
 	domainSnapshot := conformance.SnapshotV1()
-	domainIntent := cpup01.Intent{Name: "task identity fixture", Kind: domainSnapshot.Kind, PresetID: domainSnapshot.Release.PresetID, DatasetVersionID: domainSnapshot.Input.InputVersionID}
-	_, intentHash, err := cpup01.CanonicalIntent(domainIntent)
+	domainSnapshot.Environment.NamespaceName = config.Context.Association.NamespaceName
+	domainSnapshot.Environment.NamespaceUID = config.Context.Association.NamespaceUid
+	domainSnapshot.Timing = timing
+	domainSnapshot.DeadlineAt = timing.ExecutionDeadlineAt
+	domainIntent := cpup01.Intent{Name: "task identity fixture", Kind: domainSnapshot.Kind, ImplementationID: domainSnapshot.Implementation.ImplementationID, ComputePresetID: domainSnapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: domainSnapshot.Input.InputVersionID}
+	operation := config.Context.Identity.OperationId
+	if operation == "" {
+		operation = "33333333-3333-4333-8333-333333333333"
+	}
+	admission := admissionfixture.Bind(t, biz.Admission{TenantID: config.TenantID, Actor: "governance:user:42", OperationID: operation, ExecutionID: config.Context.Identity.ExecutionId, Intent: domainIntent, Snapshot: domainSnapshot, AcceptedAt: timing.AcceptedAt})
+	config.Context.Identity.ExecutionSpecHash = admission.SpecHash
+	snapshot, err := contractpb.EncodeSnapshot(admission.Snapshot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,9 +157,9 @@ func taskConfigurationResponse(t *testing.T, config component.Config) *modeldevv
 	if err != nil {
 		t.Fatal(err)
 	}
-	identity := &trainingv1.ExecutionIdentity{OperationId: "33333333-3333-4333-8333-333333333333", ExecutionId: config.Context.Identity.ExecutionId, ExecutionSpecHash: config.Context.Identity.ExecutionSpecHash}
+	identity := &trainingv1.ExecutionIdentity{OperationId: operation, ExecutionId: config.Context.Identity.ExecutionId, ExecutionSpecHash: admission.SpecHash}
 	a := config.Context.Association
-	return &modeldevv1.GetExecutionConfigurationResponse{Identity: identity, Snapshot: snapshot, Authority: &modeldevv1.AuthorityBinding{KfpRunId: a.KfpRunId, NamespaceUid: a.NamespaceUid, WorkflowUid: a.WorkflowUid}, Admission: &modeldevv1.AcceptExecutionRequest{Identity: identity, ResourceTenantId: config.TenantID, AdmittedActorId: "governance:user:42", IntentHash: intentHash, Snapshot: snapshot, Intent: intent, AcceptedAt: timestamppb.New(time.Date(2026, 9, 30, 9, 30, 0, 0, time.UTC))}}
+	return &modeldevv1.GetExecutionConfigurationResponse{Identity: identity, Snapshot: snapshot, Authority: &modeldevv1.AuthorityBinding{KfpRunId: a.KfpRunId, NamespaceUid: a.NamespaceUid, WorkflowUid: a.WorkflowUid}, Admission: &modeldevv1.AcceptExecutionRequest{Identity: identity, ResourceTenantId: config.TenantID, AdmittedActorId: "governance:user:42", IntentHash: admission.IntentHash, Snapshot: snapshot, Intent: intent, AcceptedAt: timestamppb.New(admission.AcceptedAt)}}
 }
 
 func TestComponentCloseMissingCandidatePreservesFailureAfterCloseAttempt(t *testing.T) {
@@ -132,6 +174,7 @@ func TestComponentCloseMissingCandidatePreservesFailureAfterCloseAttempt(t *test
 		Association: &modeldevv1.RunAssociation{KfpRunId: "44444444-4444-4444-8444-444444444444", NamespaceName: "cpu-execution", NamespaceUid: "55555555-5555-4555-8555-555555555555", WorkflowName: "main-flow", WorkflowUid: "66666666-6666-4666-8666-666666666666", PodName: "main-close", PodUid: "77777777-7777-4777-8777-777777777777"},
 		Step:        modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE,
 	}}
+	client.configuration = taskConfigurationResponse(t, config)
 	runner, err := component.New(config, client, nil, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -247,8 +290,13 @@ func (client *closeOnlyRPC) ReportStepResult(context.Context, *modeldevv1.Report
 // file and must retain that failure even when its close request fails too.
 type failedCloseRPC struct {
 	modeldevv1.ModelDevStepServiceClient
-	t          *testing.T
-	closeCalls int
+	t             *testing.T
+	closeCalls    int
+	configuration *modeldevv1.GetExecutionConfigurationResponse
+}
+
+func (client *failedCloseRPC) GetExecutionConfiguration(context.Context, *modeldevv1.GetExecutionConfigurationRequest, ...grpc.CallOption) (*modeldevv1.GetExecutionConfigurationResponse, error) {
+	return client.configuration, nil
 }
 
 func (client *failedCloseRPC) RequestExecutionClose(ctx context.Context, request *modeldevv1.RequestExecutionCloseRequest, _ ...grpc.CallOption) (*modeldevv1.RequestExecutionCloseResponse, error) {

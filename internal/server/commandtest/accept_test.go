@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"reflect"
 	"strings"
 	"testing"
@@ -189,19 +190,19 @@ func validAcceptCommand(t *testing.T) (*modeldevv1.AcceptExecutionRequest, biz.P
 	snapshot := conformance.SnapshotV1()
 	acceptedAt := time.Now().UTC().Truncate(time.Microsecond)
 	snapshot.DeadlineAt = acceptedAt.Add(time.Hour)
-	intent := cpup01.Intent{Name: "durable-command", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := cpup01.Intent{Name: "durable-command", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatalf("CPU_ACCEPT_PREFLIGHT: intent fixture invalid: %v; behavior NOT_RUN", err)
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatalf("CPU_ACCEPT_PREFLIGHT: snapshot fixture invalid: %v; behavior NOT_RUN", err)
-	}
+	specHash := ""
 	admission := biz.Admission{
 		TenantID: uuid.NewString(), Actor: "governance:user:42", OperationID: uuid.NewString(), ExecutionID: uuid.NewString(),
 		Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: acceptedAt,
 	}
+	admission = admissionfixture.Bind(t, admission)
+	snapshot = admission.Snapshot
+	specHash, intentHash = admission.SpecHash, admission.IntentHash
 	if _, _, err := admission.CanonicalPayloads(); err != nil {
 		t.Fatalf("CPU_ACCEPT_PREFLIGHT: frozen envelope invalid: %v; behavior NOT_RUN", err)
 	}

@@ -26,15 +26,14 @@ const (
 // Only the fixed JSON Alpaca schema is supported. The importer independently
 // reads original object bytes; callers cannot submit READY or row statistics.
 type ImportFinetuningDatasetRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	InputVersionId string                 `protobuf:"bytes,1,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
-	ReleaseId      string                 `protobuf:"bytes,2,opt,name=release_id,json=releaseId,proto3" json:"release_id,omitempty"`
-	ReleaseDigest  string                 `protobuf:"bytes,3,opt,name=release_digest,json=releaseDigest,proto3" json:"release_digest,omitempty"`
-	Object         *v1.FixedObjectRef     `protobuf:"bytes,4,opt,name=object,proto3" json:"object,omitempty"`
-	RequestedAt    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=requested_at,json=requestedAt,proto3" json:"requested_at,omitempty"`
-	Format         string                 `protobuf:"bytes,6,opt,name=format,proto3" json:"format,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	InputVersionId   string                 `protobuf:"bytes,1,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
+	ImplementationId string                 `protobuf:"bytes,7,opt,name=implementation_id,json=implementationId,proto3" json:"implementation_id,omitempty"`
+	Object           *v1.FixedObjectRef     `protobuf:"bytes,4,opt,name=object,proto3" json:"object,omitempty"`
+	RequestedAt      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=requested_at,json=requestedAt,proto3" json:"requested_at,omitempty"`
+	Format           string                 `protobuf:"bytes,6,opt,name=format,proto3" json:"format,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ImportFinetuningDatasetRequest) Reset() {
@@ -74,16 +73,9 @@ func (x *ImportFinetuningDatasetRequest) GetInputVersionId() string {
 	return ""
 }
 
-func (x *ImportFinetuningDatasetRequest) GetReleaseId() string {
+func (x *ImportFinetuningDatasetRequest) GetImplementationId() string {
 	if x != nil {
-		return x.ReleaseId
-	}
-	return ""
-}
-
-func (x *ImportFinetuningDatasetRequest) GetReleaseDigest() string {
-	if x != nil {
-		return x.ReleaseDigest
+		return x.ImplementationId
 	}
 	return ""
 }
@@ -153,269 +145,11 @@ func (x *ImportFinetuningDatasetResponse) GetInputVersion() *InputVersionView {
 	return nil
 }
 
-type ImportReleaseRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	PresetId         string                 `protobuf:"bytes,1,opt,name=preset_id,json=presetId,proto3" json:"preset_id,omitempty"`
-	ReleaseId        string                 `protobuf:"bytes,2,opt,name=release_id,json=releaseId,proto3" json:"release_id,omitempty"`
-	ReleaseDigest    string                 `protobuf:"bytes,3,opt,name=release_digest,json=releaseDigest,proto3" json:"release_digest,omitempty"`
-	CanonicalRelease []byte                 `protobuf:"bytes,4,opt,name=canonical_release,json=canonicalRelease,proto3" json:"canonical_release,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
-}
-
-func (x *ImportReleaseRequest) Reset() {
-	*x = ImportReleaseRequest{}
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ImportReleaseRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ImportReleaseRequest) ProtoMessage() {}
-
-func (x *ImportReleaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ImportReleaseRequest.ProtoReflect.Descriptor instead.
-func (*ImportReleaseRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_management_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ImportReleaseRequest) GetPresetId() string {
-	if x != nil {
-		return x.PresetId
-	}
-	return ""
-}
-
-func (x *ImportReleaseRequest) GetReleaseId() string {
-	if x != nil {
-		return x.ReleaseId
-	}
-	return ""
-}
-
-func (x *ImportReleaseRequest) GetReleaseDigest() string {
-	if x != nil {
-		return x.ReleaseDigest
-	}
-	return ""
-}
-
-func (x *ImportReleaseRequest) GetCanonicalRelease() []byte {
-	if x != nil {
-		return x.CanonicalRelease
-	}
-	return nil
-}
-
-type ImportReleaseResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PresetId      string                 `protobuf:"bytes,1,opt,name=preset_id,json=presetId,proto3" json:"preset_id,omitempty"`
-	ReleaseId     string                 `protobuf:"bytes,2,opt,name=release_id,json=releaseId,proto3" json:"release_id,omitempty"`
-	ReleaseDigest string                 `protobuf:"bytes,3,opt,name=release_digest,json=releaseDigest,proto3" json:"release_digest,omitempty"`
-	Created       bool                   `protobuf:"varint,4,opt,name=created,proto3" json:"created,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ImportReleaseResponse) Reset() {
-	*x = ImportReleaseResponse{}
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ImportReleaseResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ImportReleaseResponse) ProtoMessage() {}
-
-func (x *ImportReleaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ImportReleaseResponse.ProtoReflect.Descriptor instead.
-func (*ImportReleaseResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_management_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *ImportReleaseResponse) GetPresetId() string {
-	if x != nil {
-		return x.PresetId
-	}
-	return ""
-}
-
-func (x *ImportReleaseResponse) GetReleaseId() string {
-	if x != nil {
-		return x.ReleaseId
-	}
-	return ""
-}
-
-func (x *ImportReleaseResponse) GetReleaseDigest() string {
-	if x != nil {
-		return x.ReleaseDigest
-	}
-	return ""
-}
-
-func (x *ImportReleaseResponse) GetCreated() bool {
-	if x != nil {
-		return x.Created
-	}
-	return false
-}
-
-type ValidateReleaseRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PresetId      string                 `protobuf:"bytes,1,opt,name=preset_id,json=presetId,proto3" json:"preset_id,omitempty"`
-	ReleaseId     string                 `protobuf:"bytes,2,opt,name=release_id,json=releaseId,proto3" json:"release_id,omitempty"`
-	ReleaseDigest string                 `protobuf:"bytes,3,opt,name=release_digest,json=releaseDigest,proto3" json:"release_digest,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ValidateReleaseRequest) Reset() {
-	*x = ValidateReleaseRequest{}
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ValidateReleaseRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ValidateReleaseRequest) ProtoMessage() {}
-
-func (x *ValidateReleaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ValidateReleaseRequest.ProtoReflect.Descriptor instead.
-func (*ValidateReleaseRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_management_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *ValidateReleaseRequest) GetPresetId() string {
-	if x != nil {
-		return x.PresetId
-	}
-	return ""
-}
-
-func (x *ValidateReleaseRequest) GetReleaseId() string {
-	if x != nil {
-		return x.ReleaseId
-	}
-	return ""
-}
-
-func (x *ValidateReleaseRequest) GetReleaseDigest() string {
-	if x != nil {
-		return x.ReleaseDigest
-	}
-	return ""
-}
-
-type ValidateReleaseResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PresetId      string                 `protobuf:"bytes,1,opt,name=preset_id,json=presetId,proto3" json:"preset_id,omitempty"`
-	ReleaseId     string                 `protobuf:"bytes,2,opt,name=release_id,json=releaseId,proto3" json:"release_id,omitempty"`
-	ReleaseDigest string                 `protobuf:"bytes,3,opt,name=release_digest,json=releaseDigest,proto3" json:"release_digest,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ValidateReleaseResponse) Reset() {
-	*x = ValidateReleaseResponse{}
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ValidateReleaseResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ValidateReleaseResponse) ProtoMessage() {}
-
-func (x *ValidateReleaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ValidateReleaseResponse.ProtoReflect.Descriptor instead.
-func (*ValidateReleaseResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_management_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *ValidateReleaseResponse) GetPresetId() string {
-	if x != nil {
-		return x.PresetId
-	}
-	return ""
-}
-
-func (x *ValidateReleaseResponse) GetReleaseId() string {
-	if x != nil {
-		return x.ReleaseId
-	}
-	return ""
-}
-
-func (x *ValidateReleaseResponse) GetReleaseDigest() string {
-	if x != nil {
-		return x.ReleaseDigest
-	}
-	return ""
-}
-
 type ImportCSVRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	InputVersionId string                 `protobuf:"bytes,1,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
-	// Selects owner-approved input scope, never an arbitrary bucket prefix.
-	ReleaseId     string             `protobuf:"bytes,2,opt,name=release_id,json=releaseId,proto3" json:"release_id,omitempty"`
-	ReleaseDigest string             `protobuf:"bytes,3,opt,name=release_digest,json=releaseDigest,proto3" json:"release_digest,omitempty"`
-	Object        *v1.FixedObjectRef `protobuf:"bytes,4,opt,name=object,proto3" json:"object,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	InputVersionId   string                 `protobuf:"bytes,1,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
+	ImplementationId string                 `protobuf:"bytes,7,opt,name=implementation_id,json=implementationId,proto3" json:"implementation_id,omitempty"`
+	Object           *v1.FixedObjectRef     `protobuf:"bytes,4,opt,name=object,proto3" json:"object,omitempty"`
 	// Immutable import fact; retries keep the original time and request identity.
 	RequestedAt   *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=requested_at,json=requestedAt,proto3" json:"requested_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -424,7 +158,7 @@ type ImportCSVRequest struct {
 
 func (x *ImportCSVRequest) Reset() {
 	*x = ImportCSVRequest{}
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[6]
+	mi := &file_ani_modeldev_v1_management_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -436,7 +170,7 @@ func (x *ImportCSVRequest) String() string {
 func (*ImportCSVRequest) ProtoMessage() {}
 
 func (x *ImportCSVRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[6]
+	mi := &file_ani_modeldev_v1_management_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -449,7 +183,7 @@ func (x *ImportCSVRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportCSVRequest.ProtoReflect.Descriptor instead.
 func (*ImportCSVRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_management_proto_rawDescGZIP(), []int{6}
+	return file_ani_modeldev_v1_management_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ImportCSVRequest) GetInputVersionId() string {
@@ -459,16 +193,9 @@ func (x *ImportCSVRequest) GetInputVersionId() string {
 	return ""
 }
 
-func (x *ImportCSVRequest) GetReleaseId() string {
+func (x *ImportCSVRequest) GetImplementationId() string {
 	if x != nil {
-		return x.ReleaseId
-	}
-	return ""
-}
-
-func (x *ImportCSVRequest) GetReleaseDigest() string {
-	if x != nil {
-		return x.ReleaseDigest
+		return x.ImplementationId
 	}
 	return ""
 }
@@ -496,7 +223,7 @@ type ImportCSVResponse struct {
 
 func (x *ImportCSVResponse) Reset() {
 	*x = ImportCSVResponse{}
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[7]
+	mi := &file_ani_modeldev_v1_management_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -508,7 +235,7 @@ func (x *ImportCSVResponse) String() string {
 func (*ImportCSVResponse) ProtoMessage() {}
 
 func (x *ImportCSVResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_management_proto_msgTypes[7]
+	mi := &file_ani_modeldev_v1_management_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -521,7 +248,7 @@ func (x *ImportCSVResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportCSVResponse.ProtoReflect.Descriptor instead.
 func (*ImportCSVResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_management_proto_rawDescGZIP(), []int{7}
+	return file_ani_modeldev_v1_management_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ImportCSVResponse) GetInputVersion() *InputVersionView {
@@ -535,51 +262,25 @@ var File_ani_modeldev_v1_management_proto protoreflect.FileDescriptor
 
 const file_ani_modeldev_v1_management_proto_rawDesc = "" +
 	"\n" +
-	" ani/modeldev/v1/management.proto\x12\x0fani.modeldev.v1\x1a\x1eani/modeldev/v1/modeldev.proto\x1a\x1eani/training/v1/training.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa0\x02\n" +
+	" ani/modeldev/v1/management.proto\x12\x0fani.modeldev.v1\x1a\x1eani/modeldev/v1/modeldev.proto\x1a\x1eani/training/v1/training.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xaf\x02\n" +
 	"\x1eImportFinetuningDatasetRequest\x12(\n" +
-	"\x10input_version_id\x18\x01 \x01(\tR\x0einputVersionId\x12\x1d\n" +
-	"\n" +
-	"release_id\x18\x02 \x01(\tR\treleaseId\x12%\n" +
-	"\x0erelease_digest\x18\x03 \x01(\tR\rreleaseDigest\x127\n" +
+	"\x10input_version_id\x18\x01 \x01(\tR\x0einputVersionId\x12+\n" +
+	"\x11implementation_id\x18\a \x01(\tR\x10implementationId\x127\n" +
 	"\x06object\x18\x04 \x01(\v2\x1f.ani.training.v1.FixedObjectRefR\x06object\x12=\n" +
 	"\frequested_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vrequestedAt\x12\x16\n" +
-	"\x06format\x18\x06 \x01(\tR\x06format\"i\n" +
+	"\x06format\x18\x06 \x01(\tR\x06formatJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\n" +
+	"release_idR\x0erelease_digest\"i\n" +
 	"\x1fImportFinetuningDatasetResponse\x12F\n" +
-	"\rinput_version\x18\x01 \x01(\v2!.ani.modeldev.v1.InputVersionViewR\finputVersion\"\xa6\x01\n" +
-	"\x14ImportReleaseRequest\x12\x1b\n" +
-	"\tpreset_id\x18\x01 \x01(\tR\bpresetId\x12\x1d\n" +
-	"\n" +
-	"release_id\x18\x02 \x01(\tR\treleaseId\x12%\n" +
-	"\x0erelease_digest\x18\x03 \x01(\tR\rreleaseDigest\x12+\n" +
-	"\x11canonical_release\x18\x04 \x01(\fR\x10canonicalRelease\"\x94\x01\n" +
-	"\x15ImportReleaseResponse\x12\x1b\n" +
-	"\tpreset_id\x18\x01 \x01(\tR\bpresetId\x12\x1d\n" +
-	"\n" +
-	"release_id\x18\x02 \x01(\tR\treleaseId\x12%\n" +
-	"\x0erelease_digest\x18\x03 \x01(\tR\rreleaseDigest\x12\x18\n" +
-	"\acreated\x18\x04 \x01(\bR\acreated\"{\n" +
-	"\x16ValidateReleaseRequest\x12\x1b\n" +
-	"\tpreset_id\x18\x01 \x01(\tR\bpresetId\x12\x1d\n" +
-	"\n" +
-	"release_id\x18\x02 \x01(\tR\treleaseId\x12%\n" +
-	"\x0erelease_digest\x18\x03 \x01(\tR\rreleaseDigest\"|\n" +
-	"\x17ValidateReleaseResponse\x12\x1b\n" +
-	"\tpreset_id\x18\x01 \x01(\tR\bpresetId\x12\x1d\n" +
-	"\n" +
-	"release_id\x18\x02 \x01(\tR\treleaseId\x12%\n" +
-	"\x0erelease_digest\x18\x03 \x01(\tR\rreleaseDigest\"\xfa\x01\n" +
+	"\rinput_version\x18\x01 \x01(\v2!.ani.modeldev.v1.InputVersionViewR\finputVersion\"\x89\x02\n" +
 	"\x10ImportCSVRequest\x12(\n" +
-	"\x10input_version_id\x18\x01 \x01(\tR\x0einputVersionId\x12\x1d\n" +
-	"\n" +
-	"release_id\x18\x02 \x01(\tR\treleaseId\x12%\n" +
-	"\x0erelease_digest\x18\x03 \x01(\tR\rreleaseDigest\x127\n" +
+	"\x10input_version_id\x18\x01 \x01(\tR\x0einputVersionId\x12+\n" +
+	"\x11implementation_id\x18\a \x01(\tR\x10implementationId\x127\n" +
 	"\x06object\x18\x04 \x01(\v2\x1f.ani.training.v1.FixedObjectRefR\x06object\x12=\n" +
-	"\frequested_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vrequestedAt\"[\n" +
+	"\frequested_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vrequestedAtJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\n" +
+	"release_idR\x0erelease_digest\"[\n" +
 	"\x11ImportCSVResponse\x12F\n" +
-	"\rinput_version\x18\x01 \x01(\v2!.ani.modeldev.v1.InputVersionViewR\finputVersion2\xb3\x03\n" +
-	"\x19ModelDevManagementService\x12^\n" +
-	"\rImportRelease\x12%.ani.modeldev.v1.ImportReleaseRequest\x1a&.ani.modeldev.v1.ImportReleaseResponse\x12d\n" +
-	"\x0fValidateRelease\x12'.ani.modeldev.v1.ValidateReleaseRequest\x1a(.ani.modeldev.v1.ValidateReleaseResponse\x12R\n" +
+	"\rinput_version\x18\x01 \x01(\v2!.ani.modeldev.v1.InputVersionViewR\finputVersion2\xed\x01\n" +
+	"\x19ModelDevManagementService\x12R\n" +
 	"\tImportCSV\x12!.ani.modeldev.v1.ImportCSVRequest\x1a\".ani.modeldev.v1.ImportCSVResponse\x12|\n" +
 	"\x17ImportFinetuningDataset\x12/.ani.modeldev.v1.ImportFinetuningDatasetRequest\x1a0.ani.modeldev.v1.ImportFinetuningDatasetResponseBNZLgithub.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1;modeldevv1b\x06proto3"
 
@@ -595,40 +296,32 @@ func file_ani_modeldev_v1_management_proto_rawDescGZIP() []byte {
 	return file_ani_modeldev_v1_management_proto_rawDescData
 }
 
-var file_ani_modeldev_v1_management_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_ani_modeldev_v1_management_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_ani_modeldev_v1_management_proto_goTypes = []any{
 	(*ImportFinetuningDatasetRequest)(nil),  // 0: ani.modeldev.v1.ImportFinetuningDatasetRequest
 	(*ImportFinetuningDatasetResponse)(nil), // 1: ani.modeldev.v1.ImportFinetuningDatasetResponse
-	(*ImportReleaseRequest)(nil),            // 2: ani.modeldev.v1.ImportReleaseRequest
-	(*ImportReleaseResponse)(nil),           // 3: ani.modeldev.v1.ImportReleaseResponse
-	(*ValidateReleaseRequest)(nil),          // 4: ani.modeldev.v1.ValidateReleaseRequest
-	(*ValidateReleaseResponse)(nil),         // 5: ani.modeldev.v1.ValidateReleaseResponse
-	(*ImportCSVRequest)(nil),                // 6: ani.modeldev.v1.ImportCSVRequest
-	(*ImportCSVResponse)(nil),               // 7: ani.modeldev.v1.ImportCSVResponse
-	(*v1.FixedObjectRef)(nil),               // 8: ani.training.v1.FixedObjectRef
-	(*timestamppb.Timestamp)(nil),           // 9: google.protobuf.Timestamp
-	(*InputVersionView)(nil),                // 10: ani.modeldev.v1.InputVersionView
+	(*ImportCSVRequest)(nil),                // 2: ani.modeldev.v1.ImportCSVRequest
+	(*ImportCSVResponse)(nil),               // 3: ani.modeldev.v1.ImportCSVResponse
+	(*v1.FixedObjectRef)(nil),               // 4: ani.training.v1.FixedObjectRef
+	(*timestamppb.Timestamp)(nil),           // 5: google.protobuf.Timestamp
+	(*InputVersionView)(nil),                // 6: ani.modeldev.v1.InputVersionView
 }
 var file_ani_modeldev_v1_management_proto_depIdxs = []int32{
-	8,  // 0: ani.modeldev.v1.ImportFinetuningDatasetRequest.object:type_name -> ani.training.v1.FixedObjectRef
-	9,  // 1: ani.modeldev.v1.ImportFinetuningDatasetRequest.requested_at:type_name -> google.protobuf.Timestamp
-	10, // 2: ani.modeldev.v1.ImportFinetuningDatasetResponse.input_version:type_name -> ani.modeldev.v1.InputVersionView
-	8,  // 3: ani.modeldev.v1.ImportCSVRequest.object:type_name -> ani.training.v1.FixedObjectRef
-	9,  // 4: ani.modeldev.v1.ImportCSVRequest.requested_at:type_name -> google.protobuf.Timestamp
-	10, // 5: ani.modeldev.v1.ImportCSVResponse.input_version:type_name -> ani.modeldev.v1.InputVersionView
-	2,  // 6: ani.modeldev.v1.ModelDevManagementService.ImportRelease:input_type -> ani.modeldev.v1.ImportReleaseRequest
-	4,  // 7: ani.modeldev.v1.ModelDevManagementService.ValidateRelease:input_type -> ani.modeldev.v1.ValidateReleaseRequest
-	6,  // 8: ani.modeldev.v1.ModelDevManagementService.ImportCSV:input_type -> ani.modeldev.v1.ImportCSVRequest
-	0,  // 9: ani.modeldev.v1.ModelDevManagementService.ImportFinetuningDataset:input_type -> ani.modeldev.v1.ImportFinetuningDatasetRequest
-	3,  // 10: ani.modeldev.v1.ModelDevManagementService.ImportRelease:output_type -> ani.modeldev.v1.ImportReleaseResponse
-	5,  // 11: ani.modeldev.v1.ModelDevManagementService.ValidateRelease:output_type -> ani.modeldev.v1.ValidateReleaseResponse
-	7,  // 12: ani.modeldev.v1.ModelDevManagementService.ImportCSV:output_type -> ani.modeldev.v1.ImportCSVResponse
-	1,  // 13: ani.modeldev.v1.ModelDevManagementService.ImportFinetuningDataset:output_type -> ani.modeldev.v1.ImportFinetuningDatasetResponse
-	10, // [10:14] is the sub-list for method output_type
-	6,  // [6:10] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	4, // 0: ani.modeldev.v1.ImportFinetuningDatasetRequest.object:type_name -> ani.training.v1.FixedObjectRef
+	5, // 1: ani.modeldev.v1.ImportFinetuningDatasetRequest.requested_at:type_name -> google.protobuf.Timestamp
+	6, // 2: ani.modeldev.v1.ImportFinetuningDatasetResponse.input_version:type_name -> ani.modeldev.v1.InputVersionView
+	4, // 3: ani.modeldev.v1.ImportCSVRequest.object:type_name -> ani.training.v1.FixedObjectRef
+	5, // 4: ani.modeldev.v1.ImportCSVRequest.requested_at:type_name -> google.protobuf.Timestamp
+	6, // 5: ani.modeldev.v1.ImportCSVResponse.input_version:type_name -> ani.modeldev.v1.InputVersionView
+	2, // 6: ani.modeldev.v1.ModelDevManagementService.ImportCSV:input_type -> ani.modeldev.v1.ImportCSVRequest
+	0, // 7: ani.modeldev.v1.ModelDevManagementService.ImportFinetuningDataset:input_type -> ani.modeldev.v1.ImportFinetuningDatasetRequest
+	3, // 8: ani.modeldev.v1.ModelDevManagementService.ImportCSV:output_type -> ani.modeldev.v1.ImportCSVResponse
+	1, // 9: ani.modeldev.v1.ModelDevManagementService.ImportFinetuningDataset:output_type -> ani.modeldev.v1.ImportFinetuningDatasetResponse
+	8, // [8:10] is the sub-list for method output_type
+	6, // [6:8] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_ani_modeldev_v1_management_proto_init() }
@@ -643,7 +336,7 @@ func file_ani_modeldev_v1_management_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ani_modeldev_v1_management_proto_rawDesc), len(file_ani_modeldev_v1_management_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

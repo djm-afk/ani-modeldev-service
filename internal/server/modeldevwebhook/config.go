@@ -33,13 +33,21 @@ type LabelBinding struct {
 }
 
 type NamespaceBinding struct {
-	Namespace          string         `json:"namespace"`
-	NamespaceUID       string         `json:"namespace_uid"`
-	OwnerLabel         LabelBinding   `json:"owner_label"`
-	ArgoCreator        string         `json:"argo_creator"`
-	StepServiceAccount string         `json:"step_service_account"`
-	Profiles           []string       `json:"profiles"`
-	Driver             *DriverBinding `json:"driver,omitempty"`
+	Namespace          string           `json:"namespace"`
+	NamespaceUID       string           `json:"namespace_uid"`
+	OwnerLabel         LabelBinding     `json:"owner_label"`
+	ArgoCreator        string           `json:"argo_creator"`
+	StepServiceAccount string           `json:"step_service_account"`
+	Profiles           []string         `json:"profiles"`
+	Driver             *DriverBinding   `json:"driver,omitempty"`
+	Training           *TrainingBinding `json:"training,omitempty"`
+}
+
+// TrainingBinding scopes the existing admission endpoint to worker Pods from
+// the actual Job controller. It grants no workload-side Kubernetes access.
+type TrainingBinding struct {
+	ServiceAccount string `json:"service_account"`
+	Creator        string `json:"creator"`
 }
 
 // DriverBinding freezes the KFP backend executable separately from workload
@@ -55,8 +63,8 @@ type DriverBinding struct {
 type Profile struct {
 	ID                      string   `json:"id"`
 	Kind                    string   `json:"kind"`
-	ReleaseFile             string   `json:"release_file"`
-	ReleaseSHA256           string   `json:"release_sha256"`
+	MaterialFile            string   `json:"material_file"`
+	MaterialSHA256          string   `json:"material_sha256"`
 	ComponentImage          string   `json:"component_image"`
 	AllowedSupportImages    []string `json:"allowed_support_images"`
 	RunAsUser               int64    `json:"run_as_user"`
@@ -65,7 +73,7 @@ type Profile struct {
 	EphemeralStorageRequest string   `json:"ephemeral_storage_request"`
 	EphemeralStorageLimit   string   `json:"ephemeral_storage_limit"`
 	// Configure these only for metadata actually provided by the KFP backend.
-	// A configured key is mandatory and must equal the frozen Release version.
+	// A configured key is mandatory and must equal the frozen PipelineVersion.
 	PipelineVersionLabel      string `json:"pipeline_version_label,omitempty"`
 	PipelineVersionAnnotation string `json:"pipeline_version_annotation,omitempty"`
 }
@@ -85,7 +93,7 @@ type Config struct {
 
 type frozenProfile struct {
 	Profile
-	release cpup01.ReleaseDocument
+	material cpup01.ImplementationMaterial
 }
 
 func LoadConfig(path string) (Config, error) {
@@ -148,7 +156,7 @@ func (config Config) freeze() (map[string]frozenProfile, error) {
 	}
 	frozen := make(map[string]frozenProfile, len(config.Profiles))
 	for _, profile := range config.Profiles {
-		if len(validation.IsDNS1123Label(profile.ID)) != 0 || (profile.Kind != "GENERAL_TRAINING" && profile.Kind != "FINETUNING") || !filepath.IsAbs(profile.ReleaseFile) || !sha256Pattern.MatchString(profile.ReleaseSHA256) || !imagePattern.MatchString(profile.ComponentImage) || len(profile.AllowedSupportImages) == 0 || len(profile.AllowedSupportImages) > 8 ||
+		if len(validation.IsDNS1123Label(profile.ID)) != 0 || (profile.Kind != "GENERAL_TRAINING" && profile.Kind != "FINETUNING") || !filepath.IsAbs(profile.MaterialFile) || !sha256Pattern.MatchString(profile.MaterialSHA256) || !imagePattern.MatchString(profile.ComponentImage) || len(profile.AllowedSupportImages) == 0 || len(profile.AllowedSupportImages) > 8 ||
 			profile.RunAsUser != 10001 || profile.RunAsGroup != 10001 || profile.FSGroup != 10001 {
 			return nil, ErrConfiguration
 		}
@@ -176,24 +184,24 @@ func (config Config) freeze() (map[string]frozenProfile, error) {
 				return nil, ErrConfiguration
 			}
 		}
-		file, err := os.Open(profile.ReleaseFile)
+		file, err := os.Open(profile.MaterialFile)
 		if err != nil {
 			return nil, ErrConfiguration
 		}
-		raw, readErr := io.ReadAll(io.LimitReader(file, cpup01.MaxReleaseBytes+1))
+		raw, readErr := io.ReadAll(io.LimitReader(file, cpup01.MaxMaterialBytes+1))
 		closeErr := file.Close()
 		if readErr != nil || closeErr != nil {
 			return nil, ErrConfiguration
 		}
-		release, digest, parseErr := cpup01.ParseRelease(raw)
-		if parseErr != nil || digest != profile.ReleaseSHA256 || release.Kind != profile.Kind {
+		material, digest, parseErr := cpup01.ParseMaterial(raw)
+		if parseErr != nil || digest != profile.MaterialSHA256 || cpup01.Implementations()[material.Implementation.ImplementationID].Kind != profile.Kind {
 			return nil, ErrConfiguration
 		}
-		if profile.Kind == "FINETUNING" && (release.Finetuning == nil || release.Finetuning.ExportProgram.ImageDigest != profile.ComponentImage || release.Finetuning.VerifyProgram.ImageDigest != profile.ComponentImage) {
+		if profile.Kind == "FINETUNING" && (material.Finetuning == nil || material.Finetuning.ExportProgram.ImageDigest != profile.ComponentImage || material.Finetuning.VerifyProgram.ImageDigest != profile.ComponentImage) {
 			return nil, ErrConfiguration
 		}
 		profile.AllowedSupportImages = append([]string(nil), profile.AllowedSupportImages...)
-		frozen[profile.ID] = frozenProfile{Profile: profile, release: release}
+		frozen[profile.ID] = frozenProfile{Profile: profile, material: material}
 	}
 	seen := map[string]bool{}
 	for _, binding := range config.Bindings {
@@ -201,6 +209,9 @@ func (config Config) freeze() (map[string]frozenProfile, error) {
 			return nil, ErrConfiguration
 		}
 		seen[binding.Namespace] = true
+		if binding.Training != nil && (len(validation.IsDNS1123Subdomain(binding.Training.ServiceAccount)) != 0 || binding.Training.ServiceAccount == binding.StepServiceAccount || !creatorPattern.MatchString(binding.Training.Creator)) {
+			return nil, ErrConfiguration
+		}
 		if binding.Driver != nil {
 			if !imagePattern.MatchString(binding.Driver.Image) || len(binding.Driver.Command) != 1 || (binding.Driver.Command[0] != "driver" && binding.Driver.Command[0] != "/bin/driver") || len(binding.Driver.AllowedSupportImages) == 0 || len(binding.Driver.AllowedSupportImages) > 8 {
 				return nil, ErrConfiguration

@@ -14,7 +14,7 @@ import (
 
 func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, handle biz.TrainingHandle, history []biz.RuntimeResource) (biz.TrainingRuntimeObservation, error) {
 	observation := biz.TrainingRuntimeObservation{Handle: handle, Outcome: "UNKNOWN", ObservedAt: time.Now().UTC()}
-	train, current, err := a.currentTraining(ctx, plan)
+	train, current, err := a.readBoundTrainingForClose(ctx, plan, handle)
 	if err != nil {
 		return observation, err
 	}
@@ -77,6 +77,22 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 	setTerminal, setSuccess, setFailure := terminalConditions(jobset, "Completed")
 	resources[string(jobset.GetUID())] = resourceFact(jobset, handle.TrainJobUID, setTerminal, nil)
 	objects[string(jobset.GetUID())] = jobset
+	group, groupErr := a.client.Resource(schema.GroupVersionResource{Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}).Namespace(namespace).Get(ctx, plan.Name, metav1.GetOptions{})
+	if groupErr != nil && !apierrors.IsNotFound(groupErr) {
+		return observation, biz.ErrTrainingUnavailable
+	}
+	// A missing group while a controller is starting is unresolved. Once a
+	// worker exists, it must have the exact original group's complete vector.
+	groupMatches := groupErr == nil && validatePodGroup(plan, handle, group) == nil
+	if groupErr == nil {
+		if group == nil || group.GetUID() == "" || !controllerIs(group, "trainer.kubeflow.org/v1alpha1", "TrainJob", plan.Name, handle.TrainJobUID) {
+			return observation, biz.ErrRuntimeConflict
+		}
+		if !groupMatches {
+			observation.SpecificationMismatch = true
+		}
+		resources[string(group.GetUID())] = resourceFact(group, handle.TrainJobUID, true, nil)
+	}
 	jobs, err := a.client.Resource(schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}).Namespace(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil || jobs.GetContinue() != "" {
 		return observation, biz.ErrTrainingUnavailable
@@ -119,6 +135,10 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 		}
 		if pod.GetAPIVersion() != "v1" || pod.GetKind() != "Pod" || pod.GetNamespace() != namespace || pod.GetUID() == "" {
 			return observation, biz.ErrRuntimeConflict
+		}
+		vector, vectorErr := biz.TrainingResourceVector(plan.Snapshot)
+		if vectorErr != nil || ValidatePodResources(vector, pod) != nil || !groupMatches {
+			observation.SpecificationMismatch = true
 		}
 		terminal, code := podTermination(pod)
 		resources[string(pod.GetUID())] = resourceFact(pod, ownerUID, terminal, code)
@@ -175,6 +195,11 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 			allPodsTerminal = allPodsTerminal && terminal
 			allZero = allZero && terminal && code != nil && *code == 0
 			anyNonzero = anyNonzero || (terminal && code != nil && *code != 0)
+		} else if prior.Kind == "PodGroup" {
+			if !controllerIs(actual, "trainer.kubeflow.org/v1alpha1", "TrainJob", plan.Name, handle.TrainJobUID) {
+				return observation, biz.ErrRuntimeConflict
+			}
+			resources[prior.UID] = resourceFact(actual, handle.TrainJobUID, true, nil)
 		} else {
 			successType := "Complete"
 			if prior.Kind == "JobSet" {
@@ -350,6 +375,8 @@ func historyResource(resource biz.RuntimeResource) (schema.GroupVersionResource,
 		return schema.GroupVersionResource{Group: "jobset.x-k8s.io", Version: "v1alpha2", Resource: "jobsets"}, true
 	case resource.APIVersion == "trainer.kubeflow.org/v1alpha1" && resource.Kind == "TrainJob":
 		return trainJobs, true
+	case resource.APIVersion == "scheduling.volcano.sh/v1beta1" && resource.Kind == "PodGroup":
+		return schema.GroupVersionResource{Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}, true
 	default:
 		return schema.GroupVersionResource{}, false
 	}

@@ -22,7 +22,7 @@ func TestTrainingRejectionBindsConsumedPlanAndDatabaseTimeAcrossCloseFence(t *te
 	if _, _, err := repository.RecordPrepared(ctx, authority, workspace); err != nil {
 		t.Fatal(err)
 	}
-	reserved, err := repository.ReserveTraining(ctx, authority)
+	reserved, err := reserveTrainingV21(t, repository, ctx, authority)
 	if err != nil || !reserved.SendPermit {
 		t.Fatal("original consumed permit", err)
 	}
@@ -74,7 +74,7 @@ func TestTrainingRejectionBindsConsumedPlanAndDatabaseTimeAcrossCloseFence(t *te
 	if _, err := repository.RecordTrainingHandle(ctx, authority, biz.TrainingHandle{NamespaceUID: workspace.NamespaceUID, PVCUID: workspace.PVCUID, TrainJobUID: "unexpected-trainjob-uid"}); !errors.Is(err, biz.ErrRuntimeConflict) {
 		t.Fatal("rejected creation admitted a late conflicting handle", err)
 	}
-	if retry, err := repository.ReserveTraining(ctx, authority); err != nil || retry.SendPermit || retry.State.Training.RequestSHA256 != rejection.RequestSHA256 {
+	if retry, err := reserveTrainingV21(t, repository, ctx, authority); err != nil || retry.SendPermit || retry.State.Training.RequestSHA256 != rejection.RequestSHA256 {
 		t.Fatal("refusal regenerated or cleared the consumed plan", err)
 	}
 	if _, err := repository.ConfirmRuntimeClosed(ctx, authority, closing.CloseGeneration, biz.TrainingRuntimeObservation{}, biz.ManagedCloseEvidence{}); !errors.Is(err, biz.ErrRuntimeNotReady) {

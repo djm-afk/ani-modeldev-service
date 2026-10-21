@@ -64,6 +64,7 @@ func ComputeCleanupTargets(execution Execution, owner RunAuthorityCandidate, sta
 		byUID := map[string]RuntimeResource{}
 		for _, resource := range state.Observation.Resources {
 			valid := resource.Kind == "Pod" && resource.APIVersion == "v1" && resource.Terminal && resource.ExitCode != nil || resource.Kind == "TrainJob" && resource.APIVersion == "trainer.kubeflow.org/v1alpha1" && (resource.Terminal || resource.CreationDisabled) || resource.Kind == "JobSet" && resource.APIVersion == "jobset.x-k8s.io/v1alpha2" && (resource.Terminal || resource.CreationDisabled) || resource.Kind == "Job" && resource.APIVersion == "batch/v1" && (resource.Terminal || resource.CreationDisabled)
+			valid = valid || resource.Kind == "PodGroup" && resource.APIVersion == "scheduling.volcano.sh/v1beta1" && resource.OwnerUID == state.TrainingHandle.TrainJobUID && resource.Name == state.Training.Name && resource.Terminal
 			if !valid || resource.Name == "" || resource.UID == "" || resource.Namespace != owner.NamespaceName || byUID[resource.UID].UID != "" {
 				return nil, "", ErrCleanupBlocked
 			}
@@ -84,9 +85,12 @@ func ComputeCleanupTargets(execution Execution, owner RunAuthorityCandidate, sta
 		}
 	}
 	targets = append(targets, RuntimeResource{APIVersion: "argoproj.io/v1alpha1", Kind: "Workflow", Namespace: owner.NamespaceName, Name: owner.WorkflowName, UID: owner.WorkflowUID, APIObjectPresent: true, CreationDisabled: true, Terminal: true})
+	if fact := state.RuntimeTemplate; fact != nil && fact.Binding != nil {
+		targets = append(targets, RuntimeResource{APIVersion: "trainer.kubeflow.org/v1alpha1", Kind: "TrainingRuntime", Namespace: owner.NamespaceName, Name: fact.Binding.Name, UID: fact.Binding.UID, APIObjectPresent: true, CreationDisabled: true, Terminal: true})
+	}
 	// Keep Workflow until the other removals finish: its complete original node
 	// graph remains available for independent verification throughout cleanup.
-	rank := map[string]int{"TrainJob": 0, "JobSet": 1, "Job": 2, "Pod": 3, "Workflow": 4}
+	rank := map[string]int{"TrainJob": 0, "JobSet": 1, "Job": 2, "Pod": 3, "PodGroup": 4, "Workflow": 5, "TrainingRuntime": 6}
 	sort.Slice(targets, func(i, j int) bool {
 		if rank[targets[i].Kind] != rank[targets[j].Kind] {
 			return rank[targets[i].Kind] < rank[targets[j].Kind]

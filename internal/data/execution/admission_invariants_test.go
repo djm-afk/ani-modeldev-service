@@ -3,6 +3,7 @@ package execution_test
 import (
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"reflect"
 	"strings"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 )
@@ -32,10 +34,10 @@ func TestAcceptConflictingIdentityOrFactsPreservesOriginalAdmission(t *testing.T
 		{"different acceptance time", func(a *biz.Admission) { a.AcceptedAt = a.AcceptedAt.Add(time.Microsecond) }},
 		{"different intent", func(a *biz.Admission) { a.Intent.Name = "another-training" }},
 		{"different intent presence with same resolved spec", func(a *biz.Admission) {
-			parameters := []cpup01.Parameter{}
-			a.Intent.GeneralParameters = &parameters
+			seed := uint32(42)
+			a.Intent.MLP = &cpup01.MLPParameters{Seed: &seed}
 		}},
-		{"different release contents", func(a *biz.Admission) { a.Snapshot.Release.ReleaseDigest = strings.Repeat("9", 64) }},
+		{"different release contents", func(a *biz.Admission) { a.Snapshot.Implementation.PipelineIRSHA256 = strings.Repeat("9", 64) }},
 		{"different deadline", func(a *biz.Admission) { a.Snapshot.DeadlineAt = a.Snapshot.DeadlineAt.Add(time.Minute) }},
 		{"other tenant reuses both identities", func(a *biz.Admission) { a.TenantID = otherTenant }},
 		{"other tenant reuses operation", func(a *biz.Admission) {
@@ -131,6 +133,7 @@ func TestGetHidesOtherTenantExecutionAndReturnsOwnAdmission(t *testing.T) {
 	first, second := validAdmission(t), validAdmission(t)
 	second.TenantID, second.OperationID, second.ExecutionID = otherTenant, otherOperation, otherExecution
 	second.Actor = "governance:access-key:17"
+	refreshAdmissionHashes(t, &second)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	for _, command := range []biz.Admission{first, second} {
@@ -197,15 +200,14 @@ func TestAcceptInvalidAdmissionDoesNotReserveInbox(t *testing.T) {
 		{"actor control character", func(a *biz.Admission) { a.Actor = "governance:user:42\n" }, false},
 		{"intent hash mismatch", func(a *biz.Admission) { a.IntentHash = strings.Repeat("0", 64) }, false},
 		{"snapshot hash mismatch", func(a *biz.Admission) { a.SpecHash = strings.Repeat("0", 64) }, false},
-		{"intent snapshot preset mismatch", func(a *biz.Admission) { a.Intent.PresetID = otherExecution }, true},
+		{"intent snapshot preset mismatch", func(a *biz.Admission) { a.Intent.ComputePresetID = otherExecution }, true},
 		{"intent snapshot input mismatch", func(a *biz.Admission) { a.Intent.DatasetVersionID = otherExecution }, true},
 		{"intent snapshot image mismatch", func(a *biz.Admission) {
-			imageID := otherExecution
-			a.Intent.ImageVersionID = &imageID
+			a.Intent = conformance.FinetuningIntentV1()
 		}, true},
 		{"explicit resolved parameter mismatch", func(a *biz.Admission) {
-			parameters := []cpup01.Parameter{{Name: "learning_rate", Type: "DECIMAL", Value: "0.02"}}
-			a.Intent.GeneralParameters = &parameters
+			rate := "0.02"
+			a.Intent.MLP = &cpup01.MLPParameters{LearningRate: &rate}
 		}, true},
 		{"zero acceptance time", func(a *biz.Admission) { a.AcceptedAt = time.Time{} }, false},
 		{"submicrosecond acceptance time", func(a *biz.Admission) { a.AcceptedAt = a.AcceptedAt.Add(time.Nanosecond) }, false},
@@ -240,15 +242,7 @@ func TestAcceptInvalidAdmissionDoesNotReserveInbox(t *testing.T) {
 
 func refreshAdmissionHashes(t *testing.T, admission *biz.Admission) {
 	t.Helper()
-	_, intentHash, err := cpup01.CanonicalIntent(admission.Intent)
-	if err != nil {
-		t.Fatalf("invalid intent test vector: %v", err)
-	}
-	specHash, err := admission.Snapshot.Digest()
-	if err != nil {
-		t.Fatalf("invalid snapshot test vector: %v", err)
-	}
-	admission.IntentHash, admission.SpecHash = intentHash, specHash
+	*admission = admissionfixture.Bind(t, *admission)
 }
 
 func assertEmptyFailure(t *testing.T, got biz.Execution, err, want error) {

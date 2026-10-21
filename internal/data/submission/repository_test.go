@@ -3,6 +3,7 @@ package submission_test
 import (
 	"bytes"
 	"context"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"strings"
 	"testing"
 	"time"
@@ -135,7 +136,7 @@ func assertFrozenDispatch(t *testing.T, got biz.PipelineDispatch, request biz.Pi
 		t.Error("reservation changed the complete frozen dispatch plan or its hash")
 	}
 	if got.Plan.Owner != request.Owner || got.Plan.Environment != request.Admission.Snapshot.Environment ||
-		got.Plan.PipelineID != request.Admission.Snapshot.Release.PipelineID || got.Plan.PipelineVersionID != request.Admission.Snapshot.Release.PipelineVersionID ||
+		got.Plan.PipelineID != request.Admission.Snapshot.Implementation.PipelineID || got.Plan.PipelineVersionID != request.Admission.Snapshot.Implementation.PipelineVersionID ||
 		got.Plan.SpecHash != request.Admission.SpecHash || !got.Plan.DeadlineAt.Equal(request.Admission.Snapshot.DeadlineAt) {
 		t.Error("reservation did not retain the explicit owner revision/root and original admission's execution settings")
 	}
@@ -149,21 +150,18 @@ func validDispatchRequest(t *testing.T) biz.PipelineDispatchRequest {
 	snapshot := conformance.SnapshotV1()
 	acceptedAt := time.Now().UTC().Truncate(time.Microsecond)
 	snapshot.DeadlineAt = acceptedAt.Add(time.Hour)
-	intent := cpup01.Intent{Name: "durable-dispatch", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := cpup01.Intent{Name: "durable-dispatch", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatalf("intent fixture: %v", err)
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatalf("snapshot fixture: %v", err)
-	}
+	specHash := ""
 	return biz.PipelineDispatchRequest{
-		Admission: biz.Admission{
+		Admission: admissionfixture.Bind(t, biz.Admission{
 			TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42",
 			OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
 			Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: acceptedAt,
-		},
+		}),
 		Owner: biz.PipelineOwnerConfiguration{Reference: "cpu07-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"},
 	}
 }

@@ -70,6 +70,10 @@ func (runner *Runner) configuration(ctx context.Context) (biz.Execution, *traini
 	// the operation omitted by KFP's execution_id/spec_hash parameters.
 	runner.config.Context.Identity = proto.Clone(admission.Identity).(*trainingv1.ExecutionIdentity)
 	runner.executionKind = snapshot.Kind
+	runner.stepTiming = nil
+	if response.Timing != nil {
+		runner.stepTiming = proto.Clone(response.Timing).(*modeldevv1.StepTiming)
+	}
 	return execution, response.Workspace, nil
 }
 
@@ -88,15 +92,7 @@ func (runner *Runner) prepare(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if fine := execution.Snapshot.Finetuning; fine != nil {
-		deadline := time.Now().Add(time.Duration(fine.Budgets.PrepareTimeoutSeconds) * time.Second)
-		if execution.Snapshot.DeadlineAt.Before(deadline) {
-			deadline = execution.Snapshot.DeadlineAt
-		}
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithDeadline(ctx, deadline)
-		defer cancel()
-	}
+
 	environment := execution.Snapshot.Environment
 	namespace, err := runner.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, environment.NamespaceName, metav1.GetOptions{})
 	if err != nil {
@@ -217,10 +213,8 @@ func (runner *Runner) close(ctx context.Context) (firstError error) {
 		}
 		_, _ = runner.client.RequestExecutionClose(call, &modeldevv1.RequestExecutionCloseRequest{Context: runner.config.Context, Reason: modeldevv1.CloseReason_CLOSE_REASON_STEP_FAILED})
 	}()
-	if runner.config.Context.Identity.OperationId == "" {
-		if _, _, err := runner.configuration(ctx); err != nil {
-			return err
-		}
+	if _, _, err := runner.configuration(ctx); err != nil {
+		return err
 	}
 	if runner.executionKind == "FINETUNING" {
 		return runner.requestClose(ctx, modeldevv1.CloseReason_CLOSE_REASON_NATURAL_TERMINAL)
@@ -232,10 +226,19 @@ func (runner *Runner) close(ctx context.Context) (firstError error) {
 }
 
 func (runner *Runner) confirmPublication(ctx context.Context) error {
-	if runner.config.Context.Identity.OperationId == "" {
+	if runner.config.Context.Identity.OperationId == "" || runner.stepTiming == nil {
 		if _, _, err := runner.configuration(ctx); err != nil {
 			return err
 		}
+	}
+	if runner.stepTiming == nil || runner.stepTiming.DeadlineAt == nil || runner.stepTiming.DeadlineAt.CheckValid() != nil {
+		return ErrConfiguration
+	}
+	business, cancel := context.WithDeadline(ctx, runner.stepTiming.DeadlineAt.AsTime())
+	defer cancel()
+	ctx = business
+	if err := ctx.Err(); err != nil {
+		return err
 	}
 	if !absoluteClean(runner.config.CandidateFile) {
 		return ErrConfiguration

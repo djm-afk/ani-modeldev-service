@@ -48,6 +48,7 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 	}
 	history := make(map[string]biz.RuntimeResource)
 	if state.Observation != nil {
+		observation.SpecificationMismatch = observation.SpecificationMismatch || state.Observation.SpecificationMismatch
 		if observation.ObservedAt.Before(state.Observation.ObservedAt) {
 			return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 		}
@@ -98,6 +99,10 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 			}
 			hasJobSet = true
+		case "PodGroup":
+			if resource.APIVersion != "scheduling.volcano.sh/v1beta1" || resource.Name != state.Training.Name || resource.OwnerUID != state.TrainingHandle.TrainJobUID || !resource.Terminal || resource.ExitCode != nil {
+				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+			}
 		case "Job":
 			owner, ok := history[resource.OwnerUID]
 			if !ok || owner.Kind != "JobSet" {
@@ -141,7 +146,7 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 }
 
 func validPublication(execution biz.Execution, authority biz.RunAuthorityCandidate, state biz.ExecutionRuntime, publication biz.RuntimePublication, requireFreshObservation bool) error {
-	if state.Observation == nil || state.Observation.Outcome != "SUCCEEDED" || !state.Observation.WritersAbsent || state.TrainingHandle == nil {
+	if state.Observation == nil || state.Observation.SpecificationMismatch || state.Observation.Outcome != "SUCCEEDED" || !state.Observation.WritersAbsent || state.TrainingHandle == nil {
 		return biz.ErrRuntimeNotReady
 	}
 	if _, err := databaseID(publication.ID); err != nil {

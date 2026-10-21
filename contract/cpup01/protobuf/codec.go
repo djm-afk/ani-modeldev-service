@@ -1,71 +1,72 @@
-// Package protobuf adapts CPU-P01 pure contracts to the owned protobuf API.
-// It is a transport boundary, not an authorization decision or live validator.
+// Package protobuf adapts the single active pure contract to protobuf.
 package protobuf
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
-
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strconv"
+	"strings"
 )
 
-func EncodeIntent(intent cpup01.Intent) (*modeldevv1.UserIntent, error) {
-	if _, _, err := cpup01.CanonicalIntent(intent); err != nil {
+func EncodeIntent(i cpup01.Intent) (*modeldevv1.UserIntent, error) {
+	if _, _, err := cpup01.CanonicalIntent(i); err != nil {
 		return nil, err
 	}
-	message := &modeldevv1.UserIntent{
-		Name: intent.Name, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+intent.Kind]),
-		PresetId: intent.PresetID, DatasetVersionId: intent.DatasetVersionID,
-		ImageVersionId: cloneString(intent.ImageVersionID), SourceExecutionId: cloneString(intent.SourceExecutionID),
-		BaseModelVersionId: cloneString(intent.BaseModelVersionID), TargetModelId: cloneString(intent.TargetModelID), NewModelName: cloneString(intent.NewModelName),
+	m := &modeldevv1.UserIntent{Name: i.Name, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+i.Kind]), ImplementationId: i.ImplementationID, ComputePresetId: i.ComputePresetID, DatasetVersionId: i.DatasetVersionID, TimeoutSeconds: cloneUint64(i.TimeoutSeconds), BaseModelVersionId: cloneString(i.BaseModelVersionID), TargetModelId: cloneString(i.TargetModelID), NewModelName: cloneString(i.NewModelName)}
+	if i.MLP != nil {
+		p := i.MLP
+		m.Parameters = &modeldevv1.UserIntent_Mlp{Mlp: &modeldevv1.MLPParameters{LearningRate: cloneString(p.LearningRate), Epochs: cloneInt64(p.Epochs), BatchSize: cloneInt64(p.BatchSize), Seed: cloneUint32(p.Seed)}}
 	}
-	if intent.Finetuning != nil {
-		message.Finetuning = &modeldevv1.FinetuningParameters{LearningRate: cloneString(intent.Finetuning.LearningRate), MaxSteps: cloneInt64(intent.Finetuning.MaxSteps)}
+	if i.Finetuning != nil {
+		p := i.Finetuning
+		m.Parameters = &modeldevv1.UserIntent_SftLora{SftLora: &modeldevv1.FinetuningParameters{LearningRate: cloneString(p.LearningRate), MaxSteps: cloneInt64(p.MaxSteps), PerDeviceTrainBatchSize: cloneInt64(p.PerDeviceTrainBatchSize), GradientAccumulationSteps: cloneInt64(p.GradientAccumulationSteps), CutoffLen: cloneInt64(p.CutoffLen), LoraRank: cloneInt64(p.LoraRank), LoraAlpha: cloneInt64(p.LoraAlpha), LoraDropout: cloneString(p.LoraDropout), Seed: cloneUint32(p.Seed)}}
 	}
-	if intent.GeneralParameters != nil {
-		parameters, err := encodeParameters(*intent.GeneralParameters)
-		if err != nil {
-			return nil, err
-		}
-		message.GeneralParameters = &modeldevv1.ParameterSelection{Values: parameters}
-	}
-	return message, nil
+	return m, nil
 }
-
-func DecodeIntent(message *modeldevv1.UserIntent) (cpup01.Intent, error) {
-	if message == nil {
-		return cpup01.Intent{}, invalid("missing intent")
+func DecodeIntent(m *modeldevv1.UserIntent) (cpup01.Intent, error) {
+	if m == nil || checkMessage(m.ProtoReflect(), 0) != nil {
+		return cpup01.Intent{}, invalid("intent")
 	}
-	if err := checkMessage(message.ProtoReflect(), 0); err != nil {
+	i := cpup01.Intent{Name: m.Name, Kind: strings.TrimPrefix(m.Kind.String(), "EXECUTION_KIND_"), ImplementationID: m.ImplementationId, ComputePresetID: m.ComputePresetId, DatasetVersionID: m.DatasetVersionId, TimeoutSeconds: cloneUint64(m.TimeoutSeconds), BaseModelVersionID: cloneString(m.BaseModelVersionId), TargetModelID: cloneString(m.TargetModelId), NewModelName: cloneString(m.NewModelName)}
+	switch p := m.Parameters.(type) {
+	case *modeldevv1.UserIntent_Mlp:
+		if p == nil || p.Mlp == nil {
+			return cpup01.Intent{}, invalid("parameters")
+		}
+		v := p.Mlp
+		i.MLP = &cpup01.MLPParameters{LearningRate: cloneString(v.LearningRate), Epochs: cloneInt64(v.Epochs), BatchSize: cloneInt64(v.BatchSize), Seed: cloneUint32(v.Seed)}
+	case *modeldevv1.UserIntent_SftLora:
+		if p == nil || p.SftLora == nil {
+			return cpup01.Intent{}, invalid("parameters")
+		}
+		v := p.SftLora
+		i.Finetuning = &cpup01.FinetuningParameters{LearningRate: cloneString(v.LearningRate), MaxSteps: cloneInt64(v.MaxSteps), PerDeviceTrainBatchSize: cloneInt64(v.PerDeviceTrainBatchSize), GradientAccumulationSteps: cloneInt64(v.GradientAccumulationSteps), CutoffLen: cloneInt64(v.CutoffLen), LoraRank: cloneInt64(v.LoraRank), LoraAlpha: cloneInt64(v.LoraAlpha), LoraDropout: cloneString(v.LoraDropout), Seed: cloneUint32(v.Seed)}
+	default:
+		return cpup01.Intent{}, invalid("parameters")
+	}
+	if _, _, err := cpup01.CanonicalIntent(i); err != nil {
 		return cpup01.Intent{}, err
 	}
-	intent := cpup01.Intent{
-		Name: message.Name, Kind: strings.TrimPrefix(message.Kind.String(), "EXECUTION_KIND_"),
-		PresetID: message.PresetId, DatasetVersionID: message.DatasetVersionId,
-		ImageVersionID: cloneString(message.ImageVersionId), SourceExecutionID: cloneString(message.SourceExecutionId),
-		BaseModelVersionID: cloneString(message.BaseModelVersionId), TargetModelID: cloneString(message.TargetModelId), NewModelName: cloneString(message.NewModelName),
-	}
-	if message.Finetuning != nil {
-		intent.Finetuning = &cpup01.FinetuningParameters{LearningRate: cloneString(message.Finetuning.LearningRate), MaxSteps: cloneInt64(message.Finetuning.MaxSteps)}
-	}
-	if message.GeneralParameters != nil {
-		parameters, err := decodeParameters(message.GeneralParameters.Values)
-		if err != nil {
-			return cpup01.Intent{}, err
-		}
-		intent.GeneralParameters = &parameters
-	}
-	if _, _, err := cpup01.CanonicalIntent(intent); err != nil {
-		return cpup01.Intent{}, err
-	}
-	return intent, nil
+	return i, nil
 }
-
+func cloneUint64(v *uint64) *uint64 {
+	if v == nil {
+		return nil
+	}
+	p := *v
+	return &p
+}
+func cloneUint32(v *uint32) *uint32 {
+	if v == nil {
+		return nil
+	}
+	p := *v
+	return &p
+}
 func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, error) {
 	if err := snapshot.Validate(); err != nil {
 		return nil, err
@@ -89,16 +90,15 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 	}
 	message := &modeldevv1.ExecutionSnapshot{
 		SchemaVersion: snapshot.SchemaVersion, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+snapshot.Kind]),
-		DeliveryMode: trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS,
-		Release: &modeldevv1.ReleaseSnapshot{
-			ReleaseId: snapshot.Release.ReleaseID, ReleaseDigest: snapshot.Release.ReleaseDigest, PresetId: snapshot.Release.PresetID,
-			AcceptedBindingGeneration: snapshot.Release.AcceptedBindingGeneration, PipelineId: snapshot.Release.PipelineID,
-			PipelineVersionId: snapshot.Release.PipelineVersionID, PipelineIrSha256: snapshot.Release.PipelineIRSHA256,
-			Runtime: &trainingv1.RuntimeRef{Name: snapshot.Release.Runtime.Name, Kind: snapshot.Release.Runtime.Kind, ApiGroup: snapshot.Release.Runtime.APIGroup, ContentSha256: snapshot.Release.Runtime.ContentSHA256, TargetJobs: cloneStrings(snapshot.Release.Runtime.TargetJobs)},
-		},
-		Input:     &trainingv1.InputRef{InputVersionId: snapshot.Input.InputVersionID, Object: object, Format: snapshot.Input.Format, SchemaVersion: snapshot.Input.SchemaVersion, RowCount: snapshot.Input.RowCount, FeatureCount: snapshot.Input.FeatureCount},
-		Program:   &trainingv1.ProgramRef{ImageVersionId: snapshot.Program.ImageVersionID, ImageDigest: snapshot.Program.ImageDigest, Command: cloneStrings(snapshot.Program.Command), ResolvedArgs: cloneStrings(snapshot.Program.ResolvedArgs), ResolvedParameters: parameters},
-		Resources: &trainingv1.CPUResources{Nodes: snapshot.Resources.Nodes, ProcessesPerNode: snapshot.Resources.ProcessesPerNode, RequestMillicpu: snapshot.Resources.RequestMillicpu, LimitMillicpu: snapshot.Resources.LimitMillicpu, RequestMemoryBytes: snapshot.Resources.RequestMemoryBytes, LimitMemoryBytes: snapshot.Resources.LimitMemoryBytes},
+		DeliveryMode:   trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS,
+		IdentityRef:    encodeIdentity(snapshot.IdentityRef),
+		Implementation: encodeImplementation(snapshot.Implementation),
+		ComputeOrigin:  encodeComputeOrigin(snapshot.ComputeOrigin),
+		Timing:         encodeTiming(snapshot.Timing),
+		RuntimePlan:    encodeRuntimePlan(snapshot.RuntimePlan),
+		Input:          &trainingv1.InputRef{InputVersionId: snapshot.Input.InputVersionID, Object: object, Format: snapshot.Input.Format, SchemaVersion: snapshot.Input.SchemaVersion, RowCount: snapshot.Input.RowCount, FeatureCount: snapshot.Input.FeatureCount},
+		Program:        &trainingv1.ProgramRef{ImageVersionId: snapshot.Program.ImageVersionID, ImageDigest: snapshot.Program.ImageDigest, Command: cloneStrings(snapshot.Program.Command), ResolvedArgs: cloneStrings(snapshot.Program.ResolvedArgs), ResolvedParameters: parameters},
+		Resources:      &trainingv1.CPUResources{Nodes: snapshot.Resources.Nodes, ProcessesPerNode: snapshot.Resources.ProcessesPerNode, RequestMillicpu: snapshot.Resources.RequestMillicpu, LimitMillicpu: snapshot.Resources.LimitMillicpu, RequestMemoryBytes: snapshot.Resources.RequestMemoryBytes, LimitMemoryBytes: snapshot.Resources.LimitMemoryBytes},
 		Environment: &modeldevv1.EnvironmentBindingSnapshot{
 			BindingId: snapshot.Environment.BindingID, BindingDigest: snapshot.Environment.BindingDigest,
 			ClusterId: snapshot.Environment.ClusterID, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUid: snapshot.Environment.NamespaceUID,
@@ -113,6 +113,9 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 	if snapshot.Finetuning != nil {
 		message.Finetuning = encodeFinetuningSnapshot(*snapshot.Finetuning)
 	}
+	if snapshot.GPU != nil {
+		message.Gpu = encodeGPUPlan(snapshot.GPU)
+	}
 	return message, nil
 }
 
@@ -123,11 +126,14 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 	if err := checkMessage(message.ProtoReflect(), 0); err != nil {
 		return cpup01.Snapshot{}, err
 	}
-	if message.Release == nil || message.Release.Runtime == nil || message.Input == nil || message.Input.Object == nil || message.Program == nil || message.Resources == nil || message.Environment == nil || message.Environment.Identities == nil || message.Workspace == nil || message.PublicationScope == nil || message.OutputContract == nil || message.DeadlineAt == nil {
+	if message.Implementation == nil || message.IdentityRef == nil || message.ComputeOrigin == nil || message.Timing == nil || message.Timing.AcceptedAt == nil || message.Timing.ExecutionDeadlineAt == nil || message.RuntimePlan == nil || message.Input == nil || message.Input.Object == nil || message.Program == nil || message.Resources == nil || message.Environment == nil || message.Environment.Identities == nil || message.Workspace == nil || message.PublicationScope == nil || message.OutputContract == nil || message.DeadlineAt == nil {
 		return cpup01.Snapshot{}, invalid("missing snapshot fields")
 	}
 	if err := message.DeadlineAt.CheckValid(); err != nil {
 		return cpup01.Snapshot{}, invalid("deadline timestamp")
+	}
+	if message.Timing.AcceptedAt.CheckValid() != nil || message.Timing.ExecutionDeadlineAt.CheckValid() != nil {
+		return cpup01.Snapshot{}, invalid("timing timestamp")
 	}
 	parameters, err := decodeParameters(message.Program.ResolvedParameters)
 	if err != nil {
@@ -159,15 +165,14 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 	}
 	snapshot := cpup01.Snapshot{
 		SchemaVersion: message.SchemaVersion, Kind: strings.TrimPrefix(message.Kind.String(), "EXECUTION_KIND_"), DeliveryMode: strings.TrimPrefix(message.DeliveryMode.String(), "DELIVERY_MODE_"),
-		Release: cpup01.ReleaseSnapshot{
-			ReleaseID: message.Release.ReleaseId, ReleaseDigest: message.Release.ReleaseDigest, PresetID: message.Release.PresetId,
-			AcceptedBindingGeneration: message.Release.AcceptedBindingGeneration, PipelineID: message.Release.PipelineId,
-			PipelineVersionID: message.Release.PipelineVersionId, PipelineIRSHA256: message.Release.PipelineIrSha256,
-			Runtime: cpup01.RuntimeRef{Name: message.Release.Runtime.Name, Kind: message.Release.Runtime.Kind, APIGroup: message.Release.Runtime.ApiGroup, ContentSHA256: message.Release.Runtime.ContentSha256, TargetJobs: cloneStrings(message.Release.Runtime.TargetJobs)},
-		},
-		Input:     cpup01.InputRef{InputVersionID: message.Input.InputVersionId, Object: object, Format: message.Input.Format, SchemaVersion: message.Input.SchemaVersion, RowCount: message.Input.RowCount, FeatureCount: message.Input.FeatureCount},
-		Program:   cpup01.ProgramRef{ImageVersionID: message.Program.ImageVersionId, ImageDigest: message.Program.ImageDigest, Command: cloneStrings(message.Program.Command), ResolvedArgs: cloneStrings(message.Program.ResolvedArgs), ResolvedParameters: parameters},
-		Resources: cpup01.CPUResources{Nodes: message.Resources.Nodes, ProcessesPerNode: message.Resources.ProcessesPerNode, RequestMillicpu: message.Resources.RequestMillicpu, LimitMillicpu: message.Resources.LimitMillicpu, RequestMemoryBytes: message.Resources.RequestMemoryBytes, LimitMemoryBytes: message.Resources.LimitMemoryBytes},
+		IdentityRef:    decodeIdentity(message.IdentityRef),
+		Implementation: decodeImplementation(message.Implementation),
+		ComputeOrigin:  decodeComputeOrigin(message.ComputeOrigin),
+		Timing:         decodeTiming(message.Timing),
+		RuntimePlan:    decodeRuntimePlan(message.RuntimePlan),
+		Input:          cpup01.InputRef{InputVersionID: message.Input.InputVersionId, Object: object, Format: message.Input.Format, SchemaVersion: message.Input.SchemaVersion, RowCount: message.Input.RowCount, FeatureCount: message.Input.FeatureCount},
+		Program:        cpup01.ProgramRef{ImageVersionID: message.Program.ImageVersionId, ImageDigest: message.Program.ImageDigest, Command: cloneStrings(message.Program.Command), ResolvedArgs: cloneStrings(message.Program.ResolvedArgs), ResolvedParameters: parameters},
+		Resources:      cpup01.CPUResources{Nodes: message.Resources.Nodes, ProcessesPerNode: message.Resources.ProcessesPerNode, RequestMillicpu: message.Resources.RequestMillicpu, LimitMillicpu: message.Resources.LimitMillicpu, RequestMemoryBytes: message.Resources.RequestMemoryBytes, LimitMemoryBytes: message.Resources.LimitMemoryBytes},
 		Environment: cpup01.EnvironmentBindingSnapshot{
 			BindingID: message.Environment.BindingId, BindingDigest: message.Environment.BindingDigest, ClusterID: message.Environment.ClusterId,
 			NamespaceName: message.Environment.NamespaceName, NamespaceUID: message.Environment.NamespaceUid, KFPConnectionRef: message.Environment.KfpConnectionRef, ExperimentID: message.Environment.ExperimentId,
@@ -184,6 +189,13 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 			return cpup01.Snapshot{}, err
 		}
 		snapshot.Finetuning = &fine
+	}
+	if message.Gpu != nil {
+		plan, err := decodeGPUPlan(message.Gpu)
+		if err != nil {
+			return cpup01.Snapshot{}, err
+		}
+		snapshot.GPU = plan
 	}
 	if err := snapshot.Validate(); err != nil {
 		return cpup01.Snapshot{}, err

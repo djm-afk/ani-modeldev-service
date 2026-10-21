@@ -98,17 +98,17 @@ func Load(ctx context.Context, sources []FileSource) (*Reader, error) {
 // ResolveFinetuningModelFacts returns the frozen base-model reference for the
 // requested tenant and fixed version. A missing or mismatched key is a finite
 // domain error, never a fabricated success.
-func (reader *Reader) ResolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, release cpup01.ReleaseDocument) (cpup01.BaseModelRef, error) {
+func (reader *Reader) ResolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, material cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error) {
 	if err := ctx.Err(); err != nil {
 		return cpup01.BaseModelRef{}, err
 	}
-	if reader == nil || intent.BaseModelVersionID == nil || release.Finetuning == nil {
+	if reader == nil || intent.BaseModelVersionID == nil || material.Finetuning == nil {
 		return cpup01.BaseModelRef{}, biz.ErrFinetuningNotEnabled
 	}
 	tenant = strings.ToLower(tenant)
 	version := strings.ToLower(*intent.BaseModelVersionID)
-	if !canonicalID(tenant) || !canonicalID(version) || version != strings.ToLower(release.Finetuning.BaseModelVersionID) {
-		return cpup01.BaseModelRef{}, biz.ErrNoCompatibleRelease
+	if !canonicalID(tenant) || !canonicalID(version) {
+		return cpup01.BaseModelRef{}, biz.ErrFinetuningNotEnabled
 	}
 	value, found := reader.documents[documentKey{tenant, version}]
 	if !found {

@@ -91,8 +91,8 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 		if err != nil {
 			return failed("command admission facts unavailable or invalid")
 		}
-		releases := catalogue.NewReader(resolution.CatalogueDirectory)
-		if err := releases.Check(ctx); err != nil {
+		implementationMaterials := catalogue.NewReader(resolution.CatalogueDirectory)
+		if err := implementationMaterials.Check(ctx); err != nil {
 			return failed("command admission catalogue unavailable or invalid")
 		}
 		inputs := input.New(pool)
@@ -100,8 +100,8 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 		if err != nil {
 			return failed("command finetuning model facts unavailable or invalid")
 		}
-		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(releases, inputs, facts, models))
-		materials := biz.NewManagedMaterials(releases, facts, inputs, biz.NewInputImporter(inputs, verifier))
+		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models))
+		materials := biz.NewManagedMaterials(implementationMaterials, facts, inputs, biz.NewInputImporter(inputs, verifier))
 		management = service.NewManagement(materials)
 		if query == nil {
 			query = service.NewQuery(execution.New(pool), nil).WithMaterials(materials)

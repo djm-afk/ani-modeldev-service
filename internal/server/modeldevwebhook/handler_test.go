@@ -72,10 +72,10 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 	directory := t.TempDir()
 	profiles := []modeldevwebhook.Profile{}
 	for _, kind := range []string{"GENERAL_TRAINING", "FINETUNING"} {
-		release := conformance.ReleaseV1()
+		release := conformance.MaterialV21()
 		id := "cpu-v1"
 		if kind == "FINETUNING" {
-			release = conformance.FinetuningReleaseV1()
+			release = conformance.FinetuningMaterialV21()
 			id = "sft-v1"
 		}
 		raw, err := release.Canonical()
@@ -87,7 +87,7 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 			t.Fatal(err)
 		}
 		digest := sha256.Sum256(raw)
-		profiles = append(profiles, modeldevwebhook.Profile{ID: id, Kind: kind, ReleaseFile: path, ReleaseSHA256: hex.EncodeToString(digest[:]), ComponentImage: release.Program.ImageDigest,
+		profiles = append(profiles, modeldevwebhook.Profile{ID: id, Kind: kind, MaterialFile: path, MaterialSHA256: hex.EncodeToString(digest[:]), ComponentImage: release.Program.ImageDigest,
 			AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001, EphemeralStorageRequest: "10Gi", EphemeralStorageLimit: "12Gi"})
 	}
 	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles,
@@ -453,13 +453,13 @@ func TestConfigFreezesReleaseAndOptionalLivePipelineVersion(t *testing.T) {
 		t.Fatal("missing frozen version metadata accepted")
 	}
 	labels := reader.workflow.GetLabels()
-	labels[config.Profiles[0].PipelineVersionLabel] = conformance.ReleaseV1().PipelineVersionID
+	labels[config.Profiles[0].PipelineVersionLabel] = conformance.MaterialV21().Implementation.PipelineVersionID
 	reader.workflow.SetLabels(labels)
 	if !call(t, server, request(t, config, "cpu-v1", "prepare")).Allowed {
 		t.Fatal("original frozen version refused")
 	}
 	for _, change := range []func(*modeldevwebhook.Config){
-		func(c *modeldevwebhook.Config) { c.Profiles[0].ReleaseSHA256 = strings.Repeat("0", 64) },
+		func(c *modeldevwebhook.Config) { c.Profiles[0].MaterialSHA256 = strings.Repeat("0", 64) },
 		func(c *modeldevwebhook.Config) { c.Profiles[0].ComponentImage = "mutable:tag" },
 		func(c *modeldevwebhook.Config) { c.Profiles[0].RunAsUser = 0 },
 		func(c *modeldevwebhook.Config) { c.Bindings[0].Profiles = []string{"unknown"} },
