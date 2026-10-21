@@ -68,11 +68,21 @@ type RuntimeResource struct {
 	APIVersion, Kind, Namespace, Name, UID, OwnerUID string
 	APIObjectPresent                                 bool
 	CreationDisabled                                 bool
+	Suspension                                       *TrainingControllerSuspension `json:",omitempty"`
 	Terminal                                         bool
 	ExitCode                                         *int32
 	// InitializationAbort is owner-only Pod evidence, never a main-container
 	// exit or permission for a managed step, training writer, or publication.
 	InitializationAbort *PodInitializationAbort `json:",omitempty"`
+}
+
+// TrainingControllerSuspension is a controller acknowledgement, distinct from
+// merely writing spec.suspend. Zero-worker closure also requires the complete
+// original controller graph and a fresh, unpaginated retained-Pod inventory.
+type TrainingControllerSuspension struct {
+	Generation, ObservedGeneration int64
+	AcknowledgedAt                 time.Time
+	WorkerExitRetention            bool
 }
 
 // PodInitializationAbort retains the kubelet's explicit stopped-sandbox and
@@ -149,12 +159,13 @@ func (proof *PodInitializationAbort) ValidAt(observedAt time.Time) bool {
 // WritersAbsent requires verified current controller/child facts and all known
 // historical Pods. Neither a missing object nor a Complete condition suffices.
 type TrainingRuntimeObservation struct {
-	Handle                TrainingHandle
-	Resources             []RuntimeResource
-	Outcome               string // RUNNING, SUCCEEDED, FAILED, or UNKNOWN
-	WritersAbsent         bool
-	SpecificationMismatch bool `json:",omitempty"`
-	ObservedAt            time.Time
+	Handle                         TrainingHandle
+	Resources                      []RuntimeResource
+	Outcome                        string // RUNNING, SUCCEEDED, FAILED, or UNKNOWN
+	WritersAbsent                  bool
+	SpecificationMismatch          bool   `json:",omitempty"`
+	NoWorkerPodListResourceVersion string `json:",omitempty"`
+	ObservedAt                     time.Time
 }
 
 type TrainingReservation struct {

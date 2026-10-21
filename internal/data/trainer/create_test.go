@@ -471,6 +471,7 @@ type trainingFixture struct {
 	createStatusCode                                                   int
 	createStatusBody                                                   string
 	createStatusTruncated                                              bool
+	podListResourceVersion                                             string
 }
 
 func newTrainingFixture(t *testing.T) *trainingFixture {
@@ -616,7 +617,7 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 			if f.pod != nil {
 				items = append(items, f.pod)
 			}
-			response = map[string]any{"apiVersion": "v1", "kind": "PodList", "metadata": map[string]any{}, "items": items}
+			response = map[string]any{"apiVersion": "v1", "kind": "PodList", "metadata": map[string]any{"resourceVersion": f.podListResourceVersion}, "items": items}
 		case path == "/apis/batch/v1/namespaces/cpu-execution/jobs/"+f.job["metadata"].(map[string]any)["name"].(string):
 			response = f.job
 		case path == "/api/v1/namespaces/cpu-execution/pods/training-pod":

@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/util/validation"
 
@@ -133,16 +134,41 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 	if !hasTrainJob {
 		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 	}
-	if observation.WritersAbsent && (!allTerminal || !hasJobSet || !hasPod) {
+	noWorker := !hasPod && validNoWorkerClose(state, observation, history)
+	if observation.NoWorkerPodListResourceVersion != "" && (hasPod || !noWorker || !observation.WritersAbsent) {
+		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+	}
+	if observation.WritersAbsent && (!allTerminal || !hasJobSet || !hasPod && !noWorker) {
 		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeNotReady
 	}
-	if observation.Outcome == "SUCCEEDED" && (!observation.WritersAbsent || !allSuccessful) {
+	if observation.Outcome == "SUCCEEDED" && (!observation.WritersAbsent || !allSuccessful || !hasPod) {
 		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeNotReady
 	}
 	if state.Observation != nil && state.Observation.Outcome == "SUCCEEDED" && observation.Outcome != "SUCCEEDED" {
 		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 	}
 	return merged, nil
+}
+
+func validNoWorkerClose(state biz.ExecutionRuntime, observation biz.TrainingRuntimeObservation, resources map[string]biz.RuntimeResource) bool {
+	if state.CloseGeneration == 0 || state.CloseRequestedAt.IsZero() || !validOpaqueID(observation.NoWorkerPodListResourceVersion) {
+		return false
+	}
+	counts := map[string]int{}
+	for _, resource := range resources {
+		if resource.Kind == "PodGroup" {
+			continue
+		}
+		proof := resource.Suspension
+		if resource.Kind == "Pod" || !resource.APIObjectPresent || !resource.CreationDisabled || proof == nil || proof.Generation < 2 || proof.AcknowledgedAt.IsZero() || proof.AcknowledgedAt.After(observation.ObservedAt.Add(5*time.Second)) || !proof.AcknowledgedAt.Add(time.Second).After(state.CloseRequestedAt) || proof.ObservedGeneration != 0 && proof.ObservedGeneration != proof.Generation || proof.ObservedGeneration == 0 && proof.Generation != 2 {
+			return false
+		}
+		counts[resource.Kind]++
+		if resource.Kind == "Job" && !proof.WorkerExitRetention {
+			return false
+		}
+	}
+	return counts["TrainJob"] == 1 && counts["JobSet"] == 1 && counts["Job"] == 1
 }
 
 func validPublication(execution biz.Execution, authority biz.RunAuthorityCandidate, state biz.ExecutionRuntime, publication biz.RuntimePublication, requireFreshObservation bool) error {

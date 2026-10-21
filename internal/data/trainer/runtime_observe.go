@@ -226,13 +226,20 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 	if err != nil {
 		return observation, err
 	}
-	observation.WritersAbsent = creationStopped && jobsStopped && podCount > 0 && allPodsTerminal && !exitPending
+	// There is no exit code to invent when every original controller has
+	// acknowledged stopping before a worker existed. The immutable Job's exit
+	// protection retains any real Pod, including one whose creation raced Stop.
+	noWorker := podCount == 0 && allPodsTerminal && noWorkerControllersStopped(resources, objects) && pods.GetResourceVersion() != ""
+	if noWorker {
+		observation.NoWorkerPodListResourceVersion = pods.GetResourceVersion()
+	}
+	observation.WritersAbsent = creationStopped && jobsStopped && (podCount > 0 || noWorker) && allPodsTerminal && !exitPending
 	switch {
-	case trainSuccess && setSuccess && allZero && observation.WritersAbsent:
+	case podCount > 0 && trainSuccess && setSuccess && allZero && observation.WritersAbsent:
 		observation.Outcome = "SUCCEEDED"
 	case trainFailure && setFailure && anyNonzero && observation.WritersAbsent:
 		observation.Outcome = "FAILED"
-	case !allPodsTerminal || (!trainTerminal && !setTerminal):
+	case !observation.WritersAbsent && (!allPodsTerminal || (!trainTerminal && !setTerminal)):
 		observation.Outcome = "RUNNING"
 	}
 	observation.Resources = orderedResources(resources)
@@ -244,7 +251,7 @@ func resourceFact(object *unstructured.Unstructured, owner string, terminal bool
 	if object.GetKind() == "TrainJob" || object.GetKind() == "JobSet" || object.GetKind() == "Job" {
 		creationDisabled, _, _ = unstructured.NestedBool(object.Object, "spec", "suspend")
 	}
-	return biz.RuntimeResource{APIVersion: object.GetAPIVersion(), Kind: object.GetKind(), Namespace: object.GetNamespace(), Name: object.GetName(), UID: string(object.GetUID()), OwnerUID: owner, Terminal: terminal, ExitCode: code, APIObjectPresent: true, CreationDisabled: creationDisabled}
+	return biz.RuntimeResource{APIVersion: object.GetAPIVersion(), Kind: object.GetKind(), Namespace: object.GetNamespace(), Name: object.GetName(), UID: string(object.GetUID()), OwnerUID: owner, Terminal: terminal, ExitCode: code, APIObjectPresent: true, CreationDisabled: creationDisabled, Suspension: trainingSuspension(object, creationDisabled)}
 }
 
 func orderedResources(resources map[string]biz.RuntimeResource) []biz.RuntimeResource {

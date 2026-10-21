@@ -47,13 +47,20 @@ func (d GPUDisplay) Canonical() ([]byte, error) {
 }
 func (e GPUExecution) Validate() error {
 	bad := func() error { return fmt.Errorf("%w: GPU execution", ErrInvalidArgument) }
-	if e.SchedulerName != "volcano" || !validSnapshotDNSName(e.QueueName) || !validSnapshotDNSName(e.RuntimeClassName) || len(e.Resources) != 3 || len(e.NodeSelector) != 3 || len(e.PodAnnotations) != 1 || e.PodAnnotations["volcano.sh/vgpu-mode"] != "hami-core" {
+	if e.SchedulerName != "volcano" || !validSnapshotDNSName(e.QueueName) || !validSnapshotDNSName(e.RuntimeClassName) || len(e.Resources) != 3 || (len(e.NodeSelector) != 3 && len(e.NodeSelector) != 4) || len(e.PodAnnotations) != 1 || e.PodAnnotations["volcano.sh/vgpu-mode"] != "hami-core" {
 		return bad()
 	}
 	for _, k := range []string{"accelerator.ani.io/supply-group", "accelerator.ani.io/model-key", "accelerator.ani.io/baseline-id"} {
 		if !gpuLabelValue.MatchString(e.NodeSelector[k]) || len(e.NodeSelector[k]) > 63 {
 			return bad()
 		}
+	}
+	if hostname, exists := e.NodeSelector["kubernetes.io/hostname"]; exists {
+		if !gpuLabelValue.MatchString(hostname) || len(hostname) > 63 {
+			return bad()
+		}
+	} else if len(e.NodeSelector) != 3 {
+		return bad()
 	}
 	for _, k := range []string{"volcano.sh/vgpu-number", "volcano.sh/vgpu-memory", "volcano.sh/vgpu-cores"} {
 		s := e.Resources[k]
