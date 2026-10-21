@@ -12,6 +12,47 @@ import yaml
 
 
 class PipelineAssembly(unittest.TestCase):
+    def test_finetuning_verify_mounts_the_original_adapter_and_training_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            configuration = {
+                "kind": "FINETUNING",
+                "component_image": "registry.example.test/modeldev-fine-step@sha256:" + "b" * 64,
+                "owner_config_map": "fine-step-owner-fixture",
+                "storage_class": "fine-workspace-fixture",
+                "workspace_size": "16Gi",
+                "workspace_access_mode": "ReadWriteOnce",
+                "admission_profile": "fine-v21-fixture",
+                "execution_timeout_max_seconds": 14400,
+            }
+            config, output = root / "compile.json", root / "pipeline.yaml"
+            config.write_text(json.dumps(configuration), encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(Path(__file__).with_name("cpu_p01.py")),
+                 "--config", str(config), "--output", str(output)],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            ir, platform = list(yaml.safe_load_all(output.read_text(encoding="utf-8")))
+            json_format.ParseDict(ir, pipeline_spec_pb2.PipelineSpec())
+            body_task, = [task for name, task in ir["root"]["dag"]["tasks"].items()
+                          if name != "finalize-close"]
+            tasks = ir["components"][body_task["componentRef"]["name"]]["dag"]["tasks"]
+            self.assertIn("export", tasks["verify"]["dependentTasks"])
+            for role, paths in {
+                "export": {"inputs", "training", "reports/train", "export", "reports/export"},
+                "verify": {"inputs", "training", "reports/train", "export", "reports/export", "reports/verify"},
+            }.items():
+                with self.subTest(role=role):
+                    executor = ir["components"][tasks[role]["componentRef"]["name"]]["executorLabel"]
+                    k8s = platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][executor]
+                    mounts = k8s["pvcMount"]
+                    self.assertEqual({mount["mountPath"]: mount["subPath"] for mount in mounts},
+                                     {"/workspace/" + path: path for path in paths})
+                    self.assertEqual(len(mounts), len(paths))
+                    self.assertEqual(len({mount["taskOutputParameter"]["producerTask"] for mount in mounts}), 1)
+                    self.assertEqual(int(k8s["activeDeadlineSeconds"]), 14400)
+
     def test_compiled_pipeline_preserves_execution_chain_and_failure_close(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

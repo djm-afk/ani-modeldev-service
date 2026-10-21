@@ -110,7 +110,7 @@ func request(t *testing.T, config modeldevwebhook.Config, profile, role string) 
 	case "export":
 		mounts = map[string]string{"/workspace/inputs": "inputs", "/workspace/training": "training", "/workspace/reports/train": "reports/train", "/workspace/export": "export", "/workspace/reports/export": "reports/export"}
 	case "verify":
-		mounts = map[string]string{"/workspace/inputs": "inputs", "/workspace/export": "export", "/workspace/reports/export": "reports/export", "/workspace/reports/verify": "reports/verify"}
+		mounts = map[string]string{"/workspace/inputs": "inputs", "/workspace/training": "training", "/workspace/reports/train": "reports/train", "/workspace/export": "export", "/workspace/reports/export": "reports/export", "/workspace/reports/verify": "reports/verify"}
 	}
 	if profile == "sft-v1" && (role == "collect" || role == "publish") {
 		mounts["/workspace/publication"] = "publication"
@@ -245,6 +245,107 @@ func TestHTTPSProfilesMountsPrecisePatchAndIdempotence(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay(t *testing.T) {
+	config, reader := fixtureConfig(t)
+	handler, err := modeldevwebhook.New(config, reader, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewTLSServer(handler)
+	defer server.Close()
+	body := request(t, config, "sft-v1", "verify")
+	result := call(t, server, body)
+	if !result.Allowed {
+		t.Fatalf("six original verify subpaths were refused: %+v", result)
+	}
+	apply := func(raw []byte, response admissionv1.AdmissionResponse) []byte {
+		t.Helper()
+		patch, err := jsonpatch.DecodePatch(response.Patch)
+		if err != nil {
+			t.Fatal(err)
+		}
+		updated, err := patch.Apply(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return updated
+	}
+	mutated := apply(body.Request.Object.Raw, result)
+	want := map[string]bool{"inputs": true, "training": true, "reports/train": true, "export": true, "reports/export": true, "reports/verify": false}
+	assertMounts := func(raw []byte) {
+		t.Helper()
+		var pod corev1.Pod
+		if err := json.Unmarshal(raw, &pod); err != nil {
+			t.Fatal(err)
+		}
+		if len(pod.Spec.Containers[0].VolumeMounts) != len(want) {
+			t.Fatal("verify did not retain exactly six workspace subpaths")
+		}
+		for _, mount := range pod.Spec.Containers[0].VolumeMounts {
+			readOnly, ok := want[mount.SubPath]
+			if !ok || mount.MountPath != "/workspace/"+mount.SubPath || mount.ReadOnly != readOnly {
+				t.Fatalf("verify could write original adapter/report or lost its report output: %+v", mount)
+			}
+		}
+	}
+	assertMounts(mutated)
+	for path, readOnly := range want {
+		if !readOnly {
+			continue
+		}
+		t.Run("repair writable "+path, func(t *testing.T) {
+			replay := body
+			replay.Request = body.Request.DeepCopy()
+			replay.Request.Object.Raw = append([]byte(nil), mutated...)
+			changePod(t, &replay, func(pod *corev1.Pod) {
+				for i := range pod.Spec.Containers[0].VolumeMounts {
+					if pod.Spec.Containers[0].VolumeMounts[i].SubPath == path {
+						pod.Spec.Containers[0].VolumeMounts[i].ReadOnly = false
+					}
+				}
+			})
+			result := call(t, server, replay)
+			if !result.Allowed || len(result.Patch) == 0 {
+				t.Fatal("admission replay left an original input writable")
+			}
+			assertMounts(apply(replay.Request.Object.Raw, result))
+		})
+	}
+	for _, path := range []string{"training", "reports/train"} {
+		for _, mode := range []string{"missing", "wrong subpath"} {
+			t.Run(mode+" "+path, func(t *testing.T) {
+				rejected := request(t, config, "sft-v1", "verify")
+				changePod(t, &rejected, func(pod *corev1.Pod) {
+					mounts := pod.Spec.Containers[0].VolumeMounts
+					for i := range mounts {
+						if mounts[i].SubPath != path {
+							continue
+						}
+						if mode == "missing" {
+							pod.Spec.Containers[0].VolumeMounts = append(mounts[:i], mounts[i+1:]...)
+						} else {
+							pod.Spec.Containers[0].VolumeMounts[i].SubPath = "another-execution"
+						}
+						break
+					}
+				})
+				if result := call(t, server, rejected); result.Allowed || result.Result == nil || result.Result.Message != "ModelDev Pod admission refused: mount_contract" {
+					t.Fatalf("verify accepted a missing or foreign original subpath: %+v", result)
+				}
+			})
+		}
+	}
+	t.Run("extra writable subtree", func(t *testing.T) {
+		rejected := request(t, config, "sft-v1", "verify")
+		changePod(t, &rejected, func(pod *corev1.Pod) {
+			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "workspace", MountPath: "/workspace/another", SubPath: "another"})
+		})
+		if result := call(t, server, rejected); result.Allowed || result.Result == nil || result.Result.Message != "ModelDev Pod admission refused: mount_contract" {
+			t.Fatalf("verify accepted an additional writable workspace subtree: %+v", result)
+		}
+	})
 }
 
 func TestRefuseUntrustedScopeOwnerProfileImagesAndMounts(t *testing.T) {

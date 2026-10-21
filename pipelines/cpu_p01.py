@@ -128,7 +128,7 @@ def compile_pipeline(configuration, output):
                 exported = configure(export(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(trained))
                 verified = configure(verify(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(exported))
                 for task, paths in ((exported, ("inputs", "training", "reports/train", "export", "reports/export")),
-                                    (verified, ("inputs", "export", "reports/export", "reports/verify"))):
+                                    (verified, ("inputs", "training", "reports/train", "export", "reports/export", "reports/verify"))):
                     for path in paths:
                         kubernetes.mount_pvc(task, workspace.output, "/workspace/" + path, sub_path=path)
                 predecessor = verified

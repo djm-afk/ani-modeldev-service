@@ -43,7 +43,8 @@ func roleMounts(kind string) map[string]map[string]mountRule {
 			"/workspace/reports/export": {"reports/export", false},
 		}
 		roles["verify"] = map[string]mountRule{
-			"/workspace/inputs": {"inputs", true}, "/workspace/export": {"export", true},
+			"/workspace/inputs": {"inputs", true}, "/workspace/training": {"training", true},
+			"/workspace/reports/train": {"reports/train", true}, "/workspace/export": {"export", true},
 			"/workspace/reports/export": {"reports/export", true}, "/workspace/reports/verify": {"reports/verify", false},
 		}
 		roles["collect"] = map[string]mountRule{"/workspace": {"", true}, "/workspace/publication": {"publication", false}}
