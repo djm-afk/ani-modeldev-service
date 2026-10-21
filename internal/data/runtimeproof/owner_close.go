@@ -3,7 +3,9 @@ package runtimeproof
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 // VerifyOwnerWritersAbsent observes owner-initiated close independently of a
@@ -158,7 +161,17 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 		}
 	}
-	tasks, err := resolvedManagedTasksForKind(workflow, run.Tasks, pods.Items, execution.Snapshot.Kind)
+	// The original failed KFP task and complete graph remain in the Run/history
+	// proof. Only a separately proved, zero-retry, rejected-before-storage
+	// executor is excluded from this projection of tasks that require Pod exits.
+	// This owner-only exception must not grant a current step caller identity.
+	ownerTasks := make([]kfp.ManagedTask, 0, len(run.Tasks))
+	for _, task := range run.Tasks {
+		if !serverRejectedManagedTask(workflow, task, run.Tasks) {
+			ownerTasks = append(ownerTasks, task)
+		}
+	}
+	tasks, err := resolvedManagedTasksForKind(workflow, ownerTasks, pods.Items, execution.Snapshot.Kind)
 	if err != nil {
 		return biz.ManagedCloseEvidence{}, err
 	}
@@ -299,14 +312,16 @@ func ownerWorkflowCompletion(workflow *unstructured.Unstructured, now time.Time)
 }
 
 // Argo records a Pod node before the API create call. The formal ModelDev
-// CREATE-only hook can explicitly deny that create; node.startedAt is then
+// CREATE-only hook can reject that create; node.startedAt is then
 // controller initialization, not a process exit. Preserve the unmodified node
 // in WorkflowNodesSHA256 while requiring exits only for actually created Pods.
-// An arbitrary Error, transport timeout or disappeared historical Pod is never
-// evidence of noncreation. This narrow case matches the pinned Argo 3.7.8 and
-// ModelDev admission protocols, not free-form error substrings.
+// Kubernetes 1.35 endpoints/handlers/create.go calls mutating Admit before the
+// storage Create; mutating/dispatcher.go returns InternalError on a failed-closed
+// webhook call. The complete server-produced error is thus a rejected Create,
+// unlike a client Create timeout whose persistence outcome remains unknown.
+// An arbitrary Error, bare timeout or disappeared historical Pod proves nothing.
 func serverDeniedAdmissionNode(workflow *unstructured.Unstructured, node map[string]any) bool {
-	if node["type"] != "Pod" || node["phase"] != "Error" || node["templateName"] != "system-container-driver" || node["templateScope"] != "local/"+workflow.GetName() || node["progress"] != "0/1" || node["taskResultSynced"] != true {
+	if node["type"] != "Pod" || node["phase"] != "Error" || node["templateScope"] != "local/"+workflow.GetName() || node["progress"] != "0/1" || node["taskResultSynced"] != true || !admissionRejectionWithoutProcess(node) {
 		return false
 	}
 	name, ok := node["name"].(string)
@@ -315,9 +330,24 @@ func serverDeniedAdmissionNode(workflow *unstructured.Unstructured, node map[str
 		return false
 	}
 	expected := "task '" + name + "' errored: admission webhook \"" + workflow.GetNamespace() + ".modeldev.ani.io\" denied the request: ModelDev Pod admission refused: dependency_unavailable"
-	if node["message"] != expected {
+	if node["templateName"] == "system-container-driver" && node["message"] == expected {
+		return true
+	}
+	message, ok := node["message"].(string)
+	if !ok {
 		return false
 	}
+	if node["templateName"] == "system-container-driver" {
+		prefix := "task '" + name + "' errored: "
+		if !strings.HasPrefix(message, prefix) || !rejectedAdmissionTemplate(workflow, "system-container-driver", false) {
+			return false
+		}
+		return serverWebhookAdmissionTimeout(workflow.GetNamespace(), strings.TrimPrefix(message, prefix))
+	}
+	return node["templateName"] == "metadata-0-2-retry-system-container-impl" && serverWebhookAdmissionTimeout(workflow.GetNamespace(), message) && rejectedExecutorHasZeroRetries(workflow, node)
+}
+
+func admissionRejectionWithoutProcess(node map[string]any) bool {
 	for _, field := range []string{"hostNodeName", "podIP", "podName", "podUID", "containerID", "containerStatuses", "outputs", "resourcesDuration", "exitCode", "daemoned", "memoizationStatus"} {
 		if _, found := node[field]; found {
 			return false
@@ -328,6 +358,157 @@ func serverDeniedAdmissionNode(workflow *unstructured.Unstructured, node map[str
 	start, startErr := time.Parse(time.RFC3339Nano, started)
 	end, endErr := time.Parse(time.RFC3339Nano, finished)
 	return startedOK && finishedOK && startErr == nil && endErr == nil && !start.IsZero() && !start.After(end)
+}
+
+func serverWebhookAdmissionTimeout(namespace, message string) bool {
+	prefix := "Internal error occurred: failed calling webhook \"" + namespace + ".modeldev.ani.io\": failed to call webhook: Post \""
+	const suffix = "\": context deadline exceeded"
+	if namespace == "" || !strings.HasPrefix(message, prefix) || !strings.HasSuffix(message, suffix) {
+		return false
+	}
+	rawURL := strings.TrimSuffix(strings.TrimPrefix(message, prefix), suffix)
+	endpoint, err := url.Parse(rawURL)
+	if err != nil || endpoint.Scheme != "https" || endpoint.User != nil || endpoint.Opaque != "" || endpoint.Fragment != "" || endpoint.RawFragment != "" || endpoint.Path != "/mutate" || endpoint.RawPath != "" || endpoint.Host != endpoint.Hostname()+":443" {
+		return false
+	}
+	labels := strings.Split(endpoint.Hostname(), ".")
+	if len(labels) != 3 || labels[2] != "svc" || len(validation.IsDNS1123Label(labels[0])) != 0 || len(validation.IsDNS1123Label(labels[1])) != 0 {
+		return false
+	}
+	seconds, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(endpoint.RawQuery, "timeout="), "s"))
+	// Kubernetes admissionregistration/v1 bounds timeoutSeconds to [1,30].
+	return err == nil && seconds >= 1 && seconds <= 30 && endpoint.RawQuery == "timeout="+strconv.Itoa(seconds)+"s"
+}
+
+func rejectedAdmissionTemplate(workflow *unstructured.Unstructured, name string, executor bool) bool {
+	for _, path := range [][]string{{"spec", "retryStrategy"}, {"spec", "templateDefaults", "retryStrategy"}} {
+		if _, found, err := unstructured.NestedFieldNoCopy(workflow.Object, path...); err != nil || found {
+			return false
+		}
+	}
+	templates, found, err := unstructured.NestedSlice(workflow.Object, "spec", "templates")
+	if err != nil || !found {
+		return false
+	}
+	matches := 0
+	for _, raw := range templates {
+		template, ok := raw.(map[string]any)
+		if !ok {
+			return false
+		}
+		if template["name"] != name {
+			continue
+		}
+		matches++
+		if !executor {
+			if _, found := template["retryStrategy"]; found {
+				return false
+			}
+		} else {
+			strategy, ok := template["retryStrategy"].(map[string]any)
+			if !ok || strategy["limit"] != "{{inputs.parameters.retry-max-count}}" {
+				return false
+			}
+		}
+	}
+	return matches == 1
+}
+
+func rejectedExecutorHasZeroRetries(workflow *unstructured.Unstructured, node map[string]any) bool {
+	name, _ := node["name"].(string)
+	flags, ok := node["nodeFlag"].(map[string]any)
+	if !strings.HasSuffix(name, ".executor(0)") || node["displayName"] != "executor(0)" || !ok || len(flags) != 1 || flags["retried"] != true || !zeroRetryInput(node) || !rejectedAdmissionTemplate(workflow, "metadata-0-2-retry-system-container-impl", true) {
+		return false
+	}
+	nodes, found, err := unstructured.NestedMap(workflow.Object, "status", "nodes")
+	if err != nil || !found {
+		return false
+	}
+	matches := 0
+	for id, raw := range nodes {
+		parent, ok := raw.(map[string]any)
+		if !ok || parent["name"] != strings.TrimSuffix(name, "(0)") {
+			continue
+		}
+		matches++
+		children, ok := parent["children"].([]any)
+		boundary, boundaryOK := parent["boundaryID"].(string)
+		if parent["id"] != id || parent["type"] != "Retry" || parent["phase"] != "Error" || parent["progress"] != "0/1" || parent["templateName"] != node["templateName"] || parent["templateScope"] != node["templateScope"] || !boundaryOK || boundary == "" || node["boundaryID"] != boundary || !ok || len(children) != 1 || children[0] != node["id"] || !zeroRetryInput(parent) || !admissionRejectionWithoutProcess(parent) || parent["startedAt"] != node["startedAt"] || parent["finishedAt"] != node["finishedAt"] || parent["message"] != "task '"+parent["name"].(string)+"' errored: "+node["message"].(string) {
+			return false
+		}
+	}
+	return matches == 1
+}
+
+func zeroRetryInput(node map[string]any) bool {
+	parameters, found, err := unstructured.NestedSlice(node, "inputs", "parameters")
+	if err != nil || !found {
+		return false
+	}
+	matches := 0
+	for _, raw := range parameters {
+		parameter, ok := raw.(map[string]any)
+		if !ok {
+			return false
+		}
+		if parameter["name"] == "retry-max-count" {
+			matches++
+			if parameter["value"] != "0" {
+				return false
+			}
+		}
+	}
+	return matches == 1
+}
+
+func serverRejectedManagedTask(workflow *unstructured.Unstructured, task kfp.ManagedTask, tasks []kfp.ManagedTask) bool {
+	if task.State != "FAILED" || task.PodName != "" {
+		return false
+	}
+	nodes, found, err := unstructured.NestedMap(workflow.Object, "status", "nodes")
+	if err != nil || !found {
+		return false
+	}
+	id, controller, err := taskControllerNode(task, nodes)
+	if err != nil || controller["type"] != "DAG" || controller["phase"] != "Error" || controller["templateName"] != "metadata-0-2-retry-system-container-executor" || controller["templateScope"] != "local/"+workflow.GetName() || controller["progress"] != "0/1" || !admissionRejectionWithoutProcess(controller) {
+		return false
+	}
+	children, ok := controller["children"].([]any)
+	outbound, outboundOK := controller["outboundNodes"].([]any)
+	if !ok || len(children) != 1 || !outboundOK || len(outbound) != 1 {
+		return false
+	}
+	matches := 0
+	for executorID, raw := range nodes {
+		node := raw.(map[string]any)
+		if node["boundaryID"] != id || node["type"] != "Pod" {
+			continue
+		}
+		matches++
+		if !serverDeniedAdmissionNode(workflow, node) || node["templateName"] != "metadata-0-2-retry-system-container-impl" || node["name"] != controller["name"].(string)+".executor(0)" || outbound[0] != executorID {
+			return false
+		}
+		members := 0
+		for _, original := range tasks {
+			for _, ref := range original.ChildTasks {
+				if ref.PodName != executorID {
+					continue
+				}
+				members++
+				if ref.TaskID != "" || original.RunID != task.RunID || original.Name != "executor" || original.State != "FAILED" || original.PodName != "" || len(original.ChildTasks) != 1 {
+					return false
+				}
+				parentID, _, err := taskControllerNode(original, nodes)
+				if err != nil || children[0] != parentID {
+					return false
+				}
+			}
+		}
+		if members != 1 {
+			return false
+		}
+	}
+	return matches == 1
 }
 
 func podMatchesServerDeniedNode(workflow *unstructured.Unstructured, pod *unstructured.Unstructured) bool {
