@@ -27,11 +27,16 @@ const (
 	OpCreateModelVersion FinetuningRegistrationOperation = "CREATE_MODEL_VERSION"
 	// OpControlledCopy writes the published object into the Model-approved scope.
 	OpControlledCopy FinetuningRegistrationOperation = "CONTROLLED_COPY"
+	// OpRegisterTrainedArtifact is the whole trained-artifact registration
+	// session (prepare, artifact copy, complete). The provider contract treats
+	// it as one idempotent session, so it takes one permit rather than the
+	// legacy container/version pair.
+	OpRegisterTrainedArtifact FinetuningRegistrationOperation = "REGISTER_TRAINED_ARTIFACT"
 )
 
 func ValidRegistrationOperation(operation FinetuningRegistrationOperation) bool {
 	switch operation {
-	case OpCreateModel, OpCreateModelVersion, OpControlledCopy:
+	case OpCreateModel, OpCreateModelVersion, OpControlledCopy, OpRegisterTrainedArtifact:
 		return true
 	default:
 		return false

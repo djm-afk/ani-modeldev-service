@@ -509,6 +509,10 @@ func runtimeError(err error) error {
 		return commandError(codes.Aborted, modeldevv1.ErrorReason_ERROR_REASON_TRAINING_FAILED, "training creation was rejected", "")
 	case errors.Is(err, biz.ErrModelDependencyUnavailable):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_UPSTREAM_UNAVAILABLE, "Model dependency is not connected", "")
+	case errors.Is(err, biz.ErrModelWriteUnresolved):
+		// The registration session may have committed; it is not a failure fact
+		// and must not be reported as one.
+		return commandError(codes.Unavailable, modeldevv1.ErrorReason_ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN, "model registration result requires reconciliation", "")
 	case errors.Is(err, biz.ErrRuntimeNotReady), errors.Is(err, biz.ErrTrainingNotFound):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_ENVIRONMENT_NOT_READY, "managed runtime prerequisites are not ready", "")
 	default:

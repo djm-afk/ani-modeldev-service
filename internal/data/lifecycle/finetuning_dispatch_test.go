@@ -246,3 +246,51 @@ func TestRegistrationUnavailableIsTerminalForTheIntent(t *testing.T) {
 		t.Fatalf("unavailable record replaced an in-flight intent: %v", err)
 	}
 }
+
+// The trained-artifact contract carries the container, the copy and the version
+// inside one idempotent session, so that single operation is the READY gate and
+// it never needs a legacy container permit.
+func TestRegistrationSessionIsOnePermitAndOneTerminalFact(t *testing.T) {
+	open, _, authority := registrationReadyFixture(t)
+	ctx := context.Background()
+	repository := lifecycle.New(open())
+	session, err := repository.PermitRegistrationDispatch(ctx, authority, biz.OpRegisterTrainedArtifact, "trace-session")
+	if err != nil || !session.SendPermit || session.Dispatch.State != biz.DispatchInFlight {
+		t.Fatalf("session permit: %v %+v", err, session)
+	}
+	// The whole session takes exactly one permit; a replay observes, never resends.
+	replay, err := repository.PermitRegistrationDispatch(ctx, authority, biz.OpRegisterTrainedArtifact, "trace-again")
+	if err != nil || replay.SendPermit || !replay.Dispatch.PermittedAt.Equal(session.Dispatch.PermittedAt) {
+		t.Fatalf("session replay re-sent the write: %v %+v", err, replay)
+	}
+	// An unresolved session never claims READY.
+	unknown := session.Dispatch
+	unknown.State = biz.DispatchUnknown
+	state, err := repository.RecordRegistrationOutcome(ctx, authority, biz.OpRegisterTrainedArtifact, unknown)
+	if err != nil || state.FinetuningRegistration.State != biz.RegistrationStatePending {
+		t.Fatalf("unresolved session claimed READY: %v %+v", err, state.FinetuningRegistration)
+	}
+	// Only the verified original result settles it.
+	state, err = repository.RecordRegistrationOutcome(ctx, authority, biz.OpRegisterTrainedArtifact, confirmedOutcome(t, authority, session.Dispatch))
+	if err != nil || state.FinetuningRegistration.State != biz.RegistrationStateReady {
+		t.Fatalf("confirmed session did not become READY: %v %+v", err, state.FinetuningRegistration)
+	}
+	// The two contracts can never be mixed inside one registration intent.
+	if _, err := repository.PermitRegistrationDispatch(ctx, authority, biz.OpCreateModel, "trace-legacy"); !errors.Is(err, biz.ErrRuntimeConflict) {
+		t.Fatalf("READY session accepted a legacy write: %v", err)
+	}
+}
+
+// A registration that already uses the legacy pair cannot silently switch to the
+// session contract, and vice versa.
+func TestRegistrationContractsCannotBeMixed(t *testing.T) {
+	open, _, authority := registrationReadyFixture(t)
+	ctx := context.Background()
+	repository := lifecycle.New(open())
+	if _, err := repository.PermitRegistrationDispatch(ctx, authority, biz.OpCreateModel, "trace-container"); err != nil {
+		t.Fatal("container permit", err)
+	}
+	if _, err := repository.PermitRegistrationDispatch(ctx, authority, biz.OpRegisterTrainedArtifact, "trace-session"); !errors.Is(err, biz.ErrRuntimeConflict) {
+		t.Fatalf("legacy registration switched to the session contract: %v", err)
+	}
+}

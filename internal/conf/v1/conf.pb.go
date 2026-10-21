@@ -546,8 +546,12 @@ type ModelConnection struct {
 	// The exact DNS SAN required on the Model server certificate.
 	ServerName string `protobuf:"bytes,6,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
 	// Stable audit actor this caller asserts. Authorization never depends on it.
-	Actor         string               `protobuf:"bytes,7,opt,name=actor,proto3" json:"actor,omitempty"`
-	Timeout       *durationpb.Duration `protobuf:"bytes,8,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	Actor   string               `protobuf:"bytes,7,opt,name=actor,proto3" json:"actor,omitempty"`
+	Timeout *durationpb.Duration `protobuf:"bytes,8,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	// Presence is required with the connection. A Model dependency that cannot
+	// describe one artifact would silently record every registration as
+	// unavailable, which is exactly the degradation this block must not hide.
+	ArtifactPlan  *ModelArtifactPlan `protobuf:"bytes,9,opt,name=artifact_plan,json=artifactPlan,proto3" json:"artifact_plan,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -638,6 +642,93 @@ func (x *ModelConnection) GetTimeout() *durationpb.Duration {
 	return nil
 }
 
+func (x *ModelConnection) GetArtifactPlan() *ModelArtifactPlan {
+	if x != nil {
+		return x.ArtifactPlan
+	}
+	return nil
+}
+
+// ModelArtifactPlan pins the provider-decided values for one registration
+// session. FileName and Format describe the archived artifact the provider
+// accepts; DisplayName, Description and Capabilities are the new-model branch
+// metadata. None of them can re-point the frozen target, version or bytes.
+type ModelArtifactPlan struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FileName      string                 `protobuf:"bytes,1,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
+	Format        string                 `protobuf:"bytes,2,opt,name=format,proto3" json:"format,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	Capabilities  []string               `protobuf:"bytes,5,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ModelArtifactPlan) Reset() {
+	*x = ModelArtifactPlan{}
+	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModelArtifactPlan) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModelArtifactPlan) ProtoMessage() {}
+
+func (x *ModelArtifactPlan) ProtoReflect() protoreflect.Message {
+	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModelArtifactPlan.ProtoReflect.Descriptor instead.
+func (*ModelArtifactPlan) Descriptor() ([]byte, []int) {
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ModelArtifactPlan) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
+func (x *ModelArtifactPlan) GetFormat() string {
+	if x != nil {
+		return x.Format
+	}
+	return ""
+}
+
+func (x *ModelArtifactPlan) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *ModelArtifactPlan) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *ModelArtifactPlan) GetCapabilities() []string {
+	if x != nil {
+		return x.Capabilities
+	}
+	return nil
+}
+
 type AdmissionResolution struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	CatalogueDirectory string                 `protobuf:"bytes,1,opt,name=catalogue_directory,json=catalogueDirectory,proto3" json:"catalogue_directory,omitempty"`
@@ -648,7 +739,7 @@ type AdmissionResolution struct {
 
 func (x *AdmissionResolution) Reset() {
 	*x = AdmissionResolution{}
-	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	mi := &file_conf_v1_conf_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -660,7 +751,7 @@ func (x *AdmissionResolution) String() string {
 func (*AdmissionResolution) ProtoMessage() {}
 
 func (x *AdmissionResolution) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	mi := &file_conf_v1_conf_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -673,7 +764,7 @@ func (x *AdmissionResolution) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmissionResolution.ProtoReflect.Descriptor instead.
 func (*AdmissionResolution) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AdmissionResolution) GetCatalogueDirectory() string {
@@ -700,7 +791,7 @@ type AdmissionFactsFile struct {
 
 func (x *AdmissionFactsFile) Reset() {
 	*x = AdmissionFactsFile{}
-	mi := &file_conf_v1_conf_proto_msgTypes[8]
+	mi := &file_conf_v1_conf_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -712,7 +803,7 @@ func (x *AdmissionFactsFile) String() string {
 func (*AdmissionFactsFile) ProtoMessage() {}
 
 func (x *AdmissionFactsFile) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[8]
+	mi := &file_conf_v1_conf_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -725,7 +816,7 @@ func (x *AdmissionFactsFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmissionFactsFile.ProtoReflect.Descriptor instead.
 func (*AdmissionFactsFile) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{8}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *AdmissionFactsFile) GetPath() string {
@@ -753,7 +844,7 @@ type Server struct {
 
 func (x *Server) Reset() {
 	*x = Server{}
-	mi := &file_conf_v1_conf_proto_msgTypes[9]
+	mi := &file_conf_v1_conf_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -765,7 +856,7 @@ func (x *Server) String() string {
 func (*Server) ProtoMessage() {}
 
 func (x *Server) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[9]
+	mi := &file_conf_v1_conf_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -778,7 +869,7 @@ func (x *Server) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server.ProtoReflect.Descriptor instead.
 func (*Server) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Server) GetGrpc() *Server_GRPC {
@@ -813,7 +904,7 @@ type Server_GRPC struct {
 
 func (x *Server_GRPC) Reset() {
 	*x = Server_GRPC{}
-	mi := &file_conf_v1_conf_proto_msgTypes[10]
+	mi := &file_conf_v1_conf_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -825,7 +916,7 @@ func (x *Server_GRPC) String() string {
 func (*Server_GRPC) ProtoMessage() {}
 
 func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[10]
+	mi := &file_conf_v1_conf_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -838,7 +929,7 @@ func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server_GRPC.ProtoReflect.Descriptor instead.
 func (*Server_GRPC) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9, 0}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{10, 0}
 }
 
 func (x *Server_GRPC) GetNetwork() string {
@@ -873,7 +964,7 @@ type Server_Admin struct {
 
 func (x *Server_Admin) Reset() {
 	*x = Server_Admin{}
-	mi := &file_conf_v1_conf_proto_msgTypes[11]
+	mi := &file_conf_v1_conf_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -885,7 +976,7 @@ func (x *Server_Admin) String() string {
 func (*Server_Admin) ProtoMessage() {}
 
 func (x *Server_Admin) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[11]
+	mi := &file_conf_v1_conf_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -898,7 +989,7 @@ func (x *Server_Admin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server_Admin.ProtoReflect.Descriptor instead.
 func (*Server_Admin) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9, 1}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{10, 1}
 }
 
 func (x *Server_Admin) GetNetwork() string {
@@ -971,7 +1062,7 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"\x05model\x18\a \x01(\v2\x18.conf.v1.ModelConnectionR\x05model\x12S\n" +
 	"\x16controlled_model_facts\x18\b \x01(\v2\x1d.conf.v1.ControlledModelFactsR\x14controlledModelFacts\"I\n" +
 	"\x14ControlledModelFacts\x121\n" +
-	"\x05files\x18\x01 \x03(\v2\x1b.conf.v1.AdmissionFactsFileR\x05files\"\xaf\x02\n" +
+	"\x05files\x18\x01 \x03(\v2\x1b.conf.v1.AdmissionFactsFileR\x05files\"\xf0\x02\n" +
 	"\x0fModelConnection\x12\x1a\n" +
 	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x17\n" +
 	"\aca_file\x18\x02 \x01(\tR\x06caFile\x12&\n" +
@@ -981,7 +1072,14 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"\vserver_name\x18\x06 \x01(\tR\n" +
 	"serverName\x12\x14\n" +
 	"\x05actor\x18\a \x01(\tR\x05actor\x123\n" +
-	"\atimeout\x18\b \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\x84\x01\n" +
+	"\atimeout\x18\b \x01(\v2\x19.google.protobuf.DurationR\atimeout\x12?\n" +
+	"\rartifact_plan\x18\t \x01(\v2\x1a.conf.v1.ModelArtifactPlanR\fartifactPlan\"\xb1\x01\n" +
+	"\x11ModelArtifactPlan\x12\x1b\n" +
+	"\tfile_name\x18\x01 \x01(\tR\bfileName\x12\x16\n" +
+	"\x06format\x18\x02 \x01(\tR\x06format\x12!\n" +
+	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\x12 \n" +
+	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\"\n" +
+	"\fcapabilities\x18\x05 \x03(\tR\fcapabilities\"\x84\x01\n" +
 	"\x13AdmissionResolution\x12/\n" +
 	"\x13catalogue_directory\x18\x01 \x01(\tR\x12catalogueDirectory\x12<\n" +
 	"\vfacts_files\x18\x02 \x03(\v2\x1b.conf.v1.AdmissionFactsFileR\n" +
@@ -1014,7 +1112,7 @@ func file_conf_v1_conf_proto_rawDescGZIP() []byte {
 	return file_conf_v1_conf_proto_rawDescData
 }
 
-var file_conf_v1_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_conf_v1_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_conf_v1_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),               // 0: conf.v1.Bootstrap
 	(*ManagedRuntime)(nil),          // 1: conf.v1.ManagedRuntime
@@ -1023,40 +1121,42 @@ var file_conf_v1_conf_proto_goTypes = []any{
 	(*GovernanceCommand)(nil),       // 4: conf.v1.GovernanceCommand
 	(*ControlledModelFacts)(nil),    // 5: conf.v1.ControlledModelFacts
 	(*ModelConnection)(nil),         // 6: conf.v1.ModelConnection
-	(*AdmissionResolution)(nil),     // 7: conf.v1.AdmissionResolution
-	(*AdmissionFactsFile)(nil),      // 8: conf.v1.AdmissionFactsFile
-	(*Server)(nil),                  // 9: conf.v1.Server
-	(*Server_GRPC)(nil),             // 10: conf.v1.Server.GRPC
-	(*Server_Admin)(nil),            // 11: conf.v1.Server.Admin
-	(*durationpb.Duration)(nil),     // 12: google.protobuf.Duration
+	(*ModelArtifactPlan)(nil),       // 7: conf.v1.ModelArtifactPlan
+	(*AdmissionResolution)(nil),     // 8: conf.v1.AdmissionResolution
+	(*AdmissionFactsFile)(nil),      // 9: conf.v1.AdmissionFactsFile
+	(*Server)(nil),                  // 10: conf.v1.Server
+	(*Server_GRPC)(nil),             // 11: conf.v1.Server.GRPC
+	(*Server_Admin)(nil),            // 12: conf.v1.Server.Admin
+	(*durationpb.Duration)(nil),     // 13: google.protobuf.Duration
 }
 var file_conf_v1_conf_proto_depIdxs = []int32{
-	9,  // 0: conf.v1.Bootstrap.server:type_name -> conf.v1.Server
+	10, // 0: conf.v1.Bootstrap.server:type_name -> conf.v1.Server
 	4,  // 1: conf.v1.Bootstrap.command:type_name -> conf.v1.GovernanceCommand
 	1,  // 2: conf.v1.Bootstrap.runtime:type_name -> conf.v1.ManagedRuntime
-	10, // 3: conf.v1.ManagedRuntime.step:type_name -> conf.v1.Server.GRPC
+	11, // 3: conf.v1.ManagedRuntime.step:type_name -> conf.v1.Server.GRPC
 	2,  // 4: conf.v1.ManagedRuntime.kubernetes:type_name -> conf.v1.HTTPSWorkloadConnection
 	2,  // 5: conf.v1.ManagedRuntime.pipeline:type_name -> conf.v1.HTTPSWorkloadConnection
 	3,  // 6: conf.v1.ManagedRuntime.object_storage:type_name -> conf.v1.ObjectStorageConnection
-	12, // 7: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
-	12, // 8: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
-	12, // 9: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
-	7,  // 10: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
+	13, // 7: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
+	13, // 8: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
+	13, // 9: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
+	8,  // 10: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
 	6,  // 11: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
 	5,  // 12: conf.v1.GovernanceCommand.controlled_model_facts:type_name -> conf.v1.ControlledModelFacts
-	8,  // 13: conf.v1.ControlledModelFacts.files:type_name -> conf.v1.AdmissionFactsFile
-	12, // 14: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
-	8,  // 15: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
-	10, // 16: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
-	11, // 17: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
-	12, // 18: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
-	12, // 19: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	12, // 20: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	21, // [21:21] is the sub-list for method output_type
-	21, // [21:21] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	9,  // 13: conf.v1.ControlledModelFacts.files:type_name -> conf.v1.AdmissionFactsFile
+	13, // 14: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
+	7,  // 15: conf.v1.ModelConnection.artifact_plan:type_name -> conf.v1.ModelArtifactPlan
+	9,  // 16: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
+	11, // 17: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
+	12, // 18: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
+	13, // 19: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
+	13, // 20: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	13, // 21: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	22, // [22:22] is the sub-list for method output_type
+	22, // [22:22] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_conf_v1_conf_proto_init() }
@@ -1070,7 +1170,7 @@ func file_conf_v1_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conf_v1_conf_proto_rawDesc), len(file_conf_v1_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

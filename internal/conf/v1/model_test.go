@@ -78,6 +78,67 @@ func modelConnectionConfiguration() *ModelConnection {
 		ServerName:      "ani-model.ani.internal",
 		Actor:           "modeldev:service",
 		Timeout:         durationpb.New(30 * time.Second),
+		ArtifactPlan: &ModelArtifactPlan{
+			FileName:     "model.tar",
+			Format:       "safetensors",
+			DisplayName:  "CPU finetuned model",
+			Description:  "CPU finetuning output",
+			Capabilities: []string{"text-generation"},
+		},
+	}
+}
+
+// A Model connection that names no artifact would record every registration as
+// unavailable, so an incomplete plan is rejected at startup rather than
+// silently disabling the feature. The validator is exercised directly because
+// the full-config path additionally requires platform-specific absolute mount
+// references that only the Linux gate can satisfy.
+func TestConfiguredModelConnectionRequiresArtifactPlan(t *testing.T) {
+	tests := []struct {
+		name   string
+		plan   *ModelArtifactPlan
+		change func(*ModelArtifactPlan)
+	}{
+		{name: "missing plan", plan: nil},
+		{name: "missing file name", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) { p.FileName = "" }},
+		{name: "file name with separator", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) { p.FileName = "out/model.tar" }},
+		{name: "missing format", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) { p.Format = "" }},
+		{name: "format with whitespace", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) { p.Format = "safe tensors" }},
+		{name: "display name too long", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) { p.DisplayName = strings.Repeat("a", 129) }},
+		{name: "description too long", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) { p.Description = strings.Repeat("a", 513) }},
+		{name: "too many capabilities", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) {
+			p.Capabilities = make([]string, 17)
+			for i := range p.Capabilities {
+				p.Capabilities[i] = "chat"
+			}
+		}},
+		{name: "empty capability", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) { p.Capabilities = []string{""} }},
+		{name: "capability with space", plan: validArtifactPlanConfiguration(), change: func(p *ModelArtifactPlan) { p.Capabilities = []string{"text generation"} }},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.change != nil {
+				tt.change(tt.plan)
+			}
+			if err := validateModelArtifactPlan(tt.plan); err == nil {
+				t.Fatal("Model artifact plan accepted unusable values")
+			}
+		})
+	}
+	// Metadata is optional: the frozen intent, not this plan, decides whether a
+	// registration creates a container.
+	if err := validateModelArtifactPlan(&ModelArtifactPlan{FileName: "model.tar", Format: "safetensors"}); err != nil {
+		t.Fatalf("minimal artifact plan rejected: %v", err)
+	}
+}
+
+func validArtifactPlanConfiguration() *ModelArtifactPlan {
+	return &ModelArtifactPlan{
+		FileName:     "model.tar",
+		Format:       "safetensors",
+		DisplayName:  "CPU finetuned model",
+		Description:  "CPU finetuning output",
+		Capabilities: []string{"text-generation"},
 	}
 }
 

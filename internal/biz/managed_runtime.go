@@ -16,6 +16,10 @@ type ManagedRuntime struct {
 	trainer      TrainingRuntime
 	workspaces   PreparedWorkspaceVerifier
 	publications PublicationVerifier
+	// registration and artifactPlan are supplied by composition. While they are
+	// absent, FINETUNING registration keeps its original unavailable boundary.
+	registration *TrainedArtifactRegistrationOrchestrator
+	artifactPlan FinetuningArtifactPlan
 }
 
 func NewManagedRuntime(steps *ManagedSteps, repository ExecutionRuntimeRepository, trainer TrainingRuntime, workspaces PreparedWorkspaceVerifier, publications PublicationVerifier) (*ManagedRuntime, error) {

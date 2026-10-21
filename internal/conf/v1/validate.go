@@ -151,7 +151,38 @@ func validateModelConnection(config *ModelConnection) error {
 	if config.Actor == "" || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
 		return fmt.Errorf("model connection requires a bounded audit actor")
 	}
+	if err := validateModelArtifactPlan(config.ArtifactPlan); err != nil {
+		return err
+	}
 	return validateDuration("model connection", config.Timeout, maximumTimeout)
+}
+
+// validateModelArtifactPlan mirrors the registration layer's own bound: the
+// archive name and the weight format must describe one artifact, and the
+// new-model metadata stays optional because the frozen intent, not this plan,
+// decides whether a registration creates a container. The provider's own
+// vocabulary is not hardcoded here; an unknown format is its call to reject.
+func validateModelArtifactPlan(plan *ModelArtifactPlan) error {
+	if plan == nil {
+		return fmt.Errorf("model connection requires a pinned artifact plan")
+	}
+	if !boundedArtifactValue(plan.FileName, 255) || !boundedArtifactValue(plan.Format, 64) {
+		return fmt.Errorf("model artifact plan requires a bounded file name and format")
+	}
+	if len(plan.DisplayName) > 128 || len(plan.Description) > 512 || len(plan.Capabilities) > 16 {
+		return fmt.Errorf("model artifact plan metadata exceeds its bound")
+	}
+	for _, capability := range plan.Capabilities {
+		if !boundedArtifactValue(capability, 64) {
+			return fmt.Errorf("model artifact plan requires bounded capability values")
+		}
+	}
+	return nil
+}
+
+func boundedArtifactValue(value string, limit int) bool {
+	return value != "" && value == strings.TrimSpace(value) && len(value) <= limit &&
+		!strings.ContainsAny(value, " \t\r\n\x00/\\")
 }
 
 // validateControlledModelFacts accepts only explicitly pinned, shape-checked

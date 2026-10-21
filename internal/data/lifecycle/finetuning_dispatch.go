@@ -67,8 +67,17 @@ func (repository *Repository) PermitRegistrationDispatch(ctx context.Context, au
 			// cannot start a new external write.
 			return false, biz.ErrRuntimeConflict
 		}
-		// The new branch must hold a verified container before a version write
-		// can be permitted; a late container success never authorizes it.
+		// The two contracts are mutually exclusive for one registration: the
+		// legacy container/version pair, or the trained-artifact session that
+		// carries both inside one idempotent session.
+		for _, existing := range registration.Dispatches {
+			if (existing.Operation == biz.OpRegisterTrainedArtifact) != (operation == biz.OpRegisterTrainedArtifact) {
+				return false, biz.ErrRuntimeConflict
+			}
+		}
+		// The new branch must hold a verified container before a legacy version
+		// write can be permitted; a late container success never authorizes it.
+		// The trained-artifact session resolves the container itself.
 		newBranch := current.execution.Snapshot.Finetuning.TargetModelID == nil
 		if operation == biz.OpCreateModel && !newBranch {
 			return false, biz.ErrRuntimeConflict
@@ -136,9 +145,11 @@ func (repository *Repository) RecordRegistrationOutcome(ctx context.Context, aut
 		if original.State == biz.DispatchConfirmed {
 			return false, biz.ErrRuntimeConflict
 		}
-		// A confirmed version write is the verified original result the whole
+		// A confirmed terminal write is the verified original result the whole
 		// registration exists for. Only then does the projected state become READY.
-		if operation == biz.OpCreateModelVersion && outcome.State == biz.DispatchConfirmed {
+		// The trained-artifact session carries the version write inside one
+		// operation, so it is the terminal fact on that contract.
+		if (operation == biz.OpCreateModelVersion || operation == biz.OpRegisterTrainedArtifact) && outcome.State == biz.DispatchConfirmed {
 			registration.State = biz.RegistrationStateReady
 		}
 		*original = outcome
@@ -191,8 +202,17 @@ func validRegistrationDispatches(current *runtimeTransaction, stored biz.Finetun
 	if stored.State != biz.RegistrationStateReady {
 		return true
 	}
+	if stored.FailureCode != "" {
+		return false
+	}
+	// On the trained-artifact contract the version write and the finalization are
+	// one session, so that operation alone is the terminal fact. The legacy
+	// contract keeps the container-then-version pair.
+	if session := biz.RegistrationDispatchFor(&stored, biz.OpRegisterTrainedArtifact); session != nil {
+		return session.State == biz.DispatchConfirmed
+	}
 	version := biz.RegistrationDispatchFor(&stored, biz.OpCreateModelVersion)
-	if stored.FailureCode != "" || version == nil || version.State != biz.DispatchConfirmed {
+	if version == nil || version.State != biz.DispatchConfirmed {
 		return false
 	}
 	return !newBranch || container.State == biz.DispatchConfirmed

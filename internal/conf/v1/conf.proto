@@ -95,6 +95,22 @@ message ModelConnection {
   // Stable audit actor this caller asserts. Authorization never depends on it.
   string actor = 7;
   google.protobuf.Duration timeout = 8;
+  // Presence is required with the connection. A Model dependency that cannot
+  // describe one artifact would silently record every registration as
+  // unavailable, which is exactly the degradation this block must not hide.
+  ModelArtifactPlan artifact_plan = 9;
+}
+
+// ModelArtifactPlan pins the provider-decided values for one registration
+// session. FileName and Format describe the archived artifact the provider
+// accepts; DisplayName, Description and Capabilities are the new-model branch
+// metadata. None of them can re-point the frozen target, version or bytes.
+message ModelArtifactPlan {
+  string file_name = 1;
+  string format = 2;
+  string display_name = 3;
+  string description = 4;
+  repeated string capabilities = 5;
 }
 
 message AdmissionResolution {

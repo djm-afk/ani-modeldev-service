@@ -11,6 +11,11 @@ import (
 var ErrFinetuningNotEnabled = errors.New("FINETUNING_NOT_ENABLED")
 var ErrModelDependencyUnavailable = errors.New("MODEL_DEPENDENCY_UNAVAILABLE")
 
+// ErrModelWriteUnresolved reports a registration session whose outcome is not
+// yet settled. It is never a failure fact: the session may still be completed
+// under its original id, and only the provider can settle what it observed.
+var ErrModelWriteUnresolved = errors.New("MODEL_WRITE_UNRESOLVED")
+
 // FinetuningModelFactsReader is a read-only Model boundary. A production
 // implementation must verify current tenant/base use and target/create rights,
 // approval/protection and fixed bytes. Isolated tests explicitly replace only
