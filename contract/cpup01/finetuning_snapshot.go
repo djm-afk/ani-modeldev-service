@@ -192,7 +192,7 @@ func invalidBaseModel(model BaseModelRef, budgets ComponentBudgets) string {
 	if model.Object.SizeBytes > budgets.MaxBaseModelBytes {
 		return "base model bounds"
 	}
-	if !validSnapshotReference(model.Scope.StorageConnectionID) || !validSnapshotDNSName(model.Scope.Bucket) || !validSnapshotPath(model.Scope.ApprovedPrefix) || !validSnapshotReference(model.Scope.CredentialReference) || model.Scope.StorageConnectionID != model.Object.StorageConnectionID || model.Scope.Bucket != model.Object.Bucket || !strings.HasPrefix(model.Object.Key, model.Scope.ApprovedPrefix+"/") {
+	if model.Scope.Validate() != nil || model.Scope.StorageConnectionID != model.Object.StorageConnectionID || model.Scope.Bucket != model.Object.Bucket || !strings.HasPrefix(model.Object.Key, model.Scope.ApprovedPrefix+"/") {
 		return "base model scope"
 	}
 	if len(model.Files) == 0 || len(model.Files) > 128 {

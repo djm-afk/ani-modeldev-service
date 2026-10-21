@@ -12,9 +12,9 @@ var ErrFinetuningNotEnabled = errors.New("FINETUNING_NOT_ENABLED")
 var ErrModelDependencyUnavailable = errors.New("MODEL_DEPENDENCY_UNAVAILABLE")
 
 // FinetuningModelFactsReader is a read-only Model boundary. A production
-// implementation must verify current tenant/base use and target/create rights,
-// approval/protection and fixed bytes. Isolated tests explicitly replace only
-// this provider boundary; their fixture is not evidence of Model permissions.
+// implementation verifies tenant-owned READY source/target facts and fixed
+// bytes. Governance rechecks the current user's Model rights before delegation.
+// Isolated boundary fixtures are not evidence of those permissions or bytes.
 type FinetuningModelFactsReader interface {
 	ResolveFinetuningModelFacts(context.Context, string, cpup01.Intent, cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error)
 }

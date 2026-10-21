@@ -137,8 +137,16 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 			return observation, biz.ErrRuntimeConflict
 		}
 		vector, vectorErr := biz.TrainingResourceVector(plan.Snapshot)
-		if vectorErr != nil || ValidatePodResources(vector, pod) != nil || !groupMatches {
+		if vectorErr != nil || ValidatePodResources(vector, pod) != nil || validateEffectiveTrainingPod(plan, pod) != nil || !groupMatches {
 			observation.SpecificationMismatch = true
+		}
+		if !observation.SpecificationMismatch && plan.Snapshot.ComputeOrigin.DeviceMode == "gpu" {
+			if a.ownerSigner == nil {
+				return observation, biz.ErrRuntimeNotReady
+			}
+			if err := a.ownerSigner.SignPod(ctx, plan, handle, pod); err != nil {
+				return observation, err
+			}
 		}
 		terminal, code := podTermination(pod)
 		resources[string(pod.GetUID())] = resourceFact(pod, ownerUID, terminal, code)

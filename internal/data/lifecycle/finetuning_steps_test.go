@@ -24,7 +24,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
 )
 
-func finetuningRuntimeFixture(t *testing.T, lifetime time.Duration) (func() *pgxpool.Pool, biz.Admission, biz.RunAuthorityCandidate, biz.FinetuningStepBinding) {
+func finetuningRuntimeFixture(t *testing.T, lifetime time.Duration, edits ...func(*biz.Admission)) (func() *pgxpool.Pool, biz.Admission, biz.RunAuthorityCandidate, biz.FinetuningStepBinding) {
 	t.Helper()
 	open := postgres.Prepare(t)
 	snapshot := conformance.FinetuningSnapshotV1()
@@ -37,6 +37,9 @@ func finetuningRuntimeFixture(t *testing.T, lifetime time.Duration) (func() *pgx
 	}
 	specHash := ""
 	admission := biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:synthetic-fixture", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: accepted}
+	for _, edit := range edits {
+		edit(&admission)
+	}
 	admission = admissionfixture.Bind(t, admission)
 	snapshot = admission.Snapshot
 	pool := open()

@@ -82,7 +82,7 @@ func bootstrapInvocation(ctx context.Context, args []string, kube dynamic.Interf
 	if host, port, err := net.SplitHostPort(config.Target); err != nil || host == "" || port == "" {
 		return invocation{}, invalid
 	}
-	if config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 10800 || config.PollIntervalSeconds < 1 || config.PollIntervalSeconds > 30 {
+	if config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 86400 || config.PollIntervalSeconds < 1 || config.PollIntervalSeconds > 30 {
 		return invocation{}, invalid
 	}
 	if provided["candidate-file"] && provided["candidate-json"] {

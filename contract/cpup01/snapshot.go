@@ -120,6 +120,15 @@ type StorageScope struct {
 	CredentialReference string `json:"credential_reference"`
 }
 
+// Validate checks the same finite storage authority used by frozen objects.
+// It grants no credentials and performs no storage lookup.
+func (scope StorageScope) Validate() error {
+	if !validSnapshotReference(scope.StorageConnectionID) || !validSnapshotDNSName(scope.Bucket) || !validSnapshotPath(scope.ApprovedPrefix) || !validSnapshotReference(scope.CredentialReference) {
+		return fmt.Errorf("%w: storage scope", ErrInvalidArgument)
+	}
+	return nil
+}
+
 type RequiredOutput struct {
 	Role         string `json:"role"`
 	RelativePath string `json:"relative_path"`
@@ -333,7 +342,7 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 		return invalid(field)
 	}
 	scope := snapshot.PublicationScope
-	if !validSnapshotReference(scope.StorageConnectionID) || !validSnapshotDNSName(scope.Bucket) || !validSnapshotPath(scope.ApprovedPrefix) || !validSnapshotReference(scope.CredentialReference) {
+	if scope.Validate() != nil {
 		return invalid("publication scope")
 	}
 	if field := invalidOutputContractForKind(snapshot.Kind, snapshot.OutputContract); field != "" {

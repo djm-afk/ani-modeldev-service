@@ -1,6 +1,6 @@
 module github.com/zhangzhe-ctrl/ani-modeldev-service
 
-go 1.26.9
+go 1.26.10
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.1
@@ -10,9 +10,10 @@ require (
 	github.com/go-kratos/kratos/v3 v3.0.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.11.0
-	github.com/liangzai006/ani-model-service v0.0.0-20261013092523-8951c85bc150
 	github.com/prometheus/client_golang v1.24.1
-	github.com/zhangzhe-ctrl/ani-accelerator-service v0.0.0-20261018033121-4f084c9f5f25
+	github.com/zhangzhe-ctrl/ani-accelerator-service v0.0.0-20261021185941-10a73f7ef24e
+	github.com/zhangzhe-ctrl/ani-governance/api/quota v0.0.0-20261017184327-1c605c793b88
+	github.com/zhangzhe-ctrl/ani-model-service/api v0.0.0-20261021183330-6d469afb5a7d
 	github.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261019174951-733f625995f8
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.66.0

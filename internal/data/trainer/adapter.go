@@ -28,11 +28,17 @@ var (
 // Adapter uses the official Kubernetes client supplied by the composition root.
 // No product transport is connected to this initial test-first slice.
 type Adapter struct {
-	client dynamic.Interface
+	client      dynamic.Interface
+	ownerSigner *OwnerAssertionSigner
 }
 
 func New(client dynamic.Interface) *Adapter {
 	return &Adapter{client: client}
+}
+
+func (a *Adapter) WithOwnerSigner(signer *OwnerAssertionSigner) *Adapter {
+	a.ownerSigner = signer
+	return a
 }
 
 func (a *Adapter) ObserveTrainJob(ctx context.Context, binding biz.TrainJobBinding) (biz.TrainJobObservation, error) {

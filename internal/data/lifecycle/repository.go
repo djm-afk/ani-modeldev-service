@@ -89,6 +89,7 @@ type runtimeTransaction struct {
 	now                   time.Time
 	requireCreationOpen   bool
 	writeDeadline         time.Time
+	commandFence          uint64
 }
 
 func (repository *Repository) GetRuntime(ctx context.Context, tenant, execution string) (biz.ExecutionRuntime, error) {
@@ -309,7 +310,7 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 	if !identity.DatabaseNow.Valid || identity.DatabaseNow.InfinityModifier != pgtype.Finite {
 		return nil, biz.ErrPersistence
 	}
-	current := &runtimeTransaction{transaction: tx, queries: queries, tenantID: tenantID, executionID: executionID, execution: admitted, state: state, now: identity.DatabaseNow.Time.UTC()}
+	current := &runtimeTransaction{transaction: tx, queries: queries, tenantID: tenantID, executionID: executionID, execution: admitted, state: state, now: identity.DatabaseNow.Time.UTC(), commandFence: generation}
 	if !validManagedTimings(current) {
 		return nil, biz.ErrPersistence
 	}

@@ -13,6 +13,7 @@ service ModelDevQueryService {
   rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse);
   rpc GetInputVersion(GetInputVersionRequest) returns (GetInputVersionResponse);
   rpc ListInputVersions(ListInputVersionsRequest) returns (ListInputVersionsResponse);
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE The registration recovery operation returns this same original execution projection.
   rpc GetExecution(GetExecutionRequest) returns (GetExecutionResponse);
   rpc ListExecutions(ListExecutionsRequest) returns (ListExecutionsResponse);
   rpc GetExecutionLogs(GetExecutionLogsRequest) returns (GetExecutionLogsResponse);
@@ -362,6 +363,46 @@ message ExecutionView {
   ComputeOrigin compute_origin = 26;
   ExecutionTiming timing = 27;
   MLPParameters explicit_mlp = 28;
+  ModelRegistrationView model_registration = 29;
+  ExecutionHistoryView history = 30;
+}
+
+enum KfpRunTerminalState {
+  KFP_RUN_TERMINAL_STATE_UNSPECIFIED = 0;
+  KFP_RUN_TERMINAL_STATE_SUCCEEDED = 1;
+  KFP_RUN_TERMINAL_STATE_FAILED = 2;
+  KFP_RUN_TERMINAL_STATE_CANCELED = 3;
+}
+
+enum WorkflowTerminalPhase {
+  WORKFLOW_TERMINAL_PHASE_UNSPECIFIED = 0;
+  WORKFLOW_TERMINAL_PHASE_SUCCEEDED = 1;
+  WORKFLOW_TERMINAL_PHASE_FAILED = 2;
+  WORKFLOW_TERMINAL_PHASE_ERROR = 3;
+}
+
+// Original controller evidence persisted at compute closure. Model registration
+// recovery cannot replace this history. Missing terminal evidence stays absent.
+message ExecutionHistoryView {
+  string run_id = 1;
+  string workflow_uid = 2;
+  google.protobuf.Timestamp observed_at = 3;
+  KfpRunTerminalState run_state = 4;
+  google.protobuf.Timestamp run_finished_at = 5;
+  WorkflowTerminalPhase workflow_phase = 6;
+  google.protobuf.Timestamp workflow_finished_at = 7;
+  string workflow_resource_version = 8;
+  string workflow_nodes_sha256 = 9;
+}
+
+// Projection of the original persisted registration and verified receipt.
+// Queries never fill this view by making a live Model write or lookup.
+message ModelRegistrationView {
+  string state = 1;
+  string registration_id = 2;
+  string model_id = 3;
+  string model_version_id = 4;
+  string failure_code = 5;
 }
 
 message GetExecutionRequest {

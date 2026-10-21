@@ -83,7 +83,17 @@ func gpuReleaseScope(execution biz.Execution, state biz.ExecutionRuntime, sealed
 }
 
 func validGPUObservation(scope biz.GPUReleaseScope, observation biz.GPUReleaseObservation, now time.Time) bool {
-	if observation.Ref != scope.Ref || !gpuReleaseID(observation.EvidenceID) || !gpuReleaseDigest(observation.EvidenceDigest) || observation.ObservedAt.IsZero() || observation.ReceivedAt.IsZero() || observation.ObservedAt.Year() < 1970 || observation.ReceivedAt.Year() < 1970 || observation.ObservedAt.Year() > 9999 || observation.ReceivedAt.Year() > 9999 || observation.ObservedAt.After(now.Add(5*time.Second)) || observation.ReceivedAt.After(now.Add(5*time.Second)) || observation.ReceivedAt.Before(observation.ObservedAt.Add(-5*time.Second)) {
+	if observation.Ref != scope.Ref || !gpuReleaseID(observation.EvidenceID) || !gpuReleaseDigest(observation.EvidenceDigest) {
+		return false
+	}
+	// ACC preserves missing source times for an unknown observation. Receiving
+	// an answer must not manufacture the last trusted source timestamp.
+	for _, stamp := range []time.Time{observation.ObservedAt, observation.ReceivedAt} {
+		if !stamp.IsZero() && (stamp.Year() < 1970 || stamp.Year() > 9999 || stamp.After(now.Add(5*time.Second))) {
+			return false
+		}
+	}
+	if !observation.ObservedAt.IsZero() && !observation.ReceivedAt.IsZero() && observation.ReceivedAt.Before(observation.ObservedAt.Add(-5*time.Second)) {
 		return false
 	}
 	for _, values := range [][]string{observation.ActivePodUIDs, observation.UncertainNodeUIDs, observation.Issues} {
@@ -103,7 +113,7 @@ func validGPUObservation(scope biz.GPUReleaseScope, observation biz.GPUReleaseOb
 	}
 	switch observation.Finding {
 	case "ALLOCATION_RELEASED":
-		return observation.Complete && len(observation.ActivePodUIDs) == 0 && len(observation.UncertainNodeUIDs) == 0 && len(observation.Issues) == 0
+		return observation.Complete && !observation.ObservedAt.IsZero() && !observation.ReceivedAt.IsZero() && len(observation.ActivePodUIDs) == 0 && len(observation.UncertainNodeUIDs) == 0 && len(observation.Issues) == 0
 	case "ALLOCATION_STILL_PRESENT":
 		return len(observation.ActivePodUIDs) > 0
 	case "RELEASE_UNKNOWN":

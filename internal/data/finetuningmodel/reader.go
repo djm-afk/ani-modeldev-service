@@ -1,11 +1,6 @@
-// Package finetuningmodel loads explicitly pinned base-model facts used as a
-// read-only Model boundary substitute for isolated FINETUNING candidacy.
-//
-// Loading these documents is never evidence of a Model permission, approval,
-// protected status or environment readiness. They exist only so an isolated
-// admission can freeze a base-model byte inventory without a live Model
-// dependency. A production composition must replace this with the real
-// Model read boundary.
+// Package finetuningmodel reads tenant-scoped base and target facts through the
+// formal Model boundary. Its pinned-file Reader is an explicit external boundary
+// substitute for isolated tests; production composition uses LiveReader.
 package finetuningmodel
 
 import (

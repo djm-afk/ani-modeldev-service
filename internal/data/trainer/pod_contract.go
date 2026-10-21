@@ -2,9 +2,72 @@ package trainer
 
 import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	kjson "k8s.io/apimachinery/pkg/util/json"
+	"reflect"
 )
+
+// ValidatePodTemplate checks the effective executable, workspace and isolation
+// after all admission mutations. Kubernetes coordination fields are handled
+// separately by ValidatePodResources; they cannot replace the frozen program.
+func ValidatePodTemplate(expected corev1.PodSpec, actual corev1.PodSpec) error {
+	if len(expected.Containers) != 1 || len(actual.Containers) != 1 {
+		return biz.ErrRuntimeConflict
+	}
+	wanted, worker := expected.Containers[0], actual.Containers[0]
+	if worker.Name != wanted.Name || worker.Image != wanted.Image || !reflect.DeepEqual(worker.Command, wanted.Command) ||
+		!reflect.DeepEqual(worker.Args, wanted.Args) || worker.WorkingDir != wanted.WorkingDir ||
+		!reflect.DeepEqual(worker.VolumeMounts, wanted.VolumeMounts) || !reflect.DeepEqual(worker.SecurityContext, wanted.SecurityContext) ||
+		!reflect.DeepEqual(worker.Lifecycle, wanted.Lifecycle) || !reflect.DeepEqual(worker.LivenessProbe, wanted.LivenessProbe) ||
+		!reflect.DeepEqual(worker.ReadinessProbe, wanted.ReadinessProbe) || !reflect.DeepEqual(worker.StartupProbe, wanted.StartupProbe) ||
+		worker.Stdin != wanted.Stdin || worker.StdinOnce != wanted.StdinOnce || worker.TTY != wanted.TTY ||
+		!reflect.DeepEqual(actual.Volumes, expected.Volumes) || !reflect.DeepEqual(actual.SecurityContext, expected.SecurityContext) ||
+		actual.ServiceAccountName != expected.ServiceAccountName || actual.SchedulerName != expected.SchedulerName ||
+		!reflect.DeepEqual(actual.RuntimeClassName, expected.RuntimeClassName) || !reflect.DeepEqual(actual.NodeSelector, expected.NodeSelector) ||
+		actual.RestartPolicy != corev1.RestartPolicyNever || actual.AutomountServiceAccountToken == nil || *actual.AutomountServiceAccountToken ||
+		actual.HostNetwork || actual.HostPID || actual.HostIPC {
+		return biz.ErrRuntimeConflict
+	}
+	return nil
+}
+
+func validateEffectiveTrainingPod(plan biz.TrainingPlan, pod *unstructured.Unstructured) error {
+	var spec map[string]any
+	if kjson.Unmarshal(plan.Snapshot.RuntimePlan.ExpectedSpec, &spec) != nil {
+		return biz.ErrRuntimeConflict
+	}
+	jobs, _, err := unstructured.NestedSlice(spec, "template", "spec", "replicatedJobs")
+	if err != nil || len(jobs) != 1 {
+		return biz.ErrRuntimeConflict
+	}
+	job, ok := jobs[0].(map[string]any)
+	if !ok {
+		return biz.ErrRuntimeConflict
+	}
+	wanted, found, err := unstructured.NestedMap(job, "template", "spec", "template", "spec")
+	if err != nil || !found {
+		return biz.ErrRuntimeConflict
+	}
+	var expected corev1.PodSpec
+	var actual corev1.Pod
+	if runtime.DefaultUnstructuredConverter.FromUnstructured(wanted, &expected) != nil ||
+		runtime.DefaultUnstructuredConverter.FromUnstructured(pod.Object, &actual) != nil || ValidatePodTemplate(expected, actual.Spec) != nil {
+		return biz.ErrRuntimeConflict
+	}
+	annotations, _, err := unstructured.NestedStringMap(job, "template", "spec", "template", "metadata", "annotations")
+	if err != nil {
+		return biz.ErrRuntimeConflict
+	}
+	for key, wanted := range annotations {
+		if pod.GetAnnotations()[key] != wanted {
+			return biz.ErrRuntimeConflict
+		}
+	}
+	return nil
+}
 
 // ValidatePodResources checks the complete effective request for the current
 // single-worker capability. An additional container, Pod-level request or

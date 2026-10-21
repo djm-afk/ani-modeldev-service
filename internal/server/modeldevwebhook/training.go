@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"reflect"
 	"slices"
 	"time"
 
@@ -129,10 +128,7 @@ func (handler *Handler) admitTraining(ctx context.Context, request *admissionv1.
 	if trainer.ValidatePodResources(vector, actual) != nil {
 		return denied(request, "training_resources")
 	}
-	// Controller-injected coordination env/ports are finite infrastructure
-	// details. Images, executable arguments, mounts and security stay frozen.
-	worker, wanted := pod.Spec.Containers[0], expectedPod.Containers[0]
-	if worker.Image != wanted.Image || !reflect.DeepEqual(worker.Command, wanted.Command) || !reflect.DeepEqual(worker.Args, wanted.Args) || !reflect.DeepEqual(worker.VolumeMounts, wanted.VolumeMounts) || !reflect.DeepEqual(worker.SecurityContext, wanted.SecurityContext) || !reflect.DeepEqual(pod.Spec.Volumes, expectedPod.Volumes) || !reflect.DeepEqual(pod.Spec.SecurityContext, expectedPod.SecurityContext) || pod.Spec.SchedulerName != expectedPod.SchedulerName || !reflect.DeepEqual(pod.Spec.RuntimeClassName, expectedPod.RuntimeClassName) || !reflect.DeepEqual(pod.Spec.NodeSelector, expectedPod.NodeSelector) || pod.Spec.RestartPolicy != corev1.RestartPolicyNever || pod.Spec.AutomountServiceAccountToken == nil || *pod.Spec.AutomountServiceAccountToken || pod.Spec.HostNetwork || pod.Spec.HostPID || pod.Spec.HostIPC {
+	if trainer.ValidatePodTemplate(expectedPod, pod.Spec) != nil {
 		return denied(request, "training_spec")
 	}
 	expectedAnnotations, _, _ := unstructured.NestedStringMap(job, "template", "spec", "template", "metadata", "annotations")

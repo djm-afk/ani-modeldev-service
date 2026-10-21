@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -143,11 +144,14 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 	}
 	seenTasks := make(map[string]bool)
+	terminatedStructuralTasks := make(map[string]bool)
 	for _, task := range run.Tasks {
-		if task.RunID != authority.RunID || task.ID == "" || task.Name == "" || seenTasks[task.ID] || (task.State != "" && !terminalTask(task.State) && task.State != "SKIPPED") {
+		structuralTermination := terminatedOwnerStructuralTask(workflow, task)
+		if task.RunID != authority.RunID || task.ID == "" || task.Name == "" || seenTasks[task.ID] || (task.State != "" && !terminalTask(task.State) && task.State != "SKIPPED" && !structuralTermination) {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 		}
 		seenTasks[task.ID] = true
+		terminatedStructuralTasks[task.ID] = structuralTermination
 		// Retain the top-level Pod contract for older adapters. Child node
 		// references are resolved against the independently completed graph.
 		if task.PodName != "" && (task.State == "SKIPPED" || !seenNames[task.PodName]) {
@@ -159,7 +163,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 		return biz.ManagedCloseEvidence{}, err
 	}
 	for _, task := range tasks {
-		if !terminalTask(task.State) && task.State != "SKIPPED" {
+		if !terminalTask(task.State) && task.State != "SKIPPED" && !(task.State == "RUNNING" && terminatedStructuralTasks[task.ID]) {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 		}
 		if task.State == "SKIPPED" {
@@ -187,6 +191,24 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	sort.Slice(evidence.Resources, func(i, j int) bool { return evidence.Resources[i].UID < evidence.Resources[j].UID })
 	evidence.ObservedAt = time.Now().UTC()
 	return evidence, nil
+}
+
+// KFP faithfully projects the native Argo structural Running residue into
+// task details. Match the complete original child-reference set to one actual
+// structural node; do not rewrite that task or the original Workflow graph.
+// This is used only after completed owner/Run and every actual Pod are proved.
+func terminatedOwnerStructuralTask(workflow *unstructured.Unstructured, task kfp.ManagedTask) bool {
+	shutdown, _ := textAt(workflow, "spec", "shutdown")
+	phase, _ := textAt(workflow, "status", "phase")
+	if shutdown != "Terminate" || phase != "Failed" || task.State != "RUNNING" || task.PodName != "" || len(task.ChildTasks) == 0 {
+		return false
+	}
+	nodes, found, err := unstructured.NestedMap(workflow.Object, "status", "nodes")
+	if err != nil || !found {
+		return false
+	}
+	_, node, err := taskControllerNode(task, nodes)
+	return err == nil && node["phase"] == "Running" && (node["type"] == "DAG" || node["type"] == "Retry")
 }
 
 // ownerWorkflowCompletion requires the controller's completion marker and the
@@ -229,6 +251,11 @@ func ownerWorkflowCompletion(workflow *unstructured.Unstructured, now time.Time)
 		return biz.ManagedOwnerTermination{}, nil, biz.ErrRuntimeNotReady
 	}
 	fulfillablePods := make(map[string]bool)
+	shutdown, _ := textAt(workflow, "spec", "shutdown")
+	// Argo 3.7.3 native Terminate completes the Workflow and every actual Pod
+	// while retaining onExit DAG/Retry nodes as Running. Preserve these nodes
+	// in the full graph hash; never extend this exception to a real Pod.
+	nativeTerminate := shutdown == "Terminate" && phase == "Failed"
 	for id, raw := range nodes {
 		node, ok := raw.(map[string]any)
 		if !ok {
@@ -243,6 +270,11 @@ func ownerWorkflowCompletion(workflow *unstructured.Unstructured, now time.Time)
 		case "Succeeded", "Failed", "Error":
 		case "Skipped", "Omitted":
 			continue
+		case "Running":
+			if nativeTerminate && (kind == "DAG" || kind == "Retry") {
+				continue
+			}
+			return biz.ManagedOwnerTermination{}, nil, biz.ErrRuntimeNotReady
 		default:
 			return biz.ManagedOwnerTermination{}, nil, biz.ErrRuntimeNotReady
 		}

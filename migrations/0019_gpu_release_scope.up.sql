@@ -24,9 +24,18 @@ BEGIN
  ) THEN
   RAISE EXCEPTION 'immutable GPU release scope' USING ERRCODE='23514';
  END IF;
- IF OLD.facts->'GPURelease'->'outbox'->'event' IS NOT NULL
-  AND NEW.facts->'GPURelease'->'outbox'->'event' IS DISTINCT FROM OLD.facts->'GPURelease'->'outbox'->'event' THEN
+ IF OLD.facts->'GPURelease'->'outbox'->'event' IS NOT NULL AND (
+  NEW.facts->'GPURelease'->'outbox'->'event' IS DISTINCT FROM OLD.facts->'GPURelease'->'outbox'->'event'
+  OR NEW.facts->'GPURelease'->'outbox'->'created_at' IS DISTINCT FROM OLD.facts->'GPURelease'->'outbox'->'created_at'
+  OR NEW.facts->'GPURelease'->'observation' IS DISTINCT FROM OLD.facts->'GPURelease'->'observation'
+ ) THEN
   RAISE EXCEPTION 'immutable GPU release event' USING ERRCODE='23514';
+ END IF;
+ IF OLD.facts->'GPURelease'->'outbox'->'ack' IS NOT NULL AND (
+  NEW.facts->'GPURelease'->'outbox'->'ack' IS DISTINCT FROM OLD.facts->'GPURelease'->'outbox'->'ack'
+  OR NEW.facts->'GPURelease'->'outbox'->'delivered_at' IS DISTINCT FROM OLD.facts->'GPURelease'->'outbox'->'delivered_at'
+ ) THEN
+  RAISE EXCEPTION 'immutable GPU release ACK' USING ERRCODE='23514';
  END IF;
  RETURN NEW;
 END $body$;

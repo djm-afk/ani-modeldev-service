@@ -39,6 +39,7 @@ type ModelDevQueryServiceClient interface {
 	ListImplementations(ctx context.Context, in *ListImplementationsRequest, opts ...grpc.CallOption) (*ListImplementationsResponse, error)
 	GetInputVersion(ctx context.Context, in *GetInputVersionRequest, opts ...grpc.CallOption) (*GetInputVersionResponse, error)
 	ListInputVersions(ctx context.Context, in *ListInputVersionsRequest, opts ...grpc.CallOption) (*ListInputVersionsResponse, error)
+	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE The registration recovery operation returns this same original execution projection.
 	GetExecution(ctx context.Context, in *GetExecutionRequest, opts ...grpc.CallOption) (*GetExecutionResponse, error)
 	ListExecutions(ctx context.Context, in *ListExecutionsRequest, opts ...grpc.CallOption) (*ListExecutionsResponse, error)
 	GetExecutionLogs(ctx context.Context, in *GetExecutionLogsRequest, opts ...grpc.CallOption) (*GetExecutionLogsResponse, error)
@@ -144,6 +145,7 @@ type ModelDevQueryServiceServer interface {
 	ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
 	GetInputVersion(context.Context, *GetInputVersionRequest) (*GetInputVersionResponse, error)
 	ListInputVersions(context.Context, *ListInputVersionsRequest) (*ListInputVersionsResponse, error)
+	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE The registration recovery operation returns this same original execution projection.
 	GetExecution(context.Context, *GetExecutionRequest) (*GetExecutionResponse, error)
 	ListExecutions(context.Context, *ListExecutionsRequest) (*ListExecutionsResponse, error)
 	GetExecutionLogs(context.Context, *GetExecutionLogsRequest) (*GetExecutionLogsResponse, error)

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
@@ -77,6 +78,11 @@ func validRegistrationFacts(current *runtimeTransaction) bool {
 	if stored.RecordedAt.IsZero() || !stored.DeadlineAt.After(stored.RecordedAt) || stored.RecordedAt.After(current.now) ||
 		!stored.DeadlineAt.Equal(registrationDeadline(current, stored.RecordedAt)) {
 		return false
+	}
+	if recovery := stored.Recovery; recovery != nil {
+		if current.state.ClosedAt == nil || recovery.AdmittedAt.Before(*current.state.ClosedAt) || recovery.AdmittedAt.After(current.now) || recovery.CommandFence < current.state.CloseGeneration || recovery.CommandFence > current.commandFence || !recovery.DeadlineAt.Equal(recovery.AdmittedAt.Add(time.Duration(current.execution.Snapshot.Timing.StepTimeoutSeconds)*time.Second)) {
+			return false
+		}
 	}
 	return validRegistrationDispatches(current, *stored) && registrationIntentUnchanged(expected, *stored)
 }

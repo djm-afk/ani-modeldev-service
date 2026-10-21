@@ -108,7 +108,7 @@ def compile_pipeline(configuration, output):
 
     # KFP/Argo includes this name in component Pod names; KCN also uses each
     # Pod name as an annotation suffix, limited to 63 bytes by Kubernetes.
-    @dsl.pipeline(name="ft" if finetuning else "general-cpu")
+    @dsl.pipeline(name="ft" if finetuning else "md")
     def pipeline(execution_id: str, spec_hash: str):
         # KFP records display_name as the managed role checked by ModelDev.
         run_id = dsl.PIPELINE_JOB_ID_PLACEHOLDER

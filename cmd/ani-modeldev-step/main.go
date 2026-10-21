@@ -133,7 +133,7 @@ func execute(ctx context.Context, args []string) error {
 }
 
 func storageClient(config *storageConfig, provider aws.CredentialsProvider) (*s3.Client, error) {
-	if config == nil || config.Region == "" || config.CredentialsFile != "" || provider == nil || config.StreamingTimeoutSeconds < 0 || config.StreamingTimeoutSeconds > 900 {
+	if config == nil || config.Region == "" || config.CredentialsFile != "" || provider == nil || config.StreamingTimeoutSeconds < 0 || config.StreamingTimeoutSeconds > 86400 {
 		return nil, component.ErrConfiguration
 	}
 	endpoint, err := url.Parse(config.Endpoint)

@@ -11,10 +11,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 const maximumTimeout = 30 * time.Second
+const maximumManagedOperationTimeout = 24 * time.Hour
+const maximumModelOperationTimeout = 24 * time.Hour
 
 func (c *Bootstrap) Validate() error {
 	if c == nil {
@@ -48,7 +51,11 @@ func (c *Bootstrap) Validate() error {
 			}
 		}
 	}
-	if err := validateListener("grpc", c.Server.Grpc.Network, c.Server.Grpc.Addr, c.Server.Grpc.Timeout); err != nil {
+	commandMaximum := maximumTimeout
+	if c.Command != nil && c.Command.Model != nil {
+		commandMaximum = maximumModelOperationTimeout
+	}
+	if err := validateBoundedListener("grpc", c.Server.Grpc.Network, c.Server.Grpc.Addr, c.Server.Grpc.Timeout, commandMaximum); err != nil {
 		return err
 	}
 	if err := validateListener("admin", c.Server.Admin.Network, c.Server.Admin.Addr, c.Server.Admin.Timeout); err != nil {
@@ -76,7 +83,7 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 	if config.Step == nil || config.Kubernetes == nil || config.Pipeline == nil || config.ObjectStorage == nil {
 		return fmt.Errorf("managed runtime requires step, Kubernetes, pipeline and storage configuration")
 	}
-	if err := validateBoundedListener("managed step", config.Step.Network, config.Step.Addr, config.Step.Timeout, 10*time.Minute); err != nil {
+	if err := validateBoundedListener("managed step", config.Step.Network, config.Step.Addr, config.Step.Timeout, maximumManagedOperationTimeout); err != nil {
 		return err
 	}
 	_, portText, _ := net.SplitHostPort(config.Step.Addr)
@@ -105,7 +112,7 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 		return err
 	}
 	if config.ObjectStorage.StreamingTimeout != nil {
-		if err := validateDuration("managed storage streaming", config.ObjectStorage.StreamingTimeout, 10*time.Minute); err != nil {
+		if err := validateDuration("managed storage streaming", config.ObjectStorage.StreamingTimeout, maximumManagedOperationTimeout); err != nil {
 			return err
 		}
 	}
@@ -148,10 +155,20 @@ func validateModelConnection(config *ModelConnection) error {
 	if config.ClientDnsName == config.ServerName {
 		return fmt.Errorf("model client and server DNS identities must be distinct")
 	}
-	if config.Actor == "" || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
+	if config.ClientDnsName != "ani-modeldev-service" {
+		return fmt.Errorf("model connection requires the registered ModelDev client identity")
+	}
+	if !strings.HasPrefix(config.Actor, "modeldev:") || len(config.Actor) <= len("modeldev:") || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
 		return fmt.Errorf("model connection requires a bounded audit actor")
 	}
-	return validateDuration("model connection", config.Timeout, maximumTimeout)
+	if config.BaseModelStorageScope == nil {
+		return fmt.Errorf("model connection requires original base-model storage authority")
+	}
+	scope := config.BaseModelStorageScope
+	if (cpup01.StorageScope{StorageConnectionID: scope.ConnectionId, Bucket: scope.Bucket, ApprovedPrefix: scope.ApprovedPrefix, CredentialReference: scope.CredentialReference}).Validate() != nil {
+		return fmt.Errorf("model connection requires valid base-model storage authority")
+	}
+	return validateDuration("model connection", config.Timeout, maximumModelOperationTimeout)
 }
 
 // validateControlledModelFacts accepts only explicitly pinned, shape-checked

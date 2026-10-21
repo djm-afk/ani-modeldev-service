@@ -261,14 +261,18 @@ const saveRuntimeFacts = `-- name: SaveRuntimeFacts :execrows
 INSERT INTO modeldev_execution_runtimes (
     tenant_id, execution_id, operation_id, spec_hash, facts,
     training_name, training_request_sha256, training_uid, publication_id,
-    close_generation, close_reason, close_requested_at, closed_at
+    close_generation, close_reason, close_requested_at, closed_at,
+    gpu_release_sealed_at, gpu_release_scope_sha256
 )
 SELECT i.tenant_id, i.execution_id, i.operation_id, i.spec_hash, $1::jsonb,
     $2::text, $3::text,
     $4::text, $5::uuid,
     $6::numeric, $7::text,
-    $8::timestamptz, $9::timestamptz
+    $8::timestamptz, $9::timestamptz,
+    original.gpu_release_sealed_at, original.gpu_release_scope_sha256
 FROM modeldev_execution_identities AS i
+LEFT JOIN modeldev_execution_runtimes AS original
+  ON original.tenant_id = i.tenant_id AND original.execution_id = i.execution_id
 WHERE i.tenant_id = $10::uuid AND i.execution_id = $11::uuid
   AND (NOT $12::boolean OR
        (i.close_generation = 0 AND clock_timestamp() < $13::timestamptz))

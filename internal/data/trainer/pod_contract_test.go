@@ -8,7 +8,7 @@ import (
 )
 
 func TestTrainingObservationRetainsResourceDriftForOriginalUIDStop(t *testing.T) {
-	for _, mode := range []string{"pod-limit", "pod-sidecar", "group-vector", "group-queue"} {
+	for _, mode := range []string{"pod-limit", "pod-sidecar", "pod-image", "pod-security", "group-vector", "group-queue"} {
 		t.Run(mode, func(t *testing.T) {
 			f := newTrainingFixture(t)
 			adapter := f.adapter(t)
@@ -24,6 +24,12 @@ func TestTrainingObservationRetainsResourceDriftForOriginalUIDStop(t *testing.T)
 			case "pod-sidecar":
 				containers, _, _ := unstructured.NestedSlice(f.pod, "spec", "containers")
 				_ = unstructured.SetNestedSlice(f.pod, append(containers, map[string]any{"name": "unknown"}), "spec", "containers")
+			case "pod-image":
+				containers, _, _ := unstructured.NestedSlice(f.pod, "spec", "containers")
+				containers[0].(map[string]any)["image"] = "foreign/image:latest"
+				_ = unstructured.SetNestedSlice(f.pod, containers, "spec", "containers")
+			case "pod-security":
+				_ = unstructured.SetNestedField(f.pod, true, "spec", "hostPID")
 			case "group-vector":
 				_ = unstructured.SetNestedField(f.podGroup, "2", "spec", "minResources", "cpu")
 			case "group-queue":

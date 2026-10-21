@@ -73,6 +73,34 @@ func (a *Adapter) FindTraining(ctx context.Context, plan biz.TrainingPlan) (biz.
 	return handle, err
 }
 
+// FindTrainingForClose reads the original complete request without consulting
+// mutable Runtime/PVC objects. The caller must already hold the close fence.
+// A missing or mismatched answer remains unresolved and never permits a POST.
+func (a *Adapter) FindTrainingForClose(ctx context.Context, plan biz.TrainingPlan) (biz.TrainingHandle, error) {
+	if a == nil || a.client == nil || ctx == nil || ctx.Err() != nil || !validTrainingPlan(plan) {
+		return biz.TrainingHandle{}, biz.ErrRuntimeConflict
+	}
+	namespace, err := a.client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, plan.Workspace.NamespaceName, metav1.GetOptions{})
+	if err != nil {
+		return biz.TrainingHandle{}, biz.ErrTrainingUnavailable
+	}
+	if !liveIdentity(namespace, "v1", "Namespace", "", plan.Workspace.NamespaceName, plan.Workspace.NamespaceUID) {
+		return biz.TrainingHandle{}, biz.ErrRuntimeConflict
+	}
+	wanted, err := frozenTrainingRequest(plan)
+	if err != nil {
+		return biz.TrainingHandle{}, err
+	}
+	actual, err := a.client.Resource(trainJobs).Namespace(plan.Workspace.NamespaceName).Get(ctx, plan.Name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return biz.TrainingHandle{}, biz.ErrTrainingNotFound
+	}
+	if err != nil {
+		return biz.TrainingHandle{}, biz.ErrTrainingUnavailable
+	}
+	return verifyTrainingObject(plan, wanted, actual)
+}
+
 func (a *Adapter) currentTraining(ctx context.Context, plan biz.TrainingPlan) (*unstructured.Unstructured, biz.TrainingHandle, error) {
 	wanted, err := a.trainingRequest(ctx, plan, false)
 	if err != nil {
@@ -172,6 +200,9 @@ func (a *Adapter) trainingRequest(ctx context.Context, plan biz.TrainingPlan, re
 	if a == nil || a.client == nil || ctx == nil || ctx.Err() != nil || !validTrainingPlan(plan) {
 		return nil, biz.ErrRuntimeConflict
 	}
+	if plan.Snapshot.ComputeOrigin.DeviceMode == "gpu" && a.ownerSigner == nil {
+		return nil, biz.ErrRuntimeNotReady
+	}
 	workspace, snapshot := plan.Workspace, plan.Snapshot
 	namespace, err := a.client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, workspace.NamespaceName, metav1.GetOptions{})
 	if err != nil {
@@ -202,6 +233,14 @@ func (a *Adapter) trainingRequest(ctx context.Context, plan biz.TrainingPlan, re
 		return nil, biz.ErrRuntimeConflict
 	}
 
+	return frozenTrainingRequest(plan)
+}
+
+func frozenTrainingRequest(plan biz.TrainingPlan) (*unstructured.Unstructured, error) {
+	if !validTrainingPlan(plan) {
+		return nil, biz.ErrRuntimeConflict
+	}
+	workspace, snapshot := plan.Workspace, plan.Snapshot
 	vector, vectorErr := biz.TrainingResourceVector(snapshot)
 	if vectorErr != nil {
 		return nil, biz.ErrRuntimeConflict

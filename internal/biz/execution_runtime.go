@@ -83,7 +83,19 @@ type PodInitializationAbort struct {
 	DeletedAt, NotInitializedAt, SandboxStoppedAt      time.Time
 	DeclaredInitContainers, DeclaredContainers         []string
 	InitContainerExits                                 []InitializationContainerExit
+	UncreatedInitContainer                             *InitializationContainerNotCreated `json:",omitempty"`
 	UnstartedInitContainers, UnstartedContainers       []string
+}
+
+// InitializationContainerNotCreated is the kubelet's missing-container marker,
+// not a process exit. Sandbox/generation/deletion proof is retained separately
+// by PodInitializationAbort; this marker cannot authorize a successful init.
+type InitializationContainerNotCreated struct {
+	Name, Reason, Message, ContainerID, ImageID string
+	ReportedExitCode                            int32
+	StartedAt, FinishedAt                       *time.Time
+	Started, Ready, LastStateEmpty              bool
+	RestartCount                                int64
 }
 
 type InitializationContainerExit struct {
@@ -95,10 +107,22 @@ type InitializationContainerExit struct {
 // ValidAt validates the persisted abort facts independently of the Kubernetes
 // adapter. A completed owner Run/Workflow is additionally required by close.
 func (proof *PodInitializationAbort) ValidAt(observedAt time.Time) bool {
-	if proof == nil || proof.PodResourceVersion == "" || proof.NodeName == "" || proof.Phase != "Failed" || proof.RestartPolicy != "Never" || proof.PodGeneration <= 0 || observedAt.IsZero() || proof.DeletedAt.IsZero() || proof.NotInitializedAt.IsZero() || proof.SandboxStoppedAt.IsZero() || proof.DeletedAt.After(observedAt) || proof.SandboxStoppedAt.After(observedAt) || proof.NotInitializedAt.After(proof.SandboxStoppedAt) || len(proof.InitContainerExits) == 0 || len(proof.UnstartedInitContainers) == 0 || len(proof.UnstartedContainers) == 0 || len(proof.DeclaredInitContainers) != len(proof.InitContainerExits)+len(proof.UnstartedInitContainers) || len(proof.DeclaredContainers) != len(proof.UnstartedContainers) {
+	if proof == nil || proof.PodResourceVersion == "" || proof.NodeName == "" || proof.Phase != "Failed" || proof.RestartPolicy != "Never" || proof.PodGeneration <= 0 || observedAt.IsZero() || proof.DeletedAt.IsZero() || proof.NotInitializedAt.IsZero() || proof.SandboxStoppedAt.IsZero() || proof.DeletedAt.After(observedAt) || proof.SandboxStoppedAt.After(observedAt) || proof.NotInitializedAt.After(proof.SandboxStoppedAt) || len(proof.UnstartedInitContainers) == 0 || len(proof.UnstartedContainers) == 0 || len(proof.DeclaredContainers) != len(proof.UnstartedContainers) {
 		return false
 	}
 	seen := make(map[string]bool)
+	initPrefix := len(proof.InitContainerExits)
+	if marker := proof.UncreatedInitContainer; marker != nil {
+		if initPrefix != 0 || marker.Name == "" || marker.Reason != "ContainerStatusUnknown" || marker.Message != "The container could not be located when the pod was terminated" || marker.ReportedExitCode != 137 || marker.ContainerID != "" || marker.ImageID != "" || marker.StartedAt != nil || marker.FinishedAt != nil || marker.Started || marker.Ready || marker.RestartCount != 0 || !marker.LastStateEmpty || len(proof.DeclaredInitContainers) == 0 || proof.DeclaredInitContainers[0] != marker.Name {
+			return false
+		}
+		seen[marker.Name], initPrefix = true, 1
+	} else if initPrefix == 0 {
+		return false
+	}
+	if len(proof.DeclaredInitContainers) != initPrefix+len(proof.UnstartedInitContainers) {
+		return false
+	}
 	var previous time.Time
 	for i, exit := range proof.InitContainerExits {
 		if exit.Name == "" || seen[exit.Name] || proof.DeclaredInitContainers[i] != exit.Name || exit.ContainerID == "" || exit.ImageID == "" || exit.ExitCode != 0 || exit.StartedAt.IsZero() || exit.FinishedAt.IsZero() || exit.FinishedAt.Before(exit.StartedAt) || exit.StartedAt.Before(previous) || exit.FinishedAt.After(proof.SandboxStoppedAt) {
@@ -107,7 +131,7 @@ func (proof *PodInitializationAbort) ValidAt(observedAt time.Time) bool {
 		seen[exit.Name], previous = true, exit.FinishedAt
 	}
 	for i, name := range proof.UnstartedInitContainers {
-		if name == "" || seen[name] || proof.DeclaredInitContainers[len(proof.InitContainerExits)+i] != name {
+		if name == "" || seen[name] || proof.DeclaredInitContainers[initPrefix+i] != name {
 			return false
 		}
 		seen[name] = true
@@ -244,6 +268,13 @@ type TrainingRuntime interface {
 	FindTraining(context.Context, TrainingPlan) (TrainingHandle, error)
 	ObserveTraining(context.Context, TrainingPlan, TrainingHandle, []RuntimeResource) (TrainingRuntimeObservation, error)
 	StopTraining(context.Context, TrainingPlan, TrainingHandle) error
+}
+
+// TrainingCloseRecovery resolves an already dispatched original request after
+// the close fence. It grants no creation authority and does not depend on the
+// current Runtime or PVC still authorizing new computation.
+type TrainingCloseRecovery interface {
+	FindTrainingForClose(context.Context, TrainingPlan) (TrainingHandle, error)
 }
 
 type PreparedWorkspaceVerifier interface {

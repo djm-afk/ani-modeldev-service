@@ -36,6 +36,11 @@ class PipelineAssembly(unittest.TestCase):
             documents = list(yaml.safe_load_all(output.read_text(encoding="utf-8")))
             ir, platform = documents
             json_format.ParseDict(ir, pipeline_spec_pb2.PipelineSpec())
+            # Actual KFP 2.16 executor suffix from the failed cluster Run.
+            # KCN uses the generated Pod name in an annotation name (63 bytes).
+            generated_name = (ir["pipelineInfo"]["name"] +
+                              "-abcde-metadata-0-2-retry-system-container-impl-4294967295")
+            self.assertLessEqual(len(generated_name.encode("ascii")), 63)
             inputs = ir["root"]["inputDefinitions"]["parameters"]
             self.assertEqual(set(inputs), {"execution_id", "spec_hash"})
             self.assertTrue(all(p["parameterType"] == "STRING" and "defaultValue" not in p for p in inputs.values()))

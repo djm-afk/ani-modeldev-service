@@ -6,11 +6,11 @@ finite float32 features, and binary integer labels. It checks the selected byte
 length and SHA256 before importing Torch or creating output. Paths cannot be
 symlinks, and existing nonempty output paths are preserved.
 
-`--learning-rate`, `--epochs`, `--batch-size`, and `--seed` come from the one
-machine contract in `contract/cpup01/implementations.json`; Go embeds that same
+`--learning-rate`, `--epochs`, `--batch-size`, and `--seed` are resolved for each
+execution and frozen in its Snapshot. Their sole defaults and representation
+bounds come from `contract/cpup01/implementations.json`; Go embeds that same
 file and the workload images include its immutable bytes. Omitted values use
-its implementation defaults. Integers and decimals follow its representation
-bounds. `--device` is the platform-frozen `cpu` or `cuda`; CUDA requires exactly
+those defaults. `--device` is the platform-frozen `cpu` or `cuda`; CUDA requires exactly
 one visible CUDA device. The GPU image leaves device visibility to the assigned
 runtime and device plugin.
 
@@ -36,8 +36,26 @@ the result and reloads the checkpoint in a separate container without the
 training workspace mount. These are workload facts; the service must still
 prove authenticated admission, KFP/Trainer, publication, close and cleanup.
 
-The following locked image qualification describes the historical CPU image.
-Changed sources require a new image digest and corresponding verification.
+## Execution software materials
+
+The v2.1 CPU image is built with `cpu-execution.Dockerfile`, which copies the
+current MLP and LoRA programs plus the single machine contract into the immutable
+CPU runtime qualified by the actual workloads. `gpu.Dockerfile` uses the locked
+CUDA dependencies in `gpu-requirements.txt` and `gpu-runtime-lock.json`. Both
+retain a complete runtime inventory and the hashes of their baked sources.
+
+The finite generator in `scripts/modeldev-execution-materials` binds the
+implementation to an immutable training image and a confirmed PipelineVersion
+with its IR hash. These are software materials. Each accepted execution carries
+its own resolved algorithm values, input hash and platform-selected device;
+the image does not contain a selected input dataset or per-execution parameters.
+Image qualification and publication do not establish execution success or
+actual CUDA computation. Current task receipts live under the unique
+`.scratch/modeldev-execution-v2.1/records` index.
+
+The remaining sections describe the historical September CPU image and its
+original qualification commands. Their source, dependency and scan results
+apply only to that image. Changed sources require a new digest and verification.
 
 ## Locked image materials
 
@@ -62,7 +80,7 @@ the verified wheels offline during the build. The final image uses UID/GID
 10001:10001, read-only program files, and the workload itself as PID 1. It contains
 no selected dataset, checkpoint, or credentials and installs nothing at startup.
 
-## Fedora execution
+## Historical Fedora execution
 
 All generation, builds, training, reloads and scanning run on Fedora against a
 fixed committed source. After selecting the task-owned Podman storage containing
@@ -93,7 +111,7 @@ read-only at `/source/training` and invokes `/opt/venv/bin/python -I -m unittest
 discover -s /source/training/tests -p test_training.py -v`, with a separate bounded
 writable temporary directory and the runner's resource limits.
 
-## Fixed verification result
+## Historical fixed verification result
 
 On Fedora, source `4d56b93b045233c1325a362fe89d506210223d47` produced local image
 `sha256:0972fac83ba343e4d24e22bc35198bddf5c3e9d5c8ab3337694395beead3bd04`.

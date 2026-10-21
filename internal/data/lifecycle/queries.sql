@@ -37,14 +37,18 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid AND execution_id = sqlc.arg(executio
 INSERT INTO modeldev_execution_runtimes (
     tenant_id, execution_id, operation_id, spec_hash, facts,
     training_name, training_request_sha256, training_uid, publication_id,
-    close_generation, close_reason, close_requested_at, closed_at
+    close_generation, close_reason, close_requested_at, closed_at,
+    gpu_release_sealed_at, gpu_release_scope_sha256
 )
 SELECT i.tenant_id, i.execution_id, i.operation_id, i.spec_hash, sqlc.arg(facts)::jsonb,
     sqlc.narg(training_name)::text, sqlc.narg(training_request_sha256)::text,
     sqlc.narg(training_uid)::text, sqlc.narg(publication_id)::uuid,
     sqlc.arg(close_generation)::numeric, sqlc.narg(close_reason)::text,
-    sqlc.narg(close_requested_at)::timestamptz, sqlc.narg(closed_at)::timestamptz
+    sqlc.narg(close_requested_at)::timestamptz, sqlc.narg(closed_at)::timestamptz,
+    original.gpu_release_sealed_at, original.gpu_release_scope_sha256
 FROM modeldev_execution_identities AS i
+LEFT JOIN modeldev_execution_runtimes AS original
+  ON original.tenant_id = i.tenant_id AND original.execution_id = i.execution_id
 WHERE i.tenant_id = sqlc.arg(tenant_id)::uuid AND i.execution_id = sqlc.arg(execution_id)::uuid
   AND (NOT sqlc.arg(require_creation_open)::boolean OR
        (i.close_generation = 0 AND clock_timestamp() < sqlc.arg(deadline_at)::timestamptz))

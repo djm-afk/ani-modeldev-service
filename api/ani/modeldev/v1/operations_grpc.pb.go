@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ModelDevOperationsService_InspectExecution_FullMethodName      = "/ani.modeldev.v1.ModelDevOperationsService/InspectExecution"
-	ModelDevOperationsService_ReconcileExecution_FullMethodName    = "/ani.modeldev.v1.ModelDevOperationsService/ReconcileExecution"
-	ModelDevOperationsService_PlanExecutionCleanup_FullMethodName  = "/ani.modeldev.v1.ModelDevOperationsService/PlanExecutionCleanup"
-	ModelDevOperationsService_ApplyExecutionCleanup_FullMethodName = "/ani.modeldev.v1.ModelDevOperationsService/ApplyExecutionCleanup"
+	ModelDevOperationsService_InspectExecution_FullMethodName        = "/ani.modeldev.v1.ModelDevOperationsService/InspectExecution"
+	ModelDevOperationsService_ReconcileExecution_FullMethodName      = "/ani.modeldev.v1.ModelDevOperationsService/ReconcileExecution"
+	ModelDevOperationsService_PlanExecutionCleanup_FullMethodName    = "/ani.modeldev.v1.ModelDevOperationsService/PlanExecutionCleanup"
+	ModelDevOperationsService_ApplyExecutionCleanup_FullMethodName   = "/ani.modeldev.v1.ModelDevOperationsService/ApplyExecutionCleanup"
+	ModelDevOperationsService_ResumeModelRegistration_FullMethodName = "/ani.modeldev.v1.ModelDevOperationsService/ResumeModelRegistration"
 )
 
 // ModelDevOperationsServiceClient is the client API for ModelDevOperationsService service.
@@ -36,6 +37,11 @@ type ModelDevOperationsServiceClient interface {
 	ReconcileExecution(ctx context.Context, in *ReconcileExecutionRequest, opts ...grpc.CallOption) (*ReconcileExecutionResponse, error)
 	PlanExecutionCleanup(ctx context.Context, in *PlanExecutionCleanupRequest, opts ...grpc.CallOption) (*PlanExecutionCleanupResponse, error)
 	ApplyExecutionCleanup(ctx context.Context, in *ApplyExecutionCleanupRequest, opts ...grpc.CallOption) (*ApplyExecutionCleanupResponse, error)
+	// Restore only the original model registration. Current tenant and exact
+	// method authority come from authenticated Governance metadata.
+	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME Reuses the original execution business projection.
+	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE Reuses the original execution business projection.
+	ResumeModelRegistration(ctx context.Context, in *ResumeModelRegistrationRequest, opts ...grpc.CallOption) (*GetExecutionResponse, error)
 }
 
 type modelDevOperationsServiceClient struct {
@@ -86,6 +92,16 @@ func (c *modelDevOperationsServiceClient) ApplyExecutionCleanup(ctx context.Cont
 	return out, nil
 }
 
+func (c *modelDevOperationsServiceClient) ResumeModelRegistration(ctx context.Context, in *ResumeModelRegistrationRequest, opts ...grpc.CallOption) (*GetExecutionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetExecutionResponse)
+	err := c.cc.Invoke(ctx, ModelDevOperationsService_ResumeModelRegistration_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ModelDevOperationsServiceServer is the server API for ModelDevOperationsService service.
 // All implementations must embed UnimplementedModelDevOperationsServiceServer
 // for forward compatibility.
@@ -97,6 +113,11 @@ type ModelDevOperationsServiceServer interface {
 	ReconcileExecution(context.Context, *ReconcileExecutionRequest) (*ReconcileExecutionResponse, error)
 	PlanExecutionCleanup(context.Context, *PlanExecutionCleanupRequest) (*PlanExecutionCleanupResponse, error)
 	ApplyExecutionCleanup(context.Context, *ApplyExecutionCleanupRequest) (*ApplyExecutionCleanupResponse, error)
+	// Restore only the original model registration. Current tenant and exact
+	// method authority come from authenticated Governance metadata.
+	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME Reuses the original execution business projection.
+	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE Reuses the original execution business projection.
+	ResumeModelRegistration(context.Context, *ResumeModelRegistrationRequest) (*GetExecutionResponse, error)
 	mustEmbedUnimplementedModelDevOperationsServiceServer()
 }
 
@@ -118,6 +139,9 @@ func (UnimplementedModelDevOperationsServiceServer) PlanExecutionCleanup(context
 }
 func (UnimplementedModelDevOperationsServiceServer) ApplyExecutionCleanup(context.Context, *ApplyExecutionCleanupRequest) (*ApplyExecutionCleanupResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ApplyExecutionCleanup not implemented")
+}
+func (UnimplementedModelDevOperationsServiceServer) ResumeModelRegistration(context.Context, *ResumeModelRegistrationRequest) (*GetExecutionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResumeModelRegistration not implemented")
 }
 func (UnimplementedModelDevOperationsServiceServer) mustEmbedUnimplementedModelDevOperationsServiceServer() {
 }
@@ -213,6 +237,24 @@ func _ModelDevOperationsService_ApplyExecutionCleanup_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ModelDevOperationsService_ResumeModelRegistration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResumeModelRegistrationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevOperationsServiceServer).ResumeModelRegistration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevOperationsService_ResumeModelRegistration_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevOperationsServiceServer).ResumeModelRegistration(ctx, req.(*ResumeModelRegistrationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ModelDevOperationsService_ServiceDesc is the grpc.ServiceDesc for ModelDevOperationsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -235,6 +277,10 @@ var ModelDevOperationsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ApplyExecutionCleanup",
 			Handler:    _ModelDevOperationsService_ApplyExecutionCleanup_Handler,
+		},
+		{
+			MethodName: "ResumeModelRegistration",
+			Handler:    _ModelDevOperationsService_ResumeModelRegistration_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

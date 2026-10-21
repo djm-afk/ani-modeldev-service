@@ -16,22 +16,22 @@ import (
 // general authorization service or permit platform for this.
 
 // FinetuningRegistrationOperation names one concrete side-effect dispatch.
-// New-branch container creation and version registration are arbitrated
-// separately; a controlled copy into the Model scope is its own operation.
+// Pending-session preparation, controlled copy, and atomic completion are
+// distinct writes in the actual Model provider contract.
 type FinetuningRegistrationOperation string
 
 const (
-	// OpCreateModel creates the version container used by the new-model branch.
-	OpCreateModel FinetuningRegistrationOperation = "CREATE_MODEL"
-	// OpCreateModelVersion registers the output version under a resolved target.
-	OpCreateModelVersion FinetuningRegistrationOperation = "CREATE_MODEL_VERSION"
+	// Prepare fixes a pending upload session; it does not create a model.
+	OpPrepareTrainedArtifact FinetuningRegistrationOperation = "PREPARE_TRAINED_ARTIFACT"
+	// Complete atomically creates the applicable model and READY version.
+	OpCompleteTrainedArtifact FinetuningRegistrationOperation = "COMPLETE_TRAINED_ARTIFACT"
 	// OpControlledCopy writes the published object into the Model-approved scope.
 	OpControlledCopy FinetuningRegistrationOperation = "CONTROLLED_COPY"
 )
 
 func ValidRegistrationOperation(operation FinetuningRegistrationOperation) bool {
 	switch operation {
-	case OpCreateModel, OpCreateModelVersion, OpControlledCopy:
+	case OpPrepareTrainedArtifact, OpCompleteTrainedArtifact, OpControlledCopy:
 		return true
 	default:
 		return false
@@ -78,8 +78,17 @@ type FinetuningRegistrationDispatchRepository interface {
 	// an unresolved outcome; the caller must verify the original attempt rather
 	// than re-send it.
 	PermitRegistrationDispatch(context.Context, RunAuthorityCandidate, FinetuningRegistrationOperation, string) (FinetuningRegistrationDispatchResult, error)
+	// Normal callbacks cannot select a closed recovery window.
+	PermitRegistrationRecoveryDispatch(context.Context, RunAuthorityCandidate, FinetuningRegistrationOperation, string) (FinetuningRegistrationDispatchResult, error)
 	// RecordRegistrationOutcome stores the real observed outcome of a permitted call.
 	RecordRegistrationOutcome(context.Context, RunAuthorityCandidate, FinetuningRegistrationOperation, FinetuningRegistrationDispatch) (ExecutionRuntime, error)
+	RecordRegistrationObservation(context.Context, RunAuthorityCandidate, FinetuningRegistrationOperation, FinetuningRegistrationDispatch, TrainedArtifactObservation) (ExecutionRuntime, error)
+}
+
+type FinetuningRegistrationIntentRepository interface {
+	FinetuningRegistrationDispatchRepository
+	RecordRegistrationIntent(context.Context, RunAuthorityCandidate) (ExecutionRuntime, bool, error)
+	BeginRegistrationRecovery(context.Context, RunAuthorityCandidate) (ExecutionRuntime, error)
 }
 
 type FinetuningRegistrationDispatchResult struct {
@@ -92,9 +101,9 @@ type FinetuningRegistrationDispatchResult struct {
 }
 
 // ValidRegistrationDispatch checks a persisted dispatch record against the
-// original registration intent. Every dispatch shares the single registration
-// budget: a new permit never re-claims a fresh window, and the permit can never
-// outlive the execution's own deadline (already folded into the intent).
+// original registration content and admitted deadline. Normal writes share the
+// original REGISTER window; explicit recovery writes share its independently
+// admitted finite window. A new permit never extends either deadline.
 func ValidRegistrationDispatch(dispatch FinetuningRegistrationDispatch, intentRecordedAt, observedAt, intentDeadline time.Time) bool {
 	if !ValidRegistrationOperation(dispatch.Operation) || dispatch.PermittedAt.IsZero() ||
 		dispatch.PermittedAt.Before(intentRecordedAt) || dispatch.PermittedAt.After(observedAt) ||

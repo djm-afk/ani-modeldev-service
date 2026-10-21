@@ -235,6 +235,9 @@ func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImple
 			view.Kind = trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING
 		}
 		for _, mode := range []string{"cpu", "gpu"} {
+			if id == "builtin.sft_lora" && q.models == nil {
+				continue
+			}
 			material, _, err := q.materials.Implementation(ctx, scope.TenantID, id, mode)
 			if err == nil {
 				view.SupportedDeviceModes = append(view.SupportedDeviceModes, mode)

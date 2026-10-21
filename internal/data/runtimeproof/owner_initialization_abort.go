@@ -137,6 +137,16 @@ func observeInitializationAbort(pod *unstructured.Unstructured, now time.Time, r
 				return nil
 			}
 			if terminated, ok := state["terminated"].(map[string]any); ok {
+				// Kubelet can report Unknown/137 for an init container which
+				// never existed when its unsandboxed Pod was terminated. Keep
+				// a distinct missing-container marker, never an init/main exit.
+				if group.spec == "initContainers" && len(proof.DeclaredInitContainers) == 1 && len(proof.InitContainerExits) == 0 && !waitingSuffix {
+					if marker := uncreatedFirstInit(name, status, terminated); marker != nil {
+						proof.UncreatedInitContainer = marker
+						waitingSuffix = true
+						continue
+					}
+				}
 				if group.spec != "initContainers" || waitingSuffix {
 					return nil
 				}
@@ -182,4 +192,31 @@ func observeInitializationAbort(pod *unstructured.Unstructured, now time.Time, r
 		return nil
 	}
 	return proof
+}
+
+func uncreatedFirstInit(name string, status, terminated map[string]any) *biz.InitializationContainerNotCreated {
+	if len(terminated) != 5 || terminated["reason"] != "ContainerStatusUnknown" || terminated["message"] != "The container could not be located when the pod was terminated" {
+		return nil
+	}
+	code, found, err := unstructured.NestedInt64(terminated, "exitCode")
+	if err != nil || !found || code != 137 {
+		return nil
+	}
+	for _, field := range []string{"startedAt", "finishedAt"} {
+		if value, present := terminated[field]; !present || value != nil {
+			return nil
+		}
+	}
+	for _, field := range []string{"containerID", "imageID"} {
+		if value, present := status[field]; present && value != nil && value != "" {
+			return nil
+		}
+	}
+	ready, found, err := unstructured.NestedBool(status, "ready")
+	if err != nil || !found || ready {
+		return nil
+	}
+	// observeInitializationAbort already checked the current stopped-sandbox
+	// generation, deletion, started=false, zero restarts and empty lastState.
+	return &biz.InitializationContainerNotCreated{Name: name, Reason: "ContainerStatusUnknown", Message: "The container could not be located when the pod was terminated", ReportedExitCode: 137, LastStateEmpty: true}
 }

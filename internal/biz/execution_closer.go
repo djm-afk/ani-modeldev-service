@@ -217,7 +217,11 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 		}
 	} else if state.Training != nil {
 		if state.TrainingHandle == nil {
-			handle, findErr := runtime.trainer.FindTraining(ctx, *state.Training)
+			find := runtime.trainer.FindTraining
+			if recovery, ok := runtime.trainer.(TrainingCloseRecovery); ok {
+				find = recovery.FindTrainingForClose
+			}
+			handle, findErr := find(ctx, *state.Training)
 			if findErr != nil {
 				return ManagedRuntimeResult{}, closer.review(ctx, tenant, execution, "TRAINJOB_CREATE_UNRESOLVED", errors.Join(runErr, findErr))
 			}

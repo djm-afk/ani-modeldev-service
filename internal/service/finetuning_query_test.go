@@ -53,7 +53,22 @@ func implementationQueryContext() context.Context {
 }
 func newImplementationQuery() (*Query, *implementationQueryFacts) {
 	f := &implementationQueryFacts{timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
-	return NewQuery(nil, nil).WithMaterials(biz.NewManagedMaterials(f, f, nil, nil)), f
+	return NewQuery(nil, nil).WithMaterials(biz.NewManagedMaterials(f, f, nil, nil)).WithFinetuningFacts(directoryModelFacts{}), f
+}
+
+type directoryModelFacts struct{}
+
+func (directoryModelFacts) ResolveFinetuningModelFacts(context.Context, string, cpup01.Intent, cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error) {
+	return cpup01.BaseModelRef{}, biz.ErrModelDependencyUnavailable
+}
+
+func TestImplementationDirectoryRequiresActualModelDependencyForLoRA(t *testing.T) {
+	q, _ := newImplementationQuery()
+	q.WithFinetuningFacts(nil)
+	response, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{})
+	if err != nil || len(response.Implementations) != 2 || !response.Implementations[0].Available || response.Implementations[1].Available || len(response.Implementations[1].SupportedDeviceModes) != 0 {
+		t.Fatal("installed program alone fabricated a Model dependency", err)
+	}
 }
 func TestImplementationQueryProjectsSameDefaultsAndFiniteRules(t *testing.T) {
 	q, _ := newImplementationQuery()

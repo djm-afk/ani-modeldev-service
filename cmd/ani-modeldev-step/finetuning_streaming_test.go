@@ -40,7 +40,7 @@ func TestFinetuningStreamingStepStorageBudgetAndParentCancellation(t *testing.T)
 	if err := readConfig(ownerFile, &owner); err != nil {
 		t.Fatal(err)
 	}
-	for _, seconds := range []int{0, 1, 600, 900} {
+	for _, seconds := range []int{0, 1, 600, 900, 3600, 86400} {
 		owner.S3 = &storageConfig{Endpoint: peer.URL, Region: "us-east-1", CAFile: ca, StreamingTimeoutSeconds: seconds}
 		data, err := json.Marshal(owner)
 		if err != nil || os.WriteFile(ownerFile, data, 0600) != nil {
@@ -90,7 +90,7 @@ func TestFinetuningStreamingStepStorageBudgetAndParentCancellation(t *testing.T)
 		}
 		t.Logf("CLI streaming timeout=%s, parent deadline=300ms, actual body cancellation elapsed=%s", httpClient.Timeout, time.Since(started))
 	}
-	for _, seconds := range []int{-1, 901} {
+	for _, seconds := range []int{-1, 86401} {
 		owner.S3.StreamingTimeoutSeconds = seconds
 		if client, err := storageClient(owner.S3, provider); client != nil || !errors.Is(err, component.ErrConfiguration) {
 			t.Fatalf("out-of-range streaming seconds %d accepted: %v", seconds, err)

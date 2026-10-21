@@ -10,12 +10,15 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"net"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
-	modelv1 "github.com/liangzai006/ani-model-service/api/model/v1"
+	modelv1 "github.com/zhangzhe-ctrl/ani-model-service/api/model/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -51,7 +54,8 @@ type Client struct {
 	timeout    time.Duration
 }
 
-const maximumTimeout = 30 * time.Second
+const maximumTimeout = 24 * time.Hour
+const ClientDNSName = "ani-modeldev-service"
 
 // New validates every material at startup. A partially materialised or
 // mismatched identity fails closed instead of degrading to an unauthenticated
@@ -60,12 +64,17 @@ func New(config Config) (*Client, func(), error) {
 	if strings.TrimSpace(config.Endpoint) != config.Endpoint || strings.ContainsAny(config.Endpoint, "/\\ \t\r\n") || config.Endpoint == "" {
 		return nil, nil, errors.New("invalid model client endpoint")
 	}
+	host, portText, err := net.SplitHostPort(config.Endpoint)
+	port, portErr := strconv.Atoi(portText)
+	if err != nil || host == "" || portErr != nil || port < 1 || port > 65535 {
+		return nil, nil, errors.New("model client requires an explicit numeric endpoint port")
+	}
 	if config.ServerName == "" || strings.ContainsAny(config.ServerName, "*:/\\ \t\r\n") ||
-		config.ClientDNSName == "" || strings.ContainsAny(config.ClientDNSName, "*:/\\ \t\r\n") ||
+		config.ClientDNSName != ClientDNSName || strings.ContainsAny(config.ClientDNSName, "*:/\\ \t\r\n") ||
 		config.ClientDNSName == config.ServerName {
 		return nil, nil, errors.New("model client requires distinct exact client and server DNS identities")
 	}
-	if config.Actor == "" || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
+	if !strings.HasPrefix(config.Actor, "modeldev:") || len(config.Actor) <= len("modeldev:") || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
 		return nil, nil, errors.New("model client requires a bounded audit actor")
 	}
 	if config.Timeout <= 0 || config.Timeout > maximumTimeout {
@@ -111,7 +120,7 @@ func New(config Config) (*Client, func(), error) {
 		client:     modelv1.NewModelServiceClient(connection),
 		actor:      config.Actor,
 		timeout:    config.Timeout,
-	}, func() { _ = connection.Close() }, nil
+	}, sync.OnceFunc(func() { _ = connection.Close() }), nil
 }
 
 // exactClientIdentity requires exactly one DNS SAN, no URI/IP/email SAN and no
@@ -119,6 +128,7 @@ func New(config Config) (*Client, func(), error) {
 func exactClientIdentity(cert *x509.Certificate, want string) bool {
 	return cert != nil && len(cert.DNSNames) == 1 && cert.DNSNames[0] == want &&
 		!strings.Contains(want, "*") &&
+		!time.Now().Before(cert.NotBefore) && time.Now().Before(cert.NotAfter) && cert.KeyUsage&x509.KeyUsageDigitalSignature != 0 && len(cert.ExtKeyUsage) == 1 && cert.ExtKeyUsage[0] == x509.ExtKeyUsageClientAuth &&
 		len(cert.URIs) == 0 && len(cert.IPAddresses) == 0 && len(cert.EmailAddresses) == 0
 }
 

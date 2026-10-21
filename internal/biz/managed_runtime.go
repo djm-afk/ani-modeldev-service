@@ -11,11 +11,28 @@ import (
 )
 
 type ManagedRuntime struct {
-	steps        *ManagedSteps
-	repository   ExecutionRuntimeRepository
-	trainer      TrainingRuntime
-	workspaces   PreparedWorkspaceVerifier
-	publications PublicationVerifier
+	steps         *ManagedSteps
+	repository    ExecutionRuntimeRepository
+	trainer       TrainingRuntime
+	workspaces    PreparedWorkspaceVerifier
+	publications  PublicationVerifier
+	registrations *FinetuningRegistrationOrchestrator
+}
+
+func (runtime *ManagedRuntime) WithModelRegistration(registry TrainedArtifactRegistry, copier TrainedArtifactCopier) (*ManagedRuntime, error) {
+	if runtime == nil {
+		return nil, ErrRuntimeNotReady
+	}
+	repository, ok := runtime.repository.(FinetuningRegistrationDispatchRepository)
+	if !ok {
+		return nil, ErrRuntimeNotReady
+	}
+	writer, err := NewFinetuningRegistrationOrchestrator(repository, registry, copier)
+	if err != nil {
+		return nil, err
+	}
+	runtime.registrations = writer
+	return runtime, nil
 }
 
 func NewManagedRuntime(steps *ManagedSteps, repository ExecutionRuntimeRepository, trainer TrainingRuntime, workspaces PreparedWorkspaceVerifier, publications PublicationVerifier) (*ManagedRuntime, error) {
