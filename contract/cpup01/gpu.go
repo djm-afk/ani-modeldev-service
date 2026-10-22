@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+
+	accpb "github.com/zhangzhe-ctrl/ani-accelerator-service/api/gen/go/accelerator/v1"
+	"github.com/zhangzhe-ctrl/ani-accelerator-service/pkg/gpuprotocol"
 )
 
 // GPUPlan contains the formal ACC execution and display facts. Quota quantities
@@ -47,7 +50,10 @@ func (d GPUDisplay) Canonical() ([]byte, error) {
 }
 func (e GPUExecution) Validate() error {
 	bad := func() error { return fmt.Errorf("%w: GPU execution", ErrInvalidArgument) }
-	if e.SchedulerName != "volcano" || !validSnapshotDNSName(e.QueueName) || !validSnapshotDNSName(e.RuntimeClassName) || len(e.Resources) != 3 || (len(e.NodeSelector) != 3 && len(e.NodeSelector) != 4) || len(e.PodAnnotations) != 1 || e.PodAnnotations["volcano.sh/vgpu-mode"] != "hami-core" {
+	if e.SchedulerName != "volcano" || !validSnapshotDNSName(e.QueueName) || !validSnapshotDNSName(e.RuntimeClassName) || len(e.Resources) != 3 || (len(e.NodeSelector) != 3 && len(e.NodeSelector) != 4) || (len(e.PodAnnotations) != 1 && (len(e.PodAnnotations) != 2 || e.PodAnnotations["accelerator.ani.io/memory-block-mib"] != "10")) || e.PodAnnotations["volcano.sh/vgpu-mode"] != "hami-core" {
+		return bad()
+	}
+	if _, err := e.memoryMiBPerDevice(); err != nil {
 		return bad()
 	}
 	for _, k := range []string{"accelerator.ani.io/supply-group", "accelerator.ani.io/model-key", "accelerator.ani.io/baseline-id"} {
@@ -89,8 +95,14 @@ func (p GPUPlan) ValidateFor(origin ComputeOrigin) error {
 		return err
 	}
 	d, e := p.Display, p.Execution
-	if d.ProfileID != request.ProfileID || d.ProfileVersion != request.ProfileVersion || d.Mode != request.Mode || d.ModelKey != request.ModelKey || e.NodeSelector["accelerator.ani.io/model-key"] != d.ModelKey || e.Resources["volcano.sh/vgpu-number"] != "1" || e.Resources["volcano.sh/vgpu-memory"] != strconv.FormatInt(request.MemoryMiBPerDevice, 10) || e.Resources["volcano.sh/vgpu-cores"] != strconv.FormatUint(uint64(request.CoreLimitPercent), 10) {
+	// Keep the frozen wire blocks unchanged; compare the selected logical MiB.
+	memoryMiB, err := e.memoryMiBPerDevice()
+	if err != nil || d.ProfileID != request.ProfileID || d.ProfileVersion != request.ProfileVersion || d.Mode != request.Mode || d.ModelKey != request.ModelKey || e.NodeSelector["accelerator.ani.io/model-key"] != d.ModelKey || e.Resources["volcano.sh/vgpu-number"] != "1" || memoryMiB != request.MemoryMiBPerDevice || e.Resources["volcano.sh/vgpu-cores"] != strconv.FormatUint(uint64(request.CoreLimitPercent), 10) {
 		return ErrInvalidArgument
 	}
 	return nil
+}
+
+func (e GPUExecution) memoryMiBPerDevice() (int64, error) {
+	return gpuprotocol.GpuMemoryMiBPerDevice(&accpb.GpuExecution{PodAnnotations: e.PodAnnotations, Resources: e.Resources})
 }
