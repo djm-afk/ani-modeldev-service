@@ -43,6 +43,14 @@ type ArtifactSigner interface {
 	SignDownload(context.Context, cpup01.StorageScope, cpup01.FixedObjectRef) (DownloadGrant, error)
 }
 
+// MetricsObjectReader reads one already published object version so a query can
+// derive its metrics. It is a read-only observation channel: the owner supplies
+// the client and connection, and the caller cannot select an endpoint or
+// credential. A read failure never invalidates the execution.
+type MetricsObjectReader interface {
+	ReadObject(context.Context, cpup01.StorageScope, cpup01.FixedObjectRef, int64) ([]byte, error)
+}
+
 type DownloadGrant struct {
 	URL       string
 	ExpiresAt time.Time

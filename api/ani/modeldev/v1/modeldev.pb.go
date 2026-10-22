@@ -2407,8 +2407,11 @@ type ExecutionView struct {
 	ExplicitMlp                 *MLPParameters             `protobuf:"bytes,28,opt,name=explicit_mlp,json=explicitMlp,proto3" json:"explicit_mlp,omitempty"`
 	ModelRegistration           *ModelRegistrationView     `protobuf:"bytes,29,opt,name=model_registration,json=modelRegistration,proto3" json:"model_registration,omitempty"`
 	History                     *ExecutionHistoryView      `protobuf:"bytes,30,opt,name=history,proto3" json:"history,omitempty"`
-	unknownFields               protoimpl.UnknownFields
-	sizeCache                   protoimpl.SizeCache
+	// Complete ordered step sequence for timeline rendering. The set depends on
+	// kind; close is always last.
+	Steps         []*StepProgress `protobuf:"bytes,31,rep,name=steps,proto3" json:"steps,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ExecutionView) Reset() {
@@ -2623,6 +2626,101 @@ func (x *ExecutionView) GetHistory() *ExecutionHistoryView {
 	return nil
 }
 
+func (x *ExecutionView) GetSteps() []*StepProgress {
+	if x != nil {
+		return x.Steps
+	}
+	return nil
+}
+
+// StepProgress is one entry of the ordered execution timeline. Role names the
+// pipeline step; state is one of PENDING, RUNNING, SUCCEEDED, FAILED, STOPPED.
+type StepProgress struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Role      string                 `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
+	State     string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	StartedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	// Absent while the step has not finished; the client derives elapsed time.
+	FinishedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
+	// Only export and verify report a real process exit code.
+	ExitCode      int32                  `protobuf:"varint,5,opt,name=exit_code,json=exitCode,proto3" json:"exit_code,omitempty"`
+	DeadlineAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=deadline_at,json=deadlineAt,proto3" json:"deadline_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StepProgress) Reset() {
+	*x = StepProgress{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StepProgress) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StepProgress) ProtoMessage() {}
+
+func (x *StepProgress) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StepProgress.ProtoReflect.Descriptor instead.
+func (*StepProgress) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *StepProgress) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *StepProgress) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+func (x *StepProgress) GetStartedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.StartedAt
+	}
+	return nil
+}
+
+func (x *StepProgress) GetFinishedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.FinishedAt
+	}
+	return nil
+}
+
+func (x *StepProgress) GetExitCode() int32 {
+	if x != nil {
+		return x.ExitCode
+	}
+	return 0
+}
+
+func (x *StepProgress) GetDeadlineAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DeadlineAt
+	}
+	return nil
+}
+
 // Original controller evidence persisted at compute closure. Model registration
 // recovery cannot replace this history. Missing terminal evidence stays absent.
 type ExecutionHistoryView struct {
@@ -2642,7 +2740,7 @@ type ExecutionHistoryView struct {
 
 func (x *ExecutionHistoryView) Reset() {
 	*x = ExecutionHistoryView{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[24]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2654,7 +2752,7 @@ func (x *ExecutionHistoryView) String() string {
 func (*ExecutionHistoryView) ProtoMessage() {}
 
 func (x *ExecutionHistoryView) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[24]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2667,7 +2765,7 @@ func (x *ExecutionHistoryView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutionHistoryView.ProtoReflect.Descriptor instead.
 func (*ExecutionHistoryView) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{24}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *ExecutionHistoryView) GetRunId() string {
@@ -2748,7 +2846,7 @@ type ModelRegistrationView struct {
 
 func (x *ModelRegistrationView) Reset() {
 	*x = ModelRegistrationView{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[25]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2760,7 +2858,7 @@ func (x *ModelRegistrationView) String() string {
 func (*ModelRegistrationView) ProtoMessage() {}
 
 func (x *ModelRegistrationView) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[25]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2773,7 +2871,7 @@ func (x *ModelRegistrationView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ModelRegistrationView.ProtoReflect.Descriptor instead.
 func (*ModelRegistrationView) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{25}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ModelRegistrationView) GetState() string {
@@ -2820,7 +2918,7 @@ type GetExecutionRequest struct {
 
 func (x *GetExecutionRequest) Reset() {
 	*x = GetExecutionRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[26]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2832,7 +2930,7 @@ func (x *GetExecutionRequest) String() string {
 func (*GetExecutionRequest) ProtoMessage() {}
 
 func (x *GetExecutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[26]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2845,7 +2943,7 @@ func (x *GetExecutionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetExecutionRequest.ProtoReflect.Descriptor instead.
 func (*GetExecutionRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{26}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *GetExecutionRequest) GetExecutionId() string {
@@ -2864,7 +2962,7 @@ type GetExecutionResponse struct {
 
 func (x *GetExecutionResponse) Reset() {
 	*x = GetExecutionResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[27]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2876,7 +2974,7 @@ func (x *GetExecutionResponse) String() string {
 func (*GetExecutionResponse) ProtoMessage() {}
 
 func (x *GetExecutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[27]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2889,7 +2987,7 @@ func (x *GetExecutionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetExecutionResponse.ProtoReflect.Descriptor instead.
 func (*GetExecutionResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{27}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *GetExecutionResponse) GetExecution() *ExecutionView {
@@ -2911,7 +3009,7 @@ type ListExecutionsRequest struct {
 
 func (x *ListExecutionsRequest) Reset() {
 	*x = ListExecutionsRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[28]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2923,7 +3021,7 @@ func (x *ListExecutionsRequest) String() string {
 func (*ListExecutionsRequest) ProtoMessage() {}
 
 func (x *ListExecutionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[28]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2936,7 +3034,7 @@ func (x *ListExecutionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListExecutionsRequest.ProtoReflect.Descriptor instead.
 func (*ListExecutionsRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{28}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ListExecutionsRequest) GetPage() *PageRequest {
@@ -2978,7 +3076,7 @@ type ListExecutionsResponse struct {
 
 func (x *ListExecutionsResponse) Reset() {
 	*x = ListExecutionsResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[29]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2990,7 +3088,7 @@ func (x *ListExecutionsResponse) String() string {
 func (*ListExecutionsResponse) ProtoMessage() {}
 
 func (x *ListExecutionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[29]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3003,7 +3101,7 @@ func (x *ListExecutionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListExecutionsResponse.ProtoReflect.Descriptor instead.
 func (*ListExecutionsResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{29}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *ListExecutionsResponse) GetExecutions() []*ExecutionView {
@@ -3033,7 +3131,7 @@ type GetExecutionLogsRequest struct {
 
 func (x *GetExecutionLogsRequest) Reset() {
 	*x = GetExecutionLogsRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[30]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3045,7 +3143,7 @@ func (x *GetExecutionLogsRequest) String() string {
 func (*GetExecutionLogsRequest) ProtoMessage() {}
 
 func (x *GetExecutionLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[30]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3058,7 +3156,7 @@ func (x *GetExecutionLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetExecutionLogsRequest.ProtoReflect.Descriptor instead.
 func (*GetExecutionLogsRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{30}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *GetExecutionLogsRequest) GetExecutionId() string {
@@ -3099,7 +3197,7 @@ type LogLine struct {
 
 func (x *LogLine) Reset() {
 	*x = LogLine{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[31]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3111,7 +3209,7 @@ func (x *LogLine) String() string {
 func (*LogLine) ProtoMessage() {}
 
 func (x *LogLine) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[31]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3124,7 +3222,7 @@ func (x *LogLine) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogLine.ProtoReflect.Descriptor instead.
 func (*LogLine) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{31}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *LogLine) GetTimestamp() *timestamppb.Timestamp {
@@ -3153,7 +3251,7 @@ type GetExecutionLogsResponse struct {
 
 func (x *GetExecutionLogsResponse) Reset() {
 	*x = GetExecutionLogsResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[32]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3165,7 +3263,7 @@ func (x *GetExecutionLogsResponse) String() string {
 func (*GetExecutionLogsResponse) ProtoMessage() {}
 
 func (x *GetExecutionLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[32]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3178,7 +3276,7 @@ func (x *GetExecutionLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetExecutionLogsResponse.ProtoReflect.Descriptor instead.
 func (*GetExecutionLogsResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{32}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetExecutionLogsResponse) GetSource() *v1.LogRef {
@@ -3225,7 +3323,7 @@ type ArtifactView struct {
 
 func (x *ArtifactView) Reset() {
 	*x = ArtifactView{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[33]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3237,7 +3335,7 @@ func (x *ArtifactView) String() string {
 func (*ArtifactView) ProtoMessage() {}
 
 func (x *ArtifactView) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[33]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3250,7 +3348,7 @@ func (x *ArtifactView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArtifactView.ProtoReflect.Descriptor instead.
 func (*ArtifactView) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{33}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ArtifactView) GetArtifactId() string {
@@ -3319,7 +3417,7 @@ type ListExecutionArtifactsRequest struct {
 
 func (x *ListExecutionArtifactsRequest) Reset() {
 	*x = ListExecutionArtifactsRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[34]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3331,7 +3429,7 @@ func (x *ListExecutionArtifactsRequest) String() string {
 func (*ListExecutionArtifactsRequest) ProtoMessage() {}
 
 func (x *ListExecutionArtifactsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[34]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3344,7 +3442,7 @@ func (x *ListExecutionArtifactsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListExecutionArtifactsRequest.ProtoReflect.Descriptor instead.
 func (*ListExecutionArtifactsRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{34}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ListExecutionArtifactsRequest) GetExecutionId() string {
@@ -3372,7 +3470,7 @@ type ListExecutionArtifactsResponse struct {
 
 func (x *ListExecutionArtifactsResponse) Reset() {
 	*x = ListExecutionArtifactsResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[35]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3384,7 +3482,7 @@ func (x *ListExecutionArtifactsResponse) String() string {
 func (*ListExecutionArtifactsResponse) ProtoMessage() {}
 
 func (x *ListExecutionArtifactsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[35]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3397,7 +3495,7 @@ func (x *ListExecutionArtifactsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListExecutionArtifactsResponse.ProtoReflect.Descriptor instead.
 func (*ListExecutionArtifactsResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{35}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ListExecutionArtifactsResponse) GetArtifacts() []*ArtifactView {
@@ -3423,7 +3521,7 @@ type AuthorizeArtifactDownloadRequest struct {
 
 func (x *AuthorizeArtifactDownloadRequest) Reset() {
 	*x = AuthorizeArtifactDownloadRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[36]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3435,7 +3533,7 @@ func (x *AuthorizeArtifactDownloadRequest) String() string {
 func (*AuthorizeArtifactDownloadRequest) ProtoMessage() {}
 
 func (x *AuthorizeArtifactDownloadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[36]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3448,7 +3546,7 @@ func (x *AuthorizeArtifactDownloadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthorizeArtifactDownloadRequest.ProtoReflect.Descriptor instead.
 func (*AuthorizeArtifactDownloadRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{36}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *AuthorizeArtifactDownloadRequest) GetArtifactId() string {
@@ -3470,7 +3568,7 @@ type AuthorizeArtifactDownloadResponse struct {
 
 func (x *AuthorizeArtifactDownloadResponse) Reset() {
 	*x = AuthorizeArtifactDownloadResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[37]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3482,7 +3580,7 @@ func (x *AuthorizeArtifactDownloadResponse) String() string {
 func (*AuthorizeArtifactDownloadResponse) ProtoMessage() {}
 
 func (x *AuthorizeArtifactDownloadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[37]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3495,7 +3593,7 @@ func (x *AuthorizeArtifactDownloadResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use AuthorizeArtifactDownloadResponse.ProtoReflect.Descriptor instead.
 func (*AuthorizeArtifactDownloadResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{37}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *AuthorizeArtifactDownloadResponse) GetArtifact() *ArtifactView {
@@ -3533,7 +3631,7 @@ type RuntimeIdentityRefs struct {
 
 func (x *RuntimeIdentityRefs) Reset() {
 	*x = RuntimeIdentityRefs{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[38]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3545,7 +3643,7 @@ func (x *RuntimeIdentityRefs) String() string {
 func (*RuntimeIdentityRefs) ProtoMessage() {}
 
 func (x *RuntimeIdentityRefs) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[38]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3558,7 +3656,7 @@ func (x *RuntimeIdentityRefs) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeIdentityRefs.ProtoReflect.Descriptor instead.
 func (*RuntimeIdentityRefs) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{38}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *RuntimeIdentityRefs) GetModeldevControlIdentityRef() string {
@@ -3612,7 +3710,7 @@ type EnvironmentBindingSnapshot struct {
 
 func (x *EnvironmentBindingSnapshot) Reset() {
 	*x = EnvironmentBindingSnapshot{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[39]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3624,7 +3722,7 @@ func (x *EnvironmentBindingSnapshot) String() string {
 func (*EnvironmentBindingSnapshot) ProtoMessage() {}
 
 func (x *EnvironmentBindingSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[39]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3637,7 +3735,7 @@ func (x *EnvironmentBindingSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnvironmentBindingSnapshot.ProtoReflect.Descriptor instead.
 func (*EnvironmentBindingSnapshot) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{39}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *EnvironmentBindingSnapshot) GetBindingId() string {
@@ -3708,7 +3806,7 @@ type StorageScope struct {
 
 func (x *StorageScope) Reset() {
 	*x = StorageScope{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[40]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3720,7 +3818,7 @@ func (x *StorageScope) String() string {
 func (*StorageScope) ProtoMessage() {}
 
 func (x *StorageScope) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[40]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3733,7 +3831,7 @@ func (x *StorageScope) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StorageScope.ProtoReflect.Descriptor instead.
 func (*StorageScope) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{40}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *StorageScope) GetStorageConnectionId() string {
@@ -3793,7 +3891,7 @@ type ExecutionSnapshot struct {
 
 func (x *ExecutionSnapshot) Reset() {
 	*x = ExecutionSnapshot{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[41]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3805,7 +3903,7 @@ func (x *ExecutionSnapshot) String() string {
 func (*ExecutionSnapshot) ProtoMessage() {}
 
 func (x *ExecutionSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[41]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3818,7 +3916,7 @@ func (x *ExecutionSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutionSnapshot.ProtoReflect.Descriptor instead.
 func (*ExecutionSnapshot) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{41}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ExecutionSnapshot) GetSchemaVersion() string {
@@ -3957,7 +4055,7 @@ type StringPair struct {
 
 func (x *StringPair) Reset() {
 	*x = StringPair{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[42]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3969,7 +4067,7 @@ func (x *StringPair) String() string {
 func (*StringPair) ProtoMessage() {}
 
 func (x *StringPair) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[42]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3982,7 +4080,7 @@ func (x *StringPair) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StringPair.ProtoReflect.Descriptor instead.
 func (*StringPair) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{42}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *StringPair) GetKey() string {
@@ -4014,7 +4112,7 @@ type GPUExecutionSnapshot struct {
 
 func (x *GPUExecutionSnapshot) Reset() {
 	*x = GPUExecutionSnapshot{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[43]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4026,7 +4124,7 @@ func (x *GPUExecutionSnapshot) String() string {
 func (*GPUExecutionSnapshot) ProtoMessage() {}
 
 func (x *GPUExecutionSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[43]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4039,7 +4137,7 @@ func (x *GPUExecutionSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GPUExecutionSnapshot.ProtoReflect.Descriptor instead.
 func (*GPUExecutionSnapshot) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{43}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *GPUExecutionSnapshot) GetSchedulerName() string {
@@ -4104,7 +4202,7 @@ type GPUDisplaySnapshot struct {
 
 func (x *GPUDisplaySnapshot) Reset() {
 	*x = GPUDisplaySnapshot{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[44]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4116,7 +4214,7 @@ func (x *GPUDisplaySnapshot) String() string {
 func (*GPUDisplaySnapshot) ProtoMessage() {}
 
 func (x *GPUDisplaySnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[44]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4129,7 +4227,7 @@ func (x *GPUDisplaySnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GPUDisplaySnapshot.ProtoReflect.Descriptor instead.
 func (*GPUDisplaySnapshot) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{44}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *GPUDisplaySnapshot) GetProfileId() string {
@@ -4177,7 +4275,7 @@ type GPUPlan struct {
 
 func (x *GPUPlan) Reset() {
 	*x = GPUPlan{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[45]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4189,7 +4287,7 @@ func (x *GPUPlan) String() string {
 func (*GPUPlan) ProtoMessage() {}
 
 func (x *GPUPlan) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[45]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4202,7 +4300,7 @@ func (x *GPUPlan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GPUPlan.ProtoReflect.Descriptor instead.
 func (*GPUPlan) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{45}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *GPUPlan) GetExecution() *GPUExecutionSnapshot {
@@ -4254,7 +4352,7 @@ type FinetuningManagedSettings struct {
 
 func (x *FinetuningManagedSettings) Reset() {
 	*x = FinetuningManagedSettings{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[46]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4266,7 +4364,7 @@ func (x *FinetuningManagedSettings) String() string {
 func (*FinetuningManagedSettings) ProtoMessage() {}
 
 func (x *FinetuningManagedSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[46]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4279,7 +4377,7 @@ func (x *FinetuningManagedSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FinetuningManagedSettings.ProtoReflect.Descriptor instead.
 func (*FinetuningManagedSettings) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{46}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *FinetuningManagedSettings) GetStage() string {
@@ -4482,7 +4580,7 @@ type BaseModelFile struct {
 
 func (x *BaseModelFile) Reset() {
 	*x = BaseModelFile{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[47]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4494,7 +4592,7 @@ func (x *BaseModelFile) String() string {
 func (*BaseModelFile) ProtoMessage() {}
 
 func (x *BaseModelFile) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[47]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4507,7 +4605,7 @@ func (x *BaseModelFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BaseModelFile.ProtoReflect.Descriptor instead.
 func (*BaseModelFile) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{47}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *BaseModelFile) GetPath() string {
@@ -4546,7 +4644,7 @@ type BaseModelRef struct {
 
 func (x *BaseModelRef) Reset() {
 	*x = BaseModelRef{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[48]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4558,7 +4656,7 @@ func (x *BaseModelRef) String() string {
 func (*BaseModelRef) ProtoMessage() {}
 
 func (x *BaseModelRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[48]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4571,7 +4669,7 @@ func (x *BaseModelRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BaseModelRef.ProtoReflect.Descriptor instead.
 func (*BaseModelRef) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{48}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *BaseModelRef) GetModelId() string {
@@ -4635,7 +4733,7 @@ type ComponentBudgets struct {
 
 func (x *ComponentBudgets) Reset() {
 	*x = ComponentBudgets{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[49]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4647,7 +4745,7 @@ func (x *ComponentBudgets) String() string {
 func (*ComponentBudgets) ProtoMessage() {}
 
 func (x *ComponentBudgets) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[49]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4660,7 +4758,7 @@ func (x *ComponentBudgets) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ComponentBudgets.ProtoReflect.Descriptor instead.
 func (*ComponentBudgets) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{49}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *ComponentBudgets) GetRpcTimeoutSeconds() uint32 {
@@ -4710,7 +4808,7 @@ type FinetuningSnapshot struct {
 
 func (x *FinetuningSnapshot) Reset() {
 	*x = FinetuningSnapshot{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[50]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4722,7 +4820,7 @@ func (x *FinetuningSnapshot) String() string {
 func (*FinetuningSnapshot) ProtoMessage() {}
 
 func (x *FinetuningSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[50]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4735,7 +4833,7 @@ func (x *FinetuningSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FinetuningSnapshot.ProtoReflect.Descriptor instead.
 func (*FinetuningSnapshot) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{50}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *FinetuningSnapshot) GetParameterContractVersion() string {
@@ -4828,7 +4926,7 @@ type IdentityRef struct {
 
 func (x *IdentityRef) Reset() {
 	*x = IdentityRef{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[51]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4840,7 +4938,7 @@ func (x *IdentityRef) String() string {
 func (*IdentityRef) ProtoMessage() {}
 
 func (x *IdentityRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[51]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4853,7 +4951,7 @@ func (x *IdentityRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IdentityRef.ProtoReflect.Descriptor instead.
 func (*IdentityRef) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{51}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *IdentityRef) GetTenantId() string {
@@ -4905,7 +5003,7 @@ type ImplementationSnapshot struct {
 
 func (x *ImplementationSnapshot) Reset() {
 	*x = ImplementationSnapshot{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[52]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4917,7 +5015,7 @@ func (x *ImplementationSnapshot) String() string {
 func (*ImplementationSnapshot) ProtoMessage() {}
 
 func (x *ImplementationSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[52]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4930,7 +5028,7 @@ func (x *ImplementationSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImplementationSnapshot.ProtoReflect.Descriptor instead.
 func (*ImplementationSnapshot) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{52}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *ImplementationSnapshot) GetImplementationId() string {
@@ -4989,7 +5087,7 @@ type ComputeOrigin struct {
 
 func (x *ComputeOrigin) Reset() {
 	*x = ComputeOrigin{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[53]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5001,7 +5099,7 @@ func (x *ComputeOrigin) String() string {
 func (*ComputeOrigin) ProtoMessage() {}
 
 func (x *ComputeOrigin) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[53]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5014,7 +5112,7 @@ func (x *ComputeOrigin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ComputeOrigin.ProtoReflect.Descriptor instead.
 func (*ComputeOrigin) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{53}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *ComputeOrigin) GetComputePresetId() string {
@@ -5072,7 +5170,7 @@ type ExecutionTiming struct {
 
 func (x *ExecutionTiming) Reset() {
 	*x = ExecutionTiming{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[54]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5084,7 +5182,7 @@ func (x *ExecutionTiming) String() string {
 func (*ExecutionTiming) ProtoMessage() {}
 
 func (x *ExecutionTiming) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[54]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5097,7 +5195,7 @@ func (x *ExecutionTiming) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutionTiming.ProtoReflect.Descriptor instead.
 func (*ExecutionTiming) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{54}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *ExecutionTiming) GetAcceptedAt() *timestamppb.Timestamp {
@@ -5152,7 +5250,7 @@ type RuntimePlan struct {
 
 func (x *RuntimePlan) Reset() {
 	*x = RuntimePlan{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[55]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5164,7 +5262,7 @@ func (x *RuntimePlan) String() string {
 func (*RuntimePlan) ProtoMessage() {}
 
 func (x *RuntimePlan) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[55]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5177,7 +5275,7 @@ func (x *RuntimePlan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimePlan.ProtoReflect.Descriptor instead.
 func (*RuntimePlan) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{55}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *RuntimePlan) GetGeneratorVersion() string {
@@ -5256,7 +5354,7 @@ type PrepareAdmissionRequest struct {
 
 func (x *PrepareAdmissionRequest) Reset() {
 	*x = PrepareAdmissionRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[56]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5268,7 +5366,7 @@ func (x *PrepareAdmissionRequest) String() string {
 func (*PrepareAdmissionRequest) ProtoMessage() {}
 
 func (x *PrepareAdmissionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[56]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5281,7 +5379,7 @@ func (x *PrepareAdmissionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrepareAdmissionRequest.ProtoReflect.Descriptor instead.
 func (*PrepareAdmissionRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{56}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *PrepareAdmissionRequest) GetIntent() *UserIntent {
@@ -5329,7 +5427,7 @@ type PrepareAdmissionResponse struct {
 
 func (x *PrepareAdmissionResponse) Reset() {
 	*x = PrepareAdmissionResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[57]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5341,7 +5439,7 @@ func (x *PrepareAdmissionResponse) String() string {
 func (*PrepareAdmissionResponse) ProtoMessage() {}
 
 func (x *PrepareAdmissionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[57]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5354,7 +5452,7 @@ func (x *PrepareAdmissionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrepareAdmissionResponse.ProtoReflect.Descriptor instead.
 func (*PrepareAdmissionResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{57}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *PrepareAdmissionResponse) GetCandidateCanonical() []byte {
@@ -5383,7 +5481,7 @@ type FinalizeAdmissionRequest struct {
 
 func (x *FinalizeAdmissionRequest) Reset() {
 	*x = FinalizeAdmissionRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[58]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5395,7 +5493,7 @@ func (x *FinalizeAdmissionRequest) String() string {
 func (*FinalizeAdmissionRequest) ProtoMessage() {}
 
 func (x *FinalizeAdmissionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[58]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5408,7 +5506,7 @@ func (x *FinalizeAdmissionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FinalizeAdmissionRequest.ProtoReflect.Descriptor instead.
 func (*FinalizeAdmissionRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{58}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *FinalizeAdmissionRequest) GetCandidateCanonical() []byte {
@@ -5449,7 +5547,7 @@ type FinalizeAdmissionResponse struct {
 
 func (x *FinalizeAdmissionResponse) Reset() {
 	*x = FinalizeAdmissionResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[59]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5461,7 +5559,7 @@ func (x *FinalizeAdmissionResponse) String() string {
 func (*FinalizeAdmissionResponse) ProtoMessage() {}
 
 func (x *FinalizeAdmissionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[59]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5474,7 +5572,7 @@ func (x *FinalizeAdmissionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FinalizeAdmissionResponse.ProtoReflect.Descriptor instead.
 func (*FinalizeAdmissionResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{59}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *FinalizeAdmissionResponse) GetSnapshot() *ExecutionSnapshot {
@@ -5510,7 +5608,7 @@ type AcceptExecutionRequest struct {
 
 func (x *AcceptExecutionRequest) Reset() {
 	*x = AcceptExecutionRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[60]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5522,7 +5620,7 @@ func (x *AcceptExecutionRequest) String() string {
 func (*AcceptExecutionRequest) ProtoMessage() {}
 
 func (x *AcceptExecutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[60]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5535,7 +5633,7 @@ func (x *AcceptExecutionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptExecutionRequest.ProtoReflect.Descriptor instead.
 func (*AcceptExecutionRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{60}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *AcceptExecutionRequest) GetIdentity() *v1.ExecutionIdentity {
@@ -5603,7 +5701,7 @@ type AcceptExecutionResponse struct {
 
 func (x *AcceptExecutionResponse) Reset() {
 	*x = AcceptExecutionResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[61]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5615,7 +5713,7 @@ func (x *AcceptExecutionResponse) String() string {
 func (*AcceptExecutionResponse) ProtoMessage() {}
 
 func (x *AcceptExecutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[61]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5628,7 +5726,7 @@ func (x *AcceptExecutionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptExecutionResponse.ProtoReflect.Descriptor instead.
 func (*AcceptExecutionResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{61}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *AcceptExecutionResponse) GetIdentity() *v1.ExecutionIdentity {
@@ -5677,7 +5775,7 @@ type ApplyCloseIntentRequest struct {
 
 func (x *ApplyCloseIntentRequest) Reset() {
 	*x = ApplyCloseIntentRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[62]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5689,7 +5787,7 @@ func (x *ApplyCloseIntentRequest) String() string {
 func (*ApplyCloseIntentRequest) ProtoMessage() {}
 
 func (x *ApplyCloseIntentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[62]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5702,7 +5800,7 @@ func (x *ApplyCloseIntentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyCloseIntentRequest.ProtoReflect.Descriptor instead.
 func (*ApplyCloseIntentRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{62}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *ApplyCloseIntentRequest) GetIdentity() *v1.ExecutionIdentity {
@@ -5765,7 +5863,7 @@ type ApplyCloseIntentResponse struct {
 
 func (x *ApplyCloseIntentResponse) Reset() {
 	*x = ApplyCloseIntentResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[63]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5777,7 +5875,7 @@ func (x *ApplyCloseIntentResponse) String() string {
 func (*ApplyCloseIntentResponse) ProtoMessage() {}
 
 func (x *ApplyCloseIntentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[63]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5790,7 +5888,7 @@ func (x *ApplyCloseIntentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyCloseIntentResponse.ProtoReflect.Descriptor instead.
 func (*ApplyCloseIntentResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{63}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *ApplyCloseIntentResponse) GetIdentity() *v1.ExecutionIdentity {
@@ -5843,7 +5941,7 @@ type RunAssociation struct {
 
 func (x *RunAssociation) Reset() {
 	*x = RunAssociation{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[64]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5855,7 +5953,7 @@ func (x *RunAssociation) String() string {
 func (*RunAssociation) ProtoMessage() {}
 
 func (x *RunAssociation) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[64]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5868,7 +5966,7 @@ func (x *RunAssociation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunAssociation.ProtoReflect.Descriptor instead.
 func (*RunAssociation) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{64}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *RunAssociation) GetKfpRunId() string {
@@ -5931,7 +6029,7 @@ type StepContext struct {
 
 func (x *StepContext) Reset() {
 	*x = StepContext{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[65]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5943,7 +6041,7 @@ func (x *StepContext) String() string {
 func (*StepContext) ProtoMessage() {}
 
 func (x *StepContext) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[65]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5956,7 +6054,7 @@ func (x *StepContext) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StepContext.ProtoReflect.Descriptor instead.
 func (*StepContext) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{65}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *StepContext) GetIdentity() *v1.ExecutionIdentity {
@@ -5992,7 +6090,7 @@ type AuthorityBinding struct {
 
 func (x *AuthorityBinding) Reset() {
 	*x = AuthorityBinding{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[66]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6004,7 +6102,7 @@ func (x *AuthorityBinding) String() string {
 func (*AuthorityBinding) ProtoMessage() {}
 
 func (x *AuthorityBinding) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[66]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6017,7 +6115,7 @@ func (x *AuthorityBinding) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthorityBinding.ProtoReflect.Descriptor instead.
 func (*AuthorityBinding) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{66}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *AuthorityBinding) GetKfpRunId() string {
@@ -6057,7 +6155,7 @@ type BeginExecutionRequest struct {
 
 func (x *BeginExecutionRequest) Reset() {
 	*x = BeginExecutionRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[67]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6069,7 +6167,7 @@ func (x *BeginExecutionRequest) String() string {
 func (*BeginExecutionRequest) ProtoMessage() {}
 
 func (x *BeginExecutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[67]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6082,7 +6180,7 @@ func (x *BeginExecutionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeginExecutionRequest.ProtoReflect.Descriptor instead.
 func (*BeginExecutionRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{67}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *BeginExecutionRequest) GetContext() *StepContext {
@@ -6104,7 +6202,7 @@ type BeginExecutionResponse struct {
 
 func (x *BeginExecutionResponse) Reset() {
 	*x = BeginExecutionResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[68]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6116,7 +6214,7 @@ func (x *BeginExecutionResponse) String() string {
 func (*BeginExecutionResponse) ProtoMessage() {}
 
 func (x *BeginExecutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[68]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6129,7 +6227,7 @@ func (x *BeginExecutionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeginExecutionResponse.ProtoReflect.Descriptor instead.
 func (*BeginExecutionResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{68}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *BeginExecutionResponse) GetAuthority() *AuthorityBinding {
@@ -6171,7 +6269,7 @@ type StepTiming struct {
 
 func (x *StepTiming) Reset() {
 	*x = StepTiming{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[69]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6183,7 +6281,7 @@ func (x *StepTiming) String() string {
 func (*StepTiming) ProtoMessage() {}
 
 func (x *StepTiming) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[69]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6196,7 +6294,7 @@ func (x *StepTiming) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StepTiming.ProtoReflect.Descriptor instead.
 func (*StepTiming) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{69}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *StepTiming) GetRole() PipelineStep {
@@ -6229,7 +6327,7 @@ type BeginManagedStepRequest struct {
 
 func (x *BeginManagedStepRequest) Reset() {
 	*x = BeginManagedStepRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[70]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6241,7 +6339,7 @@ func (x *BeginManagedStepRequest) String() string {
 func (*BeginManagedStepRequest) ProtoMessage() {}
 
 func (x *BeginManagedStepRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[70]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6254,7 +6352,7 @@ func (x *BeginManagedStepRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeginManagedStepRequest.ProtoReflect.Descriptor instead.
 func (*BeginManagedStepRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{70}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *BeginManagedStepRequest) GetContext() *StepContext {
@@ -6274,7 +6372,7 @@ type BeginManagedStepResponse struct {
 
 func (x *BeginManagedStepResponse) Reset() {
 	*x = BeginManagedStepResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[71]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6286,7 +6384,7 @@ func (x *BeginManagedStepResponse) String() string {
 func (*BeginManagedStepResponse) ProtoMessage() {}
 
 func (x *BeginManagedStepResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[71]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6299,7 +6397,7 @@ func (x *BeginManagedStepResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeginManagedStepResponse.ProtoReflect.Descriptor instead.
 func (*BeginManagedStepResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{71}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *BeginManagedStepResponse) GetTiming() *StepTiming {
@@ -6325,7 +6423,7 @@ type GetExecutionConfigurationRequest struct {
 
 func (x *GetExecutionConfigurationRequest) Reset() {
 	*x = GetExecutionConfigurationRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[72]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6337,7 +6435,7 @@ func (x *GetExecutionConfigurationRequest) String() string {
 func (*GetExecutionConfigurationRequest) ProtoMessage() {}
 
 func (x *GetExecutionConfigurationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[72]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6350,7 +6448,7 @@ func (x *GetExecutionConfigurationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetExecutionConfigurationRequest.ProtoReflect.Descriptor instead.
 func (*GetExecutionConfigurationRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{72}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *GetExecutionConfigurationRequest) GetContext() *StepContext {
@@ -6382,7 +6480,7 @@ type GetExecutionConfigurationResponse struct {
 
 func (x *GetExecutionConfigurationResponse) Reset() {
 	*x = GetExecutionConfigurationResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[73]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6394,7 +6492,7 @@ func (x *GetExecutionConfigurationResponse) String() string {
 func (*GetExecutionConfigurationResponse) ProtoMessage() {}
 
 func (x *GetExecutionConfigurationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[73]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6407,7 +6505,7 @@ func (x *GetExecutionConfigurationResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use GetExecutionConfigurationResponse.ProtoReflect.Descriptor instead.
 func (*GetExecutionConfigurationResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{73}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *GetExecutionConfigurationResponse) GetIdentity() *v1.ExecutionIdentity {
@@ -6478,7 +6576,7 @@ type GetStorageCredentialsRequest struct {
 
 func (x *GetStorageCredentialsRequest) Reset() {
 	*x = GetStorageCredentialsRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[74]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6490,7 +6588,7 @@ func (x *GetStorageCredentialsRequest) String() string {
 func (*GetStorageCredentialsRequest) ProtoMessage() {}
 
 func (x *GetStorageCredentialsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[74]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6503,7 +6601,7 @@ func (x *GetStorageCredentialsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetStorageCredentialsRequest.ProtoReflect.Descriptor instead.
 func (*GetStorageCredentialsRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{74}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *GetStorageCredentialsRequest) GetContext() *StepContext {
@@ -6544,7 +6642,7 @@ type TemporaryStorageCredentials struct {
 
 func (x *TemporaryStorageCredentials) Reset() {
 	*x = TemporaryStorageCredentials{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[75]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6556,7 +6654,7 @@ func (x *TemporaryStorageCredentials) String() string {
 func (*TemporaryStorageCredentials) ProtoMessage() {}
 
 func (x *TemporaryStorageCredentials) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[75]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6569,7 +6667,7 @@ func (x *TemporaryStorageCredentials) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TemporaryStorageCredentials.ProtoReflect.Descriptor instead.
 func (*TemporaryStorageCredentials) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{75}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *TemporaryStorageCredentials) GetAccessKeyId() string {
@@ -6666,7 +6764,7 @@ type GetStorageCredentialsResponse struct {
 
 func (x *GetStorageCredentialsResponse) Reset() {
 	*x = GetStorageCredentialsResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[76]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6678,7 +6776,7 @@ func (x *GetStorageCredentialsResponse) String() string {
 func (*GetStorageCredentialsResponse) ProtoMessage() {}
 
 func (x *GetStorageCredentialsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[76]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6691,7 +6789,7 @@ func (x *GetStorageCredentialsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetStorageCredentialsResponse.ProtoReflect.Descriptor instead.
 func (*GetStorageCredentialsResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{76}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{77}
 }
 
 func (x *GetStorageCredentialsResponse) GetIdentity() *v1.ExecutionIdentity {
@@ -6726,7 +6824,7 @@ type EnsureTrainingRequest struct {
 
 func (x *EnsureTrainingRequest) Reset() {
 	*x = EnsureTrainingRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[77]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6738,7 +6836,7 @@ func (x *EnsureTrainingRequest) String() string {
 func (*EnsureTrainingRequest) ProtoMessage() {}
 
 func (x *EnsureTrainingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[77]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6751,7 +6849,7 @@ func (x *EnsureTrainingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnsureTrainingRequest.ProtoReflect.Descriptor instead.
 func (*EnsureTrainingRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{77}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *EnsureTrainingRequest) GetContext() *StepContext {
@@ -6776,7 +6874,7 @@ type ResourceRef struct {
 
 func (x *ResourceRef) Reset() {
 	*x = ResourceRef{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[78]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6788,7 +6886,7 @@ func (x *ResourceRef) String() string {
 func (*ResourceRef) ProtoMessage() {}
 
 func (x *ResourceRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[78]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6801,7 +6899,7 @@ func (x *ResourceRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceRef.ProtoReflect.Descriptor instead.
 func (*ResourceRef) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{78}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{79}
 }
 
 func (x *ResourceRef) GetApiVersion() string {
@@ -6866,7 +6964,7 @@ type ObservedCondition struct {
 
 func (x *ObservedCondition) Reset() {
 	*x = ObservedCondition{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[79]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6878,7 +6976,7 @@ func (x *ObservedCondition) String() string {
 func (*ObservedCondition) ProtoMessage() {}
 
 func (x *ObservedCondition) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[79]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6891,7 +6989,7 @@ func (x *ObservedCondition) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ObservedCondition.ProtoReflect.Descriptor instead.
 func (*ObservedCondition) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{79}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *ObservedCondition) GetType() string {
@@ -6937,7 +7035,7 @@ type ResourceObservation struct {
 
 func (x *ResourceObservation) Reset() {
 	*x = ResourceObservation{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[80]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6949,7 +7047,7 @@ func (x *ResourceObservation) String() string {
 func (*ResourceObservation) ProtoMessage() {}
 
 func (x *ResourceObservation) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[80]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6962,7 +7060,7 @@ func (x *ResourceObservation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceObservation.ProtoReflect.Descriptor instead.
 func (*ResourceObservation) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{80}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *ResourceObservation) GetResource() *ResourceRef {
@@ -7026,7 +7124,7 @@ type TrainingStatus struct {
 
 func (x *TrainingStatus) Reset() {
 	*x = TrainingStatus{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[81]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7038,7 +7136,7 @@ func (x *TrainingStatus) String() string {
 func (*TrainingStatus) ProtoMessage() {}
 
 func (x *TrainingStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[81]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7051,7 +7149,7 @@ func (x *TrainingStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrainingStatus.ProtoReflect.Descriptor instead.
 func (*TrainingStatus) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{81}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *TrainingStatus) GetIdentity() *v1.ExecutionIdentity {
@@ -7134,7 +7232,7 @@ type EnsureTrainingResponse struct {
 
 func (x *EnsureTrainingResponse) Reset() {
 	*x = EnsureTrainingResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[82]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7146,7 +7244,7 @@ func (x *EnsureTrainingResponse) String() string {
 func (*EnsureTrainingResponse) ProtoMessage() {}
 
 func (x *EnsureTrainingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[82]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7159,7 +7257,7 @@ func (x *EnsureTrainingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnsureTrainingResponse.ProtoReflect.Descriptor instead.
 func (*EnsureTrainingResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{82}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *EnsureTrainingResponse) GetStatus() *TrainingStatus {
@@ -7185,7 +7283,7 @@ type GetTrainingStatusRequest struct {
 
 func (x *GetTrainingStatusRequest) Reset() {
 	*x = GetTrainingStatusRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[83]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7197,7 +7295,7 @@ func (x *GetTrainingStatusRequest) String() string {
 func (*GetTrainingStatusRequest) ProtoMessage() {}
 
 func (x *GetTrainingStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[83]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7210,7 +7308,7 @@ func (x *GetTrainingStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrainingStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetTrainingStatusRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{83}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{84}
 }
 
 func (x *GetTrainingStatusRequest) GetContext() *StepContext {
@@ -7229,7 +7327,7 @@ type GetTrainingStatusResponse struct {
 
 func (x *GetTrainingStatusResponse) Reset() {
 	*x = GetTrainingStatusResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[84]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7241,7 +7339,7 @@ func (x *GetTrainingStatusResponse) String() string {
 func (*GetTrainingStatusResponse) ProtoMessage() {}
 
 func (x *GetTrainingStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[84]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7254,7 +7352,7 @@ func (x *GetTrainingStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrainingStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetTrainingStatusResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{84}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *GetTrainingStatusResponse) GetStatus() *TrainingStatus {
@@ -7275,7 +7373,7 @@ type PreparedInputCandidate struct {
 
 func (x *PreparedInputCandidate) Reset() {
 	*x = PreparedInputCandidate{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[85]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7287,7 +7385,7 @@ func (x *PreparedInputCandidate) String() string {
 func (*PreparedInputCandidate) ProtoMessage() {}
 
 func (x *PreparedInputCandidate) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[85]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7300,7 +7398,7 @@ func (x *PreparedInputCandidate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PreparedInputCandidate.ProtoReflect.Descriptor instead.
 func (*PreparedInputCandidate) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{85}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *PreparedInputCandidate) GetWorkspace() *v1.WorkspaceRef {
@@ -7334,7 +7432,7 @@ type PublishedFileCandidate struct {
 
 func (x *PublishedFileCandidate) Reset() {
 	*x = PublishedFileCandidate{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[86]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7346,7 +7444,7 @@ func (x *PublishedFileCandidate) String() string {
 func (*PublishedFileCandidate) ProtoMessage() {}
 
 func (x *PublishedFileCandidate) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[86]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7359,7 +7457,7 @@ func (x *PublishedFileCandidate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishedFileCandidate.ProtoReflect.Descriptor instead.
 func (*PublishedFileCandidate) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{86}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *PublishedFileCandidate) GetFile() *v1.FileEntry {
@@ -7392,7 +7490,7 @@ type PublicationCandidate struct {
 
 func (x *PublicationCandidate) Reset() {
 	*x = PublicationCandidate{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[87]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7404,7 +7502,7 @@ func (x *PublicationCandidate) String() string {
 func (*PublicationCandidate) ProtoMessage() {}
 
 func (x *PublicationCandidate) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[87]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7417,7 +7515,7 @@ func (x *PublicationCandidate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublicationCandidate.ProtoReflect.Descriptor instead.
 func (*PublicationCandidate) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{87}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{88}
 }
 
 func (x *PublicationCandidate) GetLogicalPublicationKey() string {
@@ -7472,7 +7570,7 @@ type StepFailure struct {
 
 func (x *StepFailure) Reset() {
 	*x = StepFailure{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[88]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7484,7 +7582,7 @@ func (x *StepFailure) String() string {
 func (*StepFailure) ProtoMessage() {}
 
 func (x *StepFailure) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[88]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7497,7 +7595,7 @@ func (x *StepFailure) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StepFailure.ProtoReflect.Descriptor instead.
 func (*StepFailure) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{88}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{89}
 }
 
 func (x *StepFailure) GetFailure() *ErrorDetail {
@@ -7531,7 +7629,7 @@ type ReportStepResultRequest struct {
 
 func (x *ReportStepResultRequest) Reset() {
 	*x = ReportStepResultRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[89]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7543,7 +7641,7 @@ func (x *ReportStepResultRequest) String() string {
 func (*ReportStepResultRequest) ProtoMessage() {}
 
 func (x *ReportStepResultRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[89]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7556,7 +7654,7 @@ func (x *ReportStepResultRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportStepResultRequest.ProtoReflect.Descriptor instead.
 func (*ReportStepResultRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{89}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *ReportStepResultRequest) GetContext() *StepContext {
@@ -7663,7 +7761,7 @@ type VerifiedPublication struct {
 
 func (x *VerifiedPublication) Reset() {
 	*x = VerifiedPublication{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[90]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7675,7 +7773,7 @@ func (x *VerifiedPublication) String() string {
 func (*VerifiedPublication) ProtoMessage() {}
 
 func (x *VerifiedPublication) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[90]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7688,7 +7786,7 @@ func (x *VerifiedPublication) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifiedPublication.ProtoReflect.Descriptor instead.
 func (*VerifiedPublication) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{90}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *VerifiedPublication) GetPublicationId() string {
@@ -7771,7 +7869,7 @@ type UploadCompletionEvidence struct {
 
 func (x *UploadCompletionEvidence) Reset() {
 	*x = UploadCompletionEvidence{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[91]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7783,7 +7881,7 @@ func (x *UploadCompletionEvidence) String() string {
 func (*UploadCompletionEvidence) ProtoMessage() {}
 
 func (x *UploadCompletionEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[91]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7796,7 +7894,7 @@ func (x *UploadCompletionEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadCompletionEvidence.ProtoReflect.Descriptor instead.
 func (*UploadCompletionEvidence) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{91}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{92}
 }
 
 func (x *UploadCompletionEvidence) GetKfpRunId() string {
@@ -7860,7 +7958,7 @@ type VerifiedPublishedFile struct {
 
 func (x *VerifiedPublishedFile) Reset() {
 	*x = VerifiedPublishedFile{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[92]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7872,7 +7970,7 @@ func (x *VerifiedPublishedFile) String() string {
 func (*VerifiedPublishedFile) ProtoMessage() {}
 
 func (x *VerifiedPublishedFile) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[92]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7885,7 +7983,7 @@ func (x *VerifiedPublishedFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifiedPublishedFile.ProtoReflect.Descriptor instead.
 func (*VerifiedPublishedFile) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{92}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{93}
 }
 
 func (x *VerifiedPublishedFile) GetArtifactId() string {
@@ -7928,7 +8026,7 @@ type ReportStepResultResponse struct {
 
 func (x *ReportStepResultResponse) Reset() {
 	*x = ReportStepResultResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[93]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7940,7 +8038,7 @@ func (x *ReportStepResultResponse) String() string {
 func (*ReportStepResultResponse) ProtoMessage() {}
 
 func (x *ReportStepResultResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[93]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7953,7 +8051,7 @@ func (x *ReportStepResultResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportStepResultResponse.ProtoReflect.Descriptor instead.
 func (*ReportStepResultResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{93}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{94}
 }
 
 func (x *ReportStepResultResponse) GetReplayed() bool {
@@ -7987,7 +8085,7 @@ type RequestExecutionCloseRequest struct {
 
 func (x *RequestExecutionCloseRequest) Reset() {
 	*x = RequestExecutionCloseRequest{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[94]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7999,7 +8097,7 @@ func (x *RequestExecutionCloseRequest) String() string {
 func (*RequestExecutionCloseRequest) ProtoMessage() {}
 
 func (x *RequestExecutionCloseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[94]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8012,7 +8110,7 @@ func (x *RequestExecutionCloseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestExecutionCloseRequest.ProtoReflect.Descriptor instead.
 func (*RequestExecutionCloseRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{94}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{95}
 }
 
 func (x *RequestExecutionCloseRequest) GetContext() *StepContext {
@@ -8041,7 +8139,7 @@ type RequestExecutionCloseResponse struct {
 
 func (x *RequestExecutionCloseResponse) Reset() {
 	*x = RequestExecutionCloseResponse{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[95]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8053,7 +8151,7 @@ func (x *RequestExecutionCloseResponse) String() string {
 func (*RequestExecutionCloseResponse) ProtoMessage() {}
 
 func (x *RequestExecutionCloseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[95]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8066,7 +8164,7 @@ func (x *RequestExecutionCloseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestExecutionCloseResponse.ProtoReflect.Descriptor instead.
 func (*RequestExecutionCloseResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{95}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{96}
 }
 
 func (x *RequestExecutionCloseResponse) GetCloseGeneration() uint64 {
@@ -8261,7 +8359,7 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x06_state\"\x8e\x01\n" +
 	"\x19ListInputVersionsResponse\x12H\n" +
 	"\x0einput_versions\x18\x01 \x03(\v2!.ani.modeldev.v1.InputVersionViewR\rinputVersions\x12\x14\n" +
-	"\x05total\x18\x03 \x01(\x04R\x05totalJ\x04\b\x02\x10\x03R\vnext_cursor\"\xe2\f\n" +
+	"\x05total\x18\x03 \x01(\x04R\x05totalJ\x04\b\x02\x10\x03R\vnext_cursor\"\x97\r\n" +
 	"\rExecutionView\x12>\n" +
 	"\bidentity\x18\x01 \x01(\v2\".ani.training.v1.ExecutionIdentityR\bidentity\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x122\n" +
@@ -8292,8 +8390,19 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x06timing\x18\x1b \x01(\v2 .ani.modeldev.v1.ExecutionTimingR\x06timing\x12A\n" +
 	"\fexplicit_mlp\x18\x1c \x01(\v2\x1e.ani.modeldev.v1.MLPParametersR\vexplicitMlp\x12U\n" +
 	"\x12model_registration\x18\x1d \x01(\v2&.ani.modeldev.v1.ModelRegistrationViewR\x11modelRegistration\x12?\n" +
-	"\ahistory\x18\x1e \x01(\v2%.ani.modeldev.v1.ExecutionHistoryViewR\ahistoryJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x11\x10\x12J\x04\b\x12\x10\x13R\tpreset_idR\n" +
-	"release_idR\x13source_execution_idR\x0erelease_digest\"\xa1\x04\n" +
+	"\ahistory\x18\x1e \x01(\v2%.ani.modeldev.v1.ExecutionHistoryViewR\ahistory\x123\n" +
+	"\x05steps\x18\x1f \x03(\v2\x1d.ani.modeldev.v1.StepProgressR\x05stepsJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x11\x10\x12J\x04\b\x12\x10\x13R\tpreset_idR\n" +
+	"release_idR\x13source_execution_idR\x0erelease_digest\"\x8a\x02\n" +
+	"\fStepProgress\x12\x12\n" +
+	"\x04role\x18\x01 \x01(\tR\x04role\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\x129\n" +
+	"\n" +
+	"started_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12;\n" +
+	"\vfinished_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"finishedAt\x12\x1b\n" +
+	"\texit_code\x18\x05 \x01(\x05R\bexitCode\x12;\n" +
+	"\vdeadline_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"deadlineAt\"\xa1\x04\n" +
 	"\x14ExecutionHistoryView\x12\x15\n" +
 	"\x06run_id\x18\x01 \x01(\tR\x05runId\x12!\n" +
 	"\fworkflow_uid\x18\x02 \x01(\tR\vworkflowUid\x12;\n" +
@@ -8930,7 +9039,7 @@ func file_ani_modeldev_v1_modeldev_proto_rawDescGZIP() []byte {
 }
 
 var file_ani_modeldev_v1_modeldev_proto_enumTypes = make([]protoimpl.EnumInfo, 12)
-var file_ani_modeldev_v1_modeldev_proto_msgTypes = make([]protoimpl.MessageInfo, 96)
+var file_ani_modeldev_v1_modeldev_proto_msgTypes = make([]protoimpl.MessageInfo, 97)
 var file_ani_modeldev_v1_modeldev_proto_goTypes = []any{
 	(ComputeState)(0),                          // 0: ani.modeldev.v1.ComputeState
 	(DeliveryState)(0),                         // 1: ani.modeldev.v1.DeliveryState
@@ -8968,347 +9077,352 @@ var file_ani_modeldev_v1_modeldev_proto_goTypes = []any{
 	(*ListInputVersionsRequest)(nil),           // 33: ani.modeldev.v1.ListInputVersionsRequest
 	(*ListInputVersionsResponse)(nil),          // 34: ani.modeldev.v1.ListInputVersionsResponse
 	(*ExecutionView)(nil),                      // 35: ani.modeldev.v1.ExecutionView
-	(*ExecutionHistoryView)(nil),               // 36: ani.modeldev.v1.ExecutionHistoryView
-	(*ModelRegistrationView)(nil),              // 37: ani.modeldev.v1.ModelRegistrationView
-	(*GetExecutionRequest)(nil),                // 38: ani.modeldev.v1.GetExecutionRequest
-	(*GetExecutionResponse)(nil),               // 39: ani.modeldev.v1.GetExecutionResponse
-	(*ListExecutionsRequest)(nil),              // 40: ani.modeldev.v1.ListExecutionsRequest
-	(*ListExecutionsResponse)(nil),             // 41: ani.modeldev.v1.ListExecutionsResponse
-	(*GetExecutionLogsRequest)(nil),            // 42: ani.modeldev.v1.GetExecutionLogsRequest
-	(*LogLine)(nil),                            // 43: ani.modeldev.v1.LogLine
-	(*GetExecutionLogsResponse)(nil),           // 44: ani.modeldev.v1.GetExecutionLogsResponse
-	(*ArtifactView)(nil),                       // 45: ani.modeldev.v1.ArtifactView
-	(*ListExecutionArtifactsRequest)(nil),      // 46: ani.modeldev.v1.ListExecutionArtifactsRequest
-	(*ListExecutionArtifactsResponse)(nil),     // 47: ani.modeldev.v1.ListExecutionArtifactsResponse
-	(*AuthorizeArtifactDownloadRequest)(nil),   // 48: ani.modeldev.v1.AuthorizeArtifactDownloadRequest
-	(*AuthorizeArtifactDownloadResponse)(nil),  // 49: ani.modeldev.v1.AuthorizeArtifactDownloadResponse
-	(*RuntimeIdentityRefs)(nil),                // 50: ani.modeldev.v1.RuntimeIdentityRefs
-	(*EnvironmentBindingSnapshot)(nil),         // 51: ani.modeldev.v1.EnvironmentBindingSnapshot
-	(*StorageScope)(nil),                       // 52: ani.modeldev.v1.StorageScope
-	(*ExecutionSnapshot)(nil),                  // 53: ani.modeldev.v1.ExecutionSnapshot
-	(*StringPair)(nil),                         // 54: ani.modeldev.v1.StringPair
-	(*GPUExecutionSnapshot)(nil),               // 55: ani.modeldev.v1.GPUExecutionSnapshot
-	(*GPUDisplaySnapshot)(nil),                 // 56: ani.modeldev.v1.GPUDisplaySnapshot
-	(*GPUPlan)(nil),                            // 57: ani.modeldev.v1.GPUPlan
-	(*FinetuningManagedSettings)(nil),          // 58: ani.modeldev.v1.FinetuningManagedSettings
-	(*BaseModelFile)(nil),                      // 59: ani.modeldev.v1.BaseModelFile
-	(*BaseModelRef)(nil),                       // 60: ani.modeldev.v1.BaseModelRef
-	(*ComponentBudgets)(nil),                   // 61: ani.modeldev.v1.ComponentBudgets
-	(*FinetuningSnapshot)(nil),                 // 62: ani.modeldev.v1.FinetuningSnapshot
-	(*IdentityRef)(nil),                        // 63: ani.modeldev.v1.IdentityRef
-	(*ImplementationSnapshot)(nil),             // 64: ani.modeldev.v1.ImplementationSnapshot
-	(*ComputeOrigin)(nil),                      // 65: ani.modeldev.v1.ComputeOrigin
-	(*ExecutionTiming)(nil),                    // 66: ani.modeldev.v1.ExecutionTiming
-	(*RuntimePlan)(nil),                        // 67: ani.modeldev.v1.RuntimePlan
-	(*PrepareAdmissionRequest)(nil),            // 68: ani.modeldev.v1.PrepareAdmissionRequest
-	(*PrepareAdmissionResponse)(nil),           // 69: ani.modeldev.v1.PrepareAdmissionResponse
-	(*FinalizeAdmissionRequest)(nil),           // 70: ani.modeldev.v1.FinalizeAdmissionRequest
-	(*FinalizeAdmissionResponse)(nil),          // 71: ani.modeldev.v1.FinalizeAdmissionResponse
-	(*AcceptExecutionRequest)(nil),             // 72: ani.modeldev.v1.AcceptExecutionRequest
-	(*AcceptExecutionResponse)(nil),            // 73: ani.modeldev.v1.AcceptExecutionResponse
-	(*ApplyCloseIntentRequest)(nil),            // 74: ani.modeldev.v1.ApplyCloseIntentRequest
-	(*ApplyCloseIntentResponse)(nil),           // 75: ani.modeldev.v1.ApplyCloseIntentResponse
-	(*RunAssociation)(nil),                     // 76: ani.modeldev.v1.RunAssociation
-	(*StepContext)(nil),                        // 77: ani.modeldev.v1.StepContext
-	(*AuthorityBinding)(nil),                   // 78: ani.modeldev.v1.AuthorityBinding
-	(*BeginExecutionRequest)(nil),              // 79: ani.modeldev.v1.BeginExecutionRequest
-	(*BeginExecutionResponse)(nil),             // 80: ani.modeldev.v1.BeginExecutionResponse
-	(*StepTiming)(nil),                         // 81: ani.modeldev.v1.StepTiming
-	(*BeginManagedStepRequest)(nil),            // 82: ani.modeldev.v1.BeginManagedStepRequest
-	(*BeginManagedStepResponse)(nil),           // 83: ani.modeldev.v1.BeginManagedStepResponse
-	(*GetExecutionConfigurationRequest)(nil),   // 84: ani.modeldev.v1.GetExecutionConfigurationRequest
-	(*GetExecutionConfigurationResponse)(nil),  // 85: ani.modeldev.v1.GetExecutionConfigurationResponse
-	(*GetStorageCredentialsRequest)(nil),       // 86: ani.modeldev.v1.GetStorageCredentialsRequest
-	(*TemporaryStorageCredentials)(nil),        // 87: ani.modeldev.v1.TemporaryStorageCredentials
-	(*GetStorageCredentialsResponse)(nil),      // 88: ani.modeldev.v1.GetStorageCredentialsResponse
-	(*EnsureTrainingRequest)(nil),              // 89: ani.modeldev.v1.EnsureTrainingRequest
-	(*ResourceRef)(nil),                        // 90: ani.modeldev.v1.ResourceRef
-	(*ObservedCondition)(nil),                  // 91: ani.modeldev.v1.ObservedCondition
-	(*ResourceObservation)(nil),                // 92: ani.modeldev.v1.ResourceObservation
-	(*TrainingStatus)(nil),                     // 93: ani.modeldev.v1.TrainingStatus
-	(*EnsureTrainingResponse)(nil),             // 94: ani.modeldev.v1.EnsureTrainingResponse
-	(*GetTrainingStatusRequest)(nil),           // 95: ani.modeldev.v1.GetTrainingStatusRequest
-	(*GetTrainingStatusResponse)(nil),          // 96: ani.modeldev.v1.GetTrainingStatusResponse
-	(*PreparedInputCandidate)(nil),             // 97: ani.modeldev.v1.PreparedInputCandidate
-	(*PublishedFileCandidate)(nil),             // 98: ani.modeldev.v1.PublishedFileCandidate
-	(*PublicationCandidate)(nil),               // 99: ani.modeldev.v1.PublicationCandidate
-	(*StepFailure)(nil),                        // 100: ani.modeldev.v1.StepFailure
-	(*ReportStepResultRequest)(nil),            // 101: ani.modeldev.v1.ReportStepResultRequest
-	(*VerifiedPublication)(nil),                // 102: ani.modeldev.v1.VerifiedPublication
-	(*UploadCompletionEvidence)(nil),           // 103: ani.modeldev.v1.UploadCompletionEvidence
-	(*VerifiedPublishedFile)(nil),              // 104: ani.modeldev.v1.VerifiedPublishedFile
-	(*ReportStepResultResponse)(nil),           // 105: ani.modeldev.v1.ReportStepResultResponse
-	(*RequestExecutionCloseRequest)(nil),       // 106: ani.modeldev.v1.RequestExecutionCloseRequest
-	(*RequestExecutionCloseResponse)(nil),      // 107: ani.modeldev.v1.RequestExecutionCloseResponse
-	(*timestamppb.Timestamp)(nil),              // 108: google.protobuf.Timestamp
-	(*v1.ManifestRef)(nil),                     // 109: ani.training.v1.ManifestRef
-	(v1.ExecutionKind)(0),                      // 110: ani.training.v1.ExecutionKind
-	(*v1.Parameter)(nil),                       // 111: ani.training.v1.Parameter
-	(*v1.ExecutionIdentity)(nil),               // 112: ani.training.v1.ExecutionIdentity
-	(*v1.Metric)(nil),                          // 113: ani.training.v1.Metric
-	(*v1.LogRef)(nil),                          // 114: ani.training.v1.LogRef
-	(v1.FileRole)(0),                           // 115: ani.training.v1.FileRole
-	(v1.DeliveryMode)(0),                       // 116: ani.training.v1.DeliveryMode
-	(*v1.InputRef)(nil),                        // 117: ani.training.v1.InputRef
-	(*v1.ProgramRef)(nil),                      // 118: ani.training.v1.ProgramRef
-	(*v1.CPUResources)(nil),                    // 119: ani.training.v1.CPUResources
-	(*v1.WorkspaceContract)(nil),               // 120: ani.training.v1.WorkspaceContract
-	(*v1.OutputContract)(nil),                  // 121: ani.training.v1.OutputContract
-	(*v1.FixedObjectRef)(nil),                  // 122: ani.training.v1.FixedObjectRef
-	(*v1.WorkspaceRef)(nil),                    // 123: ani.training.v1.WorkspaceRef
-	(*v1.FileEntry)(nil),                       // 124: ani.training.v1.FileEntry
-	(*v1.TrainingResult)(nil),                  // 125: ani.training.v1.TrainingResult
+	(*StepProgress)(nil),                       // 36: ani.modeldev.v1.StepProgress
+	(*ExecutionHistoryView)(nil),               // 37: ani.modeldev.v1.ExecutionHistoryView
+	(*ModelRegistrationView)(nil),              // 38: ani.modeldev.v1.ModelRegistrationView
+	(*GetExecutionRequest)(nil),                // 39: ani.modeldev.v1.GetExecutionRequest
+	(*GetExecutionResponse)(nil),               // 40: ani.modeldev.v1.GetExecutionResponse
+	(*ListExecutionsRequest)(nil),              // 41: ani.modeldev.v1.ListExecutionsRequest
+	(*ListExecutionsResponse)(nil),             // 42: ani.modeldev.v1.ListExecutionsResponse
+	(*GetExecutionLogsRequest)(nil),            // 43: ani.modeldev.v1.GetExecutionLogsRequest
+	(*LogLine)(nil),                            // 44: ani.modeldev.v1.LogLine
+	(*GetExecutionLogsResponse)(nil),           // 45: ani.modeldev.v1.GetExecutionLogsResponse
+	(*ArtifactView)(nil),                       // 46: ani.modeldev.v1.ArtifactView
+	(*ListExecutionArtifactsRequest)(nil),      // 47: ani.modeldev.v1.ListExecutionArtifactsRequest
+	(*ListExecutionArtifactsResponse)(nil),     // 48: ani.modeldev.v1.ListExecutionArtifactsResponse
+	(*AuthorizeArtifactDownloadRequest)(nil),   // 49: ani.modeldev.v1.AuthorizeArtifactDownloadRequest
+	(*AuthorizeArtifactDownloadResponse)(nil),  // 50: ani.modeldev.v1.AuthorizeArtifactDownloadResponse
+	(*RuntimeIdentityRefs)(nil),                // 51: ani.modeldev.v1.RuntimeIdentityRefs
+	(*EnvironmentBindingSnapshot)(nil),         // 52: ani.modeldev.v1.EnvironmentBindingSnapshot
+	(*StorageScope)(nil),                       // 53: ani.modeldev.v1.StorageScope
+	(*ExecutionSnapshot)(nil),                  // 54: ani.modeldev.v1.ExecutionSnapshot
+	(*StringPair)(nil),                         // 55: ani.modeldev.v1.StringPair
+	(*GPUExecutionSnapshot)(nil),               // 56: ani.modeldev.v1.GPUExecutionSnapshot
+	(*GPUDisplaySnapshot)(nil),                 // 57: ani.modeldev.v1.GPUDisplaySnapshot
+	(*GPUPlan)(nil),                            // 58: ani.modeldev.v1.GPUPlan
+	(*FinetuningManagedSettings)(nil),          // 59: ani.modeldev.v1.FinetuningManagedSettings
+	(*BaseModelFile)(nil),                      // 60: ani.modeldev.v1.BaseModelFile
+	(*BaseModelRef)(nil),                       // 61: ani.modeldev.v1.BaseModelRef
+	(*ComponentBudgets)(nil),                   // 62: ani.modeldev.v1.ComponentBudgets
+	(*FinetuningSnapshot)(nil),                 // 63: ani.modeldev.v1.FinetuningSnapshot
+	(*IdentityRef)(nil),                        // 64: ani.modeldev.v1.IdentityRef
+	(*ImplementationSnapshot)(nil),             // 65: ani.modeldev.v1.ImplementationSnapshot
+	(*ComputeOrigin)(nil),                      // 66: ani.modeldev.v1.ComputeOrigin
+	(*ExecutionTiming)(nil),                    // 67: ani.modeldev.v1.ExecutionTiming
+	(*RuntimePlan)(nil),                        // 68: ani.modeldev.v1.RuntimePlan
+	(*PrepareAdmissionRequest)(nil),            // 69: ani.modeldev.v1.PrepareAdmissionRequest
+	(*PrepareAdmissionResponse)(nil),           // 70: ani.modeldev.v1.PrepareAdmissionResponse
+	(*FinalizeAdmissionRequest)(nil),           // 71: ani.modeldev.v1.FinalizeAdmissionRequest
+	(*FinalizeAdmissionResponse)(nil),          // 72: ani.modeldev.v1.FinalizeAdmissionResponse
+	(*AcceptExecutionRequest)(nil),             // 73: ani.modeldev.v1.AcceptExecutionRequest
+	(*AcceptExecutionResponse)(nil),            // 74: ani.modeldev.v1.AcceptExecutionResponse
+	(*ApplyCloseIntentRequest)(nil),            // 75: ani.modeldev.v1.ApplyCloseIntentRequest
+	(*ApplyCloseIntentResponse)(nil),           // 76: ani.modeldev.v1.ApplyCloseIntentResponse
+	(*RunAssociation)(nil),                     // 77: ani.modeldev.v1.RunAssociation
+	(*StepContext)(nil),                        // 78: ani.modeldev.v1.StepContext
+	(*AuthorityBinding)(nil),                   // 79: ani.modeldev.v1.AuthorityBinding
+	(*BeginExecutionRequest)(nil),              // 80: ani.modeldev.v1.BeginExecutionRequest
+	(*BeginExecutionResponse)(nil),             // 81: ani.modeldev.v1.BeginExecutionResponse
+	(*StepTiming)(nil),                         // 82: ani.modeldev.v1.StepTiming
+	(*BeginManagedStepRequest)(nil),            // 83: ani.modeldev.v1.BeginManagedStepRequest
+	(*BeginManagedStepResponse)(nil),           // 84: ani.modeldev.v1.BeginManagedStepResponse
+	(*GetExecutionConfigurationRequest)(nil),   // 85: ani.modeldev.v1.GetExecutionConfigurationRequest
+	(*GetExecutionConfigurationResponse)(nil),  // 86: ani.modeldev.v1.GetExecutionConfigurationResponse
+	(*GetStorageCredentialsRequest)(nil),       // 87: ani.modeldev.v1.GetStorageCredentialsRequest
+	(*TemporaryStorageCredentials)(nil),        // 88: ani.modeldev.v1.TemporaryStorageCredentials
+	(*GetStorageCredentialsResponse)(nil),      // 89: ani.modeldev.v1.GetStorageCredentialsResponse
+	(*EnsureTrainingRequest)(nil),              // 90: ani.modeldev.v1.EnsureTrainingRequest
+	(*ResourceRef)(nil),                        // 91: ani.modeldev.v1.ResourceRef
+	(*ObservedCondition)(nil),                  // 92: ani.modeldev.v1.ObservedCondition
+	(*ResourceObservation)(nil),                // 93: ani.modeldev.v1.ResourceObservation
+	(*TrainingStatus)(nil),                     // 94: ani.modeldev.v1.TrainingStatus
+	(*EnsureTrainingResponse)(nil),             // 95: ani.modeldev.v1.EnsureTrainingResponse
+	(*GetTrainingStatusRequest)(nil),           // 96: ani.modeldev.v1.GetTrainingStatusRequest
+	(*GetTrainingStatusResponse)(nil),          // 97: ani.modeldev.v1.GetTrainingStatusResponse
+	(*PreparedInputCandidate)(nil),             // 98: ani.modeldev.v1.PreparedInputCandidate
+	(*PublishedFileCandidate)(nil),             // 99: ani.modeldev.v1.PublishedFileCandidate
+	(*PublicationCandidate)(nil),               // 100: ani.modeldev.v1.PublicationCandidate
+	(*StepFailure)(nil),                        // 101: ani.modeldev.v1.StepFailure
+	(*ReportStepResultRequest)(nil),            // 102: ani.modeldev.v1.ReportStepResultRequest
+	(*VerifiedPublication)(nil),                // 103: ani.modeldev.v1.VerifiedPublication
+	(*UploadCompletionEvidence)(nil),           // 104: ani.modeldev.v1.UploadCompletionEvidence
+	(*VerifiedPublishedFile)(nil),              // 105: ani.modeldev.v1.VerifiedPublishedFile
+	(*ReportStepResultResponse)(nil),           // 106: ani.modeldev.v1.ReportStepResultResponse
+	(*RequestExecutionCloseRequest)(nil),       // 107: ani.modeldev.v1.RequestExecutionCloseRequest
+	(*RequestExecutionCloseResponse)(nil),      // 108: ani.modeldev.v1.RequestExecutionCloseResponse
+	(*timestamppb.Timestamp)(nil),              // 109: google.protobuf.Timestamp
+	(*v1.ManifestRef)(nil),                     // 110: ani.training.v1.ManifestRef
+	(v1.ExecutionKind)(0),                      // 111: ani.training.v1.ExecutionKind
+	(*v1.Parameter)(nil),                       // 112: ani.training.v1.Parameter
+	(*v1.ExecutionIdentity)(nil),               // 113: ani.training.v1.ExecutionIdentity
+	(*v1.Metric)(nil),                          // 114: ani.training.v1.Metric
+	(*v1.LogRef)(nil),                          // 115: ani.training.v1.LogRef
+	(v1.FileRole)(0),                           // 116: ani.training.v1.FileRole
+	(v1.DeliveryMode)(0),                       // 117: ani.training.v1.DeliveryMode
+	(*v1.InputRef)(nil),                        // 118: ani.training.v1.InputRef
+	(*v1.ProgramRef)(nil),                      // 119: ani.training.v1.ProgramRef
+	(*v1.CPUResources)(nil),                    // 120: ani.training.v1.CPUResources
+	(*v1.WorkspaceContract)(nil),               // 121: ani.training.v1.WorkspaceContract
+	(*v1.OutputContract)(nil),                  // 122: ani.training.v1.OutputContract
+	(*v1.FixedObjectRef)(nil),                  // 123: ani.training.v1.FixedObjectRef
+	(*v1.WorkspaceRef)(nil),                    // 124: ani.training.v1.WorkspaceRef
+	(*v1.FileEntry)(nil),                       // 125: ani.training.v1.FileEntry
+	(*v1.TrainingResult)(nil),                  // 126: ani.training.v1.TrainingResult
 }
 var file_ani_modeldev_v1_modeldev_proto_depIdxs = []int32{
-	77,  // 0: ani.modeldev.v1.BeginFinetuningStepRequest.context:type_name -> ani.modeldev.v1.StepContext
-	108, // 1: ani.modeldev.v1.BeginFinetuningStepResponse.admitted_at:type_name -> google.protobuf.Timestamp
-	108, // 2: ani.modeldev.v1.BeginFinetuningStepResponse.deadline_at:type_name -> google.protobuf.Timestamp
-	77,  // 3: ani.modeldev.v1.ReportFinetuningStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
-	108, // 4: ani.modeldev.v1.ReportFinetuningStepResultRequest.started_at:type_name -> google.protobuf.Timestamp
-	108, // 5: ani.modeldev.v1.ReportFinetuningStepResultRequest.finished_at:type_name -> google.protobuf.Timestamp
-	109, // 6: ani.modeldev.v1.ReportFinetuningStepResultRequest.result_manifest:type_name -> ani.training.v1.ManifestRef
+	78,  // 0: ani.modeldev.v1.BeginFinetuningStepRequest.context:type_name -> ani.modeldev.v1.StepContext
+	109, // 1: ani.modeldev.v1.BeginFinetuningStepResponse.admitted_at:type_name -> google.protobuf.Timestamp
+	109, // 2: ani.modeldev.v1.BeginFinetuningStepResponse.deadline_at:type_name -> google.protobuf.Timestamp
+	78,  // 3: ani.modeldev.v1.ReportFinetuningStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
+	109, // 4: ani.modeldev.v1.ReportFinetuningStepResultRequest.started_at:type_name -> google.protobuf.Timestamp
+	109, // 5: ani.modeldev.v1.ReportFinetuningStepResultRequest.finished_at:type_name -> google.protobuf.Timestamp
+	110, // 6: ani.modeldev.v1.ReportFinetuningStepResultRequest.result_manifest:type_name -> ani.training.v1.ManifestRef
 	24,  // 7: ani.modeldev.v1.ReportFinetuningStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	77,  // 8: ani.modeldev.v1.RegisterModelRequest.context:type_name -> ani.modeldev.v1.StepContext
+	78,  // 8: ani.modeldev.v1.RegisterModelRequest.context:type_name -> ani.modeldev.v1.StepContext
 	24,  // 9: ani.modeldev.v1.RegisterModelResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	102, // 10: ani.modeldev.v1.RegisterModelResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
+	103, // 10: ani.modeldev.v1.RegisterModelResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
 	9,   // 11: ani.modeldev.v1.ErrorDetail.reason:type_name -> ani.modeldev.v1.ErrorReason
 	18,  // 12: ani.modeldev.v1.ErrorDetail.violations:type_name -> ani.modeldev.v1.FieldViolation
-	110, // 13: ani.modeldev.v1.UserIntent.kind:type_name -> ani.training.v1.ExecutionKind
+	111, // 13: ani.modeldev.v1.UserIntent.kind:type_name -> ani.training.v1.ExecutionKind
 	21,  // 14: ani.modeldev.v1.UserIntent.mlp:type_name -> ani.modeldev.v1.MLPParameters
 	22,  // 15: ani.modeldev.v1.UserIntent.sft_lora:type_name -> ani.modeldev.v1.FinetuningParameters
-	111, // 16: ani.modeldev.v1.ParameterSelection.values:type_name -> ani.training.v1.Parameter
+	112, // 16: ani.modeldev.v1.ParameterSelection.values:type_name -> ani.training.v1.Parameter
 	0,   // 17: ani.modeldev.v1.ExecutionStates.compute_state:type_name -> ani.modeldev.v1.ComputeState
 	1,   // 18: ani.modeldev.v1.ExecutionStates.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
 	2,   // 19: ani.modeldev.v1.ExecutionStates.resource_state:type_name -> ani.modeldev.v1.ResourceState
 	3,   // 20: ani.modeldev.v1.ExecutionStates.close_state:type_name -> ani.modeldev.v1.CloseState
 	8,   // 21: ani.modeldev.v1.ParameterRule.type:type_name -> ani.modeldev.v1.ParameterType
-	111, // 22: ani.modeldev.v1.ParameterRule.default_value:type_name -> ani.training.v1.Parameter
-	111, // 23: ani.modeldev.v1.ParameterRule.allowed_values:type_name -> ani.training.v1.Parameter
-	111, // 24: ani.modeldev.v1.ParameterRule.minimum:type_name -> ani.training.v1.Parameter
-	111, // 25: ani.modeldev.v1.ParameterRule.maximum:type_name -> ani.training.v1.Parameter
-	110, // 26: ani.modeldev.v1.ImplementationView.kind:type_name -> ani.training.v1.ExecutionKind
+	112, // 22: ani.modeldev.v1.ParameterRule.default_value:type_name -> ani.training.v1.Parameter
+	112, // 23: ani.modeldev.v1.ParameterRule.allowed_values:type_name -> ani.training.v1.Parameter
+	112, // 24: ani.modeldev.v1.ParameterRule.minimum:type_name -> ani.training.v1.Parameter
+	112, // 25: ani.modeldev.v1.ParameterRule.maximum:type_name -> ani.training.v1.Parameter
+	111, // 26: ani.modeldev.v1.ImplementationView.kind:type_name -> ani.training.v1.ExecutionKind
 	26,  // 27: ani.modeldev.v1.ImplementationView.parameter_rules:type_name -> ani.modeldev.v1.ParameterRule
 	25,  // 28: ani.modeldev.v1.ListImplementationsRequest.page:type_name -> ani.modeldev.v1.PageRequest
 	27,  // 29: ani.modeldev.v1.ListImplementationsResponse.implementations:type_name -> ani.modeldev.v1.ImplementationView
 	5,   // 30: ani.modeldev.v1.InputVersionView.state:type_name -> ani.modeldev.v1.InputState
-	108, // 31: ani.modeldev.v1.InputVersionView.created_at:type_name -> google.protobuf.Timestamp
+	109, // 31: ani.modeldev.v1.InputVersionView.created_at:type_name -> google.protobuf.Timestamp
 	19,  // 32: ani.modeldev.v1.InputVersionView.failure:type_name -> ani.modeldev.v1.ErrorDetail
 	30,  // 33: ani.modeldev.v1.GetInputVersionResponse.input_version:type_name -> ani.modeldev.v1.InputVersionView
 	25,  // 34: ani.modeldev.v1.ListInputVersionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
 	5,   // 35: ani.modeldev.v1.ListInputVersionsRequest.state:type_name -> ani.modeldev.v1.InputState
 	30,  // 36: ani.modeldev.v1.ListInputVersionsResponse.input_versions:type_name -> ani.modeldev.v1.InputVersionView
-	112, // 37: ani.modeldev.v1.ExecutionView.identity:type_name -> ani.training.v1.ExecutionIdentity
-	110, // 38: ani.modeldev.v1.ExecutionView.kind:type_name -> ani.training.v1.ExecutionKind
+	113, // 37: ani.modeldev.v1.ExecutionView.identity:type_name -> ani.training.v1.ExecutionIdentity
+	111, // 38: ani.modeldev.v1.ExecutionView.kind:type_name -> ani.training.v1.ExecutionKind
 	24,  // 39: ani.modeldev.v1.ExecutionView.states:type_name -> ani.modeldev.v1.ExecutionStates
 	6,   // 40: ani.modeldev.v1.ExecutionView.current_step:type_name -> ani.modeldev.v1.PipelineStep
-	108, // 41: ani.modeldev.v1.ExecutionView.accepted_at:type_name -> google.protobuf.Timestamp
-	108, // 42: ani.modeldev.v1.ExecutionView.deadline_at:type_name -> google.protobuf.Timestamp
-	108, // 43: ani.modeldev.v1.ExecutionView.observed_at:type_name -> google.protobuf.Timestamp
+	109, // 41: ani.modeldev.v1.ExecutionView.accepted_at:type_name -> google.protobuf.Timestamp
+	109, // 42: ani.modeldev.v1.ExecutionView.deadline_at:type_name -> google.protobuf.Timestamp
+	109, // 43: ani.modeldev.v1.ExecutionView.observed_at:type_name -> google.protobuf.Timestamp
 	19,  // 44: ani.modeldev.v1.ExecutionView.failure:type_name -> ani.modeldev.v1.ErrorDetail
-	113, // 45: ani.modeldev.v1.ExecutionView.metrics:type_name -> ani.training.v1.Metric
+	114, // 45: ani.modeldev.v1.ExecutionView.metrics:type_name -> ani.training.v1.Metric
 	22,  // 46: ani.modeldev.v1.ExecutionView.explicit_finetuning:type_name -> ani.modeldev.v1.FinetuningParameters
-	111, // 47: ani.modeldev.v1.ExecutionView.resolved_parameters:type_name -> ani.training.v1.Parameter
-	58,  // 48: ani.modeldev.v1.ExecutionView.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
-	65,  // 49: ani.modeldev.v1.ExecutionView.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
-	66,  // 50: ani.modeldev.v1.ExecutionView.timing:type_name -> ani.modeldev.v1.ExecutionTiming
+	112, // 47: ani.modeldev.v1.ExecutionView.resolved_parameters:type_name -> ani.training.v1.Parameter
+	59,  // 48: ani.modeldev.v1.ExecutionView.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
+	66,  // 49: ani.modeldev.v1.ExecutionView.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
+	67,  // 50: ani.modeldev.v1.ExecutionView.timing:type_name -> ani.modeldev.v1.ExecutionTiming
 	21,  // 51: ani.modeldev.v1.ExecutionView.explicit_mlp:type_name -> ani.modeldev.v1.MLPParameters
-	37,  // 52: ani.modeldev.v1.ExecutionView.model_registration:type_name -> ani.modeldev.v1.ModelRegistrationView
-	36,  // 53: ani.modeldev.v1.ExecutionView.history:type_name -> ani.modeldev.v1.ExecutionHistoryView
-	108, // 54: ani.modeldev.v1.ExecutionHistoryView.observed_at:type_name -> google.protobuf.Timestamp
-	10,  // 55: ani.modeldev.v1.ExecutionHistoryView.run_state:type_name -> ani.modeldev.v1.KfpRunTerminalState
-	108, // 56: ani.modeldev.v1.ExecutionHistoryView.run_finished_at:type_name -> google.protobuf.Timestamp
-	11,  // 57: ani.modeldev.v1.ExecutionHistoryView.workflow_phase:type_name -> ani.modeldev.v1.WorkflowTerminalPhase
-	108, // 58: ani.modeldev.v1.ExecutionHistoryView.workflow_finished_at:type_name -> google.protobuf.Timestamp
-	35,  // 59: ani.modeldev.v1.GetExecutionResponse.execution:type_name -> ani.modeldev.v1.ExecutionView
-	25,  // 60: ani.modeldev.v1.ListExecutionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
-	0,   // 61: ani.modeldev.v1.ListExecutionsRequest.compute_state:type_name -> ani.modeldev.v1.ComputeState
-	1,   // 62: ani.modeldev.v1.ListExecutionsRequest.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
-	3,   // 63: ani.modeldev.v1.ListExecutionsRequest.close_state:type_name -> ani.modeldev.v1.CloseState
-	35,  // 64: ani.modeldev.v1.ListExecutionsResponse.executions:type_name -> ani.modeldev.v1.ExecutionView
-	108, // 65: ani.modeldev.v1.LogLine.timestamp:type_name -> google.protobuf.Timestamp
-	114, // 66: ani.modeldev.v1.GetExecutionLogsResponse.source:type_name -> ani.training.v1.LogRef
-	43,  // 67: ani.modeldev.v1.GetExecutionLogsResponse.lines:type_name -> ani.modeldev.v1.LogLine
-	108, // 68: ani.modeldev.v1.GetExecutionLogsResponse.observed_at:type_name -> google.protobuf.Timestamp
-	115, // 69: ani.modeldev.v1.ArtifactView.role:type_name -> ani.training.v1.FileRole
-	1,   // 70: ani.modeldev.v1.ArtifactView.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
-	108, // 71: ani.modeldev.v1.ArtifactView.verified_at:type_name -> google.protobuf.Timestamp
-	25,  // 72: ani.modeldev.v1.ListExecutionArtifactsRequest.page:type_name -> ani.modeldev.v1.PageRequest
-	45,  // 73: ani.modeldev.v1.ListExecutionArtifactsResponse.artifacts:type_name -> ani.modeldev.v1.ArtifactView
-	45,  // 74: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.artifact:type_name -> ani.modeldev.v1.ArtifactView
-	108, // 75: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.expires_at:type_name -> google.protobuf.Timestamp
-	50,  // 76: ani.modeldev.v1.EnvironmentBindingSnapshot.identities:type_name -> ani.modeldev.v1.RuntimeIdentityRefs
-	110, // 77: ani.modeldev.v1.ExecutionSnapshot.kind:type_name -> ani.training.v1.ExecutionKind
-	116, // 78: ani.modeldev.v1.ExecutionSnapshot.delivery_mode:type_name -> ani.training.v1.DeliveryMode
-	117, // 79: ani.modeldev.v1.ExecutionSnapshot.input:type_name -> ani.training.v1.InputRef
-	118, // 80: ani.modeldev.v1.ExecutionSnapshot.program:type_name -> ani.training.v1.ProgramRef
-	119, // 81: ani.modeldev.v1.ExecutionSnapshot.resources:type_name -> ani.training.v1.CPUResources
-	51,  // 82: ani.modeldev.v1.ExecutionSnapshot.environment:type_name -> ani.modeldev.v1.EnvironmentBindingSnapshot
-	120, // 83: ani.modeldev.v1.ExecutionSnapshot.workspace:type_name -> ani.training.v1.WorkspaceContract
-	52,  // 84: ani.modeldev.v1.ExecutionSnapshot.publication_scope:type_name -> ani.modeldev.v1.StorageScope
-	121, // 85: ani.modeldev.v1.ExecutionSnapshot.output_contract:type_name -> ani.training.v1.OutputContract
-	108, // 86: ani.modeldev.v1.ExecutionSnapshot.deadline_at:type_name -> google.protobuf.Timestamp
-	62,  // 87: ani.modeldev.v1.ExecutionSnapshot.finetuning:type_name -> ani.modeldev.v1.FinetuningSnapshot
-	64,  // 88: ani.modeldev.v1.ExecutionSnapshot.implementation:type_name -> ani.modeldev.v1.ImplementationSnapshot
-	63,  // 89: ani.modeldev.v1.ExecutionSnapshot.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
-	65,  // 90: ani.modeldev.v1.ExecutionSnapshot.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
-	66,  // 91: ani.modeldev.v1.ExecutionSnapshot.timing:type_name -> ani.modeldev.v1.ExecutionTiming
-	67,  // 92: ani.modeldev.v1.ExecutionSnapshot.runtime_plan:type_name -> ani.modeldev.v1.RuntimePlan
-	57,  // 93: ani.modeldev.v1.ExecutionSnapshot.gpu:type_name -> ani.modeldev.v1.GPUPlan
-	54,  // 94: ani.modeldev.v1.GPUExecutionSnapshot.node_selector:type_name -> ani.modeldev.v1.StringPair
-	54,  // 95: ani.modeldev.v1.GPUExecutionSnapshot.pod_annotations:type_name -> ani.modeldev.v1.StringPair
-	54,  // 96: ani.modeldev.v1.GPUExecutionSnapshot.resources:type_name -> ani.modeldev.v1.StringPair
-	55,  // 97: ani.modeldev.v1.GPUPlan.execution:type_name -> ani.modeldev.v1.GPUExecutionSnapshot
-	56,  // 98: ani.modeldev.v1.GPUPlan.display:type_name -> ani.modeldev.v1.GPUDisplaySnapshot
-	122, // 99: ani.modeldev.v1.BaseModelRef.object:type_name -> ani.training.v1.FixedObjectRef
-	52,  // 100: ani.modeldev.v1.BaseModelRef.scope:type_name -> ani.modeldev.v1.StorageScope
-	59,  // 101: ani.modeldev.v1.BaseModelRef.files:type_name -> ani.modeldev.v1.BaseModelFile
-	60,  // 102: ani.modeldev.v1.FinetuningSnapshot.base_model:type_name -> ani.modeldev.v1.BaseModelRef
-	58,  // 103: ani.modeldev.v1.FinetuningSnapshot.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
-	118, // 104: ani.modeldev.v1.FinetuningSnapshot.export_program:type_name -> ani.training.v1.ProgramRef
-	118, // 105: ani.modeldev.v1.FinetuningSnapshot.verify_program:type_name -> ani.training.v1.ProgramRef
-	61,  // 106: ani.modeldev.v1.FinetuningSnapshot.budgets:type_name -> ani.modeldev.v1.ComponentBudgets
-	108, // 107: ani.modeldev.v1.ExecutionTiming.accepted_at:type_name -> google.protobuf.Timestamp
-	108, // 108: ani.modeldev.v1.ExecutionTiming.execution_deadline_at:type_name -> google.protobuf.Timestamp
-	20,  // 109: ani.modeldev.v1.PrepareAdmissionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
-	63,  // 110: ani.modeldev.v1.PrepareAdmissionRequest.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
-	108, // 111: ani.modeldev.v1.PrepareAdmissionRequest.accepted_at:type_name -> google.protobuf.Timestamp
-	53,  // 112: ani.modeldev.v1.FinalizeAdmissionResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	112, // 113: ani.modeldev.v1.AcceptExecutionRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
-	53,  // 114: ani.modeldev.v1.AcceptExecutionRequest.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	108, // 115: ani.modeldev.v1.AcceptExecutionRequest.accepted_at:type_name -> google.protobuf.Timestamp
-	20,  // 116: ani.modeldev.v1.AcceptExecutionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
-	112, // 117: ani.modeldev.v1.AcceptExecutionResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	24,  // 118: ani.modeldev.v1.AcceptExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	112, // 119: ani.modeldev.v1.ApplyCloseIntentRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
-	4,   // 120: ani.modeldev.v1.ApplyCloseIntentRequest.reason:type_name -> ani.modeldev.v1.CloseReason
-	108, // 121: ani.modeldev.v1.ApplyCloseIntentRequest.requested_at:type_name -> google.protobuf.Timestamp
-	112, // 122: ani.modeldev.v1.ApplyCloseIntentResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	3,   // 123: ani.modeldev.v1.ApplyCloseIntentResponse.close_state:type_name -> ani.modeldev.v1.CloseState
-	112, // 124: ani.modeldev.v1.StepContext.identity:type_name -> ani.training.v1.ExecutionIdentity
-	76,  // 125: ani.modeldev.v1.StepContext.association:type_name -> ani.modeldev.v1.RunAssociation
-	6,   // 126: ani.modeldev.v1.StepContext.step:type_name -> ani.modeldev.v1.PipelineStep
-	108, // 127: ani.modeldev.v1.AuthorityBinding.bound_at:type_name -> google.protobuf.Timestamp
-	77,  // 128: ani.modeldev.v1.BeginExecutionRequest.context:type_name -> ani.modeldev.v1.StepContext
-	78,  // 129: ani.modeldev.v1.BeginExecutionResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
-	24,  // 130: ani.modeldev.v1.BeginExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	81,  // 131: ani.modeldev.v1.BeginExecutionResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	6,   // 132: ani.modeldev.v1.StepTiming.role:type_name -> ani.modeldev.v1.PipelineStep
-	108, // 133: ani.modeldev.v1.StepTiming.admitted_at:type_name -> google.protobuf.Timestamp
-	108, // 134: ani.modeldev.v1.StepTiming.deadline_at:type_name -> google.protobuf.Timestamp
-	77,  // 135: ani.modeldev.v1.BeginManagedStepRequest.context:type_name -> ani.modeldev.v1.StepContext
-	81,  // 136: ani.modeldev.v1.BeginManagedStepResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	77,  // 137: ani.modeldev.v1.GetExecutionConfigurationRequest.context:type_name -> ani.modeldev.v1.StepContext
-	112, // 138: ani.modeldev.v1.GetExecutionConfigurationResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	53,  // 139: ani.modeldev.v1.GetExecutionConfigurationResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	78,  // 140: ani.modeldev.v1.GetExecutionConfigurationResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
-	123, // 141: ani.modeldev.v1.GetExecutionConfigurationResponse.workspace:type_name -> ani.training.v1.WorkspaceRef
-	24,  // 142: ani.modeldev.v1.GetExecutionConfigurationResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	72,  // 143: ani.modeldev.v1.GetExecutionConfigurationResponse.admission:type_name -> ani.modeldev.v1.AcceptExecutionRequest
-	81,  // 144: ani.modeldev.v1.GetExecutionConfigurationResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	77,  // 145: ani.modeldev.v1.GetStorageCredentialsRequest.context:type_name -> ani.modeldev.v1.StepContext
-	108, // 146: ani.modeldev.v1.TemporaryStorageCredentials.expires_at:type_name -> google.protobuf.Timestamp
-	112, // 147: ani.modeldev.v1.GetStorageCredentialsResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	6,   // 148: ani.modeldev.v1.GetStorageCredentialsResponse.step:type_name -> ani.modeldev.v1.PipelineStep
-	87,  // 149: ani.modeldev.v1.GetStorageCredentialsResponse.credentials:type_name -> ani.modeldev.v1.TemporaryStorageCredentials
-	77,  // 150: ani.modeldev.v1.EnsureTrainingRequest.context:type_name -> ani.modeldev.v1.StepContext
-	108, // 151: ani.modeldev.v1.ObservedCondition.observed_at:type_name -> google.protobuf.Timestamp
-	90,  // 152: ani.modeldev.v1.ResourceObservation.resource:type_name -> ani.modeldev.v1.ResourceRef
-	91,  // 153: ani.modeldev.v1.ResourceObservation.conditions:type_name -> ani.modeldev.v1.ObservedCondition
-	108, // 154: ani.modeldev.v1.ResourceObservation.observed_at:type_name -> google.protobuf.Timestamp
-	112, // 155: ani.modeldev.v1.TrainingStatus.identity:type_name -> ani.training.v1.ExecutionIdentity
-	7,   // 156: ani.modeldev.v1.TrainingStatus.create_state:type_name -> ani.modeldev.v1.ExternalCreateState
-	90,  // 157: ani.modeldev.v1.TrainingStatus.trainjob:type_name -> ani.modeldev.v1.ResourceRef
-	92,  // 158: ani.modeldev.v1.TrainingStatus.resource_history:type_name -> ani.modeldev.v1.ResourceObservation
-	24,  // 159: ani.modeldev.v1.TrainingStatus.states:type_name -> ani.modeldev.v1.ExecutionStates
-	108, // 160: ani.modeldev.v1.TrainingStatus.observed_at:type_name -> google.protobuf.Timestamp
-	108, // 161: ani.modeldev.v1.TrainingStatus.training_admitted_at:type_name -> google.protobuf.Timestamp
-	108, // 162: ani.modeldev.v1.TrainingStatus.training_deadline_at:type_name -> google.protobuf.Timestamp
-	93,  // 163: ani.modeldev.v1.EnsureTrainingResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
-	77,  // 164: ani.modeldev.v1.GetTrainingStatusRequest.context:type_name -> ani.modeldev.v1.StepContext
-	93,  // 165: ani.modeldev.v1.GetTrainingStatusResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
-	123, // 166: ani.modeldev.v1.PreparedInputCandidate.workspace:type_name -> ani.training.v1.WorkspaceRef
-	109, // 167: ani.modeldev.v1.PreparedInputCandidate.prepared_manifest:type_name -> ani.training.v1.ManifestRef
-	117, // 168: ani.modeldev.v1.PreparedInputCandidate.input:type_name -> ani.training.v1.InputRef
-	124, // 169: ani.modeldev.v1.PublishedFileCandidate.file:type_name -> ani.training.v1.FileEntry
-	122, // 170: ani.modeldev.v1.PublishedFileCandidate.object:type_name -> ani.training.v1.FixedObjectRef
-	98,  // 171: ani.modeldev.v1.PublicationCandidate.files:type_name -> ani.modeldev.v1.PublishedFileCandidate
-	122, // 172: ani.modeldev.v1.PublicationCandidate.manifest_object:type_name -> ani.training.v1.FixedObjectRef
-	122, // 173: ani.modeldev.v1.PublicationCandidate.bundle_object:type_name -> ani.training.v1.FixedObjectRef
-	19,  // 174: ani.modeldev.v1.StepFailure.failure:type_name -> ani.modeldev.v1.ErrorDetail
-	114, // 175: ani.modeldev.v1.StepFailure.logs:type_name -> ani.training.v1.LogRef
-	77,  // 176: ani.modeldev.v1.ReportStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
-	97,  // 177: ani.modeldev.v1.ReportStepResultRequest.prepared:type_name -> ani.modeldev.v1.PreparedInputCandidate
-	125, // 178: ani.modeldev.v1.ReportStepResultRequest.training_result:type_name -> ani.training.v1.TrainingResult
-	99,  // 179: ani.modeldev.v1.ReportStepResultRequest.publication:type_name -> ani.modeldev.v1.PublicationCandidate
-	100, // 180: ani.modeldev.v1.ReportStepResultRequest.failure:type_name -> ani.modeldev.v1.StepFailure
-	112, // 181: ani.modeldev.v1.VerifiedPublication.identity:type_name -> ani.training.v1.ExecutionIdentity
-	104, // 182: ani.modeldev.v1.VerifiedPublication.files:type_name -> ani.modeldev.v1.VerifiedPublishedFile
-	122, // 183: ani.modeldev.v1.VerifiedPublication.manifest_object:type_name -> ani.training.v1.FixedObjectRef
-	122, // 184: ani.modeldev.v1.VerifiedPublication.bundle_object:type_name -> ani.training.v1.FixedObjectRef
-	108, // 185: ani.modeldev.v1.VerifiedPublication.remote_verified_at:type_name -> google.protobuf.Timestamp
-	103, // 186: ani.modeldev.v1.VerifiedPublication.upload_completion:type_name -> ani.modeldev.v1.UploadCompletionEvidence
-	108, // 187: ani.modeldev.v1.UploadCompletionEvidence.completed_at:type_name -> google.protobuf.Timestamp
-	108, // 188: ani.modeldev.v1.UploadCompletionEvidence.observed_at:type_name -> google.protobuf.Timestamp
-	124, // 189: ani.modeldev.v1.VerifiedPublishedFile.file:type_name -> ani.training.v1.FileEntry
-	122, // 190: ani.modeldev.v1.VerifiedPublishedFile.object:type_name -> ani.training.v1.FixedObjectRef
-	108, // 191: ani.modeldev.v1.VerifiedPublishedFile.remote_verified_at:type_name -> google.protobuf.Timestamp
-	24,  // 192: ani.modeldev.v1.ReportStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	102, // 193: ani.modeldev.v1.ReportStepResultResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
-	77,  // 194: ani.modeldev.v1.RequestExecutionCloseRequest.context:type_name -> ani.modeldev.v1.StepContext
-	4,   // 195: ani.modeldev.v1.RequestExecutionCloseRequest.reason:type_name -> ani.modeldev.v1.CloseReason
-	3,   // 196: ani.modeldev.v1.RequestExecutionCloseResponse.close_state:type_name -> ani.modeldev.v1.CloseState
-	108, // 197: ani.modeldev.v1.RequestExecutionCloseResponse.accepted_at:type_name -> google.protobuf.Timestamp
-	28,  // 198: ani.modeldev.v1.ModelDevQueryService.ListImplementations:input_type -> ani.modeldev.v1.ListImplementationsRequest
-	31,  // 199: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:input_type -> ani.modeldev.v1.GetInputVersionRequest
-	33,  // 200: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:input_type -> ani.modeldev.v1.ListInputVersionsRequest
-	38,  // 201: ani.modeldev.v1.ModelDevQueryService.GetExecution:input_type -> ani.modeldev.v1.GetExecutionRequest
-	40,  // 202: ani.modeldev.v1.ModelDevQueryService.ListExecutions:input_type -> ani.modeldev.v1.ListExecutionsRequest
-	42,  // 203: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:input_type -> ani.modeldev.v1.GetExecutionLogsRequest
-	46,  // 204: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:input_type -> ani.modeldev.v1.ListExecutionArtifactsRequest
-	48,  // 205: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:input_type -> ani.modeldev.v1.AuthorizeArtifactDownloadRequest
-	68,  // 206: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:input_type -> ani.modeldev.v1.PrepareAdmissionRequest
-	70,  // 207: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:input_type -> ani.modeldev.v1.FinalizeAdmissionRequest
-	72,  // 208: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:input_type -> ani.modeldev.v1.AcceptExecutionRequest
-	74,  // 209: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:input_type -> ani.modeldev.v1.ApplyCloseIntentRequest
-	79,  // 210: ani.modeldev.v1.ModelDevStepService.BeginExecution:input_type -> ani.modeldev.v1.BeginExecutionRequest
-	82,  // 211: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:input_type -> ani.modeldev.v1.BeginManagedStepRequest
-	84,  // 212: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:input_type -> ani.modeldev.v1.GetExecutionConfigurationRequest
-	86,  // 213: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:input_type -> ani.modeldev.v1.GetStorageCredentialsRequest
-	89,  // 214: ani.modeldev.v1.ModelDevStepService.EnsureTraining:input_type -> ani.modeldev.v1.EnsureTrainingRequest
-	95,  // 215: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:input_type -> ani.modeldev.v1.GetTrainingStatusRequest
-	101, // 216: ani.modeldev.v1.ModelDevStepService.ReportStepResult:input_type -> ani.modeldev.v1.ReportStepResultRequest
-	106, // 217: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:input_type -> ani.modeldev.v1.RequestExecutionCloseRequest
-	12,  // 218: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:input_type -> ani.modeldev.v1.BeginFinetuningStepRequest
-	14,  // 219: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:input_type -> ani.modeldev.v1.ReportFinetuningStepResultRequest
-	16,  // 220: ani.modeldev.v1.ModelDevStepService.RegisterModel:input_type -> ani.modeldev.v1.RegisterModelRequest
-	29,  // 221: ani.modeldev.v1.ModelDevQueryService.ListImplementations:output_type -> ani.modeldev.v1.ListImplementationsResponse
-	32,  // 222: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:output_type -> ani.modeldev.v1.GetInputVersionResponse
-	34,  // 223: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:output_type -> ani.modeldev.v1.ListInputVersionsResponse
-	39,  // 224: ani.modeldev.v1.ModelDevQueryService.GetExecution:output_type -> ani.modeldev.v1.GetExecutionResponse
-	41,  // 225: ani.modeldev.v1.ModelDevQueryService.ListExecutions:output_type -> ani.modeldev.v1.ListExecutionsResponse
-	44,  // 226: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:output_type -> ani.modeldev.v1.GetExecutionLogsResponse
-	47,  // 227: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:output_type -> ani.modeldev.v1.ListExecutionArtifactsResponse
-	49,  // 228: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:output_type -> ani.modeldev.v1.AuthorizeArtifactDownloadResponse
-	69,  // 229: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:output_type -> ani.modeldev.v1.PrepareAdmissionResponse
-	71,  // 230: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:output_type -> ani.modeldev.v1.FinalizeAdmissionResponse
-	73,  // 231: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:output_type -> ani.modeldev.v1.AcceptExecutionResponse
-	75,  // 232: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:output_type -> ani.modeldev.v1.ApplyCloseIntentResponse
-	80,  // 233: ani.modeldev.v1.ModelDevStepService.BeginExecution:output_type -> ani.modeldev.v1.BeginExecutionResponse
-	83,  // 234: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:output_type -> ani.modeldev.v1.BeginManagedStepResponse
-	85,  // 235: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:output_type -> ani.modeldev.v1.GetExecutionConfigurationResponse
-	88,  // 236: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:output_type -> ani.modeldev.v1.GetStorageCredentialsResponse
-	94,  // 237: ani.modeldev.v1.ModelDevStepService.EnsureTraining:output_type -> ani.modeldev.v1.EnsureTrainingResponse
-	96,  // 238: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:output_type -> ani.modeldev.v1.GetTrainingStatusResponse
-	105, // 239: ani.modeldev.v1.ModelDevStepService.ReportStepResult:output_type -> ani.modeldev.v1.ReportStepResultResponse
-	107, // 240: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:output_type -> ani.modeldev.v1.RequestExecutionCloseResponse
-	13,  // 241: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:output_type -> ani.modeldev.v1.BeginFinetuningStepResponse
-	15,  // 242: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:output_type -> ani.modeldev.v1.ReportFinetuningStepResultResponse
-	17,  // 243: ani.modeldev.v1.ModelDevStepService.RegisterModel:output_type -> ani.modeldev.v1.RegisterModelResponse
-	221, // [221:244] is the sub-list for method output_type
-	198, // [198:221] is the sub-list for method input_type
-	198, // [198:198] is the sub-list for extension type_name
-	198, // [198:198] is the sub-list for extension extendee
-	0,   // [0:198] is the sub-list for field type_name
+	38,  // 52: ani.modeldev.v1.ExecutionView.model_registration:type_name -> ani.modeldev.v1.ModelRegistrationView
+	37,  // 53: ani.modeldev.v1.ExecutionView.history:type_name -> ani.modeldev.v1.ExecutionHistoryView
+	36,  // 54: ani.modeldev.v1.ExecutionView.steps:type_name -> ani.modeldev.v1.StepProgress
+	109, // 55: ani.modeldev.v1.StepProgress.started_at:type_name -> google.protobuf.Timestamp
+	109, // 56: ani.modeldev.v1.StepProgress.finished_at:type_name -> google.protobuf.Timestamp
+	109, // 57: ani.modeldev.v1.StepProgress.deadline_at:type_name -> google.protobuf.Timestamp
+	109, // 58: ani.modeldev.v1.ExecutionHistoryView.observed_at:type_name -> google.protobuf.Timestamp
+	10,  // 59: ani.modeldev.v1.ExecutionHistoryView.run_state:type_name -> ani.modeldev.v1.KfpRunTerminalState
+	109, // 60: ani.modeldev.v1.ExecutionHistoryView.run_finished_at:type_name -> google.protobuf.Timestamp
+	11,  // 61: ani.modeldev.v1.ExecutionHistoryView.workflow_phase:type_name -> ani.modeldev.v1.WorkflowTerminalPhase
+	109, // 62: ani.modeldev.v1.ExecutionHistoryView.workflow_finished_at:type_name -> google.protobuf.Timestamp
+	35,  // 63: ani.modeldev.v1.GetExecutionResponse.execution:type_name -> ani.modeldev.v1.ExecutionView
+	25,  // 64: ani.modeldev.v1.ListExecutionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	0,   // 65: ani.modeldev.v1.ListExecutionsRequest.compute_state:type_name -> ani.modeldev.v1.ComputeState
+	1,   // 66: ani.modeldev.v1.ListExecutionsRequest.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
+	3,   // 67: ani.modeldev.v1.ListExecutionsRequest.close_state:type_name -> ani.modeldev.v1.CloseState
+	35,  // 68: ani.modeldev.v1.ListExecutionsResponse.executions:type_name -> ani.modeldev.v1.ExecutionView
+	109, // 69: ani.modeldev.v1.LogLine.timestamp:type_name -> google.protobuf.Timestamp
+	115, // 70: ani.modeldev.v1.GetExecutionLogsResponse.source:type_name -> ani.training.v1.LogRef
+	44,  // 71: ani.modeldev.v1.GetExecutionLogsResponse.lines:type_name -> ani.modeldev.v1.LogLine
+	109, // 72: ani.modeldev.v1.GetExecutionLogsResponse.observed_at:type_name -> google.protobuf.Timestamp
+	116, // 73: ani.modeldev.v1.ArtifactView.role:type_name -> ani.training.v1.FileRole
+	1,   // 74: ani.modeldev.v1.ArtifactView.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
+	109, // 75: ani.modeldev.v1.ArtifactView.verified_at:type_name -> google.protobuf.Timestamp
+	25,  // 76: ani.modeldev.v1.ListExecutionArtifactsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	46,  // 77: ani.modeldev.v1.ListExecutionArtifactsResponse.artifacts:type_name -> ani.modeldev.v1.ArtifactView
+	46,  // 78: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.artifact:type_name -> ani.modeldev.v1.ArtifactView
+	109, // 79: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.expires_at:type_name -> google.protobuf.Timestamp
+	51,  // 80: ani.modeldev.v1.EnvironmentBindingSnapshot.identities:type_name -> ani.modeldev.v1.RuntimeIdentityRefs
+	111, // 81: ani.modeldev.v1.ExecutionSnapshot.kind:type_name -> ani.training.v1.ExecutionKind
+	117, // 82: ani.modeldev.v1.ExecutionSnapshot.delivery_mode:type_name -> ani.training.v1.DeliveryMode
+	118, // 83: ani.modeldev.v1.ExecutionSnapshot.input:type_name -> ani.training.v1.InputRef
+	119, // 84: ani.modeldev.v1.ExecutionSnapshot.program:type_name -> ani.training.v1.ProgramRef
+	120, // 85: ani.modeldev.v1.ExecutionSnapshot.resources:type_name -> ani.training.v1.CPUResources
+	52,  // 86: ani.modeldev.v1.ExecutionSnapshot.environment:type_name -> ani.modeldev.v1.EnvironmentBindingSnapshot
+	121, // 87: ani.modeldev.v1.ExecutionSnapshot.workspace:type_name -> ani.training.v1.WorkspaceContract
+	53,  // 88: ani.modeldev.v1.ExecutionSnapshot.publication_scope:type_name -> ani.modeldev.v1.StorageScope
+	122, // 89: ani.modeldev.v1.ExecutionSnapshot.output_contract:type_name -> ani.training.v1.OutputContract
+	109, // 90: ani.modeldev.v1.ExecutionSnapshot.deadline_at:type_name -> google.protobuf.Timestamp
+	63,  // 91: ani.modeldev.v1.ExecutionSnapshot.finetuning:type_name -> ani.modeldev.v1.FinetuningSnapshot
+	65,  // 92: ani.modeldev.v1.ExecutionSnapshot.implementation:type_name -> ani.modeldev.v1.ImplementationSnapshot
+	64,  // 93: ani.modeldev.v1.ExecutionSnapshot.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
+	66,  // 94: ani.modeldev.v1.ExecutionSnapshot.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
+	67,  // 95: ani.modeldev.v1.ExecutionSnapshot.timing:type_name -> ani.modeldev.v1.ExecutionTiming
+	68,  // 96: ani.modeldev.v1.ExecutionSnapshot.runtime_plan:type_name -> ani.modeldev.v1.RuntimePlan
+	58,  // 97: ani.modeldev.v1.ExecutionSnapshot.gpu:type_name -> ani.modeldev.v1.GPUPlan
+	55,  // 98: ani.modeldev.v1.GPUExecutionSnapshot.node_selector:type_name -> ani.modeldev.v1.StringPair
+	55,  // 99: ani.modeldev.v1.GPUExecutionSnapshot.pod_annotations:type_name -> ani.modeldev.v1.StringPair
+	55,  // 100: ani.modeldev.v1.GPUExecutionSnapshot.resources:type_name -> ani.modeldev.v1.StringPair
+	56,  // 101: ani.modeldev.v1.GPUPlan.execution:type_name -> ani.modeldev.v1.GPUExecutionSnapshot
+	57,  // 102: ani.modeldev.v1.GPUPlan.display:type_name -> ani.modeldev.v1.GPUDisplaySnapshot
+	123, // 103: ani.modeldev.v1.BaseModelRef.object:type_name -> ani.training.v1.FixedObjectRef
+	53,  // 104: ani.modeldev.v1.BaseModelRef.scope:type_name -> ani.modeldev.v1.StorageScope
+	60,  // 105: ani.modeldev.v1.BaseModelRef.files:type_name -> ani.modeldev.v1.BaseModelFile
+	61,  // 106: ani.modeldev.v1.FinetuningSnapshot.base_model:type_name -> ani.modeldev.v1.BaseModelRef
+	59,  // 107: ani.modeldev.v1.FinetuningSnapshot.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
+	119, // 108: ani.modeldev.v1.FinetuningSnapshot.export_program:type_name -> ani.training.v1.ProgramRef
+	119, // 109: ani.modeldev.v1.FinetuningSnapshot.verify_program:type_name -> ani.training.v1.ProgramRef
+	62,  // 110: ani.modeldev.v1.FinetuningSnapshot.budgets:type_name -> ani.modeldev.v1.ComponentBudgets
+	109, // 111: ani.modeldev.v1.ExecutionTiming.accepted_at:type_name -> google.protobuf.Timestamp
+	109, // 112: ani.modeldev.v1.ExecutionTiming.execution_deadline_at:type_name -> google.protobuf.Timestamp
+	20,  // 113: ani.modeldev.v1.PrepareAdmissionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
+	64,  // 114: ani.modeldev.v1.PrepareAdmissionRequest.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
+	109, // 115: ani.modeldev.v1.PrepareAdmissionRequest.accepted_at:type_name -> google.protobuf.Timestamp
+	54,  // 116: ani.modeldev.v1.FinalizeAdmissionResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	113, // 117: ani.modeldev.v1.AcceptExecutionRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
+	54,  // 118: ani.modeldev.v1.AcceptExecutionRequest.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	109, // 119: ani.modeldev.v1.AcceptExecutionRequest.accepted_at:type_name -> google.protobuf.Timestamp
+	20,  // 120: ani.modeldev.v1.AcceptExecutionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
+	113, // 121: ani.modeldev.v1.AcceptExecutionResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	24,  // 122: ani.modeldev.v1.AcceptExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	113, // 123: ani.modeldev.v1.ApplyCloseIntentRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
+	4,   // 124: ani.modeldev.v1.ApplyCloseIntentRequest.reason:type_name -> ani.modeldev.v1.CloseReason
+	109, // 125: ani.modeldev.v1.ApplyCloseIntentRequest.requested_at:type_name -> google.protobuf.Timestamp
+	113, // 126: ani.modeldev.v1.ApplyCloseIntentResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	3,   // 127: ani.modeldev.v1.ApplyCloseIntentResponse.close_state:type_name -> ani.modeldev.v1.CloseState
+	113, // 128: ani.modeldev.v1.StepContext.identity:type_name -> ani.training.v1.ExecutionIdentity
+	77,  // 129: ani.modeldev.v1.StepContext.association:type_name -> ani.modeldev.v1.RunAssociation
+	6,   // 130: ani.modeldev.v1.StepContext.step:type_name -> ani.modeldev.v1.PipelineStep
+	109, // 131: ani.modeldev.v1.AuthorityBinding.bound_at:type_name -> google.protobuf.Timestamp
+	78,  // 132: ani.modeldev.v1.BeginExecutionRequest.context:type_name -> ani.modeldev.v1.StepContext
+	79,  // 133: ani.modeldev.v1.BeginExecutionResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
+	24,  // 134: ani.modeldev.v1.BeginExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	82,  // 135: ani.modeldev.v1.BeginExecutionResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	6,   // 136: ani.modeldev.v1.StepTiming.role:type_name -> ani.modeldev.v1.PipelineStep
+	109, // 137: ani.modeldev.v1.StepTiming.admitted_at:type_name -> google.protobuf.Timestamp
+	109, // 138: ani.modeldev.v1.StepTiming.deadline_at:type_name -> google.protobuf.Timestamp
+	78,  // 139: ani.modeldev.v1.BeginManagedStepRequest.context:type_name -> ani.modeldev.v1.StepContext
+	82,  // 140: ani.modeldev.v1.BeginManagedStepResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	78,  // 141: ani.modeldev.v1.GetExecutionConfigurationRequest.context:type_name -> ani.modeldev.v1.StepContext
+	113, // 142: ani.modeldev.v1.GetExecutionConfigurationResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	54,  // 143: ani.modeldev.v1.GetExecutionConfigurationResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	79,  // 144: ani.modeldev.v1.GetExecutionConfigurationResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
+	124, // 145: ani.modeldev.v1.GetExecutionConfigurationResponse.workspace:type_name -> ani.training.v1.WorkspaceRef
+	24,  // 146: ani.modeldev.v1.GetExecutionConfigurationResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	73,  // 147: ani.modeldev.v1.GetExecutionConfigurationResponse.admission:type_name -> ani.modeldev.v1.AcceptExecutionRequest
+	82,  // 148: ani.modeldev.v1.GetExecutionConfigurationResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	78,  // 149: ani.modeldev.v1.GetStorageCredentialsRequest.context:type_name -> ani.modeldev.v1.StepContext
+	109, // 150: ani.modeldev.v1.TemporaryStorageCredentials.expires_at:type_name -> google.protobuf.Timestamp
+	113, // 151: ani.modeldev.v1.GetStorageCredentialsResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	6,   // 152: ani.modeldev.v1.GetStorageCredentialsResponse.step:type_name -> ani.modeldev.v1.PipelineStep
+	88,  // 153: ani.modeldev.v1.GetStorageCredentialsResponse.credentials:type_name -> ani.modeldev.v1.TemporaryStorageCredentials
+	78,  // 154: ani.modeldev.v1.EnsureTrainingRequest.context:type_name -> ani.modeldev.v1.StepContext
+	109, // 155: ani.modeldev.v1.ObservedCondition.observed_at:type_name -> google.protobuf.Timestamp
+	91,  // 156: ani.modeldev.v1.ResourceObservation.resource:type_name -> ani.modeldev.v1.ResourceRef
+	92,  // 157: ani.modeldev.v1.ResourceObservation.conditions:type_name -> ani.modeldev.v1.ObservedCondition
+	109, // 158: ani.modeldev.v1.ResourceObservation.observed_at:type_name -> google.protobuf.Timestamp
+	113, // 159: ani.modeldev.v1.TrainingStatus.identity:type_name -> ani.training.v1.ExecutionIdentity
+	7,   // 160: ani.modeldev.v1.TrainingStatus.create_state:type_name -> ani.modeldev.v1.ExternalCreateState
+	91,  // 161: ani.modeldev.v1.TrainingStatus.trainjob:type_name -> ani.modeldev.v1.ResourceRef
+	93,  // 162: ani.modeldev.v1.TrainingStatus.resource_history:type_name -> ani.modeldev.v1.ResourceObservation
+	24,  // 163: ani.modeldev.v1.TrainingStatus.states:type_name -> ani.modeldev.v1.ExecutionStates
+	109, // 164: ani.modeldev.v1.TrainingStatus.observed_at:type_name -> google.protobuf.Timestamp
+	109, // 165: ani.modeldev.v1.TrainingStatus.training_admitted_at:type_name -> google.protobuf.Timestamp
+	109, // 166: ani.modeldev.v1.TrainingStatus.training_deadline_at:type_name -> google.protobuf.Timestamp
+	94,  // 167: ani.modeldev.v1.EnsureTrainingResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
+	78,  // 168: ani.modeldev.v1.GetTrainingStatusRequest.context:type_name -> ani.modeldev.v1.StepContext
+	94,  // 169: ani.modeldev.v1.GetTrainingStatusResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
+	124, // 170: ani.modeldev.v1.PreparedInputCandidate.workspace:type_name -> ani.training.v1.WorkspaceRef
+	110, // 171: ani.modeldev.v1.PreparedInputCandidate.prepared_manifest:type_name -> ani.training.v1.ManifestRef
+	118, // 172: ani.modeldev.v1.PreparedInputCandidate.input:type_name -> ani.training.v1.InputRef
+	125, // 173: ani.modeldev.v1.PublishedFileCandidate.file:type_name -> ani.training.v1.FileEntry
+	123, // 174: ani.modeldev.v1.PublishedFileCandidate.object:type_name -> ani.training.v1.FixedObjectRef
+	99,  // 175: ani.modeldev.v1.PublicationCandidate.files:type_name -> ani.modeldev.v1.PublishedFileCandidate
+	123, // 176: ani.modeldev.v1.PublicationCandidate.manifest_object:type_name -> ani.training.v1.FixedObjectRef
+	123, // 177: ani.modeldev.v1.PublicationCandidate.bundle_object:type_name -> ani.training.v1.FixedObjectRef
+	19,  // 178: ani.modeldev.v1.StepFailure.failure:type_name -> ani.modeldev.v1.ErrorDetail
+	115, // 179: ani.modeldev.v1.StepFailure.logs:type_name -> ani.training.v1.LogRef
+	78,  // 180: ani.modeldev.v1.ReportStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
+	98,  // 181: ani.modeldev.v1.ReportStepResultRequest.prepared:type_name -> ani.modeldev.v1.PreparedInputCandidate
+	126, // 182: ani.modeldev.v1.ReportStepResultRequest.training_result:type_name -> ani.training.v1.TrainingResult
+	100, // 183: ani.modeldev.v1.ReportStepResultRequest.publication:type_name -> ani.modeldev.v1.PublicationCandidate
+	101, // 184: ani.modeldev.v1.ReportStepResultRequest.failure:type_name -> ani.modeldev.v1.StepFailure
+	113, // 185: ani.modeldev.v1.VerifiedPublication.identity:type_name -> ani.training.v1.ExecutionIdentity
+	105, // 186: ani.modeldev.v1.VerifiedPublication.files:type_name -> ani.modeldev.v1.VerifiedPublishedFile
+	123, // 187: ani.modeldev.v1.VerifiedPublication.manifest_object:type_name -> ani.training.v1.FixedObjectRef
+	123, // 188: ani.modeldev.v1.VerifiedPublication.bundle_object:type_name -> ani.training.v1.FixedObjectRef
+	109, // 189: ani.modeldev.v1.VerifiedPublication.remote_verified_at:type_name -> google.protobuf.Timestamp
+	104, // 190: ani.modeldev.v1.VerifiedPublication.upload_completion:type_name -> ani.modeldev.v1.UploadCompletionEvidence
+	109, // 191: ani.modeldev.v1.UploadCompletionEvidence.completed_at:type_name -> google.protobuf.Timestamp
+	109, // 192: ani.modeldev.v1.UploadCompletionEvidence.observed_at:type_name -> google.protobuf.Timestamp
+	125, // 193: ani.modeldev.v1.VerifiedPublishedFile.file:type_name -> ani.training.v1.FileEntry
+	123, // 194: ani.modeldev.v1.VerifiedPublishedFile.object:type_name -> ani.training.v1.FixedObjectRef
+	109, // 195: ani.modeldev.v1.VerifiedPublishedFile.remote_verified_at:type_name -> google.protobuf.Timestamp
+	24,  // 196: ani.modeldev.v1.ReportStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	103, // 197: ani.modeldev.v1.ReportStepResultResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
+	78,  // 198: ani.modeldev.v1.RequestExecutionCloseRequest.context:type_name -> ani.modeldev.v1.StepContext
+	4,   // 199: ani.modeldev.v1.RequestExecutionCloseRequest.reason:type_name -> ani.modeldev.v1.CloseReason
+	3,   // 200: ani.modeldev.v1.RequestExecutionCloseResponse.close_state:type_name -> ani.modeldev.v1.CloseState
+	109, // 201: ani.modeldev.v1.RequestExecutionCloseResponse.accepted_at:type_name -> google.protobuf.Timestamp
+	28,  // 202: ani.modeldev.v1.ModelDevQueryService.ListImplementations:input_type -> ani.modeldev.v1.ListImplementationsRequest
+	31,  // 203: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:input_type -> ani.modeldev.v1.GetInputVersionRequest
+	33,  // 204: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:input_type -> ani.modeldev.v1.ListInputVersionsRequest
+	39,  // 205: ani.modeldev.v1.ModelDevQueryService.GetExecution:input_type -> ani.modeldev.v1.GetExecutionRequest
+	41,  // 206: ani.modeldev.v1.ModelDevQueryService.ListExecutions:input_type -> ani.modeldev.v1.ListExecutionsRequest
+	43,  // 207: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:input_type -> ani.modeldev.v1.GetExecutionLogsRequest
+	47,  // 208: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:input_type -> ani.modeldev.v1.ListExecutionArtifactsRequest
+	49,  // 209: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:input_type -> ani.modeldev.v1.AuthorizeArtifactDownloadRequest
+	69,  // 210: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:input_type -> ani.modeldev.v1.PrepareAdmissionRequest
+	71,  // 211: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:input_type -> ani.modeldev.v1.FinalizeAdmissionRequest
+	73,  // 212: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:input_type -> ani.modeldev.v1.AcceptExecutionRequest
+	75,  // 213: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:input_type -> ani.modeldev.v1.ApplyCloseIntentRequest
+	80,  // 214: ani.modeldev.v1.ModelDevStepService.BeginExecution:input_type -> ani.modeldev.v1.BeginExecutionRequest
+	83,  // 215: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:input_type -> ani.modeldev.v1.BeginManagedStepRequest
+	85,  // 216: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:input_type -> ani.modeldev.v1.GetExecutionConfigurationRequest
+	87,  // 217: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:input_type -> ani.modeldev.v1.GetStorageCredentialsRequest
+	90,  // 218: ani.modeldev.v1.ModelDevStepService.EnsureTraining:input_type -> ani.modeldev.v1.EnsureTrainingRequest
+	96,  // 219: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:input_type -> ani.modeldev.v1.GetTrainingStatusRequest
+	102, // 220: ani.modeldev.v1.ModelDevStepService.ReportStepResult:input_type -> ani.modeldev.v1.ReportStepResultRequest
+	107, // 221: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:input_type -> ani.modeldev.v1.RequestExecutionCloseRequest
+	12,  // 222: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:input_type -> ani.modeldev.v1.BeginFinetuningStepRequest
+	14,  // 223: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:input_type -> ani.modeldev.v1.ReportFinetuningStepResultRequest
+	16,  // 224: ani.modeldev.v1.ModelDevStepService.RegisterModel:input_type -> ani.modeldev.v1.RegisterModelRequest
+	29,  // 225: ani.modeldev.v1.ModelDevQueryService.ListImplementations:output_type -> ani.modeldev.v1.ListImplementationsResponse
+	32,  // 226: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:output_type -> ani.modeldev.v1.GetInputVersionResponse
+	34,  // 227: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:output_type -> ani.modeldev.v1.ListInputVersionsResponse
+	40,  // 228: ani.modeldev.v1.ModelDevQueryService.GetExecution:output_type -> ani.modeldev.v1.GetExecutionResponse
+	42,  // 229: ani.modeldev.v1.ModelDevQueryService.ListExecutions:output_type -> ani.modeldev.v1.ListExecutionsResponse
+	45,  // 230: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:output_type -> ani.modeldev.v1.GetExecutionLogsResponse
+	48,  // 231: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:output_type -> ani.modeldev.v1.ListExecutionArtifactsResponse
+	50,  // 232: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:output_type -> ani.modeldev.v1.AuthorizeArtifactDownloadResponse
+	70,  // 233: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:output_type -> ani.modeldev.v1.PrepareAdmissionResponse
+	72,  // 234: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:output_type -> ani.modeldev.v1.FinalizeAdmissionResponse
+	74,  // 235: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:output_type -> ani.modeldev.v1.AcceptExecutionResponse
+	76,  // 236: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:output_type -> ani.modeldev.v1.ApplyCloseIntentResponse
+	81,  // 237: ani.modeldev.v1.ModelDevStepService.BeginExecution:output_type -> ani.modeldev.v1.BeginExecutionResponse
+	84,  // 238: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:output_type -> ani.modeldev.v1.BeginManagedStepResponse
+	86,  // 239: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:output_type -> ani.modeldev.v1.GetExecutionConfigurationResponse
+	89,  // 240: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:output_type -> ani.modeldev.v1.GetStorageCredentialsResponse
+	95,  // 241: ani.modeldev.v1.ModelDevStepService.EnsureTraining:output_type -> ani.modeldev.v1.EnsureTrainingResponse
+	97,  // 242: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:output_type -> ani.modeldev.v1.GetTrainingStatusResponse
+	106, // 243: ani.modeldev.v1.ModelDevStepService.ReportStepResult:output_type -> ani.modeldev.v1.ReportStepResultResponse
+	108, // 244: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:output_type -> ani.modeldev.v1.RequestExecutionCloseResponse
+	13,  // 245: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:output_type -> ani.modeldev.v1.BeginFinetuningStepResponse
+	15,  // 246: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:output_type -> ani.modeldev.v1.ReportFinetuningStepResultResponse
+	17,  // 247: ani.modeldev.v1.ModelDevStepService.RegisterModel:output_type -> ani.modeldev.v1.RegisterModelResponse
+	225, // [225:248] is the sub-list for method output_type
+	202, // [202:225] is the sub-list for method input_type
+	202, // [202:202] is the sub-list for extension type_name
+	202, // [202:202] is the sub-list for extension extendee
+	0,   // [0:202] is the sub-list for field type_name
 }
 
 func init() { file_ani_modeldev_v1_modeldev_proto_init() }
@@ -9325,17 +9439,17 @@ func file_ani_modeldev_v1_modeldev_proto_init() {
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[13].OneofWrappers = []any{}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[14].OneofWrappers = []any{}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[21].OneofWrappers = []any{}
-	file_ani_modeldev_v1_modeldev_proto_msgTypes[28].OneofWrappers = []any{}
-	file_ani_modeldev_v1_modeldev_proto_msgTypes[30].OneofWrappers = []any{}
-	file_ani_modeldev_v1_modeldev_proto_msgTypes[50].OneofWrappers = []any{}
-	file_ani_modeldev_v1_modeldev_proto_msgTypes[58].OneofWrappers = []any{}
-	file_ani_modeldev_v1_modeldev_proto_msgTypes[75].OneofWrappers = []any{
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[29].OneofWrappers = []any{}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[31].OneofWrappers = []any{}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[51].OneofWrappers = []any{}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[59].OneofWrappers = []any{}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[76].OneofWrappers = []any{
 		(*TemporaryStorageCredentials_ObjectKey)(nil),
 		(*TemporaryStorageCredentials_ObjectPrefix)(nil),
 	}
-	file_ani_modeldev_v1_modeldev_proto_msgTypes[79].OneofWrappers = []any{}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[80].OneofWrappers = []any{}
-	file_ani_modeldev_v1_modeldev_proto_msgTypes[89].OneofWrappers = []any{
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[81].OneofWrappers = []any{}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[90].OneofWrappers = []any{
 		(*ReportStepResultRequest_Prepared)(nil),
 		(*ReportStepResultRequest_TrainingResult)(nil),
 		(*ReportStepResultRequest_Publication)(nil),
@@ -9347,7 +9461,7 @@ func file_ani_modeldev_v1_modeldev_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ani_modeldev_v1_modeldev_proto_rawDesc), len(file_ani_modeldev_v1_modeldev_proto_rawDesc)),
 			NumEnums:      12,
-			NumMessages:   96,
+			NumMessages:   97,
 			NumExtensions: 0,
 			NumServices:   4,
 		},

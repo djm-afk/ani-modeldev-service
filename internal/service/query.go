@@ -24,6 +24,7 @@ type Query struct {
 	logs       biz.TrainingLogReader
 	materials  *biz.ManagedMaterials
 	models     biz.FinetuningModelFactsReader
+	metrics    biz.MetricsObjectReader
 }
 
 // WithFinetuningFacts records the actual read dependency assembled by the
@@ -35,6 +36,13 @@ func (query *Query) WithFinetuningFacts(models biz.FinetuningModelFactsReader) *
 
 func (query *Query) WithMaterials(materials *biz.ManagedMaterials) *Query {
 	query.materials = materials
+	return query
+}
+
+// WithMetrics installs the published-object reader used to derive training
+// curves. Without it metrics stay absent; the detail response is unaffected.
+func (query *Query) WithMetrics(metrics biz.MetricsObjectReader) *Query {
+	query.metrics = metrics
 	return query
 }
 
@@ -150,6 +158,9 @@ func (query *Query) GetExecution(ctx context.Context, request *modeldevv1.GetExe
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
+	// The curve needs one object read per execution, so only the single-execution
+	// detail fills it. A list keeps deriving everything from committed facts.
+	view.Metrics = query.executionMetrics(ctx, record)
 	return &modeldevv1.GetExecutionResponse{Execution: view}, nil
 }
 
@@ -225,6 +236,13 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 			view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_VERIFY
 		}
 	}
+	// A running collect supersedes the step that produced its inputs, but never
+	// publish: once publish is admitted or published, the later facts decide.
+	// The collect step state uses the same predicate, so the timeline and
+	// current_step cannot disagree.
+	if step := currentStepFromFacts(record.Runtime); step != modeldevv1.PipelineStep_PIPELINE_STEP_UNSPECIFIED {
+		view.CurrentStep = step
+	}
 	if record.Runtime.Publication != nil {
 		view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH
 		view.ObservedAt = timestamppb.New(record.Runtime.Publication.VerifiedAt)
@@ -248,6 +266,7 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if err != nil {
 		return nil, err
 	}
+	view.Steps = executionSteps(value, record.Runtime)
 	return view, nil
 }
 

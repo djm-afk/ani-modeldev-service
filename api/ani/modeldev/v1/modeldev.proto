@@ -365,6 +365,22 @@ message ExecutionView {
   MLPParameters explicit_mlp = 28;
   ModelRegistrationView model_registration = 29;
   ExecutionHistoryView history = 30;
+  // Complete ordered step sequence for timeline rendering. The set depends on
+  // kind; close is always last.
+  repeated StepProgress steps = 31;
+}
+
+// StepProgress is one entry of the ordered execution timeline. Role names the
+// pipeline step; state is one of PENDING, RUNNING, SUCCEEDED, FAILED, STOPPED.
+message StepProgress {
+  string role = 1;
+  string state = 2;
+  google.protobuf.Timestamp started_at = 3;
+  // Absent while the step has not finished; the client derives elapsed time.
+  google.protobuf.Timestamp finished_at = 4;
+  // Only export and verify report a real process exit code.
+  int32 exit_code = 5;
+  google.protobuf.Timestamp deadline_at = 6;
 }
 
 enum KfpRunTerminalState {

@@ -60,7 +60,8 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 		return nil, errors.New(message)
 	}
 	middlewares := observability.ServerMiddleware(logger)
-	query := service.NewQuery(execution.New(pool), objectstore.NewDownloadSigner(clients.store, config.Runtime.ObjectStorage.ConnectionId), clients.logs)
+	query := service.NewQuery(execution.New(pool), objectstore.NewDownloadSigner(clients.store, config.Runtime.ObjectStorage.ConnectionId), clients.logs).
+		WithMetrics(objectstore.NewObjectReader(clients.store, config.Runtime.ObjectStorage.ConnectionId))
 	admissions, dispatch, facts := execution.New(pool), submission.New(pool), lifecycle.New(pool)
 	gpuRelease, ownerSigner, closeGPU, err := assembleGPUOwner(config.Runtime, clients.kube, facts)
 	if err != nil {
