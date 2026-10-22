@@ -93,6 +93,7 @@ build:
 	mkdir -p bin
 	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(SERVICE_NAME) ./cmd/ani-modeldev-service
 	$(GO) build -trimpath -o bin/ani-modeldev-step ./cmd/ani-modeldev-step
+	$(GO) build -trimpath -o bin/ani-modeldev-webhook ./cmd/ani-modeldev-webhook
 
 test:
 	$(GO) test -count=1 ./...

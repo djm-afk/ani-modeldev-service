@@ -1,0 +1,72 @@
+{
+  "scope": "MODEL_REQUIREMENTS_NOT_EXECUTED",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "note": "按MR真实用途分别交付；不是CORE_FLOW全部开发前置。上游来件替代不等于Gov授权通过。",
+  "items": [
+    {
+      "id": "MR01",
+      "capability": "MR01 可信接收",
+      "provider": "在已有业务mTLS入口按服务+完整RPC+用途建立可信上下文；检查tenant与资源；不信任body自报Principal",
+      "consumer": "重建metadata；只从已验证Gov委托/持久受理构造请求；不冒用Gov证书",
+      "evidence": "无证书、错服务、越权方法、冲突tenant、伪造actor拒绝；合法原范围通过",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "MR02",
+      "capability": "MR02 基模读取",
+      "provider": "返回已批准精确版本及真实size/SHA/format/加密/固定引用；短期下载始终同版本",
+      "consumer": "冻结读取事实、临近使用才签发能力、流式核验",
+      "evidence": "固定版本读回；源同key新版本不替换基模；禁止任意版本读取",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "MR03",
+      "capability": "MR03 目标与名称",
+      "provider": "Model.id与外部标识明确；目标归属/可写检查；租户内名称唯一，新建重放回原模型",
+      "consumer": "create-only与existing分支固定；预检仅提示/拒绝，不承担最终唯一性",
+      "evidence": "同名新执行冲突；原键重放同模型；显式existing新增版本",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "MR04",
+      "capability": "MR04 版本登记",
+      "provider": "原key+原业务内容幂等；完整登记内容一致性；可靠finalization",
+      "consumer": "持久原登记意图；具体写派发按D09.3与停止仲裁，不以整份意图代替在途事实",
+      "evidence": "一次结果；同key异内容拒绝；丢响应/部分提交及停止竞争",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "MR05",
+      "capability": "MR05 原结果查证",
+      "provider": "限定原tenant/业务键返回未创建、pending/部分完成、READY或冲突及原字段；READY-only旧接口含义不变",
+      "consumer": "先查证再按合同有限重放；不拿404单独当无副作用",
+      "evidence": "响应丢失能找回；不会创建第二版本；未完成状态不可当READY",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "MR06",
+      "capability": "MR06 固定对象与下载",
+      "provider": "固定版本选择器或受管不可覆写key贯穿持久引用、校验、下载和重放",
+      "consumer": "不将versioned object降成latest；tar SHA/size与原发布一致",
+      "evidence": "同key后来内容改变，仍下载原内容；长度/SHA不符拒绝",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "MR07",
+      "capability": "MR07 存储交接",
+      "provider": "明确当前作用域可否接受原publication引用；需上传时票据不另建业务版本",
+      "consumer": "固定一条经验证绑定；仅必要时复制，不动态切模式",
+      "evidence": "实際从Model读取同一tar；配置缺失明确未启用",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "MR08",
+      "capability": "MR08 删除保护",
+      "provider": "批准基模/登记成品的保护在实际删除路径生效；保护建立时机明确",
+      "consumer": "在批准、引用和记录时使用权威事实；不靠隐藏按钮",
+      "evidence": "删除与批准/登记竞争时不会删掉受保护资产",
+      "status": "NOT_RUN"
+    }
+  ]
+}

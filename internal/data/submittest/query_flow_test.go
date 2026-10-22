@@ -119,16 +119,21 @@ func assertPublishedQueryBoundaries(t *testing.T, ctx context.Context, client mo
 		t.Fatalf("cross-tenant artifact list disclosed publication: %v", err)
 	}
 	seen := map[string]bool{}
-	token := ""
-	for i := 0; i <= len(files); i++ {
-		page, err := client.ListExecutionArtifacts(queryCall(ctx, admission, method), &modeldevv1.ListExecutionArtifactsRequest{ExecutionId: admission.ExecutionID, Page: &modeldevv1.PageRequest{PageSize: 1, PageToken: token}})
-		if err != nil || len(page.GetArtifacts()) != 1 || seen[page.Artifacts[0].ArtifactId] {
+	for pageIndex := uint32(1); ; pageIndex++ {
+		current, size := pageIndex, uint32(1)
+		page, err := client.ListExecutionArtifacts(queryCall(ctx, admission, method), &modeldevv1.ListExecutionArtifactsRequest{ExecutionId: admission.ExecutionID, Page: &modeldevv1.PageRequest{Page: &current, PageSize: &size}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(page.GetArtifacts()) == 0 {
+			break
+		}
+		if len(page.GetArtifacts()) != 1 || seen[page.Artifacts[0].ArtifactId] {
 			t.Fatal("artifact pagination lost stable bounded membership")
 		}
 		seen[page.Artifacts[0].ArtifactId] = true
-		token = page.NextPageToken
-		if token == "" {
-			break
+		if pageIndex > uint32(len(files))+1 {
+			t.Fatal("artifact pagination did not terminate")
 		}
 	}
 	if len(seen) != len(files) {

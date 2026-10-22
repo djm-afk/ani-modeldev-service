@@ -1,0 +1,47 @@
+{
+  "schema": "ani.finetuning.model-registration-fixture.v1",
+  "source_commit": "REPLACE_WITH_40_HEX_SOURCE_COMMIT_MATCHING_THE_BINARY",
+  "tenant_id": "REPLACE_WITH_CANONICAL_UUID_OF_THE_TARGET_TENANT",
+  "actor": "model-registration:test-driver",
+  "model": {
+    "endpoint": "ani-model-grpc.ani-system.svc.cluster.local:19090",
+    "ca_file": "/model-tls/ca.crt",
+    "certificate_file": "/model-tls/tls.crt",
+    "private_key_file": "/model-tls/tls.key",
+    "client_dns_name": "ani-governance",
+    "server_name": "ani-model.ani.internal",
+    "timeout_seconds": 30
+  },
+  "storage": {
+    "endpoint": "http://minio.ani-infra.svc.cluster.local:9000",
+    "region": "us-east-1",
+    "ca_file": "",
+    "credentials_file": "/storage/control.json"
+  },
+  "source_object": {
+    "bucket": "ani-models",
+    "key": "REPLACE_WITH_TENANT_PREFIXED_EXISTING_MODEL_TAR_KEY",
+    "version_id": null,
+    "size_bytes": 0,
+    "sha256": "REPLACE_WITH_LOWERCASE_64_HEX_SHA256_OF_THE_SOURCE_OBJECT"
+  },
+  "artifact_scope": {
+    "storage_connection_id": "REPLACE_WITH_PUBLICATION_STORAGE_CONNECTION_ID",
+    "bucket": "ani-models",
+    "approved_prefix": "REPLACE_WITH_APPROVED_PREFIX_THAT_CONTAINS_THE_SOURCE_KEY",
+    "credential_reference": "REPLACE_WITH_CREDENTIAL_REFERENCE"
+  },
+  "prepare": {
+    "idempotency_key": "REPLACE_WITH_A_STABLE_BATCH_KEY",
+    "version": "REPLACE_WITH_THE_VERSION_TAG",
+    "file_name": "model.tar",
+    "format": "safetensors",
+    "display_name": "REPLACE_WITH_DISPLAY_NAME",
+    "description": "REPLACE_WITH_DESCRIPTION",
+    "capabilities": ["REPLACE_WITH_CAPABILITY"],
+    "model_name": "REPLACE_WITH_LOWERCASE_MODEL_NAME",
+    "target_model_id": "",
+    "source_model_version_id": "REPLACE_WITH_EXISTING_READY_SOURCE_MODEL_VERSION_UUID"
+  },
+  "evidence_directory": "/evidence"
+}

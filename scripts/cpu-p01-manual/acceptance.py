@@ -47,6 +47,11 @@ class API:
 def emit(value):
     print(json.dumps(value, separators=(',', ':')), flush=True)
 
+def execution_view(response):
+    """BFF returns the execution flat; older projections nest it under 'execution'."""
+    view = response.get('execution') if isinstance(response, dict) else None
+    return view if isinstance(view, dict) else response
+
 
 def stop_training(api, config):
     """One authorized BFF client observes real optimizer output before Stop."""
@@ -71,7 +76,7 @@ def stop_training(api, config):
             emit({'event': 'awaiting-projection', 'execution_id': execution, 'http_status': 404})
             time.sleep(min(0.5, max(0, deadline-time.monotonic())))
             continue
-        view = response['execution']
+        view = execution_view(response)
         assert view['execution_id'] == execution and view['operation_id'] == operation
         emit({'event': 'observed', 'execution': view})
         compute, close = view.get('compute_state'), view.get('close_state')
@@ -163,7 +168,7 @@ def main():
                 actual = {item['execution_id'] for item in result.get('executions', [])}
                 assert actual == set(check['visible_execution_ids']), 'unexpected visible executions'
             if 'execution_id' in check:
-                assert result['execution']['execution_id'] == check['execution_id']
+                assert execution_view(result)['execution_id'] == check['execution_id']
             emit({'event': 'check-PASS', 'name': check['name'],
                   'http_status': result.get('http_status', expected[0])})
         emit({'event': 'checks-PASS', 'count': len(config['checks'])})
@@ -187,7 +192,7 @@ def main():
                     emit({'event': 'awaiting-projection', 'execution_id': execution_id, 'http_status': 404})
                     time.sleep(5)
                     continue
-                view = response['execution']
+                view = execution_view(response)
                 emit({'event': 'observed', 'execution': view})
                 if view.get('delivery_state') == 'PUBLISHED' and view.get('close_state') == 'CLOSED':
                     break

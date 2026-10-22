@@ -21,7 +21,8 @@ type ManagedReleaseStore interface {
 }
 type ManagedInputQuery interface {
 	AdmissionInputReader
-	List(context.Context, string, InputState, string, int) ([]InputVersion, string, error)
+	List(context.Context, string, InputState, int, int) ([]InputVersion, error)
+	Count(context.Context, string, InputState) (uint64, error)
 }
 
 type ManagedMaterials struct {
@@ -94,6 +95,24 @@ func (m *ManagedMaterials) ImportCSV(ctx context.Context, request InputImport, r
 	request.Scope = facts.InputScope
 	return m.importer.ImportCSV(ctx, request)
 }
+
+func (m *ManagedMaterials) ImportFinetuningDataset(ctx context.Context, request InputImport, releaseID, digest string) (InputVersion, error) {
+	if request.InputFormat() != "JSON" {
+		return InputVersion{}, ErrInvalidInput
+	}
+	if m == nil || m.facts == nil || m.importer == nil {
+		return InputVersion{}, ErrAdmissionEnvironmentNotReady
+	}
+	facts, err := m.facts.ReadAdmissionFacts(ctx, request.TenantID, releaseID, digest)
+	if err != nil {
+		return InputVersion{}, err
+	}
+	if !strings.EqualFold(facts.TenantID, request.TenantID) {
+		return InputVersion{}, ErrAdmissionEnvironmentNotReady
+	}
+	request.Scope = facts.InputScope
+	return m.importer.ImportFinetuningDataset(ctx, request)
+}
 func (m *ManagedMaterials) Releases(ctx context.Context, tenant string) ([]cpup01.ReleaseDocument, error) {
 	if !validAdmissionID(tenant) {
 		return nil, ErrInvalidAdmission
@@ -124,9 +143,15 @@ func (m *ManagedMaterials) Input(ctx context.Context, tenant, id string) (InputV
 	}
 	return m.inputs.Get(ctx, tenant, id)
 }
-func (m *ManagedMaterials) Inputs(ctx context.Context, tenant string, state InputState, after string, limit int) ([]InputVersion, string, error) {
+func (m *ManagedMaterials) Inputs(ctx context.Context, tenant string, state InputState, offset, limit int) ([]InputVersion, error) {
 	if m == nil || m.inputs == nil {
-		return nil, "", ErrPersistence
+		return nil, ErrPersistence
 	}
-	return m.inputs.List(ctx, tenant, state, after, limit)
+	return m.inputs.List(ctx, tenant, state, offset, limit)
+}
+func (m *ManagedMaterials) InputsCount(ctx context.Context, tenant string, state InputState) (uint64, error) {
+	if m == nil || m.inputs == nil {
+		return 0, ErrPersistence
+	}
+	return m.inputs.Count(ctx, tenant, state)
 }

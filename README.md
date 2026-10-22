@@ -8,6 +8,12 @@ independent source snapshot: builds and runtime do not require the layout.
 CPU-P01 的已实现功能、架构与扩展方式、环境部署和用户操作见
 [CPU-P01 功能、实现、扩展、部署与使用指南](docs/cpu-p01-guide.md)。
 
+CPU 受管微调的执行主链、隔离验收装配和保留的上游依赖边界见
+[CPU managed fine tuning execution slice](docs/finetuning-core-flow.md)。
+
+通用训练与微调共用的正式 Kubernetes 准入组件、退出留证和自动步骤回收见
+[ModelDev webhook](docs/modeldev-webhook.md)。组件独立部署，代码和发布由本仓库维护。
+
 `THIRD_PARTY_NOTICES.go-kratos-layout.txt` preserves the upstream template's
 MIT notice. This generated repository intentionally has no project `LICENSE`;
 its owner must make that choice before publication.
@@ -18,7 +24,8 @@ For CPU-P01, execute these commands only in the task's fixed Fedora checkout.
 Starting the runtime shell there is module verification, not target-cluster
 business acceptance.
 
-The minimum Go toolchain is 1.26.7, matching the verified Fedora release line.
+The minimum Go toolchain is 1.26.9. Fedora verification and release builds use
+this patched toolchain through task-scoped `GOTOOLCHAIN` selection.
 CI reads this requirement from `go.mod`. The prior Go 1.25.7 toolchain failed the
 standard-library vulnerability gate; use the declared minimum or a newer
 supported toolchain and retain the vulnerability scan. See the
@@ -59,7 +66,9 @@ the typed `ANI` environment configuration when the deployment design is added.
 ## Runtime shell
 
 - Kratos lifecycle with graceful shutdown.
-- gRPC and a separate admin HTTP server.
+- A separate admin HTTP server, plus the gRPC business listener only when a
+  `command` block configures its mTLS transport; the shell never binds a
+  plaintext business port.
 - Structured redacted logs, tracing, metrics, and middleware.
 - `/healthz` reports process liveness.
 - `/readyz` remains HTTP 503 while the required business adapters are absent;

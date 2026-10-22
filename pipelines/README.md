@@ -6,6 +6,29 @@ Only `execution_id` and `spec_hash` are Run parameters. Tenant and infrastructur
 bindings come from mounted owner configuration; the service resolves the original
 operation only after checking the current workload and the frozen KFP Run.
 
+The same compiler also accepts an optional `kind: FINETUNING` deployment binding.
+It then assembles `prepare → train-wait → export → verify → collect → publish →
+register → close` with the same failure finalizer. The register component first
+confirms actual published object versions and uploader termination. Without a
+configured Model provider it records the original registration intent and fails
+with an explicit dependency error; the owner closes the real resources. This
+does not enable a public creation mode or manufacture a Model READY receipt.
+
+The fine tuning image uses `finetuning-step.Dockerfile` with the verified workload
+OCI manifest as `WORKLOAD_IMAGE` and the static step binary from the final pushed
+commit. Fine tuning has disk `/tmp`, a 20Gi workspace, separate export/verify
+subpath mounts and fixed stage limits. Pinned KFP 2.16.0 does not encode read-only
+PVC mounts, root filesystem or ephemeral-storage resource requests. The formal
+[ModelDev webhook](../deploy/modeldev-webhook/README.md) provides and validates
+those fields for explicitly enrolled namespaces before live acceptance.
+Both execution kinds require a frozen `admission_profile` binding. The compiler
+labels every runnable step with `ani.modeldev/admission-profile` and
+`ani.modeldev/step-role`, including the failure-close component. Newly compiled
+IR rejects a missing or malformed profile. Already published IR and canonical
+Release bytes stay immutable; migrate by publishing a new PipelineVersion and
+Release after validating the shared webhook. No cluster registration is performed
+by the compiler.
+
 ```sh
 python3 -m venv /absolute/task/kfp-venv
 /absolute/task/kfp-venv/bin/pip install -r pipelines/requirements.txt
@@ -29,7 +52,8 @@ An uploaded registry copy must retain the digest before an actual Run uses it.
   "owner_config_map": "${OWNER_CONFIG_MAP}",
   "storage_class": "${ENV_STORAGE_CLASS}",
   "workspace_size": "${FROZEN_WORKSPACE_CAPACITY}",
-  "workspace_access_mode": "${ENV_WORKSPACE_ACCESS_MODE}"
+  "workspace_access_mode": "${ENV_WORKSPACE_ACCESS_MODE}",
+  "admission_profile": "${FROZEN_MODELDEV_ADMISSION_PROFILE_ID}"
 }
 ```
 
@@ -85,6 +109,22 @@ PVC write access for that identity (for example through its managed Pod/volume
 group policy) and the actual node/storage mount capability. A compiled IR does
 not prove those permissions. Workspace class/capacity must equal the immutable
 Release contract. This Pipeline has no DeletePVC step.
+
+Preparation no longer publishes whole directories through
+`renameat2(RENAME_NOREPLACE)`. A separate prepare Pod writes fixed inputs to the
+execution's PVC, verifies actual content, saves the existing prepared manifest
+and durable preparation record, and exits successfully before training uses
+that same PVC with read-only inputs. Missing, partial or conflicting content is
+not ready; replay retains original identities and bytes. The training entry must
+verify actual inputs against the original manifest and frozen references before
+model loading or computation. CSI supplies the mounted filesystem; this design
+does not call storage-vendor APIs or require a Ceph-specific branch.
+
+Preparation rejects an existing model tree without its original valid completion
+manifest. Reusing an existing manifest requires verification of every actual input;
+it cannot repair missing or conflicting bytes. Both RWO and RWX are compiler inputs;
+actual volume access, persistence and sequential role mounts remain environment
+acceptance checks for each frozen image and Release.
 
 Publish writes a small candidate to KFP's declared string `OutputPath`. Close
 receives that string through `--candidate-json` into an independent temporary

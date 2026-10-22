@@ -32,17 +32,30 @@ type Parameter struct {
 // Tenant, actor and idempotency key belong to the trusted admission scope, not
 // the intent. In particular this object cannot select a namespace or command.
 type Intent struct {
-	Name              string       `json:"name"`
-	Kind              string       `json:"kind"`
-	PresetID          string       `json:"preset_id"`
-	DatasetVersionID  string       `json:"dataset_version_id"`
-	ImageVersionID    *string      `json:"image_version_id,omitempty"`
-	GeneralParameters *[]Parameter `json:"general_parameters,omitempty"`
-	SourceExecutionID *string      `json:"source_execution_id,omitempty"`
+	Name               string                `json:"name"`
+	Kind               string                `json:"kind"`
+	PresetID           string                `json:"preset_id"`
+	DatasetVersionID   string                `json:"dataset_version_id"`
+	ImageVersionID     *string               `json:"image_version_id,omitempty"`
+	GeneralParameters  *[]Parameter          `json:"general_parameters,omitempty"`
+	SourceExecutionID  *string               `json:"source_execution_id,omitempty"`
+	BaseModelVersionID *string               `json:"base_model_version_id,omitempty"`
+	Finetuning         *FinetuningParameters `json:"finetuning,omitempty"`
+	TargetModelID      *string               `json:"target_model_id,omitempty"`
+	NewModelName       *string               `json:"new_model_name,omitempty"`
 }
 
 // ParseIntent rejects ambiguous JSON before computing an admission hash.
 func ParseIntent(raw []byte) (Intent, error) {
+	if len(raw) > 16384 || !utf8.Valid(raw) || !validUnicodeEscapes(raw) {
+		return Intent{}, fmt.Errorf("%w: intent encoding or size", ErrInvalidArgument)
+	}
+	var selector struct {
+		Kind string `json:"kind"`
+	}
+	if err := json.Unmarshal(raw, &selector); err == nil && selector.Kind == "FINETUNING" {
+		return ParseFinetuningIntent(raw)
+	}
 	if len(raw) > 16384 || !utf8.Valid(raw) || !validUnicodeEscapes(raw) {
 		return Intent{}, fmt.Errorf("%w: intent encoding or size", ErrInvalidArgument)
 	}
@@ -81,6 +94,22 @@ func CanonicalIntent(intent Intent) ([]byte, string, error) {
 		value := strings.ToLower(*intent.SourceExecutionID)
 		intent.SourceExecutionID = &value
 	}
+	if intent.BaseModelVersionID != nil {
+		value := strings.ToLower(*intent.BaseModelVersionID)
+		intent.BaseModelVersionID = &value
+	}
+	if intent.TargetModelID != nil {
+		value := strings.ToLower(*intent.TargetModelID)
+		intent.TargetModelID = &value
+	}
+	if intent.Finetuning != nil {
+		parameters := *intent.Finetuning
+		if parameters.LearningRate != nil {
+			value := canonicalDecimal(*parameters.LearningRate)
+			parameters.LearningRate = &value
+		}
+		intent.Finetuning = &parameters
+	}
 	if intent.GeneralParameters != nil {
 		parameters := canonicalParameters(*intent.GeneralParameters)
 		intent.GeneralParameters = &parameters
@@ -88,7 +117,7 @@ func CanonicalIntent(intent Intent) ([]byte, string, error) {
 	value := struct {
 		Schema string `json:"schema"`
 		Intent
-	}{Schema: "ani.modeldev.intent.v1", Intent: intent}
+	}{Schema: intentSchema(intent.Kind), Intent: intent}
 	canonical, err := encodeCanonicalJSON(value)
 	if err != nil {
 		return nil, "", fmt.Errorf("%w: intent encoding", ErrInvalidArgument)
@@ -114,7 +143,13 @@ func validateIntent(intent Intent) error {
 			return invalid("name")
 		}
 	}
+	if intent.Kind == "FINETUNING" {
+		return validateFinetuningIntent(intent)
+	}
 	if intent.Kind != "GENERAL_TRAINING" {
+		return invalid("kind")
+	}
+	if intent.Finetuning != nil || intent.BaseModelVersionID != nil || intent.TargetModelID != nil || intent.NewModelName != nil {
 		return invalid("kind")
 	}
 	if !validUUID(intent.PresetID) || !validUUID(intent.DatasetVersionID) {

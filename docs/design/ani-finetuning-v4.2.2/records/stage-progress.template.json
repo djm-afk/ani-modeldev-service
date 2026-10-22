@@ -1,0 +1,51 @@
+{
+  "template_only": true,
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "note": "阶段达标不得把未验证的父用例标PASS。",
+  "stages": [
+    {
+      "scope": "WORKLOAD",
+      "stage": "WORKLOAD：M0",
+      "requirements": "Fedora上基准和非默认真实entry/LoRA/export/verify、指标/summary、参数消费与资源材料",
+      "coverage_limit": "FT11/13/14和PA04/08/09的负载部分；不证KFP/Trainer、Gov授权或Model",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "CORE_FLOW",
+      "stage": "CORE_FLOW：M3-A（当前阶段）",
+      "requirements": "真实ModelDev应用/数据库、KFP/Trainer、S3；READY/原快照/唯一训练、export/verify、发布确认、脱卷取回；失败/幂等/停止/deadline/重启及相关CPU回归；先基准再非默认",
+      "coverage_limit": "FT01–04的本域部分、FT11–17、FT22–24、FT26–28/30/32的适用执行部分，以及PA01/03/04/06/08/09执行侧；未验证的Gov/Model/页面子断言单列",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "MODEL_INTEGRATION",
+      "stage": "MODEL_INTEGRATION：M1-B及综合",
+      "requirements": "MR01–08实际使用的正式API/身份/数据库/固定对象与登记查证；登记派发竞态对应真实验证",
+      "coverage_limit": "FT07/08/10/18–21/25/28中Model断言；不要求先完成页面，也不自动证明Gov用户链",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "BFF_INTEGRATION",
+      "stage": "BFF_INTEGRATION：M3-B（后续阶段）",
+      "requirements": "真实BFF用户认证、当前绑定/默认值、目标使用/写权、幂等冻结与投递、查询/停止/恢复，实际前端字段行为；候选绑定按D12.7",
+      "coverage_limit": "PA05及PA02/03/06/07/10的上游/页面断言；FT05/06/09/25/26/31对应入口事实；不得拿测试来件或静态页面抵扣",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "SCHEME_FINAL",
+      "stage": "SCHEME_FINAL：M3综合/M4",
+      "requirements": "D11.4全部适用断言与回归、真Model、真实BFF/前端、FT29/C23新模型独立Inference、交接",
+      "coverage_limit": "保持整版原承诺，不要求每次任务自动部署推理",
+      "status": "NOT_RUN"
+    },
+    {
+      "scope": "GPU_PRECHECK",
+      "stage": "GPU_PRECHECK：独立准备",
+      "requirements": "仅D10.2约定的合同/字段与有条件渲染/设备观察",
+      "coverage_limit": "不阻塞上述任何CPU阶段，不代替FT/PA/MR",
+      "status": "NOT_RUN"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "scope": "DESIGN_TEST_VECTOR_NOT_APPROVED_RELEASE",
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "source_section": "A07.4 / D02.6.1",
+  "status": "NOT_RUN",
+  "do_not_import_as_release": true,
+  "baseline": {
+    "learning_rate": "0.0001",
+    "max_steps": 20
+  },
+  "nondefault_candidate": {
+    "learning_rate": "0.0002",
+    "max_steps": 10
+  },
+  "formal_activation": "NOT_APPROVED",
+  "note": "当前先测正式解析与实际负载；BFF/前端M3-B补，不删除最终参数验收。B不是已批准值。"
+}

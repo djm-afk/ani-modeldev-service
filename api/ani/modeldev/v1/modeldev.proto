@@ -47,6 +47,46 @@ service ModelDevStepService {
   rpc GetTrainingStatus(GetTrainingStatusRequest) returns (GetTrainingStatusResponse);
   rpc ReportStepResult(ReportStepResultRequest) returns (ReportStepResultResponse);
   rpc RequestExecutionClose(RequestExecutionCloseRequest) returns (RequestExecutionCloseResponse);
+  // EXPORT/VERIFY startup shares execution-level arbitration with stop.
+  // Replays return the original bounds and never grant another launch.
+  rpc BeginFinetuningStep(BeginFinetuningStepRequest) returns (BeginFinetuningStepResponse);
+  rpc ReportFinetuningStepResult(ReportFinetuningStepResultRequest) returns (ReportFinetuningStepResultResponse);
+  // Confirms the original publish completion and object bytes before Model
+  // registration. A dependency error preserves PUBLISHED and closes compute.
+  rpc RegisterModel(RegisterModelRequest) returns (RegisterModelResponse);
+}
+
+message BeginFinetuningStepRequest {
+  StepContext context = 1;
+}
+
+message BeginFinetuningStepResponse {
+  bool start_permitted = 1;
+  google.protobuf.Timestamp admitted_at = 2;
+  google.protobuf.Timestamp deadline_at = 3;
+}
+
+message ReportFinetuningStepResultRequest {
+  StepContext context = 1;
+  google.protobuf.Timestamp started_at = 2;
+  google.protobuf.Timestamp finished_at = 3;
+  int32 exit_code = 4;
+  ani.training.v1.ManifestRef result_manifest = 5;
+}
+
+// A result remains a candidate until the owner independently observes the
+// original Pod terminal state and verifies the manifest bytes.
+message ReportFinetuningStepResultResponse {
+  ExecutionStates states = 1;
+}
+
+message RegisterModelRequest {
+  StepContext context = 1;
+}
+
+message RegisterModelResponse {
+  ExecutionStates states = 1;
+  VerifiedPublication publication = 2;
 }
 
 enum ComputeState {
@@ -112,6 +152,9 @@ enum PipelineStep {
   PIPELINE_STEP_COLLECT = 3;
   PIPELINE_STEP_PUBLISH = 4;
   PIPELINE_STEP_CLOSE = 5;
+  PIPELINE_STEP_EXPORT = 6;
+  PIPELINE_STEP_VERIFY = 7;
+  PIPELINE_STEP_REGISTER = 8;
 }
 
 enum ExternalCreateState {
@@ -192,6 +235,17 @@ message UserIntent {
   ParameterSelection general_parameters = 6;
   // Presence participates in intent hashing. Explicit empty is invalid.
   optional string source_execution_id = 7;
+  optional string base_model_version_id = 8;
+  FinetuningParameters finetuning = 9;
+  optional string target_model_id = 10;
+  optional string new_model_name = 11;
+}
+
+// An absent message is invalid for FINETUNING. A present empty object uses
+// immutable Release defaults. Scalar presence remains part of original intent.
+message FinetuningParameters {
+  optional string learning_rate = 1;
+  optional int64 max_steps = 2;
 }
 
 // An absent message means omitted general_parameters. A present message with
@@ -207,9 +261,14 @@ message ExecutionStates {
   CloseState close_state = 4;
 }
 
+// Page-window pagination aligned with the Governance page/pageSize baseline.
+// An absent page or page_size resolves independently to 1 or 20; lists use a
+// deterministic order and callers may jump to any valid page.
 message PageRequest {
-  uint32 page_size = 1;
-  string page_token = 2;
+  reserved 1, 2;
+  reserved "limit", "cursor";
+  optional uint32 page = 3;
+  optional uint32 page_size = 4;
 }
 
 message ParameterRule {
@@ -220,6 +279,10 @@ message ParameterRule {
   repeated ani.training.v1.Parameter allowed_values = 5;
   ani.training.v1.Parameter minimum = 6;
   ani.training.v1.Parameter maximum = 7;
+  optional bool minimum_inclusive = 8;
+  optional bool maximum_inclusive = 9;
+  bool editable = 10;
+  string non_editable_reason = 11;
 }
 
 message PresetView {
@@ -230,15 +293,33 @@ message PresetView {
   string active_release_id = 4;
   repeated string image_version_ids = 5;
   repeated ParameterRule parameter_rules = 6;
+  string release_digest = 7;
+  uint64 binding_generation = 8;
+  string parameter_contract_version = 9;
+  repeated ParameterSelection allowed_parameter_sets = 10;
+  FinetuningManagedSettings managed_settings = 11;
+}
+
+// Governance supplies its exact current binding. ModelDev may not replace it
+// with the first catalogue Release or maintain a second active pointer.
+message PresetReleaseSelection {
+  string preset_id = 1;
+  string release_id = 2;
+  string release_digest = 3;
+  uint64 binding_generation = 4;
 }
 
 message ListPresetsRequest {
   PageRequest page = 1;
+  repeated PresetReleaseSelection release_selections = 2;
 }
 
 message ListPresetsResponse {
   repeated PresetView presets = 1;
-  string next_page_token = 2;
+  reserved 2;
+  reserved "next_cursor";
+  // Matching total under the same tenant and filters, independent of the window.
+  uint64 total = 3;
 }
 
 // Public metadata omits backend object keys and credentials.
@@ -269,7 +350,10 @@ message ListInputVersionsRequest {
 
 message ListInputVersionsResponse {
   repeated InputVersionView input_versions = 1;
-  string next_page_token = 2;
+  reserved 2;
+  reserved "next_cursor";
+  // Matching total under the same tenant and filters, independent of the window.
+  uint64 total = 3;
 }
 
 message ExecutionView {
@@ -290,6 +374,12 @@ message ExecutionView {
   ErrorDetail failure = 15;
   repeated ani.training.v1.Metric metrics = 16;
   optional string source_execution_id = 17;
+  string release_digest = 18;
+  string parameter_contract_version = 19;
+  FinetuningParameters explicit_finetuning = 20;
+  repeated ani.training.v1.Parameter resolved_parameters = 21;
+  FinetuningManagedSettings managed_settings = 22;
+  string resolved_configuration_sha256 = 23;
 }
 
 message GetExecutionRequest {
@@ -309,7 +399,10 @@ message ListExecutionsRequest {
 
 message ListExecutionsResponse {
   repeated ExecutionView executions = 1;
-  string next_page_token = 2;
+  reserved 2;
+  reserved "next_cursor";
+  // Matching total under the same tenant and filters, independent of the window.
+  uint64 total = 3;
 }
 
 message GetExecutionLogsRequest {
@@ -350,7 +443,10 @@ message ListExecutionArtifactsRequest {
 
 message ListExecutionArtifactsResponse {
   repeated ArtifactView artifacts = 1;
-  string next_page_token = 2;
+  reserved 2;
+  reserved "next_cursor";
+  // Matching total under the same tenant and filters, independent of the window.
+  uint64 total = 3;
 }
 
 message AuthorizeArtifactDownloadRequest {
@@ -418,6 +514,80 @@ message ExecutionSnapshot {
   StorageScope publication_scope = 10;
   ani.training.v1.OutputContract output_contract = 11;
   google.protobuf.Timestamp deadline_at = 12;
+  FinetuningSnapshot finetuning = 13;
+}
+
+message FinetuningManagedSettings {
+  string stage = 1;
+  string finetuning_type = 2;
+  string lora_target = 3;
+  int64 lora_rank = 4;
+  int64 lora_alpha = 5;
+  int64 cutoff_len = 6;
+  int64 per_device_train_batch_size = 7;
+  int64 gradient_accumulation_steps = 8;
+  int64 seed = 9;
+  int64 data_seed = 10;
+  string device = 11;
+  bool fp16 = 12;
+  bool bf16 = 13;
+  string flash_attn = 14;
+  string report_to = 15;
+  string save_strategy = 16;
+  string template = 17;
+  string train_dtype = 18;
+  string export_dtype = 19;
+  string verify_dtype = 20;
+  string lr_scheduler_type = 21;
+  string warmup_ratio = 22;
+  string weight_decay = 23;
+  string lora_dropout = 24;
+  int64 num_train_epochs = 25;
+  string optim = 26;
+  int64 logging_steps = 27;
+}
+
+message BaseModelFile {
+  string path = 1;
+  int64 size_bytes = 2;
+  string sha256 = 3;
+}
+
+message BaseModelRef {
+  string model_id = 1;
+  string version_id = 2;
+  string family = 3;
+  string format = 4;
+  ani.training.v1.FixedObjectRef object = 5;
+  StorageScope scope = 6;
+  repeated BaseModelFile files = 7;
+}
+
+message ComponentBudgets {
+  uint32 prepare_timeout_seconds = 1;
+  uint32 export_timeout_seconds = 2;
+  uint32 verify_timeout_seconds = 3;
+  uint32 collect_timeout_seconds = 4;
+  uint32 publish_timeout_seconds = 5;
+  uint32 rpc_timeout_seconds = 6;
+  int64 max_base_model_bytes = 7;
+  int64 max_spool_bytes = 8;
+  int64 max_base_model_expanded_bytes = 9;
+  uint32 training_timeout_seconds = 10;
+}
+
+message FinetuningSnapshot {
+  string parameter_contract_version = 1;
+  BaseModelRef base_model = 2;
+  optional string target_model_id = 3;
+  optional string new_model_name = 4;
+  FinetuningManagedSettings managed_settings = 5;
+  string resolved_configuration_sha256 = 6;
+  ani.training.v1.ProgramRef export_program = 7;
+  ani.training.v1.ProgramRef verify_program = 8;
+  string recipe_sha256 = 9;
+  string mapping_sha256 = 10;
+  ComponentBudgets budgets = 11;
 }
 
 // One explicit Governance binding observation, never a request to resolve the
@@ -549,6 +719,9 @@ message GetExecutionConfigurationResponse {
 
 message GetStorageCredentialsRequest {
   StepContext context = 1;
+  // PREPARE only: grants read access to this snapshot's one fixed base object.
+  // No caller-supplied model, endpoint, key or scope is accepted.
+  bool read_base_model = 2;
 }
 
 // Secret values are confined to the authenticated TLS step channel; they are
@@ -617,6 +790,9 @@ message TrainingStatus {
   repeated ResourceObservation resource_history = 6;
   ExecutionStates states = 7;
   google.protobuf.Timestamp observed_at = 8;
+  // The original shared TRAIN/train-wait budget; absent for legacy CPU.
+  google.protobuf.Timestamp training_admitted_at = 9;
+  google.protobuf.Timestamp training_deadline_at = 10;
 }
 
 message EnsureTrainingResponse {

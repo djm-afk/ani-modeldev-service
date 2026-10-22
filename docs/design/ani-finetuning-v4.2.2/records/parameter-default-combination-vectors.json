@@ -1,0 +1,69 @@
+{
+  "scope": "CONTRACT_TEST_VECTORS_NOT_A_RELEASE",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "source_section": "D02.6.1",
+  "status": "NOT_RUN",
+  "precondition": "测试规则默认A且仅允许完整A/B；真实批准需各自验收。",
+  "cases": [
+    {
+      "input": {},
+      "resolved": {
+        "learning_rate": "0.0001",
+        "max_steps": 20
+      },
+      "expected": "ACCEPT",
+      "note": "接受A；原意图中两个字段均省略",
+      "status": "NOT_RUN"
+    },
+    {
+      "input": {
+        "learning_rate": "0.0001",
+        "max_steps": 20
+      },
+      "resolved": {
+        "learning_rate": "0.0001",
+        "max_steps": 20
+      },
+      "expected": "ACCEPT",
+      "note": "接受A；与{}的字段存在性不同，不用同一幂等键当相同请求",
+      "status": "NOT_RUN"
+    },
+    {
+      "input": {
+        "learning_rate": "0.0002"
+      },
+      "resolved": {
+        "learning_rate": "0.0002",
+        "max_steps": 20
+      },
+      "expected": "REJECT",
+      "note": "组合未批准，拒绝；不能自动把max_steps改成10",
+      "status": "NOT_RUN"
+    },
+    {
+      "input": {
+        "max_steps": 10
+      },
+      "resolved": {
+        "learning_rate": "0.0001",
+        "max_steps": 10
+      },
+      "expected": "REJECT",
+      "note": "组合未批准，拒绝；不能自动把学习率改成0.0002",
+      "status": "NOT_RUN"
+    },
+    {
+      "input": {
+        "learning_rate": "0.0002",
+        "max_steps": 10
+      },
+      "resolved": {
+        "learning_rate": "0.0002",
+        "max_steps": 10
+      },
+      "expected": "ACCEPT",
+      "note": "接受B；值进入原快照和真实entry，仍须相应实测",
+      "status": "NOT_RUN"
+    }
+  ]
+}

@@ -28,3 +28,15 @@ bin/
 *.swp
 Thumbs.db
 .DS_Store
+
+.private/
+
+# Local agent memory produced while working in this checkout.
+.workbuddy/
+
+# Local task specifications and execution evidence.
+/.scratch/
+
+# Python bytecode produced by task-owned Fedora verification.
+__pycache__/
+*.pyc

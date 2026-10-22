@@ -1,0 +1,205 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="ani-spec-sha256" content="5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9"><meta name="ani-document-scope" content="DOCUMENT_ONLY"><title>ANI v4.2.2 · 变更与自复核</title><style>
+:root{--bg:#edf1f5;--paper:#fff;--ink:#203044;--muted:#63738a;--line:#dbe3eb;--brand:#16354a;--accent:#097c7d;--soft:#eaf6f5;--warn:#855c15;--code:#122534;--font:16px}
+*{box-sizing:border-box}[hidden]{display:none!important}html{scroll-behavior:smooth;scroll-padding-top:94px}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans CJK SC","Microsoft YaHei",sans-serif;font-size:var(--font);line-height:1.85}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}button,input{font:inherit}button{cursor:pointer}.top{position:sticky;top:0;z-index:20;background:var(--brand);color:#fff;display:flex;gap:18px;align-items:center;justify-content:space-between;padding:13px 24px;box-shadow:0 1px 10px #0002}.top a{color:#cbe9e7}.brand{font-size:14px;font-weight:700;letter-spacing:.04em;white-space:nowrap}.toplinks{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}.top button{border:1px solid #a5bcc755;border-radius:6px;background:transparent;color:#fff;padding:3px 9px}.layout{max-width:1540px;margin:auto;display:grid;grid-template-columns:280px minmax(0,1fr);gap:26px;padding:28px 26px 64px}.sidebar{position:sticky;top:91px;align-self:start;max-height:calc(100vh - 113px);overflow:auto;padding:3px 3px 20px}.sidebar h2{font-size:13px;color:var(--muted);letter-spacing:.1em;margin:0 10px 12px}.search{width:100%;padding:9px 12px;border:1px solid #bbcbd7;border-radius:8px;background:#fff;outline-offset:2px;font-size:14px}.count{font-size:12px;color:var(--muted);padding:5px 10px 12px}.navlink{display:flex;gap:9px;padding:8px 10px;border-radius:7px;color:#415469;font-size:13px;line-height:1.5;margin-bottom:3px}.navlink .num{flex-shrink:0;color:var(--accent);font-weight:700;min-width:32px}.navlink:hover,.navlink.active{background:#dceeea;text-decoration:none;color:#113b46}.sidebottom{margin:22px 10px 0;border-top:1px solid var(--line);padding-top:16px;font-size:12px;color:var(--muted)}.sidebottom a{display:block;margin-top:8px}.main{min-width:0}.hero{background:linear-gradient(115deg,#16354a,#245361);color:white;padding:42px 46px;border-radius:14px;margin-bottom:22px}.eyebrow{font-size:12px;letter-spacing:.17em;font-weight:700;color:#acdcd6;margin:0 0 12px}.hero h1{font-size:30px;line-height:1.5;margin:0 0 16px;letter-spacing:.01em}.hero p{font-size:15px;color:#d8e7ef;max-width:850px;margin:0 0 18px}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid #9bc1cc55;border-radius:20px;padding:3px 11px;font-size:12px;color:#deeeef}.notice{background:#fff6e5;border-left:4px solid #d3a552;border-radius:7px;padding:16px 20px;margin-bottom:20px;color:#644b26;font-size:14px}.chapter{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:30px 38px;margin-bottom:22px;box-shadow:0 2px 5px #17354a04;overflow-wrap:anywhere;scroll-margin-top:91px}.chapter h2{font-size:24px;line-height:1.5;margin:0 0 22px;color:var(--brand)}.chapter h2 small{display:block;color:var(--accent);font-size:12px;letter-spacing:.12em;margin-bottom:7px}.chapter h3{font-size:18px;line-height:1.55;color:#245361;margin:30px 0 14px;border-bottom:1px solid #e6edf0;padding-bottom:9px}.chapter p{margin:12px 0}.chapter p:first-child{margin-top:0}.chapter strong{font-weight:700;color:#143c4b}.chapter li{margin:5px 0}.chapter ul,.chapter ol{padding-left:1.6em}blockquote{margin:18px 0;border-left:3px solid var(--accent);padding:3px 16px;background:#f0f7f6}code{font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#eaf0f4;color:#23415a;border-radius:4px;padding:1px 5px;font-size:.87em;word-break:break-word}.codewrap{position:relative;background:var(--code);border-radius:8px;margin:18px 0;overflow:hidden}.codehead{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;border-bottom:1px solid #ffffff1c;color:#c5d9dd;font-size:11px;letter-spacing:.08em}.copy{background:transparent;border:1px solid #aac1cc66;color:#d5e6eb;border-radius:4px;padding:1px 8px;font-size:12px}.codewrap pre{overflow:auto;margin:0;padding:18px 19px;line-height:1.75}.codewrap code{background:transparent;color:#e1edf0;padding:0;border-radius:0;word-break:normal;white-space:pre;font-size:13px}.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:18px 0}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.75}th,td{padding:11px 13px;text-align:left;vertical-align:top;border-right:1px solid #e4ebef;border-bottom:1px solid #e4ebef}th:last-child,td:last-child{border-right:0}tr:last-child td{border-bottom:0}th{background:#eaf2f4;color:#1a4054;font-weight:700}tbody tr:nth-child(even){background:#f8fafb}td:first-child{min-width:95px}td code{font-size:12px}.endlinks{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);margin-top:27px;padding-top:15px;font-size:13px}.srcmark{font-size:12px;font-weight:600;padding:0 3px}.footer{padding:6px 10px;color:var(--muted);font-size:12px}.empty{display:none;background:white;padding:24px;border-radius:10px}.indexwrap{max-width:1120px;margin:35px auto;padding:0 22px 60px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px}.card h2{margin:8px 0;font-size:24px;color:var(--brand)}.card .tag{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.14em}.card p{font-size:15px}.btn{display:inline-block;background:var(--accent);color:#fff;border-radius:7px;padding:8px 17px;margin-top:9px}.btn:hover{background:#076c6d;text-decoration:none}.downloads{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0}.downloads a{background:white;border:1px solid #bdced7;border-radius:7px;padding:10px 16px;font-size:14px}.indexnote{background:#fff;padding:24px 30px;border:1px solid var(--line);border-radius:12px;margin-top:22px}.indexnote h2{margin-top:0;font-size:20px}.menuBtn{display:none}
+@media(min-width:1500px){.main{max-width:1120px}.hero h1{font-size:34px}}
+@media(max-width:1050px){.layout{grid-template-columns:230px minmax(0,1fr);gap:18px;padding:20px 18px}.chapter{padding:26px}.hero{padding:32px}.hero h1{font-size:27px}}
+@media(max-width:760px){:root{--font:15px}.top{padding:10px 14px;gap:8px;align-items:flex-start}.brand{font-size:12px}.toplinks{gap:8px;font-size:11px;justify-content:flex-end}.menuBtn{display:inline-block}.layout{display:block;padding:15px 12px 38px}.sidebar{display:none;position:static;max-height:none;padding:12px;background:#f1f6f8;border:1px solid var(--line);border-radius:9px;margin-bottom:16px}.sidebar.open{display:block}.chapter{padding:21px 18px}.chapter h2{font-size:21px}.chapter h3{font-size:17px}.hero{padding:25px 23px;border-radius:11px}.hero h1{font-size:25px}.hero p{font-size:14px}.tablewrap table{min-width:610px}table{font-size:13px}.codewrap pre{padding:15px}.codewrap code{font-size:12px}.cards{grid-template-columns:1fr}.indexwrap{margin-top:18px;padding:0 14px}.indexnote{padding:22px}.notice{padding:12px 16px}.toplinks .shortHide{display:none}}
+@media print{.chapter[hidden]{display:block!important}html{scroll-padding-top:0}body{background:white;font-size:10.5pt;line-height:1.65}.top,.sidebar,.copy,.endlinks,.empty,.footer{display:none!important}.layout{display:block;padding:0;max-width:none}.hero{background:white;color:#193448;padding:0 0 20px;border-radius:0;border-bottom:2px solid #193448;break-after:avoid}.hero p,.eyebrow{color:#456}.chip{color:#456;border:1px solid #ccc}.hero h1{font-size:24pt}.chapter{display:block!important;box-shadow:none;border:0;border-radius:0;padding:15px 0;margin:0}.chapter h2{font-size:17pt;break-after:avoid}.chapter h3{font-size:13pt;break-after:avoid}table{font-size:9pt}.tablewrap{overflow:visible}th,td{padding:6px 8px}thead{display:table-header-group}tr{break-inside:avoid}.codewrap{background:#f3f5f6;border:1px solid #ccc;break-inside:avoid}.codewrap code{color:#123;white-space:pre-wrap;overflow-wrap:anywhere;font-size:9pt}.codehead{color:#456;border-color:#ddd}.notice{background:#fafafa;color:#234}.srcmark{color:#345}a{color:#234;text-decoration:none}}
+
+/* v4.1: stable wrapping, nested sections and small status panel. */
+.hero h1{line-height:1.22}.chapter h3,.chapter h4{scroll-margin-top:112px}.chapter h4{font-size:1.03em;color:#355065;margin:1.6em 0 .7em}.chapter p,.chapter li,.chapter td,.chapter th{overflow-wrap:anywhere}.chapter .source-body>p{margin:1em 0}.document-meta{font-size:12px;color:var(--muted);word-break:break-all}.docbadge{display:inline-block;border:1px solid var(--line);background:var(--soft);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700}.auditlink{font-weight:700}.intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.intro-card{background:white;border:1px solid var(--line);border-radius:10px;padding:24px}.intro-card h2{font-size:1.25em;margin:0 0 9px}.intro-card p{margin:8px 0}.task-row{padding:14px 0;border-bottom:1px solid var(--line)}.task-row:last-child{border-bottom:none}body code{overflow-wrap:anywhere}pre{white-space:pre-wrap;word-break:break-word} .hub-layout{max-width:1200px;margin:0 auto;padding:28px 24px 64px}.hub-layout .hero{margin-bottom:22px}.hub-layout .chapter{margin-top:22px}.hub-layout .hero p{max-width:900px}@media(max-width:700px){.intro-grid{grid-template-columns:1fr}.hub-layout{padding:16px 12px 48px}.intro-card{padding:18px}.top{gap:8px}.brand{font-size:12px}.toplinks{gap:7px}}
+@media print{.chapter[hidden]{display:block!important}.empty,.top,.sidebar{display:none!important}.tablewrap{overflow:visible!important} .layout{display:block!important}.hero{break-after:avoid}.chapter{break-inside:auto!important}.chapter h2,.chapter h3,.chapter h4{break-after:avoid}pre{white-space:pre-wrap}.hub-layout{padding:0}.intro-grid{display:block}.intro-card{break-inside:avoid}}
+</style></head><body><header class="top"><div class="brand"><a href="index.html">ANI / MODEL DEVELOPMENT</a></div><div class="toplinks"><a href="ANI-CPU受管微调-v4.2.2-主流程开发与分段验收手册.html">当前开工</a><a href="ANI-CPU受管微调-v4.2.2-业务与流程方案.html">业务方案</a><a href="ANI-CPU受管微调-v4.2.2-开发与Model对接说明.html">开发说明</a><a class="shortHide" href="ANI-CPU受管微调-v4.2.2-变更与自复核.html">变更复核</a><button id="fontMinus" aria-label="减小正文字号">A−</button><button id="fontPlus" aria-label="增大正文字号">A+</button><button id="print">打印</button></div></header><main class="hub-layout"><div class="hero"><p class="eyebrow">DOCUMENT REVIEW / NOT BUSINESS EVIDENCE</p><h1>v4.2.2<br>变更与自复核</h1><p>正文、派生视图、阶段用例与记录同步；检查结果只适用于文档。</p></div><section class="chapter"><h3 id="revision-14-6">14.6 v4.2.1到v4.2.2：两轮审核与主流程优先</h3>
+<p>以下是本次明确采纳的修订，不称原v4.2.1已经完整写明，也不是新代码审计结论。<a class="srcmark" href="#source-s11">S11</a><a class="srcmark" href="#source-s12">S12</a></p>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>讨论项</th>
+<th>本版写入的唯一规则</th>
+<th>同步位置/任务</th>
+<th>不改变的边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>421-R1：登记与停止竞争</td>
+<td>每个具体正常写派发与Stop/deadline共同仲裁；整份意图不预授权后继；在途迟到结果真实保留</td>
+<td>D08/D09.3、A11、W4-P2、FT25.1–3</td>
+<td>不新增授权/许可平台或跨服务事务；原CLOSED恢复仍可按授权执行</td>
+</tr>
+<tr>
+<td>421-R2：候选经BFF验收</td>
+<td>改为M3-B启动前的操作交接；当前执行主链不等待BFF/前端/候选上游绑定</td>
+<td>A03/A09/A12、D11.6、D12.6/12.7、W1/W6</td>
+<td>最终BFF仍唯一用户入口，不新增生产测试API或第二指针</td>
+</tr>
+<tr>
+<td>421-R3：组合与默认</td>
+<td>明确A/B完整组合及省略默认的5个黄金向量，不自动修改另一个字段</td>
+<td>D02.6.1、PA03/06/07、W1/W6</td>
+<td>B仍待实测；不新增PA11、DSL或更多可输入字段</td>
+</tr>
+<tr>
+<td>用户：先完成微调主流程</td>
+<td>当前M3-A真实ModelDev/KFP/Trainer/S3/发布确认/停止关闭；BFF和前端在M3-B接回</td>
+<td>A12、D11.6、D12.3/4/6、主流程派生手册</td>
+<td>合同现在固定；后置项NOT_RUN而非删掉/DEFERRED</td>
+</tr>
+<tr>
+<td>Model后接仍不造假</td>
+<td>发布确认在Model写前必须真实完成；Model未接入明确错误+计算关闭，不能伪造READY</td>
+<td>A03/A09/A10、D04/D07/D12.6</td>
+<td>主链阶段结果不等于单次六项成功，MR/FT29仍需真实接入</td>
+</tr>
+<tr>
+<td>完成证据分层</td>
+<td>WORKLOAD/CORE_FLOW/BFF_INTEGRATION等仅为记录scope；本域/上游断言分记录</td>
+<td>D11.6及records模板，W6</td>
+<td>不加业务状态机；原32 FT+12细化+10 PA+8 MR+34映射保留，新增3个登记细化</td>
+</tr>
+</tbody>
+</table></div>
+<p>历史D14.1–14.5保留其版本时点含义；遇到开发次序冲突，以本节及现行A12/D11.6/D12为准。不是让agent在多套矛盾主方案之间自行选择。GPU独立准备、单TrainJob、Alpaca JSON、正式Model目标、正常close、指标、预算数值、Fedora职责均保留。</p>
+</section><section class="chapter"><h2>v4.2.2 自复核范围</h2>
+<p>本次按用户上传的完整v4.2.1及随后两轮讨论修订；没有重新审计GitHub当前代码或连接Fedora/Kubernetes。所有文档检查与业务验收分开。</p>
+<h2>重点复核</h2>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>关注点</th>
+<th>本版落实位置</th>
+<th>不能据此宣称</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>具体登记派发与Stop/deadline共同仲裁</td>
+<td>D09.3、D08、W4-P2、FT25.1–3</td>
+<td>数据库与远端RPC绝对原子；真实竞态已通过</td>
+</tr>
+<tr>
+<td>先主链、后真实BFF/前端</td>
+<td>A03/A09/A12、D11.6、D12.3/4/6/7</td>
+<td>可以关闭生产鉴权或删掉最终BFF验收</td>
+</tr>
+<tr>
+<td>Model未就绪仍确认发布与关闭</td>
+<td>D07.3、D11.6、D12.6</td>
+<td>PUBLISHED+CLOSED等于Model READY或单次全部成功</td>
+</tr>
+<tr>
+<td>R3默认/完整组合</td>
+<td>D02.6.1、原PA03/06/07</td>
+<td>文档中的B已经运行获批</td>
+</tr>
+<tr>
+<td>原正确性继承</td>
+<td>D06启动仲裁/真实指标、A11自然收尾、D10预算</td>
+<td>无需代码回归</td>
+</tr>
+<tr>
+<td>阶段证据与范围</td>
+<td>原FT32/PA10/MR8/C34，原12细化+本次3项</td>
+<td>用主链夹具抵扣Gov/Model/Inference/前端</td>
+</tr>
+<tr>
+<td>环境与来源</td>
+<td>D12、S11/S12及source-lock</td>
+<td>本轮执行过Fedora构建、业务部署或硬件测试</td>
+</tr>
+</tbody>
+</table></div>
+<h2>检查结果</h2>
+<div aria-label="可横向滚动的表格" class="tablewrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>检查层次</th>
+<th>本轮实际结果</th>
+<th>范围与限制</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>静态文档检查</td>
+<td>42项通过</td>
+<td>完整26章、89处同源Markdown片段、5份HTML的38处可见正文、链接/锚点、范围与记录初值、原件/差异；详见document-checks.json</td>
+</tr>
+<tr>
+<td>浏览器呈现和页内交互</td>
+<td>44项通过；保存4张截图</td>
+<td>1440px桌面/390px移动端、页面无整体横向溢出、章节筛选/清除、字号、原生复制按钮返回、打印样式、移动目录和脚本错误；复制未独立回读系统剪贴板</td>
+</tr>
+<tr>
+<td>跨页导航</td>
+<td>本轮导航尝试受环境策略阻止</td>
+<td>127.0.0.1导航报ERR_BLOCKED_BY_ADMINISTRATOR，原结果保留browser-navigation-attempt.json。随后使用set_content检查HTML内容及页内操作，不将其称为HTTP或file://跨页导航通过；跨页文件/锚点另做静态核对</td>
+</tr>
+<tr>
+<td>内容复核</td>
+<td>本次修订逐项检查</td>
+<td>R1具体操作派发与stop、Model未知结果、BFF后置、CORE_FLOW与单次成功差别、R3条件向量；不代表实现已通过</td>
+</tr>
+<tr>
+<td>数值与历史范围</td>
+<td>原预算表保持，正常预算合计10800秒</td>
+<td>FT32、原12细化、PA10、MR8、C34映射保留；只新增FT25.1–3，原GPU独立边界及D06原规则保留</td>
+</tr>
+</tbody>
+</table></div>
+<p>修正了派生复核页的多余一级标题，保持一个页面标题；截图滚动固定为非动画以便核查。内容复核另外明确：Model缺失的预期失败收尾不能代替FT22的真实正常成功链；测试scope只用于证据，不新建产品状态或调用权限。</p>
+<p>本轮可见正文与同源片段检查通过不能证明并发代码正确。渲染与检查工具只处理本包文档，包内业务计划/模板仍为NOT_RUN；真实执行结果请另存，不用模板初值覆盖已有进度。</p>
+<h2>未执行</h2>
+<p>业务代码编辑/推送、提供方API发布、数据库迁移、Fedora负载、真实BFF/Model/Inference调用、KFP/Trainer部署与GPU验证均未执行。所有新业务用例初始NOT_RUN。原已填进度不在本包中伪造或覆盖。</p>
+</section><section class="chapter"><h2>可核查文件</h2><p><a href="review/spec-v4.2.1-to-v4.2.2.diff">完整diff</a> · <a href="reference/spec-v4.2.1.md">原件</a> · <a href="review/document-checks.json">静态检查</a> · <a href="review/browser-checks.json">浏览器检查</a> · <a href="review/source-lock.json">来源锁</a></p></section><section class="chapter" id="sources"><h2>来源与证据</h2><p>本稿直接基于用户上传的<strong>完整v4.2.1包</strong>，按两轮审核/讨论改写登记派发仲裁、主链优先顺序和组合测试，见S11/S12。未请求重新调研技术选型或最新代码，因此本次不借外部资料补写未核实实现。历史S0–S10保留其版本来源；本次新增是设计修订，不是当前分支/硬件的审计事实。无业务源码修改、依赖发布、Fedora训练、K8s/Model/Inference/GPU验收；文档检查不写成业务PASS。</p>
+<h3 id="source-s0">S0 · 用户附件《ANI CPU 受管微调方案 v3》</h3>
+<p>沿用原v3附件；内容包括单TrainJob、KFP export/verify、原受理/发布/关闭复用、Model需求、资源预算及原验收映射。原文副本位于 <code>reference/spec-v3.md</code>。其中指标适配职责是v4.1指标意见的原依据，不与本次421-R2候选BFF排期混同；已被v4收窄的CSV等范围不恢复。</p>
+<h3 id="source-s1">S1 · 模型研发平台 v0.4</h3>
+<p>《精简业务与架构方案》《精简开发实施说明》《管理与操作指导手册》是平台范围背景；v4形成时重点核对开发册D16的C01–C34，本次保留其原含义及已明确的覆盖边界。v0.4不是所有内容均已实现的报告。v0.2/v0.4已含target_model_id/new_model_name两个目标分支。</p>
+<h3 id="source-s2">S2 · Governance统一调用合同（沿用v4固定引用）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-governance</code>，固定commit <code>34388cf90d0834da76c9e5701ade5d92a248144f</code>，<code>docs/contracts/service-to-service-calls.md</code>，重点§1–3与§5–6。本规范涵盖三种调用方向，并明确规范入仓不代表存量实现全部符合。本次沿用v4已经固定的合同引用，未重新拉取当前分支，不宣布实现已全部对齐。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-governance/blob/34388cf90d0834da76c9e5701ade5d92a248144f/docs/contracts/service-to-service-calls.md" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-governance/blob/34388cf90d0834da76c9e5701ade5d92a248144f/docs/contracts/service-to-service-calls.md</a></p>
+<h3 id="source-s3">S3 · ModelDev已有机制（沿用前轮固定源码核查）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-modeldev-service</code>，固定commit <code>5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163</code>。主要位置：<code>internal/component/io.go</code>、<code>runner.go</code>、<code>internal/biz/execution_state.go</code>、<code>execution_closer.go</code>、<code>managed_runtime.go</code>、<code>internal/data/runtimeproof/proof.go</code>、<code>tasks.go</code>、<code>owner_close.go</code>、<code>internal/data/workspace/pipeline_io.go</code>、<code>pipelines/cpu_p01.py</code>、<code>README.md</code>。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163</a></p>
+<p>本轮没有重审所有文件或当前默认分支，也没有复跑其测试。涉及正常关闭、Task核验、状态、Fedora职责的事实沿用前轮已读取源码，不作为新增微调已通过的证明。</p>
+<h3 id="source-s4">S4 · Model接口与实现（沿用前轮固定源码核查）</h3>
+<p>仓库 <code>zhangzhe-ctrl/ani-model-service</code>，固定commit <code>6473f1ec1386067e68dbd1294c10c660da7d1e7b</code>；<code>api/model/v1/model.proto</code>、<code>internal/service/model.go</code>、相关存储与身份实现。已存在方法不等于已满足本次可信接收、pending查证、固定引用和finalization要求；MR项以提供方交接及真实联调为准。</p>
+<p>固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-model-service/tree/6473f1ec1386067e68dbd1294c10c660da7d1e7b" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-model-service/tree/6473f1ec1386067e68dbd1294c10c660da7d1e7b</a></p>
+<h3 id="source-s5">S5 · Model身份和名称唯一性（沿用前轮固定源码核查）</h3>
+<p>同S4：<code>migrations/000001_model_control_plane.sql</code>、<code>000006_external_model_id.sql</code>、<code>internal/data/postgres/model_store.go</code>、<code>queries/model.sql</code>及service错误映射。源码定义tenant内name唯一和外部model_id映射；本轮未连接实际库检查迁移状态。</p>
+<h3 id="source-s6">S6 · 本轮及紧邻对话的已确认决定</h3>
+<p>采用Gov统一S2S合同；Model需求先行、留接缝后对接；新模型/已有目标两分支；Alpaca JSON单格式；复用状态、deadline和正常关闭；不将审核澄清扩大为新系统。用户已有Fedora编译机，本机只编码/Git，172.16.101.10～12是目标集群。未提供或尚未核实的本任务具体环境值按D13处理。</p>
+<h3 id="source-s7">S7 · v4.1历史直接输入：v4与三项评审</h3>
+<p>v4原件在<code>reference/spec-v4.md</code>，v4.1的三项原评审在<code>reference/review-input-v4.1.md</code>。启动/停止仲裁、指标职责、单次执行与方案完成层级已在v4.1并入，本版继续保留D14.2对应正文，不因参数开放重写它们。</p>
+<h3 id="source-s8">S8 · v4.2的历史底稿：用户上传v4.1完整计划包</h3>
+<p>原包名：<code>ANI-CPU受管微调-v4.1-完整计划与复核包(1).zip</code>。其完整spec SHA256为<code>4c8430fc90ed92671ad06120113a909030ee76d70f807074790c5633f0b0de77</code>，本包按原字节保留<code>reference/spec-v4.1.md</code>。旧W0–W6是其派生视图，本版从新spec重新派生，不复制旧视图里已过时规则。</p>
+<h3 id="source-s9">S9 · v4.2参数审核依据与历史代码引用边界</h3>
+<p><code>reference/parameter-review-v4.2.md</code>保留当时《ANI 微调v4.1：面向下一阶段参数开放的评审要点》原文；它是v4.2的历史依据，不是本次重新审核。P-01–P-05及W6六类验收已在D14.3映射；A07.4、D02.5、D05.3、D11.2.2为落实意见而新增的明确设计选择，不宣称来自原包逐字条款。</p>
+<p>上一轮参数代码核对固定于ModelDev <code>c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb</code>，涉及<code>contract/cpup01/intent.go</code>、<code>release.go</code>、<code>snapshot.go</code>，<code>internal/biz/admission_resolution.go</code>、<code>internal/service/materials.go</code>及<code>api/ani/modeldev/v1/modeldev.proto</code>。本轮沿用该审核事实，没有重新拉取/执行最新代码；它与S3较早的执行机制基线分开记录。固定来源：<a href="https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb" rel="noreferrer noopener">https://github.com/zhangzhe-ctrl/ani-modeldev-service/tree/c5fd93c60f4aa6af229ef39d3cc503396f6d0ffb</a>。</p>
+<p>本轮仅文档生成与一致性/呈现检查；无业务源码、Git、Model发布、Fedora训练、K8s部署或数据库迁移。文档PASS标DOCUMENT_ONLY，不写入FT、PA或MR运行结果。源材料未提供的实际端口/密钥/运行版本/安全范围不猜填。</p>
+<h3 id="source-s10">S10 · v4.2.1所用底稿与当时确认的GPU分期边界</h3>
+<p>底稿为已交付的<code>ANI-CPU受管微调-v4.2-参数扩展完整计划包.zip</code>，原spec按字节保留为<code>reference/spec-v4.2.md</code>，SHA256：<code>22e3c2af2424e4a2e7ef158171922979500229ffba2cf35558e701244a4af16b</code>。本轮用户先确认“GPU正式功能紧接CPU主干，合同与关键适配提前核对”，随后明确要求把“ModelDev公共接入位置/测试、v4.2小段边界说明”加入方案。</p>
+<p>本次落实的原意是：Gov/ACC沿用既有规范，只核对ModelDev具体接入；ModelDev/Installer按条件做隔离渲染与设备前置验证；不强迫多仓当前启用GPU，不给CPU加假charge，不放松CPU限制，GPU未就绪不阻塞CPU微调验收。生成文档不是对远程写入、共享环境变更或设备占用的新授权。</p>
+<p>Gov/ACC具体合同文档、接口字段、owner与证书配置由GPU准备负责人读取其正式仓库并记录确切commit；本轮不据旧讨论宣告当前实现已支持或尚不支持某RPC。<code>gpu-extension-boundary.md</code>只切片本规范，不成为新的GPU协议权威。</p>
+<h3 id="source-s11">S11 · 直接底稿v4.2.1与本次审核意见</h3>
+<p>原上传包：<code>ANI-CPU受管微调-v4.2.1-GPU后续接入边界完整计划包(1).zip</code>，SHA256 <code>5850581e31c29eaaaa8369751ca550302c06757dc3fea8608844701147713e25</code>。权威spec为1375行、SHA256 <code>363016708aef1c22454cbd320effead34b952aadf2bad08ea3a3582dc9e4c8b1</code>，按字节保留<code>reference/spec-v4.2.1.md</code>。审核意见原件保留<code>reference/review-v4.2.1.md</code>：R1具体登记派发仲裁；R2后续候选经BFF验证的操作说明；R3组合/默认黄金向量。本次未重审GitHub最新实现，不能把这些方案缺口说成已复现生产故障。</p>
+<h3 id="source-s12">S12 · 用户随后确认的执行顺序与本轮修订</h3>
+<p>用户明确“现在先完成微调主流程，真实BFF验收放到后面”，并要求据两轮讨论优化整包。落实为A12/D11.6/D12.6–7：合同先定；隔离应用层测试替代上游来件，复用实际后端主链；真实BFF/前端和候选绑定后置但最终仍验收；Model按原分期接入，不伪造READY；GPU独立准备继续不阻塞CPU。<code>review/review-input.md</code>记录这组输入摘要及原审核引用，不虚构对话原件或新增执行授权。</p>
+<p>本次仅在对话工作目录编辑/生成/复核文档，没有连接用户本机、Fedora或K8s。最终代码/API编号、实际测试驱动方法、环境/凭据和有效参数批准仍需按任务验证并记录。本包全部业务计划初始NOT_RUN；历史已填记录应另存保留，不被新模板覆盖。</p>
+</section></main><script>(function(){
+
+const input=document.getElementById('search');
+const items=[...document.querySelectorAll('.chapter[data-chapter]')];
+const navs=[...document.querySelectorAll('.navlink[data-chapter]')];
+function filter(){const q=(input?.value||'').trim().toLocaleLowerCase();let n=0;items.forEach(el=>{let show=!q||el.textContent.toLocaleLowerCase().includes(q);el.hidden=!show;if(show)n++;const link=navs.find(a=>a.dataset.chapter===el.dataset.chapter);if(link)link.hidden=!show});const count=document.getElementById('count');if(count)count.textContent=q?`匹配 ${n} / ${items.length} 章`:`${items.length} 章 · 按关键词筛选`;const empty=document.getElementById('empty');if(empty)empty.style.display=n?'none':'block'}
+input?.addEventListener('input',filter);filter();
+document.getElementById('clear')?.addEventListener('click',()=>{input.value='';filter();input.focus()});
+document.getElementById('menu')?.addEventListener('click',()=>document.querySelector('.sidebar')?.classList.toggle('open'));
+document.getElementById('print')?.addEventListener('click',()=>window.print());
+let font=16;try{font=Number(localStorage.getItem('ani-ft-v4.2-font'))||16}catch(e){};function setFont(){document.documentElement.style.setProperty('--font',font+'px');try{localStorage.setItem('ani-ft-v4.2-font',String(font))}catch(e){}}setFont();
+document.getElementById('fontMinus')?.addEventListener('click',()=>{font=Math.max(14,font-1);setFont()});document.getElementById('fontPlus')?.addEventListener('click',()=>{font=Math.min(20,font+1);setFont()});
+document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{const text=btn.closest('.codewrap').querySelector('code').textContent;let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}btn.textContent=ok?'已复制':'请选择文本复制';setTimeout(()=>btn.textContent='复制',1800)}));
+function showAnchor(){if(!location.hash)return;let id;try{id=decodeURIComponent(location.hash.slice(1))}catch(e){return}const el=document.getElementById(id);if(el){const sec=el.closest('.chapter');if(sec?.hidden&&input){input.value='';filter()}setTimeout(()=>el.scrollIntoView({block:'start'}),20)}}window.addEventListener('hashchange',showAnchor);showAnchor();
+if('IntersectionObserver' in window){const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){navs.forEach(a=>a.classList.toggle('active',a.dataset.chapter===e.target.id))}})},{rootMargin:'-10% 0px -70% 0px'});items.forEach(el=>obs.observe(el))}
+
+})();</script></body></html>

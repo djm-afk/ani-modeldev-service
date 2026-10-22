@@ -1,0 +1,28 @@
+{
+  "scope": "DOCUMENT_ONLY",
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "FAIL",
+  "checks": [
+    {
+      "check": "browser-run-completed",
+      "status": "FAIL",
+      "detail": "Error: Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:44397/ANI-CPU%E5%8F%97%E7%AE%A1%E5%BE%AE%E8%B0%83-v4.2.2-%E4%B8%9A%E5%8A%A1%E4%B8%8E%E6%B5%81%E7%A8%8B%E6%96%B9%E6%A1%88.html\nCall log:\n  - navigating to \"http://127.0.0.1:44397/ANI-CPU%E5%8F%97%E7%AE%A1%E5%BE%AE%E8%B0%83-v4.2.2-%E4%B8%9A%E5%8A%A1%E4%B8%8E%E6%B5%81%E7%A8%8B%E6%96%B9%E6%A1%88.html\", waiting until \"networkidle\"\n"
+    }
+  ],
+  "screenshots": [],
+  "transport": "temporary loopback HTTP server, no business endpoints",
+  "not_validated": [
+    "business code",
+    "Fedora",
+    "BFF/Model",
+    "KFP/Trainer",
+    "Inference",
+    "GPU",
+    "file:// navigation"
+  ],
+  "counts": {
+    "checks": 1,
+    "screenshots": 0
+  }
+}

@@ -9,6 +9,8 @@ import (
 	"github.com/google/uuid"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -94,9 +96,6 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
-	if query.logs == nil {
-		return nil, queryError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
-	}
 	options := biz.TrainingLogOptions{TailLines: request.TailLines, MaxBytes: request.MaxBytes}
 	if options.TailLines == 0 {
 		options.TailLines = 200
@@ -104,9 +103,18 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if options.MaxBytes == 0 {
 		options.MaxBytes = 16384
 	}
-	result, err := query.logs.ReadTrainingLogs(ctx, source, options)
+	result, recorded, err := biz.RecordedTrainingLogsFor(record, source, options)
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
+	}
+	if !recorded {
+		if query.logs == nil {
+			return nil, queryError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
+		}
+		result, err = query.logs.ReadTrainingLogs(ctx, source, options)
+		if err != nil {
+			return nil, queryError(err, scope.RequestID)
+		}
 	}
 	response := &modeldevv1.GetExecutionLogsResponse{Source: &trainingv1.LogRef{LogId: source.LogID, ResourceUid: source.PodUID, ContainerName: source.ContainerName}, Truncated: result.Truncated, ObservedAt: timestamppb.New(result.ObservedAt)}
 	for _, line := range result.Lines {
@@ -144,6 +152,32 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 		return nil, biz.ErrPersistence
 	}
 	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, PresetId: value.Snapshot.Release.PresetID, ReleaseId: value.Snapshot.Release.ReleaseID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: value.Snapshot.Program.ImageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	if fine := value.Snapshot.Finetuning; fine != nil {
+		if value.Snapshot.Kind != "FINETUNING" || value.Intent.Finetuning == nil {
+			return nil, biz.ErrPersistence
+		}
+		view.Kind = trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING
+		view.ReleaseDigest = value.Snapshot.Release.ReleaseDigest
+		view.ParameterContractVersion = cpup01.FinetuningParameterContractVersion
+		view.ExplicitFinetuning = &modeldevv1.FinetuningParameters{}
+		if p := value.Intent.Finetuning.LearningRate; p != nil {
+			v := *p
+			view.ExplicitFinetuning.LearningRate = &v
+		}
+		if p := value.Intent.Finetuning.MaxSteps; p != nil {
+			v := *p
+			view.ExplicitFinetuning.MaxSteps = &v
+		}
+		for _, p := range value.Snapshot.Program.ResolvedParameters {
+			wire := parameterView(p)
+			if wire == nil {
+				return nil, biz.ErrPersistence
+			}
+			view.ResolvedParameters = append(view.ResolvedParameters, wire)
+		}
+		view.ManagedSettings = contractpb.EncodeManagedSettings(fine.ManagedSettings)
+		view.ResolvedConfigurationSha256 = fine.ResolvedConfigurationSHA256
+	}
 	if value.Close != nil {
 		view.StopRequested = value.Close.Reason == biz.CloseReasonUserStop
 	}
@@ -159,9 +193,24 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if record.Runtime.Training != nil {
 		view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT
 	}
+	for _, step := range record.Runtime.FinetuningSteps {
+		if step.Binding.Role == "export" {
+			view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_EXPORT
+		}
+		if step.Binding.Role == "verify" {
+			view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_VERIFY
+		}
+	}
 	if record.Runtime.Publication != nil {
 		view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH
 		view.ObservedAt = timestamppb.New(record.Runtime.Publication.VerifiedAt)
+	}
+	if registration := record.Runtime.FinetuningRegistration; registration != nil {
+		view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_REGISTER
+		view.ObservedAt = timestamppb.New(registration.RecordedAt)
+		if registration.FailureCode != "" {
+			view.Failure = &modeldevv1.ErrorDetail{Reason: modeldevv1.ErrorReason_ERROR_REASON_UPSTREAM_UNAVAILABLE, SafeMessage: "model registration dependency unavailable"}
+		}
 	}
 	if record.Runtime.ClosedAt != nil {
 		view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE
@@ -180,13 +229,11 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 	}
 	filter := biz.ExecutionQuery{Limit: 20}
 	if page := request.Page; page != nil {
-		if len(page.ProtoReflect().GetUnknown()) != 0 || page.PageSize > 100 || (page.PageToken != "" && !queryID(page.PageToken)) {
-			return nil, status.Error(codes.InvalidArgument, "invalid execution page")
+		resolvedPage, pageSize, err := resolveModelDevPage(page)
+		if err != nil {
+			return nil, err
 		}
-		if page.PageSize > 0 {
-			filter.Limit = int(page.PageSize)
-		}
-		filter.AfterID = page.PageToken
+		filter.Offset, filter.Limit = modelDevPageWindow(resolvedPage, pageSize)
 	}
 	if request.ComputeState != nil {
 		name, known := modeldevv1.ComputeState_name[int32(*request.ComputeState)]
@@ -212,11 +259,15 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 	if query == nil || query.repository == nil {
 		return nil, queryError(biz.ErrPersistence, scope.RequestID)
 	}
-	records, next, err := query.repository.ListQueryRecords(ctx, scope.TenantID, filter)
+	records, err := query.repository.ListQueryRecords(ctx, scope.TenantID, filter)
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
-	response := &modeldevv1.ListExecutionsResponse{NextPageToken: next}
+	total, err := query.repository.CountQueryRecords(ctx, scope.TenantID, filter)
+	if err != nil {
+		return nil, queryError(err, scope.RequestID)
+	}
+	response := &modeldevv1.ListExecutionsResponse{Total: total}
 	for _, record := range records {
 		view, err := executionView(record)
 		if err != nil {
@@ -239,16 +290,13 @@ func (query *Query) ListExecutionArtifacts(ctx context.Context, request *modelde
 	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 {
 		return nil, status.Error(codes.InvalidArgument, "invalid artifact query")
 	}
-	size := uint32(50)
-	cursor := ""
-	if page := request.Page; page != nil {
-		if len(page.ProtoReflect().GetUnknown()) != 0 || page.PageSize > 100 || (page.PageToken != "" && !queryID(page.PageToken)) {
-			return nil, status.Error(codes.InvalidArgument, "invalid artifact page")
+	page, pageSize := uint32(1), uint32(20)
+	if request.Page != nil {
+		resolvedPage, resolvedSize, err := resolveModelDevPage(request.Page)
+		if err != nil {
+			return nil, err
 		}
-		if page.PageSize > 0 {
-			size = page.PageSize
-		}
-		cursor = page.PageToken
+		page, pageSize = resolvedPage, resolvedSize
 	}
 	if query == nil || query.repository == nil {
 		return nil, queryError(biz.ErrDownloadUnavailable, scope.RequestID)
@@ -263,14 +311,17 @@ func (query *Query) ListExecutionArtifacts(ctx context.Context, request *modelde
 	}
 	files := append([]biz.PublishedRuntimeFile(nil), record.Runtime.Publication.Files...)
 	sort.Slice(files, func(i, j int) bool { return files[i].ArtifactID < files[j].ArtifactID })
+	// total is every published artifact of this execution, independent of the
+	// pagination window.
+	response.Total = uint64(len(files))
+	offset, limit := modelDevPageWindow(page, pageSize)
+	if offset < len(files) {
+		end := min(offset+limit, len(files))
+		files = files[offset:end]
+	} else {
+		files = nil
+	}
 	for _, file := range files {
-		if file.ArtifactID <= cursor {
-			continue
-		}
-		if len(response.Artifacts) == int(size) {
-			response.NextPageToken = response.Artifacts[len(response.Artifacts)-1].ArtifactId
-			break
-		}
 		response.Artifacts = append(response.Artifacts, artifactView(record, file))
 	}
 	return response, nil

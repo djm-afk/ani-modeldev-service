@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ModelDevManagementService_ImportRelease_FullMethodName   = "/ani.modeldev.v1.ModelDevManagementService/ImportRelease"
-	ModelDevManagementService_ValidateRelease_FullMethodName = "/ani.modeldev.v1.ModelDevManagementService/ValidateRelease"
-	ModelDevManagementService_ImportCSV_FullMethodName       = "/ani.modeldev.v1.ModelDevManagementService/ImportCSV"
+	ModelDevManagementService_ImportRelease_FullMethodName           = "/ani.modeldev.v1.ModelDevManagementService/ImportRelease"
+	ModelDevManagementService_ValidateRelease_FullMethodName         = "/ani.modeldev.v1.ModelDevManagementService/ValidateRelease"
+	ModelDevManagementService_ImportCSV_FullMethodName               = "/ani.modeldev.v1.ModelDevManagementService/ImportCSV"
+	ModelDevManagementService_ImportFinetuningDataset_FullMethodName = "/ani.modeldev.v1.ModelDevManagementService/ImportFinetuningDataset"
 )
 
 // ModelDevManagementServiceClient is the client API for ModelDevManagementService service.
@@ -34,6 +35,7 @@ type ModelDevManagementServiceClient interface {
 	ImportRelease(ctx context.Context, in *ImportReleaseRequest, opts ...grpc.CallOption) (*ImportReleaseResponse, error)
 	ValidateRelease(ctx context.Context, in *ValidateReleaseRequest, opts ...grpc.CallOption) (*ValidateReleaseResponse, error)
 	ImportCSV(ctx context.Context, in *ImportCSVRequest, opts ...grpc.CallOption) (*ImportCSVResponse, error)
+	ImportFinetuningDataset(ctx context.Context, in *ImportFinetuningDatasetRequest, opts ...grpc.CallOption) (*ImportFinetuningDatasetResponse, error)
 }
 
 type modelDevManagementServiceClient struct {
@@ -74,6 +76,16 @@ func (c *modelDevManagementServiceClient) ImportCSV(ctx context.Context, in *Imp
 	return out, nil
 }
 
+func (c *modelDevManagementServiceClient) ImportFinetuningDataset(ctx context.Context, in *ImportFinetuningDatasetRequest, opts ...grpc.CallOption) (*ImportFinetuningDatasetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ImportFinetuningDatasetResponse)
+	err := c.cc.Invoke(ctx, ModelDevManagementService_ImportFinetuningDataset_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ModelDevManagementServiceServer is the server API for ModelDevManagementService service.
 // All implementations must embed UnimplementedModelDevManagementServiceServer
 // for forward compatibility.
@@ -84,6 +96,7 @@ type ModelDevManagementServiceServer interface {
 	ImportRelease(context.Context, *ImportReleaseRequest) (*ImportReleaseResponse, error)
 	ValidateRelease(context.Context, *ValidateReleaseRequest) (*ValidateReleaseResponse, error)
 	ImportCSV(context.Context, *ImportCSVRequest) (*ImportCSVResponse, error)
+	ImportFinetuningDataset(context.Context, *ImportFinetuningDatasetRequest) (*ImportFinetuningDatasetResponse, error)
 	mustEmbedUnimplementedModelDevManagementServiceServer()
 }
 
@@ -102,6 +115,9 @@ func (UnimplementedModelDevManagementServiceServer) ValidateRelease(context.Cont
 }
 func (UnimplementedModelDevManagementServiceServer) ImportCSV(context.Context, *ImportCSVRequest) (*ImportCSVResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ImportCSV not implemented")
+}
+func (UnimplementedModelDevManagementServiceServer) ImportFinetuningDataset(context.Context, *ImportFinetuningDatasetRequest) (*ImportFinetuningDatasetResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ImportFinetuningDataset not implemented")
 }
 func (UnimplementedModelDevManagementServiceServer) mustEmbedUnimplementedModelDevManagementServiceServer() {
 }
@@ -179,6 +195,24 @@ func _ModelDevManagementService_ImportCSV_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ModelDevManagementService_ImportFinetuningDataset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportFinetuningDatasetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevManagementServiceServer).ImportFinetuningDataset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevManagementService_ImportFinetuningDataset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevManagementServiceServer).ImportFinetuningDataset(ctx, req.(*ImportFinetuningDatasetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ModelDevManagementService_ServiceDesc is the grpc.ServiceDesc for ModelDevManagementService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -197,6 +231,10 @@ var ModelDevManagementService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ImportCSV",
 			Handler:    _ModelDevManagementService_ImportCSV_Handler,
+		},
+		{
+			MethodName: "ImportFinetuningDataset",
+			Handler:    _ModelDevManagementService_ImportFinetuningDataset_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -19,6 +19,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/finetuningmodel"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
@@ -71,6 +72,11 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 	if err != nil {
 		return failed("command server certificate pair invalid")
 	}
+	// Reject a pair that does not present the registered server identity at
+	// startup, so a mismatched SAN cannot silently fail every Governance call.
+	if !server.ValidCommandServerCertificate(certificate) {
+		return failed("command server certificate identity invalid")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	command := service.NewCommand(execution.New(pool))
@@ -90,7 +96,11 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 			return failed("command admission catalogue unavailable or invalid")
 		}
 		inputs := input.New(pool)
-		admission = service.NewAdmission(biz.NewManagedAdmissionResolver(releases, inputs, facts))
+		models, err := buildFinetuningModelFacts(ctx, config)
+		if err != nil {
+			return failed("command finetuning model facts unavailable or invalid")
+		}
+		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(releases, inputs, facts, models))
 		materials := biz.NewManagedMaterials(releases, facts, inputs, biz.NewInputImporter(inputs, verifier))
 		management = service.NewManagement(materials)
 		if query == nil {
@@ -104,6 +114,26 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 		return failed("command listener configuration invalid")
 	}
 	return s, nil
+}
+
+// buildFinetuningModelFacts selects the read-only Model boundary. Only an
+// explicitly pinned controlled substitute is wired today, because the live
+// Model read cannot yet return the required per-file base inventory. With no
+// controlled facts configured, FINETUNING stays disabled and admission returns
+// its finite not-enabled error; no fabricated base inventory is ever produced.
+func buildFinetuningModelFacts(ctx context.Context, config *conf.GovernanceCommand) (biz.FinetuningModelFactsReader, error) {
+	if config == nil || config.ControlledModelFacts == nil {
+		return nil, nil
+	}
+	sources := make([]finetuningmodel.FileSource, len(config.ControlledModelFacts.Files))
+	for i, file := range config.ControlledModelFacts.Files {
+		sources[i] = finetuningmodel.FileSource{Path: file.GetPath(), SHA256: file.GetSha256()}
+	}
+	reader, err := finetuningmodel.Load(ctx, sources)
+	if err != nil {
+		return nil, err
+	}
+	return reader, nil
 }
 
 func openCommandPool(config *conf.GovernanceCommand) (*pgxpool.Pool, error) {

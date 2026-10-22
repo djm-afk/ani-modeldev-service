@@ -31,10 +31,14 @@ type ManagedStorageCredentialsResult struct {
 // StorageCredentials rechecks workload and Run authority on every issuance or
 // refresh. An old credential, receipt or prior successful callback grants none.
 func (runtime *ManagedRuntime) StorageCredentials(ctx context.Context, token string, request BeginManagedExecutionRequest, purpose string, issuer StorageCredentialIssuer) (ManagedStorageCredentialsResult, error) {
-	if purpose != "prepare" && purpose != "publish" {
+	if purpose != "prepare" && purpose != "prepare-base-model" && purpose != "publish" {
 		return ManagedStorageCredentialsResult{}, ErrManagedStepUnauthorized
 	}
-	result, err := runtime.Configuration(ctx, token, request, purpose)
+	task := purpose
+	if purpose == "prepare-base-model" {
+		task = "prepare"
+	}
+	result, err := runtime.Configuration(ctx, token, request, task)
 	if err != nil {
 		return ManagedStorageCredentialsResult{}, err
 	}
@@ -73,7 +77,7 @@ func storageCredentialsAllowed(result ManagedRuntimeResult, purpose string) bool
 		result.States.Delivery == DeliveryStatePublished || result.Runtime.Publication != nil {
 		return false
 	}
-	if purpose == "prepare" {
+	if purpose == "prepare" || purpose == "prepare-base-model" {
 		return result.Runtime.Training == nil
 	}
 	return result.Runtime.Observation != nil && result.Runtime.Observation.Outcome == "SUCCEEDED" && result.Runtime.Observation.WritersAbsent
@@ -91,6 +95,14 @@ func validTemporaryCredentials(execution Execution, purpose string, credentials 
 	if purpose == "prepare" {
 		input := execution.Snapshot.Input.Object
 		return credentials.StorageConnectionID == input.StorageConnectionID && credentials.Bucket == input.Bucket && credentials.ObjectKey == input.Key && credentials.ObjectPrefix == ""
+	}
+	if purpose == "prepare-base-model" {
+		fine := execution.Snapshot.Finetuning
+		if execution.Snapshot.Kind != "FINETUNING" || fine == nil {
+			return false
+		}
+		object := fine.BaseModel.Object
+		return credentials.StorageConnectionID == object.StorageConnectionID && credentials.Bucket == object.Bucket && credentials.ObjectKey == object.Key && credentials.ObjectPrefix == ""
 	}
 	scope := execution.Snapshot.PublicationScope
 	return credentials.StorageConnectionID == scope.StorageConnectionID && credentials.Bucket == scope.Bucket && credentials.ObjectKey == "" && credentials.ObjectPrefix == scope.ApprovedPrefix+"/"+execution.ExecutionID+"/"

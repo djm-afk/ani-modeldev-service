@@ -16,6 +16,10 @@ type ManagedRuntime struct {
 	trainer      TrainingRuntime
 	workspaces   PreparedWorkspaceVerifier
 	publications PublicationVerifier
+	// registration and artifactPlan are supplied by composition. While they are
+	// absent, FINETUNING registration keeps its original unavailable boundary.
+	registration *TrainedArtifactRegistrationOrchestrator
+	artifactPlan FinetuningArtifactPlan
 }
 
 func NewManagedRuntime(steps *ManagedSteps, repository ExecutionRuntimeRepository, trainer TrainingRuntime, workspaces PreparedWorkspaceVerifier, publications PublicationVerifier) (*ManagedRuntime, error) {
@@ -133,13 +137,16 @@ func runtimeResult(result ManagedRuntimeResult, state ExecutionRuntime, replayed
 }
 func (runtime *ManagedRuntime) Configuration(ctx context.Context, token string, request BeginManagedExecutionRequest, task string) (ManagedRuntimeResult, error) {
 	switch task {
-	case "prepare", "train-wait", "collect", "publish", "close":
+	case "prepare", "train-wait", "collect", "publish", "close", "export", "verify", "register":
 	default:
 		return ManagedRuntimeResult{}, ErrManagedStepUnauthorized
 	}
 	result, err := runtime.authenticate(ctx, token, request, task)
 	if err != nil {
 		return result, err
+	}
+	if (task == "export" || task == "verify" || task == "register") && result.Execution.Snapshot.Kind != "FINETUNING" {
+		return ManagedRuntimeResult{}, ErrManagedStepUnauthorized
 	}
 	resolver, ok := runtime.steps.runs.(ManagedTaskIdentityResolver)
 	if !ok {
@@ -182,6 +189,12 @@ func (runtime *ManagedRuntime) Ensure(ctx context.Context, token string, request
 	result, err := runtime.authenticate(ctx, token, request, "train-wait")
 	if err != nil {
 		return result, err
+	}
+	if result.Runtime.Workspace == nil {
+		return ManagedRuntimeResult{}, ErrRuntimeNotReady
+	}
+	if err := runtime.workspaces.VerifyPreparedCompletion(ctx, result.Execution, request.Association, *result.Runtime.Workspace); err != nil {
+		return ManagedRuntimeResult{}, err
 	}
 	reservation, err := runtime.repository.ReserveTraining(ctx, result.Authority.RunAuthorityCandidate)
 	if err != nil {
@@ -278,7 +291,18 @@ func (runtime *ManagedRuntime) Status(ctx context.Context, token string, request
 	return runtimeResult(result, state, false)
 }
 func (runtime *ManagedRuntime) Publish(ctx context.Context, token string, request BeginManagedExecutionRequest, candidate RuntimePublication) (ManagedRuntimeResult, error) {
-	result, err := runtime.authenticate(ctx, token, request, "close")
+	if runtime == nil || runtime.steps == nil || runtime.steps.executions == nil {
+		return ManagedRuntimeResult{}, ErrManagedStepUnavailable
+	}
+	execution, err := runtime.steps.executions.Get(ctx, request.TenantID, request.ExecutionID)
+	if err != nil {
+		return ManagedRuntimeResult{}, ErrManagedStepUnauthorized
+	}
+	task := "close"
+	if execution.Snapshot.Kind == "FINETUNING" {
+		task = "register"
+	}
+	result, err := runtime.authenticate(ctx, token, request, task)
 	if err != nil {
 		return result, err
 	}
@@ -300,6 +324,9 @@ func (runtime *ManagedRuntime) Close(ctx context.Context, token string, request 
 	result, err := runtime.authenticateOrCloseUnbound(ctx, token, request, "close", reason == "STEP_FAILED")
 	if err != nil {
 		return result, err
+	}
+	if reason == "NATURAL_TERMINAL" && result.Execution.Snapshot.Kind == "FINETUNING" && (result.Runtime.FinetuningRegistration == nil || result.Runtime.FinetuningRegistration.State != "READY") {
+		return ManagedRuntimeResult{}, ErrModelDependencyUnavailable
 	}
 	state, replayed, err := runtime.repository.RequestRuntimeClose(ctx, result.Authority.RunAuthorityCandidate, reason)
 	if err != nil {

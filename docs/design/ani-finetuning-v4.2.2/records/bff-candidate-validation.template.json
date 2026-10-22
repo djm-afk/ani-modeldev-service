@@ -1,0 +1,21 @@
+{
+  "template_only": true,
+  "document_version": "v4.2.2",
+  "spec_sha256": "5323612099bbfe54f2e13b3aea4a5c3c4f9a4cf143a64f7cc526b530f9925ec9",
+  "status": "NOT_RUN",
+  "scope": "BFF_INTEGRATION",
+  "phase": "M3-B",
+  "blocks_core_flow": false,
+  "actual_bff_endpoint_reference": null,
+  "approved_isolation": null,
+  "test_identity_references": [],
+  "original_binding": null,
+  "candidate_binding": null,
+  "binding_owner": null,
+  "real_contract_versions": [],
+  "parameter_cases": [],
+  "rollback_precondition": null,
+  "rollback_method": null,
+  "rollback_result": null,
+  "evidence": []
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Human-invoked real BFF tests for the retained CPU-P01 lab."""
-import argparse,base64,copy,json,pathlib,re,sys,time,urllib.request,uuid
+import argparse,base64,copy,json,pathlib,re,sys,time,urllib.error,urllib.request,uuid
 import manual as m
 from acceptance import API,stop_training
 
@@ -63,7 +63,7 @@ def run(name,mode):
   preset=m.load('release-imports.json')[mode]['preset_id'];m.save(requestfile,{'name':'manual-'+name,'kind':'GENERAL_TRAINING','preset_id':preset,'dataset_version_id':inp['input_version_id'],'idempotency_key':str(uuid.uuid4()),'general_parameters':[{'name':'epochs','type':'INTEGER','value':'3'},{'name':'batch_size','type':'INTEGER','value':'64'},{'name':'learning_rate','type':'DECIMAL','value':'0.01'}]})
  body=m.load(requestfile);reply=call('POST','/executions',body,(202,));m.save(name+'.receipt.json',reply)
  again=call('POST','/executions',body,(202,));assert again['execution_id']==reply['execution_id'] and again['operation_id']==reply['operation_id'] and again['replayed'];print(json.dumps({'receipt':reply,'idempotency':'PASS'}))
- if mode=='stop':stop_training(api(),{'execution_id':reply['execution_id'],'operation_id':reply['operation_id']})
+ if mode=='stop':stop_training(api(),{'request':body,'execution_id':reply['execution_id'],'operation_id':reply['operation_id']})
 def execution(name):return m.load(name+'.receipt.json')['execution_id']
 def wait(name,expected):
  target=execution(name);deadline=time.monotonic()+900
@@ -95,7 +95,6 @@ def negatives(name):
  artifacts=call('GET','/executions/'+target+'/artifacts')['artifacts'];artifact=artifacts[0]['artifact_id']
  checks.append({'test':'b-artifact',**call('GET','/artifacts/'+artifact+'/content',expected=(404,),who='b')})
  request=urllib.request.Request(BASE+ROOT+'/executions/'+target)
- import urllib.error
  try:urllib.request.urlopen(request,timeout=10);raise RuntimeError('Unauthenticated request unexpectedly accepted')
  except urllib.error.HTTPError as e:assert e.code==401;checks.append({'test':'no-token','http_status':e.code});e.close()
  m.save(name+'.negative-checks.json',checks);print(json.dumps({'result':'PASS','checks':checks}))

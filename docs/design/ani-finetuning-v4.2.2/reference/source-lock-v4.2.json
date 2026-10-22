@@ -1,0 +1,12 @@
+{
+  "scope": "SOURCE_BYTES_ONLY",
+  "input_zip": {
+    "name": "ANI-CPU受管微调-v4.1-完整计划与复核包(1).zip",
+    "sha256": "acc01d186c28bbdd3ca45d6ad49be5467a09e99642c06e92580e6aa0c98de8d0"
+  },
+  "v41_spec_sha256": "4c8430fc90ed92671ad06120113a909030ee76d70f807074790c5633f0b0de77",
+  "review_input_sha256": "4b0aa9db9b9582fade977128707d172183c6d30c4cc60fecaa687752e2c57b33",
+  "new_spec_sha256": "22e3c2af2424e4a2e7ef158171922979500229ffba2cf35558e701244a4af16b",
+  "no_new_github_read": true,
+  "no_business_execution": true
+}

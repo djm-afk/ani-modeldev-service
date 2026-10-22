@@ -12,8 +12,12 @@ import (
 // This controller/KFP snapshot was captured from the first real 2.16 Run.
 // Only the external record is a fixture; role and ownership decisions are real.
 func recordedTasks(t *testing.T) (*unstructured.Unstructured, []kfp.ManagedTask, []unstructured.Unstructured) {
+	return recordedTasksFrom(t, "testdata/kfp-2.16-failed-before-prepare.json")
+}
+
+func recordedTasksFrom(t *testing.T, path string) (*unstructured.Unstructured, []kfp.ManagedTask, []unstructured.Unstructured) {
 	t.Helper()
-	raw, err := os.ReadFile("testdata/kfp-2.16-failed-before-prepare.json")
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}

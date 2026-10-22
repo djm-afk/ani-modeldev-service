@@ -37,6 +37,16 @@ func (c *Bootstrap) Validate() error {
 				return err
 			}
 		}
+		if c.Command.Model != nil {
+			if err := validateModelConnection(c.Command.Model); err != nil {
+				return err
+			}
+		}
+		if c.Command.ControlledModelFacts != nil {
+			if err := validateControlledModelFacts(c.Command.ControlledModelFacts); err != nil {
+				return err
+			}
+		}
 	}
 	if err := validateListener("grpc", c.Server.Grpc.Network, c.Server.Grpc.Addr, c.Server.Grpc.Timeout); err != nil {
 		return err
@@ -66,7 +76,7 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 	if config.Step == nil || config.Kubernetes == nil || config.Pipeline == nil || config.ObjectStorage == nil {
 		return fmt.Errorf("managed runtime requires step, Kubernetes, pipeline and storage configuration")
 	}
-	if err := validateListener("managed step", config.Step.Network, config.Step.Addr, config.Step.Timeout); err != nil {
+	if err := validateBoundedListener("managed step", config.Step.Network, config.Step.Addr, config.Step.Timeout, 10*time.Minute); err != nil {
 		return err
 	}
 	_, portText, _ := net.SplitHostPort(config.Step.Addr)
@@ -94,6 +104,11 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 	if err := validateDuration("managed API", config.ApiTimeout, maximumTimeout); err != nil {
 		return err
 	}
+	if config.ObjectStorage.StreamingTimeout != nil {
+		if err := validateDuration("managed storage streaming", config.ObjectStorage.StreamingTimeout, 10*time.Minute); err != nil {
+			return err
+		}
+	}
 	if err := validateDuration("dispatch interval", config.DispatchInterval, time.Minute); err != nil {
 		return err
 	}
@@ -104,6 +119,87 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 }
 
 var commandDNSName = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$`)
+
+// validateModelConnection accepts only a fully specified business mTLS
+// dependency. A partially configured Model block is rejected rather than
+// silently disabling FINETUNING after an operator intended to enable it.
+func validateModelConnection(config *ModelConnection) error {
+	for _, reference := range []string{config.CaFile, config.CertificateFile, config.PrivateKeyFile} {
+		if !filepath.IsAbs(reference) || filepath.Clean(reference) != reference || strings.ContainsRune(reference, 0) {
+			return fmt.Errorf("model connection materials require absolute file references")
+		}
+	}
+	if config.Endpoint == "" || strings.TrimSpace(config.Endpoint) != config.Endpoint || strings.ContainsAny(config.Endpoint, "/\\ \t\r\n") {
+		return fmt.Errorf("model connection requires an explicit host:port endpoint")
+	}
+	host, portText, err := net.SplitHostPort(config.Endpoint)
+	if err != nil || host == "" {
+		return fmt.Errorf("model connection endpoint: %w", err)
+	}
+	port, err := strconv.Atoi(portText)
+	if err != nil || port <= 0 || port > 65535 {
+		return fmt.Errorf("model connection requires a numeric port in 1..65535")
+	}
+	for name, value := range map[string]string{"client DNS identity": config.ClientDnsName, "server DNS identity": config.ServerName} {
+		if len(value) > 253 || value == "unknown" || !commandDNSName.MatchString(value) {
+			return fmt.Errorf("model connection requires an explicit exact %s", name)
+		}
+	}
+	if config.ClientDnsName == config.ServerName {
+		return fmt.Errorf("model client and server DNS identities must be distinct")
+	}
+	if config.Actor == "" || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
+		return fmt.Errorf("model connection requires a bounded audit actor")
+	}
+	if err := validateModelArtifactPlan(config.ArtifactPlan); err != nil {
+		return err
+	}
+	return validateDuration("model connection", config.Timeout, maximumTimeout)
+}
+
+// validateModelArtifactPlan mirrors the registration layer's own bound: the
+// archive name and the weight format must describe one artifact, and the
+// new-model metadata stays optional because the frozen intent, not this plan,
+// decides whether a registration creates a container. The provider's own
+// vocabulary is not hardcoded here; an unknown format is its call to reject.
+func validateModelArtifactPlan(plan *ModelArtifactPlan) error {
+	if plan == nil {
+		return fmt.Errorf("model connection requires a pinned artifact plan")
+	}
+	if !boundedArtifactValue(plan.FileName, 255) || !boundedArtifactValue(plan.Format, 64) {
+		return fmt.Errorf("model artifact plan requires a bounded file name and format")
+	}
+	if len(plan.DisplayName) > 128 || len(plan.Description) > 512 || len(plan.Capabilities) > 16 {
+		return fmt.Errorf("model artifact plan metadata exceeds its bound")
+	}
+	for _, capability := range plan.Capabilities {
+		if !boundedArtifactValue(capability, 64) {
+			return fmt.Errorf("model artifact plan requires bounded capability values")
+		}
+	}
+	return nil
+}
+
+func boundedArtifactValue(value string, limit int) bool {
+	return value != "" && value == strings.TrimSpace(value) && len(value) <= limit &&
+		!strings.ContainsAny(value, " \t\r\n\x00/\\")
+}
+
+// validateControlledModelFacts accepts only explicitly pinned, shape-checked
+// references. Its presence enables an isolated boundary substitute, not a
+// production Model dependency or a public capability.
+func validateControlledModelFacts(config *ControlledModelFacts) error {
+	if len(config.Files) == 0 || len(config.Files) > 64 {
+		return fmt.Errorf("controlled model facts require 1..64 explicitly pinned files")
+	}
+	for _, file := range config.Files {
+		if file == nil || !filepath.IsAbs(file.Path) || filepath.Clean(file.Path) != file.Path || strings.ContainsRune(file.Path, 0) ||
+			len(file.Sha256) != 64 || strings.Trim(file.Sha256, "0123456789abcdef") != "" {
+			return fmt.Errorf("controlled model facts require absolute file references and lowercase SHA256 pins")
+		}
+	}
+	return nil
+}
 
 func validateAdmissionResolution(config *AdmissionResolution) error {
 	validReference := func(path string) bool {
@@ -124,6 +220,10 @@ func validateAdmissionResolution(config *AdmissionResolution) error {
 }
 
 func validateListener(name, network, address string, timeout *durationpb.Duration) error {
+	return validateBoundedListener(name, network, address, timeout, maximumTimeout)
+}
+
+func validateBoundedListener(name, network, address string, timeout *durationpb.Duration, maximum time.Duration) error {
 	if network != "tcp" {
 		return fmt.Errorf("%s network must be tcp", name)
 	}
@@ -139,7 +239,7 @@ func validateListener(name, network, address string, timeout *durationpb.Duratio
 	if err != nil || port <= 0 || port > 65535 {
 		return fmt.Errorf("%s address requires a numeric port in 1..65535", name)
 	}
-	return validateDuration(name, timeout, maximumTimeout)
+	return validateDuration(name, timeout, maximum)
 }
 
 func validateDuration(name string, value *durationpb.Duration, maximum time.Duration) error {

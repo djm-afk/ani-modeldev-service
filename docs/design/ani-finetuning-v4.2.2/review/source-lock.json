@@ -1,0 +1,51 @@
+{
+  "scope": "SOURCE_IDENTIFICATION_NOT_RUNTIME_EVIDENCE",
+  "source_archive_name": "ANI-CPU受管微调-v4.2.1-GPU后续接入边界完整计划包(1).zip",
+  "source_archive_sha256": "5850581e31c29eaaaa8369751ca550302c06757dc3fea8608844701147713e25",
+  "preserved_sources": [
+    {
+      "path": "reference/spec-v3.md",
+      "sha256": "49d4ecebe6a6858331a71693b063eeebc5646a00d2cdbac590b189aa47720ea7",
+      "bytes": 40744,
+      "role": "unchanged historical source"
+    },
+    {
+      "path": "reference/spec-v4.md",
+      "sha256": "c978c0673cf5c2da3145f09433abf472620d17754834fc5a9c8e6a7b118d82e1",
+      "bytes": 82364,
+      "role": "unchanged historical source"
+    },
+    {
+      "path": "reference/spec-v4.1.md",
+      "sha256": "4c8430fc90ed92671ad06120113a909030ee76d70f807074790c5633f0b0de77",
+      "bytes": 99584,
+      "role": "unchanged historical source"
+    },
+    {
+      "path": "reference/spec-v4.2.md",
+      "sha256": "22e3c2af2424e4a2e7ef158171922979500229ffba2cf35558e701244a4af16b",
+      "bytes": 133114,
+      "role": "unchanged historical source"
+    },
+    {
+      "path": "reference/spec-v4.2.1.md",
+      "sha256": "363016708aef1c22454cbd320effead34b952aadf2bad08ea3a3582dc9e4c8b1",
+      "bytes": 149400,
+      "role": "unchanged historical source"
+    },
+    {
+      "path": "reference/review-v4.2.1.md",
+      "sha256": "5c475dfc7a1eccb66574f693a0b8b694cbd9a7db6766ac211b4b7ce3dad5eaaa",
+      "bytes": 9516,
+      "role": "unchanged historical source"
+    },
+    {
+      "path": "reference/parameter-review-v4.2.md",
+      "sha256": "4b0aa9db9b9582fade977128707d172183c6d30c4cc60fecaa687752e2c57b33",
+      "bytes": 7227,
+      "role": "unchanged historical source"
+    }
+  ],
+  "new_decisions": "spec S11/S12 and review/review-input.md; user-approved ordering clarification",
+  "no_current_github_audit": true
+}

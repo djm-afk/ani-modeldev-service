@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -50,6 +51,12 @@ func failureDiagnostic(err error) string {
 			class, code = "grpc", remote.Code()
 			if code > codes.Unauthenticated {
 				code = codes.Unknown
+			}
+		} else {
+			var publication *workspace.PublicationFailure
+			if errors.As(err, &publication) {
+				phase, reason, httpStatus, storageCode := publication.PublicationDiagnostic()
+				return fmt.Sprintf("managed component failed stage=%s class=publication code=Unknown phase=%s reason=%s http_status=%d storage_code=%s", stage, phase, reason, httpStatus, storageCode)
 			}
 		}
 	}

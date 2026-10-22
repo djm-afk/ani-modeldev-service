@@ -15,12 +15,12 @@ import (
 	submissionsql "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission/sqlc"
 )
 
-// CloseUnboundRuntime handles an authenticated KFP close task after all four
+// CloseUnboundRuntime handles an authenticated KFP close task after all declared
 // data-plane tasks were explicitly skipped. Binding and the closed creation
 // fence commit together; no other transaction can observe an open authority.
 // The caller must have independently verified TokenReview, KFP and writer facts.
 func (repository *Repository) CloseUnboundRuntime(ctx context.Context, candidate biz.RunAuthorityCandidate, evidence biz.ManagedCloseEvidence) (biz.RunAuthority, biz.ExecutionRuntime, error) {
-	if ctx == nil || !validEarlyCloseCandidate(candidate) || len(evidence.SkippedTasks) != 4 || !validCloseEvidence(candidate, "STEP_FAILED", evidence) {
+	if ctx == nil || !validEarlyCloseCandidate(candidate) || len(evidence.SkippedTasks) < 4 {
 		return biz.RunAuthority{}, biz.ExecutionRuntime{}, biz.ErrRuntimeConflict
 	}
 	if repository == nil || repository.pool == nil {
@@ -40,6 +40,9 @@ func (repository *Repository) CloseUnboundRuntime(ctx context.Context, candidate
 	current, err := readRuntime(ctx, tx, tenantID, executionID)
 	if err != nil {
 		return biz.RunAuthority{}, biz.ExecutionRuntime{}, err
+	}
+	if len(evidence.SkippedTasks) != executionDataPlaneTaskCount(current.execution) || !validExecutionCloseEvidence(current.execution, candidate, "STEP_FAILED", evidence) {
+		return biz.RunAuthority{}, biz.ExecutionRuntime{}, biz.ErrRuntimeConflict
 	}
 	// ReadInTransaction re-derives the complete frozen dispatch from the original
 	// canonical admission and owner configuration, including its plan digest.
@@ -62,7 +65,7 @@ func (repository *Repository) CloseUnboundRuntime(ctx context.Context, candidate
 		if authority.RunAuthorityCandidate != candidate {
 			return biz.RunAuthority{}, biz.ExecutionRuntime{}, biz.ErrRunAuthorityConflict
 		}
-		if state.CloseGeneration == 0 || state.ClosedAt == nil || state.CloseReason != "STEP_FAILED" || state.CloseEvidence == nil || len(state.CloseEvidence.SkippedTasks) != 4 || !validCloseEvidence(candidate, "STEP_FAILED", *state.CloseEvidence) || !existing.BoundAt.Valid || existing.BoundAt.InfinityModifier != pgtype.Finite || authority.BoundAt.Before(dispatch.ReservedAt) || !authority.BoundAt.Before(plan.DeadlineAt) {
+		if state.CloseGeneration == 0 || state.ClosedAt == nil || state.CloseReason != "STEP_FAILED" || state.CloseEvidence == nil || len(state.CloseEvidence.SkippedTasks) != executionDataPlaneTaskCount(current.execution) || !validExecutionCloseEvidence(current.execution, candidate, "STEP_FAILED", *state.CloseEvidence) || !existing.BoundAt.Valid || existing.BoundAt.InfinityModifier != pgtype.Finite || authority.BoundAt.Before(dispatch.ReservedAt) || !authority.BoundAt.Before(plan.DeadlineAt) {
 			return biz.RunAuthority{}, biz.ExecutionRuntime{}, biz.ErrRuntimeConflict
 		}
 		authority.OwnerRevision = state.OwnerRevision

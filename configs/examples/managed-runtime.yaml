@@ -17,6 +17,28 @@ command:
   certificate_file: "${COMMAND_CERTIFICATE_FILE}"
   private_key_file: "${COMMAND_PRIVATE_KEY_FILE}"
   governance_dns_name: "${GOVERNANCE_DNS_NAME}"
+  # Presence enables the ModelDev -> Model business mTLS dependency. Every
+  # material is required and the artifact plan is part of the block: a
+  # connection that cannot describe one artifact would record every
+  # registration as unavailable instead of performing it.
+  model:
+    endpoint: "${MODEL_GRPC_ENDPOINT}"
+    ca_file: "${MODEL_CA_FILE}"
+    client_dns_name: "${MODELDEV_CLIENT_DNS_NAME}"
+    certificate_file: "${MODEL_CLIENT_CERTIFICATE_FILE}"
+    private_key_file: "${MODEL_CLIENT_PRIVATE_KEY_FILE}"
+    server_name: "${MODEL_SERVER_DNS_NAME}"
+    actor: "${MODEL_AUDIT_ACTOR}"
+    timeout: 30s
+    # FileName and Format are the provider's own vocabulary for the archived
+    # artifact; display_name/description/capabilities are the new-model branch
+    # metadata. The frozen intent still fixes the target, version and bytes.
+    artifact_plan:
+      file_name: "${MODEL_ARTIFACT_FILE_NAME}"
+      format: "${MODEL_ARTIFACT_FORMAT}"
+      display_name: "${MODEL_ARTIFACT_DISPLAY_NAME}"
+      description: "${MODEL_ARTIFACT_DESCRIPTION}"
+      capabilities: ["${MODEL_ARTIFACT_CAPABILITY}"]
 runtime:
   step:
     network: tcp

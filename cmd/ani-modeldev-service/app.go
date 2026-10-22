@@ -44,6 +44,10 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*application, error) {
 	}
 	middlewares := observability.ServerMiddleware(logger)
 	var grpcServer *kratosgrpc.Server
+	// Shell/composition mode registers no business RPC. It must never expose a
+	// plaintext business listener, so the shell transport is not started; only a
+	// configured mTLS command listener serves business traffic.
+	serveBusinessGRPC := bc.Command != nil
 	cleanup := func() {}
 	if bc.Command == nil {
 		grpcServer = server.NewGRPCServer(bc.Server.Grpc, middlewares...)
@@ -63,23 +67,27 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*application, error) {
 		defer cancel()
 		return observability.Shutdown(ctx)
 	})
-	return &application{App: newApp(logger, grpcServer, adminServer, readiness, bc.Server.ShutdownTimeout.AsDuration(), release), release: release}, nil
+	return &application{App: newApp(logger, grpcServer, serveBusinessGRPC, adminServer, readiness, bc.Server.ShutdownTimeout.AsDuration(), release), release: release}, nil
 }
 
 func newApp(
 	logger *slog.Logger,
 	grpcServer *kratosgrpc.Server,
+	serveBusinessGRPC bool,
 	adminServer *kratoshttp.Server,
 	readiness *server.Readiness,
 	stopTimeout time.Duration,
 	release func() error,
 ) *kratos.App {
-	return kratos.New(
-		kratos.ID(id),
-		kratos.Name(Name),
-		kratos.Version(Version),
-		kratos.Logger(logger),
-		kratos.Server(grpcServer, adminServer),
+	options := []kratos.Option{
+		kratos.ID(id), kratos.Name(Name), kratos.Version(Version), kratos.Logger(logger),
+	}
+	if serveBusinessGRPC {
+		options = append(options, kratos.Server(grpcServer, adminServer))
+	} else {
+		options = append(options, kratos.Server(adminServer))
+	}
+	options = append(options,
 		kratos.BeforeStop(func(context.Context) error {
 			readiness.Set(false)
 			return nil
@@ -87,4 +95,5 @@ func newApp(
 		kratos.AfterStop(func(context.Context) error { return release() }),
 		kratos.StopTimeout(stopTimeout),
 	)
+	return kratos.New(options...)
 }

@@ -14,7 +14,13 @@ func (step *Step) GetStorageCredentials(ctx context.Context, request *modeldevv1
 	switch requested {
 	case modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE:
 		purpose = "prepare"
+		if request.GetReadBaseModel() {
+			purpose = "prepare-base-model"
+		}
 	case modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH:
+		if request.GetReadBaseModel() {
+			return nil, runtimeError(biz.ErrManagedStepUnauthorized)
+		}
 		purpose = "publish"
 	default:
 		return nil, runtimeError(biz.ErrManagedStepUnauthorized)
@@ -35,7 +41,7 @@ func (step *Step) GetStorageCredentials(ctx context.Context, request *modeldevv1
 		AccessKeyId: value.AccessKeyID, SecretAccessKey: value.SecretAccessKey, SessionToken: value.SessionToken,
 		ExpiresAt: timestamppb.New(value.ExpiresAt), StorageConnectionId: value.StorageConnectionID, Bucket: value.Bucket,
 	}
-	if purpose == "prepare" {
+	if purpose == "prepare" || purpose == "prepare-base-model" {
 		wire.Scope = &modeldevv1.TemporaryStorageCredentials_ObjectKey{ObjectKey: value.ObjectKey}
 	} else {
 		wire.Scope = &modeldevv1.TemporaryStorageCredentials_ObjectPrefix{ObjectPrefix: value.ObjectPrefix}

@@ -9,6 +9,10 @@ import (
 )
 
 func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured) ([]kfp.ManagedTask, error) {
+	return resolvedManagedTasksForKind(workflow, tasks, pods, "GENERAL_TRAINING")
+}
+
+func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured, kind string) ([]kfp.ManagedTask, error) {
 	// The original top-level Pod association is retained for older adapters.
 	// The live 2.16 response instead supplies controller node references.
 	legacy := len(tasks) > 0
@@ -46,6 +50,10 @@ func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.Manag
 		}
 		switch name {
 		case "workspace-name", "prepare", "train-wait", "collect", "publish", "close", "close-finalizer":
+		case "export", "verify", "register":
+			if kind != "FINETUNING" {
+				continue
+			}
 		default:
 			continue
 		}
@@ -62,7 +70,7 @@ func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.Manag
 		mainNodes := 0
 		for podID, raw := range nodes {
 			podNode := raw.(map[string]any)
-			if podNode["boundaryID"] != id || podNode["type"] != "Pod" || podNode["templateName"] != "retry-system-container-impl" {
+			if podNode["boundaryID"] != id || podNode["type"] != "Pod" || !managedExecutorTemplate(podNode["templateName"]) {
 				continue
 			}
 			mainNodes++
@@ -112,6 +120,14 @@ func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.Manag
 		return nil, biz.ErrRuntimeNotReady
 	}
 	return result, nil
+}
+
+func managedExecutorTemplate(name any) bool {
+	// KFP wraps the executor template when the frozen platform spec supplies
+	// the two admission labels. Match the observed templates exactly; the
+	// independent Run node membership and current Workflow/Pod checks below
+	// still establish authority, never a template prefix or a Pod name.
+	return name == "retry-system-container-impl" || name == "metadata-0-2-retry-system-container-impl"
 }
 
 // KFP 2.16 derives task details from Argo displayName and node children. Those

@@ -62,6 +62,18 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed runtime configuration invalid")
 	}
+	if config.Command != nil && config.Command.Model != nil {
+		var closeModel func()
+		runtime, closeModel, err = withModelRegistration(runtime, config.Command.Model, facts, clients, config.Runtime.ObjectStorage.ConnectionId)
+		if err != nil {
+			return failed("managed Model registration configuration invalid")
+		}
+		closeBase := clients.close
+		clients.close = func() {
+			closeModel()
+			closeBase()
+		}
+	}
 	step, err := server.NewManagedStepServer(config.Runtime.Step, clients.certificate, service.NewRuntimeStep(steps, runtime, clients.storageIssuer), middlewares...)
 	if err != nil {
 		return failed("managed step listener configuration invalid")
@@ -74,9 +86,13 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed dispatch configuration invalid")
 	}
-	closer, err := biz.NewExecutionCloser(runtime, clients.runs, proof)
+	closer, err := biz.NewExecutionCloser(runtime, clients.runs, proof, proof)
 	if err != nil {
 		return failed("managed execution close configuration invalid")
+	}
+	closer, err = closer.WithComputeCleanup(proof.WithTrainingLogs(clients.logs))
+	if err != nil {
+		return failed("automatic compute cleanup configuration invalid")
 	}
 	operations, err := buildExecutionOperations(pool, clients, closer, proof)
 	if err != nil {

@@ -15,11 +15,22 @@ import (
 // observation. It must match the entire frozen import before publishing READY.
 // No request transport exposes a state or verification-proof override.
 func (r *Repository) RecordVerifiedCSV(ctx context.Context, expected biz.InputImport, verified biz.VerifiedCSV) (biz.InputVersion, error) {
-	command, err := importCommand(expected)
-	if err != nil {
+	if err := verified.ValidateFor(expected); err != nil {
 		return biz.InputVersion{}, err
 	}
+	return r.recordVerifiedInput(ctx, expected, verified.VerifiedAt, verified.SchemaVersion, verified.RowCount, verified.FeatureCount)
+}
+
+func (r *Repository) RecordVerifiedAlpaca(ctx context.Context, expected biz.InputImport, verified biz.VerifiedAlpaca) (biz.InputVersion, error) {
 	if err := verified.ValidateFor(expected); err != nil {
+		return biz.InputVersion{}, err
+	}
+	return r.recordVerifiedInput(ctx, expected, verified.VerifiedAt, verified.SchemaVersion, verified.RowCount, 0)
+}
+
+func (r *Repository) recordVerifiedInput(ctx context.Context, expected biz.InputImport, at time.Time, schema string, rows, features uint32) (biz.InputVersion, error) {
+	command, err := importCommand(expected)
+	if err != nil {
 		return biz.InputVersion{}, err
 	}
 	if r == nil || r.pool == nil {
@@ -51,10 +62,10 @@ func (r *Repository) RecordVerifiedCSV(ctx context.Context, expected biz.InputIm
 	if version.State == biz.InputStateValidating {
 		row, err = queries.RecordVerifiedCSV(ctx, inputsql.RecordVerifiedCSVParams{
 			TenantID: command.TenantID, InputVersionID: command.InputVersionID, RequestID: command.RequestID,
-			VerifiedAt:            pgtype.Timestamptz{Time: verified.VerifiedAt.UTC().Truncate(time.Microsecond), Valid: true},
-			VerifiedSchemaVersion: pgtype.Text{String: verified.SchemaVersion, Valid: true},
-			VerifiedRowCount:      pgtype.Int4{Int32: int32(verified.RowCount), Valid: true},
-			VerifiedFeatureCount:  pgtype.Int4{Int32: int32(verified.FeatureCount), Valid: true},
+			VerifiedAt:            pgtype.Timestamptz{Time: at.UTC().Truncate(time.Microsecond), Valid: true},
+			VerifiedSchemaVersion: pgtype.Text{String: schema, Valid: true},
+			VerifiedRowCount:      pgtype.Int4{Int32: int32(rows), Valid: true},
+			VerifiedFeatureCount:  pgtype.Int4{Int32: int32(features), Valid: true},
 		})
 		if err != nil {
 			return biz.InputVersion{}, biz.ErrPersistence

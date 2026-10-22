@@ -28,11 +28,14 @@ func Collect(ctx context.Context, directory string, execution biz.Execution) (bi
 	// The registered CPU contract contains only four fixed leaf names. Opening
 	// each leaf relative to this descriptor prevents traversal and directory
 	// replacement from redirecting the read after the root has been opened.
-	root, err := syscall.Open(directory, syscall.O_RDONLY|syscall.O_DIRECTORY|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0)
+	root, err := openPipelineRoot(directory)
 	if err != nil {
 		return biz.CollectedOutput{}, biz.ErrInvalidWorkspaceOutput
 	}
 	defer syscall.Close(root)
+	if execution.Snapshot.Kind == "FINETUNING" {
+		return collectFinetuning(ctx, root, execution)
+	}
 	contract := execution.Snapshot.OutputContract
 	files := make([]biz.CollectedFile, 0, len(contract.RequiredFiles))
 	remaining := contract.MaxTotalBytes
@@ -69,7 +72,7 @@ func collectFile(ctx context.Context, root int, name, role string, limit int64) 
 	}
 	// NONBLOCK prevents an untrusted FIFO replacement from blocking before the
 	// descriptor's type is checked. No symlink or multiply-linked file is read.
-	fd, err := syscall.Openat(root, name, syscall.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK|syscall.O_CLOEXEC, 0)
+	fd, err := openPipelineReadFile(root, name)
 	if err != nil {
 		return biz.CollectedFile{}, biz.ErrInvalidWorkspaceOutput
 	}
