@@ -3,6 +3,7 @@ package finetuningmodel
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"strings"
 
 	modelv1 "github.com/zhangzhe-ctrl/ani-model-service/api/model/v1"
@@ -56,6 +57,22 @@ func (r *LiveReader) ResolveFinetuningModelFacts(ctx context.Context, tenant str
 	if out.ValidateFor(in) != nil || out.Bucket != r.scope.Bucket || !strings.HasPrefix(out.ObjectKey, r.scope.ApprovedPrefix+"/") || !supportedQwenModel(out.ConfigJson, out.TokenizerConfigJson) {
 		return cpup01.BaseModelRef{}, biz.ErrModelDependencyUnavailable
 	}
+	sequenceLimit := originalSequenceLimit(out.ConfigJson, out.TokenizerConfigJson)
+	if sequenceLimit == 0 {
+		return cpup01.BaseModelRef{}, biz.ErrModelDependencyUnavailable
+	}
+	parameters, err := intent.ResolveParameters()
+	if err != nil {
+		return cpup01.BaseModelRef{}, biz.ErrInvalidAdmission
+	}
+	for _, parameter := range parameters {
+		if parameter.Name == "cutoff_len" {
+			cutoff, err := strconv.ParseInt(parameter.Value, 10, 64)
+			if err != nil || cutoff > sequenceLimit || cutoff > material.Finetuning.MaxSequenceLength {
+				return cpup01.BaseModelRef{}, biz.ErrInvalidAdmission
+			}
+		}
+	}
 	limits := material.Finetuning.Budgets
 	if out.SizeBytes > limits.MaxBaseModelBytes {
 		return cpup01.BaseModelRef{}, biz.ErrModelDependencyUnavailable
@@ -74,6 +91,32 @@ func (r *LiveReader) ResolveFinetuningModelFacts(ctx context.Context, tenant str
 		return cpup01.BaseModelRef{}, biz.ErrModelDependencyUnavailable
 	}
 	return base, nil
+}
+
+// Match the entry's finite context limits, including the Tokenizer's unbounded
+// integer sentinel. These bytes were verified against the original inventory;
+// no current model/default is read while finalizing or executing this plan.
+func originalSequenceLimit(config, tokenizer []byte) int64 {
+	var model struct {
+		Limit json.RawMessage `json:"max_position_embeddings"`
+	}
+	var tokens struct {
+		Limit json.RawMessage `json:"model_max_length"`
+	}
+	if json.Unmarshal(config, &model) != nil || json.Unmarshal(tokenizer, &tokens) != nil {
+		return 0
+	}
+	var limit int64
+	for _, raw := range []json.RawMessage{model.Limit, tokens.Limit} {
+		value, err := strconv.ParseInt(string(raw), 10, 64)
+		if err != nil || value <= 0 || value == 1<<63-1 {
+			continue
+		}
+		if limit == 0 || value < limit {
+			limit = value
+		}
+	}
+	return limit
 }
 
 // This is the structure exercised by the managed Qwen2.5-0.5B LoRA program.

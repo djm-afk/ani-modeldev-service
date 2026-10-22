@@ -35,8 +35,8 @@ func liveModelFixture(t *testing.T) (*liveModelBoundary, cpup01.StorageScope, cp
 	t.Helper()
 	intent := conformance.FinetuningIntentV1()
 	tenant := conformance.SnapshotV1().IdentityRef.TenantID
-	config := []byte(`{"model_type":"qwen2","architectures":["Qwen2ForCausalLM"],"hidden_size":896,"num_hidden_layers":24,"num_attention_heads":14,"num_key_value_heads":2,"intermediate_size":4864,"vocab_size":151936,"torch_dtype":"bfloat16"}`)
-	tokenizer := []byte(`{"tokenizer_class":"Qwen2Tokenizer"}`)
+	config := []byte(`{"model_type":"qwen2","architectures":["Qwen2ForCausalLM"],"hidden_size":896,"num_hidden_layers":24,"num_attention_heads":14,"num_key_value_heads":2,"intermediate_size":4864,"vocab_size":151936,"torch_dtype":"bfloat16","max_position_embeddings":32768}`)
+	tokenizer := []byte(`{"tokenizer_class":"Qwen2Tokenizer","model_max_length":32768}`)
 	out := &modelv1.ResolveFinetuningFactsResponse{TenantId: tenant, ModelId: "66666666-6666-4666-8666-666666666666", ModelVersionId: *intent.BaseModelVersionID, Format: "safetensors", Bucket: "ani-models", ObjectKey: tenant + "/models/original/model.tar", ObjectVersionId: "original-s3-version", SizeBytes: 16384, Sha256: strings.Repeat("a", 64), ConfigJson: config, TokenizerConfigJson: tokenizer, Target: &modelv1.ResolveFinetuningFactsResponse_NewModelName{NewModelName: *intent.NewModelName}, VerificationSource: modelv1.FinetuningVerificationSource}
 	for name, raw := range map[string][]byte{"config.json": config, "model.safetensors": []byte("original-weight-boundary-bytes"), "tokenizer.json": []byte("{}"), "tokenizer_config.json": tokenizer} {
 		digest := sha256.Sum256(raw)
@@ -64,6 +64,82 @@ func changeLiveConfig(t *testing.T, out *modelv1.ResolveFinetuningFactsResponse,
 			file.SizeBytes = int64(len(raw))
 			file.Sha256 = hex.EncodeToString(digest[:])
 		}
+	}
+}
+
+func TestLiveModelReaderRejectsCutoffAboveOriginalTokenizerBoundary(t *testing.T) {
+	boundary, scope, intent, material := liveModelFixture(t)
+	cutoff := int64(96)
+	intent.Finetuning.CutoffLen = &cutoff
+	boundary.response.TokenizerConfigJson = []byte(`{"tokenizer_class":"Qwen2Tokenizer","model_max_length":64}`)
+	digest := sha256.Sum256(boundary.response.TokenizerConfigJson)
+	for _, file := range boundary.response.Files {
+		if file.Path == "tokenizer_config.json" {
+			file.SizeBytes = int64(len(boundary.response.TokenizerConfigJson))
+			file.Sha256 = hex.EncodeToString(digest[:])
+		}
+	}
+	reader, err := NewLive(boundary, scope)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), boundary.response.TenantId, intent, material); !errors.Is(err, biz.ErrInvalidAdmission) {
+		t.Fatal("cutoff above the verified original tokenizer boundary was admitted", err)
+	}
+}
+
+func TestLiveModelReaderUsesFiniteOriginalContextAndMaterialLimits(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		model     any
+		tokenizer any
+		cutoff    int64
+		material  int64
+		want      error
+	}{
+		{"model is smaller", 64, 256, 96, 32768, biz.ErrInvalidAdmission},
+		{"tokenizer boundary is inclusive", 256, 64, 64, 32768, nil},
+		{"one above tokenizer boundary", 256, 64, 65, 32768, biz.ErrInvalidAdmission},
+		{"model boundary is inclusive", 64, 256, 64, 32768, nil},
+		{"material is smaller", 256, 256, 96, 64, biz.ErrInvalidAdmission},
+		{"omitted cutoff uses implementation default", 64, 64, 0, 32768, biz.ErrInvalidAdmission},
+		{"tokenizer sentinel uses model boundary", 32768, json.Number("1000000000000000019884624838656"), 32768, 65536, nil},
+		{"sentinel does not enlarge model boundary", 32768, json.Number("1000000000000000019884624838656"), 32769, 65536, biz.ErrInvalidAdmission},
+		{"int64 maximum is not a finite limit", nil, json.Number("9223372036854775807"), 96, 32768, biz.ErrModelDependencyUnavailable},
+		{"missing model boundary uses finite tokenizer", nil, 128, 96, 32768, nil},
+		{"no finite boundary", nil, nil, 96, 32768, biz.ErrModelDependencyUnavailable},
+		{"invalid boundaries are unavailable", -1, "128", 96, 32768, biz.ErrModelDependencyUnavailable},
+		{"fractional boundaries are not integers", json.Number("128.5"), 0, 96, 32768, biz.ErrModelDependencyUnavailable},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			boundary, scope, intent, material := liveModelFixture(t)
+			changeLiveConfig(t, boundary.response, "max_position_embeddings", test.model)
+			tokenizer, err := json.Marshal(map[string]any{"tokenizer_class": "Qwen2Tokenizer", "model_max_length": test.tokenizer})
+			if err != nil {
+				t.Fatal(err)
+			}
+			boundary.response.TokenizerConfigJson = tokenizer
+			digest := sha256.Sum256(tokenizer)
+			for _, file := range boundary.response.Files {
+				if file.Path == "tokenizer_config.json" {
+					file.SizeBytes = int64(len(tokenizer))
+					file.Sha256 = hex.EncodeToString(digest[:])
+				}
+			}
+			if test.cutoff != 0 {
+				cutoff := test.cutoff
+				intent.Finetuning.CutoffLen = &cutoff
+			}
+			material.Finetuning.MaxSequenceLength = test.material
+			reader, err := NewLive(boundary, scope)
+			if err != nil {
+				t.Fatal(err)
+			}
+			base, err := reader.ResolveFinetuningModelFacts(context.Background(), boundary.response.TenantId, intent, material)
+			if !errors.Is(err, test.want) || test.want == nil && base.VersionID != *intent.BaseModelVersionID {
+				t.Fatal("original context boundary did not govern admission", err)
+			}
+		})
 	}
 }
 
@@ -106,6 +182,9 @@ func TestLiveModelReaderRejectsUnfixedForeignOrUnsupportedOriginalFacts(t *testi
 		{"unapproved prefix", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ObjectKey = r.TenantId + "/another/model.tar" }},
 		{"unverified source", func(r *modelv1.ResolveFinetuningFactsResponse) { r.VerificationSource = "caller-assertion" }},
 		{"changed config bytes", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ConfigJson = append(r.ConfigJson, ' ') }},
+		{"changed tokenizer bytes", func(r *modelv1.ResolveFinetuningFactsResponse) {
+			r.TokenizerConfigJson = append(r.TokenizerConfigJson, ' ')
+		}},
 		{"qwen3 family", func(r *modelv1.ResolveFinetuningFactsResponse) { changeLiveConfig(t, r, "model_type", "qwen3") }},
 		{"unsupported dimensions", func(r *modelv1.ResolveFinetuningFactsResponse) { changeLiveConfig(t, r, "hidden_size", 1024) }},
 	} {
