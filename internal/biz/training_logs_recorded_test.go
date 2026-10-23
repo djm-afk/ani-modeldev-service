@@ -6,6 +6,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
@@ -47,6 +48,24 @@ func TestRecordedTrainingLogsRetainOriginalTailWithoutLiveObjects(t *testing.T) 
 	result.Lines[0].Text = "changed by caller"
 	if record.Runtime.ComputeCleanup.Logs[0].Result.Lines[1].Text != "second" {
 		t.Fatal("query modified the durable log tail")
+	}
+}
+
+func TestRecordedTrainingLogsKeepLegacyTailAlongsideNewPodEvidence(t *testing.T) {
+	record, source := recordedLogFixture(t)
+	newPod := record.Runtime.Observation.Resources[3]
+	newPod.Name, newPod.UID = "later-pod", "later-pod"
+	record.Runtime.Observation.Resources = append(record.Runtime.Observation.Resources, newPod)
+	newSource, err := biz.TrainingLogSourceFor(record, uuid.NewSHA1(uuid.NameSpaceOID, []byte(record.Execution.ExecutionID+":"+newPod.UID+":node")).String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	newLog := record.Runtime.ComputeCleanup.Logs[0]
+	newLog.Source = newSource
+	record.Runtime.Observation.Resources[4].TrainingLog = &newLog
+	result, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 1, MaxBytes: 65536})
+	if err != nil || !found || len(result.Lines) != 1 || result.Lines[0].Text != "last" {
+		t.Fatalf("a new Pod tail hid the original committed cleanup archive: found=%t result=%+v error=%v", found, result, err)
 	}
 }
 
@@ -125,5 +144,18 @@ func TestRecordedTrainingLogsWaitForCommittedCapture(t *testing.T) {
 	record.Runtime.ComputeCleanup.Logs[0].Result.Lines = nil
 	if _, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 200, MaxBytes: 16384}); err != nil || found {
 		t.Fatalf("capture in progress blocked live fallback: found=%t error=%v", found, err)
+	}
+}
+
+func TestCleanupCannotTreatGoneStartedPodAsNoWorker(t *testing.T) {
+	record, _ := recordedLogFixture(t)
+	code := int32(143)
+	pod := &record.Runtime.Observation.Resources[3]
+	pod.APIObjectPresent, pod.Terminal, pod.ExitCode = false, true, &code
+	if biz.ComputeCleanupLogsComplete(record.Execution, record.Runtime, nil) {
+		t.Fatal("a previously started worker disappeared; empty logs cannot become logs_ready")
+	}
+	if !biz.ComputeCleanupLogsComplete(record.Execution, record.Runtime, record.Runtime.ComputeCleanup.Logs) {
+		t.Fatal("the original identity-bound log tail was lost when its Pod disappeared")
 	}
 }

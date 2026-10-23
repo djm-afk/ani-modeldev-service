@@ -30,6 +30,7 @@ var (
 type Adapter struct {
 	client      dynamic.Interface
 	ownerSigner *OwnerAssertionSigner
+	logs        biz.TrainingLogReader
 }
 
 func New(client dynamic.Interface) *Adapter {
@@ -38,6 +39,11 @@ func New(client dynamic.Interface) *Adapter {
 
 func (a *Adapter) WithOwnerSigner(signer *OwnerAssertionSigner) *Adapter {
 	a.ownerSigner = signer
+	return a
+}
+
+func (a *Adapter) WithTrainingLogs(reader biz.TrainingLogReader) *Adapter {
+	a.logs = reader
 	return a
 }
 

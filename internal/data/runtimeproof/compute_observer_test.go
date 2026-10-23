@@ -39,12 +39,13 @@ func TestComputeCleanupPreservesConfiguredTrainingObserver(t *testing.T) {
 			if method := reflect.ValueOf(f.step.proof).MethodByName("WithTrainingRuntime"); method.IsValid() {
 				method.Call([]reflect.Value{reflect.ValueOf(observer)})
 			}
+			logReads := f.logReads // The original bounded tail was committed before closure.
 			result, err := f.worker(t).ReconcileOnce(context.Background())
 			if denied {
-				if err == nil && result.Unresolved == 0 || len(f.deleted) != 0 || f.logReads != 0 {
+				if err == nil && result.Unresolved == 0 || len(f.deleted) != 0 || f.logReads != logReads {
 					t.Fatalf("CONFIGURED_GPU_OWNER_OBSERVER_BYPASSED: result=%+v deletes=%v logs=%d err=%v", result, f.deleted, f.logReads, err)
 				}
-			} else if err != nil || result.Unresolved != 0 || len(f.deleted) != 7 || f.logReads != 1 {
+			} else if err != nil || result.Unresolved != 0 || len(f.deleted) != 7 || f.logReads != logReads {
 				t.Fatalf("configured observer did not complete original cleanup: %+v %v", result, err)
 			}
 			if observer.calls != 1 || denied && !errors.Is(observer.err, biz.ErrRuntimeNotReady) {

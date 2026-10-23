@@ -70,6 +70,9 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 			if previous.ExitCode != nil && (resource.ExitCode == nil || *previous.ExitCode != *resource.ExitCode) {
 				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 			}
+			if previous.TrainingLog != nil && !reflect.DeepEqual(previous.TrainingLog, resource.TrainingLog) {
+				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+			}
 		}
 		// The API no longer returning a UID is not fresh proof of termination.
 		if !resource.APIObjectPresent && resource.Terminal && (!existed || !previous.Terminal) {

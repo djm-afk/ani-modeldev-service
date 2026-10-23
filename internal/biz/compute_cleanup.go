@@ -153,7 +153,7 @@ func ComputeCleanupLogsComplete(execution Execution, state ExecutionRuntime, log
 	pods := 0
 	if state.Observation != nil {
 		for _, resource := range state.Observation.Resources {
-			if resource.Kind == "Pod" && resource.APIObjectPresent {
+			if resource.Kind == "Pod" {
 				pods++
 				found := false
 				for _, log := range logs {

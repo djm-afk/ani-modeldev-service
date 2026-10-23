@@ -29,20 +29,21 @@ import (
 )
 
 type computeCleanupFixture struct {
-	step                      *stepRetentionFixture
-	kube                      dynamic.Interface
-	mu                        sync.Mutex
-	objects                   map[string]*unstructured.Unstructured
-	runtime                   *unstructured.Unstructured
-	deleted                   []string
-	loseDelete, replaceDelete bool
-	logReads                  int
-	workflowDeleted           bool
-	runtimeDeleted            bool
-	stopPatches               int
-	pvcOwnerUID               string
-	deferDelete               bool
-	pendingReads              map[string]int
+	step                       *stepRetentionFixture
+	kube                       dynamic.Interface
+	mu                         sync.Mutex
+	objects                    map[string]*unstructured.Unstructured
+	runtime                    *unstructured.Unstructured
+	deleted                    []string
+	loseDelete, replaceDelete  bool
+	logReads                   int
+	workflowDeleted            bool
+	runtimeDeleted             bool
+	stopPatches                int
+	pvcOwnerUID                string
+	deferDelete                bool
+	pendingReads               map[string]int
+	refreshTrainingBeforeClose bool
 }
 
 // These are Kubernetes/KFP boundary substitutes, never a training load. Every
@@ -88,7 +89,11 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 		if err != nil || !reserved.SendPermit {
 			t.Fatal("real first training reservation", err)
 		}
-		training := trainer.New(kube)
+		core, err := coreclient.NewForConfig(step.clientConfig)
+		if err != nil {
+			t.Fatal(err)
+		}
+		training := trainer.New(kube).WithTrainingLogs(traininglogs.New(core))
 		handle, err := training.CreateTraining(ctx, *reserved.State.Training)
 		if err != nil {
 			t.Fatal("real Trainer adapter at HTTPS boundary", err)
@@ -126,6 +131,15 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 		}
 		if _, err := repository.RecordTrainingObservation(ctx, step.f.authority(), second); err != nil {
 			t.Fatal(err)
+		}
+		if f.refreshTrainingBeforeClose {
+			fresh, err := training.ObserveTraining(ctx, *reserved.State.Training, handle, second.Resources)
+			if err != nil || !fresh.WritersAbsent {
+				t.Fatal("fresh original writer evidence before close", err)
+			}
+			if _, err := repository.RecordTrainingObservation(ctx, step.f.authority(), fresh); err != nil {
+				t.Fatal(err)
+			}
 		}
 		if method := reflect.ValueOf(repository).MethodByName("BeginComputeCleanup"); method.IsValid() {
 			values := method.Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(step.f.authority()), reflect.ValueOf(uint64(0))})

@@ -51,8 +51,15 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 		return nil, biz.ErrCleanupBlocked
 	}
 	for _, pod := range state.Observation.Resources {
-		if pod.Kind != "Pod" || !pod.APIObjectPresent {
+		if pod.Kind != "Pod" {
 			continue
+		}
+		if pod.TrainingLog != nil {
+			logs = append(logs, *pod.TrainingLog)
+			continue
+		}
+		if !pod.APIObjectPresent {
+			return nil, biz.ErrTrainingLogsUnavailable
 		}
 		if verifier.logs == nil {
 			return nil, biz.ErrTrainingLogsUnavailable

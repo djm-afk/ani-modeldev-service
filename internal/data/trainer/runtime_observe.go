@@ -222,6 +222,9 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 	trainSuspended, _, _ := unstructured.NestedBool(train.Object, "spec", "suspend")
 	setSuspended, _, _ := unstructured.NestedBool(jobset.Object, "spec", "suspend")
 	creationStopped := (trainTerminal && setTerminal) || (trainSuspended && setSuspended && jobsStopped)
+	if err := a.retainTerminalPodLogs(ctx, plan, handle, resources, objects, history); err != nil {
+		return observation, err
+	}
 	exitPending, err := a.releaseRecordedPodExits(ctx, plan, handle, resources, objects, history)
 	if err != nil {
 		return observation, err

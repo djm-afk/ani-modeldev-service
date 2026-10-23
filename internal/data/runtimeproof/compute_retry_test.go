@@ -119,6 +119,7 @@ func TestExplicitComputeCleanupRetryPreservesFailedAttemptsAndOriginalScope(t *t
 
 func TestExplicitComputeCleanupRetryDoesNotAuthorizeReplacementUID(t *testing.T) {
 	f, _, operations := exhaustedCleanup(t)
+	logReads := f.logReads // Preserve the already captured original worker tail.
 	for _, object := range f.objects {
 		if object.GetKind() == "Pod" {
 			object.SetUID("replacement-pod")
@@ -128,7 +129,7 @@ func TestExplicitComputeCleanupRetryDoesNotAuthorizeReplacementUID(t *testing.T)
 		t.Fatal("replacement UID granted a retry")
 	}
 	state, err := lifecycle.New(f.step.open()).GetRuntime(context.Background(), f.step.f.execution.TenantID, f.step.f.execution.ExecutionID)
-	if err != nil || state.ComputeCleanup.Attempts != 3 || len(f.deleted) != 0 || f.logReads != 0 {
+	if err != nil || state.ComputeCleanup.Attempts != 3 || len(f.deleted) != 0 || f.logReads != logReads {
 		t.Fatal("failed fresh preflight changed original fence", state.ComputeCleanup, err)
 	}
 }

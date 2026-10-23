@@ -72,7 +72,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed workload verifier configuration invalid")
 	}
-	training := trainer.New(clients.kube).WithOwnerSigner(ownerSigner)
+	training := trainer.New(clients.kube).WithOwnerSigner(ownerSigner).WithTrainingLogs(clients.logs)
 	proof := runtimeproof.New(clients.kube, clients.runs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), dispatch).WithTrainingRuntime(training)
 	steps, err := biz.NewManagedSteps(dispatch, admissions, identity, proof)
 	if err != nil {
