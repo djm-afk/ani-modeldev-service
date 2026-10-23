@@ -234,7 +234,7 @@ func validateIntent(i Intent) error {
 			return bad("implementation")
 		}
 	case "FINETUNING":
-		if i.ImplementationID != "builtin.sft_lora" || i.Finetuning == nil || i.MLP != nil || i.BaseModelVersionID == nil || !validUUID(*i.BaseModelVersionID) || (i.TargetModelID == nil) == (i.NewModelName == nil) {
+		if i.ImplementationID != "builtin.sft_lora" || i.Finetuning == nil || i.MLP != nil || i.BaseModelVersionID == nil || !validUUID(*i.BaseModelVersionID) || i.TargetModelID != nil && i.NewModelName != nil {
 			return bad("implementation or model target")
 		}
 		if i.TargetModelID != nil && !validUUID(*i.TargetModelID) || i.NewModelName != nil && !validModelName(*i.NewModelName) {

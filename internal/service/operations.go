@@ -147,6 +147,9 @@ func (operations *Operations) ApplyExecutionCleanup(ctx context.Context, request
 }
 
 func operationsError(err error, requestID string) error {
+	if errors.Is(err, biz.ErrModelRegistrationNotApplicable) {
+		return status.Error(codes.FailedPrecondition, "execution has no Model registration target")
+	}
 	if errors.Is(err, biz.ErrCleanupBlocked) || errors.Is(err, biz.ErrCleanupConflict) || errors.Is(err, biz.ErrCleanupUncertain) {
 		return status.Error(codes.FailedPrecondition, "cleanup requires current closed identities and retained output evidence")
 	}

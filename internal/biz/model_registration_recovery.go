@@ -12,12 +12,8 @@ func (r *ManagedRuntime) ResumeModelRegistration(ctx context.Context, tenant, ex
 	if ctx == nil || !validAdmissionID(tenant) || !validAdmissionID(executionID) {
 		return Execution{}, ErrInvalidAdmission
 	}
-	if r == nil || r.steps == nil || r.registrations == nil {
+	if r == nil || r.steps == nil {
 		return Execution{}, ErrModelDependencyUnavailable
-	}
-	repository, ok := r.repository.(FinetuningRegistrationIntentRepository)
-	if !ok {
-		return Execution{}, ErrRuntimeNotReady
 	}
 	execution, err := r.steps.executions.Get(ctx, tenant, executionID)
 	if err != nil {
@@ -25,6 +21,16 @@ func (r *ManagedRuntime) ResumeModelRegistration(ctx context.Context, tenant, ex
 	}
 	if execution.Snapshot.Kind != "FINETUNING" {
 		return Execution{}, ErrRuntimeConflict
+	}
+	if !execution.Snapshot.Finetuning.RequiresModelRegistration() {
+		return Execution{}, ErrModelRegistrationNotApplicable
+	}
+	if r.registrations == nil {
+		return Execution{}, ErrModelDependencyUnavailable
+	}
+	repository, ok := r.repository.(FinetuningRegistrationIntentRepository)
+	if !ok {
+		return Execution{}, ErrRuntimeNotReady
 	}
 	authority, err := r.steps.repository.GetRunAuthority(ctx, tenant, executionID)
 	if err != nil {
