@@ -17,8 +17,14 @@ service ModelDevQueryService {
   rpc GetExecution(GetExecutionRequest) returns (GetExecutionResponse);
   rpc ListExecutions(ListExecutionsRequest) returns (ListExecutionsResponse);
   rpc GetExecutionLogs(GetExecutionLogsRequest) returns (GetExecutionLogsResponse);
+  // Server-streaming live logs of one already-authorized container. The first
+  // frame is READY or REJECTED; later frames are DATA or the closing frame.
+  rpc GetExecutionLogStream(GetExecutionLogStreamRequest) returns (stream GetExecutionLogStreamResponse);
   rpc ListExecutionArtifacts(ListExecutionArtifactsRequest) returns (ListExecutionArtifactsResponse);
   rpc AuthorizeArtifactDownload(AuthorizeArtifactDownloadRequest) returns (AuthorizeArtifactDownloadResponse);
+  // Live Kubernetes views. These are real-time reads, never part of ExecutionView.
+  rpc ListExecutionPods(ListExecutionPodsRequest) returns (ListExecutionPodsResponse);
+  rpc ListExecutionEvents(ListExecutionEventsRequest) returns (ListExecutionEventsResponse);
 }
 
 // Only authenticated Governance may resolve a candidate after current actor
@@ -450,6 +456,12 @@ message GetExecutionLogsRequest {
   optional string log_id = 2;
   uint32 tail_lines = 3;
   uint32 max_bytes = 4;
+  // Container selection stays outside the opaque log ID. An absent pod_uid
+  // keeps the single-worker behaviour; an absent container keeps `node`.
+  optional string pod_uid = 5;
+  optional string container = 6;
+  // Reads the last terminated instance of the same container.
+  optional bool previous = 7;
 }
 
 message LogLine {
@@ -457,11 +469,52 @@ message LogLine {
   string text = 2;
 }
 
+enum LogSourceKind {
+  LOG_SOURCE_KIND_UNSPECIFIED = 0;
+  LOG_SOURCE_KIND_TRAINER = 1;
+  LOG_SOURCE_KIND_KFP_STEP = 2;
+}
+
 message GetExecutionLogsResponse {
   ani.training.v1.LogRef source = 1;
   repeated LogLine lines = 2;
   bool truncated = 3;
   google.protobuf.Timestamp observed_at = 4;
+  LogSourceKind source_kind = 5;
+  string container_name = 6;
+  bool previous = 7;
+  bool available = 8;
+}
+
+// Server-streamed frame kinds. READY precedes every DATA frame; a stream that
+// cannot continue closes with CLOSED or REJECTED instead of ending silently.
+enum FrameKind {
+  FRAME_KIND_UNSPECIFIED = 0;
+  FRAME_KIND_READY = 1;
+  FRAME_KIND_DATA = 2;
+  FRAME_KIND_CLOSED = 3;
+  FRAME_KIND_REJECTED = 4;
+}
+
+message GetExecutionLogStreamRequest {
+  string execution_id = 1;
+  optional string pod_uid = 2;
+  optional string container = 3;
+  optional bool previous = 4;
+  // Reconnect offset: the last server offset received before reconnecting; 0
+  // starts from the log head. The server owns offsets and rejects stale ones.
+  optional int64 since_bytes = 5;
+}
+
+message GetExecutionLogStreamResponse {
+  FrameKind kind = 1;
+  bytes data = 2;
+  // REJECTED/CLOSED reason: POD_GONE, LOG_UNAVAILABLE, OFFSET_INVALID, ...
+  string reason = 3;
+  // Server-side count of bytes already sent for this stream, used to resume.
+  int64 offset = 4;
+  // Set when a rotation or Pod replacement makes an exact resume unprovable.
+  bool gap = 5;
 }
 
 message ArtifactView {
@@ -497,6 +550,121 @@ message AuthorizeArtifactDownloadResponse {
   // Short-lived secret: redact from logs and never persist in a snapshot.
   string download_url = 2;
   google.protobuf.Timestamp expires_at = 3;
+}
+
+// PodLayer separates the Trainer worker execution plane from the KFP
+// orchestration plane. They are never mixed into one training-instance list.
+enum PodLayer {
+  POD_LAYER_UNSPECIFIED = 0;
+  POD_LAYER_TRAINER = 1;
+  POD_LAYER_PIPELINE = 2;
+  POD_LAYER_ALL = 3;
+}
+
+// PodAvailability carries evidence the Pod phase cannot express. Recycled and
+// never-created are not Kubernetes phases and are never written into phase.
+enum PodAvailability {
+  POD_AVAILABILITY_UNSPECIFIED = 0;
+  POD_AVAILABILITY_LIVE = 1;
+  POD_AVAILABILITY_RECYCLED = 2;
+  POD_AVAILABILITY_NEVER_CREATED = 3;
+  POD_AVAILABILITY_REJECTED = 4;
+  POD_AVAILABILITY_ORPHANED = 5;
+  POD_AVAILABILITY_CREATION_PENDING = 6;
+}
+
+message ContainerView {
+  string name = 1;
+  // container / init_container / ephemeral
+  string type = 2;
+  // running / waiting / terminated / unknown
+  string state = 3;
+  string reason = 4;
+  string message = 5;
+  int32 restart_count = 6;
+  // Present only while the container is terminated.
+  optional int32 exit_code = 7;
+  google.protobuf.Timestamp started_at = 8;
+  google.protobuf.Timestamp finished_at = 9;
+  // Last terminated instance, for CrashLoop and restart diagnosis.
+  ContainerView last_state = 10;
+}
+
+message PodView {
+  string pod_name = 1;
+  string pod_uid = 2;
+  string pod_ip = 3;
+  // Kubernetes phase only: Pending/Running/Succeeded/Failed/Unknown.
+  string phase = 4;
+  bool ready = 5;
+  string node_name = 6;
+  int32 restarts = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp start_time = 9;
+  google.protobuf.Timestamp deletion_timestamp = 10;
+  PodLayer layer = 11;
+  PodAvailability availability = 12;
+  // KFP step name; empty for a Trainer worker.
+  string step_name = 13;
+  // JobSet restart attempt.
+  int32 attempt = 14;
+  // Job completion index for multi-node executions.
+  int32 job_index = 15;
+  // Opaque owner-issued log ID; container selection stays a separate field.
+  string log_id = 16;
+  bool log_available = 17;
+  repeated ContainerView containers = 18;
+  repeated ContainerView init_containers = 19;
+  bool api_present = 20;
+  // Worker node container exit code, when it terminated.
+  optional int32 exit_code = 21;
+  repeated ContainerView ephemeral_containers = 22;
+}
+
+message EventView {
+  string type = 1;
+  string reason = 2;
+  string message = 3;
+  google.protobuf.Timestamp first_timestamp = 4;
+  google.protobuf.Timestamp last_timestamp = 5;
+  int32 count = 6;
+  // source.component, falling back to reportingComponent.
+  string source = 7;
+  string involved_kind = 8;
+  string involved_name = 9;
+  string involved_uid = 10;
+  string field_path = 11;
+  string reporting_instance = 12;
+}
+
+message ListExecutionPodsRequest {
+  string execution_id = 1;
+  // Unspecified behaves as ALL.
+  PodLayer layer = 2;
+  bool include_recycled = 3;
+}
+
+message ListExecutionPodsResponse {
+  repeated PodView pods = 1;
+  google.protobuf.Timestamp observed_at = 2;
+  // Overall evidence for this execution: LIVE/RECYCLED/NEVER_CREATED/...
+  PodAvailability availability = 3;
+}
+
+message ListExecutionEventsRequest {
+  string execution_id = 1;
+  // key / all / warning; unspecified behaves as key.
+  string scope = 2;
+  // Equivalent to scope=warning, kept for older clients.
+  bool warning_only = 3;
+}
+
+message ListExecutionEventsResponse {
+  repeated EventView events = 1;
+  google.protobuf.Timestamp observed_at = 2;
+  // Kubernetes Event retention, e.g. "1h".
+  string retention_hint = 3;
+  bool truncated = 4;
 }
 
 // Approved identity references contain no certificate, token, or private key.
