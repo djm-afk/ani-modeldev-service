@@ -104,6 +104,17 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 		return err
 	}
 	authenticate := func(ctx context.Context, request any, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (any, error) {
+		// Reconcile contains two existing finite two-minute stages. Give only
+		// that exact method an outer envelope; never replace caller cancellation.
+		timeout := c.Timeout.AsDuration()
+		if info.FullMethod == modeldevv1.ModelDevOperationsService_ReconcileExecution_FullMethodName {
+			timeout = 5 * time.Minute
+		}
+		if timeout > 0 {
+			bounded, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
+			ctx = bounded
+		}
 		denied := status.Error(codes.Unauthenticated, "authenticated Governance delivery required")
 		remote, ok := peer.FromContext(ctx)
 		if !ok {
@@ -161,9 +172,10 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 		}
 		return next(service.WithVerifiedGovernanceDelivery(ctx, delivery), request)
 	}
+	transportTimeout := max(c.Timeout.AsDuration(), 5*time.Minute)
 	s := kratosgrpc.NewServer(
 		kratosgrpc.Network(c.Network), kratosgrpc.Address(c.Addr),
-		kratosgrpc.Timeout(c.Timeout.AsDuration()),
+		kratosgrpc.Timeout(transportTimeout),
 		kratosgrpc.TLSConfig(&tls.Config{
 			MinVersion: tls.VersionTLS13, ClientAuth: tls.RequireAndVerifyClientCert,
 			ClientCAs: roots, Certificates: []tls.Certificate{security.Certificate},

@@ -74,6 +74,64 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 	return logs, nil
 }
 
+// ObserveComputeCleanupAbsence grants no mutation or renewed attempt budget.
+// The durable exits/logs and frozen scope remain authoritative; only actual
+// NotFound responses for all original identities can complete the receipt.
+func (verifier *Verifier) ObserveComputeCleanupAbsence(ctx context.Context, execution biz.Execution, owner biz.RunAuthorityCandidate, state biz.ExecutionRuntime) ([]biz.RuntimeResource, error) {
+	if verifier == nil || verifier.kube == nil || ctx == nil || ctx.Err() != nil {
+		return nil, biz.ErrRuntimeNotReady
+	}
+	r := state.ComputeCleanup
+	if r == nil || r.Attempts == 0 || r.Attempts > biz.ComputeCleanupAttemptLimit(r) || !r.LogsReady || !biz.ComputeCleanupLogsComplete(execution, state, r.Logs) {
+		return nil, biz.ErrCleanupBlocked
+	}
+	targets, hash, err := biz.ComputeCleanupTargets(execution, owner, state)
+	if err != nil || r.CloseGeneration != state.CloseGeneration || hash != r.PlanHash || !reflect.DeepEqual(targets, r.Targets) || !reflect.DeepEqual(targets, r.Requested) {
+		return nil, biz.ErrCleanupConflict
+	}
+	namespace, err := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, owner.NamespaceName, metav1.GetOptions{})
+	if err != nil {
+		return nil, biz.ErrCleanupUncertain
+	}
+	if !sameObject(namespace, "v1", "Namespace", "", owner.NamespaceName, owner.NamespaceUID) || namespace.GetDeletionTimestamp() != nil {
+		return nil, biz.ErrCleanupConflict
+	}
+	if state.Workspace != nil {
+		if biz.ValidateWorkspaceBinding(execution, *state.Workspace) != nil {
+			return nil, biz.ErrCleanupConflict
+		}
+		pvc, err := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "persistentvolumeclaims"}).Namespace(owner.NamespaceName).Get(ctx, state.Workspace.PVCName, metav1.GetOptions{})
+		if err != nil {
+			return nil, biz.ErrCleanupUncertain
+		}
+		if !sameObject(pvc, "v1", "PersistentVolumeClaim", owner.NamespaceName, state.Workspace.PVCName, state.Workspace.PVCUID) || pvc.GetDeletionTimestamp() != nil {
+			return nil, biz.ErrCleanupConflict
+		}
+	}
+	absent := make([]biz.RuntimeResource, 0, len(targets))
+	for _, target := range targets {
+		resource, valid := computeResource(target)
+		if !valid {
+			return nil, biz.ErrCleanupConflict
+		}
+		current, err := verifier.kube.Resource(resource).Namespace(target.Namespace).Get(ctx, target.Name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			fact := target
+			fact.APIObjectPresent = false
+			absent = append(absent, fact)
+			continue
+		}
+		if err != nil {
+			return nil, biz.ErrCleanupUncertain
+		}
+		if !sameObject(current, target.APIVersion, target.Kind, target.Namespace, target.Name, target.UID) {
+			return nil, biz.ErrCleanupConflict
+		}
+		return nil, biz.ErrCleanupBlocked
+	}
+	return absent, nil
+}
+
 func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution biz.Execution, owner biz.RunAuthorityCandidate, state biz.ExecutionRuntime) ([]biz.RuntimeResource, error) {
 	removed := []biz.RuntimeResource{}
 	receipt := state.ComputeCleanup

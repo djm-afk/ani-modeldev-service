@@ -68,6 +68,7 @@ type ComputeCleanupRepository interface {
 }
 
 type ComputeCleanupBoundary interface {
+	ObserveComputeCleanupAbsence(context.Context, Execution, RunAuthorityCandidate, ExecutionRuntime) ([]RuntimeResource, error)
 	CaptureComputeCleanupLogs(context.Context, Execution, RunAuthorityCandidate, ExecutionRuntime) ([]RecordedTrainingLog, error)
 	ReconcileComputeCleanup(context.Context, Execution, RunAuthorityCandidate, ExecutionRuntime) ([]RuntimeResource, error)
 }
