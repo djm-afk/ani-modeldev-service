@@ -19,12 +19,24 @@ import (
 
 type Query struct {
 	modeldevv1.UnimplementedModelDevQueryServiceServer
-	repository biz.ArtifactQueryRepository
-	signer     biz.ArtifactSigner
-	logs       biz.TrainingLogReader
-	materials  *biz.ManagedMaterials
-	models     biz.FinetuningModelFactsReader
-	metrics    biz.MetricsObjectReader
+	repository           biz.ArtifactQueryRepository
+	operationsRepository biz.ExecutionOperationsRepository
+	signer               biz.ArtifactSigner
+	logs                 biz.TrainingLogReader
+	containers           biz.ContainerLogReader
+	streams              biz.ContainerLogStreamer
+	workers              ExecutionWorkloadReader
+	steps                StepWorkloadReader
+	materials            *biz.ManagedMaterials
+	models               biz.FinetuningModelFactsReader
+	metrics              biz.MetricsObjectReader
+}
+
+// WithOperations installs the read used by the live workload views, whose
+// authorization needs dispatch, authority and rejection evidence together.
+func (query *Query) WithOperations(operations biz.ExecutionOperationsRepository) *Query {
+	query.operationsRepository = operations
+	return query
 }
 
 // WithFinetuningFacts records the actual read dependency assembled by the
@@ -108,10 +120,6 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
-	source, err := biz.TrainingLogSourceFor(record, request.GetLogId())
-	if err != nil {
-		return nil, queryError(err, scope.RequestID)
-	}
 	options := biz.TrainingLogOptions{TailLines: request.TailLines, MaxBytes: request.MaxBytes}
 	if options.TailLines == 0 {
 		options.TailLines = 200
@@ -119,25 +127,145 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if options.MaxBytes == 0 {
 		options.MaxBytes = 16384
 	}
-	result, recorded, err := biz.RecordedTrainingLogsFor(record, source, options)
+	selection, err := query.selectLogTarget(ctx, record, request)
 	if err != nil {
-		return nil, queryError(err, scope.RequestID)
+		return nil, workloadError(err, scope.RequestID)
 	}
-	if !recorded {
-		if query.logs == nil {
-			return nil, queryError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
-		}
-		result, err = query.logs.ReadTrainingLogs(ctx, source, options)
+	var result biz.TrainingLogResult
+	if selection.Kind == biz.LogSourceKindTrainer && selection.Target.ContainerName == "node" && !selection.Target.Previous {
+		source, err := trainingSource(record, selection)
 		if err != nil {
 			return nil, queryError(err, scope.RequestID)
 		}
+		archived, recorded, err := biz.RecordedTrainingLogsFor(record, source, options)
+		if err != nil {
+			return nil, queryError(err, scope.RequestID)
+		}
+		if recorded {
+			result = archived
+		} else {
+			if query.logs == nil {
+				return nil, queryError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
+			}
+			result, err = query.logs.ReadTrainingLogs(ctx, source, options)
+			if err != nil {
+				return nil, queryError(err, scope.RequestID)
+			}
+		}
+	} else {
+		if query.containers == nil {
+			return nil, workloadError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
+		}
+		result, err = query.containers.ReadContainerLogs(ctx, selection.Target, options)
+		if err != nil {
+			return nil, queryLogError(err, scope.RequestID)
+		}
 	}
-	response := &modeldevv1.GetExecutionLogsResponse{Source: &trainingv1.LogRef{LogId: source.LogID, ResourceUid: source.PodUID, ContainerName: source.ContainerName}, Truncated: result.Truncated, ObservedAt: timestamppb.New(result.ObservedAt)}
+	response := &modeldevv1.GetExecutionLogsResponse{
+		Source:        &trainingv1.LogRef{LogId: selection.LogID, ResourceUid: selection.Target.PodUID, ContainerName: selection.Target.ContainerName},
+		Truncated:     result.Truncated,
+		ObservedAt:    timestamppb.New(result.ObservedAt),
+		SourceKind:    logSourceKindValue(selection.Kind),
+		ContainerName: selection.Target.ContainerName,
+		Previous:      selection.Target.Previous,
+		Available:     true,
+	}
 	for _, line := range result.Lines {
 		response.Lines = append(response.Lines, &modeldevv1.LogLine{Timestamp: timestamppb.New(line.Timestamp), Text: line.Text})
 	}
 	return response, nil
 }
+
+func logSourceKindValue(kind biz.LogSourceKind) modeldevv1.LogSourceKind {
+	if kind == biz.LogSourceKindKFPStep {
+		return modeldevv1.LogSourceKind_LOG_SOURCE_KIND_KFP_STEP
+	}
+	return modeldevv1.LogSourceKind_LOG_SOURCE_KIND_TRAINER
+}
+
+// queryLogError distinguishes a missing previous instance from a plain
+// unavailable log so the client can offer the right next action.
+func queryLogError(err error, requestID string) error {
+	if errors.Is(err, biz.ErrLogPreviousUnavailable) {
+		return commandError(codes.NotFound, modeldevv1.ErrorReason_ERROR_REASON_RESOURCE_NOT_FOUND, "previous container instance unavailable", requestID)
+	}
+	return queryError(err, requestID)
+}
+
+// selectLogTarget resolves exactly one container instance for a read. The
+// worker path stays compatible: no pod_uid and no container keeps the original
+// single-worker `node` behaviour, including its archived-tail fallback.
+func (query *Query) selectLogTarget(ctx context.Context, record biz.QueryRecord, request *modeldevv1.GetExecutionLogsRequest) (biz.LogSelection, error) {
+	container := request.GetContainer()
+	podUID := request.GetPodUid()
+	previous := request.GetPrevious()
+	if podUID == "" && container == "" {
+		source, err := biz.TrainingLogSourceFor(record, request.GetLogId())
+		if err != nil {
+			return biz.LogSelection{}, err
+		}
+		return biz.LogSelection{Kind: biz.LogSourceKindTrainer, LogID: source.LogID, Target: biz.ContainerLogTarget{
+			Namespace: source.Namespace, NamespaceUID: source.NamespaceUID, PodName: source.PodName,
+			PodUID: source.PodUID, ContainerName: source.ContainerName, Previous: previous,
+		}}, nil
+	}
+	workload, err := biz.ExecutionWorkloadScopeFor(biz.OperationRecord{QueryRecord: record})
+	if err != nil {
+		return biz.LogSelection{}, err
+	}
+	if podUID == "" {
+		return biz.LogSelection{}, biz.ErrWorkloadViewUnavailable
+	}
+	if workload.PipelineReadable() && query.steps != nil {
+		if pod, err := query.steps.StepPod(ctx, workload, podUID); err == nil {
+			return biz.LogSelection{Kind: biz.LogSourceKindKFPStep, LogID: request.GetLogId(), Target: biz.ContainerLogTarget{
+				Namespace: workload.NamespaceName, NamespaceUID: workload.NamespaceUID, PodName: pod.Name,
+				PodUID: pod.UID, ContainerName: containerOr(container, biz.DefaultContainerFor(biz.LogSourceKindKFPStep)), Previous: previous,
+			}}, nil
+		} else if !errors.Is(err, biz.ErrTrainingLogNotFound) {
+			return biz.LogSelection{}, err
+		}
+	}
+	if query.workers == nil || !workload.WorkerReadable() {
+		return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+	}
+	pods, err := query.workers.ListWorkerPods(ctx, workload)
+	if err != nil {
+		return biz.LogSelection{}, err
+	}
+	for _, pod := range pods {
+		if pod.UID != podUID {
+			continue
+		}
+		return biz.LogSelection{Kind: biz.LogSourceKindTrainer, LogID: workerLogID(workload.ExecutionID, pod.UID), Target: biz.ContainerLogTarget{
+			Namespace: workload.NamespaceName, NamespaceUID: workload.NamespaceUID, PodName: pod.Name,
+			PodUID: pod.UID, ContainerName: containerOr(container, biz.DefaultContainerFor(biz.LogSourceKindTrainer)), Previous: previous,
+		}}, nil
+	}
+	return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+}
+
+func containerOr(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
+// trainingSource re-derives the durable worker identity for a selection so an
+// archived tail is checked against the same owner chain the live read used.
+func trainingSource(record biz.QueryRecord, selection biz.LogSelection) (biz.TrainingLogSource, error) {
+	source, err := biz.TrainingLogSourceFor(record, selection.LogID)
+	if err != nil {
+		return biz.TrainingLogSource{}, err
+	}
+	if source.Namespace != selection.Target.Namespace || source.PodName != selection.Target.PodName ||
+		source.PodUID != selection.Target.PodUID || source.ContainerName != selection.Target.ContainerName {
+		return biz.TrainingLogSource{}, biz.ErrTrainingLogsUnavailable
+	}
+	return source, nil
+}
+
 
 func (query *Query) GetExecution(ctx context.Context, request *modeldevv1.GetExecutionRequest) (*modeldevv1.GetExecutionResponse, error) {
 	scope, err := queryScope(ctx, modeldevv1.ModelDevQueryService_GetExecution_FullMethodName)

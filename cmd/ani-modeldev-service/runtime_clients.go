@@ -37,7 +37,7 @@ type runtimeClients struct {
 	runs          *kfp.Client
 	store         *s3.Client
 	storageIssuer *storagecredentials.Issuer
-	logs          biz.TrainingLogReader
+	logs          *traininglogs.Reader
 	close         func()
 }
 

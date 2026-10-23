@@ -12,6 +12,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof"
@@ -61,7 +62,10 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	}
 	middlewares := observability.ServerMiddleware(logger)
 	query := service.NewQuery(execution.New(pool), objectstore.NewDownloadSigner(clients.store, config.Runtime.ObjectStorage.ConnectionId), clients.logs).
-		WithMetrics(objectstore.NewObjectReader(clients.store, config.Runtime.ObjectStorage.ConnectionId))
+		WithMetrics(objectstore.NewObjectReader(clients.store, config.Runtime.ObjectStorage.ConnectionId)).
+		WithOperations(execution.New(pool)).
+		WithWorkload(trainer.New(clients.kube), kfp.NewPodReader(clients.kube)).
+		WithLogStream(clients.logs, clients.logs)
 	admissions, dispatch, facts := execution.New(pool), submission.New(pool), lifecycle.New(pool)
 	gpuRelease, ownerSigner, closeGPU, err := assembleGPUOwner(config.Runtime, clients.kube, facts)
 	if err != nil {
