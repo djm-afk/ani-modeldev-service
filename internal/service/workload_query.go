@@ -30,9 +30,9 @@ type StepWorkloadReader interface {
 // LogSources bundles the three log capabilities the query service needs: the
 // archived worker tail reader, the explicit container reader, and the follower.
 type LogSources struct {
-	Archived  biz.TrainingLogReader
+	Archived   biz.TrainingLogReader
 	Containers biz.ContainerLogReader
-	Streams   biz.ContainerLogStreamer
+	Streams    biz.ContainerLogStreamer
 }
 
 func (query *Query) WithWorkload(workers ExecutionWorkloadReader, steps StepWorkloadReader) *Query {
@@ -161,7 +161,7 @@ func recycledWorkerPods(record biz.OperationRecord, executionID string) []biz.Ex
 			Availability: biz.PodAvailabilityRecycled, APIPresent: resource.APIObjectPresent,
 			ExitCode: resource.ExitCode, LogID: biz.TrainerLogID(executionID, resource.UID),
 			LogAvailable: record.Runtime.ComputeCleanup != nil && record.Runtime.ComputeCleanup.LogsReady,
-			Containers: []biz.PodContainer{{Name: "node", Type: biz.ContainerTypeContainer, State: biz.ContainerStateTerminated}},
+			Containers:   []biz.PodContainer{{Name: "node", Type: biz.ContainerTypeContainer, State: biz.ContainerStateTerminated}},
 		}
 		result = append(result, pod)
 	}

@@ -67,7 +67,10 @@ func (a *Adapter) ListWorkerPods(ctx context.Context, scope biz.ExecutionWorkloa
 	jobUIDs := make(map[string]string, len(jobs.Items))
 	for index := range jobs.Items {
 		job := &jobs.Items[index]
-		if !controllerIs(job, "trainer.kubeflow.org/v1alpha1", "TrainJob", scope.TrainJobName, scope.TrainJobUID) {
+		// The Job must be controlled by the exact original JobSet, which is in
+		// turn controlled by the verified TrainJob. Both links are real UID
+		// comparisons, never name matching.
+		if !controllerIs(job, "jobset.x-k8s.io/v1alpha2", "JobSet", jobset.GetName(), string(jobset.GetUID())) {
 			continue
 		}
 		if job.GetKind() != "Job" || job.GetNamespace() != scope.NamespaceName || job.GetUID() == "" {
@@ -156,7 +159,7 @@ func (a *Adapter) ListTrainingWorkloadEvents(ctx context.Context, scope biz.Exec
 				}
 				for index := range jobs.Items {
 					job := &jobs.Items[index]
-					if controllerIs(job, "trainer.kubeflow.org/v1alpha1", "TrainJob", scope.TrainJobName, scope.TrainJobUID) {
+					if controllerIs(job, "jobset.x-k8s.io/v1alpha2", "JobSet", set.GetName(), string(set.GetUID())) {
 						collect(string(job.GetUID()), job.GetName(), "Job")
 					}
 				}

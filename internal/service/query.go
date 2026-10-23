@@ -218,7 +218,11 @@ func (query *Query) selectLogTarget(ctx context.Context, record biz.QueryRecord,
 	}
 	if workload.PipelineReadable() && query.steps != nil {
 		if pod, err := query.steps.StepPod(ctx, workload, podUID); err == nil {
-			return biz.LogSelection{Kind: biz.LogSourceKindKFPStep, LogID: request.GetLogId(), Target: biz.ContainerLogTarget{
+			logID := biz.StepLogID(workload.ExecutionID, pod.UID)
+			if request.GetLogId() != "" && request.GetLogId() != logID {
+				return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+			}
+			return biz.LogSelection{Kind: biz.LogSourceKindKFPStep, LogID: logID, Target: biz.ContainerLogTarget{
 				Namespace: workload.NamespaceName, NamespaceUID: workload.NamespaceUID, PodName: pod.Name,
 				PodUID: pod.UID, ContainerName: containerOr(container, biz.DefaultContainerFor(biz.LogSourceKindKFPStep)), Previous: previous,
 			}}, nil
@@ -265,7 +269,6 @@ func trainingSource(record biz.QueryRecord, selection biz.LogSelection) (biz.Tra
 	}
 	return source, nil
 }
-
 
 func (query *Query) GetExecution(ctx context.Context, request *modeldevv1.GetExecutionRequest) (*modeldevv1.GetExecutionResponse, error) {
 	scope, err := queryScope(ctx, modeldevv1.ModelDevQueryService_GetExecution_FullMethodName)

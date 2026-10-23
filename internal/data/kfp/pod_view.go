@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	stepPodsResource  = schema.GroupVersionResource{Version: "v1", Resource: "pods"}
-	workflowsResource = schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}
+	stepPodsResource   = schema.GroupVersionResource{Version: "v1", Resource: "pods"}
+	workflowsResource  = schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}
 	stepEventsResource = schema.GroupVersionResource{Version: "v1", Resource: "events"}
 )
 
@@ -71,6 +71,7 @@ func (reader *PodReader) ListStepPods(ctx context.Context, scope biz.ExecutionWo
 		}
 		view := workloadview.Pod(pod, biz.PodLayerPipeline, availability)
 		view.StepName = stepName(pod)
+		view.LogID = biz.StepLogID(scope.ExecutionID, view.UID)
 		view.LogAvailable = true
 		result = append(result, view)
 	}
