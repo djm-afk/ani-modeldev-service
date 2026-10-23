@@ -103,7 +103,7 @@ func (operations *Operations) ReconcileExecution(ctx context.Context, request *m
 	if operations == nil || operations.executions == nil {
 		return nil, status.Error(codes.Unavailable, "operations unavailable")
 	}
-	view, err := operations.executions.Reconcile(ctx, access.TenantID, request.ExecutionId)
+	view, err := operations.executions.ReconcileWithActor(ctx, access.TenantID, request.ExecutionId, access.Actor)
 	if err != nil {
 		return nil, operationsError(err, access.RequestID)
 	}

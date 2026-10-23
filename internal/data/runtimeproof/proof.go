@@ -15,6 +15,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
 	workspaceio "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,15 +27,23 @@ type PlanReader interface {
 	Get(context.Context, string, string) (biz.PipelineDispatch, error)
 }
 type Verifier struct {
-	kube    dynamic.Interface
-	runs    *kfp.Client
-	objects *objectstore.Verifier
-	plans   PlanReader
-	logs    biz.TrainingLogReader
+	kube     dynamic.Interface
+	runs     *kfp.Client
+	objects  *objectstore.Verifier
+	plans    PlanReader
+	logs     biz.TrainingLogReader
+	training biz.TrainingRuntime
 }
 
 func New(kube dynamic.Interface, runs *kfp.Client, objects *objectstore.Verifier, plans PlanReader) *Verifier {
-	return &Verifier{kube: kube, runs: runs, objects: objects, plans: plans}
+	return &Verifier{kube: kube, runs: runs, objects: objects, plans: plans, training: trainer.New(kube)}
+}
+
+// WithTrainingRuntime preserves the runtime's configured owner capabilities
+// when cleanup independently refreshes the original terminal observation.
+func (verifier *Verifier) WithTrainingRuntime(training biz.TrainingRuntime) *Verifier {
+	verifier.training = training
+	return verifier
 }
 
 func (verifier *Verifier) VerifyPrepared(ctx context.Context, execution biz.Execution, association biz.ManagedStepAssociation, workspace biz.WorkspaceBinding) error {

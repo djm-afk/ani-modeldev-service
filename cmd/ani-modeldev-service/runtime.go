@@ -72,12 +72,13 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed workload verifier configuration invalid")
 	}
-	proof := runtimeproof.New(clients.kube, clients.runs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), dispatch)
+	training := trainer.New(clients.kube).WithOwnerSigner(ownerSigner)
+	proof := runtimeproof.New(clients.kube, clients.runs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), dispatch).WithTrainingRuntime(training)
 	steps, err := biz.NewManagedSteps(dispatch, admissions, identity, proof)
 	if err != nil {
 		return failed("managed step configuration invalid")
 	}
-	runtime, err := biz.NewManagedRuntime(steps, facts, trainer.New(clients.kube).WithOwnerSigner(ownerSigner), proof, proof)
+	runtime, err := biz.NewManagedRuntime(steps, facts, training, proof, proof)
 	if err != nil {
 		return failed("managed runtime configuration invalid")
 	}
@@ -115,7 +116,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("automatic compute cleanup configuration invalid")
 	}
-	operations, err := buildExecutionOperations(pool, clients, closer, proof)
+	operations, err := buildExecutionOperations(pool, clients, closer, proof, training)
 	if err != nil {
 		return failed("managed execution operations configuration invalid")
 	}

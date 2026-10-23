@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/cleanup"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -44,7 +43,10 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 	}
 	// Reuse the real training observer before disposing any parent. Its full
 	// original owner chain, historical exits and creation stop remain required.
-	fresh, err := trainer.New(verifier.kube).ObserveTraining(ctx, *state.Training, *state.TrainingHandle, state.Observation.Resources)
+	if verifier.training == nil {
+		return nil, biz.ErrRuntimeNotReady
+	}
+	fresh, err := verifier.training.ObserveTraining(ctx, *state.Training, *state.TrainingHandle, state.Observation.Resources)
 	if err != nil || !fresh.WritersAbsent || !reflect.DeepEqual(fresh.Resources, state.Observation.Resources) {
 		return nil, biz.ErrCleanupBlocked
 	}
@@ -75,8 +77,16 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution biz.Execution, owner biz.RunAuthorityCandidate, state biz.ExecutionRuntime) ([]biz.RuntimeResource, error) {
 	removed := []biz.RuntimeResource{}
 	receipt := state.ComputeCleanup
-	if receipt == nil || !receipt.LogsReady || receipt.Attempts == 0 || receipt.Attempts > biz.ComputeCleanupMaximumAttempts || receipt.Phase != "STARTED" || !biz.ComputeCleanupLogsComplete(execution, state, receipt.Logs) {
+	if receipt == nil || !receipt.LogsReady || receipt.Attempts == 0 || receipt.Attempts > biz.ComputeCleanupAttemptLimit(receipt) || receipt.Phase != "STARTED" || !biz.ComputeCleanupLogsComplete(execution, state, receipt.Logs) {
 		return removed, biz.ErrCleanupBlocked
+	}
+	if retry := receipt.OperatorRetry; retry != nil {
+		if !time.Now().Before(retry.DeadlineAt) {
+			return removed, biz.ErrCleanupBlocked
+		}
+		bounded, cancel := context.WithDeadline(ctx, retry.DeadlineAt)
+		defer cancel()
+		ctx = bounded
 	}
 	targets, hash, err := biz.ComputeCleanupTargets(execution, owner, state)
 	if err != nil || hash != receipt.PlanHash || !reflect.DeepEqual(targets, receipt.Targets) || !reflect.DeepEqual(targets, receipt.Requested) {
@@ -89,6 +99,9 @@ func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution
 	record := biz.OperationRecord{QueryRecord: biz.QueryRecord{Execution: execution, Runtime: state}, Dispatch: &dispatch, Authority: &owner}
 	controllers := cleanup.New(verifier.kube, verifier)
 	for _, target := range receipt.Targets {
+		if retry := receipt.OperatorRetry; retry != nil && !time.Now().Before(retry.DeadlineAt) {
+			return removed, biz.ErrCleanupBlocked
+		}
 		if err := verifier.verifyComputeCleanupGraph(ctx, execution, owner, state, true); err != nil {
 			return removed, err
 		}

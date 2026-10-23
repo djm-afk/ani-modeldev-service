@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"sort"
+	"time"
 )
 
 const ComputeCleanupActor = "modeldev:compute-cleanup"
@@ -17,12 +18,46 @@ const ComputeCleanupMaximumAttempts = 3
 // ConfirmedAbsent never substitutes for the original persisted process exits.
 type ComputeCleanupReceipt struct {
 	CleanupReceipt
-	CloseGeneration uint64                `json:"close_generation"`
-	Targets         []RuntimeResource     `json:"targets"`
-	Logs            []RecordedTrainingLog `json:"logs"`
-	LogsReady       bool                  `json:"logs_ready"`
-	Attempts        uint32                `json:"attempts"`
-	LastError       string                `json:"last_error,omitempty"`
+	CloseGeneration uint64                       `json:"close_generation"`
+	Targets         []RuntimeResource            `json:"targets"`
+	Logs            []RecordedTrainingLog        `json:"logs"`
+	LogsReady       bool                         `json:"logs_ready"`
+	Attempts        uint32                       `json:"attempts"`
+	LastError       string                       `json:"last_error,omitempty"`
+	OperatorRetry   *ComputeCleanupOperatorRetry `json:"operator_retry,omitempty"`
+}
+
+// ComputeCleanupOperatorRetry preserves the exhausted pre-DELETE audit. It
+// authorizes one additional original-scope attempt, never a renewed budget.
+type ComputeCleanupOperatorRetry struct {
+	Actor            string    `json:"actor"`
+	AdmittedAt       time.Time `json:"admitted_at"`
+	DeadlineAt       time.Time `json:"deadline_at"`
+	OriginalAttempts uint32    `json:"original_attempts"`
+	OriginalPhase    string    `json:"original_phase"`
+	OriginalError    string    `json:"original_error"`
+}
+
+const ComputeCleanupOperatorRetryWindow = 2 * time.Minute
+
+func ComputeCleanupAttemptLimit(receipt *ComputeCleanupReceipt) uint32 {
+	if receipt != nil && receipt.OperatorRetry != nil {
+		return ComputeCleanupMaximumAttempts + 1
+	}
+	return ComputeCleanupMaximumAttempts
+}
+
+func ComputeCleanupRetryEligible(execution Execution, owner RunAuthorityCandidate, state ExecutionRuntime) bool {
+	r := state.ComputeCleanup
+	if r == nil || r.OperatorRetry != nil || r.Attempts != ComputeCleanupMaximumAttempts || r.Phase != "NEEDS_REVIEW" || r.LastError != "ATTEMPTS_EXHAUSTED" || r.LogsReady || len(r.Logs) != 0 || len(r.Requested) != 0 || len(r.ConfirmedAbsent) != 0 {
+		return false
+	}
+	targets, hash, err := ComputeCleanupTargets(execution, owner, state)
+	return err == nil && r.CloseGeneration == state.CloseGeneration && r.PlanHash == hash && reflect.DeepEqual(r.Targets, targets)
+}
+
+type ComputeCleanupOperatorRepository interface {
+	AdmitComputeCleanupRetry(context.Context, RunAuthorityCandidate, uint64, string, []RecordedTrainingLog) (ExecutionRuntime, error)
 }
 
 type ComputeCleanupRepository interface {

@@ -142,11 +142,45 @@ func (operations *ExecutionOperations) Inspect(ctx context.Context, tenant, exec
 // Reconcile only resumes the existing owner close path; it grants no new
 // creation permit and cannot set a caller-selected computation state.
 func (operations *ExecutionOperations) Reconcile(ctx context.Context, tenant, execution string) (ExecutionInspect, error) {
+	return operations.reconcile(ctx, tenant, execution, "")
+}
+
+// ReconcileWithActor is the existing authenticated operator path. Only this
+// explicit call may admit a single exhausted pre-DELETE cleanup recovery.
+func (operations *ExecutionOperations) ReconcileWithActor(ctx context.Context, tenant, execution, actor string) (ExecutionInspect, error) {
+	if !validAuditActor(actor) {
+		return ExecutionInspect{}, ErrInvalidAdmission
+	}
+	return operations.reconcile(ctx, tenant, execution, actor)
+}
+
+func (operations *ExecutionOperations) reconcile(ctx context.Context, tenant, execution, actor string) (ExecutionInspect, error) {
 	if _, err := operations.Inspect(ctx, tenant, execution); err != nil {
 		return ExecutionInspect{}, err
 	}
 	if operations.closer == nil {
 		return ExecutionInspect{}, ErrRuntimeNotReady
+	}
+	if actor != "" {
+		record, err := operations.repository.GetOperationRecord(ctx, tenant, execution)
+		if err != nil {
+			return ExecutionInspect{}, err
+		}
+		if record.Authority != nil && ComputeCleanupRetryEligible(record.Execution, *record.Authority, record.Runtime) {
+			repository, ok := operations.closer.runtime.repository.(ComputeCleanupOperatorRepository)
+			if !ok || operations.closer.compute == nil {
+				return ExecutionInspect{}, ErrRuntimeNotReady
+			}
+			preflight, cancel := context.WithTimeout(ctx, ComputeCleanupOperatorRetryWindow)
+			logs, err := operations.closer.compute.CaptureComputeCleanupLogs(preflight, record.Execution, *record.Authority, record.Runtime)
+			if err == nil {
+				_, err = repository.AdmitComputeCleanupRetry(preflight, *record.Authority, record.Runtime.CloseGeneration, actor, logs)
+			}
+			cancel()
+			if err != nil {
+				return ExecutionInspect{}, err
+			}
+		}
 	}
 	if _, err := operations.closer.Reconcile(ctx, tenant, execution); err != nil {
 		return ExecutionInspect{}, err
