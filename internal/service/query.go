@@ -209,7 +209,7 @@ func (query *Query) selectLogTarget(ctx context.Context, record biz.QueryRecord,
 			PodUID: source.PodUID, ContainerName: source.ContainerName, Previous: previous,
 		}}, nil
 	}
-	workload, err := biz.ExecutionWorkloadScopeFor(biz.OperationRecord{QueryRecord: record})
+	workload, err := query.logWorkloadScope(ctx, record)
 	if err != nil {
 		return biz.LogSelection{}, err
 	}
@@ -228,6 +228,11 @@ func (query *Query) selectLogTarget(ctx context.Context, record biz.QueryRecord,
 			}}, nil
 		} else if !errors.Is(err, biz.ErrTrainingLogNotFound) {
 			return biz.LogSelection{}, err
+		} else if request.GetLogId() == biz.StepLogID(workload.ExecutionID, podUID) {
+			// The credential proves the caller asked for this step Pod, but the
+			// Pod is gone. M1 has no KFP archive reader, so the answer is an
+			// explicit unavailable step log rather than a worker fallback.
+			return biz.LogSelection{}, biz.ErrStepLogsUnavailable
 		}
 	}
 	if query.workers == nil || !workload.WorkerReadable() {
@@ -247,6 +252,21 @@ func (query *Query) selectLogTarget(ctx context.Context, record biz.QueryRecord,
 		}}, nil
 	}
 	return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+}
+
+// logWorkloadScope resolves the read boundary for a container log request. The
+// pipeline plane needs the frozen Run authority, which only the operation
+// aggregate carries, so a step log can never be addressed from a bare record.
+func (query *Query) logWorkloadScope(ctx context.Context, record biz.QueryRecord) (biz.ExecutionWorkloadScope, error) {
+	aggregate := biz.OperationRecord{QueryRecord: record}
+	if query.operationsRepository != nil {
+		committed, err := query.operationsRepository.GetOperationRecord(ctx, record.Execution.TenantID, record.Execution.ExecutionID)
+		if err != nil {
+			return biz.ExecutionWorkloadScope{}, err
+		}
+		aggregate = committed
+	}
+	return biz.ExecutionWorkloadScopeFor(aggregate)
 }
 
 func containerOr(value, fallback string) string {

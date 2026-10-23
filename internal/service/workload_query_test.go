@@ -8,6 +8,8 @@ import (
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // workloadQueryRepository serves one committed aggregate; every other
@@ -132,4 +134,79 @@ func TestOverallAvailabilityPrefersLiveWorkerPods(t *testing.T) {
 	if got := overallAvailability(workload, nil); got != biz.PodAvailabilityLive {
 		t.Fatalf("availability=%s, want the create evidence LIVE", got)
 	}
+}
+
+// A collected execution's events are already expired by retention: the answer is
+// a hint plus an empty list, never an error.
+func TestListExecutionEventsExpiredKeepsTheRetentionHint(t *testing.T) {
+	record, ctx := collectedExecutionFixture(t)
+	query := NewQuery(recordedLogQueryRepository{}, nil).WithOperations(workloadQueryRepository{record}).WithWorkload(noWorkerPods{}, nil)
+	response, err := query.ListExecutionEvents(withQueryMethod(ctx, modeldevv1.ModelDevQueryService_ListExecutionEvents_FullMethodName), &modeldevv1.ListExecutionEventsRequest{ExecutionId: record.Execution.ExecutionID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(response.Events) != 0 || response.RetentionHint != eventRetentionHint || response.ObservedAt == nil {
+		t.Fatalf("expired events: %+v", response)
+	}
+}
+
+// A tenant that does not own the execution sees no Pod, no event and no detail.
+func TestWorkloadViewsAreTenantScoped(t *testing.T) {
+	record, ctx := collectedExecutionFixture(t)
+	foreign := WithVerifiedGovernanceQuery(context.Background(), GovernanceDelivery{TenantID: "00000000-0000-4000-8000-000000000000", RequestID: "request-foreign"},
+		modeldevv1.ModelDevQueryService_ListExecutionPods_FullMethodName)
+	query := NewQuery(recordedLogQueryRepository{}, nil).WithOperations(workloadQueryRepository{record}).WithWorkload(noWorkerPods{}, nil)
+	if _, err := query.ListExecutionPods(foreign, &modeldevv1.ListExecutionPodsRequest{ExecutionId: record.Execution.ExecutionID}); status.Code(err) != codes.NotFound {
+		t.Fatalf("cross-tenant pods: %v", err)
+	}
+	foreignEvents := WithVerifiedGovernanceQuery(context.Background(), GovernanceDelivery{TenantID: "00000000-0000-4000-8000-000000000000", RequestID: "request-foreign"},
+		modeldevv1.ModelDevQueryService_ListExecutionEvents_FullMethodName)
+	if _, err := query.ListExecutionEvents(foreignEvents, &modeldevv1.ListExecutionEventsRequest{ExecutionId: record.Execution.ExecutionID}); status.Code(err) != codes.NotFound {
+		t.Fatalf("cross-tenant events: %v", err)
+	}
+	if _, err := query.ListExecutionPods(ctx, &modeldevv1.ListExecutionPodsRequest{ExecutionId: record.Execution.ExecutionID}); err != nil {
+		t.Fatalf("owning tenant lost its view: %v", err)
+	}
+}
+
+// A step Pod that is already gone has no archive reader in M1, so a request that
+// proves it addresses that step Pod gets STEP_LOGS_UNAVAILABLE rather than a
+// worker log or an empty success.
+func TestStepLogRequestForAGonePodIsUnavailable(t *testing.T) {
+	record, _ := collectedExecutionFixture(t)
+	record.Authority = &biz.RunAuthorityCandidate{RunID: "run-1", WorkflowName: "run-1", WorkflowUID: "workflow-uid", NamespaceName: "tenant-training", NamespaceUID: "namespace-original"}
+	ctx := WithVerifiedGovernanceQuery(context.Background(), GovernanceDelivery{TenantID: workloadTenantForTest, RequestID: "request-step"},
+		modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName)
+	stepPodUID := "step-pod-uid"
+	query := NewQuery(recordedLogQueryRepository{record.QueryRecord}, nil).WithOperations(workloadQueryRepository{record}).WithWorkload(noWorkerPods{}, &goneStepPods{})
+	logID := biz.StepLogID(record.Execution.ExecutionID, stepPodUID)
+	_, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &stepPodUID, LogId: &logID})
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Fatalf("gone step Pod: %v", err)
+	}
+	// Without the step credential the same Pod UID is just an unknown worker Pod.
+	foreignLogID := "5f3f767d-590a-49bd-850d-5c3595781173"
+	if _, err = query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &stepPodUID, LogId: &foreignLogID}); status.Code(err) != codes.NotFound {
+		t.Fatalf("unproven step Pod: %v", err)
+	}
+}
+
+// goneStepPods is a verified pipeline whose step Pods are all garbage collected.
+type goneStepPods struct{}
+
+func (goneStepPods) ListStepPods(context.Context, biz.ExecutionWorkloadScope) ([]biz.ExecutionPod, error) {
+	return nil, nil
+}
+
+func (goneStepPods) StepPod(context.Context, biz.ExecutionWorkloadScope, string) (biz.ExecutionPod, error) {
+	return biz.ExecutionPod{}, biz.ErrTrainingLogNotFound
+}
+
+func (goneStepPods) ListWorkflowEvents(context.Context, biz.ExecutionWorkloadScope) ([]biz.ExecutionEvent, error) {
+	return nil, nil
+}
+
+func withQueryMethod(ctx context.Context, method string) context.Context {
+	delivery, _ := ctx.Value(governanceQueryKey{}).(governanceQuery)
+	return WithVerifiedGovernanceQuery(ctx, delivery.delivery, method)
 }
