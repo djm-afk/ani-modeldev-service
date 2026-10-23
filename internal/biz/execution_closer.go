@@ -231,6 +231,13 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 			}
 		}
 		if state.Observation == nil || !state.Observation.WritersAbsent {
+			// Suspend may make kubelet container logs disappear before the next
+			// terminal observation. Offer a bounded live tail for durable owner
+			// storage first; capture failure must not prevent a legal Stop.
+			result.Runtime = state
+			if observed, observeErr := runtime.observe(ctx, result); observeErr == nil {
+				state = observed
+			}
 			if err = runtime.trainer.StopTraining(ctx, *state.Training, *state.TrainingHandle); err != nil {
 				return ManagedRuntimeResult{}, errors.Join(runErr, err)
 			}
@@ -238,6 +245,9 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 		result.Runtime = state
 		state, err = runtime.observe(ctx, result)
 		if err != nil {
+			if errors.Is(err, ErrTrainingLogsUnavailable) {
+				return ManagedRuntimeResult{}, closer.review(ctx, tenant, execution, "TRAINING_LOGS_UNAVAILABLE", errors.Join(runErr, err))
+			}
 			return ManagedRuntimeResult{}, errors.Join(runErr, err)
 		}
 		if state.Observation == nil || !state.Observation.WritersAbsent {

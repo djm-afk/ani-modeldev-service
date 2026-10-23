@@ -44,6 +44,7 @@ type computeCleanupFixture struct {
 	deferDelete                bool
 	pendingReads               map[string]int
 	refreshTrainingBeforeClose bool
+	captureRunningBeforeClose  bool
 }
 
 // These are Kubernetes/KFP boundary substitutes, never a training load. Every
@@ -101,6 +102,42 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 		if _, err := repository.RecordTrainingHandle(ctx, step.f.authority(), handle); err != nil {
 			t.Fatal(err)
 		}
+		var history []biz.RuntimeResource
+		if f.captureRunningBeforeClose {
+			f.mu.Lock()
+			for _, object := range f.objects {
+				if object.GetKind() == "Pod" {
+					_ = unstructured.SetNestedField(object.Object, "Running", "status", "phase")
+					_ = unstructured.SetNestedSlice(object.Object, []any{map[string]any{"name": "node", "restartCount": int64(0), "state": map[string]any{"running": map[string]any{"startedAt": time.Now().UTC().Add(-time.Second).Format(time.RFC3339Nano)}}}}, "status", "containerStatuses")
+				} else if object.GetKind() != "PodGroup" {
+					_ = unstructured.SetNestedSlice(object.Object, []any{}, "status", "conditions")
+				}
+			}
+			f.mu.Unlock()
+			running, err := training.ObserveTraining(ctx, *reserved.State.Training, handle, nil)
+			if err != nil {
+				t.Fatal("real running observation", err)
+			}
+			if _, err := repository.RecordTrainingObservation(ctx, step.f.authority(), running); err != nil {
+				t.Fatal("running tail rejected by real PostgreSQL", err)
+			}
+			pool := step.open()
+			durable, readErr := lifecycle.New(pool).GetRuntime(ctx, step.f.execution.TenantID, step.f.execution.ExecutionID)
+			pool.Close()
+			if readErr != nil || durable.Observation == nil {
+				t.Fatal("independent running tail read", readErr)
+			}
+			found := false
+			for _, fact := range durable.Observation.Resources {
+				if fact.Kind == "Pod" && !fact.Terminal && fact.TrainingLog != nil && len(fact.TrainingLog.Result.Lines) > 0 {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatal("RUNNING_TAIL_NOT_DURABLE_BEFORE_STOP")
+			}
+			history = durable.Observation.Resources
+		}
 		if closeReason != "" {
 			if closeReason == "USER_STOP" {
 				a := step.f.execution
@@ -118,7 +155,7 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 				t.Fatal("real original-UID training suspend", err)
 			}
 		}
-		first, err := training.ObserveTraining(ctx, *reserved.State.Training, handle, nil)
+		first, err := training.ObserveTraining(ctx, *reserved.State.Training, handle, history)
 		if err != nil || first.WritersAbsent {
 			t.Fatal("first exit must persist before finalizer release", err)
 		}

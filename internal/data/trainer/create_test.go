@@ -469,6 +469,8 @@ type trainingFixture struct {
 	podPatches                                                         int
 	podPatchStatusCode                                                 int
 	logReadStatusCode                                                  int
+	logReadBody                                                        []byte
+	logReads                                                           int
 	beforePodPatch                                                     func()
 	loseCreateResponse                                                 bool
 	createStatusCode                                                   int
@@ -547,8 +549,13 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 		var response any
 		switch {
 		case r.Method == http.MethodGet && strings.HasSuffix(path, "/log"):
+			f.logReads++
 			if f.logReadStatusCode != 0 {
 				w.WriteHeader(f.logReadStatusCode)
+				return
+			}
+			if f.logReadBody != nil {
+				_, _ = w.Write(f.logReadBody)
 				return
 			}
 			_, _ = w.Write([]byte(time.Now().UTC().Format(time.RFC3339Nano) + " retained original worker output\n"))

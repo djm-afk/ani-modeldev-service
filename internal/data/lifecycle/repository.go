@@ -517,7 +517,7 @@ func (repository *Repository) RecordTrainingObservation(ctx context.Context, aut
 			if resource.TrainingLog == nil {
 				continue
 			}
-			if resource.Kind != "Pod" || !resource.Terminal || resource.ExitCode == nil || resource.TrainingLog.Source.PodUID != resource.UID || biz.ValidateRecordedTrainingLogs(record, []biz.RecordedTrainingLog{*resource.TrainingLog}) != nil {
+			if resource.Kind != "Pod" || resource.Terminal && resource.ExitCode == nil || resource.TrainingLog.Source.PodUID != resource.UID || biz.ValidateRecordedTrainingLogs(record, []biz.RecordedTrainingLog{*resource.TrainingLog}) != nil {
 				return false, biz.ErrTrainingLogsUnavailable
 			}
 		}
