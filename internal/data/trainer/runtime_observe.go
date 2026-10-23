@@ -77,21 +77,33 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 	setTerminal, setSuccess, setFailure := terminalConditions(jobset, "Completed")
 	resources[string(jobset.GetUID())] = resourceFact(jobset, handle.TrainJobUID, setTerminal, nil)
 	objects[string(jobset.GetUID())] = jobset
-	group, groupErr := a.client.Resource(schema.GroupVersionResource{Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}).Namespace(namespace).Get(ctx, plan.Name, metav1.GetOptions{})
-	if groupErr != nil && !apierrors.IsNotFound(groupErr) {
-		return observation, biz.ErrTrainingUnavailable
+	// Whether a PodGroup exists is decided by the Runtime plan this execution
+	// froze. A plan compiled with podGroupPolicy.volcano must have the exact
+	// original group's complete vector; an older deployment plan without that
+	// policy never creates one, so the group is neither queried nor treated as
+	// a missing/specification mismatch.
+	groupScheduled, err := biz.RuntimePlanSchedulesPodGroup(plan.Snapshot.RuntimePlan)
+	if err != nil {
+		return observation, biz.ErrRuntimeConflict
 	}
-	// A missing group while a controller is starting is unresolved. Once a
-	// worker exists, it must have the exact original group's complete vector.
-	groupMatches := groupErr == nil && validatePodGroup(plan, handle, group) == nil
-	if groupErr == nil {
-		if group == nil || group.GetUID() == "" || !controllerIs(group, "trainer.kubeflow.org/v1alpha1", "TrainJob", plan.Name, handle.TrainJobUID) {
-			return observation, biz.ErrRuntimeConflict
+	groupMatches := true
+	if groupScheduled {
+		group, groupErr := a.client.Resource(schema.GroupVersionResource{Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}).Namespace(namespace).Get(ctx, plan.Name, metav1.GetOptions{})
+		if groupErr != nil && !apierrors.IsNotFound(groupErr) {
+			return observation, biz.ErrTrainingUnavailable
 		}
-		if !groupMatches {
-			observation.SpecificationMismatch = true
+		// A missing group while a controller is starting is unresolved. Once a
+		// worker exists, it must have the exact original group's complete vector.
+		groupMatches = groupErr == nil && validatePodGroup(plan, handle, group) == nil
+		if groupErr == nil {
+			if group == nil || group.GetUID() == "" || !controllerIs(group, "trainer.kubeflow.org/v1alpha1", "TrainJob", plan.Name, handle.TrainJobUID) {
+				return observation, biz.ErrRuntimeConflict
+			}
+			if !groupMatches {
+				observation.SpecificationMismatch = true
+			}
+			resources[string(group.GetUID())] = resourceFact(group, handle.TrainJobUID, true, nil)
 		}
-		resources[string(group.GetUID())] = resourceFact(group, handle.TrainJobUID, true, nil)
 	}
 	jobs, err := a.client.Resource(schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}).Namespace(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil || jobs.GetContinue() != "" {

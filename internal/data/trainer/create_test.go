@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
@@ -472,6 +473,7 @@ type trainingFixture struct {
 	createStatusBody                                                   string
 	createStatusTruncated                                              bool
 	podListResourceVersion                                             string
+	podGroupGets                                                       atomic.Int32
 }
 
 func newTrainingFixture(t *testing.T) *trainingFixture {
@@ -609,6 +611,7 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 		case path == "/apis/jobset.x-k8s.io/v1alpha2/namespaces/cpu-execution/jobsets/"+f.plan.Name:
 			response = f.jobset
 		case path == "/apis/scheduling.volcano.sh/v1beta1/namespaces/cpu-execution/podgroups/"+f.plan.Name:
+			f.podGroupGets.Add(1)
 			response = f.podGroup
 		case path == "/apis/batch/v1/namespaces/cpu-execution/jobs":
 			response = map[string]any{"apiVersion": "batch/v1", "kind": "JobList", "metadata": map[string]any{}, "items": []any{f.job}}
