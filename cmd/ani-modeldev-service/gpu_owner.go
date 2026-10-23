@@ -13,7 +13,7 @@ import (
 )
 
 // assembleGPUOwner extends the existing close worker and Trainer observer.
-// Absence leaves CPU execution independent of ACC/Gov release connections.
+// Absence leaves CPU execution independent of the Gov release connection.
 func assembleGPUOwner(runtime *conf.ManagedRuntime, kube dynamic.Interface, repository *lifecycle.Repository) (*biz.GPUReleaseReconciler, *trainer.OwnerAssertionSigner, func(), error) {
 	config := runtime.GetGpuOwner()
 	if config == nil {
@@ -33,10 +33,6 @@ func assembleGPUOwner(runtime *conf.ManagedRuntime, kube dynamic.Interface, repo
 		}
 		return accelerator.Config{Endpoint: value.GetEndpoint(), CAFile: value.GetCaFile(), CertificateFile: value.GetCertificateFile(), PrivateKeyFile: value.GetPrivateKeyFile(), ServerName: value.GetServerName(), Timeout: value.GetTimeout().AsDuration()}, nil
 	}
-	accConfig, err := convert(config.GetAccelerator())
-	if err != nil {
-		return nil, nil, nil, err
-	}
 	govConfig, err := convert(config.GetGovernance())
 	if err != nil {
 		return nil, nil, nil, err
@@ -45,20 +41,14 @@ func assembleGPUOwner(runtime *conf.ManagedRuntime, kube dynamic.Interface, repo
 	if err != nil {
 		return nil, nil, nil, errors.New("GPU owner signing key unavailable")
 	}
-	observer, closeACC, err := accelerator.NewReleaseClient(accConfig)
-	if err != nil {
-		return nil, nil, nil, errors.New("GPU owner ACC connection invalid")
-	}
 	reporter, closeGov, err := accelerator.NewQuotaClient(govConfig)
 	if err != nil {
-		closeACC()
 		return nil, nil, nil, errors.New("GPU owner Governance connection invalid")
 	}
-	reconciler, err := biz.NewGPUReleaseReconciler(repository, observer, reporter)
+	reconciler, err := biz.NewGPUReleaseReconciler(repository, reporter)
 	if err != nil {
 		closeGov()
-		closeACC()
 		return nil, nil, nil, err
 	}
-	return reconciler, signer, func() { closeGov(); closeACC() }, nil
+	return reconciler, signer, closeGov, nil
 }

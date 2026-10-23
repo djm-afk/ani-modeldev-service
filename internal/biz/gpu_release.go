@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -93,10 +94,11 @@ type GPUReleaseState struct {
 
 type GPUReleaseRepository interface {
 	SealGPURelease(context.Context, string, string) (ExecutionRuntime, error)
-	RecordGPUReleaseObservation(context.Context, string, string, string, GPUReleaseObservation) (ExecutionRuntime, error)
 	RecordGPUReleaseACK(context.Context, string, string, string, GPUReleaseACK) (ExecutionRuntime, error)
 }
 
+// GPUReleaseObserver is an independent diagnostic boundary. Owner release
+// delivery does not depend on its availability or findings.
 type GPUReleaseObserver interface {
 	ObserveGPURelease(context.Context, GPUReleaseScope) (GPUReleaseObservation, error)
 }
@@ -109,19 +111,18 @@ type GPUReleaseReporter interface {
 // repository commits the seal and outbox before any corresponding external call.
 type GPUReleaseReconciler struct {
 	repository GPUReleaseRepository
-	observer   GPUReleaseObserver
 	reporter   GPUReleaseReporter
 }
 
-func NewGPUReleaseReconciler(repository GPUReleaseRepository, observer GPUReleaseObserver, reporter GPUReleaseReporter) (*GPUReleaseReconciler, error) {
-	if repository == nil || observer == nil || reporter == nil {
+func NewGPUReleaseReconciler(repository GPUReleaseRepository, reporter GPUReleaseReporter) (*GPUReleaseReconciler, error) {
+	if repository == nil || reporter == nil {
 		return nil, ErrRuntimeNotReady
 	}
-	return &GPUReleaseReconciler{repository: repository, observer: observer, reporter: reporter}, nil
+	return &GPUReleaseReconciler{repository: repository, reporter: reporter}, nil
 }
 
 func (reconciler *GPUReleaseReconciler) Reconcile(ctx context.Context, tenant, execution string) (ExecutionRuntime, error) {
-	if ctx == nil || !validAdmissionID(tenant) || !validAdmissionID(execution) || reconciler == nil || reconciler.repository == nil || reconciler.observer == nil || reconciler.reporter == nil {
+	if ctx == nil || !validAdmissionID(tenant) || !validAdmissionID(execution) || reconciler == nil || reconciler.repository == nil || reconciler.reporter == nil {
 		return ExecutionRuntime{}, ErrRuntimeNotReady
 	}
 	state, err := reconciler.repository.SealGPURelease(ctx, tenant, execution)
@@ -130,17 +131,9 @@ func (reconciler *GPUReleaseReconciler) Reconcile(ctx context.Context, tenant, e
 	}
 	fact := state.GPURelease
 	if fact.Outbox == nil {
-		observation, err := reconciler.observer.ObserveGPURelease(ctx, fact.Scope)
-		if err != nil {
-			return state, err
-		}
-		state, err = reconciler.repository.RecordGPUReleaseObservation(ctx, tenant, execution, fact.ScopeSHA256, observation)
-		if err != nil {
-			return state, err
-		}
-		fact = state.GPURelease
+		return state, fmt.Errorf("GPU release scope without outbox for tenant %s execution %s: %w", tenant, execution, ErrRuntimeConflict)
 	}
-	if fact == nil || fact.Outbox == nil || fact.Outbox.ACK != nil {
+	if fact.Outbox.ACK != nil {
 		return state, nil
 	}
 	ack, err := reconciler.reporter.ReportGPUResourceReleased(ctx, fact.Outbox.Event)
