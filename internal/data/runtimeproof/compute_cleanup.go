@@ -47,7 +47,7 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 		return nil, biz.ErrRuntimeNotReady
 	}
 	fresh, err := verifier.training.ObserveTraining(ctx, *state.Training, *state.TrainingHandle, state.Observation.Resources)
-	if err != nil || !fresh.WritersAbsent || !reflect.DeepEqual(fresh.Resources, state.Observation.Resources) {
+	if err != nil || !fresh.WritersAbsent || !sameTrainingResourcesAfterPodGC(execution, state, fresh.Resources) {
 		return nil, biz.ErrCleanupBlocked
 	}
 	for _, pod := range state.Observation.Resources {
@@ -79,6 +79,30 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 		return nil, biz.ErrTrainingLogsUnavailable
 	}
 	return logs, nil
+}
+
+// Normal GC may remove an original worker after CLOSED was persisted. Its
+// durable exit and validated original log survive; other facts cannot drift.
+func retainedTerminalPod(execution biz.Execution, state biz.ExecutionRuntime, pod biz.RuntimeResource) bool {
+	return pod.Kind == "Pod" && pod.APIVersion == "v1" && pod.Terminal && pod.ExitCode != nil && pod.TrainingLog != nil &&
+		pod.TrainingLog.Source.PodUID == pod.UID && pod.TrainingLog.Source.PodName == pod.Name && pod.TrainingLog.Source.Namespace == pod.Namespace &&
+		biz.ValidateRecordedTrainingLogs(biz.QueryRecord{Execution: execution, Runtime: state}, []biz.RecordedTrainingLog{*pod.TrainingLog}) == nil
+}
+
+func sameTrainingResourcesAfterPodGC(execution biz.Execution, state biz.ExecutionRuntime, fresh []biz.RuntimeResource) bool {
+	prior := state.Observation.Resources
+	if len(fresh) != len(prior) {
+		return false
+	}
+	for i, current := range fresh {
+		if prior[i].APIObjectPresent && !current.APIObjectPresent && retainedTerminalPod(execution, state, prior[i]) {
+			current.APIObjectPresent = true // Compare every other original fact unchanged.
+		}
+		if !reflect.DeepEqual(current, prior[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 // ObserveComputeCleanupAbsence grants no mutation or renewed attempt budget.
@@ -264,7 +288,7 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 			return biz.ErrCleanupConflict
 		}
 		object, err := verifier.kube.Resource(resource).Namespace(target.Namespace).Get(ctx, target.Name, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) && (removalIntent || target.Kind == "TrainingRuntime") {
+		if apierrors.IsNotFound(err) && (removalIntent || target.Kind == "TrainingRuntime" || retainedTerminalPod(execution, state, target)) {
 			continue
 		}
 		if err != nil || !sameObject(object, target.APIVersion, target.Kind, target.Namespace, target.Name, target.UID) || object.GetResourceVersion() == "" {
