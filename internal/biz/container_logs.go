@@ -13,6 +13,12 @@ func TrainerLogID(executionID, podUID string) string {
 	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(executionID+":"+podUID+":node")).String()
 }
 
+// StepLogID is the opaque credential of one KFP step Pod. It is a separate
+// derivation so a worker ID can never address a step Pod and vice versa.
+func StepLogID(executionID, podUID string) string {
+	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(executionID+":"+podUID+":step")).String()
+}
+
 // ContainerLogTarget is one already-authorized container instance. Pod and
 // namespace identity come from a verified read; a caller cannot name another
 // workload.
