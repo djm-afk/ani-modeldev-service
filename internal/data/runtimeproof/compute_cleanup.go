@@ -148,8 +148,8 @@ func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution
 			if err := client.Delete(ctx, target.Name, metav1.DeleteOptions{Preconditions: &metav1.Preconditions{UID: &uid, ResourceVersion: &version}, PropagationPolicy: &orphan}); err != nil {
 				return removed, biz.ErrCleanupUncertain
 			}
-			if _, err := client.Get(ctx, target.Name, metav1.GetOptions{}); !apierrors.IsNotFound(err) {
-				return removed, biz.ErrCleanupUncertain
+			if err := verifier.waitComputeRemoval(ctx, target); err != nil {
+				return removed, err
 			}
 		}
 		fact := target
