@@ -105,7 +105,8 @@ func TestListExecutionPodsReportsRecycledAfterCollection(t *testing.T) {
 }
 
 // Without the recycled opt-in the list is empty, but the response must not
-// claim the execution is alive: there is no live Pod to prove it.
+// claim the execution is alive: the live read proved nothing and the durable
+// observation says the Pods existed.
 func TestListExecutionPodsOmitsRecycledUnlessAsked(t *testing.T) {
 	record, ctx := collectedExecutionFixture(t)
 	query := NewQuery(recordedLogQueryRepository{}, nil).WithOperations(workloadQueryRepository{record}).WithWorkload(noWorkerPods{}, nil)
@@ -116,8 +117,23 @@ func TestListExecutionPodsOmitsRecycledUnlessAsked(t *testing.T) {
 	if len(response.Pods) != 0 {
 		t.Fatalf("pods=%d, recycled rows must be opt-in", len(response.Pods))
 	}
-	if response.Availability != modeldevv1.PodAvailability_POD_AVAILABILITY_LIVE {
-		t.Fatalf("response availability=%v, want the create evidence LIVE", response.Availability)
+	if response.Availability != modeldevv1.PodAvailability_POD_AVAILABILITY_RECYCLED {
+		t.Fatalf("response availability=%v, want RECYCLED: the Pods were observed and are gone", response.Availability)
+	}
+}
+
+// An execution that never got a Pod must not be reported as recycled; only a
+// recorded worker Pod makes an empty live read mean "collected".
+func TestOverallAvailabilityKeepsCreateEvidenceWithoutObservedPods(t *testing.T) {
+	workload := biz.ExecutionWorkloadScope{Availability: biz.PodAvailabilityLive}
+	if got := overallAvailability(workload, nil, biz.OperationRecord{}); got != biz.PodAvailabilityLive {
+		t.Fatalf("availability=%s, want LIVE with no observation", got)
+	}
+	observed := biz.OperationRecord{QueryRecord: biz.QueryRecord{Runtime: biz.ExecutionRuntime{Observation: &biz.TrainingRuntimeObservation{Resources: []biz.RuntimeResource{
+		{Kind: "TrainJob", UID: "train"}, {Kind: "Pod", UID: "pod-uid"},
+	}}}}}
+	if got := overallAvailability(workload, nil, observed); got != biz.PodAvailabilityRecycled {
+		t.Fatalf("availability=%s, want RECYCLED", got)
 	}
 }
 
@@ -125,13 +141,13 @@ func TestListExecutionPodsOmitsRecycledUnlessAsked(t *testing.T) {
 func TestOverallAvailabilityPrefersLiveWorkerPods(t *testing.T) {
 	workload := biz.ExecutionWorkloadScope{Availability: biz.PodAvailabilityLive}
 	pods := []biz.ExecutionPod{{Availability: biz.PodAvailabilityRecycled}, {Availability: biz.PodAvailabilityLive}}
-	if got := overallAvailability(workload, pods); got != biz.PodAvailabilityLive {
+	if got := overallAvailability(workload, pods, biz.OperationRecord{}); got != biz.PodAvailabilityLive {
 		t.Fatalf("availability=%s, want LIVE", got)
 	}
-	if got := overallAvailability(workload, []biz.ExecutionPod{{Availability: biz.PodAvailabilityRecycled}}); got != biz.PodAvailabilityRecycled {
+	if got := overallAvailability(workload, []biz.ExecutionPod{{Availability: biz.PodAvailabilityRecycled}}, biz.OperationRecord{}); got != biz.PodAvailabilityRecycled {
 		t.Fatalf("availability=%s, want RECYCLED", got)
 	}
-	if got := overallAvailability(workload, nil); got != biz.PodAvailabilityLive {
+	if got := overallAvailability(workload, nil, biz.OperationRecord{}); got != biz.PodAvailabilityLive {
 		t.Fatalf("availability=%s, want the create evidence LIVE", got)
 	}
 }

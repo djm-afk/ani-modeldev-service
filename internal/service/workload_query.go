@@ -112,7 +112,7 @@ func (query *Query) ListExecutionPods(ctx context.Context, request *modeldevv1.L
 		}
 		gathered = append(gathered, pods...)
 	}
-	response.Availability = availabilityValue(overallAvailability(workload, workerPods))
+	response.Availability = availabilityValue(overallAvailability(workload, workerPods, record))
 	for _, pod := range gathered {
 		response.Pods = append(response.Pods, podViewMessage(pod))
 	}
@@ -122,8 +122,14 @@ func (query *Query) ListExecutionPods(ctx context.Context, request *modeldevv1.L
 // overallAvailability reports what the whole response can prove. An execution
 // whose worker Pods all come from the durable observation is RECYCLED, never
 // LIVE; an execution with no Pods keeps the reason from its create evidence.
-func overallAvailability(workload biz.ExecutionWorkloadScope, workerPods []biz.ExecutionPod) biz.PodAvailability {
+// The same holds when the live read finds nothing but the observation recorded
+// worker Pods: they were collected, so the honest answer is RECYCLED even
+// though the caller did not ask for the recycled rows.
+func overallAvailability(workload biz.ExecutionWorkloadScope, workerPods []biz.ExecutionPod, record biz.OperationRecord) biz.PodAvailability {
 	if len(workerPods) == 0 {
+		if workload.Availability == biz.PodAvailabilityLive && observedWorkerPods(record) != 0 {
+			return biz.PodAvailabilityRecycled
+		}
 		return workload.Availability
 	}
 	for _, pod := range workerPods {
@@ -132,6 +138,21 @@ func overallAvailability(workload biz.ExecutionWorkloadScope, workerPods []biz.E
 		}
 	}
 	return biz.PodAvailabilityRecycled
+}
+
+// observedWorkerPods counts the worker Pods the durable observation recorded.
+func observedWorkerPods(record biz.OperationRecord) int {
+	observation := record.Runtime.Observation
+	if observation == nil {
+		return 0
+	}
+	count := 0
+	for _, resource := range observation.Resources {
+		if resource.Kind == "Pod" && resource.UID != "" {
+			count++
+		}
+	}
+	return count
 }
 
 // workerPods prefers the durable observation when the API objects are gone, so

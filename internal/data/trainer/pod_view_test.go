@@ -58,7 +58,7 @@ func workerChain(podName, podUID, jobName, jobUID string) []runtime.Object {
 		object("batch/v1", "Job", jobName, jobUID, ownerRef("JobSet", "jobset.x-k8s.io/v1alpha2", workloadTrainJob, workloadJobSetUID),
 			map[string]any{"jobset.sigs.k8s.io/jobset-uid": workloadJobSetUID}),
 		object("v1", "Pod", podName, podUID, ownerRef("Job", "batch/v1", jobName, jobUID),
-			map[string]any{"batch.kubernetes.io/job-name": jobName, "batch.kubernetes.io/job-completion-index": "0"}),
+			map[string]any{"batch.kubernetes.io/job-name": jobName, "jobset.sigs.k8s.io/job-index": "2", "jobset.sigs.k8s.io/restart-attempt": "1"}),
 	}
 }
 
@@ -81,6 +81,11 @@ func TestListWorkerPodsKeepsOnlyTheVerifiedOwnerChain(t *testing.T) {
 	}
 	if pods[0].Layer != biz.PodLayerTrainer || pods[0].Availability != biz.PodAvailabilityLive || !pods[0].LogAvailable || pods[0].LogID == "" {
 		t.Fatalf("worker pod view: %+v", pods[0])
+	}
+	// JobSet publishes rank and restart attempt as labels; both must survive the
+	// projection or multi-node/retry identity is lost.
+	if pods[0].JobIndex != 2 || pods[0].Attempt != 1 {
+		t.Fatalf("rank/attempt: index=%d attempt=%d", pods[0].JobIndex, pods[0].Attempt)
 	}
 }
 

@@ -214,18 +214,24 @@ func controllerOf(object *unstructured.Unstructured) (string, string, bool) {
 }
 
 // jobIndex keeps multi-node identity explicit; the random Pod suffix is never
-// the discriminator.
+// the discriminator. JobSet records the rank inside a replicated job as a
+// label, and a Kubernetes indexed Job records the completion index; both are
+// real observed values, so an absent rank stays 0 rather than being invented.
 func jobIndex(pod *unstructured.Unstructured) int32 {
-	if value, ok := pod.GetLabels()["batch.kubernetes.io/job-completion-index"]; ok {
-		if parsed, err := strconv.ParseInt(value, 10, 32); err == nil && parsed >= 0 {
-			return int32(parsed)
+	for _, key := range []string{"jobset.sigs.k8s.io/job-index", "batch.kubernetes.io/job-completion-index"} {
+		if value, ok := pod.GetLabels()[key]; ok {
+			if parsed, err := strconv.ParseInt(value, 10, 32); err == nil && parsed >= 0 {
+				return int32(parsed)
+			}
 		}
 	}
 	return 0
 }
 
+// jobAttempt is the JobSet restart attempt, which JobSet publishes as a label
+// on every worker Pod. It is distinct from job-index: one rank can be retried.
 func jobAttempt(pod *unstructured.Unstructured) int32 {
-	if value, ok := pod.GetAnnotations()["jobset.sigs.k8s.io/job-index"]; ok {
+	if value, ok := pod.GetLabels()["jobset.sigs.k8s.io/restart-attempt"]; ok {
 		if parsed, err := strconv.ParseInt(value, 10, 32); err == nil && parsed >= 0 {
 			return int32(parsed)
 		}
