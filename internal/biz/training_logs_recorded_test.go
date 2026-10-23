@@ -127,3 +127,43 @@ func TestRecordedTrainingLogsWaitForCommittedCapture(t *testing.T) {
 		t.Fatalf("capture in progress blocked live fallback: found=%t error=%v", found, err)
 	}
 }
+
+// A collected worker Pod is gone from the Kubernetes API: APIObjectPresent is
+// false while every persisted owner UID stays intact. The archived tail must
+// still resolve, and only then; a foreign UID after GC is still refused.
+func TestRecordedTrainingLogsSurvivePodGarbageCollection(t *testing.T) {
+	record, source := recordedLogFixture(t)
+	for index := range record.Runtime.Observation.Resources {
+		record.Runtime.Observation.Resources[index].APIObjectPresent = false
+	}
+	resolved, err := biz.TrainingLogSourceFor(record, source.LogID)
+	if err != nil || resolved != source {
+		t.Fatalf("collected Pod identity unresolved: %+v %v", resolved, err)
+	}
+	result, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 3, MaxBytes: 65536})
+	if err != nil || !found || len(result.Lines) != 3 || result.Lines[2].Text != "last" {
+		t.Fatalf("archived tail unavailable after Pod GC: found=%t result=%+v error=%v", found, result, err)
+	}
+
+	for index := range record.Runtime.Observation.Resources {
+		if record.Runtime.Observation.Resources[index].Kind == "Pod" {
+			record.Runtime.Observation.Resources[index].OwnerUID = "foreign-job"
+		}
+	}
+	if _, err := biz.TrainingLogSourceFor(record, source.LogID); err == nil {
+		t.Fatal("a foreign owner chain was accepted after Pod GC")
+	}
+}
+
+// Without a recorded receipt a collected Pod has nothing left to read; that is
+// a distinct unavailability rather than an empty successful tail.
+func TestRecordedTrainingLogsRequireACommittedReceipt(t *testing.T) {
+	record, source := recordedLogFixture(t)
+	for index := range record.Runtime.Observation.Resources {
+		record.Runtime.Observation.Resources[index].APIObjectPresent = false
+	}
+	record.Runtime.ComputeCleanup = nil
+	if _, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 3, MaxBytes: 65536}); err != nil || found {
+		t.Fatalf("missing receipt must not fabricate a tail: found=%t error=%v", found, err)
+	}
+}

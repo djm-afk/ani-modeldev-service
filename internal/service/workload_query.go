@@ -72,7 +72,7 @@ func (query *Query) ListExecutionPods(ctx context.Context, request *modeldevv1.L
 		return nil, err
 	}
 	layer := modeldevv1.PodLayer_POD_LAYER_ALL
-	if request != nil {
+	if request != nil && request.Layer != modeldevv1.PodLayer_POD_LAYER_UNSPECIFIED {
 		layer = request.Layer
 	}
 	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 || layer == modeldevv1.PodLayer_POD_LAYER_UNSPECIFIED && request.Layer != 0 {
@@ -89,15 +89,17 @@ func (query *Query) ListExecutionPods(ctx context.Context, request *modeldevv1.L
 	if err != nil {
 		return nil, workloadError(err, scope.RequestID)
 	}
-	response := &modeldevv1.ListExecutionPodsResponse{ObservedAt: timestamppb.Now(), Availability: availabilityValue(workload.Availability)}
+	response := &modeldevv1.ListExecutionPodsResponse{ObservedAt: timestamppb.Now()}
 	wantTrainer := layer == modeldevv1.PodLayer_POD_LAYER_ALL || layer == modeldevv1.PodLayer_POD_LAYER_TRAINER
 	wantPipeline := layer == modeldevv1.PodLayer_POD_LAYER_ALL || layer == modeldevv1.PodLayer_POD_LAYER_PIPELINE
 	var gathered []biz.ExecutionPod
+	var workerPods []biz.ExecutionPod
 	if wantTrainer {
 		pods, err := query.workerPods(ctx, workload, record, request.IncludeRecycled)
 		if err != nil {
 			return nil, workloadError(err, scope.RequestID)
 		}
+		workerPods = pods
 		gathered = append(gathered, pods...)
 	}
 	if wantPipeline && workload.PipelineReadable() {
@@ -110,10 +112,26 @@ func (query *Query) ListExecutionPods(ctx context.Context, request *modeldevv1.L
 		}
 		gathered = append(gathered, pods...)
 	}
+	response.Availability = availabilityValue(overallAvailability(workload, workerPods))
 	for _, pod := range gathered {
 		response.Pods = append(response.Pods, podViewMessage(pod))
 	}
 	return response, nil
+}
+
+// overallAvailability reports what the whole response can prove. An execution
+// whose worker Pods all come from the durable observation is RECYCLED, never
+// LIVE; an execution with no Pods keeps the reason from its create evidence.
+func overallAvailability(workload biz.ExecutionWorkloadScope, workerPods []biz.ExecutionPod) biz.PodAvailability {
+	if len(workerPods) == 0 {
+		return workload.Availability
+	}
+	for _, pod := range workerPods {
+		if pod.Availability != biz.PodAvailabilityRecycled {
+			return workload.Availability
+		}
+	}
+	return biz.PodAvailabilityRecycled
 }
 
 // workerPods prefers the durable observation when the API objects are gone, so

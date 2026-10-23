@@ -173,7 +173,10 @@ func TrainingLogSourceFor(record QueryRecord, logID string) (TrainingLogSource, 
 		if logID != "" && logID != id {
 			continue
 		}
-		if selected != nil || pod.APIVersion != "v1" || pod.Namespace != namespace || !pod.APIObjectPresent {
+		// The archived tail is authorized by the persisted owner chain alone.
+		// APIObjectPresent only reports whether a live read is still possible;
+		// after Pod GC it is false and the recorded receipt remains readable.
+		if selected != nil || pod.APIVersion != "v1" || pod.Namespace != namespace {
 			return TrainingLogSource{}, ErrTrainingLogsUnavailable
 		}
 		owner, found := resources[pod.OwnerUID]
