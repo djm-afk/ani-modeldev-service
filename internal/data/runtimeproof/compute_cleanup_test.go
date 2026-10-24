@@ -2,8 +2,6 @@ package runtimeproof_test
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -31,19 +29,22 @@ import (
 )
 
 type computeCleanupFixture struct {
-	step                      *stepRetentionFixture
-	kube                      dynamic.Interface
-	mu                        sync.Mutex
-	objects                   map[string]*unstructured.Unstructured
-	runtime                   *unstructured.Unstructured
-	deleted                   []string
-	loseDelete, replaceDelete bool
-	logReads                  int
-	workflowDeleted           bool
-	stopPatches               int
-	pvcOwnerUID               string
-	deferDelete               bool
-	pendingReads              map[string]int
+	step                       *stepRetentionFixture
+	kube                       dynamic.Interface
+	mu                         sync.Mutex
+	objects                    map[string]*unstructured.Unstructured
+	runtime                    *unstructured.Unstructured
+	deleted                    []string
+	loseDelete, replaceDelete  bool
+	logReads                   int
+	workflowDeleted            bool
+	runtimeDeleted             bool
+	stopPatches                int
+	pvcOwnerUID                string
+	deferDelete                bool
+	pendingReads               map[string]int
+	refreshTrainingBeforeClose bool
+	captureRunningBeforeClose  bool
 }
 
 // These are Kubernetes/KFP boundary substitutes, never a training load. Every
@@ -70,17 +71,72 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 			configure(f)
 		}
 		ctx := context.Background()
+		runtimePermit, err := repository.ReserveRuntime(ctx, step.f.authority())
+		if err != nil || !runtimePermit.SendPermit {
+			t.Fatal("original Runtime reservation", err)
+		}
+		runtimePlan, err := biz.FreezeTrainingPlan(step.f.execution, step.workspace, runtimePermit.State.TrainingWindow.AdmittedAt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		binding, err := trainer.New(kube).CreateRuntime(ctx, runtimePlan)
+		if err != nil {
+			t.Fatal("original Runtime materialization", err)
+		}
+		if _, err := repository.RecordRuntimeBinding(ctx, step.f.authority(), binding); err != nil {
+			t.Fatal(err)
+		}
 		reserved, err := repository.ReserveTraining(ctx, step.f.authority())
 		if err != nil || !reserved.SendPermit {
 			t.Fatal("real first training reservation", err)
 		}
-		training := trainer.New(kube)
+		core, err := coreclient.NewForConfig(step.clientConfig)
+		if err != nil {
+			t.Fatal(err)
+		}
+		training := trainer.New(kube).WithTrainingLogs(traininglogs.New(core))
 		handle, err := training.CreateTraining(ctx, *reserved.State.Training)
 		if err != nil {
 			t.Fatal("real Trainer adapter at HTTPS boundary", err)
 		}
 		if _, err := repository.RecordTrainingHandle(ctx, step.f.authority(), handle); err != nil {
 			t.Fatal(err)
+		}
+		var history []biz.RuntimeResource
+		if f.captureRunningBeforeClose {
+			f.mu.Lock()
+			for _, object := range f.objects {
+				if object.GetKind() == "Pod" {
+					_ = unstructured.SetNestedField(object.Object, "Running", "status", "phase")
+					_ = unstructured.SetNestedSlice(object.Object, []any{map[string]any{"name": "node", "restartCount": int64(0), "state": map[string]any{"running": map[string]any{"startedAt": time.Now().UTC().Add(-time.Second).Format(time.RFC3339Nano)}}}}, "status", "containerStatuses")
+				} else if object.GetKind() != "PodGroup" {
+					_ = unstructured.SetNestedSlice(object.Object, []any{}, "status", "conditions")
+				}
+			}
+			f.mu.Unlock()
+			running, err := training.ObserveTraining(ctx, *reserved.State.Training, handle, nil)
+			if err != nil {
+				t.Fatal("real running observation", err)
+			}
+			if _, err := repository.RecordTrainingObservation(ctx, step.f.authority(), running); err != nil {
+				t.Fatal("running tail rejected by real PostgreSQL", err)
+			}
+			pool := step.open()
+			durable, readErr := lifecycle.New(pool).GetRuntime(ctx, step.f.execution.TenantID, step.f.execution.ExecutionID)
+			pool.Close()
+			if readErr != nil || durable.Observation == nil {
+				t.Fatal("independent running tail read", readErr)
+			}
+			found := false
+			for _, fact := range durable.Observation.Resources {
+				if fact.Kind == "Pod" && !fact.Terminal && fact.TrainingLog != nil && len(fact.TrainingLog.Result.Lines) > 0 {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatal("RUNNING_TAIL_NOT_DURABLE_BEFORE_STOP")
+			}
+			history = durable.Observation.Resources
 		}
 		if closeReason != "" {
 			if closeReason == "USER_STOP" {
@@ -99,7 +155,7 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 				t.Fatal("real original-UID training suspend", err)
 			}
 		}
-		first, err := training.ObserveTraining(ctx, *reserved.State.Training, handle, nil)
+		first, err := training.ObserveTraining(ctx, *reserved.State.Training, handle, history)
 		if err != nil || first.WritersAbsent {
 			t.Fatal("first exit must persist before finalizer release", err)
 		}
@@ -113,6 +169,15 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 		if _, err := repository.RecordTrainingObservation(ctx, step.f.authority(), second); err != nil {
 			t.Fatal(err)
 		}
+		if f.refreshTrainingBeforeClose {
+			fresh, err := training.ObserveTraining(ctx, *reserved.State.Training, handle, second.Resources)
+			if err != nil || !fresh.WritersAbsent {
+				t.Fatal("fresh original writer evidence before close", err)
+			}
+			if _, err := repository.RecordTrainingObservation(ctx, step.f.authority(), fresh); err != nil {
+				t.Fatal(err)
+			}
+		}
 		if method := reflect.ValueOf(repository).MethodByName("BeginComputeCleanup"); method.IsValid() {
 			values := method.Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(step.f.authority()), reflect.ValueOf(uint64(0))})
 			if values[1].IsNil() {
@@ -125,23 +190,12 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 
 func computeRuntime(t *testing.T, f *ownerCloseFixture) *unstructured.Unstructured {
 	t.Helper()
-	container := map[string]any{"name": "node", "securityContext": map[string]any{"allowPrivilegeEscalation": false, "readOnlyRootFilesystem": true, "capabilities": map[string]any{"drop": []any{"ALL"}}}}
-	pod := map[string]any{"restartPolicy": "Never", "automountServiceAccountToken": false, "securityContext": map[string]any{"runAsNonRoot": true, "runAsUser": int64(10001), "runAsGroup": int64(10001), "fsGroup": int64(10001)}, "containers": []any{container}}
-	jobSpec := map[string]any{"parallelism": int64(1), "completions": int64(1), "backoffLimit": int64(0), "activeDeadlineSeconds": int64(3600), "template": map[string]any{"metadata": map[string]any{"finalizers": []any{"modeldev.ani.io/training-exit-evidence"}}, "spec": pod}}
-	job := map[string]any{"name": f.execution.Snapshot.Release.Runtime.TargetJobs[0], "replicas": int64(1), "template": map[string]any{"metadata": map[string]any{"labels": map[string]any{"trainer.kubeflow.org/trainjob-ancestor-step": "trainer"}}, "spec": jobSpec}}
-	spec := map[string]any{"template": map[string]any{"spec": map[string]any{"failurePolicy": map[string]any{"maxRestarts": int64(0)}, "replicatedJobs": []any{job}}}}
-	raw, err := json.Marshal(spec)
-	if err != nil {
+	p := f.execution.Snapshot.RuntimePlan
+	var spec map[string]any
+	if err := json.Unmarshal(p.ExpectedSpec, &spec); err != nil {
 		t.Fatal(err)
 	}
-	digest := sha256.Sum256(raw)
-	f.execution.Snapshot.Release.Runtime.ContentSHA256 = hex.EncodeToString(digest[:])
-	ref := f.execution.Snapshot.Release.Runtime
-	namespace := ""
-	if ref.Kind == "TrainingRuntime" {
-		namespace = f.execution.Snapshot.Environment.NamespaceName
-	}
-	return &unstructured.Unstructured{Object: map[string]any{"apiVersion": "trainer.kubeflow.org/v1alpha1", "kind": ref.Kind, "metadata": map[string]any{"name": ref.Name, "namespace": namespace, "uid": "runtime-original"}, "spec": spec}}
+	return &unstructured.Unstructured{Object: map[string]any{"apiVersion": "trainer.kubeflow.org/v1alpha1", "kind": "TrainingRuntime", "metadata": map[string]any{"name": p.Name, "namespace": p.Namespace, "uid": "runtime-original", "resourceVersion": "1", "annotations": map[string]any{"modeldev.ani.io/tenant-id": f.execution.TenantID, "modeldev.ani.io/execution-id": f.execution.ExecutionID, "modeldev.ani.io/create-operation-id": f.execution.OperationID, "modeldev.ani.io/execution-spec-sha256": f.execution.SpecHash, "modeldev.ani.io/runtime-spec-sha256": p.ExpectedSpecSHA256, "modeldev.ani.io/workspace-uid": "retention-workspace-uid"}}, "spec": spec}}
 }
 
 func (f *computeCleanupFixture) serve(t *testing.T, w http.ResponseWriter, r *http.Request) bool {
@@ -150,6 +204,7 @@ func (f *computeCleanupFixture) serve(t *testing.T, w http.ResponseWriter, r *ht
 	trainPrefix := "/apis/trainer.kubeflow.org/v1alpha1/namespaces/" + ns + "/trainjobs"
 	setPrefix := "/apis/jobset.x-k8s.io/v1alpha2/namespaces/" + ns + "/jobsets"
 	jobPrefix := "/apis/batch/v1/namespaces/" + ns + "/jobs"
+	groupPrefix := "/apis/scheduling.volcano.sh/v1beta1/namespaces/" + ns + "/podgroups"
 	workflowPath := "/apis/argoproj.io/v1alpha1/namespaces/" + ns + "/workflows/" + f.step.f.workflow.GetName()
 	runtimePath := "/apis/trainer.kubeflow.org/v1alpha1/clustertrainingruntimes/" + f.runtime.GetName()
 	if f.runtime.GetKind() == "TrainingRuntime" {
@@ -157,7 +212,7 @@ func (f *computeCleanupFixture) serve(t *testing.T, w http.ResponseWriter, r *ht
 	}
 	pvcPath := "/api/v1/namespaces/" + ns + "/persistentvolumeclaims/" + f.step.workspace.PVCName
 	trainingPod := strings.HasPrefix(r.URL.Path, podPrefix+"actual-training")
-	matched := r.URL.Path == runtimePath || r.URL.Path == pvcPath || strings.HasPrefix(r.URL.Path, trainPrefix) || strings.HasPrefix(r.URL.Path, setPrefix) || strings.HasPrefix(r.URL.Path, jobPrefix) || trainingPod || r.URL.Path == workflowPath && r.Method == http.MethodDelete || r.URL.Path == workflowPath && f.workflowDeleted
+	matched := r.URL.Path == runtimePath || r.URL.Path == pvcPath || strings.HasPrefix(r.URL.Path, trainPrefix) || strings.HasPrefix(r.URL.Path, setPrefix) || strings.HasPrefix(r.URL.Path, jobPrefix) || strings.HasPrefix(r.URL.Path, groupPrefix) || trainingPod || r.URL.Path == workflowPath && r.Method == http.MethodDelete || r.URL.Path == workflowPath && f.workflowDeleted
 	if !matched {
 		return false
 	}
@@ -205,6 +260,10 @@ func (f *computeCleanupFixture) serve(t *testing.T, w http.ResponseWriter, r *ht
 	if r.Method == http.MethodGet {
 		switch r.URL.Path {
 		case runtimePath:
+			if f.runtimeDeleted {
+				status(404, "NotFound")
+				return true
+			}
 			write(f.runtime)
 			return true
 		case pvcPath:
@@ -214,7 +273,7 @@ func (f *computeCleanupFixture) serve(t *testing.T, w http.ResponseWriter, r *ht
 			}
 			write(pvc)
 			return true
-		case jobPrefix, setPrefix:
+		case jobPrefix, setPrefix, trainPrefix, groupPrefix:
 			items := []any{}
 			for path, object := range f.objects {
 				if strings.HasPrefix(path, r.URL.Path+"/") {
@@ -248,14 +307,36 @@ func (f *computeCleanupFixture) serve(t *testing.T, w http.ResponseWriter, r *ht
 		job := makeController("batch/v1", "Job", object.GetName()+"-node-0", "job-original", set.GetAPIVersion(), set.GetKind(), set.GetName(), string(set.GetUID()), "Complete")
 		f.objects[setPrefix+"/"+set.GetName()] = set
 		f.objects[jobPrefix+"/"+job.GetName()] = job
+		group := makeController("scheduling.volcano.sh/v1beta1", "PodGroup", object.GetName(), "group-original", object.GetAPIVersion(), object.GetKind(), object.GetName(), string(object.GetUID()), "Scheduled")
+		vector, vectorErr := biz.TrainingResourceVector(f.step.f.execution.Snapshot)
+		if vectorErr != nil {
+			t.Error(vectorErr)
+			status(500, "InternalError")
+			return true
+		}
+		minimum := map[string]any{}
+		for key, value := range vector {
+			minimum[key] = value
+		}
+		group.Object["spec"] = map[string]any{"minMember": int64(1), "minResources": minimum, "queue": "default"}
+		f.objects[groupPrefix+"/"+group.GetName()] = group
 		pod := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"name": "actual-training", "namespace": ns, "uid": "training-pod-original", "resourceVersion": "1", "finalizers": []any{"modeldev.ani.io/training-exit-evidence"}, "ownerReferences": []any{map[string]any{"apiVersion": job.GetAPIVersion(), "kind": "Job", "name": job.GetName(), "uid": string(job.GetUID()), "controller": true}}}, "spec": map[string]any{"serviceAccountName": f.step.f.execution.Snapshot.Environment.Identities.TrainerServiceAccount, "containers": []any{map[string]any{"name": "node"}}, "volumes": []any{map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": f.step.workspace.PVCName}}}}, "status": map[string]any{"phase": "Succeeded", "containerStatuses": []any{map[string]any{"name": "node", "restartCount": int64(0), "state": map[string]any{"terminated": map[string]any{"exitCode": int64(0), "finishedAt": time.Now().UTC().Add(-time.Minute).Format(time.RFC3339Nano)}}}}}}}
+		var runtimeSpec map[string]any
+		if json.Unmarshal(f.step.f.execution.Snapshot.RuntimePlan.ExpectedSpec, &runtimeSpec) != nil {
+			t.Fatal("invalid fixture runtime")
+		}
+		runtimeJobs, _, _ := unstructured.NestedSlice(runtimeSpec, "template", "spec", "replicatedJobs")
+		podSpec, _, _ := unstructured.NestedMap(runtimeJobs[0].(map[string]any), "template", "spec", "template", "spec")
+		pod.Object["spec"] = podSpec
 		f.objects[podPrefix+pod.GetName()] = pod
 		f.step.pods[pod.GetName()] = pod
 		write(&object)
 		return true
 	}
 	var object *unstructured.Unstructured
-	if r.URL.Path == workflowPath && !f.workflowDeleted {
+	if r.URL.Path == runtimePath && !f.runtimeDeleted {
+		object = f.runtime
+	} else if r.URL.Path == workflowPath && !f.workflowDeleted {
 		object = f.step.f.workflow
 	} else {
 		object = f.objects[r.URL.Path]
@@ -268,6 +349,9 @@ func (f *computeCleanupFixture) serve(t *testing.T, w http.ResponseWriter, r *ht
 		f.pendingReads[r.URL.Path]--
 		if f.pendingReads[r.URL.Path] == 0 {
 			delete(f.objects, r.URL.Path)
+			if r.URL.Path == runtimePath {
+				f.runtimeDeleted = true
+			}
 			status(404, "NotFound")
 			return true
 		}
@@ -336,6 +420,9 @@ func (f *computeCleanupFixture) serve(t *testing.T, w http.ResponseWriter, r *ht
 		}
 		if object.GetKind() == "Workflow" {
 			f.workflowDeleted = true
+		}
+		if object.GetKind() == "TrainingRuntime" {
+			f.runtimeDeleted = true
 		}
 		// Emulate Orphan GC only, preserving original dependent identities.
 		for _, child := range f.objects {
@@ -423,7 +510,7 @@ func TestAutomaticComputeCleanupOriginalGraphAndRestart(t *testing.T) {
 			remaining := len(f.objects)
 			logs := f.logReads
 			f.mu.Unlock()
-			if remaining != 0 || !reflect.DeepEqual(deleted, []string{"TrainJob", "JobSet", "Job", "Pod", "Workflow"}) || logs != 1 {
+			if remaining != 0 || !f.runtimeDeleted || !reflect.DeepEqual(deleted, []string{"TrainJob", "JobSet", "Job", "Pod", "PodGroup", "Workflow", "TrainingRuntime"}) || logs != 1 {
 				t.Fatalf("AUTO_COMPUTE_NOT_IMPLEMENTED: original terminal graph remains=%d deletes=%v logs=%d", remaining, deleted, logs)
 			}
 			state, err := lifecycle.New(f.step.open()).GetRuntime(context.Background(), f.step.f.execution.TenantID, f.step.f.execution.ExecutionID)
@@ -438,10 +525,10 @@ func TestAutomaticComputeCleanupOriginalGraphAndRestart(t *testing.T) {
 				ConfirmedAbsent []biz.RuntimeResource `json:"confirmed_absent"`
 				LogsReady       bool                  `json:"logs_ready"`
 			}
-			if json.Unmarshal(document["ComputeCleanup"], &receipt) != nil || receipt.Phase != "APPLIED" || len(receipt.ConfirmedAbsent) != 5 || !receipt.LogsReady {
+			if json.Unmarshal(document["ComputeCleanup"], &receipt) != nil || receipt.Phase != "APPLIED" || len(receipt.ConfirmedAbsent) != 7 || !receipt.LogsReady {
 				t.Fatal("real reconnect lost automatic cleanup receipt")
 			}
-			if state.Workspace == nil || state.CloseEvidence == nil || state.Observation == nil || len(state.Observation.Resources) != 4 || !state.Observation.Resources[0].APIObjectPresent {
+			if state.Workspace == nil || state.CloseEvidence == nil || state.Observation == nil || len(state.Observation.Resources) != 5 || !state.Observation.Resources[0].APIObjectPresent {
 				t.Fatal("cleanup erased original writer history or protected workspace")
 			}
 			query := service.NewQuery(execution.New(f.step.open()), nil)
@@ -486,7 +573,7 @@ func TestAutomaticComputeCleanupLostDeleteAndUIDConflicts(t *testing.T) {
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if len(f.objects) != 0 || !reflect.DeepEqual(f.deleted, []string{"TrainJob", "JobSet", "Job", "Pod", "Workflow"}) {
+	if len(f.objects) != 0 || !f.runtimeDeleted || !reflect.DeepEqual(f.deleted, []string{"TrainJob", "JobSet", "Job", "Pod", "PodGroup", "Workflow", "TrainingRuntime"}) {
 		t.Fatal("restart reissued or lost an original target", f.deleted)
 	}
 }

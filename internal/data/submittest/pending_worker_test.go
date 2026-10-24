@@ -15,6 +15,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
 )
 
@@ -51,7 +52,7 @@ func TestDispatchWorkerRecoversAdmissionAndConcurrentWorkersSendOneRun(t *testin
 		}
 		snapshot := request.Admission.Snapshot
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"run_id": "55555555-6666-4777-8888-999999999999", "experiment_id": snapshot.Environment.ExperimentID, "display_name": "md-" + request.Admission.ExecutionID, "pipeline_version_reference": map[string]string{"pipeline_id": snapshot.Release.PipelineID, "pipeline_version_id": snapshot.Release.PipelineVersionID}, "runtime_config": map[string]any{"parameters": map[string]string{"execution_id": request.Admission.ExecutionID, "spec_hash": request.Admission.SpecHash}, "pipeline_root": request.Owner.PipelineRoot}, "service_account": snapshot.Environment.Identities.KFPStepServiceAccount, "state": "PENDING"})
+		_ = json.NewEncoder(w).Encode(map[string]any{"run_id": "55555555-6666-4777-8888-999999999999", "experiment_id": snapshot.Environment.ExperimentID, "display_name": "md-" + request.Admission.ExecutionID, "pipeline_version_reference": map[string]string{"pipeline_id": snapshot.Implementation.PipelineID, "pipeline_version_id": snapshot.Implementation.PipelineVersionID}, "runtime_config": map[string]any{"parameters": map[string]string{"execution_id": request.Admission.ExecutionID, "spec_hash": request.Admission.SpecHash}, "pipeline_root": request.Owner.PipelineRoot}, "service_account": snapshot.Environment.Identities.KFPStepServiceAccount, "state": "PENDING"})
 	}))
 	t.Cleanup(peer.Close)
 	provider := tokenProviderFunc(func(_ context.Context, tenant string, environment cpup01.EnvironmentBindingSnapshot) (string, error) {
@@ -123,11 +124,8 @@ func TestPendingDispatchScanExcludesOtherBindingsStoppedExpiredAndReserved(t *te
 			candidate.Admission.AcceptedAt = time.Now().UTC().Add(-2 * time.Hour).Truncate(time.Microsecond)
 			candidate.Admission.Snapshot.DeadlineAt = candidate.Admission.AcceptedAt.Add(time.Hour)
 		}
+		candidate.Admission = admissionfixture.Bind(t, candidate.Admission)
 		var err error
-		candidate.Admission.SpecHash, err = candidate.Admission.Snapshot.Digest()
-		if err != nil {
-			t.Fatal(err)
-		}
 		if _, err = admissions.Accept(ctx, candidate.Admission); err != nil {
 			t.Fatal("scan fixture admission", kind, err)
 		}

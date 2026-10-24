@@ -1,7 +1,7 @@
-# CPU LoRA workload
+# Built-in LoRA workload
 
-`finetune_entry.py` is the synchronous, single-process managed entry for the
-`ani.finetune.lora.parameters.v1` contract. It calls LLaMA-Factory 0.9.3 for SFT
+`finetune_entry.py` is the synchronous, single-process CPU/CUDA managed entry for the
+`ani.sft-lora.parameters.v2.1` contract. It calls LLaMA-Factory 0.9.3 for SFT
 and Adapter merge/export, then independently reloads the merged model with
 transformers for CPU verification. It does not admit, publish, register, or close
 an execution. Those remain ModelDev application responsibilities.
@@ -17,12 +17,20 @@ The entry accepts `train`, `export`, or `verify`, with the same fixed argv:
 ```
 
 The configuration is the canonical Go `FinetuningConfiguration` projection.
+Its nine algorithm fields are resolved for each execution and frozen in the
+Snapshot. Defaults and representation bounds come only from
+`contract/cpup01/implementations.json`; every resolved value is read back from
+the actual framework parser before training. `data_seed` derives from that
+execution's `seed`. Fixed safety settings remain implementation owned.
+Canonical JSON sorts object keys.
 It contains only the contract version, sorted typed parameters, and the finite
-managed settings in `configuration.py`. Neither arbitrary YAML nor a second
+managed-settings projection in `configuration.py`. User-selectable fields in
+that projection must equal the complete resolved parameter list; their default
+values are not a separate fixed recipe. Neither arbitrary YAML nor a second
 environment/default parameter channel is supported. Before training, the entry
 uses LLaMA-Factory argument parsing and its actual model config resolver to
-check the effective projection. CPU training, Adapter save, export, and verify
-all enforce float32 independently.
+check the effective projection. CPU/CUDA training and Adapter save enforce float32. Export and independent
+verify always run on CPU in float32. CUDA training requires one visible device.
 
 The sole metric source is transformers 4.49 `TrainerCallback.on_log(loss)` with
 `logging_steps=1`; its loss maps to the unchanged `ani.metric.v1` train.loss
@@ -30,14 +38,17 @@ record. `on_optimizer_step` separately counts actual optimizer updates and is
 checked against Trainer global_step. The locked transformers version does not
 populate the callback's train_dataloader. The entry observes LLaMA-Factory's
 actual get_dataset return and passes that same object unchanged to its Trainer;
-the effective source count must remain 64. No training logic or dataset is
+source and effective counts, actual cutoff/token facts, and truncation are
+recorded without a fixed row count. No training logic or dataset is
 replaced. Failure/SIGTERM summaries retain the actual partial step count.
 
 Prepare supplies the raw Alpaca JSON, the `ani_cpu_smoke` dataset_info mapping,
 and verified base members under inputs/model. Base-manifest canonical bytes
 have the shape `{schema,files:[{path,bytes,sha256}]}`, with members sorted by
 path, bytes encoded as strings, and no trailing newline. The entry checks both
-the manifest identity and each actual member. The temporary LLaMA-Factory
+the manifest identity and each actual member. The internal dataset mapping name
+does not prescribe a sample count; the selected input must contain valid
+nonempty Alpaca records. The temporary LLaMA-Factory
 output is copied in bounded blocks into training/adapter and verified before
 atomic publication on the workspace filesystem.
 
@@ -45,14 +56,20 @@ Training writes only the final Adapter weight/config and reports/train
 metrics.jsonl, summary.json, adapter_manifest.json. Export writes export/merged
 and reports/export/merged_manifest.json plus export.json. Verify reads the
 frozen configuration and merged model evidence, writes reports/verify/verify.json,
-and requires finite logits and nonempty deterministic generated text. Collect
+and requires finite logits and nonempty deterministic generated text. Adapter,
+export and verification manifests retain the current input, base, configuration
+and Adapter inventories so a different training result cannot be substituted. Collect
 must validate these reports and inventory; it cannot generate missing metrics.
 
-The separate Dockerfile preserves the old MLP workload. The direct runtime
-versions are pinned, including PyArrow 20.0.0 for NumPy 1.26 compatibility; the
-complete installed package inventory is recorded in
-`training/finetuning-runtime-lock.json`. The actual OCI digest is authoritative
-for a Release, not the mutable build tag.
+`training/finetuning.Dockerfile` describes the qualified CPU runtime base. Its
+direct versions are pinned, including PyArrow 20.0.0 for NumPy 1.26 compatibility,
+and its complete inventory is recorded in `training/finetuning-runtime-lock.json`.
+The current execution image adds the frozen programs with
+`training/cpu-execution.Dockerfile`; the CUDA variant uses `training/gpu.Dockerfile`
+and `training/gpu-runtime-lock.json`. Software materials bind the actual
+immutable image digest to a confirmed PipelineVersion and its IR hash. Per-run
+parameters remain in the execution Snapshot. Result publication and registration
+depend on the actual collected artifacts and business execution.
 
 Run generation, builds, checks, and workloads only on Fedora:
 

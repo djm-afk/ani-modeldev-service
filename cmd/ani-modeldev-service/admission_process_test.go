@@ -103,7 +103,7 @@ func TestConfiguredAdmissionProcessLoadsPrivateConfigAndStopsOnSIGTERM(t *testin
 	rpcContext := metadata.NewOutgoingContext(ctx, metadata.Pairs(
 		"x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", uuid.NewString(),
 	))
-	response, err := modeldevv1.NewModelDevAdmissionServiceClient(connection).ResolveAdmission(rpcContext, fixture.request)
+	response, err := finalizeConfiguredAdmission(rpcContext, modeldevv1.NewModelDevAdmissionServiceClient(connection), fixture.request)
 	if err != nil || response == nil {
 		t.Fatalf("ADMISSION_PROCESS_BEHAVIOR: actual process could not resolve the configured candidate: %v", err)
 	}

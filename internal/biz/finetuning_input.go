@@ -9,7 +9,7 @@ import (
 const AlpacaSchemaVersion = "ani.finetune.alpaca.v1"
 
 // VerifiedAlpaca records observations of the exact original JSON bytes. The
-// current Release's 64-row constraint belongs to admission, not this importer.
+// nonempty Alpaca schema is independent of the implementation defaults.
 type VerifiedAlpaca struct {
 	VerifiedObject
 	SchemaVersion string

@@ -22,6 +22,7 @@ class FinetuningAssembly(unittest.TestCase):
                 "workspace_size": "20Gi", "workspace_access_mode": "ReadWriteMany",
                 "kind": "FINETUNING",
                 "admission_profile": "finetuning-v1",
+                "execution_timeout_max_seconds": 14400,
             }
             config, output = root / "config.json", root / "pipeline.yaml"
             config.write_text(json.dumps(configuration), encoding="utf-8")
@@ -50,8 +51,6 @@ class FinetuningAssembly(unittest.TestCase):
             finalizer = root_tasks["finalize-close"]
             self.assertEqual(finalizer["triggerPolicy"]["strategy"], "ALL_UPSTREAM_TASKS_COMPLETED")
             self.assertNotIn("triggerPolicy", tasks["close"])
-            limits = {"prepare": 900, "train-wait": 3600, "export": 1800, "verify": 900,
-                      "collect": 600, "publish": 900, "register": 600, "close": 600}
             for role, task in tasks.items():
                 self.assertFalse(task.get("cachingOptions", {}).get("enableCache", False))
                 self.assertEqual(int(task.get("retryPolicy", {}).get("maxRetryCount", 0)), 0)
@@ -61,8 +60,7 @@ class FinetuningAssembly(unittest.TestCase):
                 container = ir["deploymentSpec"]["executors"][executor]["container"]
                 k8s = platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][executor]
                 self.assertEqual(container["image"], configuration["component_image"])
-                if role in limits:
-                    self.assertEqual(int(k8s["activeDeadlineSeconds"]), limits[role])
+                self.assertEqual(int(k8s["activeDeadlineSeconds"]), configuration["execution_timeout_max_seconds"])
                 if role in ("prepare", "export", "verify"):
                     self.assertEqual(container["resources"]["resourceCpuRequest"], "2")
                     self.assertEqual(container["resources"]["resourceMemoryRequest"], "6Gi")
@@ -76,6 +74,7 @@ class FinetuningAssembly(unittest.TestCase):
             self.assertNotIn("deletepvc", output.read_text(encoding="utf-8"))
             final_executor = ir["components"][finalizer["componentRef"]["name"]]["executorLabel"]
             final_labels = platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][final_executor]["podMetadata"]["labels"]
+            self.assertEqual(int(platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][final_executor]["activeDeadlineSeconds"]), configuration["execution_timeout_max_seconds"])
             self.assertEqual(final_labels["ani.modeldev/step-role"], "finalize-close")
             self.assertEqual(final_labels["ani.modeldev/admission-profile"], "finetuning-v1")
 

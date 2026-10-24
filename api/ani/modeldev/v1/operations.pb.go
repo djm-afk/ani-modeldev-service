@@ -22,6 +22,51 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Targets, bytes, idempotency keys and compute behavior cannot be overridden.
+type ResumeModelRegistrationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ExecutionId   string                 `protobuf:"bytes,1,opt,name=execution_id,json=executionId,proto3" json:"execution_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResumeModelRegistrationRequest) Reset() {
+	*x = ResumeModelRegistrationRequest{}
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResumeModelRegistrationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResumeModelRegistrationRequest) ProtoMessage() {}
+
+func (x *ResumeModelRegistrationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResumeModelRegistrationRequest.ProtoReflect.Descriptor instead.
+func (*ResumeModelRegistrationRequest) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *ResumeModelRegistrationRequest) GetExecutionId() string {
+	if x != nil {
+		return x.ExecutionId
+	}
+	return ""
+}
+
 type InspectExecutionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ExecutionId   string                 `protobuf:"bytes,1,opt,name=execution_id,json=executionId,proto3" json:"execution_id,omitempty"`
@@ -31,7 +76,7 @@ type InspectExecutionRequest struct {
 
 func (x *InspectExecutionRequest) Reset() {
 	*x = InspectExecutionRequest{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[0]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -43,7 +88,7 @@ func (x *InspectExecutionRequest) String() string {
 func (*InspectExecutionRequest) ProtoMessage() {}
 
 func (x *InspectExecutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[0]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -56,7 +101,7 @@ func (x *InspectExecutionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InspectExecutionRequest.ProtoReflect.Descriptor instead.
 func (*InspectExecutionRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{0}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *InspectExecutionRequest) GetExecutionId() string {
@@ -75,7 +120,7 @@ type ReconcileExecutionRequest struct {
 
 func (x *ReconcileExecutionRequest) Reset() {
 	*x = ReconcileExecutionRequest{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[1]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -87,7 +132,7 @@ func (x *ReconcileExecutionRequest) String() string {
 func (*ReconcileExecutionRequest) ProtoMessage() {}
 
 func (x *ReconcileExecutionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[1]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -100,7 +145,7 @@ func (x *ReconcileExecutionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReconcileExecutionRequest.ProtoReflect.Descriptor instead.
 func (*ReconcileExecutionRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{1}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ReconcileExecutionRequest) GetExecutionId() string {
@@ -119,7 +164,7 @@ type PlanExecutionCleanupRequest struct {
 
 func (x *PlanExecutionCleanupRequest) Reset() {
 	*x = PlanExecutionCleanupRequest{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[2]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -131,7 +176,7 @@ func (x *PlanExecutionCleanupRequest) String() string {
 func (*PlanExecutionCleanupRequest) ProtoMessage() {}
 
 func (x *PlanExecutionCleanupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[2]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -144,7 +189,7 @@ func (x *PlanExecutionCleanupRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanExecutionCleanupRequest.ProtoReflect.Descriptor instead.
 func (*PlanExecutionCleanupRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{2}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PlanExecutionCleanupRequest) GetExecutionId() string {
@@ -166,7 +211,7 @@ type ApplyExecutionCleanupRequest struct {
 
 func (x *ApplyExecutionCleanupRequest) Reset() {
 	*x = ApplyExecutionCleanupRequest{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[3]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -178,7 +223,7 @@ func (x *ApplyExecutionCleanupRequest) String() string {
 func (*ApplyExecutionCleanupRequest) ProtoMessage() {}
 
 func (x *ApplyExecutionCleanupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[3]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -191,7 +236,7 @@ func (x *ApplyExecutionCleanupRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyExecutionCleanupRequest.ProtoReflect.Descriptor instead.
 func (*ApplyExecutionCleanupRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{3}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ApplyExecutionCleanupRequest) GetExecutionId() string {
@@ -226,7 +271,7 @@ type OperationResource struct {
 
 func (x *OperationResource) Reset() {
 	*x = OperationResource{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[4]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -238,7 +283,7 @@ func (x *OperationResource) String() string {
 func (*OperationResource) ProtoMessage() {}
 
 func (x *OperationResource) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[4]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -251,7 +296,7 @@ func (x *OperationResource) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationResource.ProtoReflect.Descriptor instead.
 func (*OperationResource) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{4}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *OperationResource) GetApiVersion() string {
@@ -333,7 +378,7 @@ type InspectExecutionResponse struct {
 
 func (x *InspectExecutionResponse) Reset() {
 	*x = InspectExecutionResponse{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[5]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -345,7 +390,7 @@ func (x *InspectExecutionResponse) String() string {
 func (*InspectExecutionResponse) ProtoMessage() {}
 
 func (x *InspectExecutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[5]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -358,7 +403,7 @@ func (x *InspectExecutionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InspectExecutionResponse.ProtoReflect.Descriptor instead.
 func (*InspectExecutionResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{5}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *InspectExecutionResponse) GetInspection() *ExecutionInspection {
@@ -377,7 +422,7 @@ type ReconcileExecutionResponse struct {
 
 func (x *ReconcileExecutionResponse) Reset() {
 	*x = ReconcileExecutionResponse{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[6]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -389,7 +434,7 @@ func (x *ReconcileExecutionResponse) String() string {
 func (*ReconcileExecutionResponse) ProtoMessage() {}
 
 func (x *ReconcileExecutionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[6]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -402,7 +447,7 @@ func (x *ReconcileExecutionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReconcileExecutionResponse.ProtoReflect.Descriptor instead.
 func (*ReconcileExecutionResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{6}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ReconcileExecutionResponse) GetInspection() *ExecutionInspection {
@@ -447,7 +492,7 @@ type ExecutionInspection struct {
 
 func (x *ExecutionInspection) Reset() {
 	*x = ExecutionInspection{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[7]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -459,7 +504,7 @@ func (x *ExecutionInspection) String() string {
 func (*ExecutionInspection) ProtoMessage() {}
 
 func (x *ExecutionInspection) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[7]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -472,7 +517,7 @@ func (x *ExecutionInspection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutionInspection.ProtoReflect.Descriptor instead.
 func (*ExecutionInspection) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{7}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ExecutionInspection) GetExecutionId() string {
@@ -683,7 +728,7 @@ type PlanExecutionCleanupResponse struct {
 
 func (x *PlanExecutionCleanupResponse) Reset() {
 	*x = PlanExecutionCleanupResponse{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[8]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -695,7 +740,7 @@ func (x *PlanExecutionCleanupResponse) String() string {
 func (*PlanExecutionCleanupResponse) ProtoMessage() {}
 
 func (x *PlanExecutionCleanupResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[8]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -708,7 +753,7 @@ func (x *PlanExecutionCleanupResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanExecutionCleanupResponse.ProtoReflect.Descriptor instead.
 func (*PlanExecutionCleanupResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{8}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *PlanExecutionCleanupResponse) GetExecutionId() string {
@@ -804,7 +849,7 @@ type ApplyExecutionCleanupResponse struct {
 
 func (x *ApplyExecutionCleanupResponse) Reset() {
 	*x = ApplyExecutionCleanupResponse{}
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[9]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -816,7 +861,7 @@ func (x *ApplyExecutionCleanupResponse) String() string {
 func (*ApplyExecutionCleanupResponse) ProtoMessage() {}
 
 func (x *ApplyExecutionCleanupResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[9]
+	mi := &file_ani_modeldev_v1_operations_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -829,7 +874,7 @@ func (x *ApplyExecutionCleanupResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyExecutionCleanupResponse.ProtoReflect.Descriptor instead.
 func (*ApplyExecutionCleanupResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{9}
+	return file_ani_modeldev_v1_operations_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ApplyExecutionCleanupResponse) GetExecutionId() string {
@@ -892,7 +937,9 @@ var File_ani_modeldev_v1_operations_proto protoreflect.FileDescriptor
 
 const file_ani_modeldev_v1_operations_proto_rawDesc = "" +
 	"\n" +
-	" ani/modeldev/v1/operations.proto\x12\x0fani.modeldev.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"<\n" +
+	" ani/modeldev/v1/operations.proto\x12\x0fani.modeldev.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eani/modeldev/v1/modeldev.proto\"C\n" +
+	"\x1eResumeModelRegistrationRequest\x12!\n" +
+	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\"<\n" +
 	"\x17InspectExecutionRequest\x12!\n" +
 	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\">\n" +
 	"\x19ReconcileExecutionRequest\x12!\n" +
@@ -982,12 +1029,13 @@ const file_ani_modeldev_v1_operations_proto_rawDesc = "" +
 	"\x05actor\x18\x06 \x01(\tR\x05actor\x129\n" +
 	"\n" +
 	"started_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
-	"\fcompleted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt2\xe0\x03\n" +
+	"\fcompleted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt2\xd3\x04\n" +
 	"\x19ModelDevOperationsService\x12g\n" +
 	"\x10InspectExecution\x12(.ani.modeldev.v1.InspectExecutionRequest\x1a).ani.modeldev.v1.InspectExecutionResponse\x12m\n" +
 	"\x12ReconcileExecution\x12*.ani.modeldev.v1.ReconcileExecutionRequest\x1a+.ani.modeldev.v1.ReconcileExecutionResponse\x12s\n" +
 	"\x14PlanExecutionCleanup\x12,.ani.modeldev.v1.PlanExecutionCleanupRequest\x1a-.ani.modeldev.v1.PlanExecutionCleanupResponse\x12v\n" +
-	"\x15ApplyExecutionCleanup\x12-.ani.modeldev.v1.ApplyExecutionCleanupRequest\x1a..ani.modeldev.v1.ApplyExecutionCleanupResponseBNZLgithub.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1;modeldevv1b\x06proto3"
+	"\x15ApplyExecutionCleanup\x12-.ani.modeldev.v1.ApplyExecutionCleanupRequest\x1a..ani.modeldev.v1.ApplyExecutionCleanupResponse\x12q\n" +
+	"\x17ResumeModelRegistration\x12/.ani.modeldev.v1.ResumeModelRegistrationRequest\x1a%.ani.modeldev.v1.GetExecutionResponseBNZLgithub.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1;modeldevv1b\x06proto3"
 
 var (
 	file_ani_modeldev_v1_operations_proto_rawDescOnce sync.Once
@@ -1001,43 +1049,47 @@ func file_ani_modeldev_v1_operations_proto_rawDescGZIP() []byte {
 	return file_ani_modeldev_v1_operations_proto_rawDescData
 }
 
-var file_ani_modeldev_v1_operations_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_ani_modeldev_v1_operations_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_ani_modeldev_v1_operations_proto_goTypes = []any{
-	(*InspectExecutionRequest)(nil),       // 0: ani.modeldev.v1.InspectExecutionRequest
-	(*ReconcileExecutionRequest)(nil),     // 1: ani.modeldev.v1.ReconcileExecutionRequest
-	(*PlanExecutionCleanupRequest)(nil),   // 2: ani.modeldev.v1.PlanExecutionCleanupRequest
-	(*ApplyExecutionCleanupRequest)(nil),  // 3: ani.modeldev.v1.ApplyExecutionCleanupRequest
-	(*OperationResource)(nil),             // 4: ani.modeldev.v1.OperationResource
-	(*InspectExecutionResponse)(nil),      // 5: ani.modeldev.v1.InspectExecutionResponse
-	(*ReconcileExecutionResponse)(nil),    // 6: ani.modeldev.v1.ReconcileExecutionResponse
-	(*ExecutionInspection)(nil),           // 7: ani.modeldev.v1.ExecutionInspection
-	(*PlanExecutionCleanupResponse)(nil),  // 8: ani.modeldev.v1.PlanExecutionCleanupResponse
-	(*ApplyExecutionCleanupResponse)(nil), // 9: ani.modeldev.v1.ApplyExecutionCleanupResponse
-	(*timestamppb.Timestamp)(nil),         // 10: google.protobuf.Timestamp
+	(*ResumeModelRegistrationRequest)(nil), // 0: ani.modeldev.v1.ResumeModelRegistrationRequest
+	(*InspectExecutionRequest)(nil),        // 1: ani.modeldev.v1.InspectExecutionRequest
+	(*ReconcileExecutionRequest)(nil),      // 2: ani.modeldev.v1.ReconcileExecutionRequest
+	(*PlanExecutionCleanupRequest)(nil),    // 3: ani.modeldev.v1.PlanExecutionCleanupRequest
+	(*ApplyExecutionCleanupRequest)(nil),   // 4: ani.modeldev.v1.ApplyExecutionCleanupRequest
+	(*OperationResource)(nil),              // 5: ani.modeldev.v1.OperationResource
+	(*InspectExecutionResponse)(nil),       // 6: ani.modeldev.v1.InspectExecutionResponse
+	(*ReconcileExecutionResponse)(nil),     // 7: ani.modeldev.v1.ReconcileExecutionResponse
+	(*ExecutionInspection)(nil),            // 8: ani.modeldev.v1.ExecutionInspection
+	(*PlanExecutionCleanupResponse)(nil),   // 9: ani.modeldev.v1.PlanExecutionCleanupResponse
+	(*ApplyExecutionCleanupResponse)(nil),  // 10: ani.modeldev.v1.ApplyExecutionCleanupResponse
+	(*timestamppb.Timestamp)(nil),          // 11: google.protobuf.Timestamp
+	(*GetExecutionResponse)(nil),           // 12: ani.modeldev.v1.GetExecutionResponse
 }
 var file_ani_modeldev_v1_operations_proto_depIdxs = []int32{
-	7,  // 0: ani.modeldev.v1.InspectExecutionResponse.inspection:type_name -> ani.modeldev.v1.ExecutionInspection
-	7,  // 1: ani.modeldev.v1.ReconcileExecutionResponse.inspection:type_name -> ani.modeldev.v1.ExecutionInspection
-	4,  // 2: ani.modeldev.v1.ExecutionInspection.resources:type_name -> ani.modeldev.v1.OperationResource
-	10, // 3: ani.modeldev.v1.ExecutionInspection.closed_at:type_name -> google.protobuf.Timestamp
-	10, // 4: ani.modeldev.v1.ExecutionInspection.observed_at:type_name -> google.protobuf.Timestamp
-	10, // 5: ani.modeldev.v1.ExecutionInspection.retrieved_at:type_name -> google.protobuf.Timestamp
-	4,  // 6: ani.modeldev.v1.PlanExecutionCleanupResponse.targets:type_name -> ani.modeldev.v1.OperationResource
-	10, // 7: ani.modeldev.v1.PlanExecutionCleanupResponse.observed_at:type_name -> google.protobuf.Timestamp
-	4,  // 8: ani.modeldev.v1.ApplyExecutionCleanupResponse.requested:type_name -> ani.modeldev.v1.OperationResource
-	4,  // 9: ani.modeldev.v1.ApplyExecutionCleanupResponse.confirmed_absent:type_name -> ani.modeldev.v1.OperationResource
-	10, // 10: ani.modeldev.v1.ApplyExecutionCleanupResponse.started_at:type_name -> google.protobuf.Timestamp
-	10, // 11: ani.modeldev.v1.ApplyExecutionCleanupResponse.completed_at:type_name -> google.protobuf.Timestamp
-	0,  // 12: ani.modeldev.v1.ModelDevOperationsService.InspectExecution:input_type -> ani.modeldev.v1.InspectExecutionRequest
-	1,  // 13: ani.modeldev.v1.ModelDevOperationsService.ReconcileExecution:input_type -> ani.modeldev.v1.ReconcileExecutionRequest
-	2,  // 14: ani.modeldev.v1.ModelDevOperationsService.PlanExecutionCleanup:input_type -> ani.modeldev.v1.PlanExecutionCleanupRequest
-	3,  // 15: ani.modeldev.v1.ModelDevOperationsService.ApplyExecutionCleanup:input_type -> ani.modeldev.v1.ApplyExecutionCleanupRequest
-	5,  // 16: ani.modeldev.v1.ModelDevOperationsService.InspectExecution:output_type -> ani.modeldev.v1.InspectExecutionResponse
-	6,  // 17: ani.modeldev.v1.ModelDevOperationsService.ReconcileExecution:output_type -> ani.modeldev.v1.ReconcileExecutionResponse
-	8,  // 18: ani.modeldev.v1.ModelDevOperationsService.PlanExecutionCleanup:output_type -> ani.modeldev.v1.PlanExecutionCleanupResponse
-	9,  // 19: ani.modeldev.v1.ModelDevOperationsService.ApplyExecutionCleanup:output_type -> ani.modeldev.v1.ApplyExecutionCleanupResponse
-	16, // [16:20] is the sub-list for method output_type
-	12, // [12:16] is the sub-list for method input_type
+	8,  // 0: ani.modeldev.v1.InspectExecutionResponse.inspection:type_name -> ani.modeldev.v1.ExecutionInspection
+	8,  // 1: ani.modeldev.v1.ReconcileExecutionResponse.inspection:type_name -> ani.modeldev.v1.ExecutionInspection
+	5,  // 2: ani.modeldev.v1.ExecutionInspection.resources:type_name -> ani.modeldev.v1.OperationResource
+	11, // 3: ani.modeldev.v1.ExecutionInspection.closed_at:type_name -> google.protobuf.Timestamp
+	11, // 4: ani.modeldev.v1.ExecutionInspection.observed_at:type_name -> google.protobuf.Timestamp
+	11, // 5: ani.modeldev.v1.ExecutionInspection.retrieved_at:type_name -> google.protobuf.Timestamp
+	5,  // 6: ani.modeldev.v1.PlanExecutionCleanupResponse.targets:type_name -> ani.modeldev.v1.OperationResource
+	11, // 7: ani.modeldev.v1.PlanExecutionCleanupResponse.observed_at:type_name -> google.protobuf.Timestamp
+	5,  // 8: ani.modeldev.v1.ApplyExecutionCleanupResponse.requested:type_name -> ani.modeldev.v1.OperationResource
+	5,  // 9: ani.modeldev.v1.ApplyExecutionCleanupResponse.confirmed_absent:type_name -> ani.modeldev.v1.OperationResource
+	11, // 10: ani.modeldev.v1.ApplyExecutionCleanupResponse.started_at:type_name -> google.protobuf.Timestamp
+	11, // 11: ani.modeldev.v1.ApplyExecutionCleanupResponse.completed_at:type_name -> google.protobuf.Timestamp
+	1,  // 12: ani.modeldev.v1.ModelDevOperationsService.InspectExecution:input_type -> ani.modeldev.v1.InspectExecutionRequest
+	2,  // 13: ani.modeldev.v1.ModelDevOperationsService.ReconcileExecution:input_type -> ani.modeldev.v1.ReconcileExecutionRequest
+	3,  // 14: ani.modeldev.v1.ModelDevOperationsService.PlanExecutionCleanup:input_type -> ani.modeldev.v1.PlanExecutionCleanupRequest
+	4,  // 15: ani.modeldev.v1.ModelDevOperationsService.ApplyExecutionCleanup:input_type -> ani.modeldev.v1.ApplyExecutionCleanupRequest
+	0,  // 16: ani.modeldev.v1.ModelDevOperationsService.ResumeModelRegistration:input_type -> ani.modeldev.v1.ResumeModelRegistrationRequest
+	6,  // 17: ani.modeldev.v1.ModelDevOperationsService.InspectExecution:output_type -> ani.modeldev.v1.InspectExecutionResponse
+	7,  // 18: ani.modeldev.v1.ModelDevOperationsService.ReconcileExecution:output_type -> ani.modeldev.v1.ReconcileExecutionResponse
+	9,  // 19: ani.modeldev.v1.ModelDevOperationsService.PlanExecutionCleanup:output_type -> ani.modeldev.v1.PlanExecutionCleanupResponse
+	10, // 20: ani.modeldev.v1.ModelDevOperationsService.ApplyExecutionCleanup:output_type -> ani.modeldev.v1.ApplyExecutionCleanupResponse
+	12, // 21: ani.modeldev.v1.ModelDevOperationsService.ResumeModelRegistration:output_type -> ani.modeldev.v1.GetExecutionResponse
+	17, // [17:22] is the sub-list for method output_type
+	12, // [12:17] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
 	12, // [12:12] is the sub-list for extension extendee
 	0,  // [0:12] is the sub-list for field type_name
@@ -1048,14 +1100,15 @@ func file_ani_modeldev_v1_operations_proto_init() {
 	if File_ani_modeldev_v1_operations_proto != nil {
 		return
 	}
-	file_ani_modeldev_v1_operations_proto_msgTypes[4].OneofWrappers = []any{}
+	file_ani_modeldev_v1_modeldev_proto_init()
+	file_ani_modeldev_v1_operations_proto_msgTypes[5].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ani_modeldev_v1_operations_proto_rawDesc), len(file_ani_modeldev_v1_operations_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

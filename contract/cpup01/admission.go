@@ -47,44 +47,35 @@ func (a AdmissionEnvelope) CanonicalPayloads() ([]byte, []byte, error) {
 	if hex.EncodeToString(digest[:]) != a.SpecHash {
 		return nil, nil, ErrInvalidArgument
 	}
-	if a.Intent.Kind != a.Snapshot.Kind || !strings.EqualFold(a.Intent.PresetID, a.Snapshot.Release.PresetID) || !strings.EqualFold(a.Intent.DatasetVersionID, a.Snapshot.Input.InputVersionID) {
+	identity := a.Snapshot.IdentityRef
+	if !strings.EqualFold(identity.TenantID, a.TenantID) || identity.Actor != a.Actor || !strings.EqualFold(identity.ExecutionID, a.ExecutionID) || !strings.EqualFold(identity.OperationID, a.OperationID) || identity.IntentHash != a.IntentHash || !a.AcceptedAt.Equal(a.Snapshot.Timing.AcceptedAt) || a.Intent.Kind != a.Snapshot.Kind || a.Intent.ImplementationID != a.Snapshot.Implementation.ImplementationID || !strings.EqualFold(a.Intent.ComputePresetID, a.Snapshot.ComputeOrigin.ComputePresetID) || !strings.EqualFold(a.Intent.DatasetVersionID, a.Snapshot.Input.InputVersionID) {
 		return nil, nil, ErrInvalidArgument
 	}
-	if a.Intent.ImageVersionID != nil && !strings.EqualFold(*a.Intent.ImageVersionID, a.Snapshot.Program.ImageVersionID) {
-		return nil, nil, ErrInvalidArgument
+	explicit, err := a.Intent.ExplicitParameters()
+	if err != nil {
+		return nil, nil, err
 	}
-	if a.Intent.GeneralParameters != nil {
-		for _, parameter := range *a.Intent.GeneralParameters {
-			matched := false
-			for _, resolved := range a.Snapshot.Program.ResolvedParameters {
-				if parameter.Name == resolved.Name && parameter.Type == resolved.Type {
-					left, leftOK := new(big.Rat).SetString(parameter.Value)
-					right, rightOK := new(big.Rat).SetString(resolved.Value)
-					matched = leftOK && rightOK && left.Cmp(right) == 0
-					break
-				}
-			}
-			if !matched {
-				return nil, nil, ErrInvalidArgument
+	for _, p := range explicit {
+		matched := false
+		for _, r := range a.Snapshot.Program.ResolvedParameters {
+			if p.Name == r.Name && p.Type == r.Type {
+				left, lok := new(big.Rat).SetString(p.Value)
+				right, rok := new(big.Rat).SetString(r.Value)
+				matched = lok && rok && left.Cmp(right) == 0
+				break
 			}
 		}
+		if !matched {
+			return nil, nil, ErrInvalidArgument
+		}
+	}
+	if a.Intent.TimeoutSeconds != nil && *a.Intent.TimeoutSeconds != a.Snapshot.Timing.ExecutionTimeoutSeconds {
+		return nil, nil, ErrInvalidArgument
 	}
 	if a.Intent.Kind == "FINETUNING" {
 		fine := a.Snapshot.Finetuning
 		if fine == nil || a.Intent.Finetuning == nil || a.Intent.BaseModelVersionID == nil || !strings.EqualFold(*a.Intent.BaseModelVersionID, fine.BaseModel.VersionID) || !sameOptionalUUID(a.Intent.TargetModelID, fine.TargetModelID) || !sameOptionalString(a.Intent.NewModelName, fine.NewModelName) {
 			return nil, nil, ErrInvalidArgument
-		}
-		for _, parameter := range a.Snapshot.Program.ResolvedParameters {
-			switch parameter.Name {
-			case "learning_rate":
-				if a.Intent.Finetuning.LearningRate != nil && canonicalDecimal(*a.Intent.Finetuning.LearningRate) != canonicalDecimal(parameter.Value) {
-					return nil, nil, ErrInvalidArgument
-				}
-			case "max_steps":
-				if a.Intent.Finetuning.MaxSteps != nil && new(big.Int).SetInt64(*a.Intent.Finetuning.MaxSteps).String() != parameter.Value {
-					return nil, nil, ErrInvalidArgument
-				}
-			}
 		}
 	}
 	return intent, snapshot, nil

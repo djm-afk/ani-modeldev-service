@@ -16,18 +16,19 @@ does not enable a public creation mode or manufacture a Model READY receipt.
 
 The fine tuning image uses `finetuning-step.Dockerfile` with the verified workload
 OCI manifest as `WORKLOAD_IMAGE` and the static step binary from the final pushed
-commit. Fine tuning has disk `/tmp`, a 20Gi workspace, separate export/verify
-subpath mounts and fixed stage limits. Pinned KFP 2.16.0 does not encode read-only
+commit. Fine tuning has disk `/tmp`, the workspace capacity frozen in its installed
+material, separate export/verify subpath mounts and the admitted finite timing limits. Pinned KFP 2.16.0 does not encode read-only
 PVC mounts, root filesystem or ephemeral-storage resource requests. The formal
 [ModelDev webhook](../deploy/modeldev-webhook/README.md) provides and validates
 those fields for explicitly enrolled namespaces before live acceptance.
 Both execution kinds require a frozen `admission_profile` binding. The compiler
 labels every runnable step with `ani.modeldev/admission-profile` and
 `ani.modeldev/step-role`, including the failure-close component. Newly compiled
-IR rejects a missing or malformed profile. Already published IR and canonical
-Release bytes stay immutable; migrate by publishing a new PipelineVersion and
-Release after validating the shared webhook. No cluster registration is performed
-by the compiler.
+IR rejects a missing or malformed profile. Published IR and canonical software
+materials stay immutable. Publish a new PipelineVersion and installed material
+after validating the shared webhook; parameter and public compute selections
+are resolved for each execution without a combination approval. The compiler
+does not register cluster objects.
 
 ```sh
 python3 -m venv /absolute/task/kfp-venv
@@ -53,7 +54,8 @@ An uploaded registry copy must retain the digest before an actual Run uses it.
   "storage_class": "${ENV_STORAGE_CLASS}",
   "workspace_size": "${FROZEN_WORKSPACE_CAPACITY}",
   "workspace_access_mode": "${ENV_WORKSPACE_ACCESS_MODE}",
-  "admission_profile": "${FROZEN_MODELDEV_ADMISSION_PROFILE_ID}"
+  "admission_profile": "${FROZEN_MODELDEV_ADMISSION_PROFILE_ID}",
+  "execution_timeout_max_seconds": "${FINITE_DEPLOYMENT_MAXIMUM_M}"
 }
 ```
 
@@ -72,7 +74,7 @@ the path under `reports` must match the frozen workspace contract:
   "workspace_directory": "/workspace",
   "inventory_file": "/workspace/reports/collected-output.json",
   "poll_interval_seconds": 2,
-  "timeout_seconds": 1800,
+  "timeout_seconds": "${FINITE_OUTER_BUDGET_COVERING_FROZEN_EXECUTION}",
   "s3": {
     "endpoint": "${ENV_HTTPS_S3_ENDPOINT}",
     "region": "${ENV_S3_REGION}",
@@ -80,6 +82,12 @@ the path under `reports` must match the frozen workspace contract:
   }
 }
 ```
+
+Replace both timeout placeholders with integers. `execution_timeout_max_seconds`
+is the finite deployment maximum M and is required by the compiler. The outer component and
+streaming budgets must cover the frozen role window; the business deadline
+still limits every request. KFP task insurance uses the same deployment maximum
+for every role.
 
 Do not set `context_file` or a static `task_id` in this dynamic mode. KFP supplies
 the actual Run ID and Downward API Pod identity. The service resolves the actual
@@ -107,8 +115,8 @@ container image. Prepare/collect/publish mount that PVC; train-wait and close do
 not. Components and the CPU training image use UID/GID 10001. ENV must establish
 PVC write access for that identity (for example through its managed Pod/volume
 group policy) and the actual node/storage mount capability. A compiled IR does
-not prove those permissions. Workspace class/capacity must equal the immutable
-Release contract. This Pipeline has no DeletePVC step.
+not prove those permissions. Workspace class/capacity must equal the installed material and frozen
+execution snapshot. This Pipeline has no DeletePVC step.
 
 Preparation no longer publishes whole directories through
 `renameat2(RENAME_NOREPLACE)`. A separate prepare Pod writes fixed inputs to the
@@ -124,7 +132,7 @@ Preparation rejects an existing model tree without its original valid completion
 manifest. Reusing an existing manifest requires verification of every actual input;
 it cannot repair missing or conflicting bytes. Both RWO and RWX are compiler inputs;
 actual volume access, persistence and sequential role mounts remain environment
-acceptance checks for each frozen image and Release.
+acceptance checks for each installed image and workspace material.
 
 Publish writes a small candidate to KFP's declared string `OutputPath`. Close
 receives that string through `--candidate-json` into an independent temporary
@@ -150,7 +158,7 @@ The selected ServiceAccount comes from ModelDev's frozen CreateRun request.
 ENV must supply its minimal current-Pod read and workspace permissions, server
 connectivity and distinct training identity. Compilation, module tests and a
 locally built image are not KFP upload, real PipelineVersion binding or L2–L4
-acceptance. Do not register fixture bindings as an enabled business Release.
+acceptance. A fixture binding cannot enable business acceptance.
 
 The focused compiler test is `python -m unittest discover -s pipelines -v` using
 the pinned virtual environment. It parses the emitted IR with KFP's protobuf

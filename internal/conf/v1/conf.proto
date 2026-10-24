@@ -30,6 +30,24 @@ message ManagedRuntime {
   google.protobuf.Duration api_timeout = 10;
   google.protobuf.Duration dispatch_interval = 11;
   uint32 dispatch_batch_size = 12;
+  // Optional GPU-owner dependencies. CPU execution does not require them.
+  ManagedGPUOwner gpu_owner = 13;
+}
+
+// Independent ModelDev owner identity for the two finite GPU close RPCs.
+message ManagedGPUOwner {
+  OwnerMTLSConnection accelerator = 1;
+  OwnerMTLSConnection governance = 2;
+  string owner_private_key_file = 3;
+}
+
+message OwnerMTLSConnection {
+  string endpoint = 1;
+  string ca_file = 2;
+  string certificate_file = 3;
+  string private_key_file = 4;
+  string server_name = 5;
+  google.protobuf.Duration timeout = 6;
 }
 
 message HTTPSWorkloadConnection {
@@ -95,6 +113,15 @@ message ModelConnection {
   // Stable audit actor this caller asserts. Authorization never depends on it.
   string actor = 7;
   google.protobuf.Duration timeout = 8;
+  // Explicit configured storage authority for real base-model object facts.
+  BaseModelStorageScope base_model_storage_scope = 9;
+}
+
+message BaseModelStorageScope {
+  string connection_id = 1;
+  string bucket = 2;
+  string approved_prefix = 3;
+  string credential_reference = 4;
 }
 
 message AdmissionResolution {

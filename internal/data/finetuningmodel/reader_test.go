@@ -49,10 +49,8 @@ func writeControlledDocument(t *testing.T, mutate func(map[string]any)) (string,
 	return path, hex.EncodeToString(digest[:])
 }
 
-func releaseForVersion(version string) cpup01.ReleaseDocument {
-	release := conformance.FinetuningReleaseV1()
-	release.Finetuning.BaseModelVersionID = version
-	return release
+func materialForModel() cpup01.ImplementationMaterial {
+	return conformance.FinetuningMaterialV21()
 }
 
 func intentForVersion(version string) cpup01.Intent {
@@ -67,7 +65,7 @@ func TestResolveReturnsFrozenBaseModel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := reader.ResolveFinetuningModelFacts(context.Background(), controlledTenant, intentForVersion(controlledVersion), releaseForVersion(controlledVersion))
+	got, err := reader.ResolveFinetuningModelFacts(context.Background(), controlledTenant, intentForVersion(controlledVersion), materialForModel())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +74,7 @@ func TestResolveReturnsFrozenBaseModel(t *testing.T) {
 	}
 	// A caller mutation must not change a later read.
 	got.Files[0].Path = "mutated"
-	again, err := reader.ResolveFinetuningModelFacts(context.Background(), controlledTenant, intentForVersion(controlledVersion), releaseForVersion(controlledVersion))
+	again, err := reader.ResolveFinetuningModelFacts(context.Background(), controlledTenant, intentForVersion(controlledVersion), materialForModel())
 	if err != nil || again.Files[0].Path == "mutated" {
 		t.Fatalf("reader leaked internal state: %+v, err %v", again, err)
 	}
@@ -88,17 +86,17 @@ func TestResolveRejectsUnknownTenantOrVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), "33333333-3333-4333-8333-333333333333", intentForVersion(controlledVersion), releaseForVersion(controlledVersion)); err != biz.ErrModelDependencyUnavailable {
+	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), "33333333-3333-4333-8333-333333333333", intentForVersion(controlledVersion), materialForModel()); err != biz.ErrModelDependencyUnavailable {
 		t.Fatalf("unknown tenant error = %v", err)
 	}
-	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), controlledTenant, intentForVersion(controlledVersion), releaseForVersion("77777777-7777-4777-8777-777777777777")); err != biz.ErrNoCompatibleRelease {
+	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), controlledTenant, intentForVersion("77777777-7777-4777-8777-777777777777"), materialForModel()); err != biz.ErrModelDependencyUnavailable {
 		t.Fatalf("version mismatch error = %v", err)
 	}
 }
 
 func TestResolveStaysNotEnabledWithoutReader(t *testing.T) {
 	var reader *finetuningmodel.Reader
-	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), controlledTenant, intentForVersion(controlledVersion), releaseForVersion(controlledVersion)); err != biz.ErrFinetuningNotEnabled {
+	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), controlledTenant, intentForVersion(controlledVersion), materialForModel()); err != biz.ErrFinetuningNotEnabled {
 		t.Fatalf("absent reader error = %v", err)
 	}
 }

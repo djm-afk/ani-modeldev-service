@@ -8,12 +8,16 @@ from kfp import compiler, dsl, kubernetes
 
 def compile_pipeline(configuration, output):
     required = {"component_image", "owner_config_map",
-                "storage_class", "workspace_size", "workspace_access_mode", "admission_profile"}
+                "storage_class", "workspace_size", "workspace_access_mode", "admission_profile",
+                "execution_timeout_max_seconds"}
     if set(configuration) not in (required, required | {"kind"}):
         raise ValueError("all frozen deployment bindings are required")
     kind = configuration.get("kind", "GENERAL_TRAINING")
     if kind not in ("GENERAL_TRAINING", "FINETUNING"):
         raise ValueError("unsupported managed execution kind")
+    maximum_timeout = configuration["execution_timeout_max_seconds"]
+    if type(maximum_timeout) is not int or maximum_timeout <= 0 or maximum_timeout > 9223372036:
+        raise ValueError("explicit finite execution maximum is required")
     finetuning = kind == "FINETUNING"
     profile = configuration["admission_profile"]
     if not isinstance(profile, str) or not re.fullmatch(r"[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?", profile):
@@ -79,7 +83,7 @@ def compile_pipeline(configuration, output):
     def finalize_close(execution_id: str, spec_hash: str, run_id: str):
         return container("close", execution_id, spec_hash, run_id, ["--close-only"])
 
-    def configure(task, *, timeout=600):
+    def configure(task):
         task.set_caching_options(False).set_retry(0)
         cpu_request, cpu_limit, memory_request, memory_limit = "100m", "500m", "128Mi", "512Mi"
         kubernetes.add_pod_label(task, "ani.modeldev/admission-profile", profile)
@@ -87,15 +91,13 @@ def compile_pipeline(configuration, output):
         if finetuning:
             if task.name in ("prepare", "export", "verify"):
                 cpu_request, cpu_limit, memory_request, memory_limit = "2", "4", "6Gi", "8Gi"
-                timeout = {"prepare": 900, "export": 1800, "verify": 900}[task.name]
             elif task.name in ("collect", "publish"):
                 cpu_request, cpu_limit, memory_request, memory_limit = "1", "2", "1Gi", "2Gi"
-                timeout = 900 if task.name == "publish" else 600
             else:
                 cpu_request, cpu_limit, memory_request, memory_limit = "500m", "1", "512Mi", "1Gi"
         task.set_cpu_request(cpu_request).set_cpu_limit(cpu_limit)
         task.set_memory_request(memory_request).set_memory_limit(memory_limit)
-        kubernetes.set_timeout(task, timeout)
+        kubernetes.set_timeout(task, maximum_timeout)
         kubernetes.set_security_context(task, run_as_user=10001, run_as_group=10001, run_as_non_root=True)
         kubernetes.use_config_map_as_volume(task, configuration["owner_config_map"], "/etc/modeldev-step")
         for name, path in (("ANI_POD_NAME", "metadata.name"), ("ANI_POD_UID", "metadata.uid"),
@@ -106,7 +108,7 @@ def compile_pipeline(configuration, output):
 
     # KFP/Argo includes this name in component Pod names; KCN also uses each
     # Pod name as an annotation suffix, limited to 63 bytes by Kubernetes.
-    @dsl.pipeline(name="ft" if finetuning else "general-cpu")
+    @dsl.pipeline(name="ft" if finetuning else "md")
     def pipeline(execution_id: str, spec_hash: str):
         # KFP records display_name as the managed role checked by ModelDev.
         run_id = dsl.PIPELINE_JOB_ID_PLACEHOLDER
@@ -120,13 +122,13 @@ def compile_pipeline(configuration, output):
                 size=configuration["workspace_size"], storage_class_name=configuration["storage_class"],
             ).set_caching_options(False).set_retry(0)
             prepared = configure(prepare(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id, pvc_name=workspace.output))
-            trained = configure(train_wait(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(prepared), timeout=3600 if finetuning else 1800)
+            trained = configure(train_wait(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(prepared))
             predecessor = trained
             if finetuning:
                 exported = configure(export(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(trained))
                 verified = configure(verify(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(exported))
                 for task, paths in ((exported, ("inputs", "training", "reports/train", "export", "reports/export")),
-                                    (verified, ("inputs", "export", "reports/export", "reports/verify"))):
+                                    (verified, ("inputs", "training", "reports/train", "export", "reports/export", "reports/verify"))):
                     for path in paths:
                         kubernetes.mount_pvc(task, workspace.output, "/workspace/" + path, sub_path=path)
                 predecessor = verified

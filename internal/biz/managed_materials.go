@@ -2,108 +2,88 @@ package biz
 
 import (
 	"context"
-	"slices"
-	"strings"
-
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	"strings"
+	"time"
 )
 
-// ManagedReleaseSelection is an owner-approved immutable catalogue reference.
-// It is not Governance's current Release pointer.
-type ManagedReleaseSelection struct{ ReleaseID, ReleaseDigest string }
-type ManagedMaterialsFacts interface {
-	AdmissionFactsReader
-	ListReleaseSelections(context.Context, string) ([]ManagedReleaseSelection, error)
-}
-type ManagedReleaseStore interface {
-	AdmissionReleaseReader
-	ImportRelease(context.Context, []byte, string) (cpup01.ReleaseDocument, bool, error)
-}
 type ManagedInputQuery interface {
 	AdmissionInputReader
 	List(context.Context, string, InputState, int, int) ([]InputVersion, error)
 	Count(context.Context, string, InputState) (uint64, error)
 }
 
+// ManagedMaterials projects the installed implementation and tenant facts.
+// Software materials have no import, approval, enablement or combination CRUD.
 type ManagedMaterials struct {
-	releases ManagedReleaseStore
-	facts    ManagedMaterialsFacts
-	inputs   ManagedInputQuery
-	importer *InputImporter
+	materials AdmissionMaterialReader
+	facts     AdmissionFactsReader
+	inputs    ManagedInputQuery
+	importer  *InputImporter
 }
 
-func NewManagedMaterials(releases ManagedReleaseStore, facts ManagedMaterialsFacts, inputs ManagedInputQuery, importer *InputImporter) *ManagedMaterials {
-	return &ManagedMaterials{releases: releases, facts: facts, inputs: inputs, importer: importer}
-}
-func (m *ManagedMaterials) Release(ctx context.Context, tenant, preset, id, digest string) (cpup01.ReleaseDocument, error) {
-	if !validAdmissionID(tenant) || !validAdmissionID(preset) || !validAdmissionID(id) || !closeSpecHashPattern.MatchString(digest) {
-		return cpup01.ReleaseDocument{}, ErrInvalidAdmission
-	}
-	if m == nil || m.releases == nil || m.facts == nil {
-		return cpup01.ReleaseDocument{}, ErrAdmissionEnvironmentNotReady
-	}
-	release, err := m.releases.ReadRelease(ctx, id, digest)
-	if err != nil {
-		return cpup01.ReleaseDocument{}, err
-	}
-	if release.ReleaseID != id || release.PresetID != preset {
-		return cpup01.ReleaseDocument{}, ErrNoCompatibleRelease
-	}
-	facts, err := m.facts.ReadAdmissionFacts(ctx, tenant, id, digest)
-	if err != nil {
-		return cpup01.ReleaseDocument{}, err
-	}
-	if facts.TenantID != tenant || !compatibleReleaseFacts(facts, release) {
-		return cpup01.ReleaseDocument{}, ErrNoCompatibleRelease
-	}
-	return release, nil
-}
-func compatibleReleaseFacts(facts TenantAdmissionFacts, release cpup01.ReleaseDocument) bool {
-	want, actual := release.Runtime, facts.Runtime
-	a, b := slices.Clone(want.TargetJobs), slices.Clone(actual.TargetJobs)
-	slices.Sort(a)
-	slices.Sort(b)
-	return want.Name == actual.Name && want.Kind == actual.Kind && want.APIGroup == actual.APIGroup && want.ContentSHA256 == actual.ContentSHA256 && slices.Equal(a, b) && release.Workspace == facts.Workspace &&
-		validAdmissionContainerPath(facts.InputFilePath) && validAdmissionContainerPath(facts.OutputDirectoryPath) && facts.InputFilePath != facts.OutputDirectoryPath && !strings.HasPrefix(facts.InputFilePath, facts.OutputDirectoryPath+"/") && !strings.HasPrefix(facts.OutputDirectoryPath, facts.InputFilePath+"/") &&
-		ValidStorageReference(facts.InputScope.StorageConnectionID) && ValidStorageReference(facts.InputScope.Bucket) && ValidStorageKey(facts.InputScope.ApprovedPrefix) && ValidStorageReference(facts.PublicationScope.StorageConnectionID) && ValidStorageReference(facts.PublicationScope.Bucket) && ValidStorageKey(facts.PublicationScope.ApprovedPrefix)
-}
-func (m *ManagedMaterials) ImportRelease(ctx context.Context, tenant, preset, id, digest string, raw []byte) (cpup01.ReleaseDocument, bool, error) {
-	release, actual, err := cpup01.ParseRelease(raw)
-	if err != nil || actual != digest || release.ReleaseID != id || release.PresetID != preset || !validAdmissionID(tenant) {
-		return cpup01.ReleaseDocument{}, false, ErrInvalidAdmission
-	}
-	if m == nil || m.facts == nil || m.releases == nil {
-		return cpup01.ReleaseDocument{}, false, ErrAdmissionEnvironmentNotReady
-	}
-	facts, err := m.facts.ReadAdmissionFacts(ctx, tenant, id, digest)
-	if err != nil {
-		return cpup01.ReleaseDocument{}, false, err
-	}
-	if facts.TenantID != tenant || !compatibleReleaseFacts(facts, release) {
-		return cpup01.ReleaseDocument{}, false, ErrNoCompatibleRelease
-	}
-	return m.releases.ImportRelease(ctx, raw, digest)
-}
-func (m *ManagedMaterials) ImportCSV(ctx context.Context, request InputImport, releaseID, digest string) (InputVersion, error) {
-	if m == nil || m.facts == nil || m.importer == nil {
-		return InputVersion{}, ErrAdmissionEnvironmentNotReady
-	}
-	facts, err := m.facts.ReadAdmissionFacts(ctx, request.TenantID, releaseID, digest)
-	if err != nil {
-		return InputVersion{}, err
-	}
-	request.Scope = facts.InputScope
-	return m.importer.ImportCSV(ctx, request)
+func NewManagedMaterials(materials AdmissionMaterialReader, facts AdmissionFactsReader, inputs ManagedInputQuery, importer *InputImporter) *ManagedMaterials {
+	return &ManagedMaterials{materials: materials, facts: facts, inputs: inputs, importer: importer}
 }
 
-func (m *ManagedMaterials) ImportFinetuningDataset(ctx context.Context, request InputImport, releaseID, digest string) (InputVersion, error) {
-	if request.InputFormat() != "JSON" {
+func (m *ManagedMaterials) Implementation(ctx context.Context, tenant, implementationID, deviceMode string) (cpup01.ImplementationMaterial, TenantAdmissionFacts, error) {
+	if !validAdmissionID(tenant) || (implementationID != "builtin.mlp" && implementationID != "builtin.sft_lora") || (deviceMode != "cpu" && deviceMode != "gpu") {
+		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, ErrInvalidAdmission
+	}
+	if m == nil || m.materials == nil || m.facts == nil {
+		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, ErrAdmissionEnvironmentNotReady
+	}
+	material, err := m.materials.ReadImplementationMaterial(ctx, implementationID, deviceMode)
+	if err != nil {
+		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, err
+	}
+	facts, err := m.facts.ReadAdmissionFacts(ctx, tenant, implementationID)
+	if err != nil {
+		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, err
+	}
+	if material.Implementation.ImplementationID != implementationID || !strings.EqualFold(facts.TenantID, tenant) || material.Workspace != facts.Workspace {
+		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, ErrAdmissionEnvironmentNotReady
+	}
+	if _, err := material.Canonical(); err != nil {
+		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, ErrAdmissionEnvironmentNotReady
+	}
+	return material, facts, nil
+}
+
+func (m *ManagedMaterials) TimingFor(ctx context.Context, tenant, implementationID string) (cpup01.TimingConfiguration, error) {
+	if m == nil || m.facts == nil || !validAdmissionID(tenant) {
+		return cpup01.TimingConfiguration{}, ErrAdmissionEnvironmentNotReady
+	}
+	facts, err := m.facts.ReadAdmissionFacts(ctx, tenant, implementationID)
+	if err != nil {
+		return cpup01.TimingConfiguration{}, err
+	}
+	if !strings.EqualFold(facts.TenantID, tenant) {
+		return cpup01.TimingConfiguration{}, ErrAdmissionEnvironmentNotReady
+	}
+	if _, err := facts.Timing.Resolve(time.Now().UTC().Truncate(time.Microsecond), nil); err != nil {
+		return cpup01.TimingConfiguration{}, ErrAdmissionEnvironmentNotReady
+	}
+	return facts.Timing, nil
+}
+
+func (m *ManagedMaterials) ImportCSV(ctx context.Context, request InputImport, implementationID string) (InputVersion, error) {
+	if implementationID != "builtin.mlp" || request.InputFormat() != "CSV" {
 		return InputVersion{}, ErrInvalidInput
 	}
+	return m.importInput(ctx, request, implementationID)
+}
+func (m *ManagedMaterials) ImportFinetuningDataset(ctx context.Context, request InputImport, implementationID string) (InputVersion, error) {
+	if implementationID != "builtin.sft_lora" || request.InputFormat() != "JSON" {
+		return InputVersion{}, ErrInvalidInput
+	}
+	return m.importInput(ctx, request, implementationID)
+}
+func (m *ManagedMaterials) importInput(ctx context.Context, request InputImport, implementationID string) (InputVersion, error) {
 	if m == nil || m.facts == nil || m.importer == nil {
 		return InputVersion{}, ErrAdmissionEnvironmentNotReady
 	}
-	facts, err := m.facts.ReadAdmissionFacts(ctx, request.TenantID, releaseID, digest)
+	facts, err := m.facts.ReadAdmissionFacts(ctx, request.TenantID, implementationID)
 	if err != nil {
 		return InputVersion{}, err
 	}
@@ -111,32 +91,12 @@ func (m *ManagedMaterials) ImportFinetuningDataset(ctx context.Context, request 
 		return InputVersion{}, ErrAdmissionEnvironmentNotReady
 	}
 	request.Scope = facts.InputScope
-	return m.importer.ImportFinetuningDataset(ctx, request)
+	if request.InputFormat() == "JSON" {
+		return m.importer.ImportFinetuningDataset(ctx, request)
+	}
+	return m.importer.ImportCSV(ctx, request)
 }
-func (m *ManagedMaterials) Releases(ctx context.Context, tenant string) ([]cpup01.ReleaseDocument, error) {
-	if !validAdmissionID(tenant) {
-		return nil, ErrInvalidAdmission
-	}
-	if m == nil || m.facts == nil {
-		return nil, ErrAdmissionEnvironmentNotReady
-	}
-	refs, err := m.facts.ListReleaseSelections(ctx, tenant)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]cpup01.ReleaseDocument, 0, len(refs))
-	for _, ref := range refs {
-		release, err := m.releases.ReadRelease(ctx, ref.ReleaseID, ref.ReleaseDigest)
-		if err != nil {
-			continue
-		} // An allowed but unimported Release is not selectable.
-		if _, err = m.Release(ctx, tenant, release.PresetID, ref.ReleaseID, ref.ReleaseDigest); err != nil {
-			return nil, err
-		}
-		out = append(out, release)
-	}
-	return out, nil
-}
+
 func (m *ManagedMaterials) Input(ctx context.Context, tenant, id string) (InputVersion, error) {
 	if m == nil || m.inputs == nil {
 		return InputVersion{}, ErrPersistence

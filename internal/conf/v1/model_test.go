@@ -34,7 +34,11 @@ func TestConfiguredModelConnectionRequiresExplicitTrustedMaterials(t *testing.T)
 		{"actor with newline", func(c *ModelConnection) { c.Actor = "modeldev:service\n" }},
 		{"missing timeout", func(c *ModelConnection) { c.Timeout = nil }},
 		{"zero timeout", func(c *ModelConnection) { c.Timeout = durationpb.New(0) }},
-		{"timeout above maximum", func(c *ModelConnection) { c.Timeout = durationpb.New(31 * time.Second) }},
+		{"timeout above maximum", func(c *ModelConnection) { c.Timeout = durationpb.New(24*time.Hour + time.Second) }},
+		{"wrong registered client identity", func(c *ModelConnection) { c.ClientDnsName = "ani-modeldev.ani.internal" }},
+		{"borrowed audit actor", func(c *ModelConnection) { c.Actor = "governance:user:42" }},
+		{"missing base storage authority", func(c *ModelConnection) { c.BaseModelStorageScope = nil }},
+		{"unsafe base prefix", func(c *ModelConnection) { c.BaseModelStorageScope.ApprovedPrefix = "../models" }},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -50,6 +54,7 @@ func TestConfiguredModelConnectionRequiresExplicitTrustedMaterials(t *testing.T)
 	config := validConfig()
 	config.Command = commandConfiguration()
 	config.Command.Model = modelConnectionConfiguration()
+	config.Command.Model.Timeout = durationpb.New(time.Hour)
 	if err := config.Validate(); err != nil {
 		t.Fatalf("complete Model connection references rejected: %v", err)
 	}
@@ -70,14 +75,15 @@ func TestAbsentModelConnectionKeepsCommandValid(t *testing.T) {
 
 func modelConnectionConfiguration() *ModelConnection {
 	return &ModelConnection{
-		Endpoint:        "ani-model-grpc.ani-system.svc.cluster.local:19090",
-		CaFile:          "/run/secrets/modeldev/model/ca.crt",
-		ClientDnsName:   "ani-modeldev.ani.internal",
-		CertificateFile: "/run/secrets/modeldev/model/tls.crt",
-		PrivateKeyFile:  "/run/secrets/modeldev/model/tls.key",
-		ServerName:      "ani-model.ani.internal",
-		Actor:           "modeldev:service",
-		Timeout:         durationpb.New(30 * time.Second),
+		Endpoint:              "ani-model-grpc.ani-system.svc.cluster.local:19090",
+		CaFile:                "/run/secrets/modeldev/model/ca.crt",
+		ClientDnsName:         "ani-modeldev-service",
+		CertificateFile:       "/run/secrets/modeldev/model/tls.crt",
+		PrivateKeyFile:        "/run/secrets/modeldev/model/tls.key",
+		ServerName:            "ani-model.ani.internal",
+		Actor:                 "modeldev:service",
+		Timeout:               durationpb.New(30 * time.Second),
+		BaseModelStorageScope: &BaseModelStorageScope{ConnectionId: "model-store-v1", Bucket: "ani-models", ApprovedPrefix: "tenant-models", CredentialReference: "model-base-read"},
 	}
 }
 

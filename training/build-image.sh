@@ -13,7 +13,7 @@ run_dir=$3
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 source_root=$(git -C "$script_dir" rev-parse --show-toplevel)
 [[ $(git -C "$source_root" rev-parse HEAD) == "$source_sha" ]]
-git -C "$source_root" diff --exit-code HEAD -- training/
+git -C "$source_root" diff --exit-code HEAD -- training/ contract/cpup01/implementations.json
 umask 077
 mkdir -- "$run_dir"
 run_dir=$(realpath -e -- "$run_dir")
@@ -23,7 +23,7 @@ printf '%s\n' "$source_sha" > "$run_dir/source.sha"
 date -u +%FT%TZ > "$run_dir/started-at.txt"
 podman --version > "$run_dir/podman-version.txt"
 mkdir -- "$run_dir/context"
-git -C "$source_root" archive --format=tar "$source_sha" training/ > "$run_dir/source.tar"
+git -C "$source_root" archive --format=tar "$source_sha" training/ contract/cpup01/implementations.json > "$run_dir/source.tar"
 tar -xf "$run_dir/source.tar" -C "$run_dir/context"
 mkdir -- "$run_dir/context/wheelhouse"
 wheel_count=0

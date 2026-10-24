@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	submissionsql "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission/sqlc"
 )
@@ -229,7 +230,10 @@ func dispatchFromRow(row submissionsql.ModeldevPipelineDispatch, original submis
 		Actor: original.Actor, IntentHash: original.IntentHash, SpecHash: original.SpecHash, AcceptedAt: original.AcceptedAt.Time.UTC(),
 	}
 	var storedPlan biz.PipelineDispatchPlan
-	if json.Unmarshal(original.IntentCanonical, &admission.Intent) != nil || json.Unmarshal(original.SnapshotCanonical, &admission.Snapshot) != nil || json.Unmarshal(row.PlanCanonical, &storedPlan) != nil {
+	var intentErr, snapshotErr error
+	admission.Intent, intentErr = cpup01.DecodeCanonicalIntent(original.IntentCanonical)
+	admission.Snapshot, snapshotErr = cpup01.DecodeCanonicalSnapshot(original.SnapshotCanonical)
+	if intentErr != nil || snapshotErr != nil || json.Unmarshal(row.PlanCanonical, &storedPlan) != nil {
 		return biz.PipelineDispatch{}, biz.ErrPersistence
 	}
 	intent, snapshot, err := admission.CanonicalPayloads()

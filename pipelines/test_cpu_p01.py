@@ -12,6 +12,47 @@ import yaml
 
 
 class PipelineAssembly(unittest.TestCase):
+    def test_finetuning_verify_mounts_the_original_adapter_and_training_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            configuration = {
+                "kind": "FINETUNING",
+                "component_image": "registry.example.test/modeldev-fine-step@sha256:" + "b" * 64,
+                "owner_config_map": "fine-step-owner-fixture",
+                "storage_class": "fine-workspace-fixture",
+                "workspace_size": "16Gi",
+                "workspace_access_mode": "ReadWriteOnce",
+                "admission_profile": "fine-v21-fixture",
+                "execution_timeout_max_seconds": 14400,
+            }
+            config, output = root / "compile.json", root / "pipeline.yaml"
+            config.write_text(json.dumps(configuration), encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(Path(__file__).with_name("cpu_p01.py")),
+                 "--config", str(config), "--output", str(output)],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            ir, platform = list(yaml.safe_load_all(output.read_text(encoding="utf-8")))
+            json_format.ParseDict(ir, pipeline_spec_pb2.PipelineSpec())
+            body_task, = [task for name, task in ir["root"]["dag"]["tasks"].items()
+                          if name != "finalize-close"]
+            tasks = ir["components"][body_task["componentRef"]["name"]]["dag"]["tasks"]
+            self.assertIn("export", tasks["verify"]["dependentTasks"])
+            for role, paths in {
+                "export": {"inputs", "training", "reports/train", "export", "reports/export"},
+                "verify": {"inputs", "training", "reports/train", "export", "reports/export", "reports/verify"},
+            }.items():
+                with self.subTest(role=role):
+                    executor = ir["components"][tasks[role]["componentRef"]["name"]]["executorLabel"]
+                    k8s = platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][executor]
+                    mounts = k8s["pvcMount"]
+                    self.assertEqual({mount["mountPath"]: mount["subPath"] for mount in mounts},
+                                     {"/workspace/" + path: path for path in paths})
+                    self.assertEqual(len(mounts), len(paths))
+                    self.assertEqual(len({mount["taskOutputParameter"]["producerTask"] for mount in mounts}), 1)
+                    self.assertEqual(int(k8s["activeDeadlineSeconds"]), 14400)
+
     def test_compiled_pipeline_preserves_execution_chain_and_failure_close(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -22,6 +63,7 @@ class PipelineAssembly(unittest.TestCase):
                 "workspace_size": "2Gi",
                 "workspace_access_mode": "ReadWriteOnce",
                 "admission_profile": "cpu-v1",
+                "execution_timeout_max_seconds": 7200,
             }
             config = root / "compile.json"
             config.write_text(json.dumps(configuration), encoding="utf-8")
@@ -35,6 +77,11 @@ class PipelineAssembly(unittest.TestCase):
             documents = list(yaml.safe_load_all(output.read_text(encoding="utf-8")))
             ir, platform = documents
             json_format.ParseDict(ir, pipeline_spec_pb2.PipelineSpec())
+            # Actual KFP 2.16 executor suffix from the failed cluster Run.
+            # KCN uses the generated Pod name in an annotation name (63 bytes).
+            generated_name = (ir["pipelineInfo"]["name"] +
+                              "-abcde-metadata-0-2-retry-system-container-impl-4294967295")
+            self.assertLessEqual(len(generated_name.encode("ascii")), 63)
             inputs = ir["root"]["inputDefinitions"]["parameters"]
             self.assertEqual(set(inputs), {"execution_id", "spec_hash"})
             self.assertTrue(all(p["parameterType"] == "STRING" and "defaultValue" not in p for p in inputs.values()))
@@ -79,6 +126,7 @@ class PipelineAssembly(unittest.TestCase):
                     self.assertNotIn("{{$.pipeline_task_uuid}}", container["args"])
                 self.assertNotIn("sh", container["command"])
                 k8s = platform["platforms"]["kubernetes"]["deploymentSpec"]["executors"][executor]
+                self.assertEqual(int(k8s["activeDeadlineSeconds"]), configuration["execution_timeout_max_seconds"])
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/admission-profile"], "cpu-v1")
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/step-role"], name)
                 self.assertEqual(bool(k8s.get("pvcMount")), name in {"prepare", "collect", "publish"})
@@ -93,6 +141,7 @@ class PipelineAssembly(unittest.TestCase):
                 "component_image": "registry.example.test/modeldev-step@sha256:" + "a" * 64,
                 "owner_config_map": "cpu-step-owner-fixture", "storage_class": "cpu-workspace-fixture",
                 "workspace_size": "2Gi", "workspace_access_mode": "ReadWriteOnce",
+                "execution_timeout_max_seconds": 7200,
             }
             for index, profile in enumerate((None, "", "UPPER", "../another", "a" * 64)):
                 with self.subTest(profile=profile):

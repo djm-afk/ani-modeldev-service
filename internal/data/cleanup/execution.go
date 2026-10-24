@@ -18,12 +18,20 @@ import (
 )
 
 type Adapter struct {
-	kube    dynamic.Interface
-	writers biz.OwnerWriterVerifier
+	kube     dynamic.Interface
+	writers  biz.OwnerWriterVerifier
+	training biz.TrainingRuntime
 }
 
 func New(kube dynamic.Interface, writers biz.OwnerWriterVerifier) *Adapter {
-	return &Adapter{kube: kube, writers: writers}
+	return &Adapter{kube: kube, writers: writers, training: trainer.New(kube)}
+}
+
+// WithTrainingRuntime preserves the configured GPU owner verification when
+// management independently refreshes the original terminal training graph.
+func (adapter *Adapter) WithTrainingRuntime(training biz.TrainingRuntime) *Adapter {
+	adapter.training = training
+	return adapter
 }
 
 // VerifyCleanupResolved reconciles an existing cleanup audit through reads only.
@@ -278,7 +286,10 @@ func (adapter *Adapter) VerifyCleanupWritersAbsent(ctx context.Context, record b
 	if record.Runtime.Training == nil {
 		return nil
 	}
-	observation, err := trainer.New(adapter.kube).ObserveTraining(ctx, *record.Runtime.Training, *record.Runtime.TrainingHandle, record.Runtime.Observation.Resources)
+	if adapter.training == nil {
+		return biz.ErrRuntimeNotReady
+	}
+	observation, err := adapter.training.ObserveTraining(ctx, *record.Runtime.Training, *record.Runtime.TrainingHandle, record.Runtime.Observation.Resources)
 	if err != nil {
 		return err
 	}

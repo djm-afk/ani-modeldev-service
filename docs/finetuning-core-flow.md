@@ -41,6 +41,18 @@ frontend and independent Inference acceptance remain separate NOT_RUN scopes.
 
 ## Reproduction and evidence
 
+New admissions may explicitly select artifacts only by omitting both
+`new_model_name` and `target_model_id`. This choice is frozen in the typed
+Intent/Snapshot and their hashes. Existing single-target admissions retain the
+complete Model delivery path; supplying both targets remains invalid. The
+artifacts-only path still reads and verifies the READY base, authenticates each
+original task, trains, exports, verifies and publishes the same bounded output.
+Its register task independently confirms the original publication and deadline,
+without creating a registration intent or calling Model prepare/copy/complete.
+Natural close requires that publication and the original writer-absence proof.
+Model registration stays absent in queries; ResumeModelRegistration returns
+FailedPrecondition because this accepted execution has no registration target.
+
 See the Chinese [manual acceptance guide](finetuning-manual-test.md) for the
 completed cases, operator steps and original evidence. The [next-work handoff](finetuning-next-handoff.md)
 describes the remaining Model, Gov/BFF and independent Inference integration.

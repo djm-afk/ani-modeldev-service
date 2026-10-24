@@ -3,6 +3,7 @@ syntax = "proto3";
 package ani.modeldev.v1;
 
 import "google/protobuf/timestamp.proto";
+import "ani/modeldev/v1/modeldev.proto";
 
 option go_package = "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1;modeldevv1";
 
@@ -13,7 +14,15 @@ service ModelDevOperationsService {
   rpc ReconcileExecution(ReconcileExecutionRequest) returns (ReconcileExecutionResponse);
   rpc PlanExecutionCleanup(PlanExecutionCleanupRequest) returns (PlanExecutionCleanupResponse);
   rpc ApplyExecutionCleanup(ApplyExecutionCleanupRequest) returns (ApplyExecutionCleanupResponse);
+  // Restore only the original model registration. Current tenant and exact
+  // method authority come from authenticated Governance metadata.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME Reuses the original execution business projection.
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE Reuses the original execution business projection.
+  rpc ResumeModelRegistration(ResumeModelRegistrationRequest) returns (GetExecutionResponse);
 }
+
+// Targets, bytes, idempotency keys and compute behavior cannot be overridden.
+message ResumeModelRegistrationRequest { string execution_id = 1; }
 
 message InspectExecutionRequest { string execution_id = 1; }
 message ReconcileExecutionRequest { string execution_id = 1; }

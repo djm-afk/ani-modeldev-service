@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"testing"
 	"time"
 
@@ -9,7 +10,10 @@ import (
 )
 
 func TestRejectedTrainingQueryUsesCommittedObservationTime(t *testing.T) {
-	accepted := time.Date(2026, 10, 5, 12, 0, 0, 0, time.UTC)
+	snapshot := conformance.SnapshotV1()
+	intent := conformance.IntentV1()
+	hash, _ := snapshot.Digest()
+	accepted := snapshot.Timing.AcceptedAt
 	rejected := accepted.Add(time.Minute)
 	closed := rejected.Add(time.Minute)
 	for _, test := range []struct {
@@ -22,7 +26,7 @@ func TestRejectedTrainingQueryUsesCommittedObservationTime(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			record := biz.QueryRecord{
-				Execution: biz.Execution{Admission: biz.Admission{AcceptedAt: accepted}, States: biz.ExecutionStates{
+				Execution: biz.Execution{Admission: biz.Admission{TenantID: snapshot.IdentityRef.TenantID, Actor: snapshot.IdentityRef.Actor, OperationID: snapshot.IdentityRef.OperationID, ExecutionID: snapshot.IdentityRef.ExecutionID, Intent: intent, IntentHash: snapshot.IdentityRef.IntentHash, Snapshot: snapshot, SpecHash: hash, AcceptedAt: accepted}, States: biz.ExecutionStates{
 					Compute: biz.ComputeStateFailed, Delivery: biz.DeliveryStatePending, Resource: biz.ResourceStateNotApplicable, Close: biz.CloseStateClosing,
 				}},
 				Runtime: biz.ExecutionRuntime{TrainingRejection: &biz.TrainingCreationRejection{ObservedAt: rejected}, ClosedAt: test.closedAt},
@@ -35,19 +39,5 @@ func TestRejectedTrainingQueryUsesCommittedObservationTime(t *testing.T) {
 				t.Fatalf("rejected query state=%v observed_at=%s, want FAILED at %s", view.States.ComputeState, view.ObservedAt.AsTime(), test.want)
 			}
 		})
-	}
-}
-
-func TestPresetDisplayNameDistinguishesPresetIdentity(t *testing.T) {
-	first := presetDisplayName("aaaaaaaa-1111-4111-8111-bbbbbbbbbbbb")
-	second := presetDisplayName("cccccccc-2222-4222-8222-dddddddddddd")
-	if first == second {
-		t.Fatalf("distinct preset IDs must not share a display name: %q", first)
-	}
-	if first != "General CPU MLP · aaaaaaaa" {
-		t.Fatalf("display name = %q, want stable preset-derived label", first)
-	}
-	if short := presetDisplayName("abcd"); short != "General CPU MLP" {
-		t.Fatalf("short ID display name = %q, want base label", short)
 	}
 }

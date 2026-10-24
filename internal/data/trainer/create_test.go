@@ -16,12 +16,16 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/traininglogs"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
+	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
+	"time"
 )
 
 func TestTrainingCompleteRejectionIsDistinctFromUnknownCreate(t *testing.T) {
@@ -95,7 +99,7 @@ func TestTrainingCreateFreezesCPUWorkspaceAndFindsUncertainResultWithoutRecreate
 		want string
 	}{
 		{[]string{"metadata", "name"}, f.plan.Name},
-		{[]string{"spec", "runtimeRef", "name"}, "cpu-runtime"},
+		{[]string{"spec", "runtimeRef", "name"}, f.plan.Snapshot.RuntimePlan.Name},
 		{[]string{"spec", "trainer", "image"}, f.plan.Snapshot.Program.ImageDigest},
 	} {
 		got, _, _ := unstructured.NestedString(job, field.path...)
@@ -112,11 +116,10 @@ func TestTrainingCreateFreezesCPUWorkspaceAndFindsUncertainResultWithoutRecreate
 	if strings.Contains(string(encoded), "gpu") || !strings.Contains(string(encoded), "cpu") || !strings.Contains(string(encoded), "memory") {
 		t.Fatalf("missing bounded CPU resources: %s", encoded)
 	}
-	overrides, _, _ := unstructured.NestedSlice(job, "spec", "podTemplateOverrides")
-	if len(overrides) != 1 {
-		t.Fatalf("expected one managed target override: %v", overrides)
+	if overrides, _, _ := unstructured.NestedSlice(job, "spec", "podTemplateOverrides"); len(overrides) != 0 {
+		t.Fatal("complete Runtime duplicated with mutable overrides")
 	}
-	override := overrides[0].(map[string]any)
+	override := runtimePodTemplate(f)
 	sa, _, _ := unstructured.NestedString(override, "spec", "serviceAccountName")
 	if sa != "cpu-training" {
 		t.Fatalf("training used wrong service account %q", sa)
@@ -126,7 +129,7 @@ func TestTrainingCreateFreezesCPUWorkspaceAndFindsUncertainResultWithoutRecreate
 		t.Fatalf("unexpected training containers: %v", containers)
 	}
 	mounts, _, _ := unstructured.NestedSlice(containers[0].(map[string]any), "volumeMounts")
-	if len(mounts) != 2 || mounts[0].(map[string]any)["name"] == mounts[1].(map[string]any)["name"] {
+	if len(mounts) != 3 || mounts[0].(map[string]any)["name"] == mounts[1].(map[string]any)["name"] {
 		t.Fatalf("Trainer strict CRD requires distinct names for input/output mounts: %v", mounts)
 	}
 	inputReadOnly, outputPrivate := false, false
@@ -139,7 +142,7 @@ func TestTrainingCreateFreezesCPUWorkspaceAndFindsUncertainResultWithoutRecreate
 			outputPrivate = true
 		}
 	}
-	if !inputReadOnly || !outputPrivate || len(mounts) != 2 {
+	if !inputReadOnly || !outputPrivate || len(mounts) != 3 {
 		t.Fatalf("workspace isolation lost: %v", mounts)
 	}
 }
@@ -157,8 +160,8 @@ func TestTrainingUsesFrozenNodeJobTargetThroughCreateFindStopAndObserve(t *testi
 		t.Fatal(err)
 	}
 	digest := sha256.Sum256(encoded)
-	f.plan.Snapshot.Release.Runtime.ContentSHA256 = hex.EncodeToString(digest[:])
-	f.plan.Snapshot.Release.Runtime.TargetJobs = []string{"node"}
+	f.plan.Snapshot.RuntimePlan.ExpectedSpecSHA256 = hex.EncodeToString(digest[:])
+	f.plan.Snapshot.RuntimePlan.TargetJobs = []string{"node"}
 	jobName := f.plan.Name + "-node-0"
 	if err := unstructured.SetNestedField(f.job, jobName, "metadata", "name"); err != nil {
 		t.Fatal(err)
@@ -174,15 +177,8 @@ func TestTrainingUsesFrozenNodeJobTargetThroughCreateFindStopAndObserve(t *testi
 	if err != nil {
 		t.Fatalf("create with the frozen node training Job: %v", err)
 	}
-	f.mu.Lock()
-	overrides, _, _ := unstructured.NestedSlice(f.train, "spec", "podTemplateOverrides")
-	f.mu.Unlock()
-	if len(overrides) != 1 {
-		t.Fatalf("expected one workspace override: %v", overrides)
-	}
-	targets, _, _ := unstructured.NestedSlice(overrides[0].(map[string]any), "targetJobs")
-	if len(targets) != 1 || targets[0].(map[string]any)["name"] != "node" {
-		t.Fatalf("workspace and identity must target the frozen node Job: %v", targets)
+	if overrides, _, _ := unstructured.NestedSlice(f.train, "spec", "podTemplateOverrides"); len(overrides) != 0 {
+		t.Fatal("unexpected mutable override")
 	}
 	found, err := a.FindTraining(ctx, f.plan)
 	if err != nil || found != handle {
@@ -210,13 +206,13 @@ func TestTrainingRejectsUnboundOrUnsafeRuntimeTargetsBeforeCreate(t *testing.T) 
 			f := newTrainingFixture(t)
 			switch mode {
 			case "target mismatch":
-				f.plan.Snapshot.Release.Runtime.TargetJobs = []string{"node"}
+				f.plan.Snapshot.RuntimePlan.TargetJobs = []string{"trainer"}
 			case "missing target":
-				f.plan.Snapshot.Release.Runtime.TargetJobs = nil
+				f.plan.Snapshot.RuntimePlan.TargetJobs = nil
 			case "multiple targets":
-				f.plan.Snapshot.Release.Runtime.TargetJobs = []string{"trainer", "node"}
+				f.plan.Snapshot.RuntimePlan.TargetJobs = []string{"trainer", "node"}
 			case "invalid target":
-				f.plan.Snapshot.Release.Runtime.TargetJobs = []string{"../trainer"}
+				f.plan.Snapshot.RuntimePlan.TargetJobs = []string{"../trainer"}
 			case "wrong training role", "multiple Jobs":
 				jobs, _, _ := unstructured.NestedSlice(f.runtime, "spec", "template", "spec", "replicatedJobs")
 				if mode == "wrong training role" {
@@ -235,9 +231,9 @@ func TestTrainingRejectsUnboundOrUnsafeRuntimeTargetsBeforeCreate(t *testing.T) 
 					t.Fatal(err)
 				}
 				digest := sha256.Sum256(encoded)
-				f.plan.Snapshot.Release.Runtime.ContentSHA256 = hex.EncodeToString(digest[:])
+				f.plan.Snapshot.RuntimePlan.ExpectedSpecSHA256 = hex.EncodeToString(digest[:])
 			case "digest mismatch":
-				f.plan.Snapshot.Release.Runtime.ContentSHA256 = strings.Repeat("0", 64)
+				f.plan.Snapshot.RuntimePlan.ExpectedSpecSHA256 = strings.Repeat("0", 64)
 			}
 			if _, err := f.adapter(t).CreateTraining(context.Background(), f.plan); !errors.Is(err, biz.ErrRuntimeConflict) {
 				t.Fatalf("unbound or unsafe target must fail closed: %v", err)
@@ -336,6 +332,78 @@ func TestTrainingFailureAndSuspendDoNotMistakeControllerAckForWriterAbsence(t *t
 	}
 }
 
+func TestBoundTrainingStopsAndObservesWithoutCurrentRuntimeOrPVC(t *testing.T) {
+	for _, mode := range []string{"runtime missing", "runtime drift", "pvc missing", "pvc replacement", "trainjob spec drift"} {
+		t.Run(mode, func(t *testing.T) {
+			f := newTrainingFixture(t)
+			a := f.adapter(t)
+			handle, err := a.CreateTraining(context.Background(), f.plan)
+			if err != nil {
+				t.Fatal(err)
+			}
+			f.mu.Lock()
+			switch mode {
+			case "runtime missing":
+				f.runtime = nil
+			case "runtime drift":
+				f.runtime["spec"] = map[string]any{}
+			case "pvc missing":
+				f.pvc = nil
+			case "pvc replacement":
+				_ = unstructured.SetNestedField(f.pvc, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", "metadata", "uid")
+			case "trainjob spec drift":
+				_ = unstructured.SetNestedField(f.train, "registry.test/drift:latest", "spec", "trainer", "image")
+			}
+			f.mu.Unlock()
+			if err := a.StopTraining(context.Background(), f.plan, handle); err != nil {
+				t.Fatalf("original computation must remain stoppable: %v", err)
+			}
+			observation, err := a.ObserveTraining(context.Background(), f.plan, handle, nil)
+			if err != nil || observation.WritersAbsent {
+				t.Fatalf("suspend alone must not prove writer exit: %+v, %v", observation, err)
+			}
+			f.setTerminal(t, 7)
+			observation, err = a.ObserveTraining(context.Background(), f.plan, handle, observation.Resources)
+			if err != nil || !observation.WritersAbsent || observation.Outcome != "FAILED" {
+				t.Fatalf("original failed writers must be observable: %+v, %v", observation, err)
+			}
+			if f.posts != 1 || f.patches != 1 || f.deletes != 0 {
+				t.Fatalf("stop recreated or deleted resources: posts=%d patches=%d deletes=%d", f.posts, f.patches, f.deletes)
+			}
+		})
+	}
+}
+
+func TestBoundTrainingStopRejectsReplacementUIDOrScope(t *testing.T) {
+	for _, mode := range []string{"trainjob uid", "namespace uid", "tenant", "execution", "spec hash", "request hash", "workspace"} {
+		t.Run(mode, func(t *testing.T) {
+			f := newTrainingFixture(t)
+			a := f.adapter(t)
+			handle, err := a.CreateTraining(context.Background(), f.plan)
+			if err != nil {
+				t.Fatal(err)
+			}
+			f.mu.Lock()
+			switch mode {
+			case "trainjob uid":
+				_ = unstructured.SetNestedField(f.train, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", "metadata", "uid")
+			case "namespace uid":
+				_ = unstructured.SetNestedField(f.namespace, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", "metadata", "uid")
+			default:
+				key := map[string]string{"tenant": "tenant-id", "execution": "execution-id", "spec hash": "execution-spec-sha256", "request hash": "training-request-sha256", "workspace": "workspace-uid"}[mode]
+				_ = unstructured.SetNestedField(f.train, "substituted", "metadata", "annotations", "modeldev.ani.io/"+key)
+			}
+			f.mu.Unlock()
+			if err := a.StopTraining(context.Background(), f.plan, handle); !errors.Is(err, biz.ErrRuntimeConflict) {
+				t.Fatalf("replacement or foreign scope must fail: %v", err)
+			}
+			if f.patches != 0 {
+				t.Fatal("patched a replacement or foreign object")
+			}
+		})
+	}
+}
+
 func TestTrainingObservationPreservesConfirmedPodExitAfterGarbageCollection(t *testing.T) {
 	f := newTrainingFixture(t)
 	a := f.adapter(t)
@@ -394,17 +462,21 @@ const (
 )
 
 type trainingFixture struct {
-	mu                                                       sync.Mutex
-	plan                                                     biz.TrainingPlan
-	namespace, pvc, runtime, train, jobset, job, pod, oldPod map[string]any
-	posts, patches, deletes                                  int
-	podPatches                                               int
-	podPatchStatusCode                                       int
-	beforePodPatch                                           func()
-	loseCreateResponse                                       bool
-	createStatusCode                                         int
-	createStatusBody                                         string
-	createStatusTruncated                                    bool
+	mu                                                                 sync.Mutex
+	plan                                                               biz.TrainingPlan
+	namespace, pvc, runtime, train, jobset, job, pod, oldPod, podGroup map[string]any
+	posts, patches, deletes                                            int
+	podPatches                                                         int
+	podPatchStatusCode                                                 int
+	logReadStatusCode                                                  int
+	logReadBody                                                        []byte
+	logReads                                                           int
+	beforePodPatch                                                     func()
+	loseCreateResponse                                                 bool
+	createStatusCode                                                   int
+	createStatusBody                                                   string
+	createStatusTruncated                                              bool
+	podListResourceVersion                                             string
 }
 
 func newTrainingFixture(t *testing.T) *trainingFixture {
@@ -416,13 +488,25 @@ func newTrainingFixture(t *testing.T) *trainingFixture {
 	f.jobset = trainingObject(t, `{"apiVersion":"jobset.x-k8s.io/v1alpha2","kind":"JobSet","metadata":{"namespace":"cpu-execution","name":"md-22222222-2222-4222-8222-222222222222","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","generation":1,"ownerReferences":[{"apiVersion":"trainer.kubeflow.org/v1alpha1","kind":"TrainJob","name":"md-22222222-2222-4222-8222-222222222222","uid":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","controller":true}]},"spec":{"suspend":false},"status":{"conditions":[]}}`)
 	f.job = trainingObject(t, `{"apiVersion":"batch/v1","kind":"Job","metadata":{"namespace":"cpu-execution","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","ownerReferences":[{"apiVersion":"jobset.x-k8s.io/v1alpha2","kind":"JobSet","name":"md-22222222-2222-4222-8222-222222222222","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","controller":true}]},"spec":{"backoffLimit":0,"parallelism":1,"completions":1},"status":{"active":1,"conditions":[]}}`)
 	f.pod = trainingObject(t, `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"cpu-execution","name":"training-pod","uid":"ffffffff-ffff-4fff-8fff-ffffffffffff","ownerReferences":[{"apiVersion":"batch/v1","kind":"Job","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","controller":true}]},"spec":{"serviceAccountName":"cpu-training","restartPolicy":"Never","automountServiceAccountToken":false,"containers":[{"name":"node"}]},"status":{"phase":"Running","containerStatuses":[{"name":"node","state":{"running":{"startedAt":"2026-10-03T00:00:00Z"}}}]}}`)
-	runtimePodTemplate(f)["metadata"] = map[string]any{"finalizers": []any{exitEvidenceFinalizer}}
-	runtimeSpec, _ := json.Marshal(f.runtime["spec"])
-	digest := sha256.Sum256(runtimeSpec)
-	f.plan = biz.TrainingPlan{TenantID: "11111111-1111-4111-8111-111111111111", OperationID: "33333333-3333-4333-8333-333333333333", ExecutionID: "22222222-2222-4222-8222-222222222222", SpecHash: strings.Repeat("a", 64), Name: "md-22222222-2222-4222-8222-222222222222", RequestSHA256: strings.Repeat("b", 64),
-		Snapshot:  cpup01.Snapshot{Release: cpup01.ReleaseSnapshot{Runtime: cpup01.RuntimeRef{Name: "cpu-runtime", Kind: "ClusterTrainingRuntime", APIGroup: "trainer.kubeflow.org", ContentSHA256: hex.EncodeToString(digest[:]), TargetJobs: []string{"trainer"}}}, Program: cpup01.ProgramRef{ImageDigest: "registry.test/cpu@sha256:" + strings.Repeat("a", 64), Command: []string{"python", "/opt/cpu/train.py"}, ResolvedArgs: []string{"--data", "/inputs/data.csv", "--output", "/outputs"}}, Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: 1000, LimitMillicpu: 2000, RequestMemoryBytes: 1073741824, LimitMemoryBytes: 2147483648}, Environment: cpup01.EnvironmentBindingSnapshot{NamespaceName: "cpu-execution", NamespaceUID: trainingNamespaceUID, Identities: cpup01.RuntimeIdentityRefs{TrainerServiceAccount: "cpu-training"}}, Workspace: cpup01.WorkspaceContract{Mode: "EXECUTION_PVC", StorageClass: "task-workspace", CapacityBytes: 2147483648, InputSubpath: "inputs", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication"}},
-		Workspace: biz.WorkspaceBinding{Mode: "EXECUTION_PVC", NamespaceName: "cpu-execution", NamespaceUID: trainingNamespaceUID, PVCName: "cpu-workspace", PVCUID: workspaceUID, InputSubpath: "inputs", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication"},
+
+	seed := conformance.SnapshotV1()
+	seed.Environment.NamespaceName, seed.Environment.NamespaceUID = "cpu-execution", trainingNamespaceUID
+	seed.Environment.Identities.TrainerServiceAccount = "cpu-training"
+	accepted := time.Now().UTC().Truncate(time.Microsecond)
+	seed.DeadlineAt = accepted.Add(time.Hour)
+	admission := admissionfixture.Bind(t, biz.Admission{TenantID: "11111111-1111-4111-8111-111111111111", OperationID: "33333333-3333-4333-8333-333333333333", ExecutionID: "22222222-2222-4222-8222-222222222222", Actor: "governance:user:trainer-fixture", Intent: conformance.IntentV1(), Snapshot: seed, AcceptedAt: accepted})
+	workspace := biz.WorkspaceBinding{Mode: seed.Workspace.Mode, NamespaceName: "cpu-execution", NamespaceUID: trainingNamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: workspaceUID, InputSubpath: seed.Workspace.InputSubpath, TrainingSubpath: seed.Workspace.TrainingSubpath, ReportsSubpath: seed.Workspace.ReportsSubpath, PublicationSubpath: seed.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	_ = unstructured.SetNestedField(f.pvc, workspace.PVCName, "metadata", "name")
+	plan, err := biz.FreezeTrainingPlan(biz.Execution{Admission: admission}, workspace, accepted)
+	if err != nil {
+		t.Fatal(err)
 	}
+	f.plan, err = biz.BindTrainingRuntime(plan, biz.RuntimeTemplateBinding{NamespaceUID: trainingNamespaceUID, Name: admission.Snapshot.RuntimePlan.Name, UID: "99999999-9999-4999-8999-999999999999", ObservedSpecSHA256: admission.Snapshot.RuntimePlan.ExpectedSpecSHA256})
+	if err != nil {
+		t.Fatal(err)
+	}
+	installFixtureRuntime(t, f)
+
 	return f
 }
 
@@ -464,11 +548,23 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 		path := r.URL.Path
 		var response any
 		switch {
+		case r.Method == http.MethodGet && strings.HasSuffix(path, "/log"):
+			f.logReads++
+			if f.logReadStatusCode != 0 {
+				w.WriteHeader(f.logReadStatusCode)
+				return
+			}
+			if f.logReadBody != nil {
+				_, _ = w.Write(f.logReadBody)
+				return
+			}
+			_, _ = w.Write([]byte(time.Now().UTC().Format(time.RFC3339Nano) + " retained original worker output\n"))
+			return
 		case path == "/api/v1/namespaces/cpu-execution":
 			response = f.namespace
-		case path == "/api/v1/namespaces/cpu-execution/persistentvolumeclaims/cpu-workspace":
+		case path == "/api/v1/namespaces/cpu-execution/persistentvolumeclaims/"+f.plan.Workspace.PVCName:
 			response = f.pvc
-		case path == "/apis/trainer.kubeflow.org/v1alpha1/clustertrainingruntimes/cpu-runtime":
+		case path == "/apis/trainer.kubeflow.org/v1alpha1/namespaces/cpu-execution/trainingruntimes/"+f.plan.Snapshot.RuntimePlan.Name:
 			response = f.runtime
 		case path == "/apis/trainer.kubeflow.org/v1alpha1/namespaces/cpu-execution/trainjobs" && r.Method == http.MethodPost:
 			f.posts++
@@ -529,6 +625,8 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 			response = f.train
 		case path == "/apis/jobset.x-k8s.io/v1alpha2/namespaces/cpu-execution/jobsets/"+f.plan.Name:
 			response = f.jobset
+		case path == "/apis/scheduling.volcano.sh/v1beta1/namespaces/cpu-execution/podgroups/"+f.plan.Name:
+			response = f.podGroup
 		case path == "/apis/batch/v1/namespaces/cpu-execution/jobs":
 			response = map[string]any{"apiVersion": "batch/v1", "kind": "JobList", "metadata": map[string]any{}, "items": []any{f.job}}
 		case path == "/api/v1/namespaces/cpu-execution/pods":
@@ -536,7 +634,7 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 			if f.pod != nil {
 				items = append(items, f.pod)
 			}
-			response = map[string]any{"apiVersion": "v1", "kind": "PodList", "metadata": map[string]any{}, "items": items}
+			response = map[string]any{"apiVersion": "v1", "kind": "PodList", "metadata": map[string]any{"resourceVersion": f.podListResourceVersion}, "items": items}
 		case path == "/apis/batch/v1/namespaces/cpu-execution/jobs/"+f.job["metadata"].(map[string]any)["name"].(string):
 			response = f.job
 		case path == "/api/v1/namespaces/cpu-execution/pods/training-pod":
@@ -600,11 +698,45 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 		_ = json.NewEncoder(w).Encode(response)
 	}))
 	t.Cleanup(server.Close)
-	client, err := dynamic.NewForConfig(&rest.Config{Host: server.URL, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})}})
+	config := &rest.Config{Host: server.URL, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})}}
+	client, err := dynamic.NewForConfig(config)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return trainer.New(client)
+	core, err := coreclient.NewForConfig(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adapter := trainer.New(client)
+	if method := reflect.ValueOf(adapter).MethodByName("WithTrainingLogs"); method.IsValid() {
+		method.Call([]reflect.Value{reflect.ValueOf(traininglogs.New(core))})
+	}
+	return adapter
 }
 
 func reflectNilMap(value any) bool { object, ok := value.(map[string]any); return ok && object == nil }
+
+func installFixtureRuntime(t *testing.T, f *trainingFixture) {
+	t.Helper()
+	var spec map[string]any
+	if err := json.Unmarshal(f.plan.Snapshot.RuntimePlan.ExpectedSpec, &spec); err != nil {
+		t.Fatal(err)
+	}
+	f.runtime = map[string]any{"apiVersion": "trainer.kubeflow.org/v1alpha1", "kind": "TrainingRuntime", "metadata": map[string]any{"namespace": f.plan.Workspace.NamespaceName, "name": f.plan.Snapshot.RuntimePlan.Name, "uid": f.plan.RuntimeBinding.UID, "annotations": map[string]any{"modeldev.ani.io/tenant-id": f.plan.TenantID, "modeldev.ani.io/execution-id": f.plan.ExecutionID, "modeldev.ani.io/create-operation-id": f.plan.OperationID, "modeldev.ani.io/execution-spec-sha256": f.plan.SpecHash, "modeldev.ani.io/runtime-spec-sha256": f.plan.Snapshot.RuntimePlan.ExpectedSpecSHA256, "modeldev.ani.io/workspace-uid": f.plan.Workspace.PVCUID}}, "spec": spec}
+	jobs, _, _ := unstructured.NestedSlice(spec, "template", "spec", "replicatedJobs")
+	podSpec, _, _ := unstructured.NestedMap(jobs[0].(map[string]any), "template", "spec", "template", "spec")
+	f.pod["spec"] = podSpec
+	vector, err := biz.TrainingResourceVector(f.plan.Snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	minimum := map[string]any{}
+	for key, value := range vector {
+		minimum[key] = value
+	}
+	queue := "default"
+	if f.plan.Snapshot.GPU != nil {
+		queue = f.plan.Snapshot.GPU.Execution.QueueName
+	}
+	f.podGroup = map[string]any{"apiVersion": "scheduling.volcano.sh/v1beta1", "kind": "PodGroup", "metadata": map[string]any{"name": f.plan.Name, "namespace": f.plan.Workspace.NamespaceName, "uid": "podgroup-original", "ownerReferences": []any{map[string]any{"apiVersion": "trainer.kubeflow.org/v1alpha1", "kind": "TrainJob", "name": f.plan.Name, "uid": trainingUID, "controller": true}}}, "spec": map[string]any{"minMember": int64(1), "minResources": minimum, "queue": queue}}
+}

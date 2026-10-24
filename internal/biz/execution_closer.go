@@ -190,13 +190,38 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 	if state.CloseReason != "NATURAL_TERMINAL" {
 		runErr = errors.Join(runErr, closer.runs.StopManagedRun(ctx, plan, owner))
 	}
+	if fact := state.RuntimeTemplate; fact != nil && fact.Binding == nil && len(fact.Attempts) > 0 && fact.Attempts[len(fact.Attempts)-1].NotSentAt == nil {
+		if state.Workspace == nil || state.TrainingWindow == nil {
+			return ManagedRuntimeResult{}, ErrRuntimeConflict
+		}
+		original, err := FreezeTrainingPlan(admitted, *state.Workspace, state.TrainingWindow.AdmittedAt)
+		if err != nil {
+			return ManagedRuntimeResult{}, err
+		}
+		binding, findErr := runtime.trainer.FindRuntime(ctx, original)
+		if findErr != nil {
+			if _, err := runtime.repository.RecordRuntimeReview(ctx, owner); err != nil {
+				return ManagedRuntimeResult{}, errors.Join(runErr, findErr, err)
+			}
+			return ManagedRuntimeResult{}, errors.Join(runErr, ErrTrainingUncertain, findErr)
+		}
+		state, err = runtime.repository.RecordRuntimeBinding(ctx, owner, binding)
+		if err != nil {
+			return ManagedRuntimeResult{}, errors.Join(runErr, err)
+		}
+		result.Runtime = state
+	}
 	if state.TrainingRejection != nil {
 		if err := runtime.verifyRejectedTrainingAbsent(ctx, state); err != nil {
 			return ManagedRuntimeResult{}, closer.review(ctx, tenant, execution, "TRAINJOB_CREATE_UNRESOLVED", errors.Join(runErr, err))
 		}
 	} else if state.Training != nil {
 		if state.TrainingHandle == nil {
-			handle, findErr := runtime.trainer.FindTraining(ctx, *state.Training)
+			find := runtime.trainer.FindTraining
+			if recovery, ok := runtime.trainer.(TrainingCloseRecovery); ok {
+				find = recovery.FindTrainingForClose
+			}
+			handle, findErr := find(ctx, *state.Training)
 			if findErr != nil {
 				return ManagedRuntimeResult{}, closer.review(ctx, tenant, execution, "TRAINJOB_CREATE_UNRESOLVED", errors.Join(runErr, findErr))
 			}
@@ -206,6 +231,13 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 			}
 		}
 		if state.Observation == nil || !state.Observation.WritersAbsent {
+			// Suspend may make kubelet container logs disappear before the next
+			// terminal observation. Offer a bounded live tail for durable owner
+			// storage first; capture failure must not prevent a legal Stop.
+			result.Runtime = state
+			if observed, observeErr := runtime.observe(ctx, result); observeErr == nil {
+				state = observed
+			}
 			if err = runtime.trainer.StopTraining(ctx, *state.Training, *state.TrainingHandle); err != nil {
 				return ManagedRuntimeResult{}, errors.Join(runErr, err)
 			}
@@ -213,6 +245,9 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 		result.Runtime = state
 		state, err = runtime.observe(ctx, result)
 		if err != nil {
+			if errors.Is(err, ErrTrainingLogsUnavailable) {
+				return ManagedRuntimeResult{}, closer.review(ctx, tenant, execution, "TRAINING_LOGS_UNAVAILABLE", errors.Join(runErr, err))
+			}
 			return ManagedRuntimeResult{}, errors.Join(runErr, err)
 		}
 		if state.Observation == nil || !state.Observation.WritersAbsent {

@@ -41,23 +41,45 @@ class FrozenConfigurationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             MODULE.load_configuration(json.dumps(changed))
 
+    def test_all_open_fields_roundtrip_without_combination_whitelist(self):
+        expected = MODULE.projection(
+            "0.00015",
+            30,
+            per_device_train_batch_size=2,
+            gradient_accumulation_steps=3,
+            cutoff_len=96,
+            lora_rank=4,
+            lora_alpha=7,
+            lora_dropout="0.125",
+            seed=7,
+        )
+        self.assertEqual(
+            MODULE.load_configuration(MODULE.canonical(expected)), expected
+        )
+        self.assertEqual(expected["managed_settings"]["data_seed"], 7)
+        self.assertEqual(expected["managed_settings"]["lora_alpha"], 7)
+        gpu = MODULE.projection(device="cuda")
+        self.assertEqual(MODULE.load_configuration(MODULE.canonical(gpu)), gpu)
+
     def test_decimal_integer_and_codec_boundaries(self):
-        for rate, steps in (
-            ("1e-4", "20"),
-            ("0.00010", "20"),
-            ("0", "20"),
-            ("1.01", "20"),
-            ("0.0001", "0"),
-            ("0.0001", "201"),
-            ("0.0001", "20.0"),
-            ("0.0001", 20),
+        for name, raw in (
+            ("learning_rate", "1e-4"),
+            ("learning_rate", "0.00010"),
+            ("learning_rate", "0"),
+            ("learning_rate", "9" * 33),
+            ("max_steps", "0"),
+            ("max_steps", "9223372036854775808"),
+            ("max_steps", "20.0"),
+            ("max_steps", 20),
+            ("seed", "4294967296"),
+            ("lora_dropout", "1"),
+            ("lora_dropout", "0.99999999999999999999999999999"),
         ):
-            changed = MODULE.projection("0.0001", 20)
-            changed["parameters"][0]["value"] = rate
-            changed["parameters"][1]["value"] = steps
-            with self.assertRaises(ValueError):
+            changed = MODULE.projection()
+            next(p for p in changed["parameters"] if p["name"] == name)["value"] = raw
+            with self.subTest(name=name, raw=raw), self.assertRaises(ValueError):
                 MODULE.load_configuration(json.dumps(changed))
-        for rate, steps in (("0.00000001", 1), ("1", 200)):
+        for rate, steps in (("0.00000001", 1), ("1000", 201)):
             expected = MODULE.projection(rate, steps)
             self.assertEqual(
                 MODULE.load_configuration(MODULE.canonical(expected)), expected

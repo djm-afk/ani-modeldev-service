@@ -19,8 +19,6 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ModelDevManagementService_ImportRelease_FullMethodName           = "/ani.modeldev.v1.ModelDevManagementService/ImportRelease"
-	ModelDevManagementService_ValidateRelease_FullMethodName         = "/ani.modeldev.v1.ModelDevManagementService/ValidateRelease"
 	ModelDevManagementService_ImportCSV_FullMethodName               = "/ani.modeldev.v1.ModelDevManagementService/ImportCSV"
 	ModelDevManagementService_ImportFinetuningDataset_FullMethodName = "/ani.modeldev.v1.ModelDevManagementService/ImportFinetuningDataset"
 )
@@ -32,8 +30,6 @@ const (
 // Governance checks the current management permission and delegates this exact
 // method over its authenticated mTLS connection. No user identity is in a body.
 type ModelDevManagementServiceClient interface {
-	ImportRelease(ctx context.Context, in *ImportReleaseRequest, opts ...grpc.CallOption) (*ImportReleaseResponse, error)
-	ValidateRelease(ctx context.Context, in *ValidateReleaseRequest, opts ...grpc.CallOption) (*ValidateReleaseResponse, error)
 	ImportCSV(ctx context.Context, in *ImportCSVRequest, opts ...grpc.CallOption) (*ImportCSVResponse, error)
 	ImportFinetuningDataset(ctx context.Context, in *ImportFinetuningDatasetRequest, opts ...grpc.CallOption) (*ImportFinetuningDatasetResponse, error)
 }
@@ -44,26 +40,6 @@ type modelDevManagementServiceClient struct {
 
 func NewModelDevManagementServiceClient(cc grpc.ClientConnInterface) ModelDevManagementServiceClient {
 	return &modelDevManagementServiceClient{cc}
-}
-
-func (c *modelDevManagementServiceClient) ImportRelease(ctx context.Context, in *ImportReleaseRequest, opts ...grpc.CallOption) (*ImportReleaseResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ImportReleaseResponse)
-	err := c.cc.Invoke(ctx, ModelDevManagementService_ImportRelease_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *modelDevManagementServiceClient) ValidateRelease(ctx context.Context, in *ValidateReleaseRequest, opts ...grpc.CallOption) (*ValidateReleaseResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ValidateReleaseResponse)
-	err := c.cc.Invoke(ctx, ModelDevManagementService_ValidateRelease_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *modelDevManagementServiceClient) ImportCSV(ctx context.Context, in *ImportCSVRequest, opts ...grpc.CallOption) (*ImportCSVResponse, error) {
@@ -93,8 +69,6 @@ func (c *modelDevManagementServiceClient) ImportFinetuningDataset(ctx context.Co
 // Governance checks the current management permission and delegates this exact
 // method over its authenticated mTLS connection. No user identity is in a body.
 type ModelDevManagementServiceServer interface {
-	ImportRelease(context.Context, *ImportReleaseRequest) (*ImportReleaseResponse, error)
-	ValidateRelease(context.Context, *ValidateReleaseRequest) (*ValidateReleaseResponse, error)
 	ImportCSV(context.Context, *ImportCSVRequest) (*ImportCSVResponse, error)
 	ImportFinetuningDataset(context.Context, *ImportFinetuningDatasetRequest) (*ImportFinetuningDatasetResponse, error)
 	mustEmbedUnimplementedModelDevManagementServiceServer()
@@ -107,12 +81,6 @@ type ModelDevManagementServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedModelDevManagementServiceServer struct{}
 
-func (UnimplementedModelDevManagementServiceServer) ImportRelease(context.Context, *ImportReleaseRequest) (*ImportReleaseResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ImportRelease not implemented")
-}
-func (UnimplementedModelDevManagementServiceServer) ValidateRelease(context.Context, *ValidateReleaseRequest) (*ValidateReleaseResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ValidateRelease not implemented")
-}
 func (UnimplementedModelDevManagementServiceServer) ImportCSV(context.Context, *ImportCSVRequest) (*ImportCSVResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ImportCSV not implemented")
 }
@@ -139,42 +107,6 @@ func RegisterModelDevManagementServiceServer(s grpc.ServiceRegistrar, srv ModelD
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&ModelDevManagementService_ServiceDesc, srv)
-}
-
-func _ModelDevManagementService_ImportRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ImportReleaseRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ModelDevManagementServiceServer).ImportRelease(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ModelDevManagementService_ImportRelease_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ModelDevManagementServiceServer).ImportRelease(ctx, req.(*ImportReleaseRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ModelDevManagementService_ValidateRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ValidateReleaseRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ModelDevManagementServiceServer).ValidateRelease(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ModelDevManagementService_ValidateRelease_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ModelDevManagementServiceServer).ValidateRelease(ctx, req.(*ValidateReleaseRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _ModelDevManagementService_ImportCSV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -220,14 +152,6 @@ var ModelDevManagementService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "ani.modeldev.v1.ModelDevManagementService",
 	HandlerType: (*ModelDevManagementServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "ImportRelease",
-			Handler:    _ModelDevManagementService_ImportRelease_Handler,
-		},
-		{
-			MethodName: "ValidateRelease",
-			Handler:    _ModelDevManagementService_ValidateRelease_Handler,
-		},
 		{
 			MethodName: "ImportCSV",
 			Handler:    _ModelDevManagementService_ImportCSV_Handler,

@@ -14,7 +14,7 @@ import (
 
 func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, handle biz.TrainingHandle, history []biz.RuntimeResource) (biz.TrainingRuntimeObservation, error) {
 	observation := biz.TrainingRuntimeObservation{Handle: handle, Outcome: "UNKNOWN", ObservedAt: time.Now().UTC()}
-	train, current, err := a.currentTraining(ctx, plan)
+	train, current, err := a.readBoundTrainingForClose(ctx, plan, handle)
 	if err != nil {
 		return observation, err
 	}
@@ -77,6 +77,22 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 	setTerminal, setSuccess, setFailure := terminalConditions(jobset, "Completed")
 	resources[string(jobset.GetUID())] = resourceFact(jobset, handle.TrainJobUID, setTerminal, nil)
 	objects[string(jobset.GetUID())] = jobset
+	group, groupErr := a.client.Resource(schema.GroupVersionResource{Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}).Namespace(namespace).Get(ctx, plan.Name, metav1.GetOptions{})
+	if groupErr != nil && !apierrors.IsNotFound(groupErr) {
+		return observation, biz.ErrTrainingUnavailable
+	}
+	// A missing group while a controller is starting is unresolved. Once a
+	// worker exists, it must have the exact original group's complete vector.
+	groupMatches := groupErr == nil && validatePodGroup(plan, handle, group) == nil
+	if groupErr == nil {
+		if group == nil || group.GetUID() == "" || !controllerIs(group, "trainer.kubeflow.org/v1alpha1", "TrainJob", plan.Name, handle.TrainJobUID) {
+			return observation, biz.ErrRuntimeConflict
+		}
+		if !groupMatches {
+			observation.SpecificationMismatch = true
+		}
+		resources[string(group.GetUID())] = resourceFact(group, handle.TrainJobUID, true, nil)
+	}
 	jobs, err := a.client.Resource(schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}).Namespace(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil || jobs.GetContinue() != "" {
 		return observation, biz.ErrTrainingUnavailable
@@ -120,7 +136,21 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 		if pod.GetAPIVersion() != "v1" || pod.GetKind() != "Pod" || pod.GetNamespace() != namespace || pod.GetUID() == "" {
 			return observation, biz.ErrRuntimeConflict
 		}
+		vector, vectorErr := biz.TrainingResourceVector(plan.Snapshot)
+		if vectorErr != nil || ValidatePodResources(vector, pod) != nil || validateEffectiveTrainingPod(plan, pod) != nil || !groupMatches {
+			observation.SpecificationMismatch = true
+		}
 		terminal, code := podTermination(pod)
+		// Owner assertions identify live GPU usage. They must not gate observing
+		// an original stopped/deleting worker or retaining its actual exit/logs.
+		if !observation.SpecificationMismatch && !terminal && pod.GetDeletionTimestamp() == nil && plan.Snapshot.ComputeOrigin.DeviceMode == "gpu" {
+			if a.ownerSigner == nil {
+				return observation, biz.ErrRuntimeNotReady
+			}
+			if err := a.ownerSigner.SignPod(ctx, plan, handle, pod); err != nil {
+				return observation, err
+			}
+		}
 		resources[string(pod.GetUID())] = resourceFact(pod, ownerUID, terminal, code)
 		objects[string(pod.GetUID())] = pod
 		podCount++
@@ -175,6 +205,11 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 			allPodsTerminal = allPodsTerminal && terminal
 			allZero = allZero && terminal && code != nil && *code == 0
 			anyNonzero = anyNonzero || (terminal && code != nil && *code != 0)
+		} else if prior.Kind == "PodGroup" {
+			if !controllerIs(actual, "trainer.kubeflow.org/v1alpha1", "TrainJob", plan.Name, handle.TrainJobUID) {
+				return observation, biz.ErrRuntimeConflict
+			}
+			resources[prior.UID] = resourceFact(actual, handle.TrainJobUID, true, nil)
 		} else {
 			successType := "Complete"
 			if prior.Kind == "JobSet" {
@@ -189,17 +224,27 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 	trainSuspended, _, _ := unstructured.NestedBool(train.Object, "spec", "suspend")
 	setSuspended, _, _ := unstructured.NestedBool(jobset.Object, "spec", "suspend")
 	creationStopped := (trainTerminal && setTerminal) || (trainSuspended && setSuspended && jobsStopped)
+	if err := a.retainPodLogs(ctx, plan, handle, resources, objects, history); err != nil {
+		return observation, err
+	}
 	exitPending, err := a.releaseRecordedPodExits(ctx, plan, handle, resources, objects, history)
 	if err != nil {
 		return observation, err
 	}
-	observation.WritersAbsent = creationStopped && jobsStopped && podCount > 0 && allPodsTerminal && !exitPending
+	// There is no exit code to invent when every original controller has
+	// acknowledged stopping before a worker existed. The immutable Job's exit
+	// protection retains any real Pod, including one whose creation raced Stop.
+	noWorker := podCount == 0 && allPodsTerminal && noWorkerControllersStopped(resources, objects) && pods.GetResourceVersion() != ""
+	if noWorker {
+		observation.NoWorkerPodListResourceVersion = pods.GetResourceVersion()
+	}
+	observation.WritersAbsent = creationStopped && jobsStopped && (podCount > 0 || noWorker) && allPodsTerminal && !exitPending
 	switch {
-	case trainSuccess && setSuccess && allZero && observation.WritersAbsent:
+	case podCount > 0 && trainSuccess && setSuccess && allZero && observation.WritersAbsent:
 		observation.Outcome = "SUCCEEDED"
 	case trainFailure && setFailure && anyNonzero && observation.WritersAbsent:
 		observation.Outcome = "FAILED"
-	case !allPodsTerminal || (!trainTerminal && !setTerminal):
+	case !observation.WritersAbsent && (!allPodsTerminal || (!trainTerminal && !setTerminal)):
 		observation.Outcome = "RUNNING"
 	}
 	observation.Resources = orderedResources(resources)
@@ -211,7 +256,7 @@ func resourceFact(object *unstructured.Unstructured, owner string, terminal bool
 	if object.GetKind() == "TrainJob" || object.GetKind() == "JobSet" || object.GetKind() == "Job" {
 		creationDisabled, _, _ = unstructured.NestedBool(object.Object, "spec", "suspend")
 	}
-	return biz.RuntimeResource{APIVersion: object.GetAPIVersion(), Kind: object.GetKind(), Namespace: object.GetNamespace(), Name: object.GetName(), UID: string(object.GetUID()), OwnerUID: owner, Terminal: terminal, ExitCode: code, APIObjectPresent: true, CreationDisabled: creationDisabled}
+	return biz.RuntimeResource{APIVersion: object.GetAPIVersion(), Kind: object.GetKind(), Namespace: object.GetNamespace(), Name: object.GetName(), UID: string(object.GetUID()), OwnerUID: owner, Terminal: terminal, ExitCode: code, APIObjectPresent: true, CreationDisabled: creationDisabled, Suspension: trainingSuspension(object, creationDisabled)}
 }
 
 func orderedResources(resources map[string]biz.RuntimeResource) []biz.RuntimeResource {
@@ -350,6 +395,8 @@ func historyResource(resource biz.RuntimeResource) (schema.GroupVersionResource,
 		return schema.GroupVersionResource{Group: "jobset.x-k8s.io", Version: "v1alpha2", Resource: "jobsets"}, true
 	case resource.APIVersion == "trainer.kubeflow.org/v1alpha1" && resource.Kind == "TrainJob":
 		return trainJobs, true
+	case resource.APIVersion == "scheduling.volcano.sh/v1beta1" && resource.Kind == "PodGroup":
+		return schema.GroupVersionResource{Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}, true
 	default:
 		return schema.GroupVersionResource{}, false
 	}

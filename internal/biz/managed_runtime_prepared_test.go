@@ -10,7 +10,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
-func TestManagedEnsureRequiresPreparedCompletionBeforeTrainingReservation(t *testing.T) {
+func TestManagedEnsureRequiresPreparedCompletionBeforeRuntimeReservation(t *testing.T) {
 	for _, test := range []struct {
 		name                   string
 		proofErr               error
@@ -72,7 +72,7 @@ type preparedGateStore struct {
 func (p *preparedGateStore) GetRuntime(context.Context, string, string) (biz.ExecutionRuntime, error) {
 	return p.state, nil
 }
-func (p *preparedGateStore) ReserveTraining(context.Context, biz.RunAuthorityCandidate) (biz.TrainingReservation, error) {
+func (p *preparedGateStore) ReserveRuntime(context.Context, biz.RunAuthorityCandidate) (biz.TrainingReservation, error) {
 	p.reservations++
 	return biz.TrainingReservation{}, biz.ErrRuntimeNotReady
 }

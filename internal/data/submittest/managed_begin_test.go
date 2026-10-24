@@ -21,8 +21,11 @@ import (
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
@@ -102,7 +105,7 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 			"pipeline_version_reference": map[string]string{"pipeline_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "pipeline_version_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd"},
 			"runtime_config":             map[string]any{"parameters": map[string]string{"execution_id": request.Admission.ExecutionID, "spec_hash": request.Admission.SpecHash}, "pipeline_root": "s3://fixture-kfp-artifacts/frozen-submit-root"},
 			"service_account":            "cpu-managed-step", "state": "RUNNING",
-			"run_details": map[string]any{"task_details": []any{map[string]string{"run_id": association.RunID, "task_id": "synthetic-task-id", "display_name": "prepare", "pod_name": podName}}},
+			"run_details": map[string]any{"task_details": []any{map[string]string{"run_id": association.RunID, "task_id": "synthetic-task-id", "display_name": "prepare", "pod_name": podName, "state": "RUNNING"}}},
 		})
 	}))
 	t.Cleanup(peer.Close)
@@ -130,12 +133,13 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	workloads := mainFlowWorkloadVerifier(t, request.Admission.Snapshot.Environment, association)
-	steps, err := biz.NewManagedSteps(repository, executions, workloads, runs)
+	workloads, kube := mainFlowWorkloadVerifier(t, request.Admission.Snapshot.Environment, association)
+	proof := runtimeproof.New(kube, runs, nil, repository)
+	steps, err := biz.NewManagedSteps(repository, executions, workloads, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, stop := startMainFlowStepServer(t, steps)
+	client, stop := startMainFlowStepServer(t, steps, lifecycle.New(pool), runs, repository)
 	body := &modeldevv1.BeginExecutionRequest{Context: &modeldevv1.StepContext{
 		Identity:    &trainingv1.ExecutionIdentity{OperationId: request.Admission.OperationID, ExecutionId: request.Admission.ExecutionID, ExecutionSpecHash: request.Admission.SpecHash},
 		Association: &modeldevv1.RunAssociation{KfpRunId: association.RunID, NamespaceName: association.NamespaceName, NamespaceUid: association.NamespaceUID, WorkflowName: association.WorkflowName, WorkflowUid: association.WorkflowUID, PodName: association.PodName, PodUid: association.PodUID},
@@ -167,11 +171,12 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 	pool.Close()
 	pool = openPool()
 	repository, executions = submission.New(pool), execution.New(pool)
-	steps, err = biz.NewManagedSteps(repository, executions, workloads, runs)
+	proof = runtimeproof.New(kube, runs, nil, repository)
+	steps, err = biz.NewManagedSteps(repository, executions, workloads, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, _ = startMainFlowStepServer(t, steps)
+	client, _ = startMainFlowStepServer(t, steps, lifecycle.New(pool), runs, repository)
 	response, err = client.BeginExecution(callContext("synthetic-bound-step-token"), body)
 	if err != nil || !response.GetReplayed() || !response.GetAuthority().GetBoundAt().AsTime().Equal(boundAt) {
 		t.Fatalf("restarted Begin lost original binding: %v", err)
@@ -187,7 +192,7 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 	t.Log("MAIN_FLOW: restarted RPC reauthenticated and replayed original authority without CreateRun")
 }
 
-func mainFlowWorkloadVerifier(t *testing.T, env cpup01.EnvironmentBindingSnapshot, association biz.ManagedStepAssociation) *stepidentity.Verifier {
+func mainFlowWorkloadVerifier(t *testing.T, env cpup01.EnvironmentBindingSnapshot, association biz.ManagedStepAssociation) (*stepidentity.Verifier, dynamic.Interface) {
 	t.Helper()
 	const saUID = "ffffffff-aaaa-4bbb-8ccc-444444444444"
 	peer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -223,10 +228,13 @@ func mainFlowWorkloadVerifier(t *testing.T, env cpup01.EnvironmentBindingSnapsho
 			object = map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": metadata(env.NamespaceName, env.NamespaceUID, false)}
 		case "/api/v1/namespaces/" + env.NamespaceName + "/serviceaccounts/" + env.Identities.KFPStepServiceAccount:
 			object = map[string]any{"apiVersion": "v1", "kind": "ServiceAccount", "metadata": metadata(env.Identities.KFPStepServiceAccount, saUID, true)}
-		case "/api/v1/namespaces/" + env.NamespaceName + "/pods/" + association.PodName:
+		case "/api/v1/namespaces/" + env.NamespaceName + "/pods/" + association.PodName, "/api/v1/namespaces/" + env.NamespaceName + "/pods":
 			m := metadata(association.PodName, association.PodUID, true)
 			m["ownerReferences"] = []any{map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": association.WorkflowName, "uid": association.WorkflowUID, "controller": true}}
 			object = map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": m, "spec": map[string]string{"serviceAccountName": env.Identities.KFPStepServiceAccount}}
+			if strings.HasSuffix(r.URL.Path, "/pods") {
+				object = map[string]any{"apiVersion": "v1", "kind": "PodList", "metadata": map[string]any{}, "items": []any{object}}
+			}
 		case "/apis/argoproj.io/v1alpha1/namespaces/" + env.NamespaceName + "/workflows/" + association.WorkflowName:
 			object = map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "metadata": metadata(association.WorkflowName, association.WorkflowUID, true)}
 		default:
@@ -250,11 +258,19 @@ func mainFlowWorkloadVerifier(t *testing.T, env cpup01.EnvironmentBindingSnapsho
 	if err != nil {
 		t.Fatal(err)
 	}
-	return verifier
+	return verifier, client
 }
 
-func startMainFlowStepServer(t *testing.T, steps *biz.ManagedSteps) (modeldevv1.ModelDevStepServiceClient, func()) {
-	return startMainFlowStepHandler(t, service.NewStep(steps))
+func startMainFlowStepServer(t *testing.T, steps *biz.ManagedSteps, repository *lifecycle.Repository, runs *kfp.Client, dispatches *submission.Repository) (modeldevv1.ModelDevStepServiceClient, func()) {
+	t.Helper()
+	// Begin uses the real authenticated task and PostgreSQL role-window code.
+	// The training/publication boundaries remain unused in this Begin-only case.
+	proof := runtimeproof.New(nil, runs, nil, dispatches)
+	runtime, err := biz.NewManagedRuntime(steps, repository, trainer.New(nil), proof, proof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return startMainFlowStepHandler(t, service.NewRuntimeStep(steps, runtime))
 }
 
 func startMainFlowStepHandler(t *testing.T, handler modeldevv1.ModelDevStepServiceServer) (modeldevv1.ModelDevStepServiceClient, func()) {

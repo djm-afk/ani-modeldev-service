@@ -24,7 +24,7 @@ func (m *Management) ImportFinetuningDataset(ctx context.Context, r *modeldevv1.
 		return nil, status.Error(codes.InvalidArgument, "fixed object version required")
 	}
 	object := cpup01.FixedObjectRef{StorageConnectionID: r.Object.StorageConnectionId, Bucket: r.Object.Bucket, Key: r.Object.Key, VersionID: &version.VersionId, SizeBytes: r.Object.SizeBytes, SHA256: r.Object.Sha256}
-	value, err := m.materials.ImportFinetuningDataset(ctx, biz.InputImport{TenantID: scope.TenantID, RequestID: scope.RequestID, Actor: scope.Actor, InputVersionID: r.InputVersionId, RequestedAt: r.RequestedAt.AsTime(), Object: object, Format: "JSON"}, r.ReleaseId, r.ReleaseDigest)
+	value, err := m.materials.ImportFinetuningDataset(ctx, biz.InputImport{TenantID: scope.TenantID, RequestID: scope.RequestID, Actor: scope.Actor, InputVersionID: r.InputVersionId, RequestedAt: r.RequestedAt.AsTime(), Object: object, Format: "JSON"}, r.ImplementationId)
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}

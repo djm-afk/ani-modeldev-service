@@ -47,7 +47,7 @@ func TestConfiguredAdmissionResolvesPinnedFilesAndDurableReadyInput(t *testing.T
 	rpcContext := metadata.NewOutgoingContext(ctx, metadata.Pairs(
 		"x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", uuid.NewString(),
 	))
-	response, err := modeldevv1.NewModelDevAdmissionServiceClient(connection).ResolveAdmission(rpcContext, fixture.request)
+	response, err := finalizeConfiguredAdmission(rpcContext, modeldevv1.NewModelDevAdmissionServiceClient(connection), fixture.request)
 	if err != nil {
 		if status.Code(err) == codes.Unimplemented && status.Convert(err).Message() == "unknown service ani.modeldev.v1.ModelDevAdmissionService" {
 			t.Fatalf("ADMISSION_STARTUP_BEHAVIOR: explicit startup materials did not register Admission on the actual listener: %v", err)
@@ -157,9 +157,19 @@ type configuredAdmissionFixture struct {
 	applicationName string
 	tenantID        string
 	ready           biz.InputVersion
-	request         *modeldevv1.ResolveAdmissionRequest
+	request         *modeldevv1.PrepareAdmissionRequest
 	wantCanonical   []byte
 	wantHash        string
+	wantSnapshot    cpup01.Snapshot
+	material        cpup01.ImplementationMaterial
+}
+
+func finalizeConfiguredAdmission(ctx context.Context, client modeldevv1.ModelDevAdmissionServiceClient, request *modeldevv1.PrepareAdmissionRequest) (*modeldevv1.FinalizeAdmissionResponse, error) {
+	prepared, err := client.PrepareAdmission(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	return client.FinalizeAdmission(ctx, &modeldevv1.FinalizeAdmissionRequest{CandidateCanonical: prepared.CandidateCanonical, CandidateHash: prepared.CandidateHash})
 }
 
 func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
@@ -167,131 +177,120 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	config, openPool, certificates, applicationName := commandAppFixture(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	release, seed := conformance.ReleaseV1(), conformance.SnapshotV1()
+	material, seed := conformance.MaterialV21(), conformance.SnapshotV1()
 	directory := t.TempDir()
-	if _, err := catalogue.ImportRelease(ctx, directory, conformance.ReleaseCanonicalV1(), conformance.ReleaseSHA256V1); err != nil {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: actual catalogue import failed; behavior NOT_RUN: %v", err)
+	materialBytes, err := material.Canonical()
+	if err != nil {
+		t.Fatal(err)
 	}
-	imported := biz.InputImport{
-		TenantID: "11111111-2222-4333-8444-555555555555", RequestID: uuid.NewString(), InputVersionID: seed.Input.InputVersionID,
-		Actor: "governance:user:42", RequestedAt: time.Date(2026, 9, 30, 12, 0, 0, 123000, time.UTC),
-		Scope:  cpup01.StorageScope{StorageConnectionID: seed.Input.Object.StorageConnectionID, Bucket: seed.Input.Object.Bucket, ApprovedPrefix: "fixed/input"},
-		Object: seed.Input.Object,
+	if err = os.WriteFile(filepath.Join(directory, "builtin.mlp.cpu.json"), materialBytes, 0600); err != nil {
+		t.Fatal(err)
 	}
+	loadedMaterial, err := catalogue.ReadImplementationMaterial(ctx, directory, "builtin.mlp", "cpu")
+	if err != nil || !reflect.DeepEqual(loadedMaterial, material) {
+		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: actual finite software material read failed")
+	}
+	imported := biz.InputImport{TenantID: "11111111-2222-4333-8444-555555555555", RequestID: uuid.NewString(), InputVersionID: seed.Input.InputVersionID, Actor: "governance:user:42", RequestedAt: time.Date(2026, 9, 30, 12, 0, 0, 123000, time.UTC), Scope: cpup01.StorageScope{StorageConnectionID: seed.Input.Object.StorageConnectionID, Bucket: seed.Input.Object.Bucket, ApprovedPrefix: "fixed/input"}, Object: seed.Input.Object}
 	writer := openPool()
 	repository := input.New(writer)
-	if _, err := repository.FreezeImport(ctx, imported); err != nil {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: actual input import failed; behavior NOT_RUN: %v", err)
+	if _, err = repository.FreezeImport(ctx, imported); err != nil {
+		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: actual input import failed: %v", err)
 	}
-	// This is a synthetic trusted observation for module preparation, not an
-	// assertion that a deployed ENV or remote S3 object has been verified.
-	ready, err := repository.RecordVerifiedCSV(ctx, imported, biz.VerifiedCSV{
-		VerifiedObject: biz.VerifiedObject{Object: imported.Object, VerifiedAt: imported.RequestedAt.Add(time.Minute)},
-		SchemaVersion:  "ani.cpu.csv.v1", RowCount: 1024, FeatureCount: 16,
-	})
+	// A synthetic external object observation enters the real import persistence.
+	ready, err := repository.RecordVerifiedCSV(ctx, imported, biz.VerifiedCSV{VerifiedObject: biz.VerifiedObject{Object: imported.Object, VerifiedAt: imported.RequestedAt.Add(time.Minute)}, SchemaVersion: "ani.cpu.csv.v1", RowCount: 1027, FeatureCount: 16})
 	if err != nil || ready.State != biz.InputStateReady {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: actual READY persistence failed; behavior NOT_RUN: %v", err)
+		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: actual READY persistence failed: %v", err)
 	}
 	writer.Close()
-	recovered, err := input.New(openPool()).Get(ctx, imported.TenantID, imported.InputVersionID)
+	observer := openPool()
+	recovered, err := input.New(observer).Get(ctx, imported.TenantID, imported.InputVersionID)
+	observer.Close()
 	if err != nil || !reflect.DeepEqual(recovered, ready) {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: fresh connection cannot recover READY; behavior NOT_RUN: %v", err)
+		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: fresh connection cannot recover READY")
 	}
-	facts := biz.TenantAdmissionFacts{
-		TenantID: imported.TenantID, Environment: seed.Environment, InputScope: imported.Scope, PublicationScope: seed.PublicationScope,
-		Runtime: release.Runtime, Workspace: release.Workspace, InputFilePath: "/startup-input/data.csv", OutputDirectoryPath: "/startup-output",
-	}
-	source := writeConfiguredAdmissionFacts(t, release, facts)
+	facts := biz.TenantAdmissionFacts{TenantID: imported.TenantID, Environment: seed.Environment, InputScope: imported.Scope, PublicationScope: seed.PublicationScope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
+	source := writeConfiguredAdmissionFacts(t, material, facts)
 	reader, err := admissionfacts.Load(ctx, []admissionfacts.FileSource{source})
 	if err != nil {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: actual pinned file load failed; behavior NOT_RUN: %v", err)
+		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed", err)
 	}
-	loaded, err := reader.ReadAdmissionFacts(ctx, imported.TenantID, release.ReleaseID, conformance.ReleaseSHA256V1)
+	loaded, err := reader.ReadAdmissionFacts(ctx, imported.TenantID, "builtin.mlp")
 	if err != nil || !reflect.DeepEqual(loaded, facts) {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: actual file differs from explicit fixture facts; behavior NOT_RUN: %v", err)
+		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: pinned facts differ from authored facts")
 	}
-	config.Command.AdmissionResolution = &conf.AdmissionResolution{
-		CatalogueDirectory: directory, FactsFiles: []*conf.AdmissionFactsFile{{Path: source.Path, Sha256: source.SHA256}},
-	}
-	parameters := []cpup01.Parameter{{Name: "learning_rate", Type: "DECIMAL", Value: "0.0200"}}
-	intent, err := contractpb.EncodeIntent(cpup01.Intent{
-		Name: "configured-admission", Kind: "GENERAL_TRAINING", PresetID: release.PresetID,
-		DatasetVersionID: imported.InputVersionID, GeneralParameters: &parameters,
-	})
+	config.Command.AdmissionResolution = &conf.AdmissionResolution{CatalogueDirectory: directory, FactsFiles: []*conf.AdmissionFactsFile{{Path: source.Path, Sha256: source.SHA256}}}
+	rate := "0.0200"
+	intent := cpup01.Intent{Name: "configured-admission", Kind: "GENERAL_TRAINING", ImplementationID: "builtin.mlp", ComputePresetID: seed.ComputeOrigin.ComputePresetID, DatasetVersionID: imported.InputVersionID, MLP: &cpup01.MLPParameters{LearningRate: &rate}}
+	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: fixture intent invalid; behavior NOT_RUN: %v", err)
+		t.Fatal(err)
 	}
-	// A complete authored expectation, independent of resolver/template code.
-	// The existing Snapshot vector supplies only fixed input/ENV fields; its
-	// original Release and digest do not describe this selected Release.
-	want := cpup01.Snapshot{
-		SchemaVersion: cpup01.SnapshotSchemaVersion, Kind: "GENERAL_TRAINING", DeliveryMode: "SAVE_ARTIFACTS",
-		Release: cpup01.ReleaseSnapshot{
-			ReleaseID: release.ReleaseID, ReleaseDigest: conformance.ReleaseSHA256V1, PresetID: release.PresetID, AcceptedBindingGeneration: 7,
-			PipelineID: release.PipelineID, PipelineVersionID: release.PipelineVersionID, PipelineIRSHA256: release.PipelineIRSHA256, Runtime: release.Runtime,
-		},
-		Input: seed.Input,
-		Program: cpup01.ProgramRef{
-			ImageVersionID: release.Program.ImageVersionID, ImageDigest: release.Program.ImageDigest, Command: release.Program.Command,
-			ResolvedArgs:       []string{"--data", "/startup-input/data.csv", "--output", "/startup-output", "--expected-input-sha256", "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "--expected-input-bytes", "192456", "--learning-rate", "0.02"},
-			ResolvedParameters: []cpup01.Parameter{{Name: "batch_size", Type: "INTEGER", Value: "64"}, {Name: "epochs", Type: "INTEGER", Value: "3"}, {Name: "learning_rate", Type: "DECIMAL", Value: "0.02"}},
-		},
-		Resources: release.Resources, Environment: seed.Environment, Workspace: release.Workspace,
-		PublicationScope: seed.PublicationScope, OutputContract: release.OutputContract,
-		DeadlineAt: time.Date(2026, 9, 30, 12, 33, 0, 123000, time.UTC),
+	wireIntent, err := contractpb.EncodeIntent(intent)
+	if err != nil {
+		t.Fatal(err)
 	}
+	acceptedAt := time.Date(2026, 9, 30, 12, 3, 0, 123000, time.UTC)
+	identity := cpup01.IdentityRef{TenantID: imported.TenantID, Actor: imported.Actor, OperationID: "88888888-8888-4888-8888-888888888888", ExecutionID: "99999999-9999-4999-8999-999999999999", IntentHash: intentHash}
+	// Expected facts are authored from the independent material/input facts and
+	// full literal Runtime spec below. No resolver/compiler/RPC result is reused.
+	want := seed
+	want.IdentityRef = identity
+	want.Program.ResolvedParameters = []cpup01.Parameter{{Name: "batch_size", Type: "INTEGER", Value: "64"}, {Name: "epochs", Type: "INTEGER", Value: "3"}, {Name: "learning_rate", Type: "DECIMAL", Value: "0.02"}, {Name: "seed", Type: "INTEGER", Value: "42"}}
+	want.Program.ResolvedArgs = []string{"--data", "/inputs/data.csv", "--output", "/outputs", "--learning-rate", "0.02", "--epochs", "3", "--batch-size", "64", "--seed", "42"}
+	want.Timing = cpup01.Timing{AcceptedAt: acceptedAt, ExecutionTimeoutSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900, ExecutionDeadlineAt: acceptedAt.Add(time.Hour)}
+	want.DeadlineAt = want.Timing.ExecutionDeadlineAt
+	want.RuntimePlan = independentConfiguredRuntime(t)
 	canonical, err := want.Canonical()
 	if err != nil {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: independently authored expectation invalid; behavior NOT_RUN: %v", err)
+		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: independent complete expectation invalid", err)
 	}
 	digest := sha256.Sum256(canonical)
-	return configuredAdmissionFixture{
-		config: config, openPool: openPool, certificates: certificates, applicationName: applicationName, tenantID: imported.TenantID, ready: ready,
-		request: &modeldevv1.ResolveAdmissionRequest{
-			Intent: intent, Release: &modeldevv1.AdmissionReleaseSelection{ReleaseId: release.ReleaseID, ReleaseDigest: conformance.ReleaseSHA256V1, BindingGeneration: 7},
-			AcceptedAt: timestamppb.New(time.Date(2026, 9, 30, 12, 3, 0, 123000, time.UTC)),
-		},
-		wantCanonical: canonical, wantHash: hex.EncodeToString(digest[:]),
-	}
+	request := &modeldevv1.PrepareAdmissionRequest{Intent: wireIntent, IdentityRef: &modeldevv1.IdentityRef{TenantId: identity.TenantID, Actor: identity.Actor, OperationId: identity.OperationID, ExecutionId: identity.ExecutionID, IntentHash: intentHash}, AcceptedAt: timestamppb.New(acceptedAt), ComputeSelectionCanonical: []byte(seed.ComputeOrigin.SelectionJSON), SelectionDigest: seed.ComputeOrigin.SelectionDigest}
+	return configuredAdmissionFixture{config: config, openPool: openPool, certificates: certificates, applicationName: applicationName, tenantID: imported.TenantID, ready: ready, request: request, wantCanonical: canonical, wantHash: hex.EncodeToString(digest[:]), wantSnapshot: want, material: material}
 }
 
-func writeConfiguredAdmissionFacts(t *testing.T, release cpup01.ReleaseDocument, facts biz.TenantAdmissionFacts) admissionfacts.FileSource {
+func independentConfiguredRuntime(t *testing.T) cpup01.RuntimePlan {
+	t.Helper()
+	const literal = `{"mlPolicy":{"numNodes":1},"podGroupPolicy":{"volcano":{}},"template":{"metadata":{"annotations":{"scheduling.volcano.sh/queue-name":"default"}},"spec":{"failurePolicy":{"maxRestarts":0,"restartStrategy":"Recreate"},"replicatedJobs":[{"groupName":"default","name":"node","replicas":1,"template":{"metadata":{"labels":{"trainer.kubeflow.org/trainjob-ancestor-step":"trainer"}},"spec":{"activeDeadlineSeconds":900,"backoffLimit":0,"completionMode":"Indexed","completions":1,"parallelism":1,"template":{"metadata":{"finalizers":["modeldev.ani.io/training-exit-evidence"]},"spec":{"automountServiceAccountToken":false,"containers":[{"args":["--data","/inputs/data.csv","--output","/outputs","--learning-rate","0.02","--epochs","3","--batch-size","64","--seed","42"],"command":["python","/opt/mlp/train.py"],"image":"registry.example.test/cpu/mlp@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","imagePullPolicy":"IfNotPresent","name":"node","resources":{"limits":{"cpu":"1","memory":"1Gi"},"requests":{"cpu":"1","memory":"1Gi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"volumeMounts":[{"mountPath":"/inputs","name":"input","readOnly":true,"subPath":"inputs"},{"mountPath":"/outputs","name":"output","readOnly":false,"subPath":"training"},{"mountPath":"/tmp","name":"tmp","readOnly":false}]}],"restartPolicy":"Never","schedulerName":"volcano","securityContext":{"fsGroup":10001,"runAsGroup":10001,"runAsNonRoot":true,"runAsUser":10001,"seccompProfile":{"type":"RuntimeDefault"}},"serviceAccountName":"cpu-training","terminationGracePeriodSeconds":5,"volumes":[{"name":"input","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}},{"name":"output","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}},{"emptyDir":{"sizeLimit":"4Gi"},"name":"tmp"}]}}}}}]}}}`
+	var object any
+	if err := json.Unmarshal([]byte(literal), &object); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := json.Marshal(object)
+	if err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(raw)
+	return cpup01.RuntimePlan{GeneratorVersion: "ani.modeldev.runtime.v1", APIGroup: "trainer.kubeflow.org", Kind: "TrainingRuntime", Namespace: "cpu-contract-fixture", Name: cpup01.RuntimeName("33333333-3333-4333-8333-333333333333", "99999999-9999-4999-8999-999999999999"), ExpectedSpec: raw, ExpectedSpecSHA256: hex.EncodeToString(digest[:]), DefaultingRules: "trainer-2.1.0-jobset-explicit-v1", TargetJobs: []string{"node"}}
+}
+
+func writeConfiguredAdmissionFacts(t *testing.T, material cpup01.ImplementationMaterial, facts biz.TenantAdmissionFacts) admissionfacts.FileSource {
 	t.Helper()
 	type evidence struct {
 		Reference string `json:"reference"`
 		SHA256    string `json:"sha256"`
 	}
-	// The private file fixture is explicitly synthetic and authored without
-	// depending on the production reader's unexported decoder structure.
 	document := struct {
 		SchemaVersion       string                            `json:"schema_version"`
 		ResourceTenantID    string                            `json:"resource_tenant_id"`
-		ReleaseID           string                            `json:"release_id"`
-		ReleaseDigest       string                            `json:"release_digest"`
+		ImplementationID    string                            `json:"implementation_id"`
 		Environment         cpup01.EnvironmentBindingSnapshot `json:"environment"`
 		InputScope          cpup01.StorageScope               `json:"input_scope"`
 		PublicationScope    cpup01.StorageScope               `json:"publication_scope"`
-		Runtime             cpup01.RuntimeRef                 `json:"runtime"`
+		Timing              cpup01.TimingConfiguration        `json:"timing"`
 		Workspace           cpup01.WorkspaceContract          `json:"workspace"`
 		InputFilePath       string                            `json:"input_file_path"`
 		OutputDirectoryPath string                            `json:"output_directory_path"`
 		EnvironmentEvidence evidence                          `json:"environment_evidence"`
 		ApplicationEvidence evidence                          `json:"application_evidence"`
-	}{
-		SchemaVersion: "ani.modeldev.managed-admission-facts.v1", ResourceTenantID: facts.TenantID,
-		ReleaseID: release.ReleaseID, ReleaseDigest: conformance.ReleaseSHA256V1,
-		Environment: facts.Environment, InputScope: facts.InputScope, PublicationScope: facts.PublicationScope,
-		Runtime: facts.Runtime, Workspace: facts.Workspace, InputFilePath: facts.InputFilePath, OutputDirectoryPath: facts.OutputDirectoryPath,
-		EnvironmentEvidence: evidence{Reference: "module-fixture:startup-environment", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
-		ApplicationEvidence: evidence{Reference: "module-fixture:startup-application", SHA256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
-	}
+	}{SchemaVersion: "ani.modeldev.managed-admission-facts.v2.1", ResourceTenantID: facts.TenantID, ImplementationID: material.Implementation.ImplementationID, Environment: facts.Environment, InputScope: facts.InputScope, PublicationScope: facts.PublicationScope, Timing: facts.Timing, Workspace: facts.Workspace, InputFilePath: facts.InputFilePath, OutputDirectoryPath: facts.OutputDirectoryPath, EnvironmentEvidence: evidence{Reference: "module-fixture:startup-environment", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, ApplicationEvidence: evidence{Reference: "module-fixture:startup-application", SHA256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}}
 	raw, err := json.Marshal(document)
 	if err != nil {
-		t.Fatalf("ADMISSION_STARTUP_PREFLIGHT: fixture encoding failed; behavior NOT_RUN: %v", err)
+		t.Fatal(err)
 	}
 	file := filepath.Join(t.TempDir(), "managed-admission-facts.json")
-	if err := os.WriteFile(file, raw, 0600); err != nil {
-		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: fixture file creation failed; behavior NOT_RUN")
+	if err = os.WriteFile(file, raw, 0600); err != nil {
+		t.Fatal(err)
 	}
 	digest := sha256.Sum256(raw)
 	return admissionfacts.FileSource{Path: file, SHA256: hex.EncodeToString(digest[:])}

@@ -25,8 +25,7 @@ func TestFinetuningImportPersistsRealVerificationAndReplaysFixedObject(t *testin
 	r.Format = "JSON"
 	r.RequestedAt = time.Now().UTC().Add(-time.Minute).Truncate(time.Microsecond)
 	r.Object.Key = "tenant/input/alpaca.json"
-	// Two rows are valid for import. Only the selected Release requires 64.
-	payload := `[ {"instruction":"概括\u4e00", "input":"", "output":" 原文 "}, {"instruction":" ","input":"\\n","output":"答案"} ]`
+	payload := `[ {"instruction":"概括\u4e00", "input":"", "output":" 原文 "}, {"instruction":"请回答", "input":"\\n","output":"答案"} ]`
 	r.Object.SizeBytes = int64(len(payload))
 	h := sha256.Sum256([]byte(payload))
 	r.Object.SHA256 = hex.EncodeToString(h[:])
@@ -56,6 +55,16 @@ func TestFinetuningImportPersistsRealVerificationAndReplaysFixedObject(t *testin
 	if err != nil || !reflect.DeepEqual(got, recovered) {
 		t.Fatalf("JSON READY was not durable: %+v %v", recovered, err)
 	}
+	changed := *got.AlpacaVerification
+	changed.RowCount++
+	if version, err := reader.RecordVerifiedAlpaca(ctx, r, changed); !errors.Is(err, biz.ErrInputVerification) || !reflect.DeepEqual(version, biz.InputVersion{}) {
+		t.Fatal("READY JSON replay accepted another row-count proof", version, err)
+	}
+	changed = *got.AlpacaVerification
+	changed.RowCount = 4294967295
+	if version, err := reader.RecordVerifiedAlpaca(ctx, r, changed); !errors.Is(err, biz.ErrInputVerification) || !reflect.DeepEqual(version, biz.InputVersion{}) {
+		t.Fatal("JSON proof exceeded PostgreSQL int4 storage", version, err)
+	}
 	replay, err := biz.NewInputImporter(reader, managedImportVerifier(server, r.Scope.StorageConnectionID)).ImportFinetuningDataset(ctx, r)
 	if err != nil || !reflect.DeepEqual(got, replay) || reads.Load() != 1 {
 		t.Fatal("replay reread or replaced original bytes")
@@ -82,6 +91,7 @@ func TestFinetuningImportRejectsContentDurablyWithoutCreatingReady(t *testing.T)
 		`[{"instruction":"x","input":null,"output":"y"}]`,
 		`[{"instruction":"x","input":2,"output":"y"}]`,
 		`[{"instruction":"","input":"","output":"y"}]`,
+		`[{"instruction":" ","input":"","output":"y"}]`,
 		`[{"instruction":"x","input":""}]`,
 		`[{"instruction":"x","input":"","output":"y"}] {}`,
 		"\xef\xbb\xbf" + `[{"instruction":"x","input":"","output":"y"}]`,

@@ -2,210 +2,179 @@ package biz
 
 import (
 	"context"
-	"strings"
-
 	"github.com/google/uuid"
+	"strings"
+	"time"
 )
 
-// D08.3 + D09.3 registration orchestration. This performs the concrete external
-// writes for one registration, but it never invents provider policy: the
-// container name/metadata, the output format mapping and the storage handover
-// are inputs, because Model owns those decisions.
-//
-// Every write is arbitrated durably first (the shared execution row lock) and
-// the RPC runs outside that arbitration. A successful response is never treated
-// as READY: only reading back the original result settles the operation.
-
-// FinetuningModelVersionReady is the only Model status that may become READY.
 const FinetuningModelVersionReady = "ready"
-
-// FinetuningWriteUnresolved is the bounded failure code stored when a permitted
-// write's outcome could not be settled. It carries no provider text.
 const FinetuningWriteUnresolved = "MODEL_WRITE_UNRESOLVED"
-
-// FinetuningContainerWrite carries the provider-decided container fields for the
-// new branch. It does not carry the frozen business key: that is read from the
-// persisted registration intent.
-type FinetuningContainerWrite struct {
-	Name         string
-	DisplayName  string
-	Description  string
-	Capabilities []string
-}
-
-// FinetuningVersionWrite carries the output version content. Format is the
-// provider-decided mapping for the frozen output kind; StoragePath is the
-// resolved handover target. Neither is guessed here.
-type FinetuningVersionWrite struct {
-	ModelID        string
-	Version        string
-	Format         string
-	StoragePath    string
-	ChecksumSHA256 string
-	SizeBytes      int64
-	IsEncrypted    bool
-	EncryptAlgo    string
-}
-
-// FinetuningContainerFact is a read-back container result.
-type FinetuningContainerFact struct {
-	ModelID string
-	Name    string
-	Status  string
-}
-
-// FinetuningVersionFact is a read-back version result. Status distinguishes a
-// pending version from a ready one, so absence is never confused with progress.
-type FinetuningVersionFact struct {
-	ModelVersionID string
-	ModelID        string
-	Version        string
-	Format         string
-	StoragePath    string
-	ChecksumSHA256 string
-	SizeBytes      int64
-	Status         string
-}
-
-// FinetuningModelRegistry is the narrow outbound port for registration writes
-// and their original-result verification. Implementations own only transport,
-// caller identity and request metadata; they never decide whether a write is
-// permitted, and they never retry by themselves.
-type FinetuningModelRegistry interface {
-	// CreateContainer writes the new-branch container under the original key.
-	CreateContainer(context.Context, string, string, FinetuningContainerWrite) (FinetuningContainerFact, error)
-	// RegisterVersion writes the output version under a resolved target.
-	RegisterVersion(context.Context, string, string, FinetuningVersionWrite) (FinetuningVersionFact, error)
-	// FindContainer reads back the original container by its business key. A
-	// missing answer never proves that a permitted write did not happen.
-	FindContainer(context.Context, string, string) (FinetuningContainerFact, bool, error)
-	// FindVersion reads back the original version by target and version tag.
-	FindVersion(context.Context, string, string, string) (FinetuningVersionFact, bool, error)
-}
 
 type FinetuningRegistrationOrchestrator struct {
 	dispatches FinetuningRegistrationDispatchRepository
-	registry   FinetuningModelRegistry
+	registry   TrainedArtifactRegistry
+	copier     TrainedArtifactCopier
 }
 
-func NewFinetuningRegistrationOrchestrator(dispatches FinetuningRegistrationDispatchRepository, registry FinetuningModelRegistry) (*FinetuningRegistrationOrchestrator, error) {
-	if dispatches == nil || registry == nil {
-		return nil, ErrFinetuningNotEnabled
+func NewFinetuningRegistrationOrchestrator(dispatches FinetuningRegistrationDispatchRepository, registry TrainedArtifactRegistry, copier TrainedArtifactCopier) (*FinetuningRegistrationOrchestrator, error) {
+	if dispatches == nil || registry == nil || copier == nil {
+		return nil, ErrModelDependencyUnavailable
 	}
-	return &FinetuningRegistrationOrchestrator{dispatches: dispatches, registry: registry}, nil
+	return &FinetuningRegistrationOrchestrator{dispatches: dispatches, registry: registry, copier: copier}, nil
 }
 
-// EnsureContainer writes the new-branch container at most once. A repeat call
-// verifies the original attempt by its business key instead of re-sending it.
-// The original key and request id are derived from the persisted intent, so a
-// caller can never select a different container or key.
-func (orchestrator *FinetuningRegistrationOrchestrator) EnsureContainer(ctx context.Context, authority RunAuthorityCandidate, registration FinetuningRegistration, write FinetuningContainerWrite) (FinetuningRegistrationDispatch, error) {
-	if err := validContainerWrite(registration, write); err != nil {
-		return FinetuningRegistrationDispatch{}, err
+// Ensure follows the provider's three concrete writes. A pending upload session
+// never stands in for a model container. Every repeated/unknown dispatch only
+// observes its original key; an absent object is never permission to resend.
+func (o *FinetuningRegistrationOrchestrator) Ensure(ctx context.Context, authority RunAuthorityCandidate, execution Execution, state ExecutionRuntime, recovery bool) (ExecutionRuntime, error) {
+	if o == nil || ctx == nil || execution.TenantID != authority.TenantID || execution.ExecutionID != authority.ExecutionID || execution.OperationID != authority.OperationID || execution.SpecHash != authority.SpecHash || state.FinetuningRegistration == nil {
+		return state, ErrRuntimeConflict
 	}
-	permit, err := orchestrator.dispatches.PermitRegistrationDispatch(ctx, authority, OpCreateModel, uuid.NewString())
-	if err != nil {
-		return FinetuningRegistrationDispatch{}, err
+	if _, _, err := execution.CanonicalPayloads(); err != nil {
+		return state, ErrRuntimeConflict
 	}
-	switch {
-	case permit.Dispatch.State == DispatchConfirmed:
-		return permit.Dispatch, nil
-	case !permit.SendPermit:
-		// A previous permit may still be live. Verify it; never re-send it.
-		fact, found, err := orchestrator.registry.FindContainer(ctx, authority.TenantID, registration.ContainerKey)
-		if err != nil || !found || fact.ModelID == "" {
-			return orchestrator.settle(ctx, authority, OpCreateModel, permit.Dispatch, "", FinetuningWriteUnresolved)
+	for _, operation := range []FinetuningRegistrationOperation{OpPrepareTrainedArtifact, OpControlledCopy, OpCompleteTrainedArtifact} {
+		registration := state.FinetuningRegistration
+		if registration.State == RegistrationStateReady {
+			if !ValidFinetuningModelReceipt(execution.TenantID, *registration, registration.Receipt) {
+				return state, ErrPersistence
+			}
+			return state, nil
 		}
-		return orchestrator.settle(ctx, authority, OpCreateModel, permit.Dispatch, fact.ModelID, "")
+		if original := RegistrationDispatchFor(registration, operation); original != nil && original.State == DispatchConfirmed {
+			continue
+		}
+		request := TrainedArtifactRequest{TenantID: execution.TenantID, ExecutionID: execution.ExecutionID, Registration: *registration}
+		var grant TrainedArtifactUploadGrant
+		if operation == OpControlledCopy && RegistrationDispatchFor(registration, operation) == nil {
+			if !validTrainedArtifactSession(execution.TenantID, registration.Session) {
+				return state, ErrRuntimeNotReady
+			}
+			// A ticket read does not consume a never-sent PUT. Stop is rechecked below.
+			deadline := registration.DeadlineAt
+			if recovery {
+				if registration.Recovery == nil {
+					return state, ErrRuntimeConflict
+				}
+				deadline = registration.Recovery.DeadlineAt
+			}
+			ticketRead, cancelTicketRead := context.WithDeadline(ctx, deadline)
+			var err error
+			grant, err = o.registry.ArtifactUploadGrant(ticketRead, request, *registration.Session)
+			cancelTicketRead()
+			if err != nil {
+				return state, ErrModelDependencyUnavailable
+			}
+			if grant.Session != *registration.Session || grant.URL == "" || !grant.ExpiresAt.After(time.Now()) {
+				return state, ErrRuntimeConflict
+			}
+		}
+		var permitted FinetuningRegistrationDispatchResult
+		var err error
+		if recovery {
+			permitted, err = o.dispatches.PermitRegistrationRecoveryDispatch(ctx, authority, operation, uuid.NewString())
+		} else {
+			permitted, err = o.dispatches.PermitRegistrationDispatch(ctx, authority, operation, uuid.NewString())
+		}
+		if err != nil {
+			return state, err
+		}
+		state = permitted.State
+		registration = state.FinetuningRegistration
+		if registration == nil {
+			return state, ErrPersistence
+		}
+		request.Registration = *registration
+		deadline := permitted.Dispatch.DeadlineAt
+		if recovery && !permitted.SendPermit && registration.Recovery != nil {
+			deadline = registration.Recovery.DeadlineAt
+		}
+		business, cancel := context.WithDeadline(ctx, deadline)
+		if permitted.SendPermit {
+			switch operation {
+			case OpPrepareTrainedArtifact:
+				_, err = o.registry.PrepareArtifact(business, request)
+			case OpControlledCopy:
+				err = o.copier.CopyTrainedArtifact(business, execution, registration.Bundle, grant)
+			case OpCompleteTrainedArtifact:
+				if !validTrainedArtifactSession(execution.TenantID, registration.Session) {
+					cancel()
+					return state, ErrPersistence
+				}
+				_, err = o.registry.CompleteArtifact(business, request, *registration.Session)
+			}
+		}
+		// A lost write response may still have succeeded. Only the exact original
+		// key can settle it; an absent observation never grants another send.
+		observation, readErr := o.registry.ReadArtifact(business, request)
+		cancel()
+		outcome := permitted.Dispatch
+		outcome.State, outcome.ReceiptID, outcome.FailureCode = DispatchUnknown, "", FinetuningWriteUnresolved
+		if readErr == nil && validTrainedArtifactObservation(execution.TenantID, *registration, observation) {
+			confirmed := operation == OpPrepareTrainedArtifact || operation == OpControlledCopy && observation.ObjectVerified || operation == OpCompleteTrainedArtifact && observation.State == FinetuningModelVersionReady && observation.ObjectVerified && ValidFinetuningModelReceipt(execution.TenantID, *registration, observation.Receipt)
+			if confirmed {
+				outcome.State, outcome.ReceiptID, outcome.FailureCode = DispatchConfirmed, observation.Session.RegistrationID, ""
+				if operation == OpCompleteTrainedArtifact {
+					outcome.ReceiptID = observation.Receipt.ModelVersionID
+				}
+			}
+		}
+		// A bounded DB-only settlement preserves late facts; it grants no Model write.
+		settle, done := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+		state, err = o.dispatches.RecordRegistrationObservation(settle, authority, operation, outcome, observation)
+		done()
+		if err != nil {
+			return state, err
+		}
+		if outcome.State != DispatchConfirmed {
+			return state, ErrModelDependencyUnavailable
+		}
+	}
+	if state.FinetuningRegistration == nil || state.FinetuningRegistration.State != RegistrationStateReady || !ValidFinetuningModelReceipt(execution.TenantID, *state.FinetuningRegistration, state.FinetuningRegistration.Receipt) {
+		return state, ErrModelDependencyUnavailable
+	}
+	return state, nil
+}
+
+func ValidTrainedArtifactSession(tenant string, session *TrainedArtifactSession) bool {
+	if session == nil || !validAdmissionID(session.RegistrationID) || !ValidStorageKey(session.StoragePath) || !strings.HasPrefix(session.StoragePath, tenant+"/") {
+		return false
+	}
+	id, err := uuid.Parse(session.RegistrationID)
+	return err == nil && id != uuid.Nil && id.String() == session.RegistrationID
+}
+
+func validTrainedArtifactSession(tenant string, session *TrainedArtifactSession) bool {
+	return ValidTrainedArtifactSession(tenant, session)
+}
+
+func ValidTrainedArtifactObservation(tenant string, registration FinetuningRegistration, observation TrainedArtifactObservation) bool {
+	if !validTrainedArtifactSession(tenant, &observation.Session) || registration.Session != nil && *registration.Session != observation.Session {
+		return false
+	}
+	switch observation.State {
+	case "pending", "uploaded", "ready":
 	default:
-		fact, err := orchestrator.registry.CreateContainer(ctx, authority.TenantID, registration.ContainerKey, write)
-		if err != nil || fact.ModelID == "" {
-			return orchestrator.settle(ctx, authority, OpCreateModel, permit.Dispatch, "", FinetuningWriteUnresolved)
-		}
-		return orchestrator.settle(ctx, authority, OpCreateModel, permit.Dispatch, fact.ModelID, "")
+		return false
 	}
+	return observation.State != "ready" || observation.ObjectVerified && ValidFinetuningModelReceipt(tenant, registration, observation.Receipt)
+}
+func validTrainedArtifactObservation(tenant string, registration FinetuningRegistration, observation TrainedArtifactObservation) bool {
+	return ValidTrainedArtifactObservation(tenant, registration, observation)
 }
 
-// EnsureVersion writes the output version and then verifies the original result.
-// A transport success is not READY: only an exact read-back does that. The
-// frozen target, version tag, size and SHA come from the persisted intent, so a
-// caller cannot register a different object or target.
-func (orchestrator *FinetuningRegistrationOrchestrator) EnsureVersion(ctx context.Context, authority RunAuthorityCandidate, registration FinetuningRegistration, write FinetuningVersionWrite) (FinetuningRegistrationDispatch, error) {
-	if err := validVersionWrite(registration, write); err != nil {
-		return FinetuningRegistrationDispatch{}, err
+func ValidFinetuningModelReceipt(tenant string, registration FinetuningRegistration, receipt *FinetuningModelReceipt) bool {
+	if receipt == nil || !validTrainedArtifactSession(tenant, &TrainedArtifactSession{RegistrationID: receipt.RegistrationID, StoragePath: receipt.StoragePath}) || receipt.SizeBytes != registration.Bundle.SizeBytes || receipt.SHA256 != registration.Bundle.SHA256 || registration.TargetModelID != nil && receipt.ModelID != *registration.TargetModelID {
+		return false
 	}
-	permit, err := orchestrator.dispatches.PermitRegistrationDispatch(ctx, authority, OpCreateModelVersion, uuid.NewString())
-	if err != nil {
-		return FinetuningRegistrationDispatch{}, err
+	if registration.Session != nil && (receipt.RegistrationID != registration.Session.RegistrationID || receipt.StoragePath != registration.Session.StoragePath) {
+		return false
 	}
-	if permit.Dispatch.State == DispatchConfirmed {
-		return permit.Dispatch, nil
-	}
-	if permit.SendPermit {
-		if _, err := orchestrator.registry.RegisterVersion(ctx, authority.TenantID, registration.VersionKey, write); err != nil {
-			return orchestrator.settle(ctx, authority, OpCreateModelVersion, permit.Dispatch, "", FinetuningWriteUnresolved)
+	for _, value := range []string{receipt.ModelID, receipt.ModelVersionID} {
+		id, err := uuid.Parse(value)
+		if err != nil || id == uuid.Nil || id.String() != value {
+			return false
 		}
 	}
-	fact, found, err := orchestrator.registry.FindVersion(ctx, authority.TenantID, write.ModelID, write.Version)
-	if err != nil || !found || !matchesFrozenVersion(registration, write, fact) {
-		return orchestrator.settle(ctx, authority, OpCreateModelVersion, permit.Dispatch, "", FinetuningWriteUnresolved)
-	}
-	return orchestrator.settle(ctx, authority, OpCreateModelVersion, permit.Dispatch, fact.ModelVersionID, "")
-}
-
-// settle records the real observed outcome. An unresolved result is UNKNOWN,
-// never a failure fact: the permitted write may still have succeeded remotely,
-// and only original-key verification can settle it. CONFIRMED requires a real
-// receipt from the read-back.
-func (orchestrator *FinetuningRegistrationOrchestrator) settle(ctx context.Context, authority RunAuthorityCandidate, operation FinetuningRegistrationOperation, permitted FinetuningRegistrationDispatch, receipt, failure string) (FinetuningRegistrationDispatch, error) {
-	outcome := permitted
-	if receipt == "" {
-		outcome.State, outcome.ReceiptID, outcome.FailureCode = DispatchUnknown, "", failure
-	} else {
-		outcome.State, outcome.ReceiptID, outcome.FailureCode = DispatchConfirmed, receipt, ""
-	}
-	state, err := orchestrator.dispatches.RecordRegistrationOutcome(ctx, authority, operation, outcome)
-	if err != nil {
-		return FinetuningRegistrationDispatch{}, err
-	}
-	if stored := RegistrationDispatchFor(state.FinetuningRegistration, operation); stored != nil {
-		return *stored, nil
-	}
-	return outcome, nil
-}
-
-// validContainerWrite binds the provider-decided fields to the frozen intent.
-// The container write exists only for the new branch.
-func validContainerWrite(registration FinetuningRegistration, write FinetuningContainerWrite) error {
-	if registration.NewModelName == nil || registration.TargetModelID != nil {
-		return ErrRuntimeConflict
-	}
-	name := strings.TrimSpace(write.Name)
-	if name == "" || len(name) > 63 || len(write.DisplayName) > 128 || len(write.Description) > 512 || len(write.Capabilities) > 16 {
-		return ErrRuntimeConflict
-	}
-	return nil
-}
-
-// validVersionWrite binds the version content to the frozen publication and the
-// original keys. A caller cannot change the target, the tag or the object.
-func validVersionWrite(registration FinetuningRegistration, write FinetuningVersionWrite) error {
-	if write.ModelID == "" || write.Version != registration.VersionTag || write.Format == "" ||
-		write.StoragePath == "" || write.ChecksumSHA256 != registration.Bundle.SHA256 ||
-		write.SizeBytes != registration.Bundle.SizeBytes || write.SizeBytes <= 0 {
-		return ErrRuntimeConflict
-	}
-	if registration.TargetModelID != nil && write.ModelID != *registration.TargetModelID {
-		return ErrRuntimeConflict
-	}
-	return nil
-}
-
-// matchesFrozenVersion is the READY gate. It compares the read-back result
-// against the frozen target, tag, exact object, size and format.
-func matchesFrozenVersion(registration FinetuningRegistration, write FinetuningVersionWrite, fact FinetuningVersionFact) bool {
-	return fact.ModelVersionID != "" && fact.ModelID == write.ModelID && fact.Version == write.Version &&
-		fact.Format == write.Format && fact.StoragePath == write.StoragePath &&
-		fact.ChecksumSHA256 == registration.Bundle.SHA256 && fact.SizeBytes == registration.Bundle.SizeBytes &&
-		fact.Status == FinetuningModelVersionReady
+	return true
 }

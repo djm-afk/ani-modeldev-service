@@ -2,11 +2,8 @@ package catalogue_test
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,136 +13,82 @@ import (
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 )
 
-func TestParseReleaseBindsTheIndependentCanonicalFixtureDigest(t *testing.T) {
-	// Independently computed with Fedora Python hashlib from fixed f16bcdeb.
-	const digest = conformance.ReleaseSHA256V1
-	document, gotDigest, err := cpup01.ParseRelease([]byte(releaseFixtureV1))
-	if err != nil || gotDigest != digest || !reflect.DeepEqual(document, releaseFixtureDocument()) {
-		t.Fatalf("canonical Release or actual-byte digest changed: digest %q, err %v", gotDigest, err)
-	}
-}
-
-func TestReleaseRejectsAmbiguousIncompleteAndUnsupportedDocuments(t *testing.T) {
-	mutate := func(change func(*cpup01.ReleaseDocument)) []byte {
-		document := releaseFixtureDocument()
-		change(&document)
-		raw, err := json.Marshal(document)
-		if err != nil {
-			t.Fatalf("fixture encoding failed; behavior NOT_RUN: %v", err)
+func TestMaterialRejectsAmbiguousIncompleteAndUnsafeSoftware(t *testing.T) {
+	_, raw := materialFixture(t)
+	text := string(raw)
+	mutate := func(change func(*cpup01.ImplementationMaterial)) []byte {
+		m := conformance.MaterialV21()
+		change(&m)
+		if _, err := m.Canonical(); err == nil {
+			t.Fatal("invalid semantic material acquired canonical bytes")
 		}
-		return raw
+		b, err := json.Marshal(m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return b
 	}
-	cases := []struct {
-		name string
-		raw  []byte
-	}{
-		{"unknown field", []byte(strings.Replace(releaseFixtureV1, `"kind":`, `"ready":true,"kind":`, 1))},
-		{"default pointer", []byte(strings.Replace(releaseFixtureV1, `"kind":`, `"current":true,"kind":`, 1))},
-		{"duplicate field", []byte(strings.Replace(releaseFixtureV1, `"kind":`, `"kind":"GENERAL_TRAINING","kind":`, 1))},
-		{"duplicate nested field", []byte(strings.Replace(releaseFixtureV1, `"nodes":1`, `"nodes":1,"nodes":1`, 1))},
-		{"case folded field", []byte(strings.Replace(releaseFixtureV1, `"kind":`, `"Kind":`, 1))},
-		{"null optional argument", []byte(strings.Replace(releaseFixtureV1, `{"literal":"--data"}`, `{"literal":"--data","source":null}`, 1))},
-		{"omitted false", []byte(strings.Replace(releaseFixtureV1, `,"create_tar_bundle":false`, "", 1))},
-		{"noncanonical integer", []byte(strings.Replace(releaseFixtureV1, `"1000"`, `"01000"`, 1))},
-		{"noncanonical parameter", []byte(strings.Replace(releaseFixtureV1, `"0.01"`, `"0.0100"`, 1))},
-		{"trailing newline", []byte(releaseFixtureV1 + "\n")},
-		{"trailing object", []byte(releaseFixtureV1 + "{}")},
-		{"leading whitespace", []byte(" " + releaseFixtureV1)},
-		{"UTF8 BOM", append([]byte{0xef, 0xbb, 0xbf}, []byte(releaseFixtureV1)...)},
-		{"invalid UTF8", []byte(strings.Replace(releaseFixtureV1, "cpu-module-fixture", "cpu-\xff", 1))},
-		{"unpaired UTF16 escape", []byte(strings.Replace(releaseFixtureV1, "cpu-module-fixture", `cpu-\ud800`, 1))},
-		{"unknown PipelineVersion", mutate(func(d *cpup01.ReleaseDocument) { d.PipelineVersionID = "UNKNOWN" })},
-		{"zero release ID", mutate(func(d *cpup01.ReleaseDocument) { d.ReleaseID = "00000000-0000-0000-0000-000000000000" })},
-		{"uppercase UUID", mutate(func(d *cpup01.ReleaseDocument) { d.PipelineVersionID = "AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA" })},
-		{"missing IR digest", mutate(func(d *cpup01.ReleaseDocument) { d.PipelineIRSHA256 = "" })},
-		{"missing Runtime digest", mutate(func(d *cpup01.ReleaseDocument) { d.Runtime.ContentSHA256 = "" })},
-		{"duplicate Runtime targets", mutate(func(d *cpup01.ReleaseDocument) { d.Runtime.TargetJobs = []string{"trainer", "trainer"} })},
-		{"unordered Runtime targets", mutate(func(d *cpup01.ReleaseDocument) { d.Runtime.TargetJobs = []string{"worker", "trainer"} })},
-		{"floating image", mutate(func(d *cpup01.ReleaseDocument) { d.Program.ImageDigest = "registry.example.test/cpu-mlp:latest" })},
-		{"shell command", mutate(func(d *cpup01.ReleaseDocument) { d.Program.Command = []string{"sh", "-c", "train"} })},
-		{"arbitrary argument source", mutate(func(d *cpup01.ReleaseDocument) { d.Program.ArgsTemplate[1].Source = "USER_SCRIPT" })},
-		{"mixed argument forms", mutate(func(d *cpup01.ReleaseDocument) { d.Program.ArgsTemplate[1].Literal = "/arbitrary" })},
-		{"unsupported parameter schema", mutate(func(d *cpup01.ReleaseDocument) { d.Program.ParameterContractVersion = "unknown" })},
-		{"missing default parameter", mutate(func(d *cpup01.ReleaseDocument) { d.Program.DefaultParameters = d.Program.DefaultParameters[:2] })},
-		{"duplicate default parameter", mutate(func(d *cpup01.ReleaseDocument) { d.Program.DefaultParameters[1] = d.Program.DefaultParameters[0] })},
-		{"learning rate outside contract", mutate(func(d *cpup01.ReleaseDocument) { d.Program.DefaultParameters[2].Value = "0.11" })},
-		{"multiple nodes", mutate(func(d *cpup01.ReleaseDocument) { d.Resources.Nodes = 2 })},
-		{"CPU limit below request", mutate(func(d *cpup01.ReleaseDocument) { d.Resources.LimitMillicpu = 999 })},
-		{"unbound storage class", mutate(func(d *cpup01.ReleaseDocument) { d.Workspace.StorageClass = "NOT_READY" })},
-		{"overlapping workspace", mutate(func(d *cpup01.ReleaseDocument) { d.Workspace.TrainingSubpath = "input/training" })},
-		{"wrong output role", mutate(func(d *cpup01.ReleaseDocument) { d.OutputContract.RequiredFiles[0].Role = "CHECKPOINT" })},
-		{"unbounded timeout", mutate(func(d *cpup01.ReleaseDocument) { d.ExecutionTimeoutSeconds = 0 })},
-		{"oversize otherwise canonical document", mutate(func(d *cpup01.ReleaseDocument) {
-			d.Runtime.TargetJobs = make([]string, 10000)
-			for i := range d.Runtime.TargetJobs {
-				d.Runtime.TargetJobs[i] = fmt.Sprintf("job-%05d", i)
-			}
-		})},
+	cases := map[string][]byte{
+		"unknown":          []byte(strings.Replace(text, `"implementation":`, `"enabled":true,"implementation":`, 1)),
+		"retired release":  []byte(strings.Replace(text, `"implementation":`, `"release_id":"11111111-1111-4111-8111-111111111111","implementation":`, 1)),
+		"duplicate":        []byte(strings.Replace(text, `"schema_version":`, `"schema_version":"duplicate","schema_version":`, 1)),
+		"duplicate nested": []byte(strings.Replace(text, `"version":"1"`, `"version":"1","version":"1"`, 1)),
+		"case folded":      []byte(strings.Replace(text, `"implementation":`, `"Implementation":`, 1)),
+		"null source":      []byte(strings.Replace(text, `{"literal":"--data"}`, `{"literal":"--data","source":null}`, 1)),
+		"omitted boolean":  []byte(strings.Replace(text, `"create_tar_bundle":true,`, "", 1)),
+		"newline":          append(append([]byte{}, raw...), '\n'), "trailing object": append(append([]byte{}, raw...), '{', '}'), "leading whitespace": append([]byte(" "), raw...), "BOM": append([]byte{0xef, 0xbb, 0xbf}, raw...),
+		"invalid UTF8":           []byte(strings.Replace(text, "registry.example.test", "registry.\xff.test", 1)),
+		"unpaired surrogate":     []byte(strings.Replace(text, "registry.example.test", `registry.\ud800.test`, 1)),
+		"unknown implementation": mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.ImplementationID = "builtin.unknown" }),
+		"wrong contract":         mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.ParameterContractVersion = "unknown" }),
+		"unknown pipeline":       mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.PipelineVersionID = "UNKNOWN" }),
+		"zero pipeline": mutate(func(m *cpup01.ImplementationMaterial) {
+			m.Implementation.PipelineID = "00000000-0000-0000-0000-000000000000"
+		}),
+		"uppercase UUID": mutate(func(m *cpup01.ImplementationMaterial) {
+			m.Implementation.PipelineVersionID = "AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA"
+		}),
+		"IR absent":         mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.PipelineIRSHA256 = "" }),
+		"floating image":    mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ImageDigest = "registry.example.test/mlp:latest" }),
+		"shell":             mutate(func(m *cpup01.ImplementationMaterial) { m.Program.Command = []string{"sh", "-c", "train"} }),
+		"arbitrary source":  mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ArgsTemplate[1].Source = "USER_SCRIPT" }),
+		"mixed argument":    mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ArgsTemplate[1].Literal = "/arbitrary" }),
+		"empty command":     mutate(func(m *cpup01.ImplementationMaterial) { m.Program.Command = nil }),
+		"unbound storage":   mutate(func(m *cpup01.ImplementationMaterial) { m.Workspace.StorageClass = "NOT_READY" }),
+		"overlap workspace": mutate(func(m *cpup01.ImplementationMaterial) { m.Workspace.TrainingSubpath = "inputs/training" }),
+		"wrong output role": mutate(func(m *cpup01.ImplementationMaterial) { m.OutputContract.RequiredFiles[0].Role = "CHECKPOINT" }),
+		"oversize":          []byte(strings.Repeat("x", cpup01.MaxMaterialBytes+1)),
 	}
-	for _, test := range cases {
-		t.Run(test.name, func(t *testing.T) {
-			document, digest, err := cpup01.ParseRelease(test.raw)
-			if !errors.Is(err, cpup01.ErrInvalidArgument) || digest != "" || !reflect.DeepEqual(document, cpup01.ReleaseDocument{}) {
-				t.Fatalf("invalid document acquired a usable contract: digest %q, err %v", digest, err)
+	for name, raw := range cases {
+		t.Run(name, func(t *testing.T) {
+			m, digest, err := cpup01.ParseMaterial(raw)
+			if !errors.Is(err, cpup01.ErrInvalidArgument) || digest != "" || !reflect.DeepEqual(m, cpup01.ImplementationMaterial{}) {
+				t.Fatal("invalid material acquired fixed provenance", err)
 			}
 			directory := t.TempDir()
-			id := releaseFixtureDocument().ReleaseID
-			if err := os.WriteFile(filepath.Join(directory, id+".json"), test.raw, 0600); err != nil {
-				t.Fatal(err)
-			}
-			actualHash := sha256.Sum256(test.raw)
-			loaded, err := catalogue.ReadRelease(context.Background(), directory, id, hex.EncodeToString(actualHash[:]))
-			if !errors.Is(err, catalogue.ErrInvalidRelease) || !reflect.DeepEqual(loaded, cpup01.ReleaseDocument{}) {
-				t.Fatalf("reader accepted invalid bytes despite a matching actual digest: %v", err)
+			writeMaterial(t, directory, "builtin.mlp", "cpu", raw)
+			got, err := catalogue.ReadImplementationMaterial(context.Background(), directory, "builtin.mlp", "cpu")
+			if !errors.Is(err, catalogue.ErrInvalidMaterial) || !reflect.DeepEqual(got, cpup01.ImplementationMaterial{}) {
+				t.Fatal("reader accepted invalid fixed bytes", err)
 			}
 		})
 	}
 }
 
-func TestReadReleaseRejectsChangedBytesAndWrongDocumentIdentity(t *testing.T) {
-	id := releaseFixtureDocument().ReleaseID
-	directory := t.TempDir()
-	name := filepath.Join(directory, id+".json")
-	originalHash := sha256.Sum256([]byte(releaseFixtureV1))
-	for _, test := range []struct {
-		name            string
-		raw             string
-		useActualDigest bool
-	}{
-		{"same ID changed content", strings.Replace(releaseFixtureV1, "55555555-5555-4555-8555-555555555555", "77777777-7777-4777-8777-777777777777", 1), false},
-		{"different document ID", strings.Replace(releaseFixtureV1, id, "22222222-2222-4222-8222-222222222222", 1), true},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			if err := os.WriteFile(name, []byte(test.raw), 0600); err != nil {
-				t.Fatal(err)
-			}
-			digest := originalHash
-			if test.useActualDigest {
-				digest = sha256.Sum256([]byte(test.raw))
-			}
-			document, err := catalogue.ReadRelease(context.Background(), directory, id, hex.EncodeToString(digest[:]))
-			if !errors.Is(err, catalogue.ErrInvalidRelease) || !reflect.DeepEqual(document, cpup01.ReleaseDocument{}) {
-				t.Fatalf("changed Release was accepted: %v", err)
-			}
-		})
-	}
-}
-
-func TestReadReleaseRejectsUnsafeFilesAndInvalidSelection(t *testing.T) {
-	id := releaseFixtureDocument().ReleaseID
-	digest := sha256.Sum256([]byte(releaseFixtureV1))
-	digestText := hex.EncodeToString(digest[:])
-	for _, kind := range []string{"symlink", "hardlink", "directory", "fifo", "empty", "oversize"} {
+func TestReadMaterialRejectsWrongImplementationUnsafeFilesAndPaths(t *testing.T) {
+	_, raw := materialFixture(t)
+	for _, kind := range []string{"symlink", "hardlink", "directory", "fifo", "empty", "oversize", "wrong implementation"} {
 		t.Run(kind, func(t *testing.T) {
 			directory := t.TempDir()
-			name := filepath.Join(directory, id+".json")
+			name := filepath.Join(directory, "builtin.mlp.cpu.json")
 			switch kind {
 			case "symlink", "hardlink":
 				target := filepath.Join(t.TempDir(), "protected.json")
-				if err := os.WriteFile(target, []byte(releaseFixtureV1), 0600); err != nil {
+				if err := os.WriteFile(target, raw, 0600); err != nil {
 					t.Fatal(err)
 				}
 				var err error
@@ -155,7 +98,7 @@ func TestReadReleaseRejectsUnsafeFilesAndInvalidSelection(t *testing.T) {
 					err = os.Link(target, name)
 				}
 				if err != nil {
-					t.Fatalf("filesystem fixture failed; behavior NOT_RUN: %v", err)
+					t.Fatal(err)
 				}
 			case "directory":
 				if err := os.Mkdir(name, 0700); err != nil {
@@ -163,50 +106,50 @@ func TestReadReleaseRejectsUnsafeFilesAndInvalidSelection(t *testing.T) {
 				}
 			case "fifo":
 				if err := syscall.Mkfifo(name, 0600); err != nil {
-					t.Fatalf("FIFO fixture failed; behavior NOT_RUN: %v", err)
-				}
-			case "empty", "oversize":
-				var raw []byte
-				if kind == "oversize" {
-					raw = []byte(strings.Repeat("x", cpup01.MaxReleaseBytes+1))
-				}
-				if err := os.WriteFile(name, raw, 0600); err != nil {
 					t.Fatal(err)
 				}
+			case "empty":
+				writeMaterial(t, directory, "builtin.mlp", "cpu", nil)
+			case "oversize":
+				writeMaterial(t, directory, "builtin.mlp", "cpu", []byte(strings.Repeat("x", cpup01.MaxMaterialBytes+1)))
+			case "wrong implementation":
+				fine := conformance.FinetuningMaterialV21()
+				b, err := fine.Canonical()
+				if err != nil {
+					t.Fatal(err)
+				}
+				writeMaterial(t, directory, "builtin.mlp", "cpu", b)
 			}
-			document, err := catalogue.ReadRelease(context.Background(), directory, id, digestText)
-			if err == nil || !reflect.DeepEqual(document, cpup01.ReleaseDocument{}) {
-				t.Fatalf("unsafe %s returned a usable Release", kind)
+			got, err := catalogue.ReadImplementationMaterial(context.Background(), directory, "builtin.mlp", "cpu")
+			if err == nil || !reflect.DeepEqual(got, cpup01.ImplementationMaterial{}) {
+				t.Fatal("unsafe material acquired contract")
 			}
 		})
 	}
 	directory := t.TempDir()
-	if err := os.WriteFile(filepath.Join(directory, id+".json"), []byte(releaseFixtureV1), 0600); err != nil {
+	writeMaterial(t, directory, "builtin.mlp", "cpu", raw)
+	for _, test := range []struct{ directory, id, mode string }{{"relative", "builtin.mlp", "cpu"}, {directory + "/../" + filepath.Base(directory), "builtin.mlp", "cpu"}, {directory, "../builtin.mlp", "cpu"}, {directory, "BUILTIN.MLP", "cpu"}, {directory, "builtin.mlp", "../cpu"}, {directory, "builtin.mlp", "CPU"}, {directory, "builtin.other", "gpu"}} {
+		got, err := catalogue.ReadImplementationMaterial(context.Background(), test.directory, test.id, test.mode)
+		if !errors.Is(err, cpup01.ErrInvalidArgument) || !reflect.DeepEqual(got, cpup01.ImplementationMaterial{}) {
+			t.Fatal("unbounded selection accepted", err)
+		}
+	}
+	if _, err := catalogue.ReadImplementationMaterial(context.Background(), directory, "builtin.mlp", "gpu"); !errors.Is(err, catalogue.ErrMaterialNotFound) {
+		t.Fatal("missing finite software fabricated", err)
+	}
+	alias := filepath.Join(t.TempDir(), "alias")
+	if err := os.Symlink(directory, alias); err != nil {
 		t.Fatal(err)
 	}
-	for _, test := range []struct{ name, directory, id, digest string }{
-		{"relative directory", "relative", id, digestText},
-		{"unclean directory", directory + "/../" + filepath.Base(directory), id, digestText},
-		{"path traversal", directory, "../" + id, digestText},
-		{"URN UUID", directory, "urn:uuid:" + id, digestText},
-		{"zero UUID", directory, "00000000-0000-0000-0000-000000000000", digestText},
-		{"empty digest", directory, id, ""},
-		{"uppercase digest", directory, id, strings.ToUpper(digestText)},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			document, err := catalogue.ReadRelease(context.Background(), test.directory, test.id, test.digest)
-			if !errors.Is(err, cpup01.ErrInvalidArgument) || !reflect.DeepEqual(document, cpup01.ReleaseDocument{}) {
-				t.Fatalf("invalid selection returned a Release: %v", err)
-			}
-		})
-	}
-	missing := "22222222-2222-4222-8222-222222222222"
-	if _, err := catalogue.ReadRelease(context.Background(), directory, missing, digestText); !errors.Is(err, catalogue.ErrReleaseNotFound) {
-		t.Fatalf("missing explicit version did not report not found: %v", err)
+	if err := catalogue.NewReader(alias).Check(context.Background()); !errors.Is(err, catalogue.ErrCatalogueUnavailable) {
+		t.Fatal("symlink catalogue root accepted", err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	if _, err := catalogue.ReadRelease(ctx, directory, id, digestText); !errors.Is(err, context.Canceled) {
-		t.Fatalf("cancellation was lost: %v", err)
+	if _, err := catalogue.ReadImplementationMaterial(ctx, directory, "builtin.mlp", "cpu"); !errors.Is(err, context.Canceled) {
+		t.Fatal("cancellation lost", err)
+	}
+	if _, err := catalogue.NewReader(directory).ReadImplementationMaterial(context.Background(), "builtin.mlp", "gpu"); !errors.Is(err, biz.ErrAdmissionEnvironmentNotReady) {
+		t.Fatal("safe unavailable mapping lost", err)
 	}
 }

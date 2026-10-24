@@ -23,7 +23,12 @@ func (v *Verifier) VerifyCSV(ctx context.Context, scope cpup01.StorageScope, obj
 	if object.SizeBytes <= 0 || object.SizeBytes > 32*1024*1024 {
 		return biz.VerifiedCSV{}, biz.ErrInputVerification
 	}
-	verified, err := v.verify(ctx, scope, object, inspectCPUCSV)
+	var rows uint32
+	verified, err := v.verify(ctx, scope, object, func(stream io.Reader) error {
+		var err error
+		rows, err = inspectCPUCSV(stream)
+		return err
+	})
 	if err != nil {
 		if ctx.Err() != nil {
 			return biz.VerifiedCSV{}, ctx.Err()
@@ -33,53 +38,53 @@ func (v *Verifier) VerifyCSV(ctx context.Context, scope cpup01.StorageScope, obj
 		}
 		return biz.VerifiedCSV{}, biz.ErrInputVerification
 	}
-	return biz.VerifiedCSV{VerifiedObject: verified, SchemaVersion: "ani.cpu.csv.v1", RowCount: 1024, FeatureCount: 16}, nil
+	return biz.VerifiedCSV{VerifiedObject: verified, SchemaVersion: "ani.cpu.csv.v1", RowCount: rows, FeatureCount: 16}, nil
 }
 
-func inspectCPUCSV(stream io.Reader) error {
+func inspectCPUCSV(stream io.Reader) (uint32, error) {
 	reader := csv.NewReader(&csvPhysicalLines{reader: stream})
 	reader.FieldsPerRecord = 17
 	reader.ReuseRecord = true
 	header, err := reader.Read()
 	if err != nil || len(header) != 17 || header[16] != "label" {
-		return biz.ErrInputVerification
+		return 0, biz.ErrInputVerification
 	}
 	for column := 0; column < 16; column++ {
 		if header[column] != "x"+strconv.Itoa(column) {
-			return biz.ErrInputVerification
+			return 0, biz.ErrInputVerification
 		}
 	}
-	rows := 0
+	var rows uint32
 	for {
 		row, err := reader.Read()
 		if err == io.EOF {
 			break
 		}
-		if err != nil || rows >= 1024 || (row[16] != "0" && row[16] != "1") {
-			return biz.ErrInputVerification
+		if err != nil || rows == math.MaxUint32 || (row[16] != "0" && row[16] != "1") {
+			return 0, biz.ErrInputVerification
 		}
 		for _, raw := range row[:16] {
 			// The registered CPython CSV loader limits each decoded field to
 			// 128 Ki characters. A byte bound is conservative for UTF-8 and
 			// prevents a verified decimal from failing that loader's parsing.
 			if len(raw) > 128*1024 {
-				return biz.ErrInputVerification
+				return 0, biz.ErrInputVerification
 			}
 			text := strings.TrimSpace(raw)
 			if strings.ContainsAny(raw, "\r\n") || !decimalFeaturePattern.MatchString(text) {
-				return biz.ErrInputVerification
+				return 0, biz.ErrInputVerification
 			}
 			value, err := strconv.ParseFloat(text, 64)
 			if err != nil || math.IsNaN(value) || math.IsInf(value, 0) || math.Abs(value) > math.MaxFloat32 {
-				return biz.ErrInputVerification
+				return 0, biz.ErrInputVerification
 			}
 		}
 		rows++
 	}
-	if rows != 1024 {
-		return biz.ErrInputVerification
+	if rows == 0 {
+		return 0, biz.ErrInputVerification
 	}
-	return nil
+	return rows, nil
 }
 
 var decimalFeaturePattern = regexp.MustCompile(`^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$`)

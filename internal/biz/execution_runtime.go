@@ -36,12 +36,13 @@ type TrainingPlan struct {
 	Name, RequestSHA256                          string
 	Snapshot                                     cpup01.Snapshot
 	Workspace                                    WorkspaceBinding
-	FinetuningTiming                             *TrainingBudgetTiming `json:",omitempty"`
+	RuntimeBinding                               RuntimeTemplateBinding
+	Timing                                       *TrainingBudgetTiming `json:",omitempty"`
 }
 
 // TrainingBudgetTiming is fixed by the first database-backed reservation. A
 // TrainJob lookup, status replay, or delayed process start cannot renew it.
-// The optional field preserves the exact historical CPU request hash.
+// Every implementation uses this original shared TRAIN/train-wait window.
 type TrainingBudgetTiming struct {
 	AdmittedAt time.Time
 	DeadlineAt time.Time
@@ -67,11 +68,24 @@ type RuntimeResource struct {
 	APIVersion, Kind, Namespace, Name, UID, OwnerUID string
 	APIObjectPresent                                 bool
 	CreationDisabled                                 bool
+	Suspension                                       *TrainingControllerSuspension `json:",omitempty"`
 	Terminal                                         bool
 	ExitCode                                         *int32
+	// A terminal worker's bounded log tail travels with its original exit
+	// observation, so releasing its finalizer cannot erase the only copy.
+	TrainingLog *RecordedTrainingLog `json:",omitempty"`
 	// InitializationAbort is owner-only Pod evidence, never a main-container
 	// exit or permission for a managed step, training writer, or publication.
 	InitializationAbort *PodInitializationAbort `json:",omitempty"`
+}
+
+// TrainingControllerSuspension is a controller acknowledgement, distinct from
+// merely writing spec.suspend. Zero-worker closure also requires the complete
+// original controller graph and a fresh, unpaginated retained-Pod inventory.
+type TrainingControllerSuspension struct {
+	Generation, ObservedGeneration int64
+	AcknowledgedAt                 time.Time
+	WorkerExitRetention            bool
 }
 
 // PodInitializationAbort retains the kubelet's explicit stopped-sandbox and
@@ -82,7 +96,19 @@ type PodInitializationAbort struct {
 	DeletedAt, NotInitializedAt, SandboxStoppedAt      time.Time
 	DeclaredInitContainers, DeclaredContainers         []string
 	InitContainerExits                                 []InitializationContainerExit
+	UncreatedInitContainer                             *InitializationContainerNotCreated `json:",omitempty"`
 	UnstartedInitContainers, UnstartedContainers       []string
+}
+
+// InitializationContainerNotCreated is the kubelet's missing-container marker,
+// not a process exit. Sandbox/generation/deletion proof is retained separately
+// by PodInitializationAbort; this marker cannot authorize a successful init.
+type InitializationContainerNotCreated struct {
+	Name, Reason, Message, ContainerID, ImageID string
+	ReportedExitCode                            int32
+	StartedAt, FinishedAt                       *time.Time
+	Started, Ready, LastStateEmpty              bool
+	RestartCount                                int64
 }
 
 type InitializationContainerExit struct {
@@ -94,10 +120,22 @@ type InitializationContainerExit struct {
 // ValidAt validates the persisted abort facts independently of the Kubernetes
 // adapter. A completed owner Run/Workflow is additionally required by close.
 func (proof *PodInitializationAbort) ValidAt(observedAt time.Time) bool {
-	if proof == nil || proof.PodResourceVersion == "" || proof.NodeName == "" || proof.Phase != "Failed" || proof.RestartPolicy != "Never" || proof.PodGeneration <= 0 || observedAt.IsZero() || proof.DeletedAt.IsZero() || proof.NotInitializedAt.IsZero() || proof.SandboxStoppedAt.IsZero() || proof.DeletedAt.After(observedAt) || proof.SandboxStoppedAt.After(observedAt) || proof.NotInitializedAt.After(proof.SandboxStoppedAt) || len(proof.InitContainerExits) == 0 || len(proof.UnstartedInitContainers) == 0 || len(proof.UnstartedContainers) == 0 || len(proof.DeclaredInitContainers) != len(proof.InitContainerExits)+len(proof.UnstartedInitContainers) || len(proof.DeclaredContainers) != len(proof.UnstartedContainers) {
+	if proof == nil || proof.PodResourceVersion == "" || proof.NodeName == "" || proof.Phase != "Failed" || proof.RestartPolicy != "Never" || proof.PodGeneration <= 0 || observedAt.IsZero() || proof.DeletedAt.IsZero() || proof.NotInitializedAt.IsZero() || proof.SandboxStoppedAt.IsZero() || proof.DeletedAt.After(observedAt) || proof.SandboxStoppedAt.After(observedAt) || proof.NotInitializedAt.After(proof.SandboxStoppedAt) || len(proof.UnstartedInitContainers) == 0 || len(proof.UnstartedContainers) == 0 || len(proof.DeclaredContainers) != len(proof.UnstartedContainers) {
 		return false
 	}
 	seen := make(map[string]bool)
+	initPrefix := len(proof.InitContainerExits)
+	if marker := proof.UncreatedInitContainer; marker != nil {
+		if initPrefix != 0 || marker.Name == "" || marker.Reason != "ContainerStatusUnknown" || marker.Message != "The container could not be located when the pod was terminated" || marker.ReportedExitCode != 137 || marker.ContainerID != "" || marker.ImageID != "" || marker.StartedAt != nil || marker.FinishedAt != nil || marker.Started || marker.Ready || marker.RestartCount != 0 || !marker.LastStateEmpty || len(proof.DeclaredInitContainers) == 0 || proof.DeclaredInitContainers[0] != marker.Name {
+			return false
+		}
+		seen[marker.Name], initPrefix = true, 1
+	} else if initPrefix == 0 {
+		return false
+	}
+	if len(proof.DeclaredInitContainers) != initPrefix+len(proof.UnstartedInitContainers) {
+		return false
+	}
 	var previous time.Time
 	for i, exit := range proof.InitContainerExits {
 		if exit.Name == "" || seen[exit.Name] || proof.DeclaredInitContainers[i] != exit.Name || exit.ContainerID == "" || exit.ImageID == "" || exit.ExitCode != 0 || exit.StartedAt.IsZero() || exit.FinishedAt.IsZero() || exit.FinishedAt.Before(exit.StartedAt) || exit.StartedAt.Before(previous) || exit.FinishedAt.After(proof.SandboxStoppedAt) {
@@ -106,7 +144,7 @@ func (proof *PodInitializationAbort) ValidAt(observedAt time.Time) bool {
 		seen[exit.Name], previous = true, exit.FinishedAt
 	}
 	for i, name := range proof.UnstartedInitContainers {
-		if name == "" || seen[name] || proof.DeclaredInitContainers[len(proof.InitContainerExits)+i] != name {
+		if name == "" || seen[name] || proof.DeclaredInitContainers[initPrefix+i] != name {
 			return false
 		}
 		seen[name] = true
@@ -124,17 +162,47 @@ func (proof *PodInitializationAbort) ValidAt(observedAt time.Time) bool {
 // WritersAbsent requires verified current controller/child facts and all known
 // historical Pods. Neither a missing object nor a Complete condition suffices.
 type TrainingRuntimeObservation struct {
-	Handle        TrainingHandle
-	Resources     []RuntimeResource
-	Outcome       string // RUNNING, SUCCEEDED, FAILED, or UNKNOWN
-	WritersAbsent bool
-	ObservedAt    time.Time
+	Handle                         TrainingHandle
+	Resources                      []RuntimeResource
+	Outcome                        string // RUNNING, SUCCEEDED, FAILED, or UNKNOWN
+	WritersAbsent                  bool
+	SpecificationMismatch          bool   `json:",omitempty"`
+	NoWorkerPodListResourceVersion string `json:",omitempty"`
+	ObservedAt                     time.Time
 }
 
 type TrainingReservation struct {
 	State      ExecutionRuntime
 	SendPermit bool
 }
+
+// RuntimeCreation keeps the original creation fence even when no HTTP receipt
+// survives. A dispatch attempt is never erased to manufacture an unsent proof.
+type RuntimeCreation struct {
+	Name, NamespaceUID, ExpectedSpecSHA256 string
+	Attempts                               []RuntimeDispatchAttempt
+	Binding                                *RuntimeTemplateBinding `json:",omitempty"`
+	ReviewReason, NextAction               string
+}
+
+type RuntimeDispatchAttempt struct {
+	DispatchedAt  time.Time
+	NotSentAt     *time.Time `json:",omitempty"`
+	NotSentReason string     `json:",omitempty"`
+}
+
+type RuntimeTemplateBinding struct {
+	NamespaceUID, Name, UID, ObservedSpecSHA256 string
+}
+
+// RuntimeCreationNotSent can be emitted only by the original adapter before
+// invoking Kubernetes Create. GET 404 and expired leases never produce it.
+type RuntimeCreationNotSent struct {
+	NamespaceUID, Name, ExpectedSpecSHA256, Reason string
+	AttemptDispatchedAt                            time.Time
+}
+
+func (*RuntimeCreationNotSent) Error() string { return "RUNTIME_CREATION_NOT_SENT" }
 
 type PublishedRuntimeFile struct {
 	ArtifactID string
@@ -159,6 +227,10 @@ type RuntimePublication struct {
 // ExecutionRuntime contains committed facts; no state value reconstructs an
 // outbound creation permit. Normal step advancement belongs to KFP.
 type ExecutionRuntime struct {
+	GPURelease             *GPUReleaseState        `json:",omitempty"`
+	StepTimings            []ManagedStepTiming     `json:",omitempty"`
+	RuntimeTemplate        *RuntimeCreation        `json:",omitempty"`
+	TrainingWindow         *TrainingBudgetTiming   `json:",omitempty"`
 	ComputeCleanup         *ComputeCleanupReceipt  `json:",omitempty"`
 	StepExitCleanup        *StepExitCleanupReceipt `json:",omitempty"`
 	FinetuningRegistration *FinetuningRegistration `json:",omitempty"`
@@ -169,11 +241,14 @@ type ExecutionRuntime struct {
 	Observation            *TrainingRuntimeObservation
 	Publication            *RuntimePublication
 	FinetuningSteps        []FinetuningStepStart `json:",omitempty"`
-	CloseGeneration        uint64
-	CloseReason            string
-	CloseRequestedAt       time.Time
-	ClosedAt               *time.Time
-	CloseEvidence          *ManagedCloseEvidence
+	// CloseOperationID is generated once under the execution lock and retained
+	// across normal, stopped and failed closure and all release observations.
+	CloseOperationID string `json:"close_operation_id,omitempty"`
+	CloseGeneration  uint64
+	CloseReason      string
+	CloseRequestedAt time.Time
+	ClosedAt         *time.Time
+	CloseEvidence    *ManagedCloseEvidence
 	// CloseAuthority is an owner-only recovery association. It cannot authorize
 	// managed steps or recreate a consumed submission permit.
 	CloseAuthority    *RunAuthorityCandidate
@@ -184,6 +259,10 @@ type ExecutionRuntime struct {
 type ExecutionRuntimeRepository interface {
 	GetRuntime(context.Context, string, string) (ExecutionRuntime, error)
 	RecordPrepared(context.Context, RunAuthorityCandidate, WorkspaceBinding) (ExecutionRuntime, bool, error)
+	ReserveRuntime(context.Context, RunAuthorityCandidate) (TrainingReservation, error)
+	RecordRuntimeBinding(context.Context, RunAuthorityCandidate, RuntimeTemplateBinding) (ExecutionRuntime, error)
+	RecordRuntimeNotSent(context.Context, RunAuthorityCandidate, RuntimeCreationNotSent) (ExecutionRuntime, error)
+	RecordRuntimeReview(context.Context, RunAuthorityCandidate) (ExecutionRuntime, error)
 	ReserveTraining(context.Context, RunAuthorityCandidate) (TrainingReservation, error)
 	RecordTrainingRejection(context.Context, RunAuthorityCandidate, TrainingCreationRejection) (ExecutionRuntime, error)
 	RecordTrainingHandle(context.Context, RunAuthorityCandidate, TrainingHandle) (ExecutionRuntime, error)
@@ -197,10 +276,19 @@ type ExecutionRuntimeRepository interface {
 }
 
 type TrainingRuntime interface {
+	CreateRuntime(context.Context, TrainingPlan) (RuntimeTemplateBinding, error)
+	FindRuntime(context.Context, TrainingPlan) (RuntimeTemplateBinding, error)
 	CreateTraining(context.Context, TrainingPlan) (TrainingHandle, error)
 	FindTraining(context.Context, TrainingPlan) (TrainingHandle, error)
 	ObserveTraining(context.Context, TrainingPlan, TrainingHandle, []RuntimeResource) (TrainingRuntimeObservation, error)
 	StopTraining(context.Context, TrainingPlan, TrainingHandle) error
+}
+
+// TrainingCloseRecovery resolves an already dispatched original request after
+// the close fence. It grants no creation authority and does not depend on the
+// current Runtime or PVC still authorizing new computation.
+type TrainingCloseRecovery interface {
+	FindTrainingForClose(context.Context, TrainingPlan) (TrainingHandle, error)
 }
 
 type PreparedWorkspaceVerifier interface {
@@ -272,25 +360,37 @@ func FreezeTrainingPlan(execution Execution, workspace WorkspaceBinding, admitte
 	}
 	plan := TrainingPlan{TenantID: execution.TenantID, OperationID: execution.OperationID, ExecutionID: execution.ExecutionID, SpecHash: execution.SpecHash,
 		Name: "md-" + strings.ToLower(execution.ExecutionID), Snapshot: execution.Snapshot, Workspace: workspace}
-	if execution.Snapshot.Kind == "FINETUNING" {
-		fine := execution.Snapshot.Finetuning
-		if fine == nil || fine.Budgets.TrainingTimeoutSeconds == 0 || len(admittedAt) != 1 || admittedAt[0].IsZero() || !admittedAt[0].Before(execution.Snapshot.DeadlineAt) {
-			return TrainingPlan{}, ErrRuntimeConflict
-		}
-		start := admittedAt[0].UTC()
-		deadline := start.Add(time.Duration(fine.Budgets.TrainingTimeoutSeconds) * time.Second)
-		if execution.Snapshot.DeadlineAt.Before(deadline) {
-			deadline = execution.Snapshot.DeadlineAt.UTC()
-		}
-		plan.FinetuningTiming = &TrainingBudgetTiming{AdmittedAt: start, DeadlineAt: deadline}
-	} else if len(admittedAt) > 1 {
+	if len(admittedAt) != 1 || admittedAt[0].IsZero() || !admittedAt[0].Before(execution.Snapshot.DeadlineAt) {
 		return TrainingPlan{}, ErrRuntimeConflict
 	}
+	start := admittedAt[0].UTC()
+	deadline, err := execution.Snapshot.Timing.DeadlineFor(start)
+	if err != nil {
+		return TrainingPlan{}, ErrRuntimeConflict
+	}
+	plan.Timing = &TrainingBudgetTiming{AdmittedAt: start, DeadlineAt: deadline}
 	encoded, err := json.Marshal(plan)
 	if err != nil {
 		return TrainingPlan{}, ErrInvalidAdmission
 	}
 	digest := sha256.Sum256(encoded)
+	plan.RequestSHA256 = hex.EncodeToString(digest[:])
+	return plan, nil
+}
+
+// BindTrainingRuntime adds observed Runtime identity to the internal TrainJob
+// request, never to the immutable admission snapshot.
+func BindTrainingRuntime(plan TrainingPlan, binding RuntimeTemplateBinding) (TrainingPlan, error) {
+	if binding.NamespaceUID != plan.Workspace.NamespaceUID || binding.Name != plan.Snapshot.RuntimePlan.Name || binding.UID == "" || binding.ObservedSpecSHA256 != plan.Snapshot.RuntimePlan.ExpectedSpecSHA256 {
+		return TrainingPlan{}, ErrRuntimeConflict
+	}
+	plan.RuntimeBinding = binding
+	plan.RequestSHA256 = ""
+	raw, err := json.Marshal(plan)
+	if err != nil {
+		return TrainingPlan{}, ErrRuntimeConflict
+	}
+	digest := sha256.Sum256(raw)
 	plan.RequestSHA256 = hex.EncodeToString(digest[:])
 	return plan, nil
 }

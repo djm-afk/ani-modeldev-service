@@ -70,6 +70,8 @@ type ModeldevExecutionRuntime struct {
 	CloseRequestedAt      pgtype.Timestamptz
 	ClosedAt              pgtype.Timestamptz
 	AuthorityExecutionID  pgtype.UUID
+	GpuReleaseSealedAt    pgtype.Timestamptz
+	GpuReleaseScopeSha256 pgtype.Text
 }
 
 type ModeldevPipelineConfirmedRun struct {

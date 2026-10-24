@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Extract independently pinned CPU-P01 vectors on the Fedora task checkout.
+"""Generate independent Python golden vectors for the single active contract.
 
-This intentionally reads handwritten Go raw-string literals, not outputs from
-the Go canonicalization implementation. It does not resolve environment values.
+All identities, registries and workloads below are synthetic test fixtures.
+The implementation defaults have one source shared with the real Go/Python code.
 """
-
 import argparse
 import hashlib
 import json
@@ -12,61 +11,61 @@ from pathlib import Path
 import re
 
 
-INTENT_SHA256 = "152ed6b8e0a392be5697ee138e5a22be4183139c2954f009d6d85483cdf4a01a"
-SNAPSHOT_SHA256 = "972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9"
+def canonical(value):
+    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode()
 
 
-def literal(source: Path, function: str, variable: str, byte_slice: bool) -> bytes:
-    text = source.read_text(encoding="utf-8")
-    declaration = re.search(r"^func " + re.escape(function) + r"\(", text, re.MULTILINE)
-    if declaration is None:
-        raise ValueError(f"missing normative test {function}")
-    body = text[declaration.end():]
-    next_function = re.search(r"^func ", body, re.MULTILINE)
-    if next_function is not None:
-        body = body[:next_function.start()]
-    value_pattern = r"\[\]byte\(`([^`]*)`\)" if byte_slice else r"`([^`]*)`"
-    values = re.findall(r"\b" + re.escape(variable) + r"\s*:=\s*" + value_pattern, body)
-    if len(values) != 1:
-        raise ValueError(f"expected one handwritten {function}/{variable} literal")
-    content = values[0].encode("utf-8")
-    if content.startswith(b"\xef\xbb\xbf") or content.endswith(b"\n"):
-        raise ValueError(f"normative {function}/{variable} contains BOM or trailing newline")
-    if not isinstance(json.loads(content), dict):
-        raise ValueError(f"normative {function}/{variable} is not a JSON object")
-    return content
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="compare only; never write files")
+    parser.add_argument("--check", action="store_true")
     arguments = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    contract = root / "contract" / "cpup01"
-    intent_test = contract / "intent_test.go"
-    snapshot_test = contract / "snapshot_test.go"
-    outputs = {
-        "intent-input-v1.json": literal(intent_test, "TestIntentCanonicalizesUserRequestWithoutResolvingDefaults", "raw", True),
-        "intent-canonical-v1.json": literal(intent_test, "TestIntentCanonicalizesUserRequestWithoutResolvingDefaults", "want", False),
-        "snapshot-v1.json": literal(snapshot_test, "TestSnapshotCanonicalizesCompleteFrozenConfiguration", "want", False),
+    destination = root / "contract/cpup01/conformance"
+    source = (destination / "fixtures.go").read_text()
+    request = re.search(r'const IntentRequest = `([^`]*)`', source).group(1).encode()
+    intent = json.loads(request)
+    frozen_intent = {"schema": "ani.modeldev.intent.v2.1", **intent}
+    intent_bytes = canonical(frozen_intent)
+    definitions = json.loads((root / "contract/cpup01/implementations.json").read_bytes())["implementations"]
+    defaults = definitions["builtin.mlp"]["defaults"]
+    parameters = [{"name": key, "type": "DECIMAL" if key == "learning_rate" else "INTEGER", "value": str(value)} for key, value in sorted(defaults.items())]
+    selection = {"schema_version": 1, "preset_id": intent["compute_preset_id"], "code": "cpu-small", "name": "CPU small", "compute_type": "cpu", "cpu_millis": 1000, "memory_mib": 1024, "gpu": None}
+    # The provider has its own published field-order canonical format.
+    selection_bytes = json.dumps(selection, ensure_ascii=False, separators=(",", ":")).encode()
+    namespace_uid = "33333333-3333-4333-8333-333333333333"
+    execution_id = "99999999-9999-4999-8999-999999999999"
+    runtime_spec = {"template": {"spec": {"replicatedJobs": []}}}
+    snapshot = {
+        "schema_version": "ani.modeldev.execution-spec.v2.1", "kind": "GENERAL_TRAINING", "delivery_mode": "SAVE_ARTIFACTS",
+        "identity_ref": {"tenant_id": "77777777-7777-4777-8777-777777777777", "actor": "governance:user:contract-test", "execution_id": execution_id, "operation_id": "88888888-8888-4888-8888-888888888888", "intent_hash": digest(intent_bytes)},
+        "implementation": {"implementation_id": "builtin.mlp", "version": "1", "parameter_contract_version": "ani.mlp.parameters.v2.1", "pipeline_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "pipeline_version_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd", "pipeline_ir_sha256": "b" * 64},
+        "compute_origin": {"compute_preset_id": intent["compute_preset_id"], "selection_digest": digest(b"compute-selection-v1\n" + selection_bytes), "selection": selection_bytes.decode(), "cpu_millis": "1000", "memory_mib": "1024", "device_mode": "cpu"},
+        "timing": {"accepted_at": "2026-10-22T00:00:00Z", "execution_timeout_seconds": 3600, "execution_timeout_max_seconds": 7200, "step_timeout_seconds": 900, "execution_deadline_at": "2026-10-22T01:00:00Z"},
+        "runtime_plan": {"generator_version": "contract-fixture-v1", "api_group": "trainer.kubeflow.org", "kind": "TrainingRuntime", "namespace": "cpu-contract-fixture", "name": "mdrt-" + digest((namespace_uid + "\n" + execution_id).encode())[:48], "expected_spec": runtime_spec, "expected_spec_sha256": digest(canonical(runtime_spec)), "defaulting_rules": "trainer-v2.1-explicit-v1", "target_jobs": ["node"]},
+        "input": {"input_version_id": intent["dataset_version_id"], "object": {"storage_connection_id": "input-store-v1", "bucket": "cpu-inputs", "key": "fixed/input/data.csv", "version_id": "input-version-1", "size_bytes": "192456", "sha256": "d" * 64}, "format": "CSV", "schema_version": "ani.cpu.csv.v1", "row_count": 1027, "feature_count": 16},
+        "program": {"image_version_id": "ffffffff-ffff-4fff-8fff-ffffffffffff", "image_digest": "registry.example.test/cpu/mlp@sha256:" + "e" * 64, "command": ["python", "/opt/mlp/train.py"], "resolved_args": ["--data", "/inputs/data.csv", "--output", "/outputs"], "resolved_parameters": parameters},
+        "resources": {"nodes": 1, "processes_per_node": 1, "request_millicpu": "1000", "limit_millicpu": "1000", "request_memory_bytes": "1073741824", "limit_memory_bytes": "1073741824"},
+        "environment": {"binding_id": "11111111-1111-4111-8111-111111111111", "binding_digest": "f" * 64, "cluster_id": "22222222-2222-4222-8222-222222222222", "namespace_name": "cpu-contract-fixture", "namespace_uid": namespace_uid, "kfp_connection_ref": "kfp-managed-v1", "experiment_id": "44444444-4444-4444-8444-444444444444", "identities": {"modeldev_control_identity_ref": "modeldev-control-v1", "kfp_step_service_account": "cpu-managed-step", "trainer_service_account": "cpu-training", "verifier_service_account": "cpu-verifier", "tenant_proxy_identity": "tenant:contract-fixture"}},
+        "workspace": {"mode": "EXECUTION_PVC", "storage_class": "task-workspace", "capacity_bytes": "2147483648", "input_subpath": "inputs", "training_subpath": "training", "reports_subpath": "reports", "publication_subpath": "publication"},
+        "publication_scope": {"storage_connection_id": "artifact-store-v1", "bucket": "cpu-artifacts", "approved_prefix": "tenant-fixed/executions", "credential_reference": "modeldev-publish-v1"},
+        "output_contract": {"schema_version": "ani.cpu.output.v1", "output_kind": "CHECKPOINT", "delivery_mode": "SAVE_ARTIFACTS", "required_files": sorted([{"role": "SUMMARY", "relative_path": "summary.json", "max_size_bytes": "4096"}, {"role": "CHECKPOINT", "relative_path": "model.pt", "max_size_bytes": "1048576"}, {"role": "MODEL_CONFIG", "relative_path": "model_config.json", "max_size_bytes": "4096"}, {"role": "METRICS", "relative_path": "metrics.jsonl", "max_size_bytes": "65536"}], key=lambda item: item["relative_path"]), "max_file_count": 16, "max_total_bytes": "2097152", "create_tar_bundle": True},
+        "deadline_at": "2026-10-22T01:00:00Z",
     }
-    for filename, expected in {
-        "intent-canonical-v1.json": INTENT_SHA256,
-        "snapshot-v1.json": SNAPSHOT_SHA256,
-    }.items():
-        if hashlib.sha256(outputs[filename]).hexdigest() != expected:
-            raise ValueError(f"independent SHA256 mismatch: {filename}")
-    destination = contract / "conformance"
-    if not arguments.check:
-        destination.mkdir(parents=True, exist_ok=True)
-    for filename, content in outputs.items():
-        target = destination / filename
+    snapshot_bytes = canonical(snapshot)
+    outputs = {"intent-input-v21.json": request, "intent-canonical-v21.json": intent_bytes, "snapshot-v21.json": snapshot_bytes}
+    outputs["vectors.go"] = ("// Code generated by scripts/generate-contract-vectors.py; DO NOT EDIT.\npackage conformance\n\nconst IntentSHA256V1 = \"" + digest(intent_bytes) + "\"\nconst SnapshotSHA256V1 = \"" + digest(snapshot_bytes) + "\"\n").encode()
+    for name, data in outputs.items():
+        target = destination / name
         if arguments.check:
-            if not target.is_file() or target.read_bytes() != content:
-                raise ValueError(f"generated fixture differs or is missing: {filename}")
+            if not target.is_file() or target.read_bytes() != data:
+                raise ValueError("generated fixture differs: " + name)
         else:
-            target.write_bytes(content)
-        print(f"{hashlib.sha256(content).hexdigest()}  {filename}")
+            target.write_bytes(data)
+        print(digest(data) + "  " + name)
 
 
 if __name__ == "__main__":

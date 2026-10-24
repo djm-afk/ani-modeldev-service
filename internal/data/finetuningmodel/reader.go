@@ -1,11 +1,6 @@
-// Package finetuningmodel loads explicitly pinned base-model facts used as a
-// read-only Model boundary substitute for isolated FINETUNING candidacy.
-//
-// Loading these documents is never evidence of a Model permission, approval,
-// protected status or environment readiness. They exist only so an isolated
-// admission can freeze a base-model byte inventory without a live Model
-// dependency. A production composition must replace this with the real
-// Model read boundary.
+// Package finetuningmodel reads tenant-scoped base and target facts through the
+// formal Model boundary. Its pinned-file Reader is an explicit external boundary
+// substitute for isolated tests; production composition uses LiveReader.
 package finetuningmodel
 
 import (
@@ -98,17 +93,17 @@ func Load(ctx context.Context, sources []FileSource) (*Reader, error) {
 // ResolveFinetuningModelFacts returns the frozen base-model reference for the
 // requested tenant and fixed version. A missing or mismatched key is a finite
 // domain error, never a fabricated success.
-func (reader *Reader) ResolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, release cpup01.ReleaseDocument) (cpup01.BaseModelRef, error) {
+func (reader *Reader) ResolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, material cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error) {
 	if err := ctx.Err(); err != nil {
 		return cpup01.BaseModelRef{}, err
 	}
-	if reader == nil || intent.BaseModelVersionID == nil || release.Finetuning == nil {
+	if reader == nil || intent.BaseModelVersionID == nil || material.Finetuning == nil {
 		return cpup01.BaseModelRef{}, biz.ErrFinetuningNotEnabled
 	}
 	tenant = strings.ToLower(tenant)
 	version := strings.ToLower(*intent.BaseModelVersionID)
-	if !canonicalID(tenant) || !canonicalID(version) || version != strings.ToLower(release.Finetuning.BaseModelVersionID) {
-		return cpup01.BaseModelRef{}, biz.ErrNoCompatibleRelease
+	if !canonicalID(tenant) || !canonicalID(version) {
+		return cpup01.BaseModelRef{}, biz.ErrFinetuningNotEnabled
 	}
 	value, found := reader.documents[documentKey{tenant, version}]
 	if !found {

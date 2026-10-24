@@ -17,55 +17,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// Runtime budgets come from the original frozen execution. Close-only before
-// prepare retains the old bounded failure-close behavior without configuration.
-func (r *Runner) invocationBudget(ctx context.Context, role string) (time.Duration, error) {
-	if r.config.CloseOnly || role == "prepare" || role == "close" || role == "train-wait" && r.config.Context.Identity.OperationId != "" {
-		return 30 * time.Minute, nil
-	}
-	e, _, err := r.configuration(ctx)
-	if err != nil {
-		return 0, err
-	}
-	if e.Snapshot.Kind != "FINETUNING" {
-		return 30 * time.Minute, nil
-	}
-	fine := e.Snapshot.Finetuning
-	if fine == nil {
-		return 0, ErrConfiguration
-	}
-	var seconds uint32
-	switch role {
-	case "prepare":
-		seconds = fine.Budgets.PrepareTimeoutSeconds
-	case "train-wait":
-		seconds = fine.Budgets.TrainingTimeoutSeconds
-	case "export":
-		seconds = fine.Budgets.ExportTimeoutSeconds
-	case "verify":
-		seconds = fine.Budgets.VerifyTimeoutSeconds
-	case "collect":
-		seconds = fine.Budgets.CollectTimeoutSeconds
-	case "publish":
-		seconds = fine.Budgets.PublishTimeoutSeconds
-	case "register":
-		seconds = fine.Budgets.RPCTimeoutSeconds
-	case "close":
-		seconds = 600
-	default:
-		return 0, ErrConfiguration
-	}
-	remaining := time.Until(e.Snapshot.DeadlineAt)
-	budget := time.Duration(seconds) * time.Second
-	if remaining < budget {
-		budget = remaining
-	}
-	if budget <= 0 {
-		return 0, context.DeadlineExceeded
-	}
-	return budget, nil
-}
-
 func (r *Runner) finetuningCompute(ctx context.Context, role string) error {
 	e, _, err := r.configuration(ctx)
 	if err != nil {
@@ -95,7 +46,8 @@ func (r *Runner) finetuningCompute(ctx context.Context, role string) error {
 		return ErrNeedsReview
 	}
 	deadline := permission.DeadlineAt.AsTime()
-	if deadline.After(e.Snapshot.DeadlineAt) || !deadline.After(permission.AdmittedAt.AsTime()) {
+	expectedDeadline, timingErr := e.Snapshot.Timing.DeadlineFor(permission.AdmittedAt.AsTime())
+	if timingErr != nil || !deadline.Equal(expectedDeadline) || !deadline.After(permission.AdmittedAt.AsTime()) {
 		return ErrConfiguration
 	}
 	compute, stop := context.WithDeadline(ctx, deadline)

@@ -16,11 +16,51 @@ const InspectExecutionOperation = "/ani.modeldev.v1.ModelDevOperationsService/In
 
 type Operations struct {
 	modeldevv1.UnimplementedModelDevOperationsServiceServer
-	executions *biz.ExecutionOperations
+	executions           *biz.ExecutionOperations
+	registrationRecovery biz.ModelRegistrationRecovery
+	registrationQueries  biz.ArtifactQueryRepository
 }
 
 func NewOperations(executions *biz.ExecutionOperations) *Operations {
 	return &Operations{executions: executions}
+}
+
+func (operations *Operations) WithRegistrationRecovery(recovery biz.ModelRegistrationRecovery, queries biz.ArtifactQueryRepository) *Operations {
+	operations.registrationRecovery, operations.registrationQueries = recovery, queries
+	return operations
+}
+
+func (operations *Operations) ResumeModelRegistration(ctx context.Context, request *modeldevv1.ResumeModelRegistrationRequest) (*modeldevv1.GetExecutionResponse, error) {
+	access, err := queryScope(ctx, modeldevv1.ModelDevOperationsService_ResumeModelRegistration_FullMethodName)
+	if err != nil {
+		return nil, err
+	}
+	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid registration recovery request")
+	}
+	if operations == nil || operations.registrationRecovery == nil || operations.registrationQueries == nil {
+		return nil, status.Error(codes.Unavailable, "registration recovery unavailable")
+	}
+	resumed, err := operations.registrationRecovery.ResumeModelRegistration(ctx, access.TenantID, request.ExecutionId)
+	if err != nil {
+		return nil, operationsError(err, access.RequestID)
+	}
+	if resumed.TenantID != access.TenantID || resumed.ExecutionID != request.ExecutionId {
+		return nil, queryError(biz.ErrPersistence, access.RequestID)
+	}
+	record, err := operations.registrationQueries.GetQueryRecord(ctx, access.TenantID, request.ExecutionId)
+	if err != nil {
+		return nil, queryError(err, access.RequestID)
+	}
+	current := record.Execution
+	if current.TenantID != access.TenantID || current.ExecutionID != request.ExecutionId || current.OperationID != resumed.OperationID || current.SpecHash != resumed.SpecHash {
+		return nil, queryError(biz.ErrPersistence, access.RequestID)
+	}
+	view, err := executionView(record)
+	if err != nil {
+		return nil, queryError(err, access.RequestID)
+	}
+	return &modeldevv1.GetExecutionResponse{Execution: view}, nil
 }
 
 func (operations *Operations) Inspect(ctx context.Context, execution string) (biz.ExecutionInspect, error) {
@@ -63,7 +103,7 @@ func (operations *Operations) ReconcileExecution(ctx context.Context, request *m
 	if operations == nil || operations.executions == nil {
 		return nil, status.Error(codes.Unavailable, "operations unavailable")
 	}
-	view, err := operations.executions.Reconcile(ctx, access.TenantID, request.ExecutionId)
+	view, err := operations.executions.ReconcileWithActor(ctx, access.TenantID, request.ExecutionId, access.Actor)
 	if err != nil {
 		return nil, operationsError(err, access.RequestID)
 	}
@@ -107,6 +147,9 @@ func (operations *Operations) ApplyExecutionCleanup(ctx context.Context, request
 }
 
 func operationsError(err error, requestID string) error {
+	if errors.Is(err, biz.ErrModelRegistrationNotApplicable) {
+		return status.Error(codes.FailedPrecondition, "execution has no Model registration target")
+	}
 	if errors.Is(err, biz.ErrCleanupBlocked) || errors.Is(err, biz.ErrCleanupConflict) || errors.Is(err, biz.ErrCleanupUncertain) {
 		return status.Error(codes.FailedPrecondition, "cleanup requires current closed identities and retained output evidence")
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/json"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -66,6 +67,7 @@ func TestCreateRunResponseLostPreservesUncertaintyWithoutResending(t *testing.T)
 }`), &want); err != nil {
 			t.Errorf("invalid handwritten fixture: %v", err)
 		}
+		want["runtime_config"].(map[string]any)["parameters"].(map[string]any)["spec_hash"] = admission.SpecHash
 		if !reflect.DeepEqual(got, want) {
 			t.Error("request does not match the fixed owner-controlled CreateRun contract")
 		}
@@ -104,12 +106,12 @@ func (provider tokenProviderFunc) BearerToken(ctx context.Context, tenant string
 func fixtureAdmission(t *testing.T) biz.Admission {
 	t.Helper()
 	snapshot := conformance.SnapshotV1()
-	intent := cpup01.Intent{Name: "kfp-boundary-fixture", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := cpup01.Intent{Name: "kfp-boundary-fixture", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatalf("fixture intent: %v", err)
 	}
-	return biz.Admission{
+	return admissionfixture.Bind(t, biz.Admission{
 		TenantID:    "11111111-2222-4333-8444-555555555555",
 		Actor:       "governance:synthetic-fixture",
 		OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff",
@@ -117,7 +119,7 @@ func fixtureAdmission(t *testing.T) biz.Admission {
 		Intent:      intent, IntentHash: intentHash,
 		Snapshot: snapshot, SpecHash: conformance.SnapshotSHA256V1,
 		AcceptedAt: snapshot.DeadlineAt.Add(-time.Hour).UTC(),
-	}
+	})
 }
 
 // This synthetic permit exercises only the outbound seam. It is not evidence
@@ -146,7 +148,7 @@ func TestCreateRunConfirmsOnlyCompleteMatchingOfficialResponse(t *testing.T) {
 	// CreateRun, but may return HTTP 200 with only run_id/experiment_id/error
 	// when conversion fails. Matching a response is not Pod/namespace identity
 	// proof, caller authorization, or an authoritative Run binding.
-	const response = `{
+	response := `{
   "run_id":"55555555-6666-4777-8888-999999999999",
   "experiment_id":"44444444-4444-4444-8444-444444444444",
   "display_name":"md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
@@ -165,6 +167,8 @@ func TestCreateRunConfirmsOnlyCompleteMatchingOfficialResponse(t *testing.T) {
   "state":"PENDING",
   "created_at":"2026-09-30T09:00:00Z"
 }`
+	fixture := fixtureAdmission(t)
+	response = strings.ReplaceAll(response, "972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9", fixture.SpecHash)
 	cases := []struct {
 		name          string
 		body          string
@@ -193,7 +197,7 @@ func TestCreateRunConfirmsOnlyCompleteMatchingOfficialResponse(t *testing.T) {
 		{name: "other pipeline", body: strings.Replace(response, "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "cccccccc-cccc-4ccc-8ccc-dddddddddddd", 1)},
 		{name: "other pipeline version", body: strings.Replace(response, "dddddddd-dddd-4ddd-8ddd-dddddddddddd", "dddddddd-dddd-4ddd-8ddd-cccccccccccc", 1)},
 		{name: "other execution", body: strings.ReplaceAll(response, "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", "aaaaaaaa-bbbb-4ccc-8ddd-ffffffffffff")},
-		{name: "other spec", body: strings.Replace(response, conformance.SnapshotSHA256V1, strings.Repeat("f", 64), 1)},
+		{name: "other spec", body: strings.Replace(response, fixture.SpecHash, strings.Repeat("f", 64), 1)},
 		{name: "other step service account", body: strings.Replace(response, "cpu-managed-step", "cpu-training", 1)},
 		{name: "other artifact root", body: strings.Replace(response, "managed-root", "other-root", 1)},
 		{name: "duplicate run ID", body: strings.TrimSuffix(response, "}") + `,"run_id":"55555555-6666-4777-8888-999999999999"}`},
@@ -241,7 +245,7 @@ func TestCreateRunConfirmsOnlyCompleteMatchingOfficialResponse(t *testing.T) {
 			client := fixtureClient(t, server, tokenProviderFunc(func(context.Context, string, cpup01.EnvironmentBindingSnapshot) (string, error) {
 				return "synthetic-fixture-token", nil
 			}))
-			observation, err := client.CreateRun(context.Background(), fixtureCreateRequest(t, fixtureAdmission(t)))
+			observation, err := client.CreateRun(context.Background(), fixtureCreateRequest(t, fixture))
 			if test.confirmed {
 				expectedRunID := test.expectedRunID
 				if expectedRunID == "" {

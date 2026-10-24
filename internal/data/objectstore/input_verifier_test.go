@@ -54,8 +54,7 @@ func TestVerifyCSVRejectsShapesTheRegisteredTrainerCannotConsume(t *testing.T) {
 		{"wrong header", strings.Replace(valid, "x0,", "feature0,", 1)},
 		{"duplicate header", strings.Replace(valid, "x1,", "x0,", 1)},
 		{"BOM header", "\xef\xbb\xbf" + valid},
-		{"missing sample", strings.Join(lines[:1024], "\r\n") + "\r\n"},
-		{"extra sample", valid + lines[1] + "\r\n"},
+		{"empty dataset", lines[0] + "\r\n"},
 		{"nonbinary label", strings.Replace(valid, ",0\r\n", ",2\r\n", 1)},
 		{"fractional label", strings.Replace(valid, ",0\r\n", ",0.0\r\n", 1)},
 		{"missing feature", strings.Replace(valid, "0.25,", "", 1)},
@@ -85,6 +84,26 @@ func TestVerifyCSVRejectsShapesTheRegisteredTrainerCannotConsume(t *testing.T) {
 			got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID, 32*1024*1024).VerifyCSV(context.Background(), scope, object)
 			if !errors.Is(err, biz.ErrInputVerification) || !got.VerifiedAt.IsZero() || got.RowCount != 0 {
 				t.Fatal("trainer-incompatible bytes produced a verified input observation")
+			}
+		})
+	}
+}
+
+func TestVerifyCSVAcceptsActualNonFixedNonemptySampleCounts(t *testing.T) {
+	valid := inputCSVFixture(t)
+	lines := strings.Split(valid, "\r\n")
+	for _, rows := range []int{1, 17, 1023, 1025} {
+		t.Run(strconv.Itoa(rows), func(t *testing.T) {
+			payload := lines[0] + "\r\n" + strings.Repeat(lines[1]+"\r\n", rows)
+			scope, object := objectFixture(payload)
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("x-amz-version-id", "version-1")
+				_, _ = io.WriteString(w, payload)
+			}))
+			defer server.Close()
+			got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID, 32<<20).VerifyCSV(context.Background(), scope, object)
+			if err != nil || got.RowCount != uint32(rows) || got.FeatureCount != 16 {
+				t.Fatalf("actual row count lost: got=%+v err=%v", got, err)
 			}
 		})
 	}

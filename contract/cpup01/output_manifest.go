@@ -58,7 +58,7 @@ func OutputManifestBytes(admission AdmissionEnvelope, files []OutputFile) ([]byt
 		ExecutionSpecHash string       `json:"execution_spec_hash"`
 		InputVersionID    string       `json:"input_version_id"`
 		InputSHA256       string       `json:"input_sha256"`
-		ReleaseID         string       `json:"release_id"`
+		ImplementationID  string       `json:"implementation_id"`
 		ImageDigest       string       `json:"image_digest"`
 		StorageState      string       `json:"storage_state"`
 		Files             []OutputFile `json:"files"`
@@ -66,7 +66,7 @@ func OutputManifestBytes(admission AdmissionEnvelope, files []OutputFile) ([]byt
 		Schema:   "ani.modeldev.output-manifest.v1",
 		TenantID: strings.ToLower(admission.TenantID), OperationID: strings.ToLower(admission.OperationID), ExecutionID: strings.ToLower(admission.ExecutionID),
 		ExecutionSpecHash: admission.SpecHash, InputVersionID: strings.ToLower(admission.Snapshot.Input.InputVersionID), InputSHA256: admission.Snapshot.Input.Object.SHA256,
-		ReleaseID: strings.ToLower(admission.Snapshot.Release.ReleaseID), ImageDigest: admission.Snapshot.Program.ImageDigest,
+		ImplementationID: admission.Snapshot.Implementation.ImplementationID, ImageDigest: admission.Snapshot.Program.ImageDigest,
 		StorageState: "WORKSPACE_ONLY", Files: ordered,
 	}
 	canonical, err := encodeCanonicalJSON(manifest)

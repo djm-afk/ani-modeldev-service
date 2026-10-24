@@ -1,1 +1,0 @@
-{"dataset_version_id":"BBBBBBBB-BBBB-4BBB-8BBB-BBBBBBBBBBBB","name":"CPU <试验>","general_parameters":[{"value":"0.0100","type":"DECIMAL","name":"learning_rate"},{"name":"epochs","type":"INTEGER","value":"3"}],"preset_id":"AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA","kind":"GENERAL_TRAINING"}

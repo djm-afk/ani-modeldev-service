@@ -18,7 +18,7 @@ func TestNaturalClosingEscalatesOnlyAtDatabaseDeadlineAndPreservesOriginalFence(
 	if _, _, err := repository.RecordPrepared(ctx, authority, workspace); err != nil {
 		t.Fatal(err)
 	}
-	reserved, err := repository.ReserveTraining(ctx, authority)
+	reserved, err := reserveTrainingV21(t, repository, ctx, authority)
 	if err != nil || !reserved.SendPermit {
 		t.Fatal("original training permit", err)
 	}
@@ -32,7 +32,7 @@ func TestNaturalClosingEscalatesOnlyAtDatabaseDeadlineAndPreservesOriginalFence(
 		t.Fatal(err)
 	}
 	publication := publicationFixture(t, admission, authority)
-	if _, _, err := repository.RecordPublication(ctx, authority, publication); err != nil {
+	if _, _, err := recordPublicationV21(t, repository, ctx, authority, publication); err != nil {
 		t.Fatal(err)
 	}
 	original, _, err := repository.RequestRuntimeClose(ctx, authority, "NATURAL_TERMINAL")
@@ -64,7 +64,7 @@ func TestNaturalClosingEscalatesOnlyAtDatabaseDeadlineAndPreservesOriginalFence(
 	if err != nil || replayed || escalated.CloseReason != "DEADLINE" || escalated.CloseGeneration != original.CloseGeneration || !escalated.CloseRequestedAt.Equal(original.CloseRequestedAt) || escalated.ClosedAt != nil || escalated.Publication == nil || escalated.Publication.ID != publication.ID || escalated.Training.RequestSHA256 != reserved.State.Training.RequestSHA256 || escalated.OwnerRevision <= original.OwnerRevision {
 		t.Fatalf("NATURAL_DEADLINE_ESCALATION_NOT_IMPLEMENTED: %+v %v", escalated, err)
 	}
-	if retry, err := repository.ReserveTraining(ctx, authority); err != nil || retry.SendPermit || retry.State.Training.RequestSHA256 != reserved.State.Training.RequestSHA256 {
+	if retry, err := reserveTrainingV21(t, repository, ctx, authority); err != nil || retry.SendPermit || retry.State.Training.RequestSHA256 != reserved.State.Training.RequestSHA256 {
 		t.Fatal("deadline escalation regenerated training", err)
 	}
 	if state, replayed, err := repository.RequestRuntimeClose(ctx, authority, "DEADLINE"); err != nil || !replayed || state.OwnerRevision != escalated.OwnerRevision {

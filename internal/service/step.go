@@ -103,11 +103,20 @@ func (step *Step) BeginExecution(ctx context.Context, request *modeldevv1.BeginE
 		authority.WorkflowName != association.WorkflowName || authority.WorkflowUID != association.WorkflowUid {
 		return unavailable()
 	}
+	if step.runtime == nil {
+		return unavailable()
+	}
+	timing, _, err := step.runtime.BeginManagedStep(ctx, token, biz.BeginManagedExecutionRequest{TenantID: tenant, OperationID: authority.OperationID, ExecutionID: identity.ExecutionId, SpecHash: identity.ExecutionSpecHash,
+		Association: biz.ManagedStepAssociation{RunID: association.KfpRunId, NamespaceName: association.NamespaceName, NamespaceUID: association.NamespaceUid, WorkflowName: association.WorkflowName, WorkflowUID: association.WorkflowUid, PodName: association.PodName, PodUID: association.PodUid}}, "prepare")
+	if err != nil {
+		return nil, runtimeError(err)
+	}
 	return &modeldevv1.BeginExecutionResponse{
 		Authority: &modeldevv1.AuthorityBinding{
 			KfpRunId: authority.RunID, NamespaceUid: authority.NamespaceUID, WorkflowUid: authority.WorkflowUID, BoundAt: boundAt,
 		},
 		States: states, Replayed: authority.Replayed,
+		Timing: encodeStepTiming(timing),
 	}, nil
 }
 

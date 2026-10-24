@@ -24,7 +24,7 @@ For CPU-P01, execute these commands only in the task's fixed Fedora checkout.
 Starting the runtime shell there is module verification, not target-cluster
 business acceptance.
 
-The minimum Go toolchain is 1.26.9. Fedora verification and release builds use
+The minimum Go toolchain is 1.26.10. Fedora verification and release builds use
 this patched toolchain through task-scoped `GOTOOLCHAIN` selection.
 CI reads this requirement from `go.mod`. The prior Go 1.25.7 toolchain failed the
 standard-library vulnerability gate; use the declared minimum or a newer
@@ -48,7 +48,9 @@ persistence tests; they are never silently skipped. These are module checks.
 `make verify` also runs the explicit `revisionupgrade` lane. It builds a private
 old-writer test binary from retained commit
 `a827457f999646394518c640d7c21915e1321496`, seeds an isolated pre-0012 schema through
-the real old repositories, and verifies the migration with the current writers.
+the real old repositories, and verifies migration retention with the current
+schema. The sole current decoder rejects those historical snapshot bytes;
+retaining their data does not enable an old runtime codec.
 Keep full Git history available, as CI does; missing historical source, build,
 binary or database conditions fail this lane rather than skip it. The script
 records the source and binary SHA256 and removes only its temporary export.
@@ -84,8 +86,11 @@ states and revision; they do not authorize an external resource creation.
 Missing materials fail startup; omitting the block keeps the unready shell.
 See [command delivery](docs/design/cpu-p01-command-delivery.md) for the trust,
 receipt and configuration boundaries. An optional `command.admission_resolution`
-block adds read-only snapshot resolution on that same mTLS listener using pinned
-mounted facts, the immutable Release catalogue and the existing runtime pool.
+block adds read-only PrepareAdmission/FinalizeAdmission on the same mTLS
+listener. Installed implementation materials and immutable input/model facts
+combine with the official public compute selection to freeze each execution
+snapshot and namespaced Runtime plan. There is no Release catalogue or
+parameter/compute combination approval.
 See [admission configuration](docs/design/cpu-p01-admission-resolution.md#启动配置)
 for material and readiness boundaries. An explicit `runtime` block additionally
 assembles the durable dispatch worker, dedicated managed-step TLS listener,

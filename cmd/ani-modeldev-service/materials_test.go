@@ -7,9 +7,11 @@ import (
 
 	"github.com/google/uuid"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
+	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestProductionInputQueryUsesCurrentDelegation(t *testing.T) {
@@ -30,22 +32,19 @@ func TestProductionInputQueryUsesCurrentDelegation(t *testing.T) {
 	if _, err := client.GetInputVersion(other, &modeldevv1.GetInputVersionRequest{InputVersionId: fixture.ready.Import.InputVersionID}); status.Code(err) != codes.NotFound {
 		t.Fatalf("cross-tenant query = %v", err)
 	}
-	presets := metadata.NewOutgoingContext(ctx, metadata.Pairs("x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", uuid.NewString(), "x-ani-data-scope", "tenant-all", "x-ani-authorized-method", modeldevv1.ModelDevQueryService_ListPresets_FullMethodName))
-	list, err := client.ListPresets(presets, &modeldevv1.ListPresetsRequest{})
-	if err != nil || len(list.GetPresets()) != 1 || list.Presets[0].ActiveReleaseId != "" {
-		t.Fatalf("preset query must expose approved catalogue without a second active pointer: %v", err)
+	implementations := metadata.NewOutgoingContext(ctx, metadata.Pairs("x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", uuid.NewString(), "x-ani-data-scope", "tenant-all", "x-ani-authorized-method", modeldevv1.ModelDevQueryService_ListImplementations_FullMethodName))
+	list, err := client.ListImplementations(implementations, &modeldevv1.ListImplementationsRequest{})
+	if err != nil || len(list.GetImplementations()) != 2 || list.Implementations[0].ImplementationId != "builtin.mlp" || !list.Implementations[0].Available || len(list.Implementations[0].ParameterRules) != 4 || list.Implementations[1].Available {
+		t.Fatalf("installed software availability and typed rules projection diverged: %v", err)
 	}
-	selection := fixture.request.Release
 	management := modeldevv1.NewModelDevManagementServiceClient(connection)
-	validate := metadata.NewOutgoingContext(ctx, metadata.Pairs("x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", uuid.NewString(), "x-ani-data-scope", "tenant-all", "x-ani-authorized-method", modeldevv1.ModelDevManagementService_ValidateRelease_FullMethodName))
-	checked, err := management.ValidateRelease(validate, &modeldevv1.ValidateReleaseRequest{PresetId: list.Presets[0].PresetId, ReleaseId: selection.ReleaseId, ReleaseDigest: selection.ReleaseDigest})
-	if err != nil || checked.GetReleaseDigest() != selection.ReleaseDigest {
-		t.Fatalf("imported immutable Release validation = %v", err)
+	importScope := metadata.NewOutgoingContext(ctx, metadata.Pairs("x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", uuid.NewString(), "x-ani-data-scope", "tenant-all", "x-ani-authorized-method", modeldevv1.ModelDevManagementService_ImportCSV_FullMethodName))
+	original := fixture.ready.Import
+	request := &modeldevv1.ImportCSVRequest{ImplementationId: "builtin.sft_lora", InputVersionId: original.InputVersionID, RequestedAt: timestamppb.New(original.RequestedAt), Object: &trainingv1.FixedObjectRef{StorageConnectionId: original.Object.StorageConnectionID, Bucket: original.Object.Bucket, Key: original.Object.Key, SizeBytes: original.Object.SizeBytes, Sha256: original.Object.SHA256, Immutability: &trainingv1.FixedObjectRef_VersionId{VersionId: *original.Object.VersionID}}}
+	if _, err := management.ImportCSV(importScope, request); status.Code(err) != codes.InvalidArgument {
+		t.Fatalf("wrong implementation accepted CSV contract: %v", err)
 	}
-	if _, err := management.ValidateRelease(validate, &modeldevv1.ValidateReleaseRequest{PresetId: uuid.NewString(), ReleaseId: selection.ReleaseId, ReleaseDigest: selection.ReleaseDigest}); status.Code(err) != codes.FailedPrecondition {
-		t.Fatalf("wrong preset enabled: %v", err)
-	}
-	if _, err := management.ValidateRelease(rpc, &modeldevv1.ValidateReleaseRequest{PresetId: list.Presets[0].PresetId, ReleaseId: selection.ReleaseId, ReleaseDigest: selection.ReleaseDigest}); status.Code(err) != codes.PermissionDenied {
+	if _, err := management.ImportCSV(rpc, request); status.Code(err) != codes.PermissionDenied {
 		t.Fatalf("query delegation authorized management: %v", err)
 	}
 }

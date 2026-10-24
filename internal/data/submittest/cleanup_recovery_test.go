@@ -359,9 +359,23 @@ func closedCleanupRecoveryFixture(t *testing.T) (*pgxpool.Pool, *execution.Repos
 	if _, err := dispatch.RecordSubmissionConfirmed(ctx, *reserved.SendPermit, biz.PipelineSubmissionObservation{State: biz.PipelineSubmissionConfirmed, RunID: authority.RunID}, time.Now().UTC().Truncate(time.Microsecond)); err != nil {
 		t.Fatal(err)
 	}
-	workspace := biz.WorkspaceBinding{Mode: a.Snapshot.Workspace.Mode, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, PVCName: "cleanup-workspace", PVCUID: "cleanup-workspace-uid", InputSubpath: a.Snapshot.Workspace.InputSubpath, TrainingSubpath: a.Snapshot.Workspace.TrainingSubpath, ReportsSubpath: a.Snapshot.Workspace.ReportsSubpath, PublicationSubpath: a.Snapshot.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: a.Snapshot.Workspace.Mode, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(a.ExecutionID), PVCUID: "cleanup-workspace-uid", InputSubpath: a.Snapshot.Workspace.InputSubpath, TrainingSubpath: a.Snapshot.Workspace.TrainingSubpath, ReportsSubpath: a.Snapshot.Workspace.ReportsSubpath, PublicationSubpath: a.Snapshot.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 	runtime := lifecycle.New(pool)
+	startRole := func(role string) {
+		b := biz.FinetuningStepBinding{Role: role, SpecHash: a.SpecHash, RunID: authority.RunID, WorkflowUID: authority.WorkflowUID, TaskID: role + "-cleanup-task", PodName: role + "-cleanup-pod", PodUID: role + "-cleanup-pod-uid"}
+		if _, _, err := runtime.ReserveManagedStep(ctx, authority, b); err != nil {
+			t.Fatal(err)
+		}
+	}
+	startRole("prepare")
 	if _, _, err := runtime.RecordPrepared(ctx, authority, workspace); err != nil {
+		t.Fatal(err)
+	}
+	rt, err := runtime.ReserveRuntime(ctx, authority)
+	if err != nil || !rt.SendPermit {
+		t.Fatal(err)
+	}
+	if _, err := runtime.RecordRuntimeBinding(ctx, authority, biz.RuntimeTemplateBinding{NamespaceUID: authority.NamespaceUID, Name: a.Snapshot.RuntimePlan.Name, UID: "cleanup-runtime-uid", ObservedSpecSHA256: a.Snapshot.RuntimePlan.ExpectedSpecSHA256}); err != nil {
 		t.Fatal(err)
 	}
 	training, err := runtime.ReserveTraining(ctx, authority)
@@ -400,6 +414,8 @@ func closedCleanupRecoveryFixture(t *testing.T) (*pgxpool.Pool, *execution.Repos
 		bundle.Key, bundle.SHA256 = strings.TrimSuffix(scope.ApprovedPrefix, "/")+"/"+a.ExecutionID+"/bundle.tar", strings.Repeat("3", 64)
 		publication.Bundle = &bundle
 	}
+	startRole("collect")
+	startRole("publish")
 	if _, _, err := runtime.RecordPublication(ctx, authority, publication); err != nil {
 		t.Fatal(err)
 	}

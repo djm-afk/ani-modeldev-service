@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ModelDevQueryService_ListPresets_FullMethodName               = "/ani.modeldev.v1.ModelDevQueryService/ListPresets"
+	ModelDevQueryService_ListImplementations_FullMethodName       = "/ani.modeldev.v1.ModelDevQueryService/ListImplementations"
 	ModelDevQueryService_GetInputVersion_FullMethodName           = "/ani.modeldev.v1.ModelDevQueryService/GetInputVersion"
 	ModelDevQueryService_ListInputVersions_FullMethodName         = "/ani.modeldev.v1.ModelDevQueryService/ListInputVersions"
 	ModelDevQueryService_GetExecution_FullMethodName              = "/ani.modeldev.v1.ModelDevQueryService/GetExecution"
@@ -36,9 +36,10 @@ const (
 // BFF-facing internal RPCs. Each call requires current actor authorization;
 // the actor saved at admission is audit data, not permanent access permission.
 type ModelDevQueryServiceClient interface {
-	ListPresets(ctx context.Context, in *ListPresetsRequest, opts ...grpc.CallOption) (*ListPresetsResponse, error)
+	ListImplementations(ctx context.Context, in *ListImplementationsRequest, opts ...grpc.CallOption) (*ListImplementationsResponse, error)
 	GetInputVersion(ctx context.Context, in *GetInputVersionRequest, opts ...grpc.CallOption) (*GetInputVersionResponse, error)
 	ListInputVersions(ctx context.Context, in *ListInputVersionsRequest, opts ...grpc.CallOption) (*ListInputVersionsResponse, error)
+	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE The registration recovery operation returns this same original execution projection.
 	GetExecution(ctx context.Context, in *GetExecutionRequest, opts ...grpc.CallOption) (*GetExecutionResponse, error)
 	ListExecutions(ctx context.Context, in *ListExecutionsRequest, opts ...grpc.CallOption) (*ListExecutionsResponse, error)
 	GetExecutionLogs(ctx context.Context, in *GetExecutionLogsRequest, opts ...grpc.CallOption) (*GetExecutionLogsResponse, error)
@@ -54,10 +55,10 @@ func NewModelDevQueryServiceClient(cc grpc.ClientConnInterface) ModelDevQuerySer
 	return &modelDevQueryServiceClient{cc}
 }
 
-func (c *modelDevQueryServiceClient) ListPresets(ctx context.Context, in *ListPresetsRequest, opts ...grpc.CallOption) (*ListPresetsResponse, error) {
+func (c *modelDevQueryServiceClient) ListImplementations(ctx context.Context, in *ListImplementationsRequest, opts ...grpc.CallOption) (*ListImplementationsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListPresetsResponse)
-	err := c.cc.Invoke(ctx, ModelDevQueryService_ListPresets_FullMethodName, in, out, cOpts...)
+	out := new(ListImplementationsResponse)
+	err := c.cc.Invoke(ctx, ModelDevQueryService_ListImplementations_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,9 +142,10 @@ func (c *modelDevQueryServiceClient) AuthorizeArtifactDownload(ctx context.Conte
 // BFF-facing internal RPCs. Each call requires current actor authorization;
 // the actor saved at admission is audit data, not permanent access permission.
 type ModelDevQueryServiceServer interface {
-	ListPresets(context.Context, *ListPresetsRequest) (*ListPresetsResponse, error)
+	ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
 	GetInputVersion(context.Context, *GetInputVersionRequest) (*GetInputVersionResponse, error)
 	ListInputVersions(context.Context, *ListInputVersionsRequest) (*ListInputVersionsResponse, error)
+	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE The registration recovery operation returns this same original execution projection.
 	GetExecution(context.Context, *GetExecutionRequest) (*GetExecutionResponse, error)
 	ListExecutions(context.Context, *ListExecutionsRequest) (*ListExecutionsResponse, error)
 	GetExecutionLogs(context.Context, *GetExecutionLogsRequest) (*GetExecutionLogsResponse, error)
@@ -159,8 +161,8 @@ type ModelDevQueryServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedModelDevQueryServiceServer struct{}
 
-func (UnimplementedModelDevQueryServiceServer) ListPresets(context.Context, *ListPresetsRequest) (*ListPresetsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListPresets not implemented")
+func (UnimplementedModelDevQueryServiceServer) ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListImplementations not implemented")
 }
 func (UnimplementedModelDevQueryServiceServer) GetInputVersion(context.Context, *GetInputVersionRequest) (*GetInputVersionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetInputVersion not implemented")
@@ -204,20 +206,20 @@ func RegisterModelDevQueryServiceServer(s grpc.ServiceRegistrar, srv ModelDevQue
 	s.RegisterService(&ModelDevQueryService_ServiceDesc, srv)
 }
 
-func _ModelDevQueryService_ListPresets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListPresetsRequest)
+func _ModelDevQueryService_ListImplementations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListImplementationsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ModelDevQueryServiceServer).ListPresets(ctx, in)
+		return srv.(ModelDevQueryServiceServer).ListImplementations(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ModelDevQueryService_ListPresets_FullMethodName,
+		FullMethod: ModelDevQueryService_ListImplementations_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ModelDevQueryServiceServer).ListPresets(ctx, req.(*ListPresetsRequest))
+		return srv.(ModelDevQueryServiceServer).ListImplementations(ctx, req.(*ListImplementationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -356,8 +358,8 @@ var ModelDevQueryService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ModelDevQueryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListPresets",
-			Handler:    _ModelDevQueryService_ListPresets_Handler,
+			MethodName: "ListImplementations",
+			Handler:    _ModelDevQueryService_ListImplementations_Handler,
 		},
 		{
 			MethodName: "GetInputVersion",
@@ -393,7 +395,8 @@ var ModelDevQueryService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ModelDevAdmissionService_ResolveAdmission_FullMethodName = "/ani.modeldev.v1.ModelDevAdmissionService/ResolveAdmission"
+	ModelDevAdmissionService_PrepareAdmission_FullMethodName  = "/ani.modeldev.v1.ModelDevAdmissionService/PrepareAdmission"
+	ModelDevAdmissionService_FinalizeAdmission_FullMethodName = "/ani.modeldev.v1.ModelDevAdmissionService/FinalizeAdmission"
 )
 
 // ModelDevAdmissionServiceClient is the client API for ModelDevAdmissionService service.
@@ -402,9 +405,10 @@ const (
 //
 // Only authenticated Governance may resolve a candidate after current actor
 // authorization and an original-key miss. This service does not accept an
-// execution, allocate command IDs or choose Governance's current Release.
+// execution or allocate command identities.
 type ModelDevAdmissionServiceClient interface {
-	ResolveAdmission(ctx context.Context, in *ResolveAdmissionRequest, opts ...grpc.CallOption) (*ResolveAdmissionResponse, error)
+	PrepareAdmission(ctx context.Context, in *PrepareAdmissionRequest, opts ...grpc.CallOption) (*PrepareAdmissionResponse, error)
+	FinalizeAdmission(ctx context.Context, in *FinalizeAdmissionRequest, opts ...grpc.CallOption) (*FinalizeAdmissionResponse, error)
 }
 
 type modelDevAdmissionServiceClient struct {
@@ -415,10 +419,20 @@ func NewModelDevAdmissionServiceClient(cc grpc.ClientConnInterface) ModelDevAdmi
 	return &modelDevAdmissionServiceClient{cc}
 }
 
-func (c *modelDevAdmissionServiceClient) ResolveAdmission(ctx context.Context, in *ResolveAdmissionRequest, opts ...grpc.CallOption) (*ResolveAdmissionResponse, error) {
+func (c *modelDevAdmissionServiceClient) PrepareAdmission(ctx context.Context, in *PrepareAdmissionRequest, opts ...grpc.CallOption) (*PrepareAdmissionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ResolveAdmissionResponse)
-	err := c.cc.Invoke(ctx, ModelDevAdmissionService_ResolveAdmission_FullMethodName, in, out, cOpts...)
+	out := new(PrepareAdmissionResponse)
+	err := c.cc.Invoke(ctx, ModelDevAdmissionService_PrepareAdmission_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modelDevAdmissionServiceClient) FinalizeAdmission(ctx context.Context, in *FinalizeAdmissionRequest, opts ...grpc.CallOption) (*FinalizeAdmissionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FinalizeAdmissionResponse)
+	err := c.cc.Invoke(ctx, ModelDevAdmissionService_FinalizeAdmission_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -431,9 +445,10 @@ func (c *modelDevAdmissionServiceClient) ResolveAdmission(ctx context.Context, i
 //
 // Only authenticated Governance may resolve a candidate after current actor
 // authorization and an original-key miss. This service does not accept an
-// execution, allocate command IDs or choose Governance's current Release.
+// execution or allocate command identities.
 type ModelDevAdmissionServiceServer interface {
-	ResolveAdmission(context.Context, *ResolveAdmissionRequest) (*ResolveAdmissionResponse, error)
+	PrepareAdmission(context.Context, *PrepareAdmissionRequest) (*PrepareAdmissionResponse, error)
+	FinalizeAdmission(context.Context, *FinalizeAdmissionRequest) (*FinalizeAdmissionResponse, error)
 	mustEmbedUnimplementedModelDevAdmissionServiceServer()
 }
 
@@ -444,8 +459,11 @@ type ModelDevAdmissionServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedModelDevAdmissionServiceServer struct{}
 
-func (UnimplementedModelDevAdmissionServiceServer) ResolveAdmission(context.Context, *ResolveAdmissionRequest) (*ResolveAdmissionResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ResolveAdmission not implemented")
+func (UnimplementedModelDevAdmissionServiceServer) PrepareAdmission(context.Context, *PrepareAdmissionRequest) (*PrepareAdmissionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PrepareAdmission not implemented")
+}
+func (UnimplementedModelDevAdmissionServiceServer) FinalizeAdmission(context.Context, *FinalizeAdmissionRequest) (*FinalizeAdmissionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method FinalizeAdmission not implemented")
 }
 func (UnimplementedModelDevAdmissionServiceServer) mustEmbedUnimplementedModelDevAdmissionServiceServer() {
 }
@@ -469,20 +487,38 @@ func RegisterModelDevAdmissionServiceServer(s grpc.ServiceRegistrar, srv ModelDe
 	s.RegisterService(&ModelDevAdmissionService_ServiceDesc, srv)
 }
 
-func _ModelDevAdmissionService_ResolveAdmission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResolveAdmissionRequest)
+func _ModelDevAdmissionService_PrepareAdmission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareAdmissionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ModelDevAdmissionServiceServer).ResolveAdmission(ctx, in)
+		return srv.(ModelDevAdmissionServiceServer).PrepareAdmission(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ModelDevAdmissionService_ResolveAdmission_FullMethodName,
+		FullMethod: ModelDevAdmissionService_PrepareAdmission_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ModelDevAdmissionServiceServer).ResolveAdmission(ctx, req.(*ResolveAdmissionRequest))
+		return srv.(ModelDevAdmissionServiceServer).PrepareAdmission(ctx, req.(*PrepareAdmissionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModelDevAdmissionService_FinalizeAdmission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FinalizeAdmissionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevAdmissionServiceServer).FinalizeAdmission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevAdmissionService_FinalizeAdmission_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevAdmissionServiceServer).FinalizeAdmission(ctx, req.(*FinalizeAdmissionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -495,8 +531,12 @@ var ModelDevAdmissionService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ModelDevAdmissionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ResolveAdmission",
-			Handler:    _ModelDevAdmissionService_ResolveAdmission_Handler,
+			MethodName: "PrepareAdmission",
+			Handler:    _ModelDevAdmissionService_PrepareAdmission_Handler,
+		},
+		{
+			MethodName: "FinalizeAdmission",
+			Handler:    _ModelDevAdmissionService_FinalizeAdmission_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -652,6 +692,7 @@ var ModelDevCommandService_ServiceDesc = grpc.ServiceDesc{
 
 const (
 	ModelDevStepService_BeginExecution_FullMethodName             = "/ani.modeldev.v1.ModelDevStepService/BeginExecution"
+	ModelDevStepService_BeginManagedStep_FullMethodName           = "/ani.modeldev.v1.ModelDevStepService/BeginManagedStep"
 	ModelDevStepService_GetExecutionConfiguration_FullMethodName  = "/ani.modeldev.v1.ModelDevStepService/GetExecutionConfiguration"
 	ModelDevStepService_GetStorageCredentials_FullMethodName      = "/ani.modeldev.v1.ModelDevStepService/GetStorageCredentials"
 	ModelDevStepService_EnsureTraining_FullMethodName             = "/ani.modeldev.v1.ModelDevStepService/EnsureTraining"
@@ -672,6 +713,9 @@ const (
 // identity; labels or caller-supplied IDs alone never authorize a callback.
 type ModelDevStepServiceClient interface {
 	BeginExecution(ctx context.Context, in *BeginExecutionRequest, opts ...grpc.CallOption) (*BeginExecutionResponse, error)
+	// Limited to COLLECT, PUBLISH and REGISTER. The execution owner persists
+	// the first role window; replay never grants another business budget.
+	BeginManagedStep(ctx context.Context, in *BeginManagedStepRequest, opts ...grpc.CallOption) (*BeginManagedStepResponse, error)
 	GetExecutionConfiguration(ctx context.Context, in *GetExecutionConfigurationRequest, opts ...grpc.CallOption) (*GetExecutionConfigurationResponse, error)
 	// Temporary object access is derived from the current execution snapshot.
 	// Every refresh repeats the same workload and Run authority verification.
@@ -701,6 +745,16 @@ func (c *modelDevStepServiceClient) BeginExecution(ctx context.Context, in *Begi
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BeginExecutionResponse)
 	err := c.cc.Invoke(ctx, ModelDevStepService_BeginExecution_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modelDevStepServiceClient) BeginManagedStep(ctx context.Context, in *BeginManagedStepRequest, opts ...grpc.CallOption) (*BeginManagedStepResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BeginManagedStepResponse)
+	err := c.cc.Invoke(ctx, ModelDevStepService_BeginManagedStep_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -806,6 +860,9 @@ func (c *modelDevStepServiceClient) RegisterModel(ctx context.Context, in *Regis
 // identity; labels or caller-supplied IDs alone never authorize a callback.
 type ModelDevStepServiceServer interface {
 	BeginExecution(context.Context, *BeginExecutionRequest) (*BeginExecutionResponse, error)
+	// Limited to COLLECT, PUBLISH and REGISTER. The execution owner persists
+	// the first role window; replay never grants another business budget.
+	BeginManagedStep(context.Context, *BeginManagedStepRequest) (*BeginManagedStepResponse, error)
 	GetExecutionConfiguration(context.Context, *GetExecutionConfigurationRequest) (*GetExecutionConfigurationResponse, error)
 	// Temporary object access is derived from the current execution snapshot.
 	// Every refresh repeats the same workload and Run authority verification.
@@ -833,6 +890,9 @@ type UnimplementedModelDevStepServiceServer struct{}
 
 func (UnimplementedModelDevStepServiceServer) BeginExecution(context.Context, *BeginExecutionRequest) (*BeginExecutionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method BeginExecution not implemented")
+}
+func (UnimplementedModelDevStepServiceServer) BeginManagedStep(context.Context, *BeginManagedStepRequest) (*BeginManagedStepResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BeginManagedStep not implemented")
 }
 func (UnimplementedModelDevStepServiceServer) GetExecutionConfiguration(context.Context, *GetExecutionConfigurationRequest) (*GetExecutionConfigurationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetExecutionConfiguration not implemented")
@@ -896,6 +956,24 @@ func _ModelDevStepService_BeginExecution_Handler(srv interface{}, ctx context.Co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ModelDevStepServiceServer).BeginExecution(ctx, req.(*BeginExecutionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModelDevStepService_BeginManagedStep_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BeginManagedStepRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevStepServiceServer).BeginManagedStep(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevStepService_BeginManagedStep_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevStepServiceServer).BeginManagedStep(ctx, req.(*BeginManagedStepRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1072,6 +1150,10 @@ var ModelDevStepService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BeginExecution",
 			Handler:    _ModelDevStepService_BeginExecution_Handler,
+		},
+		{
+			MethodName: "BeginManagedStep",
+			Handler:    _ModelDevStepService_BeginManagedStep_Handler,
 		},
 		{
 			MethodName: "GetExecutionConfiguration",

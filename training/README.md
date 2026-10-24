@@ -1,38 +1,61 @@
-# CPU03 training workload
+# Built-in MLP workload
 
-Source task: `ANI-doc/02-issues/modeldev/cpu-p01/tasks/CPU03.md`.
-The fixed CSV and MLP recipe originate in that package's
-`reference/v04/cpu-baseline/`; historical package reports are not current evidence.
+`train_mlp.py` runs the single-process, single-device 16→32→2 MLP. It consumes
+one immutable CSV with header `x0` through `x15`, then `label`, at least one row,
+finite float32 features, and binary integer labels. It checks the selected byte
+length and SHA256 before importing Torch or creating output. Paths cannot be
+symlinks, and existing nonempty output paths are preserved.
 
-## Workload contract
+`--learning-rate`, `--epochs`, `--batch-size`, and `--seed` are resolved for each
+execution and frozen in its Snapshot. Their sole defaults and representation
+bounds come from `contract/cpup01/implementations.json`; Go embeds that same
+file and the workload images include its immutable bytes. Omitted values use
+those defaults. `--device` is the platform-frozen `cpu` or `cuda`; CUDA requires exactly
+one visible CUDA device. The GPU image leaves device visibility to the assigned
+runtime and device plugin.
 
-The command requires `--data`, `--output`, `--expected-input-sha256`, and
-`--expected-input-bytes`. Before importing PyTorch or creating output, it checks
-the selected regular file's size and SHA256, all 1024 rows with 16 finite float32
-features and binary labels, single-process WORLD_SIZE, and paths without symlinks.
-Nonempty or non-directory output paths are refused and preserved; an existing
-empty directory is accepted.
+Every epoch shuffles using the selected seed and includes the final partial
+batch. Actual optimizer updates are emitted as `ani.metric.v1`; a completed run
+has `epochs × ceil(samples/batch_size)` steps. Finite loss and weights are
+required. Improvement is only an assertion for known regression data.
 
-The CPU MLP is 16→32→2, with three epochs, batch size 64 and 48 optimizer steps.
-`--learning-rate` accepts a decimal in (0, 0.1], at most 32 characters without
-exponent notation, and defaults to 0.01. Its canonical value is recorded in the
-summary and used by Adam. Tests compare actual checkpoint tensors to establish
-that changing the learning rate affects computation.
+Success emits `model.pt`, `model_config.json`, `metrics.jsonl`, `summary.json`,
+and the candidate `result.json`. Failure and SIGTERM retain actual metrics and
+a `FAILED` or `CANCELLED` partial summary, without a successful result manifest.
+A result candidate does not prove publication or business success.
 
-Three registered internal recipes use this same workload:
+Internal acceptance recipes `fail` and `slow-stop` retain the controlled
+five-update failure and two-second step delay. Their fixed fault timing is
+restricted to acceptance, and ordinary training has no recipe alarm.
 
-- `success`: complete 48 steps and emit candidate files and their digests.
-- `fail`: complete five optimizer updates, exit with `CPU03_RECIPE_FAILURE`,
-  and retain only metrics.
-- `slow-stop`: perform real optimization with a fixed 2-second delay after each
-  update and a 180-second POSIX alarm, leaving time for the managed close path
-  to interrupt an active trainer. SIGTERM exits 143 while closing open files.
+Run behavior tests and the persistent workload/independent reload drivers on
+Fedora only. The drivers use private writable directories and a supplied,
+immutable runtime image. `run_mlp_acceptance.py --nondefault` covers 17 rows,
+batch 6, two epochs, seed 7, and a finite run whose loss increases. It copies
+the result and reloads the checkpoint in a separate container without the
+training workspace mount. These are workload facts; the service must still
+prove authenticated admission, KFP/Trainer, publication, close and cleanup.
 
-These recipes are internal acceptance commands, not ordinary user parameters or
-a second training API. Callers cannot supply custom failure steps or time budgets.
-`result.json` is a candidate result, not proof of S3 publication or business success.
-The separate CPU08/CPU09 verifier must obtain bytes through BFF-authorized S3
-access without mounting the original training PVC.
+## Execution software materials
+
+The v2.1 CPU image is built with `cpu-execution.Dockerfile`, which copies the
+current MLP and LoRA programs plus the single machine contract into the immutable
+CPU runtime qualified by the actual workloads. `gpu.Dockerfile` uses the locked
+CUDA dependencies in `gpu-requirements.txt` and `gpu-runtime-lock.json`. Both
+retain a complete runtime inventory and the hashes of their baked sources.
+
+The finite generator in `scripts/modeldev-execution-materials` binds the
+implementation to an immutable training image and a confirmed PipelineVersion
+with its IR hash. These are software materials. Each accepted execution carries
+its own resolved algorithm values, input hash and platform-selected device;
+the image does not contain a selected input dataset or per-execution parameters.
+Image qualification and publication do not establish execution success or
+actual CUDA computation. Current task receipts live under the unique
+`.scratch/modeldev-execution-v2.1/records` index.
+
+The remaining sections describe the historical September CPU image and its
+original qualification commands. Their source, dependency and scan results
+apply only to that image. Changed sources require a new digest and verification.
 
 ## Locked image materials
 
@@ -57,7 +80,7 @@ the verified wheels offline during the build. The final image uses UID/GID
 10001:10001, read-only program files, and the workload itself as PID 1. It contains
 no selected dataset, checkpoint, or credentials and installs nothing at startup.
 
-## Fedora execution
+## Historical Fedora execution
 
 All generation, builds, training, reloads and scanning run on Fedora against a
 fixed committed source. After selecting the task-owned Podman storage containing
@@ -88,7 +111,7 @@ read-only at `/source/training` and invokes `/opt/venv/bin/python -I -m unittest
 discover -s /source/training/tests -p test_training.py -v`, with a separate bounded
 writable temporary directory and the runner's resource limits.
 
-## Fixed verification result
+## Historical fixed verification result
 
 On Fedora, source `4d56b93b045233c1325a362fe89d506210223d47` produced local image
 `sha256:0972fac83ba343e4d24e22bc35198bddf5c3e9d5c8ab3337694395beead3bd04`.

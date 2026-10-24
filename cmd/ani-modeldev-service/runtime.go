@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net/http"
 	"sync"
 	"time"
 
@@ -26,6 +27,18 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return nil, err
 	}
+	modelClient, modelFacts, closeModel, err := loadModelResources(config.Command)
+	if err != nil {
+		clients.close()
+		return nil, err
+	}
+	if modelClient != nil && (config.Command.Model.BaseModelStorageScope == nil || config.Command.Model.BaseModelStorageScope.ConnectionId != config.Runtime.ObjectStorage.ConnectionId) {
+		closeModel()
+		clients.close()
+		return nil, errors.New("Model source scope must match the configured physical object store")
+	}
+	closeInitialClients := clients.close
+	clients.close = sync.OnceFunc(func() { closeModel(); closeInitialClients() })
 	pool, err := openCommandPool(config.Command)
 	if err != nil {
 		clients.close()
@@ -49,18 +62,39 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	middlewares := observability.ServerMiddleware(logger)
 	query := service.NewQuery(execution.New(pool), objectstore.NewDownloadSigner(clients.store, config.Runtime.ObjectStorage.ConnectionId), clients.logs)
 	admissions, dispatch, facts := execution.New(pool), submission.New(pool), lifecycle.New(pool)
+	gpuRelease, ownerSigner, closeGPU, err := assembleGPUOwner(config.Runtime, clients.kube, facts)
+	if err != nil {
+		return failed("managed GPU owner configuration invalid")
+	}
+	closeRuntimeClients := clients.close
+	clients.close = sync.OnceFunc(func() { closeGPU(); closeRuntimeClients() })
 	identity, err := stepidentity.New(clients.kube, config.Runtime.TokenAudience)
 	if err != nil {
 		return failed("managed workload verifier configuration invalid")
 	}
-	proof := runtimeproof.New(clients.kube, clients.runs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), dispatch)
+	training := trainer.New(clients.kube).WithOwnerSigner(ownerSigner).WithTrainingLogs(clients.logs)
+	proof := runtimeproof.New(clients.kube, clients.runs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), dispatch).WithTrainingRuntime(training)
 	steps, err := biz.NewManagedSteps(dispatch, admissions, identity, proof)
 	if err != nil {
 		return failed("managed step configuration invalid")
 	}
-	runtime, err := biz.NewManagedRuntime(steps, facts, trainer.New(clients.kube), proof, proof)
+	runtime, err := biz.NewManagedRuntime(steps, facts, training, proof, proof)
 	if err != nil {
 		return failed("managed runtime configuration invalid")
+	}
+	if modelClient != nil {
+		storageHTTP, ok := clients.store.Options().HTTPClient.(*http.Client)
+		if !ok {
+			return failed("Model controlled-copy transport unavailable")
+		}
+		copier, copyErr := objectstore.NewTrainedArtifactCopier(objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), storageHTTP, config.Runtime.ObjectStorage.Endpoint, config.Command.Model.BaseModelStorageScope.Bucket)
+		if copyErr != nil {
+			return failed("Model controlled-copy scope invalid")
+		}
+		runtime, err = runtime.WithModelRegistration(modelClient, copier)
+		if err != nil {
+			return failed("Model original registration configuration invalid")
+		}
 	}
 	step, err := server.NewManagedStepServer(config.Runtime.Step, clients.certificate, service.NewRuntimeStep(steps, runtime, clients.storageIssuer), middlewares...)
 	if err != nil {
@@ -82,15 +116,22 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("automatic compute cleanup configuration invalid")
 	}
-	operations, err := buildExecutionOperations(pool, clients, closer, proof)
+	operations, err := buildExecutionOperations(pool, clients, closer, proof, training)
 	if err != nil {
 		return failed("managed execution operations configuration invalid")
 	}
-	command, err := buildCommandServerWithCapabilities(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), operations, middlewares...)
+	if modelClient != nil {
+		operations.WithRegistrationRecovery(runtime, admissions)
+	}
+	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), operations, modelFacts, middlewares...)
 	if err != nil {
 		return failed("managed command listener configuration invalid")
 	}
-	closeWorker, err := biz.NewCloseWorker(facts, closer, clients.binding, int(config.Runtime.DispatchBatchSize), config.Runtime.DispatchInterval.AsDuration())
+	var releaseReconcilers []*biz.GPUReleaseReconciler
+	if gpuRelease != nil {
+		releaseReconcilers = append(releaseReconcilers, gpuRelease)
+	}
+	closeWorker, err := biz.NewCloseWorker(facts, closer, clients.binding, int(config.Runtime.DispatchBatchSize), config.Runtime.DispatchInterval.AsDuration(), releaseReconcilers...)
 	if err != nil {
 		return failed("managed close worker configuration invalid")
 	}

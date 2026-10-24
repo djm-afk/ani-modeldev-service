@@ -23,6 +23,14 @@ type Query struct {
 	signer     biz.ArtifactSigner
 	logs       biz.TrainingLogReader
 	materials  *biz.ManagedMaterials
+	models     biz.FinetuningModelFactsReader
+}
+
+// WithFinetuningFacts records the actual read dependency assembled by the
+// composition. A selected base and target still require a current Model read.
+func (query *Query) WithFinetuningFacts(models biz.FinetuningModelFactsReader) *Query {
+	query.models = models
+	return query
 }
 
 func (query *Query) WithMaterials(materials *biz.ManagedMaterials) *Query {
@@ -151,23 +159,39 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if !valid {
 		return nil, biz.ErrPersistence
 	}
-	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, PresetId: value.Snapshot.Release.PresetID, ReleaseId: value.Snapshot.Release.ReleaseID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: value.Snapshot.Program.ImageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: value.Snapshot.Program.ImageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	view.ParameterContractVersion = value.Snapshot.Implementation.ParameterContractVersion
+	encoded, err := contractpb.EncodeSnapshot(value.Snapshot)
+	if err != nil {
+		return nil, biz.ErrPersistence
+	}
+	view.ComputeOrigin = encoded.ComputeOrigin
+	view.Timing = encoded.Timing
+	if value.Intent.MLP != nil {
+		typed, err := contractpb.EncodeIntent(value.Intent)
+		if err != nil {
+			return nil, biz.ErrPersistence
+		}
+		view.ExplicitMlp = typed.GetMlp()
+		for _, p := range value.Snapshot.Program.ResolvedParameters {
+			wire := parameterView(p)
+			if wire == nil {
+				return nil, biz.ErrPersistence
+			}
+			view.ResolvedParameters = append(view.ResolvedParameters, wire)
+		}
+	}
 	if fine := value.Snapshot.Finetuning; fine != nil {
 		if value.Snapshot.Kind != "FINETUNING" || value.Intent.Finetuning == nil {
 			return nil, biz.ErrPersistence
 		}
 		view.Kind = trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING
-		view.ReleaseDigest = value.Snapshot.Release.ReleaseDigest
 		view.ParameterContractVersion = cpup01.FinetuningParameterContractVersion
-		view.ExplicitFinetuning = &modeldevv1.FinetuningParameters{}
-		if p := value.Intent.Finetuning.LearningRate; p != nil {
-			v := *p
-			view.ExplicitFinetuning.LearningRate = &v
+		typedIntent, err := contractpb.EncodeIntent(value.Intent)
+		if err != nil {
+			return nil, biz.ErrPersistence
 		}
-		if p := value.Intent.Finetuning.MaxSteps; p != nil {
-			v := *p
-			view.ExplicitFinetuning.MaxSteps = &v
-		}
+		view.ExplicitFinetuning = typedIntent.GetSftLora()
 		for _, p := range value.Snapshot.Program.ResolvedParameters {
 			wire := parameterView(p)
 			if wire == nil {
@@ -206,6 +230,10 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 		view.ObservedAt = timestamppb.New(record.Runtime.Publication.VerifiedAt)
 	}
 	if registration := record.Runtime.FinetuningRegistration; registration != nil {
+		view.ModelRegistration, err = modelRegistrationView(value.Snapshot, registration)
+		if err != nil {
+			return nil, err
+		}
 		view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_REGISTER
 		view.ObservedAt = timestamppb.New(registration.RecordedAt)
 		if registration.FailureCode != "" {
@@ -215,6 +243,87 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if record.Runtime.ClosedAt != nil {
 		view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE
 		view.ObservedAt = timestamppb.New(*record.Runtime.ClosedAt)
+	}
+	view.History, err = executionHistoryView(record.Runtime.CloseEvidence)
+	if err != nil {
+		return nil, err
+	}
+	return view, nil
+}
+
+func executionHistoryView(evidence *biz.ManagedCloseEvidence) (*modeldevv1.ExecutionHistoryView, error) {
+	if evidence == nil {
+		return nil, nil
+	}
+	view := &modeldevv1.ExecutionHistoryView{RunId: evidence.RunID, WorkflowUid: evidence.WorkflowUID}
+	if !evidence.ObservedAt.IsZero() {
+		view.ObservedAt = timestamppb.New(evidence.ObservedAt)
+		if view.ObservedAt.CheckValid() != nil {
+			return nil, biz.ErrPersistence
+		}
+	}
+	owner := evidence.OwnerTermination
+	if owner == nil {
+		return view, nil
+	}
+	switch owner.RunState {
+	case "SUCCEEDED":
+		view.RunState = modeldevv1.KfpRunTerminalState_KFP_RUN_TERMINAL_STATE_SUCCEEDED
+	case "FAILED":
+		view.RunState = modeldevv1.KfpRunTerminalState_KFP_RUN_TERMINAL_STATE_FAILED
+	case "CANCELED":
+		view.RunState = modeldevv1.KfpRunTerminalState_KFP_RUN_TERMINAL_STATE_CANCELED
+	default:
+		return nil, biz.ErrPersistence
+	}
+	switch owner.WorkflowPhase {
+	case "Succeeded":
+		view.WorkflowPhase = modeldevv1.WorkflowTerminalPhase_WORKFLOW_TERMINAL_PHASE_SUCCEEDED
+	case "Failed":
+		view.WorkflowPhase = modeldevv1.WorkflowTerminalPhase_WORKFLOW_TERMINAL_PHASE_FAILED
+	case "Error":
+		view.WorkflowPhase = modeldevv1.WorkflowTerminalPhase_WORKFLOW_TERMINAL_PHASE_ERROR
+	default:
+		return nil, biz.ErrPersistence
+	}
+	if owner.RunFinishedAt.IsZero() || owner.WorkflowFinishedAt.IsZero() || evidence.ObservedAt.IsZero() || owner.RunFinishedAt.After(evidence.ObservedAt) || owner.WorkflowFinishedAt.After(evidence.ObservedAt) || owner.WorkflowResourceVersion == "" || strings.ContainsAny(owner.WorkflowResourceVersion, "\x00\r\n") || (owner.WorkflowNodesSHA256 != "" && !runtimeSHA256(owner.WorkflowNodesSHA256)) {
+		return nil, biz.ErrPersistence
+	}
+	view.RunFinishedAt, view.WorkflowFinishedAt = timestamppb.New(owner.RunFinishedAt), timestamppb.New(owner.WorkflowFinishedAt)
+	if view.RunFinishedAt.CheckValid() != nil || view.WorkflowFinishedAt.CheckValid() != nil {
+		return nil, biz.ErrPersistence
+	}
+	view.WorkflowResourceVersion, view.WorkflowNodesSha256 = owner.WorkflowResourceVersion, owner.WorkflowNodesSHA256
+	return view, nil
+}
+
+// Registration visibility comes exclusively from the original persisted
+// provider receipt. Reading a catalogue or retrying a write cannot imply READY.
+func modelRegistrationView(snapshot cpup01.Snapshot, registration *biz.FinetuningRegistration) (*modeldevv1.ModelRegistrationView, error) {
+	if snapshot.Kind != "FINETUNING" || snapshot.Finetuning == nil {
+		return nil, biz.ErrPersistence
+	}
+	view := &modeldevv1.ModelRegistrationView{State: registration.State, FailureCode: registration.FailureCode}
+	switch registration.State {
+	case biz.RegistrationStatePending:
+		if registration.FailureCode != "" || registration.Receipt != nil {
+			return nil, biz.ErrPersistence
+		}
+	case biz.RegistrationStateUnavailable:
+		if registration.FailureCode != biz.RegistrationUnavailableFailureCode || registration.Receipt != nil {
+			return nil, biz.ErrPersistence
+		}
+	case biz.RegistrationStateReady:
+		receipt := registration.Receipt
+		if registration.FailureCode != "" || receipt == nil || !queryID(receipt.RegistrationID) || !queryID(receipt.ModelID) || !queryID(receipt.ModelVersionID) || receipt.StoragePath == "" || receipt.SizeBytes <= 0 || receipt.SizeBytes != registration.Bundle.SizeBytes || !runtimeSHA256(receipt.SHA256) || receipt.SHA256 != registration.Bundle.SHA256 {
+			return nil, biz.ErrPersistence
+		}
+		if target := snapshot.Finetuning.TargetModelID; target != nil && receipt.ModelID != *target {
+			return nil, biz.ErrPersistence
+		}
+		view.RegistrationId, view.ModelId, view.ModelVersionId = receipt.RegistrationID, receipt.ModelID, receipt.ModelVersionID
+	default:
+		return nil, biz.ErrPersistence
 	}
 	return view, nil
 }

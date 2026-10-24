@@ -49,6 +49,7 @@ type Runner struct {
 	store         *s3.Client
 	baseStore     *s3.Client
 	executionKind string
+	stepTiming    *modeldevv1.StepTiming
 }
 
 func New(config Config, client modeldevv1.ModelDevStepServiceClient, kube dynamic.Interface, store *s3.Client, baseStores ...*s3.Client) (*Runner, error) {
@@ -105,11 +106,10 @@ func (runner *Runner) Run(ctx context.Context, step string) error {
 	if step == "train-wait" {
 		return runner.trainWait(ctx)
 	}
-	budget, err := runner.invocationBudget(ctx, step)
+	ctx, cancel, err := runner.roleContext(ctx, step)
 	if err != nil {
 		return err
 	}
-	ctx, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
 	switch step {
 	case "prepare":
@@ -151,25 +151,23 @@ func (runner *Runner) callContext(ctx context.Context) (context.Context, error) 
 
 func (runner *Runner) trainWait(ctx context.Context) error {
 	parent := ctx
-	legacyDeadline := time.Now().Add(30 * time.Minute)
-	ctx, cancel := context.WithDeadline(parent, legacyDeadline)
+	execution, _, err := runner.configuration(ctx)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithDeadline(parent, execution.Snapshot.DeadlineAt)
 	defer func() { cancel() }()
 	var admittedAt, trainingDeadline time.Time
 	bindBudget := func(training *modeldevv1.TrainingStatus) error {
 		if training == nil {
 			return ErrConfiguration
 		}
-		if training.TrainingAdmittedAt == nil && training.TrainingDeadlineAt == nil {
-			if !trainingDeadline.IsZero() {
-				return ErrConfiguration
-			}
-			return nil
-		}
 		if training.TrainingAdmittedAt == nil || training.TrainingDeadlineAt == nil || training.TrainingAdmittedAt.CheckValid() != nil || training.TrainingDeadlineAt.CheckValid() != nil {
 			return ErrConfiguration
 		}
 		start, deadline := training.TrainingAdmittedAt.AsTime(), training.TrainingDeadlineAt.AsTime()
-		if !deadline.After(start) || deadline.Sub(start) > time.Hour {
+		expected, err := execution.Snapshot.Timing.DeadlineFor(start)
+		if err != nil || !deadline.After(start) || !deadline.Equal(expected) {
 			return ErrConfiguration
 		}
 		if !trainingDeadline.IsZero() {
@@ -193,6 +191,7 @@ func (runner *Runner) trainWait(ctx context.Context) error {
 		return err
 	}
 	ensured, err := runner.client.EnsureTraining(call, &modeldevv1.EnsureTrainingRequest{Context: runner.config.Context})
+	ensureConfirmed := err == nil
 	if err != nil && !retryObservation(err) {
 		return err
 	}
@@ -206,12 +205,49 @@ func (runner *Runner) trainWait(ctx context.Context) error {
 		}
 	}
 	for {
+		if !ensureConfirmed {
+			// An unknown Runtime response may precede the original TrainJob
+			// reservation. Retry the authenticated Ensure command: its durable
+			// Runtime/TrainJob fences permit lookup only after an uncertain POST.
+			// Read the already admitted TRAIN window so transport recovery never
+			// falls back to a fresh local S budget.
+			_, _, readErr := runner.configuration(ctx)
+			if readErr != nil && !retryObservation(readErr) {
+				return readErr
+			}
+			if readErr == nil && runner.stepTiming != nil {
+				t := runner.stepTiming
+				if t.Role != modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT {
+					return ErrConfiguration
+				}
+				if err := bindBudget(&modeldevv1.TrainingStatus{TrainingAdmittedAt: t.AdmittedAt, TrainingDeadlineAt: t.DeadlineAt}); err != nil {
+					return err
+				}
+			}
+		}
 		if err := runner.wait(ctx); err != nil {
 			return err
 		}
 		call, err := runner.callContext(ctx)
 		if err != nil {
 			return err
+		}
+		if !ensureConfirmed {
+			recovered, err := runner.client.EnsureTraining(call, &modeldevv1.EnsureTrainingRequest{Context: runner.config.Context})
+			if err != nil {
+				if retryObservation(err) {
+					continue
+				}
+				return err
+			}
+			if err := bindBudget(recovered.GetStatus()); err != nil {
+				return err
+			}
+			ensureConfirmed = true
+			if done, err := runner.trainingResult(recovered.GetStatus()); done || err != nil {
+				return err
+			}
+			continue
 		}
 		observed, err := runner.client.GetTrainingStatus(call, &modeldevv1.GetTrainingStatusRequest{Context: runner.config.Context})
 		if err != nil {

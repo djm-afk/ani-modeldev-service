@@ -16,15 +16,17 @@ func TestFinetuningStreamingConfigurationBudgets(t *testing.T) {
 	}{
 		{name: "existing defaults", valid: true},
 		{name: "managed fine budgets", valid: true, change: func(c *Bootstrap) {
-			c.Runtime.Step.Timeout = durationpb.New(600 * time.Second)
-			c.Runtime.ObjectStorage.StreamingTimeout = durationpb.New(600 * time.Second)
+			c.Runtime.Step.Timeout = durationpb.New(3600 * time.Second)
+			c.Runtime.ObjectStorage.StreamingTimeout = durationpb.New(3600 * time.Second)
 		}},
-		{name: "step above 600", change: func(c *Bootstrap) { c.Runtime.Step.Timeout = durationpb.New(601 * time.Second) }},
+		{name: "step above finite maximum", change: func(c *Bootstrap) { c.Runtime.Step.Timeout = durationpb.New(24*time.Hour + time.Second) }},
 		{name: "command stays bounded by 30", change: func(c *Bootstrap) { c.Server.Grpc.Timeout = durationpb.New(31 * time.Second) }},
 		{name: "admin stays bounded by 30", change: func(c *Bootstrap) { c.Server.Admin.Timeout = durationpb.New(31 * time.Second) }},
 		{name: "API stays bounded by 30", change: func(c *Bootstrap) { c.Runtime.ApiTimeout = durationpb.New(31 * time.Second) }},
 		{name: "explicit zero streaming", change: func(c *Bootstrap) { c.Runtime.ObjectStorage.StreamingTimeout = durationpb.New(0) }},
-		{name: "streaming above 600", change: func(c *Bootstrap) { c.Runtime.ObjectStorage.StreamingTimeout = durationpb.New(601 * time.Second) }},
+		{name: "streaming above finite maximum", change: func(c *Bootstrap) {
+			c.Runtime.ObjectStorage.StreamingTimeout = durationpb.New(24*time.Hour + time.Second)
+		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			c := validConfig()

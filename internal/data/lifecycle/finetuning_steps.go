@@ -49,10 +49,8 @@ func (repository *Repository) ReserveFinetuningStep(ctx context.Context, authori
 		if current.state.Observation == nil || current.state.Observation.Outcome != "SUCCEEDED" || !current.state.Observation.WritersAbsent {
 			return false, biz.ErrRuntimeNotReady
 		}
-		fine := current.execution.Snapshot.Finetuning
-		budget := fine.Budgets.ExportTimeoutSeconds
+		budget := current.execution.Snapshot.Timing.StepTimeoutSeconds
 		if binding.Role == "verify" {
-			budget = fine.Budgets.VerifyTimeoutSeconds
 			export := stepForRole(current.state, "export")
 			if export == nil || export.Result == nil || export.Result.ExitCode != 0 {
 				return false, biz.ErrRuntimeNotReady
@@ -66,6 +64,7 @@ func (repository *Repository) ReserveFinetuningStep(ctx context.Context, authori
 			deadline = current.execution.Snapshot.DeadlineAt
 		}
 		start = biz.FinetuningStepStart{Binding: binding, AdmittedAt: current.now, DeadlineAt: deadline, ObservedCloseGeneration: current.state.CloseGeneration}
+		current.writeDeadline = deadline
 		current.state.FinetuningSteps = append(current.state.FinetuningSteps, start)
 		send = true
 		return true, nil
@@ -132,10 +131,7 @@ func validFinetuningStarts(current *runtimeTransaction) bool {
 		}
 		seen[start.Binding.Role] = true
 		seenTasks[start.Binding.TaskID], seenPods[start.Binding.PodUID] = true, true
-		budget := current.execution.Snapshot.Finetuning.Budgets.ExportTimeoutSeconds
-		if start.Binding.Role == "verify" {
-			budget = current.execution.Snapshot.Finetuning.Budgets.VerifyTimeoutSeconds
-		}
+		budget := current.execution.Snapshot.Timing.StepTimeoutSeconds
 		deadline := start.AdmittedAt.Add(time.Duration(budget) * time.Second)
 		if current.execution.Snapshot.DeadlineAt.Before(deadline) {
 			deadline = current.execution.Snapshot.DeadlineAt

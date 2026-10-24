@@ -87,8 +87,8 @@ func newCompleteFixture(t *testing.T) *completeFixture {
 	snapshot.Input.Object.SHA256 = completeHash(data)
 	snapshot.Program.ResolvedArgs = []string{"--data", "/inputs/data.csv", "--output", "/outputs", "--expected-input-sha256", snapshot.Input.Object.SHA256, "--expected-input-bytes", fmt.Sprint(len(data)), "--learning-rate", "0.01"}
 	snapshot.Workspace.Mode = "EXECUTION_PVC"
-	snapshot.Release.Runtime.Name = "cpu-runtime-v1"
-	snapshot.Release.Runtime.TargetJobs = []string{"trainer"}
+	snapshot.RuntimePlan.Name = "cpu-runtime-v1"
+	snapshot.RuntimePlan.TargetJobs = []string{"trainer"}
 	f.workspace = biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "md-" + f.request.Admission.ExecutionID, PVCUID: completePVCUID, InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath}
 	ns := snapshot.Environment.NamespaceName
 	meta := func(name, uid string) map[string]any {
@@ -114,7 +114,7 @@ func newCompleteFixture(t *testing.T) *completeFixture {
 	runtimePod := runtimeJobs[0].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["template"].(map[string]any)
 	runtimePod["metadata"] = map[string]any{"finalizers": []any{"modeldev.ani.io/training-exit-evidence"}}
 	runtimeSpec, _ := json.Marshal(runtime["spec"])
-	snapshot.Release.Runtime.ContentSHA256 = completeHash(runtimeSpec)
+	snapshot.RuntimePlan.ExpectedSpecSHA256 = completeHash(runtimeSpec)
 	f.objects["/apis/trainer.kubeflow.org/v1alpha1/clustertrainingruntimes/cpu-runtime-v1"] = runtime
 	f.request.Admission.SpecHash, err = snapshot.Digest()
 	if err != nil {
@@ -428,7 +428,7 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		tasks = append(tasks, map[string]string{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "pod_name": "main-" + step, "state": state})
 	}
-	run := map[string]any{"run_id": completeRunID, "experiment_id": s.Environment.ExperimentID, "display_name": "md-" + f.request.Admission.ExecutionID, "pipeline_version_reference": map[string]string{"pipeline_id": s.Release.PipelineID, "pipeline_version_id": s.Release.PipelineVersionID}, "runtime_config": map[string]any{"parameters": map[string]string{"execution_id": f.request.Admission.ExecutionID, "spec_hash": f.request.Admission.SpecHash}, "pipeline_root": f.request.Owner.PipelineRoot}, "service_account": s.Environment.Identities.KFPStepServiceAccount, "state": "RUNNING", "run_details": map[string]any{"task_details": tasks}}
+	run := map[string]any{"run_id": completeRunID, "experiment_id": s.Environment.ExperimentID, "display_name": "md-" + f.request.Admission.ExecutionID, "pipeline_version_reference": map[string]string{"pipeline_id": s.Implementation.PipelineID, "pipeline_version_id": s.Implementation.PipelineVersionID}, "runtime_config": map[string]any{"parameters": map[string]string{"execution_id": f.request.Admission.ExecutionID, "spec_hash": f.request.Admission.SpecHash}, "pipeline_root": f.request.Owner.PipelineRoot}, "service_account": s.Environment.Identities.KFPStepServiceAccount, "state": "RUNNING", "run_details": map[string]any{"task_details": tasks}}
 	if f.runStoppedAt != "" {
 		run["state"], run["finished_at"] = "CANCELED", f.runStoppedAt
 	} else if f.runSucceededAt != "" {

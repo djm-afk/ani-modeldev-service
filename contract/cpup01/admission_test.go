@@ -1,35 +1,47 @@
 package cpup01_test
 
 import (
-	"bytes"
-	"testing"
-	"time"
-
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
+	"testing"
 )
 
-func TestAdmissionEnvelopeReturnsImmutableCanonicalPayloads(t *testing.T) {
-	snapshot := conformance.SnapshotV1()
-	intent := cpup01.Intent{Name: "shared-admission", Kind: snapshot.Kind, PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
-	wantIntent, intentHash, err := cpup01.CanonicalIntent(intent)
-	if err != nil {
-		t.Fatal(err)
+func admissionFixture() cpup01.AdmissionEnvelope {
+	s := conformance.SnapshotV1()
+	i := conformance.IntentV1()
+	_, h, _ := cpup01.CanonicalIntent(i)
+	spec, _ := s.Digest()
+	return cpup01.AdmissionEnvelope{TenantID: s.IdentityRef.TenantID, Actor: s.IdentityRef.Actor, ExecutionID: s.IdentityRef.ExecutionID, OperationID: s.IdentityRef.OperationID, Intent: i, IntentHash: h, Snapshot: s, SpecHash: spec, AcceptedAt: s.Timing.AcceptedAt}
+}
+func TestAdmissionEnvelopeBindsOriginalCandidate(t *testing.T) {
+	a := admissionFixture()
+	if _, _, e := a.CanonicalPayloads(); e != nil {
+		t.Fatal(e)
 	}
-	envelope := cpup01.AdmissionEnvelope{
-		TenantID:    "11111111-2222-4333-8444-555555555555",
-		Actor:       "governance:user:66666666-7777-4888-8999-aaaaaaaaaaaa",
-		OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff",
-		ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
-		Intent:      intent, IntentHash: intentHash,
-		Snapshot: snapshot, SpecHash: conformance.SnapshotSHA256V1,
-		AcceptedAt: snapshot.DeadlineAt.Add(-time.Hour),
+	a.OperationID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+	if _, _, e := a.CanonicalPayloads(); e == nil {
+		t.Fatal("different operation accepted")
 	}
-	gotIntent, gotSnapshot, err := envelope.CanonicalPayloads()
-	if err != nil {
-		t.Fatalf("valid frozen admission: %v", err)
+	a = admissionFixture()
+	a.Snapshot.IdentityRef.IntentHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	a.SpecHash, _ = a.Snapshot.Digest()
+	if _, _, e := a.CanonicalPayloads(); e == nil {
+		t.Fatal("different intent binding accepted")
 	}
-	if !bytes.Equal(gotIntent, wantIntent) || !bytes.Equal(gotSnapshot, conformance.SnapshotCanonicalV1()) {
-		t.Fatal("shared validator changed canonical payloads")
+}
+func TestCandidateCanonicalRoundTripRejectsWrongHash(t *testing.T) {
+	s := conformance.SnapshotV1()
+	s.RuntimePlan = cpup01.RuntimePlan{}
+	c := cpup01.PreparedCandidate{SchemaVersion: cpup01.CandidateSchemaVersion, Intent: conformance.IntentV1(), Snapshot: s}
+	raw, e := c.Canonical()
+	if e != nil {
+		t.Fatal(e)
+	}
+	h, _ := c.Digest()
+	if _, e := cpup01.DecodePreparedCandidate(raw, h); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := cpup01.DecodePreparedCandidate(raw, "wrong"); e == nil {
+		t.Fatal("wrong candidate hash accepted")
 	}
 }

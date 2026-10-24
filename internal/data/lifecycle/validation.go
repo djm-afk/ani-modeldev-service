@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/util/validation"
 
@@ -48,6 +49,7 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 	}
 	history := make(map[string]biz.RuntimeResource)
 	if state.Observation != nil {
+		observation.SpecificationMismatch = observation.SpecificationMismatch || state.Observation.SpecificationMismatch
 		if observation.ObservedAt.Before(state.Observation.ObservedAt) {
 			return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 		}
@@ -67,6 +69,15 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 			}
 			if previous.ExitCode != nil && (resource.ExitCode == nil || *previous.ExitCode != *resource.ExitCode) {
 				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+			}
+			if previous.TrainingLog != nil && !reflect.DeepEqual(previous.TrainingLog, resource.TrainingLog) {
+				before, after := previous.TrainingLog, resource.TrainingLog
+				if previous.Terminal || after == nil || before.Source != after.Source || after.Result.ObservedAt.Before(before.Result.ObservedAt) {
+					return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+				}
+				if after.Result.ObservedAt.Equal(before.Result.ObservedAt) && (!reflect.DeepEqual(before.Result.Lines, after.Result.Lines) || before.Result.Truncated && !after.Result.Truncated) {
+					return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+				}
 			}
 		}
 		// The API no longer returning a UID is not fresh proof of termination.
@@ -98,6 +109,10 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 			}
 			hasJobSet = true
+		case "PodGroup":
+			if resource.APIVersion != "scheduling.volcano.sh/v1beta1" || resource.Name != state.Training.Name || resource.OwnerUID != state.TrainingHandle.TrainJobUID || !resource.Terminal || resource.ExitCode != nil {
+				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+			}
 		case "Job":
 			owner, ok := history[resource.OwnerUID]
 			if !ok || owner.Kind != "JobSet" {
@@ -128,10 +143,14 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 	if !hasTrainJob {
 		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 	}
-	if observation.WritersAbsent && (!allTerminal || !hasJobSet || !hasPod) {
+	noWorker := !hasPod && validNoWorkerClose(state, observation, history)
+	if observation.NoWorkerPodListResourceVersion != "" && (hasPod || !noWorker || !observation.WritersAbsent) {
+		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+	}
+	if observation.WritersAbsent && (!allTerminal || !hasJobSet || !hasPod && !noWorker) {
 		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeNotReady
 	}
-	if observation.Outcome == "SUCCEEDED" && (!observation.WritersAbsent || !allSuccessful) {
+	if observation.Outcome == "SUCCEEDED" && (!observation.WritersAbsent || !allSuccessful || !hasPod) {
 		return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeNotReady
 	}
 	if state.Observation != nil && state.Observation.Outcome == "SUCCEEDED" && observation.Outcome != "SUCCEEDED" {
@@ -140,8 +159,29 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 	return merged, nil
 }
 
+func validNoWorkerClose(state biz.ExecutionRuntime, observation biz.TrainingRuntimeObservation, resources map[string]biz.RuntimeResource) bool {
+	if state.CloseGeneration == 0 || state.CloseRequestedAt.IsZero() || !validOpaqueID(observation.NoWorkerPodListResourceVersion) {
+		return false
+	}
+	counts := map[string]int{}
+	for _, resource := range resources {
+		if resource.Kind == "PodGroup" {
+			continue
+		}
+		proof := resource.Suspension
+		if resource.Kind == "Pod" || !resource.APIObjectPresent || !resource.CreationDisabled || proof == nil || proof.Generation < 2 || proof.AcknowledgedAt.IsZero() || proof.AcknowledgedAt.After(observation.ObservedAt.Add(5*time.Second)) || !proof.AcknowledgedAt.Add(time.Second).After(state.CloseRequestedAt) || proof.ObservedGeneration != 0 && proof.ObservedGeneration != proof.Generation || proof.ObservedGeneration == 0 && proof.Generation != 2 {
+			return false
+		}
+		counts[resource.Kind]++
+		if resource.Kind == "Job" && !proof.WorkerExitRetention {
+			return false
+		}
+	}
+	return counts["TrainJob"] == 1 && counts["JobSet"] == 1 && counts["Job"] == 1
+}
+
 func validPublication(execution biz.Execution, authority biz.RunAuthorityCandidate, state biz.ExecutionRuntime, publication biz.RuntimePublication, requireFreshObservation bool) error {
-	if state.Observation == nil || state.Observation.Outcome != "SUCCEEDED" || !state.Observation.WritersAbsent || state.TrainingHandle == nil {
+	if state.Observation == nil || state.Observation.SpecificationMismatch || state.Observation.Outcome != "SUCCEEDED" || !state.Observation.WritersAbsent || state.TrainingHandle == nil {
 		return biz.ErrRuntimeNotReady
 	}
 	if _, err := databaseID(publication.ID); err != nil {

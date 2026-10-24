@@ -17,7 +17,7 @@ import (
 )
 
 func TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport(t *testing.T) {
-	for _, attack := range []string{"original", "completed-after-close", "missing-completion-time", "future-completion", "duplicate-completion", "set-generation3", "set-not-suspended", "train-no-suspend-report", "set-replacement", "set-foreign-owner", "unknown-running-writer", "original-writer-running", "missing-log"} {
+	for _, attack := range []string{"original", "completed-after-close", "missing-completion-time", "future-completion", "duplicate-completion", "set-generation3", "set-not-suspended", "train-no-suspend-report", "set-replacement", "set-foreign-owner", "unknown-running-writer", "original-writer-running", "reader-unavailable-after-log-commit"} {
 		t.Run(attack, func(t *testing.T) {
 			f := newComputeCleanupClosingFixture(t, false, "USER_STOP", completedSetSuspendBoundary)
 			state, err := lifecycle.New(f.step.open()).GetRuntime(context.Background(), f.step.f.execution.TenantID, f.step.f.execution.ExecutionID)
@@ -67,7 +67,9 @@ func TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport(t 
 					_ = unstructured.SetNestedField(pod.Object, "Running", "status", "phase")
 					_ = unstructured.SetNestedSlice(pod.Object, []any{map[string]any{"name": "node", "state": map[string]any{"running": map[string]any{"startedAt": time.Now().Add(-time.Minute).Format(time.RFC3339Nano)}}}}, "status", "containerStatuses")
 				}
-			case "missing-log":
+			case "reader-unavailable-after-log-commit":
+				// The original exit and bounded tail are already committed by the
+				// fixture. Later reader loss must not require a second log fetch.
 				f.step.serveExtra = func(t *testing.T, w http.ResponseWriter, r *http.Request) bool {
 					if strings.HasSuffix(r.URL.Path, "/pods/actual-training/log") {
 						w.WriteHeader(http.StatusForbidden)
@@ -77,14 +79,14 @@ func TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport(t 
 				}
 			}
 			result, err := f.worker(t).ReconcileOnce(context.Background())
-			if attack != "original" {
+			if attack != "original" && attack != "reader-unavailable-after-log-commit" {
 				if err != nil || result.Unresolved != 1 || len(f.deleted) != 0 {
 					t.Fatal("incomplete completion/identity/writer/log facts allowed a DELETE", result, err, f.deleted)
 				}
 				return
 			}
 			state, readErr := lifecycle.New(f.step.open()).GetRuntime(context.Background(), f.step.f.execution.TenantID, f.step.f.execution.ExecutionID)
-			if err != nil || readErr != nil || result.Unresolved != 0 || state.ComputeCleanup == nil || state.ComputeCleanup.Phase != "APPLIED" || !state.ComputeCleanup.LogsReady || len(state.ComputeCleanup.ConfirmedAbsent) != 5 || len(f.deleted) != 5 || f.logReads != 1 || state.Workspace == nil {
+			if err != nil || readErr != nil || result.Unresolved != 0 || state.ComputeCleanup == nil || state.ComputeCleanup.Phase != "APPLIED" || !state.ComputeCleanup.LogsReady || len(state.ComputeCleanup.ConfirmedAbsent) != 7 || len(f.deleted) != 7 || f.logReads != 1 || state.Workspace == nil {
 				t.Fatal("completed original set could not finish bounded automatic cleanup", result, err, readErr, "logs", f.logReads, "deletes", len(f.deleted))
 			}
 			for _, resource := range state.Observation.Resources {

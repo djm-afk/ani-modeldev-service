@@ -5,11 +5,14 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -40,31 +43,24 @@ func TestGovernanceDeliveryContractProvider(t *testing.T) {
 	if err != nil {
 		t.Fatal("GOVERNANCE_DELIVERY_PREFLIGHT: shared fixture intent cannot canonicalize")
 	}
-	var normalized struct {
-		Schema string `json:"schema"`
-		cpup01.Intent
-	}
-	var snapshot cpup01.Snapshot
-	if json.Unmarshal(intentCanonical, &normalized) != nil || json.Unmarshal(fixture.wantCanonical, &snapshot) != nil {
-		t.Fatal("GOVERNANCE_DELIVERY_PREFLIGHT: independent canonical fixture cannot decode")
-	}
-	// The delivery consumer creates its first real Governance binding via CAS.
-	// Only its generation differs from the Resolve fixture's fixed generation 7.
-	snapshot.Release.AcceptedBindingGeneration = 1
-	snapshotCanonical, err := snapshot.Canonical()
+	normalized, err := cpup01.DecodeCanonicalIntent(intentCanonical)
 	if err != nil {
-		t.Fatal("GOVERNANCE_DELIVERY_PREFLIGHT: first-binding snapshot cannot canonicalize")
+		t.Fatal(err)
 	}
+	snapshot := fixture.wantSnapshot
+	snapshot.Timing.AcceptedAt = time.Now().UTC().Truncate(time.Microsecond)
+	snapshot.Timing.ExecutionDeadlineAt = snapshot.Timing.AcceptedAt.Add(time.Hour)
+	snapshot.DeadlineAt = snapshot.Timing.ExecutionDeadlineAt
 	specHash, err := snapshot.Digest()
 	if err != nil {
-		t.Fatal("GOVERNANCE_DELIVERY_PREFLIGHT: first-binding snapshot cannot hash")
+		t.Fatal(err)
 	}
 	handshake := governanceDeliveryHandshake{
-		Schema: "ani.cpu-p01.governance-delivery-fixture.v1", Address: fixture.config.Server.Grpc.Addr,
+		Schema: "ani.modeldev.governance-delivery-fixture.v2.1", Address: fixture.config.Server.Grpc.Addr,
 		Frozen: governanceDeliveryFrozen{
-			ResourceTenantID: fixture.tenantID, Actor: "governance:user:42", Intent: normalized.Intent,
+			ResourceTenantID: fixture.tenantID, Actor: "governance:user:42", Intent: normalized,
 			Snapshot: snapshot, IntentHash: intentHash, ExecutionSpecHash: specHash,
-			AcceptedAt: fixture.request.AcceptedAt.AsTime(),
+			AcceptedAt: snapshot.Timing.AcceptedAt,
 		},
 		Target:  governanceDeliveryIdentity{OperationID: uuid.NewString(), ExecutionID: uuid.NewString()},
 		Control: governanceDeliveryIdentity{OperationID: uuid.NewString(), ExecutionID: uuid.NewString()},
@@ -78,7 +74,7 @@ func TestGovernanceDeliveryContractProvider(t *testing.T) {
 	}
 	for _, original := range []cpup01.AdmissionEnvelope{control, target} {
 		wantIntent, wantSnapshot, err := original.CanonicalPayloads()
-		if err != nil || !bytes.Equal(wantIntent, intentCanonical) || !bytes.Equal(wantSnapshot, snapshotCanonical) {
+		if err != nil || !bytes.Equal(wantIntent, intentCanonical) || len(wantSnapshot) == 0 {
 			t.Fatal("GOVERNANCE_DELIVERY_PREFLIGHT: immutable fixture envelope differs from authored facts")
 		}
 	}
@@ -181,10 +177,14 @@ type governanceDeliveryFrozen struct {
 }
 
 func (f governanceDeliveryFrozen) envelope(identity governanceDeliveryIdentity) cpup01.AdmissionEnvelope {
-	return cpup01.AdmissionEnvelope{
-		TenantID: f.ResourceTenantID, Actor: f.Actor, OperationID: identity.OperationID, ExecutionID: identity.ExecutionID,
-		Intent: f.Intent, IntentHash: f.IntentHash, Snapshot: f.Snapshot, SpecHash: f.ExecutionSpecHash, AcceptedAt: f.AcceptedAt,
-	}
+	snapshot := f.Snapshot
+	snapshot.IdentityRef = cpup01.IdentityRef{TenantID: f.ResourceTenantID, Actor: f.Actor, OperationID: identity.OperationID, ExecutionID: identity.ExecutionID, IntentHash: f.IntentHash}
+	snapshot.RuntimePlan.ExpectedSpec = []byte(strings.ReplaceAll(string(snapshot.RuntimePlan.ExpectedSpec), "ani-kfp-workspace-99999999-9999-4999-8999-999999999999", "ani-kfp-workspace-"+identity.ExecutionID))
+	runtimeDigest := sha256.Sum256(snapshot.RuntimePlan.ExpectedSpec)
+	snapshot.RuntimePlan.ExpectedSpecSHA256 = hex.EncodeToString(runtimeDigest[:])
+	snapshot.RuntimePlan.Name = cpup01.RuntimeName(snapshot.Environment.NamespaceUID, identity.ExecutionID)
+	hash, _ := snapshot.Digest()
+	return cpup01.AdmissionEnvelope{TenantID: f.ResourceTenantID, Actor: f.Actor, OperationID: identity.OperationID, ExecutionID: identity.ExecutionID, Intent: f.Intent, IntentHash: f.IntentHash, Snapshot: snapshot, SpecHash: hash, AcceptedAt: f.AcceptedAt}
 }
 
 type governanceDeliveryHandshake struct {

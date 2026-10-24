@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
@@ -33,7 +32,7 @@ func TestOutputManifestBindsActualInventoryWithoutClaimingPublication(t *testing
 		ExecutionSpecHash string              `json:"execution_spec_hash"`
 		InputVersionID    string              `json:"input_version_id"`
 		InputSHA256       string              `json:"input_sha256"`
-		ReleaseID         string              `json:"release_id"`
+		ImplementationID  string              `json:"implementation_id"`
 		ImageDigest       string              `json:"image_digest"`
 		StorageState      string              `json:"storage_state"`
 		Files             []cpup01.OutputFile `json:"files"`
@@ -43,7 +42,7 @@ func TestOutputManifestBindsActualInventoryWithoutClaimingPublication(t *testing
 	if err := decoder.Decode(&decoded); err != nil {
 		t.Fatalf("manifest has unsupported or self-hash fields: %v", err)
 	}
-	if decoded.Schema != "ani.modeldev.output-manifest.v1" || decoded.StorageState != "WORKSPACE_ONLY" || decoded.TenantID != admission.TenantID || decoded.OperationID != admission.OperationID || decoded.ExecutionID != admission.ExecutionID || decoded.ExecutionSpecHash != admission.SpecHash || decoded.InputVersionID != admission.Snapshot.Input.InputVersionID || decoded.InputSHA256 != admission.Snapshot.Input.Object.SHA256 || decoded.ReleaseID != admission.Snapshot.Release.ReleaseID || decoded.ImageDigest != admission.Snapshot.Program.ImageDigest {
+	if decoded.Schema != "ani.modeldev.output-manifest.v1" || decoded.StorageState != "WORKSPACE_ONLY" || decoded.TenantID != admission.TenantID || decoded.OperationID != admission.OperationID || decoded.ExecutionID != admission.ExecutionID || decoded.ExecutionSpecHash != admission.SpecHash || decoded.InputVersionID != admission.Snapshot.Input.InputVersionID || decoded.InputSHA256 != admission.Snapshot.Input.Object.SHA256 || decoded.ImplementationID != admission.Snapshot.Implementation.ImplementationID || decoded.ImageDigest != admission.Snapshot.Program.ImageDigest {
 		t.Fatalf("manifest lost frozen binding: %+v", decoded)
 	}
 	wantFiles := []cpup01.OutputFile{files[1], files[0], files[2], files[3]}
@@ -98,12 +97,13 @@ func TestOutputManifestRejectsInvalidInventoryAndEnvelope(t *testing.T) {
 func manifestFixture(t *testing.T) (cpup01.AdmissionEnvelope, []cpup01.OutputFile) {
 	t.Helper()
 	snapshot := conformance.SnapshotV1()
-	intent := cpup01.Intent{Name: "manifest-cpu", Kind: snapshot.Kind, PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := conformance.IntentV1()
 	_, hash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
 	}
-	admission := cpup01.AdmissionEnvelope{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:7", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: hash, Snapshot: snapshot, SpecHash: conformance.SnapshotSHA256V1, AcceptedAt: snapshot.DeadlineAt.Add(-time.Hour)}
+	specHash, _ := snapshot.Digest()
+	admission := cpup01.AdmissionEnvelope{TenantID: snapshot.IdentityRef.TenantID, Actor: snapshot.IdentityRef.Actor, OperationID: snapshot.IdentityRef.OperationID, ExecutionID: snapshot.IdentityRef.ExecutionID, Intent: intent, IntentHash: hash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: snapshot.Timing.AcceptedAt}
 	files := []cpup01.OutputFile{
 		{RelativePath: "model.pt", Role: "CHECKPOINT", SizeBytes: 17, SHA256: strings.Repeat("a", 64)},
 		{RelativePath: "metrics.jsonl", Role: "METRICS", SizeBytes: 9, SHA256: strings.Repeat("b", 64)},

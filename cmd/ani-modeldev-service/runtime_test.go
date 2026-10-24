@@ -21,13 +21,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/storagecredentials"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -183,16 +183,10 @@ func runtimeAppFixture(t *testing.T) configuredRuntimeFixture {
 	snapshot := conformance.SnapshotV1()
 	now := time.Now().UTC().Truncate(time.Microsecond)
 	snapshot.DeadlineAt = now.Add(time.Hour)
-	intent := cpup01.Intent{Name: "configured-runtime", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
-	_, intentHash, err := cpup01.CanonicalIntent(intent)
-	if err != nil {
-		t.Fatal(err)
-	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
-	admission := biz.Admission{TenantID: uuid.NewString(), Actor: "governance:user:42", OperationID: uuid.NewString(), ExecutionID: uuid.NewString(), Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: now}
+	intent := conformance.IntentV1()
+	intent.Name = "configured-runtime"
+	admission := admissionfixture.Bind(t, biz.Admission{TenantID: uuid.NewString(), Actor: "governance:user:42", OperationID: uuid.NewString(), ExecutionID: uuid.NewString(), Intent: intent, Snapshot: snapshot, AcceptedAt: now})
+	snapshot = admission.Snapshot
 	posts, reviews := &atomic.Int32{}, &atomic.Int32{}
 	peer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {

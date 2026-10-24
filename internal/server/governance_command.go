@@ -104,6 +104,17 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 		return err
 	}
 	authenticate := func(ctx context.Context, request any, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (any, error) {
+		// Reconcile contains two existing finite two-minute stages. Give only
+		// that exact method an outer envelope; never replace caller cancellation.
+		timeout := c.Timeout.AsDuration()
+		if info.FullMethod == modeldevv1.ModelDevOperationsService_ReconcileExecution_FullMethodName {
+			timeout = 5 * time.Minute
+		}
+		if timeout > 0 {
+			bounded, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
+			ctx = bounded
+		}
 		denied := status.Error(codes.Unauthenticated, "authenticated Governance delivery required")
 		remote, ok := peer.FromContext(ctx)
 		if !ok {
@@ -115,11 +126,11 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 		}
 		allowed := info.FullMethod == modeldevv1.ModelDevCommandService_ApplyCloseIntent_FullMethodName ||
 			info.FullMethod == modeldevv1.ModelDevCommandService_AcceptExecution_FullMethodName ||
-			(admission != nil && info.FullMethod == modeldevv1.ModelDevAdmissionService_ResolveAdmission_FullMethodName)
+			(admission != nil && (info.FullMethod == modeldevv1.ModelDevAdmissionService_PrepareAdmission_FullMethodName || info.FullMethod == modeldevv1.ModelDevAdmissionService_FinalizeAdmission_FullMethodName))
 		isQuery := query != nil && (info.FullMethod == modeldevv1.ModelDevQueryService_GetExecution_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_ListExecutions_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_ListExecutionArtifacts_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_AuthorizeArtifactDownload_FullMethodName)
-		isQuery = isQuery || (query != nil && (info.FullMethod == modeldevv1.ModelDevQueryService_ListPresets_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_GetInputVersion_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_ListInputVersions_FullMethodName))
-		isQuery = isQuery || (extra.Management != nil && (info.FullMethod == modeldevv1.ModelDevManagementService_ImportRelease_FullMethodName || info.FullMethod == modeldevv1.ModelDevManagementService_ValidateRelease_FullMethodName || info.FullMethod == modeldevv1.ModelDevManagementService_ImportCSV_FullMethodName || info.FullMethod == modeldevv1.ModelDevManagementService_ImportFinetuningDataset_FullMethodName))
-		isQuery = isQuery || (extra.Operations != nil && (info.FullMethod == modeldevv1.ModelDevOperationsService_InspectExecution_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_ReconcileExecution_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_PlanExecutionCleanup_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_ApplyExecutionCleanup_FullMethodName))
+		isQuery = isQuery || (query != nil && (info.FullMethod == modeldevv1.ModelDevQueryService_ListImplementations_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_GetInputVersion_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_ListInputVersions_FullMethodName))
+		isQuery = isQuery || (extra.Management != nil && (info.FullMethod == modeldevv1.ModelDevManagementService_ImportCSV_FullMethodName || info.FullMethod == modeldevv1.ModelDevManagementService_ImportFinetuningDataset_FullMethodName))
+		isQuery = isQuery || (extra.Operations != nil && (info.FullMethod == modeldevv1.ModelDevOperationsService_InspectExecution_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_ReconcileExecution_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_PlanExecutionCleanup_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_ApplyExecutionCleanup_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_ResumeModelRegistration_FullMethodName))
 		allowed = allowed || isQuery
 		if !allowed {
 			return nil, status.Error(codes.PermissionDenied, "Governance delivery does not permit this method")
@@ -161,9 +172,10 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 		}
 		return next(service.WithVerifiedGovernanceDelivery(ctx, delivery), request)
 	}
+	transportTimeout := max(c.Timeout.AsDuration(), 5*time.Minute)
 	s := kratosgrpc.NewServer(
 		kratosgrpc.Network(c.Network), kratosgrpc.Address(c.Addr),
-		kratosgrpc.Timeout(c.Timeout.AsDuration()),
+		kratosgrpc.Timeout(transportTimeout),
 		kratosgrpc.TLSConfig(&tls.Config{
 			MinVersion: tls.VersionTLS13, ClientAuth: tls.RequireAndVerifyClientCert,
 			ClientCAs: roots, Certificates: []tls.Certificate{security.Certificate},

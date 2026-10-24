@@ -49,6 +49,10 @@ func New(config Config, reader IdentityReader, logger *slog.Logger) (*Handler, e
 		dependencyTimeout: time.Duration(config.DependencyTimeoutMilliseconds) * time.Millisecond, capacity: make(chan struct{}, config.MaxConcurrentRequests)}
 	for _, binding := range config.Bindings {
 		binding.Profiles = append([]string(nil), binding.Profiles...)
+		if binding.Training != nil {
+			training := *binding.Training
+			binding.Training = &training
+		}
 		if binding.Driver != nil {
 			driver := *binding.Driver
 			driver.Command = append([]string(nil), driver.Command...)

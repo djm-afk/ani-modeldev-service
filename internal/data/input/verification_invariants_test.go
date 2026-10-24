@@ -98,7 +98,7 @@ func TestInputVerificationInvalidProofsCannotChangeValidatingOrReadyVersions(t *
 		{"size", func(p *biz.VerifiedCSV) { p.Object.SizeBytes++ }},
 		{"digest", func(p *biz.VerifiedCSV) { p.Object.SHA256 = strings.Repeat("b", 64) }},
 		{"schema", func(p *biz.VerifiedCSV) { p.SchemaVersion = "ani.cpu.csv.v2" }},
-		{"rows", func(p *biz.VerifiedCSV) { p.RowCount = 1023 }},
+		{"rows", func(p *biz.VerifiedCSV) { p.RowCount = 0 }},
 		{"features", func(p *biz.VerifiedCSV) { p.FeatureCount = 15 }},
 		{"row count overflow", func(p *biz.VerifiedCSV) { p.RowCount = 4294967295 }},
 		{"missing time", func(p *biz.VerifiedCSV) { p.VerifiedAt = time.Time{} }},
@@ -160,6 +160,12 @@ func TestInputVerificationEquivalentRechecksKeepFirstProofAndImportReplayCannotD
 		}
 		requireStoredInputVersion(t, ctx, repository, first)
 	}
+	changed := verificationObservation(request)
+	changed.RowCount--
+	if got, err := repository.RecordVerifiedCSV(ctx, request, changed); !errors.Is(err, biz.ErrInputVerification) || !reflect.DeepEqual(got, biz.InputVersion{}) {
+		t.Fatal("READY replay accepted another structurally valid row-count proof", got, err)
+	}
+	requireStoredInputVersion(t, ctx, repository, first)
 }
 
 func TestInputVerificationStoresMicrosecondUTCWithoutRoundingOrShiftingTheObservation(t *testing.T) {

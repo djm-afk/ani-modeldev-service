@@ -32,6 +32,7 @@ func NewManagedStepServer(c *conf.Server_GRPC, certificate tls.Certificate, step
 		kratosgrpc.UnaryInterceptor(func(ctx context.Context, request any, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (any, error) {
 			switch info.FullMethod {
 			case modeldevv1.ModelDevStepService_BeginExecution_FullMethodName,
+				modeldevv1.ModelDevStepService_BeginManagedStep_FullMethodName,
 				modeldevv1.ModelDevStepService_GetExecutionConfiguration_FullMethodName,
 				modeldevv1.ModelDevStepService_GetStorageCredentials_FullMethodName,
 				modeldevv1.ModelDevStepService_EnsureTraining_FullMethodName,

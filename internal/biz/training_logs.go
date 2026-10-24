@@ -96,14 +96,23 @@ func RecordedTrainingLogsFor(record QueryRecord, source TrainingLogSource, optio
 	if err != nil || expected != source {
 		return TrainingLogResult{}, false, ErrTrainingLogsUnavailable
 	}
-	receipt := record.Runtime.ComputeCleanup
-	if receipt == nil || !receipt.LogsReady {
-		return TrainingLogResult{}, false, nil
+	logs := []RecordedTrainingLog{}
+	for _, resource := range record.Runtime.Observation.Resources {
+		if resource.UID == source.PodUID && resource.TrainingLog != nil {
+			logs = append(logs, *resource.TrainingLog)
+		}
 	}
-	if err := ValidateRecordedTrainingLogs(record, receipt.Logs); err != nil {
+	if len(logs) == 0 {
+		receipt := record.Runtime.ComputeCleanup
+		if receipt == nil || !receipt.LogsReady {
+			return TrainingLogResult{}, false, nil
+		}
+		logs = receipt.Logs
+	}
+	if err := ValidateRecordedTrainingLogs(record, logs); err != nil {
 		return TrainingLogResult{}, false, err
 	}
-	for _, log := range receipt.Logs {
+	for _, log := range logs {
 		if log.Source != source {
 			continue
 		}
@@ -173,7 +182,7 @@ func TrainingLogSourceFor(record QueryRecord, logID string) (TrainingLogSource, 
 		if logID != "" && logID != id {
 			continue
 		}
-		if selected != nil || pod.APIVersion != "v1" || pod.Namespace != namespace || !pod.APIObjectPresent {
+		if selected != nil || pod.APIVersion != "v1" || pod.Namespace != namespace || !pod.APIObjectPresent && (!pod.Terminal || pod.ExitCode == nil) {
 			return TrainingLogSource{}, ErrTrainingLogsUnavailable
 		}
 		owner, found := resources[pod.OwnerUID]

@@ -1,38 +1,7 @@
-# CPU-P01 consumer conformance fixtures
+# Current execution contract vectors
 
-This package is for consumer tests only. Its example UUIDs, registry.example.test
-image, storage names, and repeated-byte digests are synthetic. Do not import
-it from production code, use it as an environment default, or treat it as ENV
-handoff evidence.
+The v2.1 JSON files are independently generated with Python from synthetic inputs by `scripts/generate-contract-vectors.py`. Run generation and `--check` on Fedora. Go's encoder must match these bytes and hashes. All namespaces, registries and identities are test fixtures and establish no deployment or enablement facts. The exported `*V1` Go test helper names remain source-level fixture names; they produce only the one active v2.1 contract and do not decode historical requests.
 
-On the isolated Fedora checkout, run:
+The active contract separates typed Intent, PreparedCandidate and Snapshot. Intent preserves explicitly supplied parameters; [`../implementations.json`](../implementations.json) is the single machine-readable source for supported parameters, defaults and numeric rules. PrepareAdmission reads and freezes the implementation, Resource ComputeOrigin, input, timing and applicable Model facts. FinalizeAdmission consumes that same candidate, adds the applicable formal GPU plan and compiles RuntimePlan without rereading those facts or creating execution resources. CPU candidates and snapshots carry no GPU request or plan. Neither stage is a Release approval or a combination allowlist.
 
-```sh
-python3 scripts/generate-contract-vectors.py
-python3 scripts/generate-contract-vectors.py --check
-```
-
-The generator extracts the manually specified raw/want literals from the
-original intent and snapshot contract tests. It independently checks canonical
-SHA256 with Python hashlib and writes three UTF-8 files without a trailing
-newline. It never invokes the Go implementation to create expected values.
-Preserve those original handwritten literals as the source of truth; replacing
-them with these generated files would create a circular conformance check.
-
-Return generated files to the workstation for review and commit, then verify
-the new commit on Fedora. Missing embedded files are an expected build failure
-until this generation step has completed; do not create placeholder JSON.
-
-Consumers use IntentV1/SnapshotV1 for fresh typed values and compare their actual
-wire round trips with the canonical byte accessors and fixed SHA256 constants.
-Mutable slices returned to one test do not change the next test's fixture.
-
-The Release v1 vector is maintained directly in `release-v1.json`. It was moved
-byte-for-byte from the manually authored catalogue test literal on Fedora:
-2362 bytes, SHA256 `388c7687614c92a2b50a14c8ee29df04f4d8934cf1dbf88d7b31258efc9f3dae`.
-Its expected digest was independently computed with Python hashlib. The file has
-no trailing newline; the generator above intentionally leaves it unchanged.
-`ReleaseCanonicalV1`, `ReleaseV1` and `ReleaseSHA256V1` provide the shared consumer
-test inputs. The catalogue test retains an independently authored expected Go
-document and tests the public parser against the exact digest. Do not derive the
-expected vector from the parser or maintain another JSON copy.
+Stored canonical bytes use only `DecodeCanonicalIntent`, `DecodePreparedCandidate` and `DecodeCanonicalSnapshot`, with their matching schema and hash checks. Parameter changes are checked against resolved values and the original identity envelope; a runtime UID, registration receipt or recovery window is a later persisted fact and cannot replace the immutable snapshot. Historical contracts and their receipts retain their original bytes; this vector set supplies no legacy decoder or compatibility request path.

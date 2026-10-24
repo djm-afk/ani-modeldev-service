@@ -63,6 +63,7 @@ sql:
       - "migrations/0014_execution_runtime.up.sql"
       - "migrations/0015_fenced_unbound_runtime.up.sql"
       - "migrations/0016_execution_cleanup_audit.up.sql"
+      - "migrations/0019_gpu_release_scope.up.sql"
     queries: "internal/data/lifecycle/queries.sql"
     gen:
       go:

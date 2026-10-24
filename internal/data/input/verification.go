@@ -3,6 +3,7 @@ package input
 import (
 	"context"
 	"errors"
+	"math"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -29,6 +30,11 @@ func (r *Repository) RecordVerifiedAlpaca(ctx context.Context, expected biz.Inpu
 }
 
 func (r *Repository) recordVerifiedInput(ctx context.Context, expected biz.InputImport, at time.Time, schema string, rows, features uint32) (biz.InputVersion, error) {
+	// PostgreSQL stores these proof dimensions as int4. Validate before either
+	// a conversion or a READY replay so an overflow cannot wrap into a proof.
+	if rows > math.MaxInt32 || features > math.MaxInt32 {
+		return biz.InputVersion{}, biz.ErrInputVerification
+	}
 	command, err := importCommand(expected)
 	if err != nil {
 		return biz.InputVersion{}, err
@@ -58,6 +64,19 @@ func (r *Repository) recordVerifiedInput(ctx context.Context, expected biz.Input
 	}
 	if version.State == biz.InputStateRejected {
 		return version, biz.ErrInputVerification
+	}
+	if version.State == biz.InputStateReady {
+		if expected.InputFormat() == "CSV" {
+			proof := version.Verification
+			if proof == nil || proof.SchemaVersion != schema || proof.RowCount != rows || proof.FeatureCount != features {
+				return biz.InputVersion{}, biz.ErrInputVerification
+			}
+		} else {
+			proof := version.AlpacaVerification
+			if proof == nil || proof.SchemaVersion != schema || proof.RowCount != rows || features != 0 {
+				return biz.InputVersion{}, biz.ErrInputVerification
+			}
+		}
 	}
 	if version.State == biz.InputStateValidating {
 		row, err = queries.RecordVerifiedCSV(ctx, inputsql.RecordVerifiedCSVParams{

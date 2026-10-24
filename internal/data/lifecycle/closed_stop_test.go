@@ -146,7 +146,7 @@ func naturalClosedFixture(t *testing.T, repository *lifecycle.Repository, admiss
 	if _, _, err := repository.RecordPrepared(ctx, authority, workspace); err != nil {
 		t.Fatal(err)
 	}
-	reservation, err := repository.ReserveTraining(ctx, authority)
+	reservation, err := reserveTrainingV21(t, repository, ctx, authority)
 	if err != nil || !reservation.SendPermit {
 		t.Fatal("original creation permit", err)
 	}
@@ -163,7 +163,7 @@ func naturalClosedFixture(t *testing.T, repository *lifecycle.Repository, admiss
 	if _, err := repository.RecordTrainingObservation(ctx, authority, observation); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := repository.RecordPublication(ctx, authority, publicationFixture(t, admission, authority)); err != nil {
+	if _, _, err := recordPublicationV21(t, repository, ctx, authority, publicationFixture(t, admission, authority)); err != nil {
 		t.Fatal(err)
 	}
 	closing, _, err := repository.RequestRuntimeClose(ctx, authority, "NATURAL_TERMINAL")

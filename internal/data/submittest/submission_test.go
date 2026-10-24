@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -195,21 +196,18 @@ func dispatchRequest(t *testing.T) biz.PipelineDispatchRequest {
 	snapshot := conformance.SnapshotV1()
 	acceptedAt := time.Now().UTC().Truncate(time.Microsecond)
 	snapshot.DeadlineAt = acceptedAt.Add(time.Hour)
-	intent := cpup01.Intent{Name: "submit-integration-fixture", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := cpup01.Intent{Name: "submit-integration-fixture", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal("CPU07_SUBMIT_PREFLIGHT: invalid intent fixture; behavior NOT_RUN")
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatal("CPU07_SUBMIT_PREFLIGHT: invalid snapshot fixture; behavior NOT_RUN")
-	}
+	specHash := ""
 	return biz.PipelineDispatchRequest{
-		Admission: biz.Admission{
+		Admission: admissionfixture.Bind(t, biz.Admission{
 			TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:synthetic-fixture",
 			OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
 			Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: acceptedAt,
-		},
+		}),
 		Owner: biz.PipelineOwnerConfiguration{Reference: "cpu07-submit-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/frozen-submit-root"},
 	}
 }
@@ -219,7 +217,7 @@ func assertOriginalDispatch(t *testing.T, dispatch biz.PipelineDispatch, request
 	plan := dispatch.Plan
 	if dispatch.AttemptID == "" || len(dispatch.PlanHash) != 64 || dispatch.ReservedAt.IsZero() ||
 		plan.TenantID != request.Admission.TenantID || plan.ExecutionID != request.Admission.ExecutionID || plan.OperationID != request.Admission.OperationID || plan.SpecHash != request.Admission.SpecHash ||
-		plan.Owner != request.Owner || plan.Environment != request.Admission.Snapshot.Environment || plan.PipelineID != request.Admission.Snapshot.Release.PipelineID || plan.PipelineVersionID != request.Admission.Snapshot.Release.PipelineVersionID ||
+		plan.Owner != request.Owner || plan.Environment != request.Admission.Snapshot.Environment || plan.PipelineID != request.Admission.Snapshot.Implementation.PipelineID || plan.PipelineVersionID != request.Admission.Snapshot.Implementation.PipelineVersionID ||
 		plan.DisplayName != "md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee" || !plan.DeadlineAt.Equal(request.Admission.Snapshot.DeadlineAt) {
 		t.Error("CPU07_SUBMIT_BEHAVIOR: dispatch does not preserve the original full plan")
 	}

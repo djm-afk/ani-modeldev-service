@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"errors"
-	"sort"
 	"strconv"
+	"time"
 
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -34,42 +35,14 @@ func materialsError(err error, requestID string) error {
 		return status.Error(codes.NotFound, "input version unavailable")
 	case errors.Is(err, biz.ErrInputConflict), errors.Is(err, biz.ErrAdmissionConflict):
 		return status.Error(codes.AlreadyExists, "immutable material conflict")
-	case errors.Is(err, biz.ErrNoCompatibleRelease):
-		return status.Error(codes.FailedPrecondition, "Release unavailable or incompatible")
+	case errors.Is(err, biz.ErrImplementationUnavailable):
+		return status.Error(codes.FailedPrecondition, "implementation unavailable")
 	default:
 		return queryError(err, requestID)
 	}
 }
 func validMaterialMessage(message proto.Message) bool {
 	return message != nil && validRuntimeMessage(message.ProtoReflect(), 0)
-}
-func (m *Management) ValidateRelease(ctx context.Context, r *modeldevv1.ValidateReleaseRequest) (*modeldevv1.ValidateReleaseResponse, error) {
-	scope, err := queryScope(ctx, modeldevv1.ModelDevManagementService_ValidateRelease_FullMethodName)
-	if err != nil {
-		return nil, err
-	}
-	if r == nil || !validMaterialMessage(r) {
-		return nil, status.Error(codes.InvalidArgument, "invalid Release selection")
-	}
-	release, err := m.materials.Release(ctx, scope.TenantID, r.PresetId, r.ReleaseId, r.ReleaseDigest)
-	if err != nil {
-		return nil, materialsError(err, scope.RequestID)
-	}
-	return &modeldevv1.ValidateReleaseResponse{PresetId: release.PresetID, ReleaseId: release.ReleaseID, ReleaseDigest: r.ReleaseDigest}, nil
-}
-func (m *Management) ImportRelease(ctx context.Context, r *modeldevv1.ImportReleaseRequest) (*modeldevv1.ImportReleaseResponse, error) {
-	scope, err := queryScope(ctx, modeldevv1.ModelDevManagementService_ImportRelease_FullMethodName)
-	if err != nil {
-		return nil, err
-	}
-	if r == nil || !validMaterialMessage(r) {
-		return nil, status.Error(codes.InvalidArgument, "invalid Release import")
-	}
-	release, created, err := m.materials.ImportRelease(ctx, scope.TenantID, r.PresetId, r.ReleaseId, r.ReleaseDigest, r.CanonicalRelease)
-	if err != nil {
-		return nil, materialsError(err, scope.RequestID)
-	}
-	return &modeldevv1.ImportReleaseResponse{PresetId: release.PresetID, ReleaseId: release.ReleaseID, ReleaseDigest: r.ReleaseDigest, Created: created}, nil
 }
 func (m *Management) ImportCSV(ctx context.Context, r *modeldevv1.ImportCSVRequest) (*modeldevv1.ImportCSVResponse, error) {
 	scope, err := queryScope(ctx, modeldevv1.ModelDevManagementService_ImportCSV_FullMethodName)
@@ -84,7 +57,7 @@ func (m *Management) ImportCSV(ctx context.Context, r *modeldevv1.ImportCSVReque
 		return nil, status.Error(codes.InvalidArgument, "fixed object version required")
 	}
 	object := cpup01.FixedObjectRef{StorageConnectionID: r.Object.StorageConnectionId, Bucket: r.Object.Bucket, Key: r.Object.Key, VersionID: &version.VersionId, SizeBytes: r.Object.SizeBytes, SHA256: r.Object.Sha256}
-	value, err := m.materials.ImportCSV(ctx, biz.InputImport{TenantID: scope.TenantID, RequestID: scope.RequestID, Actor: scope.Actor, InputVersionID: r.InputVersionId, RequestedAt: r.RequestedAt.AsTime(), Object: object}, r.ReleaseId, r.ReleaseDigest)
+	value, err := m.materials.ImportCSV(ctx, biz.InputImport{TenantID: scope.TenantID, RequestID: scope.RequestID, Actor: scope.Actor, InputVersionID: r.InputVersionId, RequestedAt: r.RequestedAt.AsTime(), Object: object}, r.ImplementationId)
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
@@ -111,17 +84,6 @@ func inputVersionView(v biz.InputVersion) *modeldevv1.InputVersionView {
 		out.Failure = &modeldevv1.ErrorDetail{Reason: modeldevv1.ErrorReason_ERROR_REASON_INPUT_NOT_READY, SafeMessage: string(v.Failure.Code)}
 	}
 	return out
-}
-
-// presetDisplayName derives a stable, distinguishing label for one preset.
-// The immutable Release contract has no display name, so reuse its fixed
-// identity: a human base plus a short prefix of the preset UUID.
-func presetDisplayName(presetID string) string {
-	const base = "General CPU MLP"
-	if len(presetID) < 8 {
-		return base
-	}
-	return base + " · " + presetID[:8]
 }
 
 // modelDevMaxOffset saturates the derived window offset so an out-of-range high
@@ -214,92 +176,84 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 	}
 	return response, nil
 }
-func (q *Query) ListPresets(ctx context.Context, r *modeldevv1.ListPresetsRequest) (*modeldevv1.ListPresetsResponse, error) {
-	scope, err := queryScope(ctx, modeldevv1.ModelDevQueryService_ListPresets_FullMethodName)
+func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImplementationsRequest) (*modeldevv1.ListImplementationsResponse, error) {
+	scope, err := queryScope(ctx, modeldevv1.ModelDevQueryService_ListImplementations_FullMethodName)
 	if err != nil {
 		return nil, err
 	}
 	if r == nil || !validMaterialMessage(r) {
-		return nil, status.Error(codes.InvalidArgument, "invalid preset query")
+		return nil, status.Error(codes.InvalidArgument, "invalid implementation query")
 	}
-	page, pageSize, err := resolveModelDevPage(r.Page)
+	page, size, err := resolveModelDevPage(r.Page)
 	if err != nil {
 		return nil, err
 	}
-	if len(r.ReleaseSelections) > 0 {
-		return q.selectedPresets(ctx, scope, r.ReleaseSelections, page, pageSize)
+	if q == nil || q.materials == nil {
+		return nil, queryError(biz.ErrPersistence, scope.RequestID)
 	}
-	releases, err := q.materials.Releases(ctx, scope.TenantID)
-	if err != nil {
-		return nil, materialsError(err, scope.RequestID)
-	}
-	presets := map[string]*modeldevv1.PresetView{}
-	for _, release := range releases {
-		// A fine candidate has no ModelDev current pointer. Its rules are only
-		// returned for Governance's explicit exact Release selection.
-		if release.Kind == "FINETUNING" {
-			continue
+	ids := []string{"builtin.mlp", "builtin.sft_lora"}
+	response := &modeldevv1.ListImplementationsResponse{Total: uint64(len(ids))}
+	// Loaded facts enforce one global T/S/M configuration. An implementation
+	// with no installed tenant facts remains unavailable; it must not hide the
+	// other implementation or invent another timing configuration.
+	var timing cpup01.TimingConfiguration
+	foundTiming := false
+	for _, id := range ids {
+		value, timingErr := q.materials.TimingFor(ctx, scope.TenantID, id)
+		if timingErr == nil {
+			timing = value
+			foundTiming = true
+			break
 		}
-		p := presets[release.PresetID]
-		if p == nil {
-			p = &modeldevv1.PresetView{PresetId: release.PresetID, Name: presetDisplayName(release.PresetID), Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING}
-			presets[release.PresetID] = p
-			for _, v := range release.Program.DefaultParameters {
-				rule := &modeldevv1.ParameterRule{Name: v.Name, DefaultValue: parameterView(v)}
-				switch v.Type {
-				case "INTEGER":
-					rule.Type = modeldevv1.ParameterType_PARAMETER_TYPE_INTEGER
-					rule.AllowedValues = []*trainingv1.Parameter{parameterView(v)}
-				case "DECIMAL":
-					rule.Type = modeldevv1.ParameterType_PARAMETER_TYPE_DECIMAL
-					rule.Maximum = parameterView(cpup01.Parameter{Name: v.Name, Type: "DECIMAL", Value: "0.1"})
+		if !errors.Is(timingErr, biz.ErrAdmissionEnvironmentNotReady) {
+			return nil, materialsError(timingErr, scope.RequestID)
+		}
+	}
+	if !foundTiming {
+		return nil, materialsError(biz.ErrAdmissionEnvironmentNotReady, scope.RequestID)
+	}
+	offset, limit := modelDevPageWindow(page, size)
+	if offset >= len(ids) {
+		return response, nil
+	}
+	ids = ids[offset:min(offset+limit, len(ids))]
+	for _, id := range ids {
+		definition := cpup01.Implementations()[id]
+		if _, err := timing.Resolve(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), nil); err != nil {
+			return nil, queryError(err, scope.RequestID)
+		}
+		rules, err := contractpb.EncodeImplementationParameterRules(id)
+		if err != nil {
+			return nil, queryError(err, scope.RequestID)
+		}
+		view := &modeldevv1.ImplementationView{ImplementationId: id, Version: definition.Version, ParameterContractVersion: definition.ParameterContractVersion, ParameterRules: rules, ExecutionTimeoutDefaultSeconds: timing.ExecutionTimeoutDefaultSeconds, ExecutionTimeoutMaxSeconds: timing.ExecutionTimeoutMaxSeconds, StepTimeoutSeconds: timing.StepTimeoutSeconds}
+		if definition.Kind == "GENERAL_TRAINING" {
+			view.Name = "MLP training"
+			view.Kind = trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING
+		} else {
+			view.Name = "LoRA supervised finetuning"
+			view.Kind = trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING
+		}
+		for _, mode := range []string{"cpu", "gpu"} {
+			if id == "builtin.sft_lora" && q.models == nil {
+				continue
+			}
+			material, _, err := q.materials.Implementation(ctx, scope.TenantID, id, mode)
+			if err == nil {
+				view.SupportedDeviceModes = append(view.SupportedDeviceModes, mode)
+				if material.Finetuning != nil {
+					for _, rule := range view.ParameterRules {
+						if rule.Name == "cutoff_len" {
+							rule.ValidationDescription += "; installed " + mode + " implementation upper bound=" + strconv.FormatInt(material.Finetuning.MaxSequenceLength, 10)
+						}
+					}
 				}
-				p.ParameterRules = append(p.ParameterRules, rule)
+			} else if !errors.Is(err, biz.ErrImplementationUnavailable) && !errors.Is(err, biz.ErrAdmissionEnvironmentNotReady) {
+				return nil, materialsError(err, scope.RequestID)
 			}
 		}
-		found := false
-		for _, id := range p.ImageVersionIds {
-			found = found || id == release.Program.ImageVersionID
-		}
-		if !found {
-			p.ImageVersionIds = append(p.ImageVersionIds, release.Program.ImageVersionID)
-		}
-	}
-	ids := make([]string, 0, len(presets))
-	for id := range presets {
-		ids = append(ids, id)
-	}
-	sort.Strings(ids)
-	// total is every distinct preset for this tenant, independent of the window;
-	// presets are aggregated from the approved catalogue rather than a table.
-	response := &modeldevv1.ListPresetsResponse{Total: uint64(len(presets))}
-	offset, limit := modelDevPageWindow(page, pageSize)
-	if offset < len(ids) {
-		end := min(offset+limit, len(ids))
-		ids = ids[offset:end]
-	} else {
-		ids = nil
-	}
-	for _, id := range ids {
-		p := presets[id]
-		sort.Strings(p.ImageVersionIds)
-		response.Presets = append(response.Presets, p)
+		view.Available = len(view.SupportedDeviceModes) > 0
+		response.Implementations = append(response.Implementations, view)
 	}
 	return response, nil
-}
-func parameterView(p cpup01.Parameter) *trainingv1.Parameter {
-	value := &trainingv1.Parameter{Name: p.Name}
-	// The registered grammar has only integer and decimal parameters.
-	if p.Type == "INTEGER" {
-		integer, err := strconv.ParseInt(p.Value, 10, 64)
-		if err != nil || strconv.FormatInt(integer, 10) != p.Value {
-			return nil
-		}
-		value.Value = &trainingv1.Parameter_IntegerValue{IntegerValue: integer}
-	} else if p.Type == "DECIMAL" {
-		value.Value = &trainingv1.Parameter_DecimalValue{DecimalValue: p.Value}
-	} else {
-		return nil
-	}
-	return value
 }

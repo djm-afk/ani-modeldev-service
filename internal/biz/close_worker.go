@@ -18,6 +18,7 @@ type CloseWorker struct {
 	binding    PipelineDispatchBinding
 	batchSize  int
 	interval   time.Duration
+	gpuRelease *GPUReleaseReconciler
 	after      string
 }
 
@@ -26,11 +27,18 @@ type CloseBatchResult struct {
 	LastError                    error
 }
 
-func NewCloseWorker(repository PendingCloseRepository, closer *ExecutionCloser, binding PipelineDispatchBinding, batchSize int, interval time.Duration) (*CloseWorker, error) {
-	if repository == nil || closer == nil || binding.Validate() != nil || batchSize < 1 || batchSize > 100 || interval < 100*time.Millisecond || interval > time.Minute {
+func NewCloseWorker(repository PendingCloseRepository, closer *ExecutionCloser, binding PipelineDispatchBinding, batchSize int, interval time.Duration, gpuRelease ...*GPUReleaseReconciler) (*CloseWorker, error) {
+	if repository == nil || closer == nil || binding.Validate() != nil || batchSize < 1 || batchSize > 100 || interval < 100*time.Millisecond || interval > time.Minute || len(gpuRelease) > 1 {
 		return nil, ErrInvalidDispatchWorker
 	}
-	return &CloseWorker{repository: repository, closer: closer, binding: binding, batchSize: batchSize, interval: interval}, nil
+	worker := &CloseWorker{repository: repository, closer: closer, binding: binding, batchSize: batchSize, interval: interval}
+	if len(gpuRelease) == 1 {
+		if gpuRelease[0] == nil {
+			return nil, ErrInvalidDispatchWorker
+		}
+		worker.gpuRelease = gpuRelease[0]
+	}
+	return worker, nil
 }
 
 // ReconcileOnce is owned by one worker loop. A bounded cursor prevents an
@@ -56,6 +64,17 @@ func (worker *CloseWorker) ReconcileOnce(ctx context.Context) (CloseBatchResult,
 			return result, err
 		}
 		closed, err := worker.closer.Reconcile(ctx, worker.binding.TenantID, id)
+		if err == nil && closed.Runtime.ClosedAt != nil && closed.Execution.Snapshot.GPU != nil {
+			if worker.gpuRelease == nil {
+				err = ErrRuntimeNotReady
+			} else {
+				state, releaseErr := worker.gpuRelease.Reconcile(ctx, worker.binding.TenantID, id)
+				err = releaseErr
+				if err == nil && (state.GPURelease == nil || state.GPURelease.Outbox == nil || state.GPURelease.Outbox.ACK == nil || state.GPURelease.Outbox.DeliveredAt == nil) {
+					err = ErrRuntimeNotReady
+				}
+			}
+		}
 		result.Examined++
 		if err == nil && closed.Runtime.ClosedAt != nil {
 			result.Closed++

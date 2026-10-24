@@ -60,6 +60,7 @@ func (step *Step) GetExecutionConfiguration(ctx context.Context, request *modeld
 		Identity: runtimeIdentity(result.Execution), Snapshot: snapshot,
 		Authority: authority, Workspace: encodeRuntimeWorkspace(result.Runtime.Workspace), States: states,
 		KfpTaskId: result.TaskID,
+		Timing:    existingStepTiming(result, task),
 		Admission: &modeldevv1.AcceptExecutionRequest{Identity: runtimeIdentity(result.Execution), ResourceTenantId: result.Execution.TenantID, AdmittedActorId: result.Execution.Actor, IntentHash: result.Execution.IntentHash, Snapshot: snapshot, AcceptedAt: timestamppb.New(result.Execution.AcceptedAt), Intent: intent},
 	}, nil
 }
@@ -307,7 +308,7 @@ func runtimeTrainingStatus(result biz.ManagedRuntimeResult, claim biz.BeginManag
 		Identity: runtimeIdentity(result.Execution), CreateState: modeldevv1.ExternalCreateState_EXTERNAL_CREATE_STATE_INTENT_RECORDED,
 		DeterministicTrainjobName: plan.Name, CreateRequestSha256: plan.RequestSHA256, States: states,
 	}
-	if timing := plan.FinetuningTiming; timing != nil {
+	if timing := plan.Timing; timing != nil {
 		admitted, a := runtimeTimestamp(timing.AdmittedAt)
 		deadline, d := runtimeTimestamp(timing.DeadlineAt)
 		if !a || !d || !timing.DeadlineAt.After(timing.AdmittedAt) {

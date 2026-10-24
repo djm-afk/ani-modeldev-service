@@ -16,6 +16,26 @@ import (
 
 const exitEvidenceFinalizer = "modeldev.ani.io/training-exit-evidence"
 
+func TestTrainingLogCaptureFailureRetainsOriginalPod(t *testing.T) {
+	f := newTrainingFixture(t)
+	f.pod["metadata"].(map[string]any)["resourceVersion"] = "1"
+	f.pod["metadata"].(map[string]any)["finalizers"] = []any{exitEvidenceFinalizer}
+	f.logReadStatusCode = http.StatusServiceUnavailable
+	a := f.adapter(t)
+	handle, err := a.CreateTraining(context.Background(), f.plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.setTerminal(t, 143)
+	if _, err := a.ObserveTraining(context.Background(), f.plan, handle, nil); !errors.Is(err, biz.ErrTrainingLogsUnavailable) {
+		t.Fatalf("missing real worker logs must remain an explicit failure: %v", err)
+	}
+	finalizers, _, _ := unstructured.NestedStringSlice(f.pod, "metadata", "finalizers")
+	if !reflect.DeepEqual(finalizers, []string{exitEvidenceFinalizer}) || f.podPatches != 0 || f.deletes != 0 {
+		t.Fatal("failed capture released or deleted original worker evidence", finalizers, f.podPatches, f.deletes)
+	}
+}
+
 func TestTrainingRequiresExitRetentionRuntimeBeforeNewCreate(t *testing.T) {
 	f := newTrainingFixture(t)
 	delete(runtimePodTemplate(f), "metadata")
@@ -34,7 +54,7 @@ func runtimePodTemplate(f *trainingFixture) map[string]any {
 func freezeRuntime(f *trainingFixture) {
 	encoded, _ := json.Marshal(f.runtime["spec"])
 	digest := sha256.Sum256(encoded)
-	f.plan.Snapshot.Release.Runtime.ContentSHA256 = hex.EncodeToString(digest[:])
+	f.plan.Snapshot.RuntimePlan.ExpectedSpecSHA256 = hex.EncodeToString(digest[:])
 }
 
 func TestTrainingRetainsStoppedPodUntilExitEvidenceIsDurable(t *testing.T) {
@@ -117,21 +137,17 @@ func TestTrainingReleasesDurableNaturalExitBeforeControllerCompletion(t *testing
 	}
 }
 
-func TestTrainingExitRetentionPreservesLegacyFrozenRuntimeObservations(t *testing.T) {
+func TestTrainingRuntimeDriftBlocksLookupButOriginalStopAndObservationStillWork(t *testing.T) {
 	f := newTrainingFixture(t)
 	a, ctx := f.adapter(t), context.Background()
 	handle, err := a.CreateTraining(ctx, f.plan)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Reconstruct an already-created legacy Run's original frozen Runtime and
-	// annotation. No Create call is permitted for this historical contract.
+	// A current template edit cannot transfer or hide the original computation.
 	delete(runtimePodTemplate(f), "metadata")
-	freezeRuntime(f)
-	_ = unstructured.SetNestedField(f.train, f.plan.Snapshot.Release.Runtime.ContentSHA256, "metadata", "annotations", "modeldev.ani.io/runtime-spec-sha256")
-	found, err := a.FindTraining(ctx, f.plan)
-	if err != nil || found != handle {
-		t.Fatalf("upgrade lost the exact legacy training handle: %+v err=%v", found, err)
+	if _, err := a.FindTraining(ctx, f.plan); !errors.Is(err, biz.ErrRuntimeConflict) {
+		t.Fatal("drifted Runtime allowed normal lookup", err)
 	}
 	if err := a.StopTraining(ctx, f.plan, handle); err != nil {
 		t.Fatalf("upgrade blocked normal Stop of a legacy Run: %v", err)

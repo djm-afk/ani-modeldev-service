@@ -56,6 +56,13 @@ func (configuration FinetuningConfiguration) Canonical() ([]byte, error) {
 	if configuration.ParameterContractVersion != FinetuningParameterContractVersion || validateCompleteFinetuningParameters(configuration.Parameters) != nil || invalidFinetuningManagedSettings(configuration.ManagedSettings) != "" {
 		return nil, fmt.Errorf("%w: finetuning configuration", ErrInvalidArgument)
 	}
+	settings := configuration.ManagedSettings
+	expected := map[string]string{"lora_rank": strconv.FormatInt(settings.LoraRank, 10), "lora_alpha": strconv.FormatInt(settings.LoraAlpha, 10), "cutoff_len": strconv.FormatInt(settings.CutoffLen, 10), "per_device_train_batch_size": strconv.FormatInt(settings.PerDeviceTrainBatchSize, 10), "gradient_accumulation_steps": strconv.FormatInt(settings.GradientAccumulationSteps, 10), "seed": strconv.FormatInt(settings.Seed, 10), "lora_dropout": canonicalDecimal(settings.LoraDropout)}
+	for _, p := range configuration.Parameters {
+		if value, ok := expected[p.Name]; ok && canonicalDecimal(p.Value) != value {
+			return nil, fmt.Errorf("%w: managed parameter mismatch", ErrInvalidArgument)
+		}
+	}
 	configuration.Parameters = canonicalParameters(configuration.Parameters)
 	return encodeCanonicalJSON(configuration)
 }
@@ -125,34 +132,10 @@ func (model BaseModelRef) BaseManifestSHA256() (string, error) {
 }
 
 type ComponentBudgets struct {
-	TrainingTimeoutSeconds    uint32 `json:"training_timeout_seconds"`
-	PrepareTimeoutSeconds     uint32 `json:"prepare_timeout_seconds"`
-	ExportTimeoutSeconds      uint32 `json:"export_timeout_seconds"`
-	VerifyTimeoutSeconds      uint32 `json:"verify_timeout_seconds"`
-	CollectTimeoutSeconds     uint32 `json:"collect_timeout_seconds"`
-	PublishTimeoutSeconds     uint32 `json:"publish_timeout_seconds"`
 	RPCTimeoutSeconds         uint32 `json:"rpc_timeout_seconds"`
 	MaxBaseModelBytes         int64  `json:"max_base_model_bytes,string"`
 	MaxBaseModelExpandedBytes int64  `json:"max_base_model_expanded_bytes,string"`
 	MaxSpoolBytes             int64  `json:"max_spool_bytes,string"`
-}
-
-type ReleaseComponentProgram struct {
-	ImageVersionID       string            `json:"image_version_id"`
-	ImageDigest          string            `json:"image_digest"`
-	Command              []string          `json:"command"`
-	ArgsTemplate         []ReleaseArgument `json:"args_template"`
-	ImplementationSHA256 string            `json:"implementation_sha256"`
-}
-
-type FinetuningRelease struct {
-	BaseModelVersionID string                    `json:"base_model_version_id"`
-	ManagedSettings    FinetuningManagedSettings `json:"managed_settings"`
-	ExportProgram      ReleaseComponentProgram   `json:"export_program"`
-	VerifyProgram      ReleaseComponentProgram   `json:"verify_program"`
-	RecipeSHA256       string                    `json:"recipe_sha256"`
-	MappingSHA256      string                    `json:"mapping_sha256"`
-	Budgets            ComponentBudgets          `json:"budgets"`
 }
 
 type FinetuningSnapshot struct {
@@ -169,15 +152,21 @@ type FinetuningSnapshot struct {
 	Budgets                     ComponentBudgets          `json:"budgets"`
 }
 
+// RequiresModelRegistration keeps target presence as the canonical delivery
+// choice. A validated snapshot without either target only publishes artifacts.
+func (fine *FinetuningSnapshot) RequiresModelRegistration() bool {
+	return fine != nil && (fine.TargetModelID != nil || fine.NewModelName != nil)
+}
+
 func invalidFinetuningManagedSettings(settings FinetuningManagedSettings) string {
-	if settings.Stage != "sft" || settings.FinetuningType != "lora" || settings.LoraTarget != "all" || settings.LoraRank != 8 || settings.LoraAlpha != 16 || settings.CutoffLen != 128 || settings.PerDeviceTrainBatchSize != 1 || settings.GradientAccumulationSteps != 1 || settings.Seed != 42 || settings.DataSeed != 42 || settings.Device != "cpu" || settings.FP16 || settings.BF16 || settings.FlashAttn != "disabled" || settings.ReportTo != "none" || settings.SaveStrategy != "no" || settings.Template != "qwen" || settings.TrainDtype != "float32" || settings.ExportDtype != "float32" || settings.VerifyDtype != "float32" || settings.LRSchedulerType != "linear" || settings.WarmupRatio != "0" || settings.WeightDecay != "0" || settings.LoraDropout != "0" || settings.NumTrainEpochs != 3 || settings.Optim != "adamw_torch" || settings.LoggingSteps != 1 {
+	if settings.Stage != "sft" || settings.FinetuningType != "lora" || settings.LoraTarget != "all" || settings.LoraRank < 1 || settings.LoraAlpha < 1 || settings.CutoffLen < 1 || settings.PerDeviceTrainBatchSize < 1 || settings.GradientAccumulationSteps < 1 || settings.Seed < 0 || settings.Seed > 4294967295 || settings.DataSeed != settings.Seed || (settings.Device != "cpu" && settings.Device != "cuda") || settings.FP16 || settings.BF16 || settings.FlashAttn != "disabled" || settings.ReportTo != "none" || settings.SaveStrategy != "no" || settings.Template != "qwen" || settings.TrainDtype != "float32" || settings.ExportDtype != "float32" || settings.VerifyDtype != "float32" || settings.LRSchedulerType != "linear" || settings.WarmupRatio != "0" || settings.WeightDecay != "0" || validateFinetuningParameter(Parameter{Name: "lora_dropout", Type: "DECIMAL", Value: settings.LoraDropout}) != nil || settings.NumTrainEpochs != 3 || settings.Optim != "adamw_torch" || settings.LoggingSteps != 1 {
 		return "managed settings"
 	}
 	return ""
 }
 
 func invalidComponentBudgets(budgets ComponentBudgets) string {
-	if budgets.TrainingTimeoutSeconds == 0 || budgets.PrepareTimeoutSeconds == 0 || budgets.ExportTimeoutSeconds == 0 || budgets.VerifyTimeoutSeconds == 0 || budgets.CollectTimeoutSeconds == 0 || budgets.PublishTimeoutSeconds == 0 || budgets.RPCTimeoutSeconds == 0 || budgets.MaxBaseModelBytes <= 0 || budgets.MaxBaseModelExpandedBytes <= 0 || budgets.MaxSpoolBytes < budgets.MaxBaseModelBytes {
+	if budgets.RPCTimeoutSeconds == 0 || budgets.MaxBaseModelBytes <= 0 || budgets.MaxBaseModelExpandedBytes <= 0 || budgets.MaxSpoolBytes < budgets.MaxBaseModelBytes {
 		return "component budgets"
 	}
 	return ""
@@ -209,7 +198,7 @@ func invalidBaseModel(model BaseModelRef, budgets ComponentBudgets) string {
 	if model.Object.SizeBytes > budgets.MaxBaseModelBytes {
 		return "base model bounds"
 	}
-	if !validSnapshotReference(model.Scope.StorageConnectionID) || !validSnapshotDNSName(model.Scope.Bucket) || !validSnapshotPath(model.Scope.ApprovedPrefix) || !validSnapshotReference(model.Scope.CredentialReference) || model.Scope.StorageConnectionID != model.Object.StorageConnectionID || model.Scope.Bucket != model.Object.Bucket || !strings.HasPrefix(model.Object.Key, model.Scope.ApprovedPrefix+"/") {
+	if model.Scope.Validate() != nil || model.Scope.StorageConnectionID != model.Object.StorageConnectionID || model.Scope.Bucket != model.Object.Bucket || !strings.HasPrefix(model.Object.Key, model.Scope.ApprovedPrefix+"/") {
 		return "base model scope"
 	}
 	if len(model.Files) == 0 || len(model.Files) > 128 {
@@ -235,10 +224,10 @@ func invalidFinetuningSnapshot(snapshot Snapshot) string {
 	if fine == nil || fine.ParameterContractVersion != FinetuningParameterContractVersion {
 		return "finetuning contract"
 	}
-	if snapshot.Input.Format != "JSON" || snapshot.Input.SchemaVersion != FinetuningInputSchemaVersion || snapshot.Input.RowCount != 64 || snapshot.Input.FeatureCount != 0 {
+	if snapshot.Input.Format != "JSON" || snapshot.Input.SchemaVersion != FinetuningInputSchemaVersion || snapshot.Input.RowCount == 0 || snapshot.Input.FeatureCount != 0 {
 		return "fixed JSON contract"
 	}
-	if (fine.TargetModelID == nil) == (fine.NewModelName == nil) || fine.TargetModelID != nil && !validUUID(*fine.TargetModelID) || fine.NewModelName != nil && !validModelName(*fine.NewModelName) {
+	if fine.TargetModelID != nil && fine.NewModelName != nil || fine.TargetModelID != nil && !validUUID(*fine.TargetModelID) || fine.NewModelName != nil && !validModelName(*fine.NewModelName) {
 		return "model target"
 	}
 	if field := invalidComponentBudgets(fine.Budgets); field != "" {
@@ -296,57 +285,8 @@ func canonicalFinetuningSnapshot(fine FinetuningSnapshot) FinetuningSnapshot {
 	return fine
 }
 
-func invalidFinetuningRelease(document ReleaseDocument) string {
-	fine := document.Finetuning
-	if fine == nil || !validUUID(fine.BaseModelVersionID) {
-		return "finetuning contract"
-	}
-	if !validSnapshotImage(document.Program.ImageDigest) || !slices.Equal(document.Program.Command, []string{"/opt/venv/bin/python", "-I", "/opt/finetuning/finetune_entry.py"}) {
-		return "finetuning command"
-	}
-	if ValidateFinetuningProgramParameters(document.Program) != nil {
-		return "parameter defaults"
-	}
-	if field := invalidFinetuningManagedSettings(fine.ManagedSettings); field != "" {
-		return field
-	}
-	if !snapshotSHA256Pattern.MatchString(fine.RecipeSHA256) || !snapshotSHA256Pattern.MatchString(fine.MappingSHA256) {
-		return "program provenance"
-	}
-	if field := invalidComponentBudgets(fine.Budgets); field != "" {
-		return field
-	}
-	if field := invalidFinetuningArguments(document.Program.ArgsTemplate, "train"); field != "" {
-		return field
-	}
-	for _, entry := range []struct {
-		Program ReleaseComponentProgram
-		Mode    string
-	}{{fine.ExportProgram, "export"}, {fine.VerifyProgram, "verify"}} {
-		if !validUUID(entry.Program.ImageVersionID) || !validSnapshotImage(entry.Program.ImageDigest) || !slices.Equal(entry.Program.Command, document.Program.Command) || !snapshotSHA256Pattern.MatchString(entry.Program.ImplementationSHA256) {
-			return "component program"
-		}
-		if field := invalidFinetuningArguments(entry.Program.ArgsTemplate, entry.Mode); field != "" {
-			return field
-		}
-	}
-	if field := invalidCPUResources(document.Resources); field != "" {
-		return field
-	}
-	if field := invalidWorkspaceContract(document.Workspace); field != "" {
-		return field
-	}
-	if field := invalidOutputContractForKind(document.Kind, document.OutputContract); field != "" {
-		return field
-	}
-	if document.ExecutionTimeoutSeconds == 0 {
-		return "execution timeout"
-	}
-	return ""
-}
-
-func invalidFinetuningArguments(arguments []ReleaseArgument, mode string) string {
-	want := []ReleaseArgument{{Literal: mode}, {Literal: "--configuration"}, {Literal: "/workspace/inputs/finetune_configuration.json"}, {Literal: "--workspace"}, {Literal: "/workspace"}, {Literal: "--expected-input-sha256"}, {Source: "INPUT_SHA256"}, {Literal: "--expected-input-bytes"}, {Source: "INPUT_BYTES"}, {Literal: "--expected-base-manifest-sha256"}, {Source: "BASE_MANIFEST_SHA256"}}
+func invalidFinetuningArguments(arguments []MaterialArgument, mode string) string {
+	want := []MaterialArgument{{Literal: mode}, {Literal: "--configuration"}, {Literal: "/workspace/inputs/finetune_configuration.json"}, {Literal: "--workspace"}, {Literal: "/workspace"}, {Literal: "--expected-input-sha256"}, {Source: "INPUT_SHA256"}, {Literal: "--expected-input-bytes"}, {Source: "INPUT_BYTES"}, {Literal: "--expected-base-manifest-sha256"}, {Source: "BASE_MANIFEST_SHA256"}}
 	if !slices.Equal(arguments, want) {
 		return "args template"
 	}

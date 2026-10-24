@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
@@ -139,7 +139,11 @@ func TestCollectRejectsSymlinkDirectoryAndCancelledContext(t *testing.T) {
 func preparedWorkspace(t *testing.T) (string, biz.Execution, map[string][]byte) {
 	t.Helper()
 	snapshot := conformance.SnapshotV1()
-	intent := cpup01.Intent{Name: "collector-actual-bytes", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := conformance.IntentV1()
+	intent.Name = "collector-actual-bytes"
+	snapshot.Input.RowCount = 1024
+	snapshot.Input.Object.SizeBytes = int64(len(pipelineCSVFixture()))
+	snapshot.Input.Object.SHA256 = pipelineDigest(pipelineCSVFixture())
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
@@ -147,11 +151,11 @@ func preparedWorkspace(t *testing.T) (string, biz.Execution, map[string][]byte) 
 	execution := biz.Execution{Admission: biz.Admission{
 		TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42",
 		OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
-		Intent: intent, IntentHash: intentHash, Snapshot: snapshot, AcceptedAt: snapshot.DeadlineAt.Add(-time.Hour),
+		Intent: intent, IntentHash: intentHash, Snapshot: snapshot, AcceptedAt: snapshot.Timing.AcceptedAt,
 	}}
 	refreshSpec(t, &execution)
 	directory := t.TempDir()
-	contents := map[string][]byte{"model.pt": []byte("checkpoint bytes\x00\xff"), "model_config.json": []byte(`{"architecture":"MLP"}`), "metrics.jsonl": []byte("{\"step\":48}\n"), "summary.json": []byte(`{"steps":48}`)}
+	contents := mlpOutputFixture(t, execution)
 	for name, data := range contents {
 		writeFile(t, filepath.Join(directory, name), data)
 	}
@@ -160,7 +164,12 @@ func preparedWorkspace(t *testing.T) (string, biz.Execution, map[string][]byte) 
 
 func refreshSpec(t *testing.T, execution *biz.Execution) {
 	t.Helper()
+	execution.Snapshot.IdentityRef = cpup01.IdentityRef{TenantID: execution.TenantID, Actor: execution.Actor, ExecutionID: execution.ExecutionID, OperationID: execution.OperationID, IntentHash: execution.IntentHash}
 	var err error
+	execution.Snapshot.RuntimePlan, err = biz.CompileRuntimePlan(execution.Snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
 	execution.SpecHash, err = execution.Snapshot.Digest()
 	if err != nil {
 		t.Fatal(err)
@@ -181,4 +190,107 @@ func mustRemove(t *testing.T, name string) {
 	if err := os.Remove(name); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func mlpOutputFixture(t *testing.T, execution biz.Execution) map[string][]byte {
+	t.Helper()
+	parameters := map[string]string{}
+	for _, parameter := range execution.Snapshot.Program.ResolvedParameters {
+		parameters[parameter.Name] = parameter.Value
+	}
+	epochs, _ := strconv.ParseInt(parameters["epochs"], 10, 64)
+	batch, _ := strconv.ParseInt(parameters["batch_size"], 10, 64)
+	seed, _ := strconv.ParseUint(parameters["seed"], 10, 32)
+	samples := int64(execution.Snapshot.Input.RowCount)
+	steps := epochs * ((samples-1)/batch + 1)
+	device := "cpu"
+	if execution.Snapshot.ComputeOrigin.DeviceMode == "gpu" {
+		device = "cuda"
+	}
+	summary, err := json.Marshal(map[string]any{"status": "SUCCEEDED", "error": nil,
+		"samples": samples, "epochs": epochs, "batch_size": batch, "seed": seed,
+		"learning_rate": parameters["learning_rate"], "steps": steps, "world_size": 1,
+		"device": device, "torch_version": "test-fixture", "input_sha256": execution.Snapshot.Input.Object.SHA256,
+		"input_bytes": strconv.FormatInt(execution.Snapshot.Input.Object.SizeBytes, 10), "initial_loss": 0.5, "final_loss": 0.75})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var metrics strings.Builder
+	for step := int64(1); step <= steps; step++ {
+		raw, err := json.Marshal(map[string]any{"schema": "ani.metric.v1", "step": step, "name": "train.loss", "value": 0.75, "rank": 0, "timestamp": "2026-10-22T00:00:01Z"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		metrics.Write(raw)
+		metrics.WriteByte('\n')
+	}
+	return map[string][]byte{"model.pt": []byte("module checkpoint fixture bytes\x00\xff"),
+		"model_config.json": []byte(`{"architecture":"mlp-16-32-2","input_dim":16,"hidden_dim":32,"output_dim":2,"dtype":"float32"}`),
+		"metrics.jsonl":     []byte(metrics.String()), "summary.json": summary}
+}
+
+func TestCollectMLPUsesFrozenParametersAndIncludesPartialBatch(t *testing.T) {
+	directory, execution, _ := preparedWorkspace(t)
+	rate, epochs, batch, seed := "1000", int64(2), int64(6), uint32(7)
+	execution.Intent.MLP = &cpup01.MLPParameters{LearningRate: &rate, Epochs: &epochs, BatchSize: &batch, Seed: &seed}
+	_, execution.IntentHash, _ = cpup01.CanonicalIntent(execution.Intent)
+	execution.Snapshot.Program.ResolvedParameters, _ = execution.Intent.ResolveParameters()
+	execution.Snapshot.Input.RowCount = 17
+	rows := strings.Split(string(pipelineCSVFixture()), "\n")
+	input := []byte(strings.Join(rows[:18], "\n") + "\n")
+	execution.Snapshot.Input.Object.SizeBytes = int64(len(input))
+	execution.Snapshot.Input.Object.SHA256 = pipelineDigest(input)
+	refreshSpec(t, &execution)
+	contents := mlpOutputFixture(t, execution)
+	for name, data := range contents {
+		writeFile(t, filepath.Join(directory, name), data)
+	}
+	if _, err := workspace.Collect(context.Background(), directory, execution); err != nil {
+		t.Fatalf("valid 17-row/6-batch/2-epoch finite non-decreasing result: %v", err)
+	}
+	var summary map[string]any
+	if json.Unmarshal(contents["summary.json"], &summary) != nil || summary["steps"] != float64(6) {
+		t.Fatal("fixture must exercise six real-step observations")
+	}
+}
+
+func TestCollectMLPRejectsForgedOrMissingWorkloadFacts(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		path   string
+		change func([]byte) []byte
+	}{
+		{"steps", "summary.json", func(raw []byte) []byte { return changeMLPReport(t, raw, "steps", 47) }},
+		{"samples", "summary.json", func(raw []byte) []byte { return changeMLPReport(t, raw, "samples", 1023) }},
+		{"seed", "summary.json", func(raw []byte) []byte { return changeMLPReport(t, raw, "seed", 7) }},
+		{"missing initial loss", "summary.json", func(raw []byte) []byte { return changeMLPReport(t, raw, "initial_loss", nil) }},
+		{"wrong device", "summary.json", func(raw []byte) []byte { return changeMLPReport(t, raw, "device", "cuda") }},
+		{"wrong input", "summary.json", func(raw []byte) []byte { return changeMLPReport(t, raw, "input_sha256", strings.Repeat("0", 64)) }},
+		{"failed status", "summary.json", func(raw []byte) []byte { return changeMLPReport(t, raw, "status", "FAILED") }},
+		{"metric gap", "metrics.jsonl", func(raw []byte) []byte { return []byte(strings.Replace(string(raw), `"step":1,`, `"step":2,`, 1)) }},
+		{"metric schema", "metrics.jsonl", func(raw []byte) []byte { return []byte(strings.Replace(string(raw), "ani.metric.v1", "wrong", 1)) }},
+		{"wrong architecture", "model_config.json", func(raw []byte) []byte { return changeMLPReport(t, raw, "input_dim", 15) }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			directory, execution, contents := preparedWorkspace(t)
+			writeFile(t, filepath.Join(directory, test.path), test.change(contents[test.path]))
+			if _, err := workspace.Collect(context.Background(), directory, execution); !errors.Is(err, biz.ErrInvalidWorkspaceOutput) {
+				t.Fatalf("forged report accepted: %v", err)
+			}
+		})
+	}
+}
+
+func changeMLPReport(t *testing.T, raw []byte, key string, value any) []byte {
+	t.Helper()
+	var report map[string]any
+	if err := json.Unmarshal(raw, &report); err != nil {
+		t.Fatal(err)
+	}
+	report[key] = value
+	changed, err := json.Marshal(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return changed
 }

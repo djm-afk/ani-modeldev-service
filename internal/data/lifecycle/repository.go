@@ -11,10 +11,12 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	executionsql "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution/sqlc"
 	lifecyclesql "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle/sqlc"
@@ -86,6 +88,8 @@ type runtimeTransaction struct {
 	state                 biz.ExecutionRuntime
 	now                   time.Time
 	requireCreationOpen   bool
+	writeDeadline         time.Time
+	commandFence          uint64
 }
 
 func (repository *Repository) GetRuntime(ctx context.Context, tenant, execution string) (biz.ExecutionRuntime, error) {
@@ -183,7 +187,12 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 		return nil, storageError(err)
 	}
 	admitted := biz.Execution{Admission: biz.Admission{TenantID: row.TenantID.String(), ExecutionID: row.ExecutionID.String(), OperationID: row.OperationID.String(), Actor: row.Actor, SpecHash: row.SpecHash, IntentHash: row.IntentHash, AcceptedAt: row.AcceptedAt.Time.UTC()}}
-	if json.Unmarshal(row.IntentCanonical, &admitted.Intent) != nil || json.Unmarshal(row.SnapshotCanonical, &admitted.Snapshot) != nil {
+	admitted.Intent, err = cpup01.DecodeCanonicalIntent(row.IntentCanonical)
+	if err != nil {
+		return nil, biz.ErrPersistence
+	}
+	admitted.Snapshot, err = cpup01.DecodeCanonicalSnapshot(row.SnapshotCanonical)
+	if err != nil {
 		return nil, biz.ErrPersistence
 	}
 	intent, snapshot, err := admitted.CanonicalPayloads()
@@ -214,18 +223,40 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 	if state.Workspace != nil && !validWorkspace(admitted, *state.Workspace) {
 		return nil, biz.ErrPersistence
 	}
+	if !identity.DatabaseNow.Valid || !validRuntimeMaterialization(admitted, state, identity.DatabaseNow.Time.UTC()) {
+		return nil, biz.ErrPersistence
+	}
 	if state.Training != nil {
+		// PostgreSQL jsonb changes object key order and whitespace inside a
+		// RawMessage. Restore only byte-equivalent canonical Runtime spec from
+		// the authoritative admitted snapshot, after comparing its full content.
+		var value any
+		decoder := json.NewDecoder(bytes.NewReader(state.Training.Snapshot.RuntimePlan.ExpectedSpec))
+		decoder.UseNumber()
+		if decoder.Decode(&value) != nil {
+			return nil, biz.ErrPersistence
+		}
+		var encoded bytes.Buffer
+		encoder := json.NewEncoder(&encoded)
+		encoder.SetEscapeHTML(false)
+		if encoder.Encode(value) != nil || !bytes.Equal(bytes.TrimSuffix(encoded.Bytes(), []byte("\n")), admitted.Snapshot.RuntimePlan.ExpectedSpec) {
+			return nil, biz.ErrPersistence
+		}
+		state.Training.Snapshot.RuntimePlan.ExpectedSpec = append([]byte(nil), admitted.Snapshot.RuntimePlan.ExpectedSpec...)
 		if state.Workspace == nil {
 			return nil, biz.ErrPersistence
 		}
 		var starts []time.Time
-		if state.Training.FinetuningTiming != nil {
-			starts = []time.Time{state.Training.FinetuningTiming.AdmittedAt}
-			if !identity.DatabaseNow.Valid || state.Training.FinetuningTiming.AdmittedAt.After(identity.DatabaseNow.Time) {
+		if state.Training.Timing != nil {
+			starts = []time.Time{state.Training.Timing.AdmittedAt}
+			if !identity.DatabaseNow.Valid || state.Training.Timing.AdmittedAt.After(identity.DatabaseNow.Time) {
 				return nil, biz.ErrPersistence
 			}
 		}
 		expected, err := biz.FreezeTrainingPlan(admitted, *state.Workspace, starts...)
+		if err == nil && state.RuntimeTemplate != nil && state.RuntimeTemplate.Binding != nil {
+			expected, err = biz.BindTrainingRuntime(expected, *state.RuntimeTemplate.Binding)
+		}
 		if err != nil || !reflect.DeepEqual(expected, *state.Training) {
 			return nil, biz.ErrPersistence
 		}
@@ -245,6 +276,12 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 	}
 	if state.ClosedAt != nil && state.CloseEvidence == nil {
 		return nil, biz.ErrPersistence
+	}
+	if state.CloseOperationID != "" {
+		id, err := uuid.Parse(state.CloseOperationID)
+		if err != nil || id == uuid.Nil || id.String() != state.CloseOperationID || state.CloseOperationID == admitted.OperationID {
+			return nil, biz.ErrPersistence
+		}
 	}
 	if state.ClosedAt == nil && (state.StepExitCleanup != nil || state.ComputeCleanup != nil) {
 		return nil, biz.ErrPersistence
@@ -273,14 +310,17 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 	if !identity.DatabaseNow.Valid || identity.DatabaseNow.InfinityModifier != pgtype.Finite {
 		return nil, biz.ErrPersistence
 	}
-	current := &runtimeTransaction{transaction: tx, queries: queries, tenantID: tenantID, executionID: executionID, execution: admitted, state: state, now: identity.DatabaseNow.Time.UTC()}
+	current := &runtimeTransaction{transaction: tx, queries: queries, tenantID: tenantID, executionID: executionID, execution: admitted, state: state, now: identity.DatabaseNow.Time.UTC(), commandFence: generation}
+	if !validManagedTimings(current) {
+		return nil, biz.ErrPersistence
+	}
 	if !validFinetuningStarts(current) {
 		return nil, biz.ErrPersistence
 	}
 	if !validRegistrationFacts(current) {
 		return nil, biz.ErrPersistence
 	}
-	if len(state.FinetuningSteps) > 0 {
+	if len(state.FinetuningSteps) > 0 || len(state.StepTimings) > 0 {
 		authority, err := submissionsql.New(tx).GetRunAuthorityRow(ctx, submissionsql.GetRunAuthorityRowParams{TenantID: tenantID, ExecutionID: executionID})
 		if err != nil {
 			return nil, biz.ErrPersistence
@@ -290,22 +330,45 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 				return nil, biz.ErrPersistence
 			}
 		}
+		for _, timing := range state.StepTimings {
+			if timing.Binding.RunID != authority.RunID.String() || timing.Binding.WorkflowUID != authority.WorkflowUid || timing.Binding.SpecHash != authority.SpecHash {
+				return nil, biz.ErrPersistence
+			}
+		}
 	}
 	if state.ClosedAt != nil {
 		if err := validateCommittedClose(ctx, current); err != nil {
 			return nil, err
 		}
 	}
+	if ValidGPUReleaseFacts(current.execution, current.state, current.now) != nil || validateGPUReleaseAnchor(ctx, current) != nil {
+		return nil, biz.ErrPersistence
+	}
 	return current, nil
 }
 
 func saveRuntime(ctx context.Context, current *runtimeTransaction) error {
+	if current.state.CloseGeneration > 0 && current.state.CloseOperationID == "" {
+		closeID, err := uuid.NewRandom()
+		if err != nil {
+			return biz.ErrPersistence
+		}
+		// A close is a distinct operation even when it is naturally initiated by
+		// the original execution. Never reuse the create operation for ACC.
+		if closeID.String() == current.execution.OperationID {
+			return biz.ErrRuntimeConflict
+		}
+		current.state.CloseOperationID = closeID.String()
+	}
 	state := current.state
 	facts, err := json.Marshal(state)
 	if err != nil {
 		return biz.ErrPersistence
 	}
 	command := lifecyclesql.SaveRuntimeFactsParams{TenantID: current.tenantID, ExecutionID: current.executionID, Facts: facts, RequireCreationOpen: current.requireCreationOpen, DeadlineAt: timestamp(current.execution.Snapshot.DeadlineAt), CloseGeneration: pgtype.Numeric{Int: new(big.Int).SetUint64(state.CloseGeneration), Valid: true}}
+	if !current.writeDeadline.IsZero() && current.writeDeadline.Before(current.execution.Snapshot.DeadlineAt) {
+		command.DeadlineAt = timestamp(current.writeDeadline)
+	}
 	if state.Training != nil {
 		command.TrainingName = textValue(state.Training.Name)
 		command.TrainingRequestSha256 = textValue(state.Training.RequestSHA256)
@@ -350,6 +413,9 @@ func (repository *Repository) RecordPrepared(ctx context.Context, authority biz.
 		if err := requireOpen(current); err != nil {
 			return false, err
 		}
+		if err := requireRoleWindow(current, "prepare"); err != nil {
+			return false, err
+		}
 		current.state.Workspace = &workspace
 		return true, nil
 	})
@@ -364,10 +430,21 @@ func (repository *Repository) ReserveTraining(ctx context.Context, authority biz
 		if current.state.Workspace == nil {
 			return false, biz.ErrRuntimeNotReady
 		}
+		if current.state.RuntimeTemplate == nil || current.state.RuntimeTemplate.Binding == nil || current.state.TrainingWindow == nil {
+			return false, biz.ErrRuntimeNotReady
+		}
 		if err := requireOpen(current); err != nil {
 			return false, err
 		}
-		plan, err := biz.FreezeTrainingPlan(current.execution, *current.state.Workspace, current.now)
+		if !current.now.Before(current.state.TrainingWindow.DeadlineAt) {
+			return false, biz.ErrPipelineDispatchBlocked
+		}
+		current.writeDeadline = current.state.TrainingWindow.DeadlineAt
+		plan, err := biz.FreezeTrainingPlan(current.execution, *current.state.Workspace, current.state.TrainingWindow.AdmittedAt)
+		if err != nil {
+			return false, err
+		}
+		plan, err = biz.BindTrainingRuntime(plan, *current.state.RuntimeTemplate.Binding)
 		if err != nil {
 			return false, err
 		}
@@ -434,6 +511,16 @@ func (repository *Repository) RecordTrainingObservation(ctx context.Context, aut
 		if err != nil {
 			return false, err
 		}
+		record := biz.QueryRecord{Execution: current.execution, Runtime: current.state}
+		record.Runtime.Observation = &merged
+		for _, resource := range merged.Resources {
+			if resource.TrainingLog == nil {
+				continue
+			}
+			if resource.Kind != "Pod" || resource.Terminal && resource.ExitCode == nil || resource.TrainingLog.Source.PodUID != resource.UID || biz.ValidateRecordedTrainingLogs(record, []biz.RecordedTrainingLog{*resource.TrainingLog}) != nil {
+				return false, biz.ErrTrainingLogsUnavailable
+			}
+		}
 		if reflect.DeepEqual(current.state.Observation, &merged) {
 			return false, nil
 		}
@@ -463,6 +550,13 @@ func (repository *Repository) RecordPublication(ctx context.Context, authority b
 		if err := requireOpen(current); err != nil {
 			return false, err
 		}
+		role := "publish"
+		if current.execution.Snapshot.Kind == "FINETUNING" {
+			role = "register"
+		}
+		if err := requireRoleWindow(current, role); err != nil {
+			return false, err
+		}
 		current.state.Publication = &publication
 		return true, nil
 	})
@@ -474,7 +568,7 @@ func (repository *Repository) RequestRuntimeClose(ctx context.Context, authority
 			return false, biz.ErrInvalidAdmission
 		}
 		if current.state.CloseGeneration > 0 {
-			if reason == "DEADLINE" && current.state.CloseReason == "NATURAL_TERMINAL" && current.state.ClosedAt == nil && !current.now.Before(current.execution.Snapshot.DeadlineAt) {
+			if reason == "DEADLINE" && current.state.CloseReason == "NATURAL_TERMINAL" && current.state.ClosedAt == nil && !current.now.Before(biz.ActiveBusinessDeadline(current.execution, current.state)) {
 				// A natural handoff may outlive its frozen deadline. The database
 				// observes expiry without replacing the original fence or receipt.
 				current.state.CloseReason = "DEADLINE"
@@ -485,7 +579,7 @@ func (repository *Repository) RequestRuntimeClose(ctx context.Context, authority
 		if reason == "NATURAL_TERMINAL" && (current.state.Publication == nil || current.state.Observation == nil || current.state.Observation.Outcome != "SUCCEEDED" || !current.state.Observation.WritersAbsent) {
 			return false, biz.ErrRuntimeNotReady
 		}
-		if reason == "DEADLINE" && current.now.Before(current.execution.Snapshot.DeadlineAt) {
+		if reason == "DEADLINE" && current.now.Before(biz.ActiveBusinessDeadline(current.execution, current.state)) {
 			return false, biz.ErrRuntimeNotReady
 		}
 		generation, err := current.queries.AdvanceRuntimeClose(ctx, lifecyclesql.AdvanceRuntimeCloseParams{TenantID: current.tenantID, ExecutionID: current.executionID})
@@ -525,6 +619,9 @@ func (repository *Repository) ConfirmRuntimeClosed(ctx context.Context, authorit
 		}
 		if current.state.ClosedAt != nil {
 			return false, nil
+		}
+		if !runtimeCreationSettled(current.state) {
+			return false, biz.ErrTrainingUncertain
 		}
 		// A committed creation intent without a UID remains uncertain; absence
 		// cannot prove that an in-flight API request will not produce a writer.

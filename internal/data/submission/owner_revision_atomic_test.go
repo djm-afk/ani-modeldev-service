@@ -26,6 +26,7 @@ func TestOwnerRevisionSerializesDuplicateAndMixedWriters(t *testing.T) {
 	defer cancel()
 	request := validDispatchRequest(t)
 	request.Admission.TenantID = "aaaaaaaa-2222-4333-8444-555555555555"
+	refreshDispatchHashes(t, &request.Admission)
 	alias := request
 	alias.Admission.TenantID = strings.ToUpper(alias.Admission.TenantID)
 	alias.Admission.ExecutionID = strings.ToUpper(alias.Admission.ExecutionID)

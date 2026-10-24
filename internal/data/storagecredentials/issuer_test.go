@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -109,8 +110,9 @@ func TestIssuerRejectsUnapprovedExecutionScopesBeforeAssumeRole(t *testing.T) {
 			case "wildcard key":
 				execution.Snapshot.Input.Object.Key = "fixed/input/*.csv"
 			case "expired execution":
-				execution.Snapshot.DeadlineAt = time.Now().Add(-time.Second)
+				execution.Snapshot.DeadlineAt = time.Now().UTC().Truncate(time.Microsecond).Add(-time.Second)
 				execution.AcceptedAt = execution.Snapshot.DeadlineAt.Add(-time.Hour)
+				execution.Admission = admissionfixture.Bind(t, execution.Admission)
 			case "unsupported step":
 				purpose = "train-wait"
 			case "temporary owner":
@@ -169,20 +171,17 @@ func executionFixture(t *testing.T) biz.Execution {
 	t.Helper()
 	snapshot := conformance.SnapshotV1()
 	snapshot.DeadlineAt = time.Now().UTC().Add(30 * time.Minute).Truncate(time.Microsecond)
-	intent := cpup01.Intent{Name: "execution-storage-session", Kind: "GENERAL_TRAINING", PresetID: snapshot.Release.PresetID, DatasetVersionID: snapshot.Input.InputVersionID}
+	intent := cpup01.Intent{Name: "execution-storage-session", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
 	}
-	specHash, err := snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return biz.Execution{Admission: biz.Admission{
+	specHash := ""
+	return biz.Execution{Admission: admissionfixture.Bind(t, biz.Admission{
 		TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42",
 		OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
 		Intent: intent, IntentHash: intentHash, SpecHash: specHash, Snapshot: snapshot, AcceptedAt: snapshot.DeadlineAt.Add(-30 * time.Minute),
-	}}
+	})}
 }
 
 func configFixture(server *httptest.Server, execution biz.Execution) storagecredentials.Config {

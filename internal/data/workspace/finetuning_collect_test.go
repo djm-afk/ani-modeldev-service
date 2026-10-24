@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
@@ -132,6 +131,19 @@ func TestFinetuningCollectRejectsInventoryAndActualReportConflicts(t *testing.T)
 		}},
 		{"other input", func(t *testing.T, d string, _ *biz.Execution, c map[string][]byte) {
 			replaceReport(t, d, c, "reports/train/summary.json", "input_sha256", strings.Repeat("0", 64))
+		}},
+		{"merged from another adapter", func(t *testing.T, d string, _ *biz.Execution, c map[string][]byte) {
+			replaceReport(t, d, c, "reports/export/merged_manifest.json", "adapter_manifest_sha256", strings.Repeat("0", 64))
+			replaceReport(t, d, c, "reports/verify/verify.json", "merged_manifest_sha256", pipelineDigest(c["reports/export/merged_manifest.json"]))
+		}},
+		{"missing intermediate optimizer metric", func(t *testing.T, d string, _ *biz.Execution, c map[string][]byte) {
+			lines := bytes.SplitAfter(c["reports/train/metrics.jsonl"], []byte("\n"))
+			c["reports/train/metrics.jsonl"] = bytes.Join(lines[1:], nil)
+			writeFile(t, filepath.Join(d, "reports/train/metrics.jsonl"), c["reports/train/metrics.jsonl"])
+			replaceReport(t, d, c, "reports/train/summary.json", "metric_samples", 19)
+		}},
+		{"forged effective tokens", func(t *testing.T, d string, _ *biz.Execution, c map[string][]byte) {
+			replaceReport(t, d, c, "reports/train/summary.json", "effective_token_count", 0)
 		}},
 		{"wrong merged digest", func(t *testing.T, d string, _ *biz.Execution, c map[string][]byte) {
 			replaceReport(t, d, c, "reports/verify/verify.json", "merged_manifest_sha256", strings.Repeat("0", 64))
@@ -341,13 +353,26 @@ func TestFinetuningCollectorAcceptsDifferentActualWeightsUnderSamePathContract(t
 
 func finetuningOutputWorkspace(t *testing.T) (string, biz.Execution, map[string][]byte) {
 	t.Helper()
+	return finetuningOutputWorkspaceWith(t, nil)
+}
+
+func finetuningOutputWorkspaceWith(t *testing.T, customize func(*cpup01.Snapshot, *cpup01.Intent)) (string, biz.Execution, map[string][]byte) {
+	t.Helper()
 	snapshot := conformance.FinetuningSnapshotV1()
 	intent := conformance.FinetuningIntentV1()
+	if customize != nil {
+		customize(&snapshot, &intent)
+	}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := biz.Execution{Admission: biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, AcceptedAt: snapshot.DeadlineAt.Add(-time.Hour)}}
+	configurationDigest, err := (cpup01.FinetuningConfiguration{ParameterContractVersion: cpup01.FinetuningParameterContractVersion, Parameters: snapshot.Program.ResolvedParameters, ManagedSettings: snapshot.Finetuning.ManagedSettings}).Digest()
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot.Finetuning.ResolvedConfigurationSHA256 = configurationDigest
+	e := biz.Execution{Admission: biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, AcceptedAt: snapshot.Timing.AcceptedAt}}
 	refreshSpec(t, &e)
 	contents := map[string][]byte{}
 	for _, file := range snapshot.OutputContract.RequiredFiles {
@@ -364,7 +389,11 @@ func finetuningOutputWorkspace(t *testing.T) (string, biz.Execution, map[string]
 	if err != nil {
 		t.Fatal(err)
 	}
-	settings, _ := json.Marshal(snapshot.Finetuning.ManagedSettings)
+	var projection map[string]json.RawMessage
+	if err := json.Unmarshal(effective, &projection); err != nil {
+		t.Fatal(err)
+	}
+	settings := projection["managed_settings"]
 	members := func(prefix string) []map[string]string {
 		names := []string{}
 		for name := range contents {
@@ -386,16 +415,22 @@ func finetuningOutputWorkspace(t *testing.T) (string, biz.Execution, map[string]
 		}
 		contents[name] = raw
 	}
+	parameters := map[string]string{}
+	for _, parameter := range snapshot.Program.ResolvedParameters {
+		parameters[parameter.Name] = parameter.Value
+	}
+	maxSteps, _ := strconv.ParseInt(parameters["max_steps"], 10, 64)
+	samples := int64(snapshot.Input.RowCount)
 	var metrics bytes.Buffer
-	for step := int64(1); step <= 20; step++ {
+	for step := int64(1); step <= maxSteps; step++ {
 		line, _ := json.Marshal(map[string]any{"schema": "ani.metric.v1", "step": step, "name": "train.loss", "value": 0.125, "rank": 0, "timestamp": "2026-10-14T00:00:00Z"})
 		metrics.Write(line)
 		metrics.WriteByte('\n')
 	}
 	contents["reports/train/metrics.jsonl"] = metrics.Bytes()
-	encode("reports/train/summary.json", map[string]any{"schema": "ani.finetune.summary.v1", "status": "SUCCEEDED", "samples": 64, "source_samples": 64, "optimizer_steps": 20, "steps": 20, "metric_samples": 20, "input_sha256": snapshot.Input.Object.SHA256, "input_bytes": stringNumber(snapshot.Input.Object.SizeBytes), "base_manifest_sha256": baseHash, "parameter_contract_version": cpup01.FinetuningParameterContractVersion, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "effective_configuration": json.RawMessage(effective), "effective_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "learning_rate": "0.0001", "max_steps": 20, "recipe_sha256": pipelineDigest(settings), "adapter_files": members("training/adapter/")})
+	encode("reports/train/summary.json", map[string]any{"schema": "ani.finetune.summary.v1", "status": "SUCCEEDED", "samples": samples, "source_samples": samples, "dropped_samples": 0, "effective_token_count": samples * 48, "max_effective_tokens": 48, "samples_at_cutoff": 0, "truncated_samples": 0, "truncated_tokens": 0, "device": "cpu", "train_dtypes": []string{"float32"}, "adapter_dtype": "float32", "optimizer_steps": maxSteps, "steps": maxSteps, "metric_samples": maxSteps, "input_sha256": snapshot.Input.Object.SHA256, "input_bytes": stringNumber(snapshot.Input.Object.SizeBytes), "base_manifest_sha256": baseHash, "parameter_contract_version": cpup01.FinetuningParameterContractVersion, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "effective_configuration": json.RawMessage(effective), "effective_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "learning_rate": parameters["learning_rate"], "max_steps": maxSteps, "recipe_sha256": pipelineDigest(settings), "adapter_files": members("training/adapter/")})
 	encode("reports/train/adapter_manifest.json", map[string]any{"schema": "ani.finetune.adapter-manifest.v1", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "files": members("training/adapter/")})
-	encode("reports/export/merged_manifest.json", map[string]any{"schema": "ani.finetune.merged-manifest.v1", "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "dtype": "float32", "files": members("export/merged/")})
+	encode("reports/export/merged_manifest.json", map[string]any{"schema": "ani.finetune.merged-manifest.v1", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "adapter_manifest_sha256": pipelineDigest(contents["reports/train/adapter_manifest.json"]), "adapter_files": members("training/adapter/"), "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "dtype": "float32", "files": members("export/merged/")})
 	encode("reports/export/export.json", map[string]any{"schema": "ani.finetune.export.v1", "status": "SUCCEEDED", "dtype": "float32"})
 	encode("reports/verify/verify.json", map[string]any{"schema": "ani.finetune.verify.v1", "status": "PASSED", "dtype": "float32", "device": "cpu", "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "merged_manifest_sha256": pipelineDigest(contents["reports/export/merged_manifest.json"]), "finite_logits": true, "generated_token_ids": []int64{1, 2}})
 	// Fedora /tmp is tmpfs. Use this checkout's private disk-backed work area
@@ -439,3 +474,20 @@ func replaceReport(t *testing.T, directory string, contents map[string][]byte, n
 
 func stringBytes(value []byte) string { return stringNumber(int64(len(value))) }
 func stringNumber(value int64) string { return strconv.FormatInt(value, 10) }
+
+func TestFinetuningCollectUsesAllResolvedParametersWithoutCombinationApproval(t *testing.T) {
+	directory, execution, _ := finetuningOutputWorkspaceWith(t, func(snapshot *cpup01.Snapshot, intent *cpup01.Intent) {
+		rate, dropout := "0.0003", "0.125"
+		steps, batch, accumulation, cutoff, rank, alpha, seed := int64(7), int64(2), int64(3), int64(96), int64(4), int64(7), uint32(7)
+		intent.Finetuning = &cpup01.FinetuningParameters{LearningRate: &rate, MaxSteps: &steps, PerDeviceTrainBatchSize: &batch, GradientAccumulationSteps: &accumulation, CutoffLen: &cutoff, LoraRank: &rank, LoraAlpha: &alpha, LoraDropout: &dropout, Seed: &seed}
+		snapshot.Program.ResolvedParameters, _ = intent.ResolveParameters()
+		settings := &snapshot.Finetuning.ManagedSettings
+		settings.PerDeviceTrainBatchSize, settings.GradientAccumulationSteps, settings.CutoffLen = batch, accumulation, cutoff
+		settings.LoraRank, settings.LoraAlpha, settings.LoraDropout = rank, alpha, dropout
+		settings.Seed, settings.DataSeed = int64(seed), int64(seed)
+		snapshot.Input.RowCount = 17
+	})
+	if _, err := workspace.Collect(context.Background(), directory, execution); err != nil {
+		t.Fatalf("valid independent rank/alpha and nondefault batch/accumulation/cutoff/seed must collect: %v", err)
+	}
+}

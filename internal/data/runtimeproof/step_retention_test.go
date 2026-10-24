@@ -22,6 +22,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -59,19 +60,15 @@ func newConfiguredStepRetentionFixture(t *testing.T, abort bool, fine []bool, co
 		f.execution.Snapshot, f.execution.Intent = conformance.FinetuningSnapshotV1(), conformance.FinetuningIntentV1()
 		_, f.execution.IntentHash, _ = cpup01.CanonicalIntent(f.execution.Intent)
 	}
-	if configure != nil {
-		configure(f)
-	}
 	f.execution.AcceptedAt = time.Now().UTC().Truncate(time.Microsecond)
 	f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(time.Hour)
 	if len(deadline) == 1 {
 		f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(deadline[0])
 	}
-	hash, err := f.execution.Snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
+	f.execution.Admission = admissionfixture.Bind(t, f.execution.Admission)
+	if configure != nil {
+		configure(f)
 	}
-	f.execution.SpecHash = hash
 	open := postgres.Prepare(t)
 	pool := open()
 	ctx := context.Background()
@@ -107,7 +104,7 @@ func newConfiguredStepRetentionFixture(t *testing.T, abort bool, fine []bool, co
 		capturedInitializationAbort(t, &f.pods[0])
 	}
 	w, e := f.execution.Snapshot.Workspace, f.execution.Snapshot.Environment
-	fixture := &stepRetentionFixture{f: f, open: open, pods: map[string]*unstructured.Unstructured{}, workspace: biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: e.NamespaceName, NamespaceUID: e.NamespaceUID, PVCName: "retention-workspace", PVCUID: "retention-workspace-uid", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}}
+	fixture := &stepRetentionFixture{f: f, open: open, pods: map[string]*unstructured.Unstructured{}, workspace: biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: e.NamespaceName, NamespaceUID: e.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(f.execution.ExecutionID), PVCUID: "retention-workspace-uid", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}}
 	for i := range f.pods {
 		fixture.pods[f.pods[i].GetName()] = f.pods[i].DeepCopy()
 	}
@@ -120,6 +117,10 @@ func newConfiguredStepRetentionFixture(t *testing.T, abort bool, fine []bool, co
 	}
 	fixture.proof = runtimeproof.New(client, f.runs, nil, dispatches)
 	repository := lifecycle.New(pool)
+	stepBinding := biz.FinetuningStepBinding{Role: "prepare", SpecHash: f.execution.SpecHash, RunID: f.runID, WorkflowUID: string(f.workflow.GetUID()), TaskID: "prepare-retention", PodName: "prepare-retention", PodUID: "77777777-aaaa-4bbb-8ccc-dddddddddddd"}
+	if _, _, err := repository.ReserveManagedStep(ctx, f.authority(), stepBinding); err != nil {
+		t.Fatal(err)
+	}
 	if _, _, err := repository.RecordPrepared(ctx, f.authority(), fixture.workspace); err != nil {
 		t.Fatal(err)
 	}

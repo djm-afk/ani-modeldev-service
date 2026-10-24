@@ -1,1 +1,0 @@
-{"schema":"ani.modeldev.intent.v1","name":"CPU <试验>","kind":"GENERAL_TRAINING","preset_id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dataset_version_id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","general_parameters":[{"name":"epochs","type":"INTEGER","value":"3"},{"name":"learning_rate","type":"DECIMAL","value":"0.01"}]}

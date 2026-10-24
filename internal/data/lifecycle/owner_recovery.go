@@ -17,7 +17,7 @@ func (repository *Repository) FenceOwnerClose(ctx context.Context, tenant, execu
 }
 
 func (repository *Repository) MarkOwnerCloseReview(ctx context.Context, tenant, execution, reason string) (biz.ExecutionRuntime, error) {
-	if reason != "KFP_CREATE_UNRESOLVED" && reason != "TRAINJOB_CREATE_UNRESOLVED" && reason != "MULTIPLE_RUNS" {
+	if reason != "KFP_CREATE_UNRESOLVED" && reason != "TRAINJOB_CREATE_UNRESOLVED" && reason != "MULTIPLE_RUNS" && reason != "TRAINING_LOGS_UNAVAILABLE" {
 		return biz.ExecutionRuntime{}, biz.ErrInvalidAdmission
 	}
 	return repository.mutateOwnerClose(ctx, tenant, execution, func(current *runtimeTransaction, _ pgx.Tx) (bool, error) {

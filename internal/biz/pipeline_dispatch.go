@@ -81,7 +81,7 @@ func (request PipelineDispatchRequest) Freeze() (PipelineDispatchPlan, error) {
 		OperationID:   strings.ToLower(request.Admission.OperationID),
 		SpecHash:      request.Admission.SpecHash,
 		Owner:         owner, Environment: snapshot.Environment,
-		PipelineID: snapshot.Release.PipelineID, PipelineVersionID: snapshot.Release.PipelineVersionID,
+		PipelineID: snapshot.Implementation.PipelineID, PipelineVersionID: snapshot.Implementation.PipelineVersionID,
 		DisplayName: "md-" + strings.ToLower(request.Admission.ExecutionID),
 		DeadlineAt:  snapshot.DeadlineAt,
 	}, nil

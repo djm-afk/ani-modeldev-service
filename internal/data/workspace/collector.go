@@ -55,6 +55,9 @@ func Collect(ctx context.Context, directory string, execution biz.Execution) (bi
 		remaining -= entry.SizeBytes
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].RelativePath < files[j].RelativePath })
+	if err := verifyMLPReports(ctx, root, execution, files); err != nil {
+		return biz.CollectedOutput{}, err
+	}
 	manifest, manifestHash, err := cpup01.OutputManifestBytes(cpup01.AdmissionEnvelope(execution.Admission), files)
 	if err != nil {
 		return biz.CollectedOutput{}, biz.ErrInvalidWorkspaceOutput

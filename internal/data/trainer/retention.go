@@ -93,7 +93,7 @@ func recordedPodExit(current biz.RuntimeResource, history []biz.RuntimeResource)
 		if prior.UID != current.UID {
 			continue
 		}
-		if found || prior.APIVersion != current.APIVersion || prior.Kind != current.Kind || prior.Namespace != current.Namespace || prior.Name != current.Name || prior.OwnerUID != current.OwnerUID || !prior.Terminal || prior.ExitCode == nil || *prior.ExitCode != *current.ExitCode {
+		if found || prior.APIVersion != current.APIVersion || prior.Kind != current.Kind || prior.Namespace != current.Namespace || prior.Name != current.Name || prior.OwnerUID != current.OwnerUID || !prior.Terminal || prior.ExitCode == nil || *prior.ExitCode != *current.ExitCode || prior.TrainingLog == nil || !reflect.DeepEqual(prior.TrainingLog, current.TrainingLog) {
 			return false
 		}
 		found = true
