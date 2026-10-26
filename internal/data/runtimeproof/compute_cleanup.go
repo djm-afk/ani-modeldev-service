@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/cleanup"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -44,13 +43,23 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 	}
 	// Reuse the real training observer before disposing any parent. Its full
 	// original owner chain, historical exits and creation stop remain required.
-	fresh, err := trainer.New(verifier.kube).ObserveTraining(ctx, *state.Training, *state.TrainingHandle, state.Observation.Resources)
-	if err != nil || !fresh.WritersAbsent || !reflect.DeepEqual(fresh.Resources, state.Observation.Resources) {
+	if verifier.training == nil {
+		return nil, biz.ErrRuntimeNotReady
+	}
+	fresh, err := verifier.training.ObserveTraining(ctx, *state.Training, *state.TrainingHandle, state.Observation.Resources)
+	if err != nil || !fresh.WritersAbsent || !sameTrainingResourcesAfterPodGC(execution, state, fresh.Resources) {
 		return nil, biz.ErrCleanupBlocked
 	}
 	for _, pod := range state.Observation.Resources {
-		if pod.Kind != "Pod" || !pod.APIObjectPresent {
+		if pod.Kind != "Pod" {
 			continue
+		}
+		if pod.TrainingLog != nil {
+			logs = append(logs, *pod.TrainingLog)
+			continue
+		}
+		if !pod.APIObjectPresent {
+			return nil, biz.ErrTrainingLogsUnavailable
 		}
 		if verifier.logs == nil {
 			return nil, biz.ErrTrainingLogsUnavailable
@@ -72,11 +81,101 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 	return logs, nil
 }
 
+// Normal GC may remove an original worker after CLOSED was persisted. Its
+// durable exit and validated original log survive; other facts cannot drift.
+func retainedTerminalPod(execution biz.Execution, state biz.ExecutionRuntime, pod biz.RuntimeResource) bool {
+	return pod.Kind == "Pod" && pod.APIVersion == "v1" && pod.Terminal && pod.ExitCode != nil && pod.TrainingLog != nil &&
+		pod.TrainingLog.Source.PodUID == pod.UID && pod.TrainingLog.Source.PodName == pod.Name && pod.TrainingLog.Source.Namespace == pod.Namespace &&
+		biz.ValidateRecordedTrainingLogs(biz.QueryRecord{Execution: execution, Runtime: state}, []biz.RecordedTrainingLog{*pod.TrainingLog}) == nil
+}
+
+func sameTrainingResourcesAfterPodGC(execution biz.Execution, state biz.ExecutionRuntime, fresh []biz.RuntimeResource) bool {
+	prior := state.Observation.Resources
+	if len(fresh) != len(prior) {
+		return false
+	}
+	for i, current := range fresh {
+		if prior[i].APIObjectPresent && !current.APIObjectPresent && retainedTerminalPod(execution, state, prior[i]) {
+			current.APIObjectPresent = true // Compare every other original fact unchanged.
+		}
+		if !reflect.DeepEqual(current, prior[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// ObserveComputeCleanupAbsence grants no mutation or renewed attempt budget.
+// The durable exits/logs and frozen scope remain authoritative; only actual
+// NotFound responses for all original identities can complete the receipt.
+func (verifier *Verifier) ObserveComputeCleanupAbsence(ctx context.Context, execution biz.Execution, owner biz.RunAuthorityCandidate, state biz.ExecutionRuntime) ([]biz.RuntimeResource, error) {
+	if verifier == nil || verifier.kube == nil || ctx == nil || ctx.Err() != nil {
+		return nil, biz.ErrRuntimeNotReady
+	}
+	r := state.ComputeCleanup
+	if r == nil || r.Attempts == 0 || r.Attempts > biz.ComputeCleanupAttemptLimit(r) || !r.LogsReady || !biz.ComputeCleanupLogsComplete(execution, state, r.Logs) {
+		return nil, biz.ErrCleanupBlocked
+	}
+	targets, hash, err := biz.ComputeCleanupTargets(execution, owner, state)
+	if err != nil || r.CloseGeneration != state.CloseGeneration || hash != r.PlanHash || !reflect.DeepEqual(targets, r.Targets) || !reflect.DeepEqual(targets, r.Requested) {
+		return nil, biz.ErrCleanupConflict
+	}
+	namespace, err := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, owner.NamespaceName, metav1.GetOptions{})
+	if err != nil {
+		return nil, biz.ErrCleanupUncertain
+	}
+	if !sameObject(namespace, "v1", "Namespace", "", owner.NamespaceName, owner.NamespaceUID) || namespace.GetDeletionTimestamp() != nil {
+		return nil, biz.ErrCleanupConflict
+	}
+	if state.Workspace != nil {
+		if biz.ValidateWorkspaceBinding(execution, *state.Workspace) != nil {
+			return nil, biz.ErrCleanupConflict
+		}
+		pvc, err := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "persistentvolumeclaims"}).Namespace(owner.NamespaceName).Get(ctx, state.Workspace.PVCName, metav1.GetOptions{})
+		if err != nil {
+			return nil, biz.ErrCleanupUncertain
+		}
+		if !sameObject(pvc, "v1", "PersistentVolumeClaim", owner.NamespaceName, state.Workspace.PVCName, state.Workspace.PVCUID) || pvc.GetDeletionTimestamp() != nil {
+			return nil, biz.ErrCleanupConflict
+		}
+	}
+	absent := make([]biz.RuntimeResource, 0, len(targets))
+	for _, target := range targets {
+		resource, valid := computeResource(target)
+		if !valid {
+			return nil, biz.ErrCleanupConflict
+		}
+		current, err := verifier.kube.Resource(resource).Namespace(target.Namespace).Get(ctx, target.Name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			fact := target
+			fact.APIObjectPresent = false
+			absent = append(absent, fact)
+			continue
+		}
+		if err != nil {
+			return nil, biz.ErrCleanupUncertain
+		}
+		if !sameObject(current, target.APIVersion, target.Kind, target.Namespace, target.Name, target.UID) {
+			return nil, biz.ErrCleanupConflict
+		}
+		return nil, biz.ErrCleanupBlocked
+	}
+	return absent, nil
+}
+
 func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution biz.Execution, owner biz.RunAuthorityCandidate, state biz.ExecutionRuntime) ([]biz.RuntimeResource, error) {
 	removed := []biz.RuntimeResource{}
 	receipt := state.ComputeCleanup
-	if receipt == nil || !receipt.LogsReady || receipt.Attempts == 0 || receipt.Attempts > biz.ComputeCleanupMaximumAttempts || receipt.Phase != "STARTED" || !biz.ComputeCleanupLogsComplete(execution, state, receipt.Logs) {
+	if receipt == nil || !receipt.LogsReady || receipt.Attempts == 0 || receipt.Attempts > biz.ComputeCleanupAttemptLimit(receipt) || receipt.Phase != "STARTED" || !biz.ComputeCleanupLogsComplete(execution, state, receipt.Logs) {
 		return removed, biz.ErrCleanupBlocked
+	}
+	if retry := receipt.OperatorRetry; retry != nil {
+		if !time.Now().Before(retry.DeadlineAt) {
+			return removed, biz.ErrCleanupBlocked
+		}
+		bounded, cancel := context.WithDeadline(ctx, retry.DeadlineAt)
+		defer cancel()
+		ctx = bounded
 	}
 	targets, hash, err := biz.ComputeCleanupTargets(execution, owner, state)
 	if err != nil || hash != receipt.PlanHash || !reflect.DeepEqual(targets, receipt.Targets) || !reflect.DeepEqual(targets, receipt.Requested) {
@@ -89,6 +188,9 @@ func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution
 	record := biz.OperationRecord{QueryRecord: biz.QueryRecord{Execution: execution, Runtime: state}, Dispatch: &dispatch, Authority: &owner}
 	controllers := cleanup.New(verifier.kube, verifier)
 	for _, target := range receipt.Targets {
+		if retry := receipt.OperatorRetry; retry != nil && !time.Now().Before(retry.DeadlineAt) {
+			return removed, biz.ErrCleanupBlocked
+		}
 		if err := verifier.verifyComputeCleanupGraph(ctx, execution, owner, state, true); err != nil {
 			return removed, err
 		}
@@ -135,8 +237,8 @@ func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution
 			if err := client.Delete(ctx, target.Name, metav1.DeleteOptions{Preconditions: &metav1.Preconditions{UID: &uid, ResourceVersion: &version}, PropagationPolicy: &orphan}); err != nil {
 				return removed, biz.ErrCleanupUncertain
 			}
-			if _, err := client.Get(ctx, target.Name, metav1.GetOptions{}); !apierrors.IsNotFound(err) {
-				return removed, biz.ErrCleanupUncertain
+			if err := verifier.waitComputeRemoval(ctx, target); err != nil {
+				return removed, err
 			}
 		}
 		fact := target
@@ -186,7 +288,7 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 			return biz.ErrCleanupConflict
 		}
 		object, err := verifier.kube.Resource(resource).Namespace(target.Namespace).Get(ctx, target.Name, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) && (removalIntent || target.Kind == "TrainingRuntime") {
+		if apierrors.IsNotFound(err) && (removalIntent || target.Kind == "TrainingRuntime" || retainedTerminalPod(execution, state, target)) {
 			continue
 		}
 		if err != nil || !sameObject(object, target.APIVersion, target.Kind, target.Namespace, target.Name, target.UID) || object.GetResourceVersion() == "" {

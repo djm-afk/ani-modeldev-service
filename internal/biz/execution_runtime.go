@@ -71,6 +71,9 @@ type RuntimeResource struct {
 	Suspension                                       *TrainingControllerSuspension `json:",omitempty"`
 	Terminal                                         bool
 	ExitCode                                         *int32
+	// A terminal worker's bounded log tail travels with its original exit
+	// observation, so releasing its finalizer cannot erase the only copy.
+	TrainingLog *RecordedTrainingLog `json:",omitempty"`
 	// InitializationAbort is owner-only Pod evidence, never a main-container
 	// exit or permission for a managed step, training writer, or publication.
 	InitializationAbort *PodInitializationAbort `json:",omitempty"`

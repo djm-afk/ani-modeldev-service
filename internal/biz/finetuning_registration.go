@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
@@ -63,6 +64,14 @@ type FinetuningRegistrationRepository interface {
 	RecordRegistrationUnavailable(context.Context, RunAuthorityCandidate) (ExecutionRuntime, bool, error)
 }
 
+var ErrModelRegistrationNotApplicable = errors.New("MODEL_REGISTRATION_NOT_APPLICABLE")
+
+// FinetuningArtifactsRepository validates the original publication and frozen
+// register window without recording or dispatching a Model write intent.
+type FinetuningArtifactsRepository interface {
+	ConfirmArtifactsOnly(context.Context, RunAuthorityCandidate) (ExecutionRuntime, error)
+}
+
 // RegisterModel persists the original published content before the provider
 // writes. An absent provider records an explicit dependency failure; recovery
 // keeps the same training, target, fixed object and idempotency key.
@@ -73,6 +82,17 @@ func (r *ManagedRuntime) RegisterModel(ctx context.Context, token string, claim 
 	}
 	if result.Execution.Snapshot.Kind != "FINETUNING" || result.Runtime.Publication == nil || result.Runtime.Publication.Bundle == nil {
 		return ManagedRuntimeResult{}, ErrRuntimeNotReady
+	}
+	if !result.Execution.Snapshot.Finetuning.RequiresModelRegistration() {
+		repository, ok := r.repository.(FinetuningArtifactsRepository)
+		if !ok {
+			return ManagedRuntimeResult{}, ErrRuntimeNotReady
+		}
+		state, err := repository.ConfirmArtifactsOnly(ctx, result.Authority.RunAuthorityCandidate)
+		if err != nil {
+			return ManagedRuntimeResult{}, err
+		}
+		return runtimeResult(result, state, true)
 	}
 	repo, ok := r.repository.(FinetuningRegistrationRepository)
 	if !ok {

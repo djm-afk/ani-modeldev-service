@@ -292,6 +292,7 @@ def train(args):
     versions = runtime(configuration["managed_settings"]["device"])
     reports = empty_output(workspace / "reports/train")
     adapter = empty_output(workspace / "training/adapter")
+    import torch
     from transformers import TrainerCallback
     from llamafactory.hparams import get_train_args
     from llamafactory.model.loader import load_config, load_tokenizer
@@ -310,10 +311,13 @@ def train(args):
         parsed = get_train_args(
             factory_arguments(workspace, configuration, factory_output)
         )
-        # The framework resolves compute_dtype while patching the fixed model
-        # config, after argument parsing. Resolve through that exact function
-        # before loading weights, then pass the same parsed objects to run_sft.
-        # No dtype is guessed from fp16/bf16 flags or copied from the request.
+        # Pin the validated managed dtype before the framework can infer a
+        # different precision from the base config and hardware capabilities.
+        # The real patcher and strict projection check still run, and run_sft
+        # receives these same parsed objects before loading any model weights.
+        parsed[0].compute_dtype = getattr(
+            torch, configuration["managed_settings"]["train_dtype"]
+        )
         tokenizer = load_tokenizer(parsed[0])["tokenizer"]
         model_configuration = load_config(parsed[0])
         cutoff = configuration["managed_settings"]["cutoff_len"]

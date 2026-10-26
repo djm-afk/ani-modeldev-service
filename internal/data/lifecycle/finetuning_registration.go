@@ -16,6 +16,9 @@ func registrationContent(current *runtimeTransaction) (biz.FinetuningRegistratio
 	if current.execution.Snapshot.Kind != "FINETUNING" || fine == nil || publication == nil || publication.Bundle == nil {
 		return biz.FinetuningRegistration{}, biz.ErrRuntimeNotReady
 	}
+	if !fine.RequiresModelRegistration() {
+		return biz.FinetuningRegistration{}, biz.ErrModelRegistrationNotApplicable
+	}
 	export, verify := stepForRole(current.state, "export"), stepForRole(current.state, "verify")
 	if export == nil || verify == nil || export.Result == nil || verify.Result == nil || export.Result.ExitCode != 0 || verify.Result.ExitCode != 0 {
 		return biz.FinetuningRegistration{}, biz.ErrRuntimeNotReady
@@ -29,6 +32,30 @@ func registrationContent(current *runtimeTransaction) (biz.FinetuningRegistratio
 	h := sha256.Sum256(raw)
 	intent.ContentSHA256 = hex.EncodeToString(h[:])
 	return intent, nil
+}
+
+func (r *Repository) ConfirmArtifactsOnly(ctx context.Context, owner biz.RunAuthorityCandidate) (biz.ExecutionRuntime, error) {
+	state, _, err := r.mutate(ctx, owner, func(current *runtimeTransaction) (bool, error) {
+		fine, publication := current.execution.Snapshot.Finetuning, current.state.Publication
+		if current.execution.Snapshot.Kind != "FINETUNING" || fine == nil || fine.RequiresModelRegistration() || publication == nil || publication.Bundle == nil || current.state.FinetuningRegistration != nil {
+			return false, biz.ErrRuntimeNotReady
+		}
+		export, verify := stepForRole(current.state, "export"), stepForRole(current.state, "verify")
+		if export == nil || verify == nil || export.Result == nil || verify.Result == nil || export.Result.ExitCode != 0 || verify.Result.ExitCode != 0 {
+			return false, biz.ErrRuntimeNotReady
+		}
+		if err := validPublication(current.execution, owner, current.state, *publication, false); err != nil {
+			return false, err
+		}
+		if err := requireOpen(current); err != nil {
+			return false, err
+		}
+		if err := requireRoleWindow(current, "register"); err != nil {
+			return false, err
+		}
+		return false, nil
+	})
+	return state, err
 }
 
 func (r *Repository) RecordRegistrationUnavailable(ctx context.Context, a biz.RunAuthorityCandidate) (biz.ExecutionRuntime, bool, error) {

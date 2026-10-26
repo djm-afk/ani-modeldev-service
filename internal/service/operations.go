@@ -103,7 +103,7 @@ func (operations *Operations) ReconcileExecution(ctx context.Context, request *m
 	if operations == nil || operations.executions == nil {
 		return nil, status.Error(codes.Unavailable, "operations unavailable")
 	}
-	view, err := operations.executions.Reconcile(ctx, access.TenantID, request.ExecutionId)
+	view, err := operations.executions.ReconcileWithActor(ctx, access.TenantID, request.ExecutionId, access.Actor)
 	if err != nil {
 		return nil, operationsError(err, access.RequestID)
 	}
@@ -147,6 +147,9 @@ func (operations *Operations) ApplyExecutionCleanup(ctx context.Context, request
 }
 
 func operationsError(err error, requestID string) error {
+	if errors.Is(err, biz.ErrModelRegistrationNotApplicable) {
+		return status.Error(codes.FailedPrecondition, "execution has no Model registration target")
+	}
 	if errors.Is(err, biz.ErrCleanupBlocked) || errors.Is(err, biz.ErrCleanupConflict) || errors.Is(err, biz.ErrCleanupUncertain) {
 		return status.Error(codes.FailedPrecondition, "cleanup requires current closed identities and retained output evidence")
 	}

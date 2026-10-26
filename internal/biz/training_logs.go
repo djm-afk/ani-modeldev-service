@@ -96,14 +96,23 @@ func RecordedTrainingLogsFor(record QueryRecord, source TrainingLogSource, optio
 	if err != nil || expected != source {
 		return TrainingLogResult{}, false, ErrTrainingLogsUnavailable
 	}
-	receipt := record.Runtime.ComputeCleanup
-	if receipt == nil || !receipt.LogsReady {
-		return TrainingLogResult{}, false, nil
+	logs := []RecordedTrainingLog{}
+	for _, resource := range record.Runtime.Observation.Resources {
+		if resource.UID == source.PodUID && resource.TrainingLog != nil {
+			logs = append(logs, *resource.TrainingLog)
+		}
 	}
-	if err := ValidateRecordedTrainingLogs(record, receipt.Logs); err != nil {
+	if len(logs) == 0 {
+		receipt := record.Runtime.ComputeCleanup
+		if receipt == nil || !receipt.LogsReady {
+			return TrainingLogResult{}, false, nil
+		}
+		logs = receipt.Logs
+	}
+	if err := ValidateRecordedTrainingLogs(record, logs); err != nil {
 		return TrainingLogResult{}, false, err
 	}
-	for _, log := range receipt.Logs {
+	for _, log := range logs {
 		if log.Source != source {
 			continue
 		}
@@ -173,10 +182,13 @@ func TrainingLogSourceFor(record QueryRecord, logID string) (TrainingLogSource, 
 		if logID != "" && logID != id {
 			continue
 		}
-		// The archived tail is authorized by the persisted owner chain alone.
-		// APIObjectPresent only reports whether a live read is still possible;
-		// after Pod GC it is false and the recorded receipt remains readable.
-		if selected != nil || pod.APIVersion != "v1" || pod.Namespace != namespace {
+		// After Pod GC a live read is impossible, so the recorded receipt is the
+		// only source left. That is permitted solely for a worker whose original
+		// exit was observed: a gone Pod with no terminal exit could have been
+		// killed before its tail was captured, and calling that a readable log
+		// would invent evidence. The persisted owner chain below still has to
+		// match UID for UID either way.
+		if selected != nil || pod.APIVersion != "v1" || pod.Namespace != namespace || !pod.APIObjectPresent && (!pod.Terminal || pod.ExitCode == nil) {
 			return TrainingLogSource{}, ErrTrainingLogsUnavailable
 		}
 		owner, found := resources[pod.OwnerUID]

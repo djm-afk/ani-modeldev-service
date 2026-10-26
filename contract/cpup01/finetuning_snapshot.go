@@ -152,6 +152,12 @@ type FinetuningSnapshot struct {
 	Budgets                     ComponentBudgets          `json:"budgets"`
 }
 
+// RequiresModelRegistration keeps target presence as the canonical delivery
+// choice. A validated snapshot without either target only publishes artifacts.
+func (fine *FinetuningSnapshot) RequiresModelRegistration() bool {
+	return fine != nil && (fine.TargetModelID != nil || fine.NewModelName != nil)
+}
+
 func invalidFinetuningManagedSettings(settings FinetuningManagedSettings) string {
 	if settings.Stage != "sft" || settings.FinetuningType != "lora" || settings.LoraTarget != "all" || settings.LoraRank < 1 || settings.LoraAlpha < 1 || settings.CutoffLen < 1 || settings.PerDeviceTrainBatchSize < 1 || settings.GradientAccumulationSteps < 1 || settings.Seed < 0 || settings.Seed > 4294967295 || settings.DataSeed != settings.Seed || (settings.Device != "cpu" && settings.Device != "cuda") || settings.FP16 || settings.BF16 || settings.FlashAttn != "disabled" || settings.ReportTo != "none" || settings.SaveStrategy != "no" || settings.Template != "qwen" || settings.TrainDtype != "float32" || settings.ExportDtype != "float32" || settings.VerifyDtype != "float32" || settings.LRSchedulerType != "linear" || settings.WarmupRatio != "0" || settings.WeightDecay != "0" || validateFinetuningParameter(Parameter{Name: "lora_dropout", Type: "DECIMAL", Value: settings.LoraDropout}) != nil || settings.NumTrainEpochs != 3 || settings.Optim != "adamw_torch" || settings.LoggingSteps != 1 {
 		return "managed settings"
@@ -221,7 +227,7 @@ func invalidFinetuningSnapshot(snapshot Snapshot) string {
 	if snapshot.Input.Format != "JSON" || snapshot.Input.SchemaVersion != FinetuningInputSchemaVersion || snapshot.Input.RowCount == 0 || snapshot.Input.FeatureCount != 0 {
 		return "fixed JSON contract"
 	}
-	if (fine.TargetModelID == nil) == (fine.NewModelName == nil) || fine.TargetModelID != nil && !validUUID(*fine.TargetModelID) || fine.NewModelName != nil && !validModelName(*fine.NewModelName) {
+	if fine.TargetModelID != nil && fine.NewModelName != nil || fine.TargetModelID != nil && !validUUID(*fine.TargetModelID) || fine.NewModelName != nil && !validModelName(*fine.NewModelName) {
 		return "model target"
 	}
 	if field := invalidComponentBudgets(fine.Budgets); field != "" {

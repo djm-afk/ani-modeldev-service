@@ -412,7 +412,7 @@ func (runtime *ManagedRuntime) Close(ctx context.Context, token string, request 
 	if err != nil {
 		return result, err
 	}
-	if reason == "NATURAL_TERMINAL" && result.Execution.Snapshot.Kind == "FINETUNING" && (result.Runtime.FinetuningRegistration == nil || result.Runtime.FinetuningRegistration.State != "READY") {
+	if reason == "NATURAL_TERMINAL" && result.Execution.Snapshot.Kind == "FINETUNING" && result.Execution.Snapshot.Finetuning.RequiresModelRegistration() && (result.Runtime.FinetuningRegistration == nil || result.Runtime.FinetuningRegistration.State != "READY") {
 		return ManagedRuntimeResult{}, ErrModelDependencyUnavailable
 	}
 	state, replayed, err := runtime.repository.RequestRuntimeClose(ctx, result.Authority.RunAuthorityCandidate, reason)

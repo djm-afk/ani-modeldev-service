@@ -511,6 +511,16 @@ func (repository *Repository) RecordTrainingObservation(ctx context.Context, aut
 		if err != nil {
 			return false, err
 		}
+		record := biz.QueryRecord{Execution: current.execution, Runtime: current.state}
+		record.Runtime.Observation = &merged
+		for _, resource := range merged.Resources {
+			if resource.TrainingLog == nil {
+				continue
+			}
+			if resource.Kind != "Pod" || resource.Terminal && resource.ExitCode == nil || resource.TrainingLog.Source.PodUID != resource.UID || biz.ValidateRecordedTrainingLogs(record, []biz.RecordedTrainingLog{*resource.TrainingLog}) != nil {
+				return false, biz.ErrTrainingLogsUnavailable
+			}
+		}
 		if reflect.DeepEqual(current.state.Observation, &merged) {
 			return false, nil
 		}

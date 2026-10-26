@@ -20,9 +20,11 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/traininglogs"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
+	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"time"
 )
@@ -467,6 +469,9 @@ type trainingFixture struct {
 	posts, patches, deletes                                            int
 	podPatches                                                         int
 	podPatchStatusCode                                                 int
+	logReadStatusCode                                                  int
+	logReadBody                                                        []byte
+	logReads                                                           int
 	beforePodPatch                                                     func()
 	loseCreateResponse                                                 bool
 	createStatusCode                                                   int
@@ -545,6 +550,18 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 		path := r.URL.Path
 		var response any
 		switch {
+		case r.Method == http.MethodGet && strings.HasSuffix(path, "/log"):
+			f.logReads++
+			if f.logReadStatusCode != 0 {
+				w.WriteHeader(f.logReadStatusCode)
+				return
+			}
+			if f.logReadBody != nil {
+				_, _ = w.Write(f.logReadBody)
+				return
+			}
+			_, _ = w.Write([]byte(time.Now().UTC().Format(time.RFC3339Nano) + " retained original worker output\n"))
+			return
 		case path == "/api/v1/namespaces/cpu-execution":
 			response = f.namespace
 		case path == "/api/v1/namespaces/cpu-execution/persistentvolumeclaims/"+f.plan.Workspace.PVCName:
@@ -684,11 +701,20 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 		_ = json.NewEncoder(w).Encode(response)
 	}))
 	t.Cleanup(server.Close)
-	client, err := dynamic.NewForConfig(&rest.Config{Host: server.URL, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})}})
+	config := &rest.Config{Host: server.URL, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})}}
+	client, err := dynamic.NewForConfig(config)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return trainer.New(client)
+	core, err := coreclient.NewForConfig(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adapter := trainer.New(client)
+	if method := reflect.ValueOf(adapter).MethodByName("WithTrainingLogs"); method.IsValid() {
+		method.Call([]reflect.Value{reflect.ValueOf(traininglogs.New(core))})
+	}
+	return adapter
 }
 
 func reflectNilMap(value any) bool { object, ok := value.(map[string]any); return ok && object == nil }

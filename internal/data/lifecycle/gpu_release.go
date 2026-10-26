@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"sort"
 	"strings"
@@ -156,10 +157,10 @@ func ValidGPUReleaseFacts(execution biz.Execution, state biz.ExecutionRuntime, n
 		return biz.ErrPersistence
 	}
 	if fact.Outbox == nil {
-		return nil
+		return biz.ErrPersistence
 	}
 	outbox := fact.Outbox
-	if fact.Observation == nil || fact.Observation.Finding != "ALLOCATION_RELEASED" || !fact.Observation.Complete || !gpuReleaseID(outbox.Event.ReleaseEventID) || outbox.Event.CreateOperationID != execution.OperationID || outbox.Event.ResourceID != execution.ExecutionID || outbox.Event.Reason != gpuReleaseReason(state) || outbox.CreatedAt.Before(fact.Scope.SealedAt) || outbox.CreatedAt.After(now) || (outbox.ACK == nil) != (outbox.DeliveredAt == nil) {
+	if !gpuReleaseID(outbox.Event.ReleaseEventID) || outbox.Event.CreateOperationID != execution.OperationID || outbox.Event.ResourceID != execution.ExecutionID || outbox.Event.Reason != gpuReleaseReason(state) || outbox.CreatedAt.Before(fact.Scope.SealedAt) || outbox.CreatedAt.After(now) || (outbox.ACK == nil) != (outbox.DeliveredAt == nil) {
 		return biz.ErrPersistence
 	}
 	if outbox.ACK != nil && (!validGPUACK(outbox.Event, *outbox.ACK) || outbox.DeliveredAt.Before(outbox.CreatedAt) || outbox.DeliveredAt.After(now)) {
@@ -246,7 +247,7 @@ func (repository *Repository) gpuReleaseMutation(ctx context.Context, tenant, ex
 }
 
 func (repository *Repository) SealGPURelease(ctx context.Context, tenant, execution string) (biz.ExecutionRuntime, error) {
-	return repository.gpuReleaseMutation(ctx, tenant, execution, func(current *runtimeTransaction) (bool, error) {
+	state, err := repository.gpuReleaseMutation(ctx, tenant, execution, func(current *runtimeTransaction) (bool, error) {
 		if current.execution.Snapshot.ComputeOrigin.DeviceMode == "cpu" {
 			if current.state.GPURelease != nil {
 				return false, biz.ErrPersistence
@@ -264,37 +265,17 @@ func (repository *Repository) SealGPURelease(ctx context.Context, tenant, execut
 		if err != nil {
 			return false, biz.ErrPersistence
 		}
-		current.state.GPURelease = &biz.GPUReleaseState{Scope: scope, ScopeSHA256: hash, NoDispatch: current.state.CloseEvidence.NoDispatch}
+		eventID, err := uuid.NewRandom()
+		if err != nil {
+			return false, biz.ErrPersistence
+		}
+		current.state.GPURelease = &biz.GPUReleaseState{Scope: scope, ScopeSHA256: hash, NoDispatch: current.state.CloseEvidence.NoDispatch, Outbox: &biz.GPUReleaseOutbox{Event: biz.GPUResourceReleasedEvent{ReleaseEventID: eventID.String(), CreateOperationID: current.execution.OperationID, ResourceID: current.execution.ExecutionID, Reason: gpuReleaseReason(current.state)}, CreatedAt: current.now}}
 		return true, nil
 	})
-}
-
-func (repository *Repository) RecordGPUReleaseObservation(ctx context.Context, tenant, execution, scopeHash string, observation biz.GPUReleaseObservation) (biz.ExecutionRuntime, error) {
-	return repository.gpuReleaseMutation(ctx, tenant, execution, func(current *runtimeTransaction) (bool, error) {
-		fact := current.state.GPURelease
-		if fact == nil || scopeHash != fact.ScopeSHA256 || !validGPUObservation(fact.Scope, observation, current.now) {
-			return false, biz.ErrRuntimeConflict
-		}
-		if fact.Outbox != nil {
-			return false, nil
-		}
-		if fact.Observation != nil {
-			same := observation
-			same.EvidenceID = fact.Observation.EvidenceID
-			if reflect.DeepEqual(same, *fact.Observation) {
-				return false, nil
-			}
-		}
-		fact.Observation = &observation
-		if observation.Finding == "ALLOCATION_RELEASED" && observation.Complete {
-			eventID, err := uuid.NewRandom()
-			if err != nil {
-				return false, biz.ErrPersistence
-			}
-			fact.Outbox = &biz.GPUReleaseOutbox{Event: biz.GPUResourceReleasedEvent{ReleaseEventID: eventID.String(), CreateOperationID: current.execution.OperationID, ResourceID: current.execution.ExecutionID, Reason: gpuReleaseReason(current.state)}, CreatedAt: current.now}
-		}
-		return true, nil
-	})
+	if err != nil {
+		return state, fmt.Errorf("GPU release tenant %s execution %s: %w", tenant, execution, err)
+	}
+	return state, nil
 }
 
 func (repository *Repository) RecordGPUReleaseACK(ctx context.Context, tenant, execution, eventID string, ack biz.GPUReleaseACK) (biz.ExecutionRuntime, error) {

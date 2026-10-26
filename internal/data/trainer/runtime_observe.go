@@ -152,7 +152,10 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 		if vectorErr != nil || ValidatePodResources(vector, pod) != nil || validateEffectiveTrainingPod(plan, pod) != nil || !groupMatches {
 			observation.SpecificationMismatch = true
 		}
-		if !observation.SpecificationMismatch && plan.Snapshot.ComputeOrigin.DeviceMode == "gpu" {
+		terminal, code := podTermination(pod)
+		// Owner assertions identify live GPU usage. They must not gate observing
+		// an original stopped/deleting worker or retaining its actual exit/logs.
+		if !observation.SpecificationMismatch && !terminal && pod.GetDeletionTimestamp() == nil && plan.Snapshot.ComputeOrigin.DeviceMode == "gpu" {
 			if a.ownerSigner == nil {
 				return observation, biz.ErrRuntimeNotReady
 			}
@@ -160,7 +163,6 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 				return observation, err
 			}
 		}
-		terminal, code := podTermination(pod)
 		resources[string(pod.GetUID())] = resourceFact(pod, ownerUID, terminal, code)
 		objects[string(pod.GetUID())] = pod
 		podCount++
@@ -234,6 +236,9 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 	trainSuspended, _, _ := unstructured.NestedBool(train.Object, "spec", "suspend")
 	setSuspended, _, _ := unstructured.NestedBool(jobset.Object, "spec", "suspend")
 	creationStopped := (trainTerminal && setTerminal) || (trainSuspended && setSuspended && jobsStopped)
+	if err := a.retainPodLogs(ctx, plan, handle, resources, objects, history); err != nil {
+		return observation, err
+	}
 	exitPending, err := a.releaseRecordedPodExits(ctx, plan, handle, resources, objects, history)
 	if err != nil {
 		return observation, err

@@ -42,6 +42,21 @@ func (closer *ExecutionCloser) reconcileComputeCleanup(ctx context.Context, resu
 	if state.ComputeCleanup.Phase == "APPLIED" {
 		return runtimeResult(result, state, replayed)
 	}
+	// An exhausted or expired attempt grants no further deletion. It may still
+	// finish from fresh absence of every original target, retaining its audit.
+	receipt := state.ComputeCleanup
+	if receipt.LogsReady && receipt.Attempts > 0 && (receipt.Attempts >= ComputeCleanupAttemptLimit(receipt) || receipt.OperatorRetry != nil && !time.Now().Before(receipt.OperatorRetry.DeadlineAt)) {
+		absent, err := closer.compute.ObserveComputeCleanupAbsence(ctx, result.Execution, owner, state)
+		if err != nil {
+			return result, err
+		}
+		stored, err := repository.RecordComputeCleanupResult(ctx, owner, state.CloseGeneration, receipt.Attempts, absent, "")
+		if err != nil {
+			return result, err
+		}
+		result.Runtime = stored
+		return runtimeResult(result, stored, replayed)
+	}
 	state, err := repository.StartComputeCleanupAttempt(ctx, owner, state.CloseGeneration)
 	if err != nil {
 		return result, err

@@ -9,6 +9,9 @@ import (
 
 func (r *Repository) BeginRegistrationRecovery(ctx context.Context, a biz.RunAuthorityCandidate) (biz.ExecutionRuntime, error) {
 	state, _, err := r.mutate(ctx, a, func(current *runtimeTransaction) (bool, error) {
+		if current.execution.Snapshot.Kind == "FINETUNING" && !current.execution.Snapshot.Finetuning.RequiresModelRegistration() {
+			return false, biz.ErrModelRegistrationNotApplicable
+		}
 		registration := current.state.FinetuningRegistration
 		if current.state.ClosedAt == nil || current.state.CloseEvidence == nil || registration == nil {
 			return false, biz.ErrRuntimeNotReady

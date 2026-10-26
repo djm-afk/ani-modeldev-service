@@ -5,11 +5,35 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	lifecyclesql "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle/sqlc"
 )
 
 var _ biz.ComputeCleanupRepository = (*Repository)(nil)
+
+// AdmitComputeCleanupRetry commits fresh exact-scope logs and the one-shot
+// authenticated operator audit under the same original aggregate lock.
+func (repository *Repository) AdmitComputeCleanupRetry(ctx context.Context, owner biz.RunAuthorityCandidate, generation uint64, actor string, logs []biz.RecordedTrainingLog) (biz.ExecutionRuntime, error) {
+	state, _, err := repository.mutate(ctx, owner, func(current *runtimeTransaction) (bool, error) {
+		r := current.state.ComputeCleanup
+		if !cpup01.ValidAuditActor(actor) || generation != current.state.CloseGeneration || r == nil {
+			return false, biz.ErrCleanupBlocked
+		}
+		if r.OperatorRetry != nil {
+			return false, nil
+		}
+		if !biz.ComputeCleanupRetryEligible(current.execution, owner, current.state) || !biz.ComputeCleanupLogsComplete(current.execution, current.state, logs) {
+			return false, biz.ErrCleanupBlocked
+		}
+		r.OperatorRetry = &biz.ComputeCleanupOperatorRetry{Actor: actor, AdmittedAt: current.now, DeadlineAt: current.now.Add(biz.ComputeCleanupOperatorRetryWindow), OriginalAttempts: r.Attempts, OriginalPhase: r.Phase, OriginalError: r.LastError}
+		r.Logs = append([]biz.RecordedTrainingLog{}, logs...)
+		r.LogsReady = true
+		r.Requested = append([]biz.RuntimeResource{}, r.Targets...)
+		return true, nil
+	})
+	return state, err
+}
 
 func (repository *Repository) BeginComputeCleanup(ctx context.Context, owner biz.RunAuthorityCandidate, generation uint64) (biz.ExecutionRuntime, error) {
 	state, _, err := repository.mutate(ctx, owner, func(current *runtimeTransaction) (bool, error) {
@@ -42,7 +66,10 @@ func (repository *Repository) StartComputeCleanupAttempt(ctx context.Context, ow
 		if receipt.Phase == "APPLIED" {
 			return false, nil
 		}
-		if receipt.Attempts >= biz.ComputeCleanupMaximumAttempts {
+		if retry := receipt.OperatorRetry; retry != nil && (receipt.Attempts >= biz.ComputeCleanupAttemptLimit(receipt) || !current.now.Before(retry.DeadlineAt)) {
+			return false, biz.ErrCleanupUncertain
+		}
+		if receipt.Attempts >= biz.ComputeCleanupAttemptLimit(receipt) {
 			if receipt.Phase == "NEEDS_REVIEW" && receipt.LastError == "ATTEMPTS_EXHAUSTED" {
 				return false, nil
 			}
@@ -119,8 +146,13 @@ func validComputeCleanup(current *runtimeTransaction, owner biz.RunAuthorityCand
 		return true
 	}
 	targets, hash, err := biz.ComputeCleanupTargets(current.execution, owner, current.state)
-	if err != nil || receipt.ExecutionID != current.execution.ExecutionID || receipt.Actor != biz.ComputeCleanupActor || receipt.CloseGeneration != current.state.CloseGeneration || receipt.PlanHash != hash || !reflect.DeepEqual(receipt.Targets, targets) || receipt.StartedAt.IsZero() || receipt.StartedAt.Before(*current.state.ClosedAt) || receipt.StartedAt.After(current.now) || receipt.Attempts > biz.ComputeCleanupMaximumAttempts || !biz.ComputeCleanupRemovedValid(targets, receipt.ConfirmedAbsent, receipt.Phase == "APPLIED") || !receipt.ReconciledAt.IsZero() || receipt.ReconciledFromPhase != "" || len(receipt.ResolvedAbsent) != 0 {
+	if err != nil || receipt.ExecutionID != current.execution.ExecutionID || receipt.Actor != biz.ComputeCleanupActor || receipt.CloseGeneration != current.state.CloseGeneration || receipt.PlanHash != hash || !reflect.DeepEqual(receipt.Targets, targets) || receipt.StartedAt.IsZero() || receipt.StartedAt.Before(*current.state.ClosedAt) || receipt.StartedAt.After(current.now) || receipt.Attempts > biz.ComputeCleanupAttemptLimit(receipt) || !biz.ComputeCleanupRemovedValid(targets, receipt.ConfirmedAbsent, receipt.Phase == "APPLIED") || !receipt.ReconciledAt.IsZero() || receipt.ReconciledFromPhase != "" || len(receipt.ResolvedAbsent) != 0 {
 		return false
+	}
+	if r := receipt.OperatorRetry; r != nil {
+		if !cpup01.ValidAuditActor(r.Actor) || r.AdmittedAt.Before(receipt.StartedAt) || r.AdmittedAt.After(current.now) || r.DeadlineAt.Sub(r.AdmittedAt) != biz.ComputeCleanupOperatorRetryWindow || r.OriginalAttempts != biz.ComputeCleanupMaximumAttempts || r.OriginalPhase != "NEEDS_REVIEW" || r.OriginalError != "ATTEMPTS_EXHAUSTED" || receipt.Attempts < r.OriginalAttempts || !receipt.LogsReady {
+			return false
+		}
 	}
 	if receipt.LogsReady {
 		if receipt.Attempts == 0 || !biz.ComputeCleanupLogsComplete(current.execution, current.state, receipt.Logs) || !reflect.DeepEqual(receipt.Requested, targets) {

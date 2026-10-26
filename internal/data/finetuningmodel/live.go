@@ -47,8 +47,6 @@ func (r *LiveReader) ResolveFinetuningModelFacts(ctx context.Context, tenant str
 		in.Target = &modelv1.ResolveFinetuningFactsRequest_TargetModelId{TargetModelId: *intent.TargetModelID}
 	} else if intent.NewModelName != nil {
 		in.Target = &modelv1.ResolveFinetuningFactsRequest_NewModelName{NewModelName: *intent.NewModelName}
-	} else {
-		return cpup01.BaseModelRef{}, biz.ErrFinetuningNotEnabled
 	}
 	out, err := r.client.ResolveFinetuningFacts(ctx, tenant, in)
 	if err != nil {

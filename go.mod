@@ -11,9 +11,9 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/prometheus/client_golang v1.24.1
-	github.com/zhangzhe-ctrl/ani-accelerator-service v0.0.0-20261021231649-b51b9c135728
+	github.com/zhangzhe-ctrl/ani-accelerator-service v0.0.0-20261022092841-c8d761d4ff1a
 	github.com/zhangzhe-ctrl/ani-governance/api/quota v0.0.0-20261017184327-1c605c793b88
-	github.com/zhangzhe-ctrl/ani-model-service/api v0.0.0-20261021183330-6d469afb5a7d
+	github.com/zhangzhe-ctrl/ani-model-service/api v0.0.0-20261022131120-2a7a2a2851cf
 	github.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261019174951-733f625995f8
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.66.0
