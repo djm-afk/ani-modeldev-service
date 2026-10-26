@@ -16,14 +16,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// verifiedQueryMethods lists the unary reads that carry the BFF's per-request
-// current authorization. It is one list so the unary and stream paths cannot
-// drift apart.
+// verifiedQueryMethods lists every read that carries the BFF's per-request
+// current authorization, unary and streaming alike. It is one list so the two
+// transports cannot drift apart: the stream interceptor checks this same map,
+// and a method absent here is refused even after its own allow-list admits it.
 func verifiedQueryMethods(query modeldevv1.ModelDevQueryServiceServer, extra GovernanceServices) map[string]bool {
 	methods := make(map[string]bool, 12)
 	if query != nil {
 		for _, method := range []string{
 			modeldevv1.ModelDevQueryService_GetExecution_FullMethodName,
+			modeldevv1.ModelDevQueryService_GetExecutionLogStream_FullMethodName,
 			modeldevv1.ModelDevQueryService_ListExecutions_FullMethodName,
 			modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName,
 			modeldevv1.ModelDevQueryService_ListExecutionArtifacts_FullMethodName,

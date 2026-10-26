@@ -8,7 +8,9 @@ import (
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 )
 
@@ -61,5 +63,48 @@ func TestStreamInterceptorRequiresRegisteredQueryService(t *testing.T) {
 	err := interceptor(nil, nil, &grpc.StreamServerInfo{FullMethod: modeldevv1.ModelDevQueryService_GetExecutionLogStream_FullMethodName, IsServerStream: true}, nil)
 	if status.Code(err) != codes.PermissionDenied {
 		t.Fatalf("unregistered query service admitted a stream: %v", err)
+	}
+}
+
+// auditedStream is an authenticated Governance peer: the TLS state passes
+// verification and every header the query gate requires is present exactly once.
+type auditedStream struct{ peerlessStream }
+
+func (s auditedStream) Context() context.Context {
+	return peer.NewContext(s.ctx, &peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{HandshakeComplete: true}}})
+}
+
+func authenticatedStreamHeaders(method string) metadata.MD {
+	return metadata.Pairs(
+		"x-ani-tenant-id", "11111111-1111-4111-8111-111111111111",
+		"x-ani-actor", "governance:user:42",
+		"x-ani-request-id", "22222222-2222-4222-8222-222222222222",
+		"x-ani-authorized-method", method,
+		"x-ani-data-scope", "tenant-all",
+	)
+}
+
+// The admitted stream must also clear the shared current-authorization list.
+// Both checks exist in the stream path, so a passing case is the only thing that
+// proves the two allow-lists actually agree; asserting rejection alone let the
+// stream method go missing from verifiedQueryMethods without any failure.
+func TestStreamInterceptorAdmitsAuthorizedExecutionLogStream(t *testing.T) {
+	method := modeldevv1.ModelDevQueryService_GetExecutionLogStream_FullMethodName
+	interceptor := authenticateStream(CommandTLS{}, nil, func(tls.ConnectionState) error { return nil }, &stubQueryStreamServer{})
+	stream := auditedStream{peerlessStream{ctx: metadata.NewIncomingContext(context.Background(), authenticatedStreamHeaders(method))}}
+	handled := false
+	handler := func(_ any, wrapped grpc.ServerStream) error {
+		handled = true
+		// The handler must run with the verified delivery, not the bare context.
+		if wrapped.Context() == stream.ctx {
+			return status.Error(codes.Internal, "handler saw the unauthenticated context")
+		}
+		return nil
+	}
+	if err := interceptor(nil, stream, &grpc.StreamServerInfo{FullMethod: method, IsServerStream: true}, handler); err != nil {
+		t.Fatalf("authorized execution log stream refused: %v", err)
+	}
+	if !handled {
+		t.Fatal("authorized execution log stream never reached the handler")
 	}
 }
