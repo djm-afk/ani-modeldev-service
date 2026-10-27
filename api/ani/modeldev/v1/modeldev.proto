@@ -303,7 +303,13 @@ message ImplementationView {
  repeated string supported_device_modes = 7; bool available = 8;
  uint64 execution_timeout_default_seconds = 9; uint64 execution_timeout_max_seconds = 10; uint64 step_timeout_seconds = 11;
 }
-message ListImplementationsRequest { PageRequest page = 1; }
+// An absent kind returns every implementation. A specified kind is applied
+// before Total and the page window, and UNSPECIFIED is rejected rather than
+// treated as a filter.
+message ListImplementationsRequest {
+  PageRequest page = 1;
+  optional ani.training.v1.ExecutionKind kind = 2;
+}
 message ListImplementationsResponse { repeated ImplementationView implementations = 1; uint64 total = 2; }
 
 // Public metadata omits backend object keys and credentials.

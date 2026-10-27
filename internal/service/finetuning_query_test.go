@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
+	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -108,9 +109,11 @@ func TestImplementationQueryAuthorizationUnknownFieldsAndPagination(t *testing.T
 		t.Fatal("query read facts without authority")
 	}
 	request := &modeldevv1.ListImplementationsRequest{}
-	request.ProtoReflect().SetUnknown([]byte{0x12, 0})
+	// Field 6 is not declared by the catalogue request, so an unknown wire field
+	// must be rejected instead of being ignored.
+	request.ProtoReflect().SetUnknown([]byte{0x32, 0})
 	if _, e := q.ListImplementations(implementationQueryContext(), request); status.Code(e) != codes.InvalidArgument {
-		t.Fatal("old selection accepted")
+		t.Fatal("unknown field accepted")
 	}
 	page, size := uint32(2), uint32(1)
 	response, e := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{Page: &modeldevv1.PageRequest{Page: &page, PageSize: &size}})
@@ -120,6 +123,44 @@ func TestImplementationQueryAuthorizationUnknownFieldsAndPagination(t *testing.T
 	zero := uint32(0)
 	if _, e := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{Page: &modeldevv1.PageRequest{Page: &zero}}); status.Code(e) != codes.InvalidArgument {
 		t.Fatal("zero page accepted")
+	}
+}
+func TestImplementationQueryFiltersByKindBeforeTotalAndPage(t *testing.T) {
+	q, _ := newImplementationQuery()
+	finetuning := trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING
+	general := trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING
+	for _, test := range []struct {
+		name string
+		kind trainingv1.ExecutionKind
+		want string
+	}{
+		{name: "finetuning", kind: finetuning, want: "builtin.sft_lora"},
+		{name: "general training", kind: general, want: "builtin.mlp"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			// pageSize=2 covers both entries unfiltered, so a page that still
+			// reported total=2 would prove the filter ran after pagination.
+			page, size := uint32(2), uint32(2)
+			response, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{
+				Page: &modeldevv1.PageRequest{Page: &page, PageSize: &size},
+				Kind: &test.kind,
+			})
+			if err != nil || response.Total != 1 || len(response.Implementations) != 0 {
+				t.Fatalf("filtered total or page window wrong: %v", err)
+			}
+			first, size2 := uint32(1), uint32(1)
+			response, err = q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{
+				Page: &modeldevv1.PageRequest{Page: &first, PageSize: &size2},
+				Kind: &test.kind,
+			})
+			if err != nil || response.Total != 1 || len(response.Implementations) != 1 || response.Implementations[0].ImplementationId != test.want || response.Implementations[0].Kind != test.kind {
+				t.Fatalf("filtered page did not return the matching implementation: %v", err)
+			}
+		})
+	}
+	unspecified := trainingv1.ExecutionKind_EXECUTION_KIND_UNSPECIFIED
+	if _, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{Kind: &unspecified}); status.Code(err) != codes.InvalidArgument {
+		t.Fatal("UNSPECIFIED kind accepted as a filter")
 	}
 }
 func TestHistoricalExecutionProjectionPreservesOriginalParametersAndTiming(t *testing.T) {

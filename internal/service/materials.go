@@ -191,8 +191,16 @@ func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImple
 	if q == nil || q.materials == nil {
 		return nil, queryError(biz.ErrPersistence, scope.RequestID)
 	}
-	ids := []string{"builtin.mlp", "builtin.sft_lora"}
+	if r.Kind != nil && *r.Kind == trainingv1.ExecutionKind_EXECUTION_KIND_UNSPECIFIED {
+		return nil, status.Error(codes.InvalidArgument, "invalid implementation kind")
+	}
+	// The filter narrows the catalogue before Total and the page window, so the
+	// reported total and any page beyond it describe only matching entries.
+	ids := implementationIDs(r.Kind)
 	response := &modeldevv1.ListImplementationsResponse{Total: uint64(len(ids))}
+	if len(ids) == 0 {
+		return response, nil
+	}
 	// Loaded facts enforce one global T/S/M configuration. An implementation
 	// with no installed tenant facts remains unavailable; it must not hide the
 	// other implementation or invent another timing configuration.
@@ -227,12 +235,12 @@ func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImple
 			return nil, queryError(err, scope.RequestID)
 		}
 		view := &modeldevv1.ImplementationView{ImplementationId: id, Version: definition.Version, ParameterContractVersion: definition.ParameterContractVersion, ParameterRules: rules, ExecutionTimeoutDefaultSeconds: timing.ExecutionTimeoutDefaultSeconds, ExecutionTimeoutMaxSeconds: timing.ExecutionTimeoutMaxSeconds, StepTimeoutSeconds: timing.StepTimeoutSeconds}
-		if definition.Kind == "GENERAL_TRAINING" {
+		view.Kind = implementationKind(definition)
+		switch view.Kind {
+		case trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING:
 			view.Name = "MLP training"
-			view.Kind = trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING
-		} else {
+		case trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING:
 			view.Name = "LoRA supervised finetuning"
-			view.Kind = trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING
 		}
 		for _, mode := range []string{"cpu", "gpu"} {
 			if id == "builtin.sft_lora" && q.models == nil {
@@ -256,4 +264,35 @@ func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImple
 		response.Implementations = append(response.Implementations, view)
 	}
 	return response, nil
+}
+
+// implementationIDs returns the published catalogue order, optionally narrowed
+// to one kind. The order is stable so page windows stay deterministic.
+func implementationIDs(kind *trainingv1.ExecutionKind) []string {
+	ids := []string{"builtin.mlp", "builtin.sft_lora"}
+	if kind == nil {
+		return ids
+	}
+	definitions := cpup01.Implementations()
+	filtered := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if definition, ok := definitions[id]; ok && implementationKind(definition) == *kind {
+			filtered = append(filtered, id)
+		}
+	}
+	return filtered
+}
+
+// implementationKind maps the compiled definition kind onto the shared public
+// enum so the catalogue filter and the returned field cannot disagree. An
+// unrecognized definition stays UNSPECIFIED and therefore matches no filter.
+func implementationKind(definition cpup01.ImplementationDefinition) trainingv1.ExecutionKind {
+	switch definition.Kind {
+	case "GENERAL_TRAINING":
+		return trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING
+	case "FINETUNING":
+		return trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING
+	default:
+		return trainingv1.ExecutionKind_EXECUTION_KIND_UNSPECIFIED
+	}
 }
