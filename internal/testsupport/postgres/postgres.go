@@ -118,15 +118,26 @@ func (fixture *schemaFixture) migrationTransaction(t *testing.T, ctx context.Con
 	return transaction
 }
 
-func applyMigrationFiles(t *testing.T, ctx context.Context, transaction pgx.Tx, migrations []string) {
+// applyMigrationFiles mirrors the documented production procedure, which runs
+// each file as its own transaction. Sharing one transaction across the set is
+// not equivalent: a file that carries its own BEGIN/COMMIT (0019 does) commits
+// the surrounding transaction, and every later file would then run against a
+// closed one.
+func (fixture *schemaFixture) applyMigrationFiles(t *testing.T, ctx context.Context, migrations []string) {
 	t.Helper()
 	for _, migrationPath := range migrations {
 		migration, err := os.ReadFile(migrationPath)
 		if err != nil {
 			t.Fatalf("CPU04_DB_PREFLIGHT: cannot read migration %s; behavior NOT_RUN", filepath.Base(migrationPath))
 		}
+		transaction := fixture.migrationTransaction(t, ctx)
 		if _, err := transaction.Exec(ctx, string(migration)); err != nil {
 			t.Fatalf("CPU04_DB_PREFLIGHT: migration %s failed; behavior NOT_RUN", filepath.Base(migrationPath))
+		}
+		// A file with its own COMMIT has already closed this transaction, and
+		// pgx reports a redundant COMMIT as a warning rather than an error.
+		if err := transaction.Commit(ctx); err != nil {
+			t.Fatalf("CPU04_DB_PREFLIGHT: migration %s did not commit; behavior NOT_RUN", filepath.Base(migrationPath))
 		}
 	}
 }
@@ -135,9 +146,9 @@ func (fixture *schemaFixture) install(t *testing.T, migrations []string, ownerRe
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+	fixture.applyMigrationFiles(t, ctx, migrations)
 	transaction := fixture.migrationTransaction(t, ctx)
 	defer rollbackMigration(transaction)
-	applyMigrationFiles(t, ctx, transaction, migrations)
 	schemaSQL, roleSQL := fixture.schemaSQL, fixture.roleSQL
 	if _, err := transaction.Exec(ctx, "GRANT USAGE ON SCHEMA "+schemaSQL+" TO "+roleSQL); err != nil {
 		t.Fatal("CPU04_DB_PREFLIGHT: runtime schema grant failed; behavior NOT_RUN")
