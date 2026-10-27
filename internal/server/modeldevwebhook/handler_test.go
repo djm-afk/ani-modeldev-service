@@ -30,6 +30,7 @@ import (
 )
 
 const namespaceUID = "8f79e7cc-769b-4b2d-87d3-a69c53c946f3"
+const namespaceTenant = "9a1f3c62-4b7d-4e05-8c31-2d6f5b0e7a48"
 const workflowUID = "2d9c812d-c6ec-4fa4-8e6b-e14b5a0a0727"
 const runID = "5dc1e8a2-b890-4f41-bba0-c3f9b1370177"
 const requestUID = "549b5d38-739c-4bb7-8eb6-e262b945b1ed"
@@ -92,7 +93,7 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 	}
 	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles,
 		Bindings: []modeldevwebhook.NamespaceBinding{{Namespace: "test-tenant", NamespaceUID: namespaceUID, OwnerLabel: modeldevwebhook.LabelBinding{Key: "ani.io/managed-by", Value: "modeldev-test"}, ArgoCreator: "system:serviceaccount:kubeflow:argo", StepServiceAccount: "modeldev-step", Profiles: []string{"cpu-v1", "sft-v1"}}}}
-	reader := &identities{namespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-tenant", UID: types.UID(namespaceUID), Labels: map[string]string{"ani.io/managed-by": "modeldev-test"}}},
+	reader := &identities{namespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-tenant", UID: types.UID(namespaceUID), Labels: map[string]string{"ani.io/managed-by": "modeldev-test", modeldevwebhook.NamespaceTenantLabel: namespaceTenant}}},
 		workflow: &unstructured.Unstructured{Object: map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "metadata": map[string]any{"name": "main-flow", "namespace": "test-tenant", "uid": workflowUID, "labels": map[string]any{"pipeline/runid": runID}}}}}
 	return config, reader
 }

@@ -177,6 +177,12 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 	if string(namespace.UID) != binding.NamespaceUID || namespace.Name != binding.Namespace || namespace.DeletionTimestamp != nil || namespace.Labels[binding.OwnerLabel.Key] != binding.OwnerLabel.Value {
 		return denied(request, "namespace_identity")
 	}
+	// The tenant label becomes part of the observability scope, so a missing or
+	// non-canonical value must fail closed instead of producing an unattributable
+	// metric series.
+	if !canonicalUUID(namespace.Labels[NamespaceTenantLabel]) {
+		return denied(request, "namespace_identity")
+	}
 	started = time.Now()
 	workflow, err := handler.reader.Workflow(identityCtx, binding.Namespace, owner.Name)
 	if err != nil || workflow == nil {
@@ -308,6 +314,12 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 		seenFinalizers[finalizer] = true
 	}
 	builder := patchBuilder{object: raw}
+	// Metric labels use already-verified sources: the Workflow run ID for the
+	// instance, and the tenant label of the namespace whose UID and owner label
+	// were checked above. Backend driver Pods return earlier and stay unlabelled.
+	builder.set(labels["pipeline/runid"], "metadata", "labels", InstanceLabel)
+	builder.set(namespace.Labels[NamespaceTenantLabel], "metadata", "labels", TenantLabel)
+	builder.set(WorkloadKindTrainer, "metadata", "labels", WorkloadKindLabel)
 	builder.set(profile.FSGroup, "spec", "securityContext", "fsGroup")
 	builder.set("OnRootMismatch", "spec", "securityContext", "fsGroupChangePolicy")
 	builder.set("RuntimeDefault", "spec", "securityContext", "seccompProfile", "type")
