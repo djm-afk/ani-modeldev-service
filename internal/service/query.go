@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sort"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
@@ -92,6 +94,22 @@ func queryScope(ctx context.Context, method string) (GovernanceDelivery, error) 
 func queryID(value string) bool {
 	id, err := uuid.Parse(value)
 	return err == nil && id != uuid.Nil && id.String() == value
+}
+
+// validExecutionNameFilter mirrors the admitted name shape: a non-blank,
+// non-control substring of at most 80 runes. Longer or control-bearing input
+// cannot match a stored name, so rejecting it keeps an impossible query from
+// looking like an empty tenant.
+func validExecutionNameFilter(value string) bool {
+	if !utf8.ValidString(value) || strings.TrimSpace(value) == "" || utf8.RuneCountInString(value) > 80 {
+		return false
+	}
+	for _, r := range value {
+		if unicode.IsControl(r) {
+			return false
+		}
+	}
+	return true
 }
 
 func queryError(err error, requestID string) error {
@@ -540,6 +558,14 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 			return nil, status.Error(codes.InvalidArgument, "invalid close filter")
 		}
 		filter.Close = biz.CloseState(strings.TrimPrefix(name, "CLOSE_STATE_"))
+	}
+	if request.Name != nil {
+		if !validExecutionNameFilter(*request.Name) {
+			return nil, status.Error(codes.InvalidArgument, "invalid name filter")
+		}
+		// The name is matched case-insensitively as a substring, so it is
+		// folded once here rather than per scanned row.
+		filter.Name = strings.ToLower(*request.Name)
 	}
 	if query == nil || query.repository == nil {
 		return nil, queryError(biz.ErrPersistence, scope.RequestID)

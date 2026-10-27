@@ -464,6 +464,9 @@ message ListExecutionsRequest {
   optional ComputeState compute_state = 2;
   optional DeliveryState delivery_state = 3;
   optional CloseState close_state = 4;
+  // Case-insensitive substring of the admitted execution name. Filtering
+  // happens before the page window, so total reports the matching count.
+  optional string name = 5;
 }
 
 message ListExecutionsResponse {

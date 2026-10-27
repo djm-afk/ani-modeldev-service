@@ -3330,6 +3330,9 @@ type ListExecutionsRequest struct {
 	ComputeState  *ComputeState          `protobuf:"varint,2,opt,name=compute_state,json=computeState,proto3,enum=ani.modeldev.v1.ComputeState,oneof" json:"compute_state,omitempty"`
 	DeliveryState *DeliveryState         `protobuf:"varint,3,opt,name=delivery_state,json=deliveryState,proto3,enum=ani.modeldev.v1.DeliveryState,oneof" json:"delivery_state,omitempty"`
 	CloseState    *CloseState            `protobuf:"varint,4,opt,name=close_state,json=closeState,proto3,enum=ani.modeldev.v1.CloseState,oneof" json:"close_state,omitempty"`
+	// Case-insensitive substring of the admitted execution name. Filtering
+	// happens before the page window, so total reports the matching count.
+	Name          *string `protobuf:"bytes,5,opt,name=name,proto3,oneof" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3390,6 +3393,13 @@ func (x *ListExecutionsRequest) GetCloseState() CloseState {
 		return *x.CloseState
 	}
 	return CloseState_CLOSE_STATE_UNSPECIFIED
+}
+
+func (x *ListExecutionsRequest) GetName() string {
+	if x != nil && x.Name != nil {
+		return *x.Name
+	}
+	return ""
 }
 
 type ListExecutionsResponse struct {
@@ -9714,16 +9724,18 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x13GetExecutionRequest\x12!\n" +
 	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\"T\n" +
 	"\x14GetExecutionResponse\x12<\n" +
-	"\texecution\x18\x01 \x01(\v2\x1e.ani.modeldev.v1.ExecutionViewR\texecution\"\xd6\x02\n" +
+	"\texecution\x18\x01 \x01(\v2\x1e.ani.modeldev.v1.ExecutionViewR\texecution\"\xf8\x02\n" +
 	"\x15ListExecutionsRequest\x120\n" +
 	"\x04page\x18\x01 \x01(\v2\x1c.ani.modeldev.v1.PageRequestR\x04page\x12G\n" +
 	"\rcompute_state\x18\x02 \x01(\x0e2\x1d.ani.modeldev.v1.ComputeStateH\x00R\fcomputeState\x88\x01\x01\x12J\n" +
 	"\x0edelivery_state\x18\x03 \x01(\x0e2\x1e.ani.modeldev.v1.DeliveryStateH\x01R\rdeliveryState\x88\x01\x01\x12A\n" +
 	"\vclose_state\x18\x04 \x01(\x0e2\x1b.ani.modeldev.v1.CloseStateH\x02R\n" +
-	"closeState\x88\x01\x01B\x10\n" +
+	"closeState\x88\x01\x01\x12\x17\n" +
+	"\x04name\x18\x05 \x01(\tH\x03R\x04name\x88\x01\x01B\x10\n" +
 	"\x0e_compute_stateB\x11\n" +
 	"\x0f_delivery_stateB\x0e\n" +
-	"\f_close_state\"\x81\x01\n" +
+	"\f_close_stateB\a\n" +
+	"\x05_name\"\x81\x01\n" +
 	"\x16ListExecutionsResponse\x12>\n" +
 	"\n" +
 	"executions\x18\x01 \x03(\v2\x1e.ani.modeldev.v1.ExecutionViewR\n" +

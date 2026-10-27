@@ -40,12 +40,18 @@ LIMIT 2;
 
 -- A bounded scan within one tenant and snapshot. State filters use the same
 -- validated aggregate projection as GetExecution before filling a page.
+-- The walk follows acceptance time, newest first, so the first page of a list
+-- is the most recent work. execution_id breaks ties; two rows admitted in the
+-- same microsecond still have one stable order. A NULL cursor starts the walk.
 -- name: ListTenantExecutionIDs :many
-SELECT execution_id
+SELECT execution_id, accepted_at
 FROM modeldev_executions
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
-  AND execution_id > sqlc.arg(after_execution_id)::uuid
-ORDER BY execution_id
+  AND (
+      sqlc.narg(after_accepted_at)::timestamptz IS NULL
+      OR (accepted_at, execution_id) < (sqlc.narg(after_accepted_at)::timestamptz, sqlc.narg(after_execution_id)::uuid)
+  )
+ORDER BY accepted_at DESC, execution_id DESC
 LIMIT 128;
 
 -- name: LockExecutionIdentity :one
