@@ -61,10 +61,6 @@ func gpuReleaseAdmission(t *testing.T) biz.Admission {
 	return admissionfixture.Bind(t, biz.Admission{TenantID: uuid.NewString(), Actor: "governance:user:gpu-release", OperationID: uuid.NewString(), ExecutionID: uuid.NewString(), Intent: cpup01.Intent{Name: "GPU release", Kind: "GENERAL_TRAINING", ImplementationID: s.Implementation.ImplementationID, ComputePresetID: s.ComputeOrigin.ComputePresetID, DatasetVersionID: s.Input.InputVersionID, MLP: &cpup01.MLPParameters{}}, Snapshot: s, AcceptedAt: now})
 }
 
-func releasedObservation(scope biz.GPUReleaseScope, now time.Time) biz.GPUReleaseObservation {
-	return biz.GPUReleaseObservation{Ref: scope.Ref, Finding: "ALLOCATION_RELEASED", Complete: true, EvidenceID: uuid.NewString(), EvidenceDigest: strings.Repeat("c", 64), ObservedAt: now, ReceivedAt: now, ActivePodUIDs: []string{}, UncertainNodeUIDs: []string{}, Issues: []string{}}
-}
-
 type releaseReporterFunc func(context.Context, biz.GPUResourceReleasedEvent) (biz.GPUReleaseACK, error)
 
 func (f releaseReporterFunc) ReportGPUResourceReleased(ctx context.Context, event biz.GPUResourceReleasedEvent) (biz.GPUReleaseACK, error) {
@@ -89,8 +85,8 @@ func TestGPUReleaseSealCommitsOriginalOutboxWithoutACC(t *testing.T) {
 	if err != nil || sealed.GPURelease == nil || sealed.GPURelease.Outbox == nil {
 		t.Fatal("owner close did not commit scope and outbox together", err)
 	}
-	if sealed.GPURelease.Observation != nil || sealed.GPURelease.Scope.CloseOperationID != closed.CloseOperationID || sealed.GPURelease.Outbox.Event.CreateOperationID != a.OperationID || sealed.GPURelease.Outbox.Event.ResourceID != a.ExecutionID || sealed.GPURelease.Outbox.Event.Reason != "RESOURCE_RELEASED" {
-		t.Fatal("owner event lost original identity or manufactured ACC evidence")
+	if sealed.GPURelease.Scope.CloseOperationID != closed.CloseOperationID || sealed.GPURelease.Outbox.Event.CreateOperationID != a.OperationID || sealed.GPURelease.Outbox.Event.ResourceID != a.ExecutionID || sealed.GPURelease.Outbox.Event.Reason != "RESOURCE_RELEASED" {
+		t.Fatal("owner event lost original identity or minted non-owner evidence")
 	}
 	durable, err := lifecycle.New(open()).GetRuntime(ctx, a.TenantID, a.ExecutionID)
 	if err != nil || !reflect.DeepEqual(durable.GPURelease, sealed.GPURelease) {
@@ -281,7 +277,7 @@ func TestGPUReleaseNoDispatchOutboxAndACKSurviveReconnect(t *testing.T) {
 	if err != nil || again.OwnerRevision != sealed.OwnerRevision || !reflect.DeepEqual(again.GPURelease, sealed.GPURelease) {
 		t.Fatal("seal retry changed original request", err)
 	}
-	if original.Outbox == nil || original.Observation != nil {
+	if original.Outbox == nil {
 		t.Fatal("owner close did not persist an event without ACC evidence")
 	}
 	binding := biz.PipelineDispatchBinding{TenantID: a.TenantID, Environment: a.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "gpu-release-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/gpu-release"}}
@@ -390,19 +386,32 @@ func TestGPUReleaseReadValidationRejectsForgedOriginalScopeAndEvidence(t *testin
 	if err := lifecycle.ValidGPUReleaseFacts(execution, base, now); err != nil {
 		t.Fatal("valid isolated scope", err)
 	}
-	for name, observation := range map[string]biz.GPUReleaseObservation{
-		"unknown":       {Ref: scope.Ref, Finding: "RELEASE_UNKNOWN", EvidenceID: uuid.NewString(), EvidenceDigest: strings.Repeat("a", 64), Issues: []string{"SOURCE_UNKNOWN"}},
-		"still-present": {Ref: scope.Ref, Finding: "ALLOCATION_STILL_PRESENT", EvidenceID: uuid.NewString(), EvidenceDigest: strings.Repeat("b", 64), ActivePodUIDs: []string{"original-pod-uid"}},
-	} {
-		t.Run(name, func(t *testing.T) {
-			changed := base
-			fact := *base.GPURelease
-			fact.Observation = &observation
-			changed.GPURelease = &fact
-			if lifecycle.ValidGPUReleaseFacts(execution, changed, now) != nil || !reflect.DeepEqual(*changed.GPURelease.Observation, observation) {
-				t.Fatal("legal independent ACC diagnostics denied or changed owner event")
-			}
-		})
+	// Facts persisted before the ACC client removal may still carry the retired
+	// diagnostic observation. It is ignored rather than reinterpreted as release
+	// authority, so the original owner event stays valid.
+	raw, err := json.Marshal(base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var legacy map[string]any
+	if err := json.Unmarshal(raw, &legacy); err != nil {
+		t.Fatal(err)
+	}
+	facts, ok := legacy["GPURelease"].(map[string]any)
+	if !ok {
+		t.Fatal("GPU release facts not addressable")
+	}
+	facts["observation"] = map[string]any{"finding": "RELEASE_UNKNOWN", "evidence_id": uuid.NewString(), "issues": []string{"SOURCE_UNKNOWN"}}
+	legacyRaw, err := json.Marshal(legacy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tolerant biz.ExecutionRuntime
+	if err := json.Unmarshal(legacyRaw, &tolerant); err != nil {
+		t.Fatal(err)
+	}
+	if lifecycle.ValidGPUReleaseFacts(execution, tolerant, now) != nil || tolerant.GPURelease.Outbox == nil {
+		t.Fatal("retired observation blocked or altered the committed owner event")
 	}
 	for name, mutate := range map[string]func(*biz.ExecutionRuntime){
 		"create-is-close": func(s *biz.ExecutionRuntime) {
@@ -413,11 +422,6 @@ func TestGPUReleaseReadValidationRejectsForgedOriginalScopeAndEvidence(t *testin
 		"renewed-seal": func(s *biz.ExecutionRuntime) { s.GPURelease.Scope.SealedAt = now.Add(time.Second) },
 		"invented-pod": func(s *biz.ExecutionRuntime) {
 			s.GPURelease.Scope.Pods = append(s.GPURelease.Scope.Pods, biz.GPUReleasePodRef{ClusterID: scope.ClusterID, Namespace: a.Snapshot.Environment.NamespaceName, Name: "made-up", UID: "anticipated", ContainerName: "node"})
-		},
-		"forged-positive": func(s *biz.ExecutionRuntime) {
-			v := releasedObservation(scope, now)
-			v.Issues = []string{"SOURCE_UNKNOWN"}
-			s.GPURelease.Observation = &v
 		},
 		"scope-only": func(s *biz.ExecutionRuntime) { s.GPURelease.Outbox = nil },
 	} {

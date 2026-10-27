@@ -14,6 +14,8 @@ import (
 
 // assembleGPUOwner extends the existing close worker and Trainer observer.
 // Absence leaves CPU execution independent of the Gov release connection.
+// Only the Governance release reporter is wired; no Accelerator connection is
+// required or attempted for owner refunds.
 func assembleGPUOwner(runtime *conf.ManagedRuntime, kube dynamic.Interface, repository *lifecycle.Repository) (*biz.GPUReleaseReconciler, *trainer.OwnerAssertionSigner, func(), error) {
 	config := runtime.GetGpuOwner()
 	if config == nil {

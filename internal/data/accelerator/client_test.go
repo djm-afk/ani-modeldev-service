@@ -9,14 +9,12 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
-	accpb "github.com/zhangzhe-ctrl/ani-accelerator-service/api/gen/go/accelerator/v1"
 	quotapb "github.com/zhangzhe-ctrl/ani-governance/api/quota/gen/go/quota/service/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/accelerator"
@@ -30,15 +28,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type releaseBoundary struct {
-	accpb.UnimplementedAcceleratorUsageServiceServer
-	call func(*accpb.ObserveReleaseRequest) (*accpb.ReleaseObservation, error)
-}
-
-func (s *releaseBoundary) ObserveRelease(_ context.Context, r *accpb.ObserveReleaseRequest) (*accpb.ReleaseObservation, error) {
-	return s.call(r)
-}
-
 type quotaBoundary struct {
 	quotapb.UnimplementedQuotaReleaseServiceServer
 	call func(*quotapb.ReportResourceReleasedRequest) (*quotapb.ReportResourceReleasedResponse, error)
@@ -48,8 +37,8 @@ func (s *quotaBoundary) ReportResourceReleased(_ context.Context, r *quotapb.Rep
 	return s.call(r)
 }
 
-// Only the external ACC/Gov servers are boundary fixtures. The typed client,
-// TLS authentication, finite request projection and response decoding are real.
+// Only the external Gov server is a boundary fixture. The typed client, TLS
+// authentication, finite request projection and response decoding are real.
 func ownerBoundary(t *testing.T, dns, method string, register func(*grpc.Server), mutate func(*x509.Certificate)) accelerator.Config {
 	t.Helper()
 	certs := commandtls.NewForServer(t, dns)
@@ -72,12 +61,7 @@ func ownerBoundary(t *testing.T, dns, method string, register func(*grpc.Server)
 				return nil, status.Error(codes.PermissionDenied, "forwarded identity metadata")
 			}
 		}
-		if method == accpb.AcceleratorUsageService_ObserveRelease_FullMethodName {
-			original, ok := request.(*accpb.ObserveReleaseRequest)
-			if !ok || original.Ref == nil || !reflect.DeepEqual(md.Get("x-ani-action"), []string{"ObserveRelease"}) || !reflect.DeepEqual(md.Get("x-ani-tenant-id"), []string{original.Ref.TenantId}) {
-				return nil, status.Error(codes.PermissionDenied, "original owner scope context missing")
-			}
-		} else if len(md.Get("x-ani-tenant-id")) != 0 || len(md.Get("x-ani-action")) != 0 {
+		if len(md.Get("x-ani-tenant-id")) != 0 || len(md.Get("x-ani-action")) != 0 {
 			return nil, status.Error(codes.PermissionDenied, "unexpected Gov release identity metadata")
 		}
 		return handler(ctx, request)
@@ -103,58 +87,6 @@ func ownerBoundary(t *testing.T, dns, method string, register func(*grpc.Server)
 		t.Fatal("private synthetic owner TLS material")
 	}
 	return accelerator.Config{Endpoint: listener.Addr().String(), CAFile: files.CAFile, CertificateFile: pair, PrivateKeyFile: key, ServerName: dns, Timeout: 2 * time.Second}
-}
-
-func TestReleaseClientUsesExactOwnerTLSAndStableOriginalScope(t *testing.T) {
-	var mu sync.Mutex
-	var requests []*accpb.ObserveReleaseRequest
-	badRef := false
-	config := ownerBoundary(t, accelerator.AcceleratorDNSName, accpb.AcceleratorUsageService_ObserveRelease_FullMethodName, func(server *grpc.Server) {
-		accpb.RegisterAcceleratorUsageServiceServer(server, &releaseBoundary{call: func(request *accpb.ObserveReleaseRequest) (*accpb.ReleaseObservation, error) {
-			mu.Lock()
-			defer mu.Unlock()
-			requests = append(requests, proto.Clone(request).(*accpb.ObserveReleaseRequest))
-			ref := proto.Clone(request.Ref).(*accpb.GpuUsageRef)
-			if badRef {
-				ref.TenantId = uuid.NewString()
-			}
-			return &accpb.ReleaseObservation{EvidenceId: uuid.NewString(), Ref: ref, Finding: accpb.ReleaseFinding_RELEASE_UNKNOWN, EvidenceDigest: strings.Repeat("a", 64), Observation: &accpb.Observation{Issues: []string{"SOURCE_UNKNOWN"}}}, nil
-		}})
-	}, nil)
-	client, closeClient, err := accelerator.NewReleaseClient(config)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer closeClient()
-	scope := biz.GPUReleaseScope{Ref: biz.GPUReleaseRef{TenantID: uuid.NewString(), OwnerService: biz.GPUOwnerService, ResourceID: uuid.NewString(), CreateOperationID: uuid.NewString()}, CloseOperationID: uuid.NewString(), ClusterID: uuid.NewString(), SealedAt: time.Now().UTC().Add(-time.Second), Pods: []biz.GPUReleasePodRef{}}
-	scope.Pods = []biz.GPUReleasePodRef{{ClusterID: scope.ClusterID, Namespace: "gpu-owner", Name: "original-trainer", UID: "actual-api-pod-uid", ContainerName: "node"}}
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("authorization", "Bearer forged", "x-ani-tenant-id", uuid.NewString(), "x-ani-actor", "forged"))
-	for i := 0; i < 2; i++ {
-		result, err := client.ObserveGPURelease(ctx, scope)
-		if err != nil || result.Ref != scope.Ref || result.Finding != "RELEASE_UNKNOWN" || !result.ObservedAt.IsZero() || result.Complete {
-			t.Fatal("unknown source facts or exact mTLS caller lost", err)
-		}
-	}
-	mu.Lock()
-	if len(requests) != 2 || requests[0].DeleteOperationId != scope.CloseOperationID || requests[1].DeleteOperationId != scope.CloseOperationID || requests[0].SealedAt != requests[1].SealedAt || requests[0].Pods[0].Uid != scope.Pods[0].UID || requests[0].Pods[0].ContainerName != "node" {
-		t.Fatal("release retry changed original scope")
-	}
-	before := len(requests)
-	mu.Unlock()
-	bad := scope
-	bad.CloseOperationID = scope.Ref.CreateOperationID
-	if _, err := client.ObserveGPURelease(ctx, bad); err == nil {
-		t.Fatal("create UUID accepted as close")
-	}
-	mu.Lock()
-	if len(requests) != before {
-		t.Fatal("invalid scope reached receiver")
-	}
-	badRef = true
-	mu.Unlock()
-	if _, err := client.ObserveGPURelease(ctx, scope); err == nil {
-		t.Fatal("foreign response ref accepted")
-	}
 }
 
 func TestQuotaClientSendsOnlyFourStableFieldsAndValidatesACK(t *testing.T) {
@@ -198,38 +130,40 @@ func TestQuotaClientSendsOnlyFourStableFieldsAndValidatesACK(t *testing.T) {
 }
 
 func TestOwnerClientRejectsUnregisteredCertificateAndServerAliases(t *testing.T) {
+	govMethod := quotapb.QuotaReleaseService_ReportResourceReleased_FullMethodName
+	govRegister := func(*grpc.Server) {}
 	for name, mutate := range map[string]func(*x509.Certificate){"foreign": func(c *x509.Certificate) { c.DNSNames = []string{"ani-resource-service"} }, "multiple": func(c *x509.Certificate) { c.DNSNames = append(c.DNSNames, "alias") }, "IP": func(c *x509.Certificate) { c.IPAddresses = []net.IP{net.ParseIP("127.0.0.1")} }} {
 		t.Run(name, func(t *testing.T) {
-			config := ownerBoundary(t, accelerator.AcceleratorDNSName, accpb.AcceleratorUsageService_ObserveRelease_FullMethodName, func(*grpc.Server) {}, mutate)
-			if _, closeClient, err := accelerator.NewReleaseClient(config); err == nil {
+			config := ownerBoundary(t, accelerator.GovernanceDNSName, govMethod, govRegister, mutate)
+			if _, closeClient, err := accelerator.NewQuotaClient(config); err == nil {
 				closeClient()
 				t.Fatal("unregistered owner certificate accepted")
 			}
 		})
 	}
 	var called atomic.Bool
-	config := ownerBoundary(t, accelerator.AcceleratorDNSName, accpb.AcceleratorUsageService_ObserveRelease_FullMethodName, func(server *grpc.Server) {
-		accpb.RegisterAcceleratorUsageServiceServer(server, &releaseBoundary{call: func(r *accpb.ObserveReleaseRequest) (*accpb.ReleaseObservation, error) {
+	config := ownerBoundary(t, accelerator.GovernanceDNSName, govMethod, func(server *grpc.Server) {
+		quotapb.RegisterQuotaReleaseServiceServer(server, &quotaBoundary{call: func(r *quotapb.ReportResourceReleasedRequest) (*quotapb.ReportResourceReleasedResponse, error) {
 			called.Store(true)
-			return &accpb.ReleaseObservation{EvidenceId: uuid.NewString(), Ref: r.Ref, Finding: accpb.ReleaseFinding_RELEASE_UNKNOWN, EvidenceDigest: strings.Repeat("a", 64), Observation: &accpb.Observation{}}, nil
+			return &quotapb.ReportResourceReleasedResponse{ReleaseEventId: r.ReleaseEventId, CreateOperationId: r.CreateOperationId, ResourceId: r.ResourceId, Status: quotapb.ResourceReleaseStatus_APPLIED}, nil
 		}})
 	}, nil)
 	for _, name := range []string{"", "*.cluster.local", accelerator.ClientDNSName} {
 		invalid := config
 		invalid.ServerName = name
-		if _, closeClient, err := accelerator.NewReleaseClient(invalid); err == nil {
+		if _, closeClient, err := accelerator.NewQuotaClient(invalid); err == nil {
 			closeClient()
 			t.Fatal("missing or wildcard server identity accepted")
 		}
 	}
 	config.ServerName = "accelerator.alias"
-	client, closeClient, err := accelerator.NewReleaseClient(config)
+	client, closeClient, err := accelerator.NewQuotaClient(config)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer closeClient()
-	scope := biz.GPUReleaseScope{Ref: biz.GPUReleaseRef{TenantID: uuid.NewString(), OwnerService: biz.GPUOwnerService, ResourceID: uuid.NewString(), CreateOperationID: uuid.NewString()}, CloseOperationID: uuid.NewString(), ClusterID: uuid.NewString(), SealedAt: time.Now().UTC()}
-	if _, err := client.ObserveGPURelease(context.Background(), scope); err == nil || called.Load() {
+	event := biz.GPUResourceReleasedEvent{ReleaseEventID: uuid.NewString(), CreateOperationID: uuid.NewString(), ResourceID: uuid.NewString(), Reason: "RESOURCE_RELEASED"}
+	if _, err := client.ReportGPUResourceReleased(context.Background(), event); err == nil || called.Load() {
 		t.Fatal("configured wrong DNS name fell back to another server SAN")
 	}
 }
