@@ -51,14 +51,15 @@ func executionSteps(execution biz.Execution, runtime biz.ExecutionRuntime) []*mo
 		roles = append(roles, stepRoleRegister)
 	}
 	roles = append(roles, stepRoleClose)
+	registrationRequired := execution.Snapshot.Finetuning.RequiresModelRegistration()
 	steps := make([]*modeldevv1.StepProgress, 0, len(roles))
 	for _, role := range roles {
-		steps = append(steps, stepProgress(role, runtime))
+		steps = append(steps, stepProgress(role, runtime, registrationRequired))
 	}
 	return steps
 }
 
-func stepProgress(role string, runtime biz.ExecutionRuntime) *modeldevv1.StepProgress {
+func stepProgress(role string, runtime biz.ExecutionRuntime, registrationRequired bool) *modeldevv1.StepProgress {
 	step := &modeldevv1.StepProgress{Role: role, State: stepStatePending}
 	if exportOrVerify(role) {
 		finishFinetuningStep(step, role, runtime)
@@ -68,7 +69,7 @@ func stepProgress(role string, runtime biz.ExecutionRuntime) *modeldevv1.StepPro
 		finishCloseStep(step, runtime)
 		return step
 	}
-	finishManagedStep(step, role, runtime)
+	finishManagedStep(step, role, runtime, registrationRequired)
 	return step
 }
 
@@ -120,11 +121,11 @@ func finishCloseStep(step *modeldevv1.StepProgress, runtime biz.ExecutionRuntime
 
 // finishManagedStep covers prepare, train-wait, collect, publish and register.
 // Their finish facts come from whichever successor fact exists first.
-func finishManagedStep(step *modeldevv1.StepProgress, role string, runtime biz.ExecutionRuntime) {
+func finishManagedStep(step *modeldevv1.StepProgress, role string, runtime biz.ExecutionRuntime, registrationRequired bool) {
 	startAt, deadlineAt := managedStepWindow(role, runtime)
 	step.DeadlineAt = timestampOrNil(deadlineAt)
 	step.StartedAt = timestampOrNil(startAt)
-	step.State = managedStepState(role, runtime)
+	step.State = managedStepState(role, runtime, registrationRequired)
 	if step.State == stepStateSucceeded {
 		step.FinishedAt = timestampOrNil(successorAnchor(role, runtime))
 	}
@@ -143,7 +144,7 @@ func managedStepWindow(role string, runtime biz.ExecutionRuntime) (time.Time, ti
 	return time.Time{}, time.Time{}
 }
 
-func managedStepState(role string, runtime biz.ExecutionRuntime) string {
+func managedStepState(role string, runtime biz.ExecutionRuntime, registrationRequired bool) string {
 	switch role {
 	case stepRolePrepare:
 		if hasPostPrepareFact(runtime) {
@@ -193,7 +194,14 @@ func managedStepState(role string, runtime biz.ExecutionRuntime) string {
 				return stepStateFailed
 			}
 		}
+		// A snapshot without a target only publishes artifacts, so the pod
+		// confirms the bundle and records no registration fact on purpose.
+		// Reading that silence as an interrupted registration would report a
+		// STOPPED step on a delivery that never asked to register.
 		if started(runtime, stepRoleRegister) {
+			if !registrationRequired && runtime.ClosedAt != nil && runtime.CloseReason == "NATURAL_TERMINAL" {
+				return stepStateSucceeded
+			}
 			return activeStepState(runtime)
 		}
 	}

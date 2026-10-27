@@ -259,6 +259,44 @@ func TestExecutionStepsRegistrationStates(t *testing.T) {
 	}
 }
 
+func TestExecutionStepsArtifactsOnlyRegistrationSucceeds(t *testing.T) {
+	// A finetuning snapshot without a target publishes artifacts and never
+	// records a registration fact. The pod still runs and is admitted, so the
+	// timeline must not read that deliberate silence as an interrupted step.
+	closedAt := stepTestStart.Add(4 * time.Hour)
+	runtime := biz.ExecutionRuntime{
+		StepTimings: []biz.ManagedStepTiming{managedTiming(stepRoleRegister, 3*time.Hour)},
+		CloseReason: "NATURAL_TERMINAL",
+		ClosedAt:    &closedAt,
+	}
+	steps := executionSteps(finetuningExecution("FINETUNING"), runtime)
+	register := stepByRole(t, steps, stepRoleRegister)
+	if register.State != stepStateSucceeded {
+		t.Fatalf("register=%v, want SUCCEEDED", register)
+	}
+	if register.FinishedAt == nil || !register.FinishedAt.AsTime().Equal(closedAt) {
+		t.Fatalf("register=%v, want finish at closure", register)
+	}
+}
+
+func TestExecutionStepsRequiredRegistrationStaysStopped(t *testing.T) {
+	// With a target the delivery does ask to register, so an admitted register
+	// step on a naturally closed execution is still an interrupted step.
+	target := "model-id"
+	closedAt := stepTestStart.Add(4 * time.Hour)
+	execution := finetuningExecution("FINETUNING")
+	execution.Snapshot.Finetuning = &cpup01.FinetuningSnapshot{TargetModelID: &target}
+	runtime := biz.ExecutionRuntime{
+		StepTimings: []biz.ManagedStepTiming{managedTiming(stepRoleRegister, 3*time.Hour)},
+		CloseReason: "NATURAL_TERMINAL",
+		ClosedAt:    &closedAt,
+	}
+	steps := executionSteps(execution, runtime)
+	if register := stepByRole(t, steps, stepRoleRegister); register.State != stepStateStopped {
+		t.Fatalf("register=%v, want STOPPED", register)
+	}
+}
+
 func TestCurrentStepFromFactsCollectFix(t *testing.T) {
 	collect := biz.ExecutionRuntime{
 		Training:    &biz.TrainingPlan{},
