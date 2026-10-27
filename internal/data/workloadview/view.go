@@ -43,6 +43,10 @@ func Pod(pod *unstructured.Unstructured, layer biz.PodLayer, availability biz.Po
 			view.ExitCode = container.ExitCode
 		}
 	}
+	// The admission webhook writes this label from sources it already verified,
+	// so it names the metric instance directly. A Pod created before that label
+	// existed leaves it empty, which a consumer must not fill in itself.
+	view.MetricInstanceID = pod.GetLabels()[biz.MetricInstanceLabel]
 	return view
 }
 

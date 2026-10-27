@@ -4217,8 +4217,13 @@ type PodView struct {
 	// Worker node container exit code, when it terminated.
 	ExitCode            *int32           `protobuf:"varint,21,opt,name=exit_code,json=exitCode,proto3,oneof" json:"exit_code,omitempty"`
 	EphemeralContainers []*ContainerView `protobuf:"bytes,22,rep,name=ephemeral_containers,json=ephemeralContainers,proto3" json:"ephemeral_containers,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// the metric instance this Pod reports under, taken from the verified
+	// ani.io/instance-id label: the execution ID for a Trainer worker, the KFP
+	// run ID for a pipeline step. Empty when the Pod predates metric labelling,
+	// so a consumer must treat it as unavailable rather than substitute one.
+	MetricInstanceId string `protobuf:"bytes,23,opt,name=metric_instance_id,json=metricInstanceId,proto3" json:"metric_instance_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *PodView) Reset() {
@@ -4403,6 +4408,13 @@ func (x *PodView) GetEphemeralContainers() []*ContainerView {
 		return x.EphemeralContainers
 	}
 	return nil
+}
+
+func (x *PodView) GetMetricInstanceId() string {
+	if x != nil {
+		return x.MetricInstanceId
+	}
+	return ""
 }
 
 type EventView struct {
@@ -9704,7 +9716,7 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"last_state\x18\n" +
 	" \x01(\v2\x1e.ani.modeldev.v1.ContainerViewR\tlastStateB\f\n" +
 	"\n" +
-	"_exit_code\"\xae\a\n" +
+	"_exit_code\"\xdc\a\n" +
 	"\aPodView\x12\x19\n" +
 	"\bpod_name\x18\x01 \x01(\tR\apodName\x12\x17\n" +
 	"\apod_uid\x18\x02 \x01(\tR\x06podUid\x12\x15\n" +
@@ -9733,7 +9745,8 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\vapi_present\x18\x14 \x01(\bR\n" +
 	"apiPresent\x12 \n" +
 	"\texit_code\x18\x15 \x01(\x05H\x00R\bexitCode\x88\x01\x01\x12Q\n" +
-	"\x14ephemeral_containers\x18\x16 \x03(\v2\x1e.ani.modeldev.v1.ContainerViewR\x13ephemeralContainersB\f\n" +
+	"\x14ephemeral_containers\x18\x16 \x03(\v2\x1e.ani.modeldev.v1.ContainerViewR\x13ephemeralContainers\x12,\n" +
+	"\x12metric_instance_id\x18\x17 \x01(\tR\x10metricInstanceIdB\f\n" +
 	"\n" +
 	"_exit_code\"\xc2\x03\n" +
 	"\tEventView\x12\x12\n" +

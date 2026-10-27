@@ -22,6 +22,11 @@ const (
 	PodLayerPipeline PodLayer = "PIPELINE"
 )
 
+// MetricInstanceLabel is written by the admission webhook from sources it has
+// already verified. The observability training records use the same value, so
+// reading it here keeps this service from deriving an identity of its own.
+const MetricInstanceLabel = "ani.io/instance-id"
+
 func ParsePodLayer(value string) (PodLayer, bool) {
 	switch PodLayer(value) {
 	case "", PodLayerAll:
@@ -102,6 +107,12 @@ type ExecutionPod struct {
 	EphemeralContainers []PodContainer
 	APIPresent          bool
 	ExitCode            *int32
+	// MetricInstanceID is the value of the ani.io/instance-id label the
+	// admission webhook writes: the execution ID for a Trainer worker and the
+	// KFP run ID for a pipeline step. It names the same instance the
+	// observability training records carry, so callers can query one Pod's
+	// curve without re-deriving it. Empty on Pods created before labelling.
+	MetricInstanceID string
 }
 
 type ExecutionEvent struct {

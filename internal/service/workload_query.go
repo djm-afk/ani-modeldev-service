@@ -326,7 +326,7 @@ func podViewMessage(pod biz.ExecutionPod) *modeldevv1.PodView {
 		NodeName: pod.NodeName, Restarts: pod.Restarts, Layer: podLayerValue(pod.Layer),
 		Availability: availabilityValue(pod.Availability), StepName: pod.StepName, Attempt: pod.Attempt,
 		JobIndex: pod.JobIndex, LogId: pod.LogID, LogAvailable: pod.LogAvailable, ApiPresent: pod.APIPresent,
-		ExitCode: pod.ExitCode,
+		ExitCode: pod.ExitCode, MetricInstanceId: pod.MetricInstanceID,
 	}
 	view.CreatedAt, view.StartTime, view.DeletionTimestamp = optionalTimestamp(pod.CreatedAt), optionalTimestamp(pod.StartTime), optionalTimestamp(pod.DeletedAt)
 	for _, container := range pod.Containers {

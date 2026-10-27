@@ -625,6 +625,11 @@ message PodView {
   // Worker node container exit code, when it terminated.
   optional int32 exit_code = 21;
   repeated ContainerView ephemeral_containers = 22;
+  // the metric instance this Pod reports under, taken from the verified
+  // ani.io/instance-id label: the execution ID for a Trainer worker, the KFP
+  // run ID for a pipeline step. Empty when the Pod predates metric labelling,
+  // so a consumer must treat it as unavailable rather than substitute one.
+  string metric_instance_id = 23;
 }
 
 message EventView {
