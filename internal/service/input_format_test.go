@@ -27,7 +27,7 @@ func TestInputQueryFilterAcceptsOnlyVerifiedFormats(t *testing.T) {
 		{name: "unknown format rejected", in: &modeldevv1.ListInputVersionsRequest{Format: text("PARQUET")}, wantErr: true},
 		{name: "empty value rejected", in: &modeldevv1.ListInputVersionsRequest{Format: text("")}, wantErr: true},
 		{name: "format and state combine",
-			in:      &modeldevv1.ListInputVersionsRequest{Format: text("JSON"), State: state(modeldevv1.InputState_INPUT_STATE_READY)},
+			in:         &modeldevv1.ListInputVersionsRequest{Format: text("JSON"), State: state(modeldevv1.InputState_INPUT_STATE_READY)},
 			wantFormat: "JSON", wantState: biz.InputStateReady},
 		{name: "ready state", in: &modeldevv1.ListInputVersionsRequest{State: state(modeldevv1.InputState_INPUT_STATE_READY)}, wantState: biz.InputStateReady},
 		{name: "validating state", in: &modeldevv1.ListInputVersionsRequest{State: state(modeldevv1.InputState_INPUT_STATE_VALIDATING)}, wantState: biz.InputStateValidating},
