@@ -7,10 +7,20 @@ import (
 	"time"
 )
 
+// InputQueryFilter narrows an input-version page. Both fields are applied where
+// the page is counted, so Total always describes the same set the window shows.
+type InputQueryFilter struct {
+	State InputState
+	// Format is the verified format (CSV or JSON); empty means no restriction.
+	// Compatibility is decided by the format alone: CSV feeds general training,
+	// JSON feeds finetuning.
+	Format string
+}
+
 type ManagedInputQuery interface {
 	AdmissionInputReader
-	List(context.Context, string, InputState, int, int) ([]InputVersion, error)
-	Count(context.Context, string, InputState) (uint64, error)
+	List(context.Context, string, InputQueryFilter, int, int) ([]InputVersion, error)
+	Count(context.Context, string, InputQueryFilter) (uint64, error)
 }
 
 // ManagedMaterials projects the installed implementation and tenant facts.
@@ -103,15 +113,15 @@ func (m *ManagedMaterials) Input(ctx context.Context, tenant, id string) (InputV
 	}
 	return m.inputs.Get(ctx, tenant, id)
 }
-func (m *ManagedMaterials) Inputs(ctx context.Context, tenant string, state InputState, offset, limit int) ([]InputVersion, error) {
+func (m *ManagedMaterials) Inputs(ctx context.Context, tenant string, filter InputQueryFilter, offset, limit int) ([]InputVersion, error) {
 	if m == nil || m.inputs == nil {
 		return nil, ErrPersistence
 	}
-	return m.inputs.List(ctx, tenant, state, offset, limit)
+	return m.inputs.List(ctx, tenant, filter, offset, limit)
 }
-func (m *ManagedMaterials) InputsCount(ctx context.Context, tenant string, state InputState) (uint64, error) {
+func (m *ManagedMaterials) InputsCount(ctx context.Context, tenant string, filter InputQueryFilter) (uint64, error) {
 	if m == nil || m.inputs == nil {
 		return 0, ErrPersistence
 	}
-	return m.inputs.Count(ctx, tenant, state)
+	return m.inputs.Count(ctx, tenant, filter)
 }

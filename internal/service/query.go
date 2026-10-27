@@ -363,6 +363,12 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 		}
 		view.ManagedSettings = contractpb.EncodeManagedSettings(fine.ManagedSettings)
 		view.ResolvedConfigurationSha256 = fine.ResolvedConfigurationSHA256
+		// Publish only the base model identity: object key, storage scope and
+		// the file list stay owner-internal.
+		view.BaseModel = &modeldevv1.BaseModelIdentity{
+			ModelId: fine.BaseModel.ModelID, VersionId: fine.BaseModel.VersionID,
+			Family: fine.BaseModel.Family, Format: fine.BaseModel.Format,
+		}
 	}
 	if value.Close != nil {
 		view.StopRequested = value.Close.Reason == biz.CloseReasonUserStop

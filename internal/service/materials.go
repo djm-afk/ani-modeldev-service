@@ -148,25 +148,16 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 	if err != nil {
 		return nil, err
 	}
-	var state biz.InputState
-	if r.State != nil {
-		switch *r.State {
-		case modeldevv1.InputState_INPUT_STATE_READY:
-			state = biz.InputStateReady
-		case modeldevv1.InputState_INPUT_STATE_VALIDATING:
-			state = biz.InputStateValidating
-		case modeldevv1.InputState_INPUT_STATE_FAILED:
-			state = biz.InputStateRejected
-		default:
-			return nil, status.Error(codes.InvalidArgument, "invalid input state")
-		}
+	filter, err := inputQueryFilter(r)
+	if err != nil {
+		return nil, err
 	}
 	offset, limit := modelDevPageWindow(page, pageSize)
-	values, err := q.materials.Inputs(ctx, scope.TenantID, state, offset, limit)
+	values, err := q.materials.Inputs(ctx, scope.TenantID, filter, offset, limit)
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
-	total, err := q.materials.InputsCount(ctx, scope.TenantID, state)
+	total, err := q.materials.InputsCount(ctx, scope.TenantID, filter)
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
@@ -175,6 +166,35 @@ func (q *Query) ListInputVersions(ctx context.Context, r *modeldevv1.ListInputVe
 		response.InputVersions = append(response.InputVersions, inputVersionView(value))
 	}
 	return response, nil
+}
+
+// inputQueryFilter translates the request selectors into the filter the page is
+// counted with. Only the formats the owner actually verifies are accepted, so an
+// unrecognized value never turns into an empty page that looks like an empty
+// tenant.
+func inputQueryFilter(r *modeldevv1.ListInputVersionsRequest) (biz.InputQueryFilter, error) {
+	filter := biz.InputQueryFilter{}
+	if r.State != nil {
+		switch *r.State {
+		case modeldevv1.InputState_INPUT_STATE_READY:
+			filter.State = biz.InputStateReady
+		case modeldevv1.InputState_INPUT_STATE_VALIDATING:
+			filter.State = biz.InputStateValidating
+		case modeldevv1.InputState_INPUT_STATE_FAILED:
+			filter.State = biz.InputStateRejected
+		default:
+			return biz.InputQueryFilter{}, status.Error(codes.InvalidArgument, "invalid input state")
+		}
+	}
+	if r.Format != nil {
+		switch *r.Format {
+		case "CSV", "JSON":
+			filter.Format = *r.Format
+		default:
+			return biz.InputQueryFilter{}, status.Error(codes.InvalidArgument, "invalid input format")
+		}
+	}
+	return filter, nil
 }
 func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImplementationsRequest) (*modeldevv1.ListImplementationsResponse, error) {
 	scope, err := queryScope(ctx, modeldevv1.ModelDevQueryService_ListImplementations_FullMethodName)

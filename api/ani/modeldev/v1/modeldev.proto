@@ -336,6 +336,11 @@ message GetInputVersionResponse {
 message ListInputVersionsRequest {
   PageRequest page = 1;
   optional InputState state = 2;
+  // Restricts the page to one verified input format before Total is counted.
+  // Compatibility is decided by the format alone: CSV feeds general training,
+  // JSON feeds finetuning. An unrecognized value is rejected instead of
+  // matching nothing.
+  optional string format = 3;
 }
 
 message ListInputVersionsResponse {
@@ -380,6 +385,19 @@ message ExecutionView {
   // Complete ordered step sequence for timeline rendering. The set depends on
   // kind; close is always last.
   repeated StepProgress steps = 31;
+  // Base model the finetuning started from, frozen at acceptance. Only the
+  // identity facts are published: the object key, storage scope and file list
+  // stay owner-internal. Absent for general training.
+  BaseModelIdentity base_model = 32;
+}
+
+// BaseModelIdentity is the publishable half of BaseModelRef. It names the base
+// model without revealing where the owner keeps its bytes.
+message BaseModelIdentity {
+  string model_id = 1;
+  string version_id = 2;
+  string family = 3;
+  string format = 4;
 }
 
 // StepProgress is one entry of the ordered execution timeline. Role names the
