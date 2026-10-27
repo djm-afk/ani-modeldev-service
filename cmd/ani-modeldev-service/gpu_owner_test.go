@@ -54,27 +54,34 @@ func gpuOwnerTestConfig(t *testing.T) *conf.ManagedRuntime {
 	}}
 }
 
+// The owner refund chain is assembled from Governance material alone. Binding
+// an Accelerator connection is no longer expressible, so absence of that input
+// cannot be compensated by any deployment configuration.
 func TestGPUOwnerAssemblyDoesNotRequireACCReleaseConnection(t *testing.T) {
-	for _, test := range []struct {
-		name string
-		acc  *conf.OwnerMTLSConnection
-	}{
-		{name: "absent"},
-		{name: "unavailable", acc: &conf.OwnerMTLSConnection{Endpoint: "unavailable-acc", CaFile: "/missing/acc-ca.pem"}},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			config := gpuOwnerTestConfig(t)
-			config.GpuOwner.Accelerator = test.acc
-			kube, err := dynamic.NewForConfig(&rest.Config{Host: "https://127.0.0.1:6443"})
-			if err != nil {
-				t.Fatal(err)
-			}
-			reconciler, signer, closeOwner, err := assembleGPUOwner(config, kube, lifecycle.New(nil))
-			if err != nil || reconciler == nil || signer == nil || closeOwner == nil {
-				t.Fatalf("valid owner refund and independent Pod signer require no ACC release connection: %v", err)
-			}
-			closeOwner()
-			closeOwner()
-		})
+	kube, err := dynamic.NewForConfig(&rest.Config{Host: "https://127.0.0.1:6443"})
+	if err != nil {
+		t.Fatal(err)
 	}
+	t.Run("governance-only", func(t *testing.T) {
+		reconciler, signer, closeOwner, err := assembleGPUOwner(gpuOwnerTestConfig(t), kube, lifecycle.New(nil))
+		if err != nil || reconciler == nil || signer == nil || closeOwner == nil {
+			t.Fatalf("valid owner refund and independent Pod signer require no ACC release connection: %v", err)
+		}
+		closeOwner()
+		closeOwner()
+	})
+	t.Run("missing-governance", func(t *testing.T) {
+		config := gpuOwnerTestConfig(t)
+		config.GpuOwner.Governance = nil
+		if _, _, _, err := assembleGPUOwner(config, kube, lifecycle.New(nil)); err == nil {
+			t.Fatal("owner refund assembled without its Governance reporter")
+		}
+	})
+	t.Run("absent-gpu-owner", func(t *testing.T) {
+		reconciler, signer, closeOwner, err := assembleGPUOwner(&conf.ManagedRuntime{}, kube, lifecycle.New(nil))
+		if err != nil || reconciler != nil || signer != nil || closeOwner == nil {
+			t.Fatalf("CPU-only runtime must stay independent of GPU owner inputs: %v", err)
+		}
+		closeOwner()
+	})
 }

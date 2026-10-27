@@ -2,14 +2,11 @@ package lifecycle
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"sort"
-	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -24,11 +21,6 @@ var _ biz.GPUReleaseRepository = (*Repository)(nil)
 func gpuReleaseID(value string) bool {
 	id, err := uuid.Parse(value)
 	return err == nil && id != uuid.Nil && id.String() == value
-}
-
-func gpuReleaseDigest(value string) bool {
-	raw, err := hex.DecodeString(value)
-	return err == nil && len(raw) == 32 && hex.EncodeToString(raw) == value
 }
 
 func gpuReleaseReady(execution biz.Execution, state biz.ExecutionRuntime) bool {
@@ -83,47 +75,6 @@ func gpuReleaseScope(execution biz.Execution, state biz.ExecutionRuntime, sealed
 	return scope, nil
 }
 
-func validGPUObservation(scope biz.GPUReleaseScope, observation biz.GPUReleaseObservation, now time.Time) bool {
-	if observation.Ref != scope.Ref || !gpuReleaseID(observation.EvidenceID) || !gpuReleaseDigest(observation.EvidenceDigest) {
-		return false
-	}
-	// ACC preserves missing source times for an unknown observation. Receiving
-	// an answer must not manufacture the last trusted source timestamp.
-	for _, stamp := range []time.Time{observation.ObservedAt, observation.ReceivedAt} {
-		if !stamp.IsZero() && (stamp.Year() < 1970 || stamp.Year() > 9999 || stamp.After(now.Add(5*time.Second))) {
-			return false
-		}
-	}
-	if !observation.ObservedAt.IsZero() && !observation.ReceivedAt.IsZero() && observation.ReceivedAt.Before(observation.ObservedAt.Add(-5*time.Second)) {
-		return false
-	}
-	for _, values := range [][]string{observation.ActivePodUIDs, observation.UncertainNodeUIDs, observation.Issues} {
-		if len(values) > 4096 {
-			return false
-		}
-		seen := map[string]bool{}
-		for _, value := range values {
-			if value == "" || len(value) > 256 || !utf8.ValidString(value) || strings.ContainsAny(value, "\x00\r\n") || seen[value] {
-				return false
-			}
-			seen[value] = true
-		}
-	}
-	if observation.Complete && (len(observation.UncertainNodeUIDs) != 0 || len(observation.Issues) != 0) {
-		return false
-	}
-	switch observation.Finding {
-	case "ALLOCATION_RELEASED":
-		return observation.Complete && !observation.ObservedAt.IsZero() && !observation.ReceivedAt.IsZero() && len(observation.ActivePodUIDs) == 0 && len(observation.UncertainNodeUIDs) == 0 && len(observation.Issues) == 0
-	case "ALLOCATION_STILL_PRESENT":
-		return len(observation.ActivePodUIDs) > 0
-	case "RELEASE_UNKNOWN":
-		return !observation.Complete
-	default:
-		return false
-	}
-}
-
 func gpuReleaseReason(state biz.ExecutionRuntime) string {
 	if state.CloseReason == "STEP_FAILED" || state.CloseReason == "DEADLINE" {
 		return "ABORTED_CLEANED"
@@ -151,9 +102,6 @@ func ValidGPUReleaseFacts(execution biz.Execution, state biz.ExecutionRuntime, n
 	}
 	hash, err := biz.GPUReleaseScopeSHA256(expected)
 	if err != nil || hash != fact.ScopeSHA256 {
-		return biz.ErrPersistence
-	}
-	if fact.Observation != nil && !validGPUObservation(fact.Scope, *fact.Observation, now) {
 		return biz.ErrPersistence
 	}
 	if fact.Outbox == nil {

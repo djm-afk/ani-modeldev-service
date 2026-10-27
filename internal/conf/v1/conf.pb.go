@@ -228,10 +228,9 @@ func (x *ManagedRuntime) GetGpuOwner() *ManagedGPUOwner {
 	return nil
 }
 
-// Independent ModelDev owner identity for the two finite GPU close RPCs.
+// Independent ModelDev owner identity for the finite GPU close RPC.
 type ManagedGPUOwner struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
-	Accelerator         *OwnerMTLSConnection   `protobuf:"bytes,1,opt,name=accelerator,proto3" json:"accelerator,omitempty"`
 	Governance          *OwnerMTLSConnection   `protobuf:"bytes,2,opt,name=governance,proto3" json:"governance,omitempty"`
 	OwnerPrivateKeyFile string                 `protobuf:"bytes,3,opt,name=owner_private_key_file,json=ownerPrivateKeyFile,proto3" json:"owner_private_key_file,omitempty"`
 	unknownFields       protoimpl.UnknownFields
@@ -266,13 +265,6 @@ func (x *ManagedGPUOwner) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ManagedGPUOwner.ProtoReflect.Descriptor instead.
 func (*ManagedGPUOwner) Descriptor() ([]byte, []int) {
 	return file_conf_v1_conf_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ManagedGPUOwner) GetAccelerator() *OwnerMTLSConnection {
-	if x != nil {
-		return x.Accelerator
-	}
-	return nil
 }
 
 func (x *ManagedGPUOwner) GetGovernance() *OwnerMTLSConnection {
@@ -1179,13 +1171,12 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"apiTimeout\x12F\n" +
 	"\x11dispatch_interval\x18\v \x01(\v2\x19.google.protobuf.DurationR\x10dispatchInterval\x12.\n" +
 	"\x13dispatch_batch_size\x18\f \x01(\rR\x11dispatchBatchSize\x125\n" +
-	"\tgpu_owner\x18\r \x01(\v2\x18.conf.v1.ManagedGPUOwnerR\bgpuOwner\"\xc4\x01\n" +
-	"\x0fManagedGPUOwner\x12>\n" +
-	"\vaccelerator\x18\x01 \x01(\v2\x1c.conf.v1.OwnerMTLSConnectionR\vaccelerator\x12<\n" +
+	"\tgpu_owner\x18\r \x01(\v2\x18.conf.v1.ManagedGPUOwnerR\bgpuOwner\"\x97\x01\n" +
+	"\x0fManagedGPUOwner\x12<\n" +
 	"\n" +
 	"governance\x18\x02 \x01(\v2\x1c.conf.v1.OwnerMTLSConnectionR\n" +
 	"governance\x123\n" +
-	"\x16owner_private_key_file\x18\x03 \x01(\tR\x13ownerPrivateKeyFile\"\xf5\x01\n" +
+	"\x16owner_private_key_file\x18\x03 \x01(\tR\x13ownerPrivateKeyFileJ\x04\b\x01\x10\x02R\vaccelerator\"\xf5\x01\n" +
 	"\x13OwnerMTLSConnection\x12\x1a\n" +
 	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x17\n" +
 	"\aca_file\x18\x02 \x01(\tR\x06caFile\x12)\n" +
@@ -1296,27 +1287,26 @@ var file_conf_v1_conf_proto_depIdxs = []int32{
 	15, // 7: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
 	15, // 8: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
 	2,  // 9: conf.v1.ManagedRuntime.gpu_owner:type_name -> conf.v1.ManagedGPUOwner
-	3,  // 10: conf.v1.ManagedGPUOwner.accelerator:type_name -> conf.v1.OwnerMTLSConnection
-	3,  // 11: conf.v1.ManagedGPUOwner.governance:type_name -> conf.v1.OwnerMTLSConnection
-	15, // 12: conf.v1.OwnerMTLSConnection.timeout:type_name -> google.protobuf.Duration
-	15, // 13: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
-	10, // 14: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
-	8,  // 15: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
-	7,  // 16: conf.v1.GovernanceCommand.controlled_model_facts:type_name -> conf.v1.ControlledModelFacts
-	11, // 17: conf.v1.ControlledModelFacts.files:type_name -> conf.v1.AdmissionFactsFile
-	15, // 18: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
-	9,  // 19: conf.v1.ModelConnection.base_model_storage_scope:type_name -> conf.v1.BaseModelStorageScope
-	11, // 20: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
-	13, // 21: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
-	14, // 22: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
-	15, // 23: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
-	15, // 24: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	15, // 25: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	26, // [26:26] is the sub-list for method output_type
-	26, // [26:26] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	3,  // 10: conf.v1.ManagedGPUOwner.governance:type_name -> conf.v1.OwnerMTLSConnection
+	15, // 11: conf.v1.OwnerMTLSConnection.timeout:type_name -> google.protobuf.Duration
+	15, // 12: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
+	10, // 13: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
+	8,  // 14: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
+	7,  // 15: conf.v1.GovernanceCommand.controlled_model_facts:type_name -> conf.v1.ControlledModelFacts
+	11, // 16: conf.v1.ControlledModelFacts.files:type_name -> conf.v1.AdmissionFactsFile
+	15, // 17: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
+	9,  // 18: conf.v1.ModelConnection.base_model_storage_scope:type_name -> conf.v1.BaseModelStorageScope
+	11, // 19: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
+	13, // 20: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
+	14, // 21: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
+	15, // 22: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
+	15, // 23: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	15, // 24: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	25, // [25:25] is the sub-list for method output_type
+	25, // [25:25] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_conf_v1_conf_proto_init() }

@@ -48,19 +48,6 @@ func GPUReleaseScopeSHA256(scope GPUReleaseScope) (string, error) {
 	return hex.EncodeToString(sum[:]), nil
 }
 
-type GPUReleaseObservation struct {
-	Ref               GPUReleaseRef `json:"ref"`
-	Finding           string        `json:"finding"`
-	Complete          bool          `json:"complete"`
-	EvidenceID        string        `json:"evidence_id"`
-	EvidenceDigest    string        `json:"evidence_digest"`
-	ObservedAt        time.Time     `json:"observed_at"`
-	ReceivedAt        time.Time     `json:"received_at"`
-	ActivePodUIDs     []string      `json:"active_pod_uids"`
-	UncertainNodeUIDs []string      `json:"uncertain_node_uids"`
-	Issues            []string      `json:"issues"`
-}
-
 // GPUResourceReleasedEvent is the complete four-field Gov release request.
 // Tenant, owner and quantities come from its authenticated original ledger.
 type GPUResourceReleasedEvent struct {
@@ -85,22 +72,15 @@ type GPUReleaseOutbox struct {
 }
 
 type GPUReleaseState struct {
-	Scope       GPUReleaseScope        `json:"scope"`
-	ScopeSHA256 string                 `json:"scope_sha256"`
-	NoDispatch  bool                   `json:"no_dispatch"`
-	Observation *GPUReleaseObservation `json:"observation,omitempty"`
-	Outbox      *GPUReleaseOutbox      `json:"outbox,omitempty"`
+	Scope       GPUReleaseScope   `json:"scope"`
+	ScopeSHA256 string            `json:"scope_sha256"`
+	NoDispatch  bool              `json:"no_dispatch"`
+	Outbox      *GPUReleaseOutbox `json:"outbox,omitempty"`
 }
 
 type GPUReleaseRepository interface {
 	SealGPURelease(context.Context, string, string) (ExecutionRuntime, error)
 	RecordGPUReleaseACK(context.Context, string, string, string, GPUReleaseACK) (ExecutionRuntime, error)
-}
-
-// GPUReleaseObserver is an independent diagnostic boundary. Owner release
-// delivery does not depend on its availability or findings.
-type GPUReleaseObserver interface {
-	ObserveGPURelease(context.Context, GPUReleaseScope) (GPUReleaseObservation, error)
 }
 
 type GPUReleaseReporter interface {

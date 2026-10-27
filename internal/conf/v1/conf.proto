@@ -34,9 +34,13 @@ message ManagedRuntime {
   ManagedGPUOwner gpu_owner = 13;
 }
 
-// Independent ModelDev owner identity for the two finite GPU close RPCs.
+// Independent ModelDev owner identity for the finite GPU close RPC.
 message ManagedGPUOwner {
-  OwnerMTLSConnection accelerator = 1;
+  // The Accelerator ObserveRelease connection was removed with its RPC; the
+  // number and name stay reserved so a stale deployment config cannot silently
+  // revive the retired caller.
+  reserved 1;
+  reserved "accelerator";
   OwnerMTLSConnection governance = 2;
   string owner_private_key_file = 3;
 }
