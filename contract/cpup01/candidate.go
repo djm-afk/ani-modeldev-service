@@ -49,7 +49,7 @@ func (c PreparedCandidate) Validate() error {
 		return ErrInvalidArgument
 	}
 	definition, ok := Implementations()[s.Implementation.ImplementationID]
-	if !ok || definition.Version != s.Implementation.Version || definition.ParameterContractVersion != s.Implementation.ParameterContractVersion || ValidateResolvedParameters(s.Implementation.ImplementationID, s.Program.ResolvedParameters) != nil {
+	if !ok || definition.Version != s.Implementation.Version || definition.ParameterContractVersion != s.Implementation.ParameterContractVersion || ValidateResolvedParameters(s.Implementation.ImplementationID, s.resolvedParameters()) != nil {
 		return ErrInvalidArgument
 	}
 	if c.Intent.TimeoutSeconds != nil && *c.Intent.TimeoutSeconds != s.Timing.ExecutionTimeoutSeconds {
@@ -61,13 +61,25 @@ func (c PreparedCandidate) Validate() error {
 	}
 	for _, p := range explicit {
 		found := false
-		for _, r := range s.Program.ResolvedParameters {
+		for _, r := range s.resolvedParameters() {
 			if p == r {
 				found = true
 				break
 			}
 		}
 		if !found {
+			return ErrInvalidArgument
+		}
+	}
+	// The selected training image is part of the frozen candidate identity, so
+	// an accepted execution can never be replayed with a different image. An
+	// absent user selection is legal: the snapshot then carries the trusted
+	// material default that Resource resolved.
+	if c.Intent.Kind == "GENERAL_TRAINING" {
+		if s.TrainingProgram == nil {
+			return ErrInvalidArgument
+		}
+		if c.Intent.TrainingImageID != nil && (s.TrainingProgram.Image.ImageID != *c.Intent.TrainingImageID || s.TrainingProgram.Image.Scope != *c.Intent.TrainingImageScope) {
 			return ErrInvalidArgument
 		}
 	}

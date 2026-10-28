@@ -20,9 +20,14 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 )
 
-type image struct {
-	VersionID   string `json:"version_id"`
-	Digest      string `json:"digest"`
+// trainingImage describes the training image of one implementation. General
+// training selects a catalogue entry by identity, so the digest stays with
+// Resource; finetuning keeps its frozen image version and digest identity.
+type trainingImage struct {
+	ImageID     string `json:"image_id,omitempty"`
+	Scope       string `json:"scope,omitempty"`
+	VersionID   string `json:"version_id,omitempty"`
+	Digest      string `json:"digest,omitempty"`
 	EntrySHA256 string `json:"entry_sha256"`
 }
 type pipelineReceipt struct {
@@ -32,8 +37,8 @@ type pipelineReceipt struct {
 	PipelineIRSHA256  string `json:"pipeline_ir_sha256"`
 }
 type finetuningFacts struct {
-	ExportImage       image                   `json:"export_image"`
-	VerifyImage       image                   `json:"verify_image"`
+	ExportImage       trainingImage           `json:"export_image"`
+	VerifyImage       trainingImage           `json:"verify_image"`
 	MappingSHA256     string                  `json:"mapping_sha256"`
 	MaxSequenceLength int64                   `json:"max_sequence_length"`
 	Budgets           cpup01.ComponentBudgets `json:"budgets"`
@@ -42,7 +47,7 @@ type facts struct {
 	SchemaVersion          string           `json:"schema_version"`
 	ImplementationID       string           `json:"implementation_id"`
 	DeviceMode             string           `json:"device_mode"`
-	TrainingImage          image            `json:"training_image"`
+	TrainingImage          trainingImage    `json:"training_image"`
 	Pipeline               pipelineReceipt  `json:"pipeline"`
 	WorkspaceStorageClass  string           `json:"workspace_storage_class"`
 	WorkspaceCapacityBytes int64            `json:"workspace_capacity_bytes"`
@@ -130,26 +135,31 @@ func material(f facts, entrySHA, mappingSHA string) (cpup01.ImplementationMateri
 		return cpup01.ImplementationMaterial{}, errors.New("explicit confirmed PipelineVersion, immutable image/source evidence and workspace required")
 	}
 	definition, ok := cpup01.Implementations()[f.ImplementationID]
-	if !ok || f.SchemaVersion != "ani.modeldev.material-input.v2.1" || (f.DeviceMode != "cpu" && f.DeviceMode != "gpu") || f.Pipeline.Phase != "CONFIRMED" || f.TrainingImage.EntrySHA256 != entrySHA || f.WorkspaceCapacityBytes <= 0 {
+	if !ok || f.SchemaVersion != "ani.modeldev.material-input.v2.2" || (f.DeviceMode != "cpu" && f.DeviceMode != "gpu") || f.Pipeline.Phase != "CONFIRMED" || f.TrainingImage.EntrySHA256 != entrySHA || f.WorkspaceCapacityBytes <= 0 {
 		return bad()
 	}
 	m := cpup01.ImplementationMaterial{SchemaVersion: cpup01.MaterialSchemaVersion, Implementation: cpup01.ImplementationSnapshot{ImplementationID: f.ImplementationID, Version: definition.Version, ParameterContractVersion: definition.ParameterContractVersion, PipelineID: f.Pipeline.PipelineID, PipelineVersionID: f.Pipeline.PipelineVersionID, PipelineIRSHA256: f.Pipeline.PipelineIRSHA256}, Workspace: cpup01.WorkspaceContract{Mode: "EXECUTION_PVC", StorageClass: f.WorkspaceStorageClass, CapacityBytes: f.WorkspaceCapacityBytes, InputSubpath: "inputs", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication"}}
-	m.Program = cpup01.MaterialProgram{ImageVersionID: f.TrainingImage.VersionID, ImageDigest: f.TrainingImage.Digest}
 	if f.ImplementationID == "builtin.mlp" {
-		if f.Finetuning != nil {
+		if f.Finetuning != nil || f.TrainingImage.VersionID != "" || f.TrainingImage.Digest != "" {
 			return bad()
 		}
-		m.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/cpu03/train_mlp.py"}
+		// General training keeps only the catalogue selection: Resource resolves
+		// the digest, so a stale material cannot pin an obsolete image.
+		m.Training = &cpup01.TrainingMaterial{
+			DefaultImage: cpup01.DefaultTrainingImage{ImageID: f.TrainingImage.ImageID, Scope: f.TrainingImage.Scope},
+			Command:      []string{"/opt/venv/bin/python", "-I", "/opt/cpu03/train_mlp.py"},
+		}
 		device := "cpu"
 		if f.DeviceMode == "gpu" {
 			device = "cuda"
 		}
-		m.Program.ArgsTemplate = []cpup01.MaterialArgument{{Literal: "--data"}, {Source: "INPUT_PATH"}, {Literal: "--output"}, {Source: "OUTPUT_PATH"}, {Literal: "--expected-input-sha256"}, {Source: "INPUT_SHA256"}, {Literal: "--expected-input-bytes"}, {Source: "INPUT_BYTES"}, {Literal: "--learning-rate"}, {Source: "LEARNING_RATE"}, {Literal: "--epochs"}, {Source: "EPOCHS"}, {Literal: "--batch-size"}, {Source: "BATCH_SIZE"}, {Literal: "--seed"}, {Source: "SEED"}, {Literal: "--device"}, {Literal: device}}
+		m.Training.ArgsTemplate = []cpup01.MaterialArgument{{Literal: "--data"}, {Source: "INPUT_PATH"}, {Literal: "--output"}, {Source: "OUTPUT_PATH"}, {Literal: "--expected-input-sha256"}, {Source: "INPUT_SHA256"}, {Literal: "--expected-input-bytes"}, {Source: "INPUT_BYTES"}, {Literal: "--learning-rate"}, {Source: "LEARNING_RATE"}, {Literal: "--epochs"}, {Source: "EPOCHS"}, {Literal: "--batch-size"}, {Source: "BATCH_SIZE"}, {Literal: "--seed"}, {Source: "SEED"}, {Literal: "--device"}, {Literal: device}}
 		m.OutputContract = cpup01.OutputContract{SchemaVersion: "ani.cpu.output.v1", OutputKind: "CHECKPOINT", DeliveryMode: "SAVE_ARTIFACTS", RequiredFiles: []cpup01.RequiredOutput{{Role: "METRICS", RelativePath: "metrics.jsonl", MaxSizeBytes: 16 << 20}, {Role: "CHECKPOINT", RelativePath: "model.pt", MaxSizeBytes: 32 << 20}, {Role: "MODEL_CONFIG", RelativePath: "model_config.json", MaxSizeBytes: 1 << 20}, {Role: "SUMMARY", RelativePath: "summary.json", MaxSizeBytes: 1 << 20}}, MaxFileCount: 16, MaxTotalBytes: 100 << 20, CreateTarBundle: false}
 	} else {
 		if f.Finetuning == nil || f.Finetuning.MappingSHA256 != mappingSHA || f.Finetuning.ExportImage.EntrySHA256 != entrySHA || f.Finetuning.VerifyImage.EntrySHA256 != entrySHA {
 			return bad()
 		}
+		m.Program = &cpup01.MaterialProgram{ImageVersionID: f.TrainingImage.VersionID, ImageDigest: f.TrainingImage.Digest}
 		m.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/finetuning/finetune_entry.py"}
 		m.Program.ArgsTemplate = arguments("train")
 		settings, err := managedSettings(f.DeviceMode)
@@ -160,7 +170,7 @@ func material(f facts, entrySHA, mappingSHA string) (cpup01.ImplementationMateri
 		if err != nil {
 			return bad()
 		}
-		component := func(mode string, i image) cpup01.ComponentProgram {
+		component := func(mode string, i trainingImage) cpup01.ComponentProgram {
 			return cpup01.ComponentProgram{ImageVersionID: i.VersionID, ImageDigest: i.Digest, Command: append([]string{}, m.Program.Command...), ArgsTemplate: arguments(mode), ImplementationSHA256: entrySHA}
 		}
 		m.Finetuning = &cpup01.FinetuningMaterial{ManagedSettings: settings, ExportProgram: component("export", f.Finetuning.ExportImage), VerifyProgram: component("verify", f.Finetuning.VerifyImage), RecipeSHA256: hash(encoded), MappingSHA256: mappingSHA, Budgets: f.Finetuning.Budgets, MaxSequenceLength: f.Finetuning.MaxSequenceLength}

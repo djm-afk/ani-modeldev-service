@@ -256,7 +256,7 @@ func frozenTrainingRequest(plan biz.TrainingPlan) (*unstructured.Unstructured, e
 		"spec": map[string]any{
 			"runtimeRef": map[string]any{"name": snapshot.RuntimePlan.Name, "kind": snapshot.RuntimePlan.Kind, "apiGroup": "trainer.kubeflow.org"},
 			"managedBy":  "trainer.kubeflow.org/trainjob-controller", "suspend": false,
-			"trainer": map[string]any{"image": snapshot.Program.ImageDigest, "command": stringValues(snapshot.Program.Command), "args": stringValues(snapshot.Program.ResolvedArgs), "numNodes": int64(1), "numProcPerNode": int64(1), "resourcesPerNode": map[string]any{
+			"trainer": map[string]any{"image": snapshot.ProgramImage(), "command": stringValues(snapshot.ProgramCommand()), "args": stringValues(snapshot.ProgramArgs()), "numNodes": int64(1), "numProcPerNode": int64(1), "resourcesPerNode": map[string]any{
 				"requests": resources,
 				"limits":   resources,
 			}},
@@ -319,7 +319,7 @@ func validTrainingPlan(plan biz.TrainingPlan) bool {
 	if s.RuntimePlan.APIGroup != "trainer.kubeflow.org" || s.RuntimePlan.Kind != "TrainingRuntime" || len(validation.IsDNS1123Subdomain(s.RuntimePlan.Name)) != 0 || len(s.RuntimePlan.TargetJobs) != 1 || len(validation.IsDNS1123Label(s.RuntimePlan.TargetJobs[0])) != 0 {
 		return false
 	}
-	if len(s.Program.Command) == 0 || !strings.Contains(s.Program.ImageDigest, "@sha256:") || s.Resources.Nodes != 1 || s.Resources.ProcessesPerNode != 1 || s.Resources.RequestMillicpu <= 0 || s.Resources.LimitMillicpu < s.Resources.RequestMillicpu || s.Resources.RequestMemoryBytes <= 0 || s.Resources.LimitMemoryBytes < s.Resources.RequestMemoryBytes {
+	if len(s.ProgramCommand()) == 0 || !strings.Contains(s.ProgramImage(), "@sha256:") || s.Resources.Nodes != 1 || s.Resources.ProcessesPerNode != 1 || s.Resources.RequestMillicpu <= 0 || s.Resources.LimitMillicpu < s.Resources.RequestMillicpu || s.Resources.RequestMemoryBytes <= 0 || s.Resources.LimitMemoryBytes < s.Resources.RequestMemoryBytes {
 		return false
 	}
 	if plan.Timing == nil || plan.Timing.AdmittedAt.IsZero() || plan.RuntimeBinding.UID == "" || plan.RuntimeBinding.NamespaceUID != w.NamespaceUID || plan.RuntimeBinding.Name != s.RuntimePlan.Name || plan.RuntimeBinding.ObservedSpecSHA256 != s.RuntimePlan.ExpectedSpecSHA256 {

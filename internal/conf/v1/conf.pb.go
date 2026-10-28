@@ -29,7 +29,12 @@ type Bootstrap struct {
 	// assembles the real Governance command listener without plaintext fallback.
 	Command *GovernanceCommand `protobuf:"bytes,2,opt,name=command,proto3" json:"command,omitempty"`
 	// Presence assembles the managed execution main flow alongside command.
-	Runtime       *ManagedRuntime `protobuf:"bytes,3,opt,name=runtime,proto3" json:"runtime,omitempty"`
+	Runtime *ManagedRuntime `protobuf:"bytes,3,opt,name=runtime,proto3" json:"runtime,omitempty"`
+	// Resource ImageRuntime mTLS dependency shared by admission resolution and
+	// the training creation boundary. Presence enables training image resolution
+	// and the shared pull Secret; absence rejects training admission instead of
+	// falling back to a local image identity.
+	ImageRuntime  *ImageRuntimeConnection `protobuf:"bytes,4,opt,name=image_runtime,json=imageRuntime,proto3" json:"image_runtime,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -81,6 +86,13 @@ func (x *Bootstrap) GetCommand() *GovernanceCommand {
 func (x *Bootstrap) GetRuntime() *ManagedRuntime {
 	if x != nil {
 		return x.Runtime
+	}
+	return nil
+}
+
+func (x *Bootstrap) GetImageRuntime() *ImageRuntimeConnection {
+	if x != nil {
+		return x.ImageRuntime
 	}
 	return nil
 }
@@ -228,6 +240,93 @@ func (x *ManagedRuntime) GetGpuOwner() *ManagedGPUOwner {
 	return nil
 }
 
+// ImageRuntimeConnection is ModelDev's narrow Resource runtime identity. It
+// carries no registry credentials and cannot select an endpoint per request.
+type ImageRuntimeConnection struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Endpoint        string                 `protobuf:"bytes,1,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	CaFile          string                 `protobuf:"bytes,2,opt,name=ca_file,json=caFile,proto3" json:"ca_file,omitempty"`
+	CertificateFile string                 `protobuf:"bytes,3,opt,name=certificate_file,json=certificateFile,proto3" json:"certificate_file,omitempty"`
+	PrivateKeyFile  string                 `protobuf:"bytes,4,opt,name=private_key_file,json=privateKeyFile,proto3" json:"private_key_file,omitempty"`
+	// The exact DNS SAN required on the Resource runtime server certificate.
+	ServerName    string               `protobuf:"bytes,5,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
+	Timeout       *durationpb.Duration `protobuf:"bytes,6,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImageRuntimeConnection) Reset() {
+	*x = ImageRuntimeConnection{}
+	mi := &file_conf_v1_conf_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImageRuntimeConnection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImageRuntimeConnection) ProtoMessage() {}
+
+func (x *ImageRuntimeConnection) ProtoReflect() protoreflect.Message {
+	mi := &file_conf_v1_conf_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImageRuntimeConnection.ProtoReflect.Descriptor instead.
+func (*ImageRuntimeConnection) Descriptor() ([]byte, []int) {
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ImageRuntimeConnection) GetEndpoint() string {
+	if x != nil {
+		return x.Endpoint
+	}
+	return ""
+}
+
+func (x *ImageRuntimeConnection) GetCaFile() string {
+	if x != nil {
+		return x.CaFile
+	}
+	return ""
+}
+
+func (x *ImageRuntimeConnection) GetCertificateFile() string {
+	if x != nil {
+		return x.CertificateFile
+	}
+	return ""
+}
+
+func (x *ImageRuntimeConnection) GetPrivateKeyFile() string {
+	if x != nil {
+		return x.PrivateKeyFile
+	}
+	return ""
+}
+
+func (x *ImageRuntimeConnection) GetServerName() string {
+	if x != nil {
+		return x.ServerName
+	}
+	return ""
+}
+
+func (x *ImageRuntimeConnection) GetTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.Timeout
+	}
+	return nil
+}
+
 // Independent ModelDev owner identity for the finite GPU close RPC.
 type ManagedGPUOwner struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
@@ -239,7 +338,7 @@ type ManagedGPUOwner struct {
 
 func (x *ManagedGPUOwner) Reset() {
 	*x = ManagedGPUOwner{}
-	mi := &file_conf_v1_conf_proto_msgTypes[2]
+	mi := &file_conf_v1_conf_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -251,7 +350,7 @@ func (x *ManagedGPUOwner) String() string {
 func (*ManagedGPUOwner) ProtoMessage() {}
 
 func (x *ManagedGPUOwner) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[2]
+	mi := &file_conf_v1_conf_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -264,7 +363,7 @@ func (x *ManagedGPUOwner) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ManagedGPUOwner.ProtoReflect.Descriptor instead.
 func (*ManagedGPUOwner) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{2}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ManagedGPUOwner) GetGovernance() *OwnerMTLSConnection {
@@ -295,7 +394,7 @@ type OwnerMTLSConnection struct {
 
 func (x *OwnerMTLSConnection) Reset() {
 	*x = OwnerMTLSConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[3]
+	mi := &file_conf_v1_conf_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -307,7 +406,7 @@ func (x *OwnerMTLSConnection) String() string {
 func (*OwnerMTLSConnection) ProtoMessage() {}
 
 func (x *OwnerMTLSConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[3]
+	mi := &file_conf_v1_conf_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -320,7 +419,7 @@ func (x *OwnerMTLSConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OwnerMTLSConnection.ProtoReflect.Descriptor instead.
 func (*OwnerMTLSConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{3}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *OwnerMTLSConnection) GetEndpoint() string {
@@ -377,7 +476,7 @@ type HTTPSWorkloadConnection struct {
 
 func (x *HTTPSWorkloadConnection) Reset() {
 	*x = HTTPSWorkloadConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[4]
+	mi := &file_conf_v1_conf_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -389,7 +488,7 @@ func (x *HTTPSWorkloadConnection) String() string {
 func (*HTTPSWorkloadConnection) ProtoMessage() {}
 
 func (x *HTTPSWorkloadConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[4]
+	mi := &file_conf_v1_conf_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -402,7 +501,7 @@ func (x *HTTPSWorkloadConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HTTPSWorkloadConnection.ProtoReflect.Descriptor instead.
 func (*HTTPSWorkloadConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{4}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *HTTPSWorkloadConnection) GetEndpoint() string {
@@ -443,7 +542,7 @@ type ObjectStorageConnection struct {
 
 func (x *ObjectStorageConnection) Reset() {
 	*x = ObjectStorageConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[5]
+	mi := &file_conf_v1_conf_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -455,7 +554,7 @@ func (x *ObjectStorageConnection) String() string {
 func (*ObjectStorageConnection) ProtoMessage() {}
 
 func (x *ObjectStorageConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[5]
+	mi := &file_conf_v1_conf_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -468,7 +567,7 @@ func (x *ObjectStorageConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ObjectStorageConnection.ProtoReflect.Descriptor instead.
 func (*ObjectStorageConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{5}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ObjectStorageConnection) GetEndpoint() string {
@@ -544,7 +643,7 @@ type GovernanceCommand struct {
 
 func (x *GovernanceCommand) Reset() {
 	*x = GovernanceCommand{}
-	mi := &file_conf_v1_conf_proto_msgTypes[6]
+	mi := &file_conf_v1_conf_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -556,7 +655,7 @@ func (x *GovernanceCommand) String() string {
 func (*GovernanceCommand) ProtoMessage() {}
 
 func (x *GovernanceCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[6]
+	mi := &file_conf_v1_conf_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -569,7 +668,7 @@ func (x *GovernanceCommand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GovernanceCommand.ProtoReflect.Descriptor instead.
 func (*GovernanceCommand) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{6}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GovernanceCommand) GetDatabaseUrlFile() string {
@@ -641,7 +740,7 @@ type ControlledModelFacts struct {
 
 func (x *ControlledModelFacts) Reset() {
 	*x = ControlledModelFacts{}
-	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	mi := &file_conf_v1_conf_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -653,7 +752,7 @@ func (x *ControlledModelFacts) String() string {
 func (*ControlledModelFacts) ProtoMessage() {}
 
 func (x *ControlledModelFacts) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	mi := &file_conf_v1_conf_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -666,7 +765,7 @@ func (x *ControlledModelFacts) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ControlledModelFacts.ProtoReflect.Descriptor instead.
 func (*ControlledModelFacts) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ControlledModelFacts) GetFiles() []*AdmissionFactsFile {
@@ -702,7 +801,7 @@ type ModelConnection struct {
 
 func (x *ModelConnection) Reset() {
 	*x = ModelConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[8]
+	mi := &file_conf_v1_conf_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -714,7 +813,7 @@ func (x *ModelConnection) String() string {
 func (*ModelConnection) ProtoMessage() {}
 
 func (x *ModelConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[8]
+	mi := &file_conf_v1_conf_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -727,7 +826,7 @@ func (x *ModelConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ModelConnection.ProtoReflect.Descriptor instead.
 func (*ModelConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{8}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ModelConnection) GetEndpoint() string {
@@ -805,7 +904,7 @@ type BaseModelStorageScope struct {
 
 func (x *BaseModelStorageScope) Reset() {
 	*x = BaseModelStorageScope{}
-	mi := &file_conf_v1_conf_proto_msgTypes[9]
+	mi := &file_conf_v1_conf_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -817,7 +916,7 @@ func (x *BaseModelStorageScope) String() string {
 func (*BaseModelStorageScope) ProtoMessage() {}
 
 func (x *BaseModelStorageScope) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[9]
+	mi := &file_conf_v1_conf_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -830,7 +929,7 @@ func (x *BaseModelStorageScope) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BaseModelStorageScope.ProtoReflect.Descriptor instead.
 func (*BaseModelStorageScope) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *BaseModelStorageScope) GetConnectionId() string {
@@ -871,7 +970,7 @@ type AdmissionResolution struct {
 
 func (x *AdmissionResolution) Reset() {
 	*x = AdmissionResolution{}
-	mi := &file_conf_v1_conf_proto_msgTypes[10]
+	mi := &file_conf_v1_conf_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -883,7 +982,7 @@ func (x *AdmissionResolution) String() string {
 func (*AdmissionResolution) ProtoMessage() {}
 
 func (x *AdmissionResolution) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[10]
+	mi := &file_conf_v1_conf_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -896,7 +995,7 @@ func (x *AdmissionResolution) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmissionResolution.ProtoReflect.Descriptor instead.
 func (*AdmissionResolution) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{10}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *AdmissionResolution) GetCatalogueDirectory() string {
@@ -923,7 +1022,7 @@ type AdmissionFactsFile struct {
 
 func (x *AdmissionFactsFile) Reset() {
 	*x = AdmissionFactsFile{}
-	mi := &file_conf_v1_conf_proto_msgTypes[11]
+	mi := &file_conf_v1_conf_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -935,7 +1034,7 @@ func (x *AdmissionFactsFile) String() string {
 func (*AdmissionFactsFile) ProtoMessage() {}
 
 func (x *AdmissionFactsFile) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[11]
+	mi := &file_conf_v1_conf_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -948,7 +1047,7 @@ func (x *AdmissionFactsFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmissionFactsFile.ProtoReflect.Descriptor instead.
 func (*AdmissionFactsFile) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{11}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *AdmissionFactsFile) GetPath() string {
@@ -976,7 +1075,7 @@ type Server struct {
 
 func (x *Server) Reset() {
 	*x = Server{}
-	mi := &file_conf_v1_conf_proto_msgTypes[12]
+	mi := &file_conf_v1_conf_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -988,7 +1087,7 @@ func (x *Server) String() string {
 func (*Server) ProtoMessage() {}
 
 func (x *Server) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[12]
+	mi := &file_conf_v1_conf_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1001,7 +1100,7 @@ func (x *Server) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server.ProtoReflect.Descriptor instead.
 func (*Server) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{12}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Server) GetGrpc() *Server_GRPC {
@@ -1036,7 +1135,7 @@ type Server_GRPC struct {
 
 func (x *Server_GRPC) Reset() {
 	*x = Server_GRPC{}
-	mi := &file_conf_v1_conf_proto_msgTypes[13]
+	mi := &file_conf_v1_conf_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1048,7 +1147,7 @@ func (x *Server_GRPC) String() string {
 func (*Server_GRPC) ProtoMessage() {}
 
 func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[13]
+	mi := &file_conf_v1_conf_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1061,7 +1160,7 @@ func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server_GRPC.ProtoReflect.Descriptor instead.
 func (*Server_GRPC) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{12, 0}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{13, 0}
 }
 
 func (x *Server_GRPC) GetNetwork() string {
@@ -1096,7 +1195,7 @@ type Server_Admin struct {
 
 func (x *Server_Admin) Reset() {
 	*x = Server_Admin{}
-	mi := &file_conf_v1_conf_proto_msgTypes[14]
+	mi := &file_conf_v1_conf_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1108,7 +1207,7 @@ func (x *Server_Admin) String() string {
 func (*Server_Admin) ProtoMessage() {}
 
 func (x *Server_Admin) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[14]
+	mi := &file_conf_v1_conf_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1121,7 +1220,7 @@ func (x *Server_Admin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server_Admin.ProtoReflect.Descriptor instead.
 func (*Server_Admin) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{12, 1}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{13, 1}
 }
 
 func (x *Server_Admin) GetNetwork() string {
@@ -1149,11 +1248,12 @@ var File_conf_v1_conf_proto protoreflect.FileDescriptor
 
 const file_conf_v1_conf_proto_rawDesc = "" +
 	"\n" +
-	"\x12conf/v1/conf.proto\x12\aconf.v1\x1a\x1egoogle/protobuf/duration.proto\"\x9d\x01\n" +
+	"\x12conf/v1/conf.proto\x12\aconf.v1\x1a\x1egoogle/protobuf/duration.proto\"\xe3\x01\n" +
 	"\tBootstrap\x12'\n" +
 	"\x06server\x18\x01 \x01(\v2\x0f.conf.v1.ServerR\x06server\x124\n" +
 	"\acommand\x18\x02 \x01(\v2\x1a.conf.v1.GovernanceCommandR\acommand\x121\n" +
-	"\aruntime\x18\x03 \x01(\v2\x17.conf.v1.ManagedRuntimeR\aruntime\"\xb4\x05\n" +
+	"\aruntime\x18\x03 \x01(\v2\x17.conf.v1.ManagedRuntimeR\aruntime\x12D\n" +
+	"\rimage_runtime\x18\x04 \x01(\v2\x1f.conf.v1.ImageRuntimeConnectionR\fimageRuntime\"\xb4\x05\n" +
 	"\x0eManagedRuntime\x12(\n" +
 	"\x04step\x18\x01 \x01(\v2\x14.conf.v1.Server.GRPCR\x04step\x12)\n" +
 	"\x10certificate_file\x18\x02 \x01(\tR\x0fcertificateFile\x12(\n" +
@@ -1171,7 +1271,15 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"apiTimeout\x12F\n" +
 	"\x11dispatch_interval\x18\v \x01(\v2\x19.google.protobuf.DurationR\x10dispatchInterval\x12.\n" +
 	"\x13dispatch_batch_size\x18\f \x01(\rR\x11dispatchBatchSize\x125\n" +
-	"\tgpu_owner\x18\r \x01(\v2\x18.conf.v1.ManagedGPUOwnerR\bgpuOwner\"\x97\x01\n" +
+	"\tgpu_owner\x18\r \x01(\v2\x18.conf.v1.ManagedGPUOwnerR\bgpuOwner\"\xf8\x01\n" +
+	"\x16ImageRuntimeConnection\x12\x1a\n" +
+	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x17\n" +
+	"\aca_file\x18\x02 \x01(\tR\x06caFile\x12)\n" +
+	"\x10certificate_file\x18\x03 \x01(\tR\x0fcertificateFile\x12(\n" +
+	"\x10private_key_file\x18\x04 \x01(\tR\x0eprivateKeyFile\x12\x1f\n" +
+	"\vserver_name\x18\x05 \x01(\tR\n" +
+	"serverName\x123\n" +
+	"\atimeout\x18\x06 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\x97\x01\n" +
 	"\x0fManagedGPUOwner\x12<\n" +
 	"\n" +
 	"governance\x18\x02 \x01(\v2\x1c.conf.v1.OwnerMTLSConnectionR\n" +
@@ -1257,56 +1365,59 @@ func file_conf_v1_conf_proto_rawDescGZIP() []byte {
 	return file_conf_v1_conf_proto_rawDescData
 }
 
-var file_conf_v1_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_conf_v1_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_conf_v1_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),               // 0: conf.v1.Bootstrap
 	(*ManagedRuntime)(nil),          // 1: conf.v1.ManagedRuntime
-	(*ManagedGPUOwner)(nil),         // 2: conf.v1.ManagedGPUOwner
-	(*OwnerMTLSConnection)(nil),     // 3: conf.v1.OwnerMTLSConnection
-	(*HTTPSWorkloadConnection)(nil), // 4: conf.v1.HTTPSWorkloadConnection
-	(*ObjectStorageConnection)(nil), // 5: conf.v1.ObjectStorageConnection
-	(*GovernanceCommand)(nil),       // 6: conf.v1.GovernanceCommand
-	(*ControlledModelFacts)(nil),    // 7: conf.v1.ControlledModelFacts
-	(*ModelConnection)(nil),         // 8: conf.v1.ModelConnection
-	(*BaseModelStorageScope)(nil),   // 9: conf.v1.BaseModelStorageScope
-	(*AdmissionResolution)(nil),     // 10: conf.v1.AdmissionResolution
-	(*AdmissionFactsFile)(nil),      // 11: conf.v1.AdmissionFactsFile
-	(*Server)(nil),                  // 12: conf.v1.Server
-	(*Server_GRPC)(nil),             // 13: conf.v1.Server.GRPC
-	(*Server_Admin)(nil),            // 14: conf.v1.Server.Admin
-	(*durationpb.Duration)(nil),     // 15: google.protobuf.Duration
+	(*ImageRuntimeConnection)(nil),  // 2: conf.v1.ImageRuntimeConnection
+	(*ManagedGPUOwner)(nil),         // 3: conf.v1.ManagedGPUOwner
+	(*OwnerMTLSConnection)(nil),     // 4: conf.v1.OwnerMTLSConnection
+	(*HTTPSWorkloadConnection)(nil), // 5: conf.v1.HTTPSWorkloadConnection
+	(*ObjectStorageConnection)(nil), // 6: conf.v1.ObjectStorageConnection
+	(*GovernanceCommand)(nil),       // 7: conf.v1.GovernanceCommand
+	(*ControlledModelFacts)(nil),    // 8: conf.v1.ControlledModelFacts
+	(*ModelConnection)(nil),         // 9: conf.v1.ModelConnection
+	(*BaseModelStorageScope)(nil),   // 10: conf.v1.BaseModelStorageScope
+	(*AdmissionResolution)(nil),     // 11: conf.v1.AdmissionResolution
+	(*AdmissionFactsFile)(nil),      // 12: conf.v1.AdmissionFactsFile
+	(*Server)(nil),                  // 13: conf.v1.Server
+	(*Server_GRPC)(nil),             // 14: conf.v1.Server.GRPC
+	(*Server_Admin)(nil),            // 15: conf.v1.Server.Admin
+	(*durationpb.Duration)(nil),     // 16: google.protobuf.Duration
 }
 var file_conf_v1_conf_proto_depIdxs = []int32{
-	12, // 0: conf.v1.Bootstrap.server:type_name -> conf.v1.Server
-	6,  // 1: conf.v1.Bootstrap.command:type_name -> conf.v1.GovernanceCommand
+	13, // 0: conf.v1.Bootstrap.server:type_name -> conf.v1.Server
+	7,  // 1: conf.v1.Bootstrap.command:type_name -> conf.v1.GovernanceCommand
 	1,  // 2: conf.v1.Bootstrap.runtime:type_name -> conf.v1.ManagedRuntime
-	13, // 3: conf.v1.ManagedRuntime.step:type_name -> conf.v1.Server.GRPC
-	4,  // 4: conf.v1.ManagedRuntime.kubernetes:type_name -> conf.v1.HTTPSWorkloadConnection
-	4,  // 5: conf.v1.ManagedRuntime.pipeline:type_name -> conf.v1.HTTPSWorkloadConnection
-	5,  // 6: conf.v1.ManagedRuntime.object_storage:type_name -> conf.v1.ObjectStorageConnection
-	15, // 7: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
-	15, // 8: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
-	2,  // 9: conf.v1.ManagedRuntime.gpu_owner:type_name -> conf.v1.ManagedGPUOwner
-	3,  // 10: conf.v1.ManagedGPUOwner.governance:type_name -> conf.v1.OwnerMTLSConnection
-	15, // 11: conf.v1.OwnerMTLSConnection.timeout:type_name -> google.protobuf.Duration
-	15, // 12: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
-	10, // 13: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
-	8,  // 14: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
-	7,  // 15: conf.v1.GovernanceCommand.controlled_model_facts:type_name -> conf.v1.ControlledModelFacts
-	11, // 16: conf.v1.ControlledModelFacts.files:type_name -> conf.v1.AdmissionFactsFile
-	15, // 17: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
-	9,  // 18: conf.v1.ModelConnection.base_model_storage_scope:type_name -> conf.v1.BaseModelStorageScope
-	11, // 19: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
-	13, // 20: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
-	14, // 21: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
-	15, // 22: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
-	15, // 23: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	15, // 24: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	25, // [25:25] is the sub-list for method output_type
-	25, // [25:25] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	2,  // 3: conf.v1.Bootstrap.image_runtime:type_name -> conf.v1.ImageRuntimeConnection
+	14, // 4: conf.v1.ManagedRuntime.step:type_name -> conf.v1.Server.GRPC
+	5,  // 5: conf.v1.ManagedRuntime.kubernetes:type_name -> conf.v1.HTTPSWorkloadConnection
+	5,  // 6: conf.v1.ManagedRuntime.pipeline:type_name -> conf.v1.HTTPSWorkloadConnection
+	6,  // 7: conf.v1.ManagedRuntime.object_storage:type_name -> conf.v1.ObjectStorageConnection
+	16, // 8: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
+	16, // 9: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
+	3,  // 10: conf.v1.ManagedRuntime.gpu_owner:type_name -> conf.v1.ManagedGPUOwner
+	16, // 11: conf.v1.ImageRuntimeConnection.timeout:type_name -> google.protobuf.Duration
+	4,  // 12: conf.v1.ManagedGPUOwner.governance:type_name -> conf.v1.OwnerMTLSConnection
+	16, // 13: conf.v1.OwnerMTLSConnection.timeout:type_name -> google.protobuf.Duration
+	16, // 14: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
+	11, // 15: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
+	9,  // 16: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
+	8,  // 17: conf.v1.GovernanceCommand.controlled_model_facts:type_name -> conf.v1.ControlledModelFacts
+	12, // 18: conf.v1.ControlledModelFacts.files:type_name -> conf.v1.AdmissionFactsFile
+	16, // 19: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
+	10, // 20: conf.v1.ModelConnection.base_model_storage_scope:type_name -> conf.v1.BaseModelStorageScope
+	12, // 21: conf.v1.AdmissionResolution.facts_files:type_name -> conf.v1.AdmissionFactsFile
+	14, // 22: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
+	15, // 23: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
+	16, // 24: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
+	16, // 25: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	16, // 26: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_conf_v1_conf_proto_init() }
@@ -1320,7 +1431,7 @@ func file_conf_v1_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conf_v1_conf_proto_rawDesc), len(file_conf_v1_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

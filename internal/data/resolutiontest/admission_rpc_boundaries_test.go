@@ -156,7 +156,7 @@ func (r waitingAdmissionFacts) ReadAdmissionFacts(ctx context.Context, tenant, i
 func TestAdmissionRPCCancellationReachesActualFactsRead(t *testing.T) {
 	f := prepareResolution(t)
 	waiting := waitingAdmissionFacts{delegate: f.factReader.reader, entered: make(chan struct{}), exited: make(chan error, 1)}
-	client := startAdmissionClient(t, f, biz.NewAdmissionResolver(f.materials, f.inputs, waiting))
+	client := startAdmissionClient(t, f, biz.NewAdmissionResolver(f.materials, f.inputs, waiting, &fixtureImages{selection: f.selection}))
 	ctx, cancel := context.WithCancel(admissionRPCContext(f.ctx, f.request.IdentityRef.TenantID))
 	defer cancel()
 	result := make(chan error, 1)

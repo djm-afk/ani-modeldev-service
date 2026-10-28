@@ -9,6 +9,7 @@ import (
 
 // FinetuningIntentV1 and related fixtures identify no real image, provider,
 // workload or environment. They are shared contract vectors for consumer tests.
+// The finetuning contract is unchanged: no training image selection is present.
 func FinetuningIntentV1() cpup01.Intent {
 	base := "55555555-5555-4555-8555-555555555555"
 	name := "cpu-ft-contract"
@@ -19,10 +20,16 @@ func FinetuningManagedSettingsV1() cpup01.FinetuningManagedSettings {
 	return cpup01.FinetuningManagedSettings{Stage: "sft", FinetuningType: "lora", LoraTarget: "all", LoraRank: 8, LoraAlpha: 16, CutoffLen: 128, PerDeviceTrainBatchSize: 1, GradientAccumulationSteps: 1, Seed: 42, DataSeed: 42, Device: "cpu", FlashAttn: "disabled", ReportTo: "none", SaveStrategy: "no", Template: "qwen", TrainDtype: "float32", ExportDtype: "float32", VerifyDtype: "float32", LRSchedulerType: "linear", WarmupRatio: "0", WeightDecay: "0", LoraDropout: "0", NumTrainEpochs: 3, Optim: "adamw_torch", LoggingSteps: 1}
 }
 
+// FinetuningMaterialV21 keeps the finetuning material shape exactly as it was:
+// a pinned image_version_id plus digest, plus the export/verify components. The
+// values are the original fixture's, so the finetuning snapshot hash is
+// unchanged by the training-image work.
 func FinetuningMaterialV21() cpup01.ImplementationMaterial {
-	material := MaterialV21()
-	material.Implementation.ImplementationID = "builtin.sft_lora"
-	material.Implementation.ParameterContractVersion = cpup01.FinetuningParameterContractVersion
+	material := cpup01.ImplementationMaterial{
+		SchemaVersion:  cpup01.MaterialSchemaVersion,
+		Implementation: cpup01.ImplementationSnapshot{ImplementationID: "builtin.sft_lora", Version: "1", ParameterContractVersion: cpup01.FinetuningParameterContractVersion, PipelineID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", PipelineVersionID: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", PipelineIRSHA256: strings.Repeat("b", 64)},
+		Program:        &cpup01.MaterialProgram{ImageVersionID: "ffffffff-ffff-4fff-8fff-ffffffffffff", ImageDigest: "registry.example.test/cpu/mlp@sha256:" + strings.Repeat("e", 64)},
+	}
 	material.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/finetuning/finetune_entry.py"}
 
 	arguments := func(mode string) []cpup01.MaterialArgument {
@@ -50,6 +57,7 @@ func FinetuningMaterialV21() cpup01.ImplementationMaterial {
 	add("EXPORT_REPORT", "reports/export/merged_manifest.json", false, 1<<20)
 	add("EXPORT_REPORT", "reports/export/export.json", false, 1<<20)
 	add("VERIFY_REPORT", "reports/verify/verify.json", false, 1<<20)
+	material.Workspace = cpup01.WorkspaceContract{Mode: "EXECUTION_PVC", StorageClass: "task-workspace", CapacityBytes: 2147483648, InputSubpath: "inputs", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication"}
 	material.OutputContract = cpup01.OutputContract{SchemaVersion: "ani.finetune.output.v1", OutputKind: "MERGED_HF_MODEL", DeliveryMode: "SAVE_ARTIFACTS", RequiredFiles: files, MaxFileCount: 64, MaxTotalBytes: 4 << 30, CreateTarBundle: true, MaxTarBytes: &maxTar}
 	return material
 }
@@ -58,8 +66,12 @@ func FinetuningSnapshotV1() cpup01.Snapshot {
 	snapshot := SnapshotV1()
 	material := FinetuningMaterialV21()
 	intent := FinetuningIntentV1()
+	snapshot.SchemaVersion = cpup01.SnapshotSchemaVersion
 	snapshot.Kind = "FINETUNING"
 	snapshot.Implementation = material.Implementation
+	// The training program is replaced by the finetuning program identity.
+	snapshot.TrainingProgram = nil
+	snapshot.Program = &cpup01.ProgramRef{ImageVersionID: material.Program.ImageVersionID, ImageDigest: material.Program.ImageDigest}
 	_, snapshot.IdentityRef.IntentHash, _ = cpup01.CanonicalIntent(intent)
 	snapshot.Input.Format = "JSON"
 	snapshot.Input.SchemaVersion = cpup01.FinetuningInputSchemaVersion

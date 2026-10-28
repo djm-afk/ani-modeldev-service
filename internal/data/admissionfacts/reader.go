@@ -24,7 +24,10 @@ import (
 )
 
 const (
-	schemaVersion = "ani.modeldev.managed-admission-facts.v2.1"
+	// v2.2 adds target_platform: the resolved OS/architecture the training Pod
+	// is scheduled onto. It comes from installation configuration, never from
+	// the CPU/GPU device name or the image name.
+	schemaVersion = "ani.modeldev.managed-admission-facts.v2.2"
 	maxFiles      = 64
 	maxFileBytes  = 64 * 1024
 	maxJSONDepth  = 16
@@ -56,6 +59,7 @@ type document struct {
 	Workspace           cpup01.WorkspaceContract          `json:"workspace"`
 	InputFilePath       string                            `json:"input_file_path"`
 	OutputDirectoryPath string                            `json:"output_directory_path"`
+	TargetPlatform      cpup01.TrainingPlatform           `json:"target_platform"`
 	EnvironmentEvidence evidenceReference                 `json:"environment_evidence"`
 	ApplicationEvidence evidenceReference                 `json:"application_evidence"`
 }
@@ -124,7 +128,7 @@ func (reader *Reader) ReadAdmissionFacts(ctx context.Context, tenantID, implemen
 	if !found {
 		return biz.TenantAdmissionFacts{}, biz.ErrAdmissionEnvironmentNotReady
 	}
-	return biz.TenantAdmissionFacts{TenantID: value.ResourceTenantID, Environment: value.Environment, InputScope: value.InputScope, PublicationScope: value.PublicationScope, Workspace: value.Workspace, InputFilePath: value.InputFilePath, OutputDirectoryPath: value.OutputDirectoryPath, Timing: value.Timing}, nil
+	return biz.TenantAdmissionFacts{TenantID: value.ResourceTenantID, Environment: value.Environment, InputScope: value.InputScope, PublicationScope: value.PublicationScope, Workspace: value.Workspace, InputFilePath: value.InputFilePath, OutputDirectoryPath: value.OutputDirectoryPath, TargetPlatform: value.TargetPlatform, Timing: value.Timing}, nil
 }
 
 func readDocument(ctx context.Context, source FileSource) (document, error) {
@@ -182,6 +186,9 @@ func readDocument(ctx context.Context, source FileSource) (document, error) {
 	if _, err := value.Timing.Resolve(time.Now().UTC().Truncate(time.Microsecond), nil); err != nil {
 		return document{}, ErrInvalidFacts
 	}
+	if !validTargetPlatform(value.TargetPlatform) {
+		return document{}, ErrInvalidFacts
+	}
 	if err := ctx.Err(); err != nil {
 		return document{}, err
 	}
@@ -234,6 +241,30 @@ func validEvidence(value evidenceReference) bool {
 			continue
 		}
 		return false
+	}
+	return true
+}
+
+// validTargetPlatform rejects an empty or non-DNS platform. The variant is
+// optional, so an empty value is accepted there only.
+func validTargetPlatform(platform cpup01.TrainingPlatform) bool {
+	return validDNSLabel(platform.OS) && validDNSLabel(platform.Architecture) && (platform.Variant == "" || validDNSLabel(platform.Variant))
+}
+
+func validDNSLabel(value string) bool {
+	if len(value) == 0 || len(value) > 63 {
+		return false
+	}
+	for index, char := range value {
+		isLower := char >= 'a' && char <= 'z'
+		isDigit := char >= '0' && char <= '9'
+		isDash := char == '-'
+		if !isLower && !isDigit && !isDash {
+			return false
+		}
+		if isDash && (index == 0 || index == len(value)-1) {
+			return false
+		}
 	}
 	return true
 }

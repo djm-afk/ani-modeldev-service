@@ -50,9 +50,10 @@ func writeManagedFactsFixture(t *testing.T, f resolutionFixture) admissionfacts.
 		Workspace           cpup01.WorkspaceContract          `json:"workspace"`
 		InputFilePath       string                            `json:"input_file_path"`
 		OutputDirectoryPath string                            `json:"output_directory_path"`
+		TargetPlatform      cpup01.TrainingPlatform           `json:"target_platform"`
 		EnvironmentEvidence evidence                          `json:"environment_evidence"`
 		ApplicationEvidence evidence                          `json:"application_evidence"`
-	}{SchemaVersion: "ani.modeldev.managed-admission-facts.v2.1", ResourceTenantID: f.facts.TenantID, ImplementationID: f.request.Intent.ImplementationID, Environment: f.facts.Environment, InputScope: f.facts.InputScope, PublicationScope: f.facts.PublicationScope, Timing: f.facts.Timing, Workspace: f.facts.Workspace, InputFilePath: f.facts.InputFilePath, OutputDirectoryPath: f.facts.OutputDirectoryPath, EnvironmentEvidence: evidence{Reference: "module-fixture:environment-handoff", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, ApplicationEvidence: evidence{Reference: "module-fixture:application-verification", SHA256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}}
+	}{SchemaVersion: "ani.modeldev.managed-admission-facts.v2.2", ResourceTenantID: f.facts.TenantID, ImplementationID: f.request.Intent.ImplementationID, Environment: f.facts.Environment, InputScope: f.facts.InputScope, PublicationScope: f.facts.PublicationScope, Timing: f.facts.Timing, Workspace: f.facts.Workspace, InputFilePath: f.facts.InputFilePath, OutputDirectoryPath: f.facts.OutputDirectoryPath, TargetPlatform: f.facts.TargetPlatform, EnvironmentEvidence: evidence{Reference: "module-fixture:environment-handoff", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, ApplicationEvidence: evidence{Reference: "module-fixture:application-verification", SHA256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}}
 	raw, e := json.Marshal(document)
 	if e != nil {
 		t.Fatal(e)

@@ -42,7 +42,7 @@ func TestFinetuningStreamingRuntimeStoragePreservesAPIBudget(t *testing.T) {
 		if err := f.config.Validate(); err != nil {
 			t.Fatal(err)
 		}
-		clients, err := loadRuntimeClients(f.config.Runtime)
+		clients, err := loadRuntimeClients(f.config.Runtime, f.config.ImageRuntime)
 		if err != nil {
 			t.Fatal(err)
 		}

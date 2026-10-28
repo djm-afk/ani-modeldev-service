@@ -21,7 +21,7 @@ func TestMaterialRejectsAmbiguousIncompleteAndUnsafeSoftware(t *testing.T) {
 	_, raw := materialFixture(t)
 	text := string(raw)
 	mutate := func(change func(*cpup01.ImplementationMaterial)) []byte {
-		m := conformance.MaterialV21()
+		m := conformance.MaterialV3()
 		change(&m)
 		if _, err := m.Canonical(); err == nil {
 			t.Fatal("invalid semantic material acquired canonical bytes")
@@ -41,8 +41,8 @@ func TestMaterialRejectsAmbiguousIncompleteAndUnsafeSoftware(t *testing.T) {
 		"null source":      []byte(strings.Replace(text, `{"literal":"--data"}`, `{"literal":"--data","source":null}`, 1)),
 		"omitted boolean":  []byte(strings.Replace(text, `"create_tar_bundle":true,`, "", 1)),
 		"newline":          append(append([]byte{}, raw...), '\n'), "trailing object": append(append([]byte{}, raw...), '{', '}'), "leading whitespace": append([]byte(" "), raw...), "BOM": append([]byte{0xef, 0xbb, 0xbf}, raw...),
-		"invalid UTF8":           []byte(strings.Replace(text, "registry.example.test", "registry.\xff.test", 1)),
-		"unpaired surrogate":     []byte(strings.Replace(text, "registry.example.test", `registry.\ud800.test`, 1)),
+		"invalid UTF8":           []byte(strings.Replace(text, "builtin.mlp", "builtin.\xff.mlp", 1)),
+		"unpaired surrogate":     []byte(strings.Replace(text, "builtin.mlp", `builtin.\ud800.mlp`, 1)),
 		"unknown implementation": mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.ImplementationID = "builtin.unknown" }),
 		"wrong contract":         mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.ParameterContractVersion = "unknown" }),
 		"unknown pipeline":       mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.PipelineVersionID = "UNKNOWN" }),
@@ -53,11 +53,14 @@ func TestMaterialRejectsAmbiguousIncompleteAndUnsafeSoftware(t *testing.T) {
 			m.Implementation.PipelineVersionID = "AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA"
 		}),
 		"IR absent":         mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.PipelineIRSHA256 = "" }),
-		"floating image":    mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ImageDigest = "registry.example.test/mlp:latest" }),
-		"shell":             mutate(func(m *cpup01.ImplementationMaterial) { m.Program.Command = []string{"sh", "-c", "train"} }),
-		"arbitrary source":  mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ArgsTemplate[1].Source = "USER_SCRIPT" }),
-		"mixed argument":    mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ArgsTemplate[1].Literal = "/arbitrary" }),
-		"empty command":     mutate(func(m *cpup01.ImplementationMaterial) { m.Program.Command = nil }),
+		"floating image":    mutate(func(m *cpup01.ImplementationMaterial) { m.Training.DefaultImage.ImageID = "registry.example.test/mlp:latest" }),
+		"unknown scope":     mutate(func(m *cpup01.ImplementationMaterial) { m.Training.DefaultImage.Scope = "global" }),
+		"missing image":     mutate(func(m *cpup01.ImplementationMaterial) { m.Training.DefaultImage = cpup01.DefaultTrainingImage{} }),
+		"pinned digest":     mutate(func(m *cpup01.ImplementationMaterial) { m.Program = &cpup01.MaterialProgram{ImageVersionID: "11111111-1111-4111-8111-111111111111", ImageDigest: "registry.example.test/mlp@sha256:" + strings.Repeat("a", 64)} }),
+		"shell":             mutate(func(m *cpup01.ImplementationMaterial) { m.Training.Command = []string{"sh", "-c", "train"} }),
+		"arbitrary source":  mutate(func(m *cpup01.ImplementationMaterial) { m.Training.ArgsTemplate[1].Source = "USER_SCRIPT" }),
+		"mixed argument":    mutate(func(m *cpup01.ImplementationMaterial) { m.Training.ArgsTemplate[1].Literal = "/arbitrary" }),
+		"empty command":     mutate(func(m *cpup01.ImplementationMaterial) { m.Training.Command = nil }),
 		"unbound storage":   mutate(func(m *cpup01.ImplementationMaterial) { m.Workspace.StorageClass = "NOT_READY" }),
 		"overlap workspace": mutate(func(m *cpup01.ImplementationMaterial) { m.Workspace.TrainingSubpath = "inputs/training" }),
 		"wrong output role": mutate(func(m *cpup01.ImplementationMaterial) { m.OutputContract.RequiredFiles[0].Role = "CHECKPOINT" }),

@@ -32,7 +32,7 @@ func TestCollectActualFedoraMLPArtifacts(t *testing.T) {
 			snapshot := conformance.SnapshotV1()
 			intent := conformance.IntentV1()
 			intent.MLP = &cpup01.MLPParameters{LearningRate: &vector.rate, Epochs: &vector.epochs, BatchSize: &vector.batch, Seed: &vector.seed}
-			snapshot.Program.ResolvedParameters, _ = intent.ResolveParameters()
+			snapshot.TrainingProgram.ResolvedParameters, _ = intent.ResolveParameters()
 			snapshot.Input.RowCount = uint32(vector.rows)
 			raw, err := os.ReadFile(filepath.Join(root, vector.name, "input.csv"))
 			if err != nil {

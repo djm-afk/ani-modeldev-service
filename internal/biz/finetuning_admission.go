@@ -19,8 +19,8 @@ type FinetuningModelFactsReader interface {
 	ResolveFinetuningModelFacts(context.Context, string, cpup01.Intent, cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error)
 }
 
-func NewFinetuningAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader, models FinetuningModelFactsReader) *AdmissionResolver {
-	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts, models: models}
+func NewFinetuningAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader, models FinetuningModelFactsReader, images TrainingImageResolver) *AdmissionResolver {
+	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts, models: models, images: images}
 }
 
 func verifiedAdmissionInput(v InputVersion, kind string) (cpup01.InputRef, error) {

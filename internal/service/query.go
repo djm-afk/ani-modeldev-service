@@ -339,8 +339,20 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if !valid {
 		return nil, biz.ErrPersistence
 	}
-	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: value.Snapshot.Program.ImageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	// imageVersionID stays a finetuning-only projection: the training chain has
+	// no image version identity at all, only the resolved catalogue selection.
+	var imageVersionID string
+	if value.Snapshot.Program != nil {
+		imageVersionID = value.Snapshot.Program.ImageVersionID
+	}
+	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: imageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
 	view.ParameterContractVersion = value.Snapshot.Implementation.ParameterContractVersion
+	if program := value.Snapshot.TrainingProgram; program != nil {
+		view.TrainingImageId = program.Image.ImageID
+		view.TrainingImageScope = program.Image.Scope
+		view.TrainingImageDigest = program.Image.Digest
+		view.TrainingImageRegistryAuthority = program.Image.RegistryAuthority
+	}
 	encoded, err := contractpb.EncodeSnapshot(value.Snapshot)
 	if err != nil {
 		return nil, biz.ErrPersistence
@@ -353,7 +365,7 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 			return nil, biz.ErrPersistence
 		}
 		view.ExplicitMlp = typed.GetMlp()
-		for _, p := range value.Snapshot.Program.ResolvedParameters {
+		for _, p := range value.Snapshot.ProgramParameters() {
 			wire := parameterView(p)
 			if wire == nil {
 				return nil, biz.ErrPersistence
@@ -372,7 +384,7 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 			return nil, biz.ErrPersistence
 		}
 		view.ExplicitFinetuning = typedIntent.GetSftLora()
-		for _, p := range value.Snapshot.Program.ResolvedParameters {
+		for _, p := range value.Snapshot.ProgramParameters() {
 			wire := parameterView(p)
 			if wire == nil {
 				return nil, biz.ErrPersistence

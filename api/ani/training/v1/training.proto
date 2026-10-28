@@ -109,6 +109,9 @@ message RuntimeRef {
   repeated string target_jobs = 5;
 }
 
+// ProgramRef is the finetuning program identity. Its image_version_id stays
+// reserved for the finetuning chain only; general training uses
+// TrainingProgram below.
 message ProgramRef {
   string image_version_id = 1;
   // Full immutable registry reference, including @sha256:<digest>.
@@ -116,6 +119,41 @@ message ProgramRef {
   repeated string command = 3;
   repeated string resolved_args = 4;
   repeated Parameter resolved_parameters = 5;
+}
+
+// TrainingPlatform is the resolved target platform of the selected image. It
+// comes from pinned admission facts, never from the device name or image name.
+message TrainingPlatform {
+  string os = 1;
+  string architecture = 2;
+  string variant = 3;
+}
+
+// TrainingImageSelection is the frozen catalogue resolution of the training
+// image. It never carries credentials; pull_secret_ref is only a Secret name.
+message TrainingImageSelection {
+  string image_id = 1;
+  string scope = 2;
+  // Authoritative registry authority from Resource. Never re-derived from the
+  // reference by a consumer.
+  string registry_authority = 3;
+  // Fixed content digest as sha256:<64 lowercase hex>.
+  string digest = 4;
+  // Complete runnable reference, including @sha256:<digest>.
+  string reference = 5;
+  TrainingPlatform platform = 6;
+  string protocol_version = 7;
+  // Shared tenant pull Secret name derived offline from Resource's naming rule.
+  string pull_secret_ref = 8;
+}
+
+// TrainingProgram is the general-training executable program. It is separate
+// from ProgramRef so the finetuning chain keeps its own identity and hash.
+message TrainingProgram {
+  TrainingImageSelection image = 1;
+  repeated string command = 2;
+  repeated string resolved_args = 3;
+  repeated Parameter resolved_parameters = 4;
 }
 
 message CPUResources {

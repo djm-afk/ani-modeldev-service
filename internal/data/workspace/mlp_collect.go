@@ -36,7 +36,7 @@ func verifyMLPReports(ctx context.Context, root int, execution biz.Execution, fi
 		return invalid
 	}
 	expected := map[string]string{}
-	for _, parameter := range execution.Snapshot.Program.ResolvedParameters {
+	for _, parameter := range execution.Snapshot.ProgramParameters() {
 		expected[parameter.Name] = parameter.Value
 	}
 	epochs, epochErr := strconv.ParseInt(expected["epochs"], 10, 64)

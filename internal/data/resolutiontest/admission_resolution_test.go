@@ -28,6 +28,7 @@ type resolutionFixture struct {
 	ready      biz.InputVersion
 	request    biz.PrepareAdmissionInput
 	facts      biz.TenantAdmissionFacts
+	selection  cpup01.TrainingImageSelection
 	resolver   *biz.AdmissionResolver
 	materials  *countedMaterials
 	inputs     *countedInputs
@@ -94,7 +95,7 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	identity.Actor = "governance:user:42"
 	identity.IntentHash = hash
 	directory := t.TempDir()
-	material := conformance.MaterialV21()
+	material := conformance.MaterialV3()
 	writeMaterial(t, directory, material, "cpu")
 	imported := biz.InputImport{TenantID: identity.TenantID, RequestID: "12345678-1234-4234-8234-123456789abc", InputVersionID: intent.DatasetVersionID, Actor: identity.Actor, RequestedAt: snapshot.Timing.AcceptedAt.Add(-time.Minute), Scope: cpup01.StorageScope{StorageConnectionID: snapshot.Input.Object.StorageConnectionID, Bucket: snapshot.Input.Object.Bucket, ApprovedPrefix: "fixed/input"}, Object: snapshot.Input.Object}
 	repository := input.New(openPool())
@@ -105,8 +106,8 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	if err != nil {
 		t.Fatal("READY preflight proof failed", err)
 	}
-	facts := biz.TenantAdmissionFacts{TenantID: identity.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: imported.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
-	f := resolutionFixture{ctx: ctx, openPool: openPool, directory: directory, material: material, imported: imported, ready: ready, facts: facts, request: biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: snapshot.Timing.AcceptedAt}}
+	facts := biz.TenantAdmissionFacts{TenantID: identity.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: imported.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", TargetPlatform: snapshot.TrainingProgram.Image.Platform, Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
+	f := resolutionFixture{ctx: ctx, openPool: openPool, directory: directory, material: material, imported: imported, ready: ready, facts: facts, selection: snapshot.TrainingProgram.Image, request: biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: snapshot.Timing.AcceptedAt}}
 	reader, err := admissionfacts.Load(ctx, []admissionfacts.FileSource{writeManagedFactsFixture(t, f)})
 	if err != nil {
 		t.Fatal("facts preflight", err)
@@ -114,12 +115,27 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	f.materials = &countedMaterials{reader: catalogue.NewReader(directory)}
 	f.inputs = &countedInputs{reader: input.New(openPool())}
 	f.factReader = &countedFacts{reader: reader}
-	f.resolver = biz.NewAdmissionResolver(f.materials, f.inputs, f.factReader)
+	f.resolver = biz.NewAdmissionResolver(f.materials, f.inputs, f.factReader, &fixtureImages{selection: snapshot.TrainingProgram.Image})
 	recovered, err := f.inputs.reader.Get(ctx, imported.TenantID, imported.InputVersionID)
 	if err != nil || !reflect.DeepEqual(ready, recovered) {
 		t.Fatal("READY unavailable across new PG connection", err)
 	}
 	return f
+}
+
+// fixtureImages answers exactly the frozen synthetic selection and records what
+// Prepare asked for. It never writes a Secret.
+type fixtureImages struct {
+	selection cpup01.TrainingImageSelection
+	requests  int
+	imageID   string
+	scope     string
+}
+
+func (f *fixtureImages) ResolveTrainingImage(_ context.Context, _, imageID, scope string, target cpup01.TrainingPlatform) (biz.TrainingImageResolution, error) {
+	f.requests++
+	f.imageID, f.scope = imageID, scope
+	return biz.TrainingImageResolution{ImageID: imageID, Scope: scope, Reference: f.selection.Reference, Digest: f.selection.Digest, RegistryAuthority: f.selection.RegistryAuthority, Platform: target}, nil
 }
 func writeMaterial(t *testing.T, directory string, m cpup01.ImplementationMaterial, mode string) {
 	t.Helper()
@@ -180,12 +196,12 @@ func TestPrepareFinalizeFreezeCompleteCandidateWithoutWritesOrSecondReads(t *tes
 		t.Fatal("Finalize read new defaults/facts")
 	}
 	s := resolved.Snapshot
-	if s.RuntimePlan.Name != cpup01.RuntimeName(s.Environment.NamespaceUID, s.IdentityRef.ExecutionID) || s.Timing.StepTimeoutSeconds != 900 || !s.DeadlineAt.Equal(f.request.AcceptedAt.Add(time.Hour)) || len(s.Program.ResolvedParameters) != 4 || s.Input.RowCount != 1027 {
+	if s.RuntimePlan.Name != cpup01.RuntimeName(s.Environment.NamespaceUID, s.IdentityRef.ExecutionID) || s.Timing.StepTimeoutSeconds != 900 || !s.DeadlineAt.Equal(f.request.AcceptedAt.Add(time.Hour)) || len(s.ProgramParameters()) != 4 || s.Input.RowCount != 1027 {
 		t.Fatal("incomplete plan")
 	}
 	expected := []string{"--data", "/inputs/data.csv", "--output", "/outputs", "--learning-rate", "0.02", "--epochs", "5", "--batch-size", "37", "--seed", "7"}
-	if !reflect.DeepEqual(s.Program.ResolvedArgs, expected) {
-		t.Fatalf("typed parameters did not enter argv: %v", s.Program.ResolvedArgs)
+	if !reflect.DeepEqual(s.ProgramArgs(), expected) {
+		t.Fatalf("typed parameters did not enter argv: %v", s.ProgramArgs())
 	}
 	spec, _ := s.Digest()
 	if spec != resolved.SpecHash {
@@ -195,7 +211,7 @@ func TestPrepareFinalizeFreezeCompleteCandidateWithoutWritesOrSecondReads(t *tes
 	if hash != originalHash || !bytes.Equal(before, after) || *f.request.Intent.MLP.LearningRate != "0.0200" {
 		t.Fatal("caller intent mutated")
 	}
-	s.Program.Command[0] = "consumer-change"
+	s.TrainingProgram.Command[0] = "consumer-change"
 	*s.Input.Object.VersionID = "consumer-change"
 	s.OutputContract.RequiredFiles[0].RelativePath = "consumer-change"
 	raw, _ := candidate.Canonical()

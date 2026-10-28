@@ -861,6 +861,9 @@ func (x *RuntimeRef) GetTargetJobs() []string {
 	return nil
 }
 
+// ProgramRef is the finetuning program identity. Its image_version_id stays
+// reserved for the finetuning chain only; general training uses
+// TrainingProgram below.
 type ProgramRef struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ImageVersionId string                 `protobuf:"bytes,1,opt,name=image_version_id,json=imageVersionId,proto3" json:"image_version_id,omitempty"`
@@ -938,6 +941,245 @@ func (x *ProgramRef) GetResolvedParameters() []*Parameter {
 	return nil
 }
 
+// TrainingPlatform is the resolved target platform of the selected image. It
+// comes from pinned admission facts, never from the device name or image name.
+type TrainingPlatform struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Os            string                 `protobuf:"bytes,1,opt,name=os,proto3" json:"os,omitempty"`
+	Architecture  string                 `protobuf:"bytes,2,opt,name=architecture,proto3" json:"architecture,omitempty"`
+	Variant       string                 `protobuf:"bytes,3,opt,name=variant,proto3" json:"variant,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TrainingPlatform) Reset() {
+	*x = TrainingPlatform{}
+	mi := &file_ani_training_v1_training_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrainingPlatform) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrainingPlatform) ProtoMessage() {}
+
+func (x *TrainingPlatform) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_training_v1_training_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrainingPlatform.ProtoReflect.Descriptor instead.
+func (*TrainingPlatform) Descriptor() ([]byte, []int) {
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *TrainingPlatform) GetOs() string {
+	if x != nil {
+		return x.Os
+	}
+	return ""
+}
+
+func (x *TrainingPlatform) GetArchitecture() string {
+	if x != nil {
+		return x.Architecture
+	}
+	return ""
+}
+
+func (x *TrainingPlatform) GetVariant() string {
+	if x != nil {
+		return x.Variant
+	}
+	return ""
+}
+
+// TrainingImageSelection is the frozen catalogue resolution of the training
+// image. It never carries credentials; pull_secret_ref is only a Secret name.
+type TrainingImageSelection struct {
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	ImageId string                 `protobuf:"bytes,1,opt,name=image_id,json=imageId,proto3" json:"image_id,omitempty"`
+	Scope   string                 `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
+	// Authoritative registry authority from Resource. Never re-derived from the
+	// reference by a consumer.
+	RegistryAuthority string `protobuf:"bytes,3,opt,name=registry_authority,json=registryAuthority,proto3" json:"registry_authority,omitempty"`
+	// Fixed content digest as sha256:<64 lowercase hex>.
+	Digest string `protobuf:"bytes,4,opt,name=digest,proto3" json:"digest,omitempty"`
+	// Complete runnable reference, including @sha256:<digest>.
+	Reference       string            `protobuf:"bytes,5,opt,name=reference,proto3" json:"reference,omitempty"`
+	Platform        *TrainingPlatform `protobuf:"bytes,6,opt,name=platform,proto3" json:"platform,omitempty"`
+	ProtocolVersion string            `protobuf:"bytes,7,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	// Shared tenant pull Secret name derived offline from Resource's naming rule.
+	PullSecretRef string `protobuf:"bytes,8,opt,name=pull_secret_ref,json=pullSecretRef,proto3" json:"pull_secret_ref,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TrainingImageSelection) Reset() {
+	*x = TrainingImageSelection{}
+	mi := &file_ani_training_v1_training_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrainingImageSelection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrainingImageSelection) ProtoMessage() {}
+
+func (x *TrainingImageSelection) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_training_v1_training_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrainingImageSelection.ProtoReflect.Descriptor instead.
+func (*TrainingImageSelection) Descriptor() ([]byte, []int) {
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *TrainingImageSelection) GetImageId() string {
+	if x != nil {
+		return x.ImageId
+	}
+	return ""
+}
+
+func (x *TrainingImageSelection) GetScope() string {
+	if x != nil {
+		return x.Scope
+	}
+	return ""
+}
+
+func (x *TrainingImageSelection) GetRegistryAuthority() string {
+	if x != nil {
+		return x.RegistryAuthority
+	}
+	return ""
+}
+
+func (x *TrainingImageSelection) GetDigest() string {
+	if x != nil {
+		return x.Digest
+	}
+	return ""
+}
+
+func (x *TrainingImageSelection) GetReference() string {
+	if x != nil {
+		return x.Reference
+	}
+	return ""
+}
+
+func (x *TrainingImageSelection) GetPlatform() *TrainingPlatform {
+	if x != nil {
+		return x.Platform
+	}
+	return nil
+}
+
+func (x *TrainingImageSelection) GetProtocolVersion() string {
+	if x != nil {
+		return x.ProtocolVersion
+	}
+	return ""
+}
+
+func (x *TrainingImageSelection) GetPullSecretRef() string {
+	if x != nil {
+		return x.PullSecretRef
+	}
+	return ""
+}
+
+// TrainingProgram is the general-training executable program. It is separate
+// from ProgramRef so the finetuning chain keeps its own identity and hash.
+type TrainingProgram struct {
+	state              protoimpl.MessageState  `protogen:"open.v1"`
+	Image              *TrainingImageSelection `protobuf:"bytes,1,opt,name=image,proto3" json:"image,omitempty"`
+	Command            []string                `protobuf:"bytes,2,rep,name=command,proto3" json:"command,omitempty"`
+	ResolvedArgs       []string                `protobuf:"bytes,3,rep,name=resolved_args,json=resolvedArgs,proto3" json:"resolved_args,omitempty"`
+	ResolvedParameters []*Parameter            `protobuf:"bytes,4,rep,name=resolved_parameters,json=resolvedParameters,proto3" json:"resolved_parameters,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *TrainingProgram) Reset() {
+	*x = TrainingProgram{}
+	mi := &file_ani_training_v1_training_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrainingProgram) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrainingProgram) ProtoMessage() {}
+
+func (x *TrainingProgram) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_training_v1_training_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrainingProgram.ProtoReflect.Descriptor instead.
+func (*TrainingProgram) Descriptor() ([]byte, []int) {
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *TrainingProgram) GetImage() *TrainingImageSelection {
+	if x != nil {
+		return x.Image
+	}
+	return nil
+}
+
+func (x *TrainingProgram) GetCommand() []string {
+	if x != nil {
+		return x.Command
+	}
+	return nil
+}
+
+func (x *TrainingProgram) GetResolvedArgs() []string {
+	if x != nil {
+		return x.ResolvedArgs
+	}
+	return nil
+}
+
+func (x *TrainingProgram) GetResolvedParameters() []*Parameter {
+	if x != nil {
+		return x.ResolvedParameters
+	}
+	return nil
+}
+
 type CPUResources struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Nodes              uint32                 `protobuf:"varint,1,opt,name=nodes,proto3" json:"nodes,omitempty"`
@@ -952,7 +1194,7 @@ type CPUResources struct {
 
 func (x *CPUResources) Reset() {
 	*x = CPUResources{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[6]
+	mi := &file_ani_training_v1_training_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -964,7 +1206,7 @@ func (x *CPUResources) String() string {
 func (*CPUResources) ProtoMessage() {}
 
 func (x *CPUResources) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[6]
+	mi := &file_ani_training_v1_training_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -977,7 +1219,7 @@ func (x *CPUResources) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CPUResources.ProtoReflect.Descriptor instead.
 func (*CPUResources) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{6}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CPUResources) GetNodes() uint32 {
@@ -1039,7 +1281,7 @@ type WorkspaceContract struct {
 
 func (x *WorkspaceContract) Reset() {
 	*x = WorkspaceContract{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[7]
+	mi := &file_ani_training_v1_training_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1051,7 +1293,7 @@ func (x *WorkspaceContract) String() string {
 func (*WorkspaceContract) ProtoMessage() {}
 
 func (x *WorkspaceContract) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[7]
+	mi := &file_ani_training_v1_training_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1064,7 +1306,7 @@ func (x *WorkspaceContract) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceContract.ProtoReflect.Descriptor instead.
 func (*WorkspaceContract) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{7}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *WorkspaceContract) GetMode() WorkspaceMode {
@@ -1135,7 +1377,7 @@ type WorkspaceRef struct {
 
 func (x *WorkspaceRef) Reset() {
 	*x = WorkspaceRef{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[8]
+	mi := &file_ani_training_v1_training_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1147,7 +1389,7 @@ func (x *WorkspaceRef) String() string {
 func (*WorkspaceRef) ProtoMessage() {}
 
 func (x *WorkspaceRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[8]
+	mi := &file_ani_training_v1_training_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1160,7 +1402,7 @@ func (x *WorkspaceRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceRef.ProtoReflect.Descriptor instead.
 func (*WorkspaceRef) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{8}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *WorkspaceRef) GetMode() WorkspaceMode {
@@ -1238,7 +1480,7 @@ type RequiredOutput struct {
 
 func (x *RequiredOutput) Reset() {
 	*x = RequiredOutput{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[9]
+	mi := &file_ani_training_v1_training_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1250,7 +1492,7 @@ func (x *RequiredOutput) String() string {
 func (*RequiredOutput) ProtoMessage() {}
 
 func (x *RequiredOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[9]
+	mi := &file_ani_training_v1_training_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1263,7 +1505,7 @@ func (x *RequiredOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequiredOutput.ProtoReflect.Descriptor instead.
 func (*RequiredOutput) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{9}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *RequiredOutput) GetRole() FileRole {
@@ -1310,7 +1552,7 @@ type OutputContract struct {
 
 func (x *OutputContract) Reset() {
 	*x = OutputContract{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[10]
+	mi := &file_ani_training_v1_training_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1322,7 +1564,7 @@ func (x *OutputContract) String() string {
 func (*OutputContract) ProtoMessage() {}
 
 func (x *OutputContract) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[10]
+	mi := &file_ani_training_v1_training_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1335,7 +1577,7 @@ func (x *OutputContract) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OutputContract.ProtoReflect.Descriptor instead.
 func (*OutputContract) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{10}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *OutputContract) GetSchemaVersion() string {
@@ -1409,7 +1651,7 @@ type FileEntry struct {
 
 func (x *FileEntry) Reset() {
 	*x = FileEntry{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[11]
+	mi := &file_ani_training_v1_training_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1421,7 +1663,7 @@ func (x *FileEntry) String() string {
 func (*FileEntry) ProtoMessage() {}
 
 func (x *FileEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[11]
+	mi := &file_ani_training_v1_training_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1434,7 +1676,7 @@ func (x *FileEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileEntry.ProtoReflect.Descriptor instead.
 func (*FileEntry) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{11}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *FileEntry) GetRelativePath() string {
@@ -1476,7 +1718,7 @@ type ManifestRef struct {
 
 func (x *ManifestRef) Reset() {
 	*x = ManifestRef{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[12]
+	mi := &file_ani_training_v1_training_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1488,7 +1730,7 @@ func (x *ManifestRef) String() string {
 func (*ManifestRef) ProtoMessage() {}
 
 func (x *ManifestRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[12]
+	mi := &file_ani_training_v1_training_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1501,7 +1743,7 @@ func (x *ManifestRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ManifestRef.ProtoReflect.Descriptor instead.
 func (*ManifestRef) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{12}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ManifestRef) GetRelativePath() string {
@@ -1536,7 +1778,7 @@ type Metric struct {
 
 func (x *Metric) Reset() {
 	*x = Metric{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[13]
+	mi := &file_ani_training_v1_training_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1548,7 +1790,7 @@ func (x *Metric) String() string {
 func (*Metric) ProtoMessage() {}
 
 func (x *Metric) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[13]
+	mi := &file_ani_training_v1_training_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1561,7 +1803,7 @@ func (x *Metric) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Metric.ProtoReflect.Descriptor instead.
 func (*Metric) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{13}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *Metric) GetName() string {
@@ -1597,7 +1839,7 @@ type LogRef struct {
 
 func (x *LogRef) Reset() {
 	*x = LogRef{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[14]
+	mi := &file_ani_training_v1_training_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1609,7 +1851,7 @@ func (x *LogRef) String() string {
 func (*LogRef) ProtoMessage() {}
 
 func (x *LogRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[14]
+	mi := &file_ani_training_v1_training_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1622,7 +1864,7 @@ func (x *LogRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogRef.ProtoReflect.Descriptor instead.
 func (*LogRef) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{14}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *LogRef) GetLogId() string {
@@ -1664,7 +1906,7 @@ type TrainingInput struct {
 
 func (x *TrainingInput) Reset() {
 	*x = TrainingInput{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[15]
+	mi := &file_ani_training_v1_training_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1676,7 +1918,7 @@ func (x *TrainingInput) String() string {
 func (*TrainingInput) ProtoMessage() {}
 
 func (x *TrainingInput) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[15]
+	mi := &file_ani_training_v1_training_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1689,7 +1931,7 @@ func (x *TrainingInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrainingInput.ProtoReflect.Descriptor instead.
 func (*TrainingInput) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{15}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *TrainingInput) GetSchemaVersion() string {
@@ -1785,7 +2027,7 @@ type TrainingResult struct {
 
 func (x *TrainingResult) Reset() {
 	*x = TrainingResult{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[16]
+	mi := &file_ani_training_v1_training_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1797,7 +2039,7 @@ func (x *TrainingResult) String() string {
 func (*TrainingResult) ProtoMessage() {}
 
 func (x *TrainingResult) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[16]
+	mi := &file_ani_training_v1_training_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1810,7 +2052,7 @@ func (x *TrainingResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrainingResult.ProtoReflect.Descriptor instead.
 func (*TrainingResult) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{16}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *TrainingResult) GetSchemaVersion() string {
@@ -1952,7 +2194,25 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\fimage_digest\x18\x02 \x01(\tR\vimageDigest\x12\x18\n" +
 	"\acommand\x18\x03 \x03(\tR\acommand\x12#\n" +
 	"\rresolved_args\x18\x04 \x03(\tR\fresolvedArgs\x12K\n" +
-	"\x13resolved_parameters\x18\x05 \x03(\v2\x1a.ani.training.v1.ParameterR\x12resolvedParameters\"\x84\x02\n" +
+	"\x13resolved_parameters\x18\x05 \x03(\v2\x1a.ani.training.v1.ParameterR\x12resolvedParameters\"`\n" +
+	"\x10TrainingPlatform\x12\x0e\n" +
+	"\x02os\x18\x01 \x01(\tR\x02os\x12\"\n" +
+	"\farchitecture\x18\x02 \x01(\tR\farchitecture\x12\x18\n" +
+	"\avariant\x18\x03 \x01(\tR\avariant\"\xc0\x02\n" +
+	"\x16TrainingImageSelection\x12\x19\n" +
+	"\bimage_id\x18\x01 \x01(\tR\aimageId\x12\x14\n" +
+	"\x05scope\x18\x02 \x01(\tR\x05scope\x12-\n" +
+	"\x12registry_authority\x18\x03 \x01(\tR\x11registryAuthority\x12\x16\n" +
+	"\x06digest\x18\x04 \x01(\tR\x06digest\x12\x1c\n" +
+	"\treference\x18\x05 \x01(\tR\treference\x12=\n" +
+	"\bplatform\x18\x06 \x01(\v2!.ani.training.v1.TrainingPlatformR\bplatform\x12)\n" +
+	"\x10protocol_version\x18\a \x01(\tR\x0fprotocolVersion\x12&\n" +
+	"\x0fpull_secret_ref\x18\b \x01(\tR\rpullSecretRef\"\xdc\x01\n" +
+	"\x0fTrainingProgram\x12=\n" +
+	"\x05image\x18\x01 \x01(\v2'.ani.training.v1.TrainingImageSelectionR\x05image\x12\x18\n" +
+	"\acommand\x18\x02 \x03(\tR\acommand\x12#\n" +
+	"\rresolved_args\x18\x03 \x03(\tR\fresolvedArgs\x12K\n" +
+	"\x13resolved_parameters\x18\x04 \x03(\v2\x1a.ani.training.v1.ParameterR\x12resolvedParameters\"\x84\x02\n" +
 	"\fCPUResources\x12\x14\n" +
 	"\x05nodes\x18\x01 \x01(\rR\x05nodes\x12,\n" +
 	"\x12processes_per_node\x18\x02 \x01(\rR\x10processesPerNode\x12)\n" +
@@ -2096,68 +2356,74 @@ func file_ani_training_v1_training_proto_rawDescGZIP() []byte {
 }
 
 var file_ani_training_v1_training_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_ani_training_v1_training_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_ani_training_v1_training_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_ani_training_v1_training_proto_goTypes = []any{
-	(ExecutionKind)(0),            // 0: ani.training.v1.ExecutionKind
-	(DeliveryMode)(0),             // 1: ani.training.v1.DeliveryMode
-	(OutputKind)(0),               // 2: ani.training.v1.OutputKind
-	(TrainingOutcome)(0),          // 3: ani.training.v1.TrainingOutcome
-	(CandidateStorageState)(0),    // 4: ani.training.v1.CandidateStorageState
-	(WorkspaceMode)(0),            // 5: ani.training.v1.WorkspaceMode
-	(FileRole)(0),                 // 6: ani.training.v1.FileRole
-	(*Parameter)(nil),             // 7: ani.training.v1.Parameter
-	(*ExecutionIdentity)(nil),     // 8: ani.training.v1.ExecutionIdentity
-	(*FixedObjectRef)(nil),        // 9: ani.training.v1.FixedObjectRef
-	(*InputRef)(nil),              // 10: ani.training.v1.InputRef
-	(*RuntimeRef)(nil),            // 11: ani.training.v1.RuntimeRef
-	(*ProgramRef)(nil),            // 12: ani.training.v1.ProgramRef
-	(*CPUResources)(nil),          // 13: ani.training.v1.CPUResources
-	(*WorkspaceContract)(nil),     // 14: ani.training.v1.WorkspaceContract
-	(*WorkspaceRef)(nil),          // 15: ani.training.v1.WorkspaceRef
-	(*RequiredOutput)(nil),        // 16: ani.training.v1.RequiredOutput
-	(*OutputContract)(nil),        // 17: ani.training.v1.OutputContract
-	(*FileEntry)(nil),             // 18: ani.training.v1.FileEntry
-	(*ManifestRef)(nil),           // 19: ani.training.v1.ManifestRef
-	(*Metric)(nil),                // 20: ani.training.v1.Metric
-	(*LogRef)(nil),                // 21: ani.training.v1.LogRef
-	(*TrainingInput)(nil),         // 22: ani.training.v1.TrainingInput
-	(*TrainingResult)(nil),        // 23: ani.training.v1.TrainingResult
-	(*timestamppb.Timestamp)(nil), // 24: google.protobuf.Timestamp
+	(ExecutionKind)(0),             // 0: ani.training.v1.ExecutionKind
+	(DeliveryMode)(0),              // 1: ani.training.v1.DeliveryMode
+	(OutputKind)(0),                // 2: ani.training.v1.OutputKind
+	(TrainingOutcome)(0),           // 3: ani.training.v1.TrainingOutcome
+	(CandidateStorageState)(0),     // 4: ani.training.v1.CandidateStorageState
+	(WorkspaceMode)(0),             // 5: ani.training.v1.WorkspaceMode
+	(FileRole)(0),                  // 6: ani.training.v1.FileRole
+	(*Parameter)(nil),              // 7: ani.training.v1.Parameter
+	(*ExecutionIdentity)(nil),      // 8: ani.training.v1.ExecutionIdentity
+	(*FixedObjectRef)(nil),         // 9: ani.training.v1.FixedObjectRef
+	(*InputRef)(nil),               // 10: ani.training.v1.InputRef
+	(*RuntimeRef)(nil),             // 11: ani.training.v1.RuntimeRef
+	(*ProgramRef)(nil),             // 12: ani.training.v1.ProgramRef
+	(*TrainingPlatform)(nil),       // 13: ani.training.v1.TrainingPlatform
+	(*TrainingImageSelection)(nil), // 14: ani.training.v1.TrainingImageSelection
+	(*TrainingProgram)(nil),        // 15: ani.training.v1.TrainingProgram
+	(*CPUResources)(nil),           // 16: ani.training.v1.CPUResources
+	(*WorkspaceContract)(nil),      // 17: ani.training.v1.WorkspaceContract
+	(*WorkspaceRef)(nil),           // 18: ani.training.v1.WorkspaceRef
+	(*RequiredOutput)(nil),         // 19: ani.training.v1.RequiredOutput
+	(*OutputContract)(nil),         // 20: ani.training.v1.OutputContract
+	(*FileEntry)(nil),              // 21: ani.training.v1.FileEntry
+	(*ManifestRef)(nil),            // 22: ani.training.v1.ManifestRef
+	(*Metric)(nil),                 // 23: ani.training.v1.Metric
+	(*LogRef)(nil),                 // 24: ani.training.v1.LogRef
+	(*TrainingInput)(nil),          // 25: ani.training.v1.TrainingInput
+	(*TrainingResult)(nil),         // 26: ani.training.v1.TrainingResult
+	(*timestamppb.Timestamp)(nil),  // 27: google.protobuf.Timestamp
 }
 var file_ani_training_v1_training_proto_depIdxs = []int32{
 	9,  // 0: ani.training.v1.InputRef.object:type_name -> ani.training.v1.FixedObjectRef
 	7,  // 1: ani.training.v1.ProgramRef.resolved_parameters:type_name -> ani.training.v1.Parameter
-	5,  // 2: ani.training.v1.WorkspaceContract.mode:type_name -> ani.training.v1.WorkspaceMode
-	5,  // 3: ani.training.v1.WorkspaceRef.mode:type_name -> ani.training.v1.WorkspaceMode
-	6,  // 4: ani.training.v1.RequiredOutput.role:type_name -> ani.training.v1.FileRole
-	2,  // 5: ani.training.v1.OutputContract.output_kind:type_name -> ani.training.v1.OutputKind
-	1,  // 6: ani.training.v1.OutputContract.delivery_mode:type_name -> ani.training.v1.DeliveryMode
-	16, // 7: ani.training.v1.OutputContract.required_files:type_name -> ani.training.v1.RequiredOutput
-	6,  // 8: ani.training.v1.FileEntry.role:type_name -> ani.training.v1.FileRole
-	8,  // 9: ani.training.v1.TrainingInput.identity:type_name -> ani.training.v1.ExecutionIdentity
-	10, // 10: ani.training.v1.TrainingInput.input:type_name -> ani.training.v1.InputRef
-	19, // 11: ani.training.v1.TrainingInput.prepared_manifest:type_name -> ani.training.v1.ManifestRef
-	12, // 12: ani.training.v1.TrainingInput.program:type_name -> ani.training.v1.ProgramRef
-	11, // 13: ani.training.v1.TrainingInput.runtime:type_name -> ani.training.v1.RuntimeRef
-	13, // 14: ani.training.v1.TrainingInput.resources:type_name -> ani.training.v1.CPUResources
-	15, // 15: ani.training.v1.TrainingInput.workspace:type_name -> ani.training.v1.WorkspaceRef
-	17, // 16: ani.training.v1.TrainingInput.output_contract:type_name -> ani.training.v1.OutputContract
-	24, // 17: ani.training.v1.TrainingInput.deadline_at:type_name -> google.protobuf.Timestamp
-	8,  // 18: ani.training.v1.TrainingResult.identity:type_name -> ani.training.v1.ExecutionIdentity
-	3,  // 19: ani.training.v1.TrainingResult.outcome:type_name -> ani.training.v1.TrainingOutcome
-	24, // 20: ani.training.v1.TrainingResult.completed_at:type_name -> google.protobuf.Timestamp
-	2,  // 21: ani.training.v1.TrainingResult.output_kind:type_name -> ani.training.v1.OutputKind
-	4,  // 22: ani.training.v1.TrainingResult.storage_state:type_name -> ani.training.v1.CandidateStorageState
-	15, // 23: ani.training.v1.TrainingResult.workspace:type_name -> ani.training.v1.WorkspaceRef
-	18, // 24: ani.training.v1.TrainingResult.files:type_name -> ani.training.v1.FileEntry
-	19, // 25: ani.training.v1.TrainingResult.manifest:type_name -> ani.training.v1.ManifestRef
-	20, // 26: ani.training.v1.TrainingResult.metrics:type_name -> ani.training.v1.Metric
-	21, // 27: ani.training.v1.TrainingResult.logs:type_name -> ani.training.v1.LogRef
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	13, // 2: ani.training.v1.TrainingImageSelection.platform:type_name -> ani.training.v1.TrainingPlatform
+	14, // 3: ani.training.v1.TrainingProgram.image:type_name -> ani.training.v1.TrainingImageSelection
+	7,  // 4: ani.training.v1.TrainingProgram.resolved_parameters:type_name -> ani.training.v1.Parameter
+	5,  // 5: ani.training.v1.WorkspaceContract.mode:type_name -> ani.training.v1.WorkspaceMode
+	5,  // 6: ani.training.v1.WorkspaceRef.mode:type_name -> ani.training.v1.WorkspaceMode
+	6,  // 7: ani.training.v1.RequiredOutput.role:type_name -> ani.training.v1.FileRole
+	2,  // 8: ani.training.v1.OutputContract.output_kind:type_name -> ani.training.v1.OutputKind
+	1,  // 9: ani.training.v1.OutputContract.delivery_mode:type_name -> ani.training.v1.DeliveryMode
+	19, // 10: ani.training.v1.OutputContract.required_files:type_name -> ani.training.v1.RequiredOutput
+	6,  // 11: ani.training.v1.FileEntry.role:type_name -> ani.training.v1.FileRole
+	8,  // 12: ani.training.v1.TrainingInput.identity:type_name -> ani.training.v1.ExecutionIdentity
+	10, // 13: ani.training.v1.TrainingInput.input:type_name -> ani.training.v1.InputRef
+	22, // 14: ani.training.v1.TrainingInput.prepared_manifest:type_name -> ani.training.v1.ManifestRef
+	12, // 15: ani.training.v1.TrainingInput.program:type_name -> ani.training.v1.ProgramRef
+	11, // 16: ani.training.v1.TrainingInput.runtime:type_name -> ani.training.v1.RuntimeRef
+	16, // 17: ani.training.v1.TrainingInput.resources:type_name -> ani.training.v1.CPUResources
+	18, // 18: ani.training.v1.TrainingInput.workspace:type_name -> ani.training.v1.WorkspaceRef
+	20, // 19: ani.training.v1.TrainingInput.output_contract:type_name -> ani.training.v1.OutputContract
+	27, // 20: ani.training.v1.TrainingInput.deadline_at:type_name -> google.protobuf.Timestamp
+	8,  // 21: ani.training.v1.TrainingResult.identity:type_name -> ani.training.v1.ExecutionIdentity
+	3,  // 22: ani.training.v1.TrainingResult.outcome:type_name -> ani.training.v1.TrainingOutcome
+	27, // 23: ani.training.v1.TrainingResult.completed_at:type_name -> google.protobuf.Timestamp
+	2,  // 24: ani.training.v1.TrainingResult.output_kind:type_name -> ani.training.v1.OutputKind
+	4,  // 25: ani.training.v1.TrainingResult.storage_state:type_name -> ani.training.v1.CandidateStorageState
+	18, // 26: ani.training.v1.TrainingResult.workspace:type_name -> ani.training.v1.WorkspaceRef
+	21, // 27: ani.training.v1.TrainingResult.files:type_name -> ani.training.v1.FileEntry
+	22, // 28: ani.training.v1.TrainingResult.manifest:type_name -> ani.training.v1.ManifestRef
+	23, // 29: ani.training.v1.TrainingResult.metrics:type_name -> ani.training.v1.Metric
+	24, // 30: ani.training.v1.TrainingResult.logs:type_name -> ani.training.v1.LogRef
+	31, // [31:31] is the sub-list for method output_type
+	31, // [31:31] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_ani_training_v1_training_proto_init() }
@@ -2175,16 +2441,16 @@ func file_ani_training_v1_training_proto_init() {
 		(*FixedObjectRef_VersionId)(nil),
 		(*FixedObjectRef_ImmutableCopy)(nil),
 	}
-	file_ani_training_v1_training_proto_msgTypes[9].OneofWrappers = []any{}
-	file_ani_training_v1_training_proto_msgTypes[10].OneofWrappers = []any{}
+	file_ani_training_v1_training_proto_msgTypes[12].OneofWrappers = []any{}
 	file_ani_training_v1_training_proto_msgTypes[13].OneofWrappers = []any{}
+	file_ani_training_v1_training_proto_msgTypes[16].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ani_training_v1_training_proto_rawDesc), len(file_ani_training_v1_training_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   17,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

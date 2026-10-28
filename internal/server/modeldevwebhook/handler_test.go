@@ -73,11 +73,16 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 	directory := t.TempDir()
 	profiles := []modeldevwebhook.Profile{}
 	for _, kind := range []string{"GENERAL_TRAINING", "FINETUNING"} {
-		release := conformance.MaterialV21()
+		release := conformance.MaterialV3()
 		id := "cpu-v1"
+		// The training material no longer pins an image digest: its catalogue
+		// default is resolved at admission. The step component image is the fixed
+		// system tool contract and stays independent of that selection.
+		componentImage := "example.invalid/modeldev-step@sha256:" + strings.Repeat("d", 64)
 		if kind == "FINETUNING" {
 			release = conformance.FinetuningMaterialV21()
 			id = "sft-v1"
+			componentImage = release.Program.ImageDigest
 		}
 		raw, err := release.Canonical()
 		if err != nil {
@@ -88,7 +93,7 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 			t.Fatal(err)
 		}
 		digest := sha256.Sum256(raw)
-		profiles = append(profiles, modeldevwebhook.Profile{ID: id, Kind: kind, MaterialFile: path, MaterialSHA256: hex.EncodeToString(digest[:]), ComponentImage: release.Program.ImageDigest,
+		profiles = append(profiles, modeldevwebhook.Profile{ID: id, Kind: kind, MaterialFile: path, MaterialSHA256: hex.EncodeToString(digest[:]), ComponentImage: componentImage,
 			AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001, EphemeralStorageRequest: "10Gi", EphemeralStorageLimit: "12Gi"})
 	}
 	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles,
@@ -555,7 +560,7 @@ func TestConfigFreezesReleaseAndOptionalLivePipelineVersion(t *testing.T) {
 		t.Fatal("missing frozen version metadata accepted")
 	}
 	labels := reader.workflow.GetLabels()
-	labels[config.Profiles[0].PipelineVersionLabel] = conformance.MaterialV21().Implementation.PipelineVersionID
+	labels[config.Profiles[0].PipelineVersionLabel] = conformance.MaterialV3().Implementation.PipelineVersionID
 	reader.workflow.SetLabels(labels)
 	if !call(t, server, request(t, config, "cpu-v1", "prepare")).Allowed {
 		t.Fatal("original frozen version refused")

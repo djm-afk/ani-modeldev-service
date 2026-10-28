@@ -250,6 +250,11 @@ message UserIntent {
   string compute_preset_id = 13;
   oneof parameters { MLPParameters mlp = 14; FinetuningParameters sft_lora = 15; }
   optional uint64 timeout_seconds = 16;
+  // Catalogue training image selection. General training requires both and the
+  // scope is platform|tenant; finetuning must omit both and keeps its frozen
+  // trusted image.
+  optional string training_image_id = 17;
+  optional string training_image_scope = 18;
 }
 
 message MLPParameters {
@@ -389,6 +394,12 @@ message ExecutionView {
   // identity facts are published: the object key, storage scope and file list
   // stay owner-internal. Absent for general training.
   BaseModelIdentity base_model = 32;
+  // Catalogue training image of a general training execution. Finetuning keeps
+  // image_version_id above and leaves these absent.
+  string training_image_id = 33;
+  string training_image_scope = 34;
+  string training_image_digest = 35;
+  string training_image_registry_authority = 36;
 }
 
 // BaseModelIdentity is the publishable half of BaseModelRef. It names the base
@@ -750,6 +761,9 @@ message ExecutionSnapshot {
   ExecutionTiming timing = 17;
   RuntimePlan runtime_plan = 18;
   GPUPlan gpu = 19;
+  // General training carries training_program and no program; finetuning is
+  // the opposite. A v2.1 training snapshot is rejected, not migrated.
+  ani.training.v1.TrainingProgram training_program = 20;
 }
 
 message StringPair { string key = 1; string value = 2; }

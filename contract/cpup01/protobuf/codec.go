@@ -16,7 +16,7 @@ func EncodeIntent(i cpup01.Intent) (*modeldevv1.UserIntent, error) {
 	if _, _, err := cpup01.CanonicalIntent(i); err != nil {
 		return nil, err
 	}
-	m := &modeldevv1.UserIntent{Name: i.Name, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+i.Kind]), ImplementationId: i.ImplementationID, ComputePresetId: i.ComputePresetID, DatasetVersionId: i.DatasetVersionID, TimeoutSeconds: cloneUint64(i.TimeoutSeconds), BaseModelVersionId: cloneString(i.BaseModelVersionID), TargetModelId: cloneString(i.TargetModelID), NewModelName: cloneString(i.NewModelName)}
+	m := &modeldevv1.UserIntent{Name: i.Name, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+i.Kind]), ImplementationId: i.ImplementationID, ComputePresetId: i.ComputePresetID, DatasetVersionId: i.DatasetVersionID, TimeoutSeconds: cloneUint64(i.TimeoutSeconds), BaseModelVersionId: cloneString(i.BaseModelVersionID), TargetModelId: cloneString(i.TargetModelID), NewModelName: cloneString(i.NewModelName), TrainingImageId: cloneString(i.TrainingImageID), TrainingImageScope: cloneString(i.TrainingImageScope)}
 	if i.MLP != nil {
 		p := i.MLP
 		m.Parameters = &modeldevv1.UserIntent_Mlp{Mlp: &modeldevv1.MLPParameters{LearningRate: cloneString(p.LearningRate), Epochs: cloneInt64(p.Epochs), BatchSize: cloneInt64(p.BatchSize), Seed: cloneUint32(p.Seed)}}
@@ -31,7 +31,7 @@ func DecodeIntent(m *modeldevv1.UserIntent) (cpup01.Intent, error) {
 	if m == nil || checkMessage(m.ProtoReflect(), 0) != nil {
 		return cpup01.Intent{}, invalid("intent")
 	}
-	i := cpup01.Intent{Name: m.Name, Kind: strings.TrimPrefix(m.Kind.String(), "EXECUTION_KIND_"), ImplementationID: m.ImplementationId, ComputePresetID: m.ComputePresetId, DatasetVersionID: m.DatasetVersionId, TimeoutSeconds: cloneUint64(m.TimeoutSeconds), BaseModelVersionID: cloneString(m.BaseModelVersionId), TargetModelID: cloneString(m.TargetModelId), NewModelName: cloneString(m.NewModelName)}
+	i := cpup01.Intent{Name: m.Name, Kind: strings.TrimPrefix(m.Kind.String(), "EXECUTION_KIND_"), ImplementationID: m.ImplementationId, ComputePresetID: m.ComputePresetId, DatasetVersionID: m.DatasetVersionId, TimeoutSeconds: cloneUint64(m.TimeoutSeconds), BaseModelVersionID: cloneString(m.BaseModelVersionId), TargetModelID: cloneString(m.TargetModelId), NewModelName: cloneString(m.NewModelName), TrainingImageID: cloneString(m.TrainingImageId), TrainingImageScope: cloneString(m.TrainingImageScope)}
 	switch p := m.Parameters.(type) {
 	case *modeldevv1.UserIntent_Mlp:
 		if p == nil || p.Mlp == nil {
@@ -71,7 +71,7 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 	if err := snapshot.Validate(); err != nil {
 		return nil, err
 	}
-	parameters, err := encodeParameters(snapshot.Program.ResolvedParameters)
+	parameters, err := encodeParameters(snapshot.ProgramParameters())
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,8 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 		files = append(files, &trainingv1.RequiredOutput{Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+file.Role]), RelativePath: file.RelativePath, MaxSizeBytes: file.MaxSizeBytes, InTar: cloneBool(file.InTar)})
 	}
 	message := &modeldevv1.ExecutionSnapshot{
-		SchemaVersion: snapshot.SchemaVersion, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+snapshot.Kind]),
+		SchemaVersion:  snapshot.SchemaVersion,
+		Kind:           trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+snapshot.Kind]),
 		DeliveryMode:   trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS,
 		IdentityRef:    encodeIdentity(snapshot.IdentityRef),
 		Implementation: encodeImplementation(snapshot.Implementation),
@@ -97,7 +98,6 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 		Timing:         encodeTiming(snapshot.Timing),
 		RuntimePlan:    encodeRuntimePlan(snapshot.RuntimePlan),
 		Input:          &trainingv1.InputRef{InputVersionId: snapshot.Input.InputVersionID, Object: object, Format: snapshot.Input.Format, SchemaVersion: snapshot.Input.SchemaVersion, RowCount: snapshot.Input.RowCount, FeatureCount: snapshot.Input.FeatureCount},
-		Program:        &trainingv1.ProgramRef{ImageVersionId: snapshot.Program.ImageVersionID, ImageDigest: snapshot.Program.ImageDigest, Command: cloneStrings(snapshot.Program.Command), ResolvedArgs: cloneStrings(snapshot.Program.ResolvedArgs), ResolvedParameters: parameters},
 		Resources:      &trainingv1.CPUResources{Nodes: snapshot.Resources.Nodes, ProcessesPerNode: snapshot.Resources.ProcessesPerNode, RequestMillicpu: snapshot.Resources.RequestMillicpu, LimitMillicpu: snapshot.Resources.LimitMillicpu, RequestMemoryBytes: snapshot.Resources.RequestMemoryBytes, LimitMemoryBytes: snapshot.Resources.LimitMemoryBytes},
 		Environment: &modeldevv1.EnvironmentBindingSnapshot{
 			BindingId: snapshot.Environment.BindingID, BindingDigest: snapshot.Environment.BindingDigest,
@@ -109,6 +109,17 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 		PublicationScope: &modeldevv1.StorageScope{StorageConnectionId: snapshot.PublicationScope.StorageConnectionID, Bucket: snapshot.PublicationScope.Bucket, ApprovedPrefix: snapshot.PublicationScope.ApprovedPrefix, CredentialReference: snapshot.PublicationScope.CredentialReference},
 		OutputContract:   &trainingv1.OutputContract{SchemaVersion: snapshot.OutputContract.SchemaVersion, OutputKind: trainingv1.OutputKind(trainingv1.OutputKind_value["OUTPUT_KIND_"+snapshot.OutputContract.OutputKind]), DeliveryMode: trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS, RequiredFiles: files, MaxFileCount: snapshot.OutputContract.MaxFileCount, MaxTotalBytes: snapshot.OutputContract.MaxTotalBytes, CreateTarBundle: snapshot.OutputContract.CreateTarBundle, MaxTarBytes: cloneInt64(snapshot.OutputContract.MaxTarBytes)},
 		DeadlineAt:       timestamppb.New(snapshot.DeadlineAt.UTC()),
+	}
+	if snapshot.Program != nil {
+		message.Program = &trainingv1.ProgramRef{ImageVersionId: snapshot.Program.ImageVersionID, ImageDigest: snapshot.Program.ImageDigest, Command: cloneStrings(snapshot.Program.Command), ResolvedArgs: cloneStrings(snapshot.Program.ResolvedArgs), ResolvedParameters: parameters}
+	}
+	if snapshot.TrainingProgram != nil {
+		message.TrainingProgram = &trainingv1.TrainingProgram{
+			Image:              encodeTrainingImageSelection(snapshot.TrainingProgram.Image),
+			Command:            cloneStrings(snapshot.TrainingProgram.Command),
+			ResolvedArgs:       cloneStrings(snapshot.TrainingProgram.ResolvedArgs),
+			ResolvedParameters: parameters,
+		}
 	}
 	if snapshot.Finetuning != nil {
 		message.Finetuning = encodeFinetuningSnapshot(*snapshot.Finetuning)
@@ -126,8 +137,18 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 	if err := checkMessage(message.ProtoReflect(), 0); err != nil {
 		return cpup01.Snapshot{}, err
 	}
-	if message.Implementation == nil || message.IdentityRef == nil || message.ComputeOrigin == nil || message.Timing == nil || message.Timing.AcceptedAt == nil || message.Timing.ExecutionDeadlineAt == nil || message.RuntimePlan == nil || message.Input == nil || message.Input.Object == nil || message.Program == nil || message.Resources == nil || message.Environment == nil || message.Environment.Identities == nil || message.Workspace == nil || message.PublicationScope == nil || message.OutputContract == nil || message.DeadlineAt == nil {
+	if message.Implementation == nil || message.IdentityRef == nil || message.ComputeOrigin == nil || message.Timing == nil || message.Timing.AcceptedAt == nil || message.Timing.ExecutionDeadlineAt == nil || message.RuntimePlan == nil || message.Input == nil || message.Input.Object == nil || message.Resources == nil || message.Environment == nil || message.Environment.Identities == nil || message.Workspace == nil || message.PublicationScope == nil || message.OutputContract == nil || message.DeadlineAt == nil {
 		return cpup01.Snapshot{}, invalid("missing snapshot fields")
+	}
+	// Exactly one program representation is present, decided by kind. There is
+	// no fallback: a training snapshot carrying `program` is a retired schema.
+	kind := strings.TrimPrefix(message.Kind.String(), "EXECUTION_KIND_")
+	if kind == "FINETUNING" {
+		if message.Program == nil || message.TrainingProgram != nil {
+			return cpup01.Snapshot{}, invalid("program")
+		}
+	} else if message.Program != nil || message.TrainingProgram == nil {
+		return cpup01.Snapshot{}, invalid("program")
 	}
 	if err := message.DeadlineAt.CheckValid(); err != nil {
 		return cpup01.Snapshot{}, invalid("deadline timestamp")
@@ -135,7 +156,7 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 	if message.Timing.AcceptedAt.CheckValid() != nil || message.Timing.ExecutionDeadlineAt.CheckValid() != nil {
 		return cpup01.Snapshot{}, invalid("timing timestamp")
 	}
-	parameters, err := decodeParameters(message.Program.ResolvedParameters)
+	parameters, err := decodeParameters(programParameters(message))
 	if err != nil {
 		return cpup01.Snapshot{}, err
 	}
@@ -171,7 +192,6 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 		Timing:         decodeTiming(message.Timing),
 		RuntimePlan:    decodeRuntimePlan(message.RuntimePlan),
 		Input:          cpup01.InputRef{InputVersionID: message.Input.InputVersionId, Object: object, Format: message.Input.Format, SchemaVersion: message.Input.SchemaVersion, RowCount: message.Input.RowCount, FeatureCount: message.Input.FeatureCount},
-		Program:        cpup01.ProgramRef{ImageVersionID: message.Program.ImageVersionId, ImageDigest: message.Program.ImageDigest, Command: cloneStrings(message.Program.Command), ResolvedArgs: cloneStrings(message.Program.ResolvedArgs), ResolvedParameters: parameters},
 		Resources:      cpup01.CPUResources{Nodes: message.Resources.Nodes, ProcessesPerNode: message.Resources.ProcessesPerNode, RequestMillicpu: message.Resources.RequestMillicpu, LimitMillicpu: message.Resources.LimitMillicpu, RequestMemoryBytes: message.Resources.RequestMemoryBytes, LimitMemoryBytes: message.Resources.LimitMemoryBytes},
 		Environment: cpup01.EnvironmentBindingSnapshot{
 			BindingID: message.Environment.BindingId, BindingDigest: message.Environment.BindingDigest, ClusterID: message.Environment.ClusterId,
@@ -182,6 +202,21 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 		PublicationScope: cpup01.StorageScope{StorageConnectionID: message.PublicationScope.StorageConnectionId, Bucket: message.PublicationScope.Bucket, ApprovedPrefix: message.PublicationScope.ApprovedPrefix, CredentialReference: message.PublicationScope.CredentialReference},
 		OutputContract:   cpup01.OutputContract{SchemaVersion: message.OutputContract.SchemaVersion, OutputKind: strings.TrimPrefix(message.OutputContract.OutputKind.String(), "OUTPUT_KIND_"), DeliveryMode: strings.TrimPrefix(message.OutputContract.DeliveryMode.String(), "DELIVERY_MODE_"), RequiredFiles: files, MaxFileCount: message.OutputContract.MaxFileCount, MaxTotalBytes: message.OutputContract.MaxTotalBytes, CreateTarBundle: message.OutputContract.CreateTarBundle, MaxTarBytes: cloneInt64(message.OutputContract.MaxTarBytes)},
 		DeadlineAt:       message.DeadlineAt.AsTime(),
+	}
+	switch source := programDescriptor(message).(type) {
+	case *trainingv1.ProgramRef:
+		program := cpup01.ProgramRef{ImageVersionID: source.ImageVersionId, ImageDigest: source.ImageDigest, Command: cloneStrings(source.Command), ResolvedArgs: cloneStrings(source.ResolvedArgs), ResolvedParameters: parameters}
+		snapshot.Program = &program
+	case *trainingv1.TrainingProgram:
+		program := cpup01.TrainingProgram{
+			Image:              decodeTrainingImageSelection(source.Image),
+			Command:            cloneStrings(source.Command),
+			ResolvedArgs:       cloneStrings(source.ResolvedArgs),
+			ResolvedParameters: parameters,
+		}
+		snapshot.TrainingProgram = &program
+	default:
+		return cpup01.Snapshot{}, invalid("program")
 	}
 	if message.Finetuning != nil {
 		fine, err := decodeFinetuningSnapshot(message.Finetuning)

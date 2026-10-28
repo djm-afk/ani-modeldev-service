@@ -57,7 +57,7 @@ func (a AdmissionEnvelope) CanonicalPayloads() ([]byte, []byte, error) {
 	}
 	for _, p := range explicit {
 		matched := false
-		for _, r := range a.Snapshot.Program.ResolvedParameters {
+		for _, r := range a.Snapshot.resolvedParameters() {
 			if p.Name == r.Name && p.Type == r.Type {
 				left, lok := new(big.Rat).SetString(p.Value)
 				right, rok := new(big.Rat).SetString(r.Value)
@@ -71,6 +71,18 @@ func (a AdmissionEnvelope) CanonicalPayloads() ([]byte, []byte, error) {
 	}
 	if a.Intent.TimeoutSeconds != nil && *a.Intent.TimeoutSeconds != a.Snapshot.Timing.ExecutionTimeoutSeconds {
 		return nil, nil, ErrInvalidArgument
+	}
+	// The training image selection must reach the snapshot unchanged: an
+	// accepted image intent can never execute a different image. An absent user
+	// selection is legal and must still be backed by a resolved snapshot image.
+	if a.Intent.Kind == "GENERAL_TRAINING" {
+		program := a.Snapshot.TrainingProgram
+		if program == nil || (a.Intent.TrainingImageID == nil) != (a.Intent.TrainingImageScope == nil) {
+			return nil, nil, ErrInvalidArgument
+		}
+		if a.Intent.TrainingImageID != nil && (!strings.EqualFold(*a.Intent.TrainingImageID, program.Image.ImageID) || !strings.EqualFold(*a.Intent.TrainingImageScope, program.Image.Scope)) {
+			return nil, nil, ErrInvalidArgument
+		}
 	}
 	if a.Intent.Kind == "FINETUNING" {
 		fine := a.Snapshot.Finetuning

@@ -11,7 +11,10 @@ import (
 	"strings"
 )
 
-const MaterialSchemaVersion = "ani.modeldev.implementation-material.v2.1"
+// MaterialSchemaVersion v3 splits the training program out of the finetuning
+// program: training carries a catalogue default image, finetuning keeps its
+// frozen digest identity. The two shapes are not interchangeable.
+const MaterialSchemaVersion = "ani.modeldev.implementation-material.v3"
 const MaxMaterialBytes = 64 * 1024
 
 // ImplementationMaterial fixes finite software and safety provenance. It has
@@ -20,10 +23,22 @@ const MaxMaterialBytes = 64 * 1024
 type ImplementationMaterial struct {
 	SchemaVersion  string                 `json:"schema_version"`
 	Implementation ImplementationSnapshot `json:"implementation"`
-	Program        MaterialProgram        `json:"program"`
-	Workspace      WorkspaceContract      `json:"workspace"`
-	OutputContract OutputContract         `json:"output_contract"`
-	Finetuning     *FinetuningMaterial    `json:"finetuning,omitempty"`
+	// Training is present only for general training. Program is present only for
+	// finetuning, whose image identity stays exactly as it was.
+	Training       *TrainingMaterial  `json:"training,omitempty"`
+	Program        *MaterialProgram   `json:"program,omitempty"`
+	Workspace      WorkspaceContract  `json:"workspace"`
+	OutputContract OutputContract     `json:"output_contract"`
+	Finetuning     *FinetuningMaterial `json:"finetuning,omitempty"`
+}
+
+// TrainingMaterial is the trusted general-training contract. The image is a
+// catalogue selection resolved by Resource, so a stale material cannot pin an
+// old digest; the command, argument template and output contract stay fixed.
+type TrainingMaterial struct {
+	DefaultImage DefaultTrainingImage `json:"default_image"`
+	Command      []string             `json:"command"`
+	ArgsTemplate []MaterialArgument   `json:"args_template"`
 }
 
 type MaterialProgram struct {
@@ -86,13 +101,25 @@ func ParseMaterial(raw []byte) (ImplementationMaterial, string, error) {
 
 func (m ImplementationMaterial) Canonical() ([]byte, error) {
 	definition, ok := Implementations()[m.Implementation.ImplementationID]
-	if !ok || m.SchemaVersion != MaterialSchemaVersion || m.Implementation.Version != definition.Version || m.Implementation.ParameterContractVersion != definition.ParameterContractVersion || !canonicalMaterialID(m.Implementation.PipelineID) || !canonicalMaterialID(m.Implementation.PipelineVersionID) || !snapshotSHA256Pattern.MatchString(m.Implementation.PipelineIRSHA256) || !canonicalMaterialID(m.Program.ImageVersionID) || !validSnapshotImage(m.Program.ImageDigest) || !validMaterialProgram(m.Program.Command, m.Program.ArgsTemplate, definition.Kind == "FINETUNING") || invalidWorkspaceContract(m.Workspace) != "" || invalidOutputContractForKind(definition.Kind, m.OutputContract) != "" {
+	if !ok || m.SchemaVersion != MaterialSchemaVersion || m.Implementation.Version != definition.Version || m.Implementation.ParameterContractVersion != definition.ParameterContractVersion || !canonicalMaterialID(m.Implementation.PipelineID) || !canonicalMaterialID(m.Implementation.PipelineVersionID) || !snapshotSHA256Pattern.MatchString(m.Implementation.PipelineIRSHA256) || invalidWorkspaceContract(m.Workspace) != "" || invalidOutputContractForKind(definition.Kind, m.OutputContract) != "" {
 		return nil, ErrInvalidArgument
 	}
-	if (definition.Kind == "FINETUNING") != (m.Finetuning != nil) {
-		return nil, ErrInvalidArgument
-	}
-	if m.Finetuning != nil {
+	// Only one program representation per kind, and the finetuning image
+	// identity stays required exactly as before.
+	if definition.Kind == "GENERAL_TRAINING" {
+		if m.Training == nil || m.Program != nil || m.Finetuning != nil {
+			return nil, ErrInvalidArgument
+		}
+		if m.Training.DefaultImage.validate() != nil || !validMaterialProgram(m.Training.Command, m.Training.ArgsTemplate, false) {
+			return nil, ErrInvalidArgument
+		}
+	} else {
+		if m.Program == nil || m.Training != nil || m.Finetuning == nil {
+			return nil, ErrInvalidArgument
+		}
+		if !canonicalMaterialID(m.Program.ImageVersionID) || !validSnapshotImage(m.Program.ImageDigest) || !validMaterialProgram(m.Program.Command, m.Program.ArgsTemplate, true) {
+			return nil, ErrInvalidArgument
+		}
 		f := m.Finetuning
 		if invalidFinetuningManagedSettings(f.ManagedSettings) != "" || invalidComponentBudgets(f.Budgets) != "" || f.MaxSequenceLength <= 0 || !snapshotSHA256Pattern.MatchString(f.RecipeSHA256) || !snapshotSHA256Pattern.MatchString(f.MappingSHA256) {
 			return nil, ErrInvalidArgument

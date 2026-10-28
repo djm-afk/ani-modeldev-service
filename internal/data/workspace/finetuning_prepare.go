@@ -77,7 +77,7 @@ func PrepareFinetuningInput(ctx context.Context, dataClient, baseClient *s3.Clie
 	if err := writePipelineFile(ctx, dataDir, "dataset_info.json", []byte(FinetuningDatasetInfo)); err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
-	configuration, err := (cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: e.Snapshot.Program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}).Canonical()
+	configuration, err := (cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: e.Snapshot.ProgramParameters(), ManagedSettings: fine.ManagedSettings}).Canonical()
 	if err != nil || pipelineContentHash(configuration) != fine.ResolvedConfigurationSHA256 {
 		return biz.WorkspaceBinding{}, biz.ErrInputVerification
 	}
@@ -133,7 +133,7 @@ func reuseFinetuningPreparation(ctx context.Context, root int, e biz.Execution, 
 		return false, nil, biz.ErrInputVerification
 	}
 	fine := e.Snapshot.Finetuning
-	configuration, err := (cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: e.Snapshot.Program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}).Canonical()
+	configuration, err := (cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: e.Snapshot.ProgramParameters(), ManagedSettings: fine.ManagedSettings}).Canonical()
 	if err != nil {
 		return false, nil, err
 	}

@@ -28,7 +28,7 @@ import (
 
 // Command assembly consumes mounted references only. It does not run schema
 // migrations, create roles, enable readiness, or fall back to another listener.
-func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceCommand, middlewares ...middleware.Middleware) (*kratosgrpc.Server, func(), error) {
+func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceCommand, imageRuntime *conf.ImageRuntimeConnection, middlewares ...middleware.Middleware) (*kratosgrpc.Server, func(), error) {
 	if config == nil {
 		return nil, nil, errors.New("command configuration required")
 	}
@@ -41,13 +41,20 @@ func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceComma
 		pool.Close()
 		return nil, nil, err
 	}
-	s, err := buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, nil, nil, nil, models, middlewares...)
+	images, closeImages, err := loadImageRuntime(imageRuntime)
 	if err != nil {
 		pool.Close()
 		closeModel()
 		return nil, nil, err
 	}
-	return s, sync.OnceFunc(func() { pool.Close(); closeModel() }), nil
+	s, err := buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, nil, nil, nil, models, images, middlewares...)
+	if err != nil {
+		pool.Close()
+		closeImages()
+		closeModel()
+		return nil, nil, err
+	}
+	return s, sync.OnceFunc(func() { closeImages(); pool.Close(); closeModel() }), nil
 }
 
 // The runtime composition shares this restricted pool with all durable ports;
@@ -70,10 +77,10 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 	if err != nil {
 		return nil, err
 	}
-	return buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, query, verifier, operations, models, middlewares...)
+	return buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, query, verifier, operations, models, nil, middlewares...)
 }
 
-func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, images biz.TrainingImageResolver, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
 	failed := func(message string) (*kratosgrpc.Server, error) { return nil, errors.New(message) }
 	if config == nil || (config.Model != nil && models == nil) || (config.Model != nil && config.ControlledModelFacts != nil) {
 		return failed("shared Model resources required")
@@ -122,7 +129,7 @@ func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC,
 			return failed("command admission catalogue unavailable or invalid")
 		}
 		inputs := input.New(pool)
-		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models))
+		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models, images))
 		materials := biz.NewManagedMaterials(implementationMaterials, facts, inputs, biz.NewInputImporter(inputs, verifier))
 		management = service.NewManagement(materials)
 		if query == nil {

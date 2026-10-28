@@ -104,3 +104,55 @@ func TestRuntimePlanNeverSharesBetweenExecutionsOrSilentlyAcceptsResourceDrift(t
 		t.Fatal("GPU selected without a formal execution")
 	}
 }
+
+// The training Pod must reference the shared tenant pull Secret by name, and
+// the finetuning template must stay unchanged.
+func TestRuntimePlanReferencesTheSharedPullSecretOnlyForTraining(t *testing.T) {
+	training := conformance.SnapshotV1()
+	plan, err := biz.CompileRuntimePlan(training)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var spec struct {
+		Template struct {
+			Spec struct {
+				Jobs []struct {
+					Template struct {
+						Spec struct {
+							Template struct {
+								Spec struct {
+									ImagePullSecrets []struct {
+										Name string `json:"name"`
+									} `json:"imagePullSecrets"`
+								} `json:"spec"`
+							} `json:"template"`
+						} `json:"spec"`
+					} `json:"template"`
+				} `json:"replicatedJobs"`
+			} `json:"spec"`
+		} `json:"template"`
+	}
+	if err := json.Unmarshal(plan.ExpectedSpec, &spec); err != nil {
+		t.Fatal(err)
+	}
+	if len(spec.Template.Spec.Jobs) != 1 {
+		t.Fatal("multiple training jobs")
+	}
+	secrets := spec.Template.Spec.Jobs[0].Template.Spec.Template.Spec.ImagePullSecrets
+	want := training.TrainingProgram.Image.PullSecretRef
+	if len(secrets) != 1 || secrets[0].Name != want {
+		t.Fatalf("training Pod must reference exactly the frozen Secret %q: %+v", want, secrets)
+	}
+	if !strings.HasPrefix(want, "ani-pull-") || strings.Contains(string(plan.ExpectedSpec), "ani-inference-pull-") {
+		t.Fatalf("training Pod used a service-specific Secret name: %s", want)
+	}
+
+	finetuning := conformance.FinetuningSnapshotV1()
+	finePlan, err := biz.CompileRuntimePlan(finetuning)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(finePlan.ExpectedSpec), "imagePullSecrets") {
+		t.Fatal("finetuning template must stay unchanged")
+	}
+}

@@ -30,7 +30,7 @@ func CompileRuntimePlan(snapshot cpup01.Snapshot) (cpup01.RuntimePlan, error) {
 		!validAdmissionID(snapshot.Environment.NamespaceUID) || snapshot.Environment.NamespaceName == "" ||
 		snapshot.Environment.Identities.TrainerServiceAccount == "" || r.Nodes != 1 || r.ProcessesPerNode != 1 ||
 		r.RequestMillicpu <= 0 || r.RequestMillicpu != r.LimitMillicpu || r.RequestMemoryBytes <= 0 || r.RequestMemoryBytes != r.LimitMemoryBytes ||
-		!strings.Contains(snapshot.Program.ImageDigest, "@sha256:") || len(snapshot.Program.Command) == 0 {
+		!strings.Contains(snapshot.ProgramImage(), "@sha256:") || len(snapshot.ProgramCommand()) == 0 {
 		return cpup01.RuntimePlan{}, ErrInvalidAdmission
 	}
 	resources, err := TrainingResourceVector(snapshot)
@@ -68,12 +68,19 @@ func CompileRuntimePlan(snapshot cpup01.Snapshot) (cpup01.RuntimePlan, error) {
 		"securityContext":               map[string]any{"runAsNonRoot": true, "runAsUser": int64(10001), "runAsGroup": int64(10001), "fsGroup": int64(10001), "seccompProfile": map[string]any{"type": "RuntimeDefault"}},
 		"volumes":                       volumes,
 		"containers": []any{map[string]any{
-			"name": "node", "image": snapshot.Program.ImageDigest, "imagePullPolicy": "IfNotPresent",
-			"command": snapshot.Program.Command, "args": snapshot.Program.ResolvedArgs,
+			"name": "node", "image": snapshot.ProgramImage(), "imagePullPolicy": "IfNotPresent",
+			"command": snapshot.ProgramCommand(), "args": snapshot.ProgramArgs(),
 			"resources":       map[string]any{"requests": resources, "limits": resources},
 			"securityContext": map[string]any{"allowPrivilegeEscalation": false, "readOnlyRootFilesystem": true, "capabilities": map[string]any{"drop": []string{"ALL"}}},
 			"volumeMounts":    mounts,
 		}},
+	}
+	if snapshot.TrainingProgram != nil {
+		// The training Pod must reference the shared tenant pull Secret by name.
+		// The name is derived offline from the same rule Resource uses; the
+		// Secret material itself never enters this plan. The finetuning chain
+		// keeps its own unchanged template.
+		pod["imagePullSecrets"] = []any{map[string]any{"name": snapshot.TrainingProgram.Image.PullSecretRef}}
 	}
 	queue := "default"
 	podMetadata := map[string]any{"finalizers": []string{"modeldev.ani.io/training-exit-evidence"}}

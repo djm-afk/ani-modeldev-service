@@ -39,6 +39,17 @@ func (c *Bootstrap) Validate() error {
 			if err := validateAdmissionResolution(c.Command.AdmissionResolution); err != nil {
 				return err
 			}
+			// Training admission resolves the selected catalogue image through
+			// Resource. Accepting training without that dependency would freeze a
+			// snapshot no runtime could explain, so the pair is validated together.
+			if c.ImageRuntime == nil {
+				return fmt.Errorf("admission resolution requires the Resource image runtime connection")
+			}
+		}
+		if c.ImageRuntime != nil {
+			if err := validateImageRuntime(c.ImageRuntime); err != nil {
+				return err
+			}
 		}
 		if c.Command.Model != nil {
 			if err := validateModelConnection(c.Command.Model); err != nil {
@@ -203,6 +214,32 @@ func validateAdmissionResolution(config *AdmissionResolution) error {
 		}
 	}
 	return nil
+}
+
+// validateImageRuntime accepts only a fully specified business mTLS dependency
+// on the Resource ImageRuntime listener. A partial block is rejected rather
+// than silently disabling training image resolution.
+func validateImageRuntime(config *ImageRuntimeConnection) error {
+	for _, reference := range []string{config.CaFile, config.CertificateFile, config.PrivateKeyFile} {
+		if !filepath.IsAbs(reference) || filepath.Clean(reference) != reference || strings.ContainsRune(reference, 0) {
+			return fmt.Errorf("image runtime materials require absolute file references")
+		}
+	}
+	if config.Endpoint == "" || strings.TrimSpace(config.Endpoint) != config.Endpoint || strings.ContainsAny(config.Endpoint, "/\\ \t\r\n") {
+		return fmt.Errorf("image runtime requires an explicit host:port endpoint")
+	}
+	host, portText, err := net.SplitHostPort(config.Endpoint)
+	if err != nil || host == "" {
+		return fmt.Errorf("image runtime endpoint: %w", err)
+	}
+	port, err := strconv.Atoi(portText)
+	if err != nil || port <= 0 || port > 65535 {
+		return fmt.Errorf("image runtime requires a numeric port in 1..65535")
+	}
+	if len(config.ServerName) > 253 || config.ServerName == "unknown" || !commandDNSName.MatchString(config.ServerName) {
+		return fmt.Errorf("image runtime requires an explicit exact server DNS identity")
+	}
+	return validateDuration("image runtime", config.Timeout, maximumTimeout)
 }
 
 func validateListener(name, network, address string, timeout *durationpb.Duration) error {

@@ -27,6 +27,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/imageruntimefixture"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
@@ -34,6 +35,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -177,7 +179,7 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	config, openPool, certificates, applicationName := commandAppFixture(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	material, seed := conformance.MaterialV21(), conformance.SnapshotV1()
+	material, seed := conformance.MaterialV3(), conformance.SnapshotV1()
 	directory := t.TempDir()
 	materialBytes, err := material.Canonical()
 	if err != nil {
@@ -208,7 +210,7 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	if err != nil || !reflect.DeepEqual(recovered, ready) {
 		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: fresh connection cannot recover READY")
 	}
-	facts := biz.TenantAdmissionFacts{TenantID: imported.TenantID, Environment: seed.Environment, InputScope: imported.Scope, PublicationScope: seed.PublicationScope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
+	facts := biz.TenantAdmissionFacts{TenantID: imported.TenantID, Environment: seed.Environment, InputScope: imported.Scope, PublicationScope: seed.PublicationScope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", TargetPlatform: seed.TrainingProgram.Image.Platform, Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
 	source := writeConfiguredAdmissionFacts(t, material, facts)
 	reader, err := admissionfacts.Load(ctx, []admissionfacts.FileSource{source})
 	if err != nil {
@@ -219,6 +221,10 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: pinned facts differ from authored facts")
 	}
 	config.Command.AdmissionResolution = &conf.AdmissionResolution{CatalogueDirectory: directory, FactsFiles: []*conf.AdmissionFactsFile{{Path: source.Path, Sha256: source.SHA256}}}
+	// A real mTLS Resource ImageRuntime listener answers the narrow RPCs. No mock
+	// decides the frozen digest, platform or shared Secret name.
+	images := imageruntimefixture.New(t, imageruntimefixture.DefaultResolution(conformance.TrainingImageID, conformance.TrainingImageScope, conformance.RegistryAuthority))
+	config.ImageRuntime = &conf.ImageRuntimeConnection{Endpoint: images.Endpoint, CaFile: images.CAFile, CertificateFile: images.CertificateFile, PrivateKeyFile: images.PrivateKeyFile, ServerName: images.ServerName, Timeout: durationpb.New(5 * time.Second)}
 	rate := "0.0200"
 	intent := cpup01.Intent{Name: "configured-admission", Kind: "GENERAL_TRAINING", ImplementationID: "builtin.mlp", ComputePresetID: seed.ComputeOrigin.ComputePresetID, DatasetVersionID: imported.InputVersionID, MLP: &cpup01.MLPParameters{LearningRate: &rate}}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
@@ -235,11 +241,18 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	// full literal Runtime spec below. No resolver/compiler/RPC result is reused.
 	want := seed
 	want.IdentityRef = identity
-	want.Program.ResolvedParameters = []cpup01.Parameter{{Name: "batch_size", Type: "INTEGER", Value: "64"}, {Name: "epochs", Type: "INTEGER", Value: "3"}, {Name: "learning_rate", Type: "DECIMAL", Value: "0.02"}, {Name: "seed", Type: "INTEGER", Value: "42"}}
-	want.Program.ResolvedArgs = []string{"--data", "/inputs/data.csv", "--output", "/outputs", "--learning-rate", "0.02", "--epochs", "3", "--batch-size", "64", "--seed", "42"}
+	want.TrainingProgram.ResolvedParameters = []cpup01.Parameter{{Name: "batch_size", Type: "INTEGER", Value: "64"}, {Name: "epochs", Type: "INTEGER", Value: "3"}, {Name: "learning_rate", Type: "DECIMAL", Value: "0.02"}, {Name: "seed", Type: "INTEGER", Value: "42"}}
+	want.TrainingProgram.ResolvedArgs = []string{"--data", "/inputs/data.csv", "--output", "/outputs", "--learning-rate", "0.02", "--epochs", "3", "--batch-size", "64", "--seed", "42"}
+	// The shared Secret name is derived from this tenant's real environment, not
+	// copied from the shared fixture.
+	pullSecretRef, err := cpup01.PullSecretName(imported.TenantID, seed.Environment.ClusterID, seed.Environment.NamespaceName, conformance.RegistryAuthority)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want.TrainingProgram.Image.PullSecretRef = pullSecretRef
 	want.Timing = cpup01.Timing{AcceptedAt: acceptedAt, ExecutionTimeoutSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900, ExecutionDeadlineAt: acceptedAt.Add(time.Hour)}
 	want.DeadlineAt = want.Timing.ExecutionDeadlineAt
-	want.RuntimePlan = independentConfiguredRuntime(t)
+	want.RuntimePlan = independentConfiguredRuntime(t, pullSecretRef)
 	canonical, err := want.Canonical()
 	if err != nil {
 		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: independent complete expectation invalid", err)
@@ -249,9 +262,9 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	return configuredAdmissionFixture{config: config, openPool: openPool, certificates: certificates, applicationName: applicationName, tenantID: imported.TenantID, ready: ready, request: request, wantCanonical: canonical, wantHash: hex.EncodeToString(digest[:]), wantSnapshot: want, material: material}
 }
 
-func independentConfiguredRuntime(t *testing.T) cpup01.RuntimePlan {
+func independentConfiguredRuntime(t *testing.T, pullSecretRef string) cpup01.RuntimePlan {
 	t.Helper()
-	const literal = `{"mlPolicy":{"numNodes":1},"podGroupPolicy":{"volcano":{}},"template":{"metadata":{"annotations":{"scheduling.volcano.sh/queue-name":"default"}},"spec":{"failurePolicy":{"maxRestarts":0,"restartStrategy":"Recreate"},"replicatedJobs":[{"groupName":"default","name":"node","replicas":1,"template":{"metadata":{"labels":{"trainer.kubeflow.org/trainjob-ancestor-step":"trainer"}},"spec":{"activeDeadlineSeconds":900,"backoffLimit":0,"completionMode":"Indexed","completions":1,"parallelism":1,"template":{"metadata":{"finalizers":["modeldev.ani.io/training-exit-evidence"]},"spec":{"automountServiceAccountToken":false,"containers":[{"args":["--data","/inputs/data.csv","--output","/outputs","--learning-rate","0.02","--epochs","3","--batch-size","64","--seed","42"],"command":["python","/opt/mlp/train.py"],"image":"registry.example.test/cpu/mlp@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","imagePullPolicy":"IfNotPresent","name":"node","resources":{"limits":{"cpu":"1","memory":"1Gi"},"requests":{"cpu":"1","memory":"1Gi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"volumeMounts":[{"mountPath":"/inputs","name":"input","readOnly":true,"subPath":"inputs"},{"mountPath":"/outputs","name":"output","readOnly":false,"subPath":"training"},{"mountPath":"/tmp","name":"tmp","readOnly":false}]}],"restartPolicy":"Never","schedulerName":"volcano","securityContext":{"fsGroup":10001,"runAsGroup":10001,"runAsNonRoot":true,"runAsUser":10001,"seccompProfile":{"type":"RuntimeDefault"}},"serviceAccountName":"cpu-training","terminationGracePeriodSeconds":5,"volumes":[{"name":"input","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}},{"name":"output","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}},{"emptyDir":{"sizeLimit":"4Gi"},"name":"tmp"}]}}}}}]}}}`
+	var literal = `{"mlPolicy":{"numNodes":1},"podGroupPolicy":{"volcano":{}},"template":{"metadata":{"annotations":{"scheduling.volcano.sh/queue-name":"default"}},"spec":{"failurePolicy":{"maxRestarts":0,"restartStrategy":"Recreate"},"replicatedJobs":[{"groupName":"default","name":"node","replicas":1,"template":{"metadata":{"labels":{"trainer.kubeflow.org/trainjob-ancestor-step":"trainer"}},"spec":{"activeDeadlineSeconds":900,"backoffLimit":0,"completionMode":"Indexed","completions":1,"parallelism":1,"template":{"metadata":{"finalizers":["modeldev.ani.io/training-exit-evidence"]},"spec":{"automountServiceAccountToken":false,"containers":[{"args":["--data","/inputs/data.csv","--output","/outputs","--learning-rate","0.02","--epochs","3","--batch-size","64","--seed","42"],"command":["python","/opt/mlp/train.py"],"image":"registry.example.test/cpu/mlp@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","imagePullPolicy":"IfNotPresent","name":"node","resources":{"limits":{"cpu":"1","memory":"1Gi"},"requests":{"cpu":"1","memory":"1Gi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"volumeMounts":[{"mountPath":"/inputs","name":"input","readOnly":true,"subPath":"inputs"},{"mountPath":"/outputs","name":"output","readOnly":false,"subPath":"training"},{"mountPath":"/tmp","name":"tmp","readOnly":false}]}],"imagePullSecrets":[{"name":"` + pullSecretRef + `"}],"restartPolicy":"Never","schedulerName":"volcano","securityContext":{"fsGroup":10001,"runAsGroup":10001,"runAsNonRoot":true,"runAsUser":10001,"seccompProfile":{"type":"RuntimeDefault"}},"serviceAccountName":"cpu-training","terminationGracePeriodSeconds":5,"volumes":[{"name":"input","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}},{"name":"output","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}},{"emptyDir":{"sizeLimit":"4Gi"},"name":"tmp"}]}}}}}]}}}`
 	var object any
 	if err := json.Unmarshal([]byte(literal), &object); err != nil {
 		t.Fatal(err)
@@ -281,9 +294,10 @@ func writeConfiguredAdmissionFacts(t *testing.T, material cpup01.ImplementationM
 		Workspace           cpup01.WorkspaceContract          `json:"workspace"`
 		InputFilePath       string                            `json:"input_file_path"`
 		OutputDirectoryPath string                            `json:"output_directory_path"`
+		TargetPlatform      cpup01.TrainingPlatform           `json:"target_platform"`
 		EnvironmentEvidence evidence                          `json:"environment_evidence"`
 		ApplicationEvidence evidence                          `json:"application_evidence"`
-	}{SchemaVersion: "ani.modeldev.managed-admission-facts.v2.1", ResourceTenantID: facts.TenantID, ImplementationID: material.Implementation.ImplementationID, Environment: facts.Environment, InputScope: facts.InputScope, PublicationScope: facts.PublicationScope, Timing: facts.Timing, Workspace: facts.Workspace, InputFilePath: facts.InputFilePath, OutputDirectoryPath: facts.OutputDirectoryPath, EnvironmentEvidence: evidence{Reference: "module-fixture:startup-environment", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, ApplicationEvidence: evidence{Reference: "module-fixture:startup-application", SHA256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}}
+	}{SchemaVersion: "ani.modeldev.managed-admission-facts.v2.2", ResourceTenantID: facts.TenantID, ImplementationID: material.Implementation.ImplementationID, Environment: facts.Environment, InputScope: facts.InputScope, PublicationScope: facts.PublicationScope, Timing: facts.Timing, Workspace: facts.Workspace, InputFilePath: facts.InputFilePath, OutputDirectoryPath: facts.OutputDirectoryPath, TargetPlatform: facts.TargetPlatform, EnvironmentEvidence: evidence{Reference: "module-fixture:startup-environment", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, ApplicationEvidence: evidence{Reference: "module-fixture:startup-application", SHA256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}}
 	raw, err := json.Marshal(document)
 	if err != nil {
 		t.Fatal(err)

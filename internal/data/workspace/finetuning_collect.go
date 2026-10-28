@@ -283,7 +283,7 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 	if err != nil {
 		return invalid
 	}
-	resolved := cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: execution.Snapshot.Program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}
+	resolved := cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: execution.Snapshot.ProgramParameters(), ManagedSettings: fine.ManagedSettings}
 	resolvedBytes, err := resolved.Canonical()
 	if err != nil {
 		return invalid

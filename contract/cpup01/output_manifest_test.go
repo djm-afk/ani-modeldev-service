@@ -42,7 +42,7 @@ func TestOutputManifestBindsActualInventoryWithoutClaimingPublication(t *testing
 	if err := decoder.Decode(&decoded); err != nil {
 		t.Fatalf("manifest has unsupported or self-hash fields: %v", err)
 	}
-	if decoded.Schema != "ani.modeldev.output-manifest.v1" || decoded.StorageState != "WORKSPACE_ONLY" || decoded.TenantID != admission.TenantID || decoded.OperationID != admission.OperationID || decoded.ExecutionID != admission.ExecutionID || decoded.ExecutionSpecHash != admission.SpecHash || decoded.InputVersionID != admission.Snapshot.Input.InputVersionID || decoded.InputSHA256 != admission.Snapshot.Input.Object.SHA256 || decoded.ImplementationID != admission.Snapshot.Implementation.ImplementationID || decoded.ImageDigest != admission.Snapshot.Program.ImageDigest {
+	if decoded.Schema != "ani.modeldev.output-manifest.v1" || decoded.StorageState != "WORKSPACE_ONLY" || decoded.TenantID != admission.TenantID || decoded.OperationID != admission.OperationID || decoded.ExecutionID != admission.ExecutionID || decoded.ExecutionSpecHash != admission.SpecHash || decoded.InputVersionID != admission.Snapshot.Input.InputVersionID || decoded.InputSHA256 != admission.Snapshot.Input.Object.SHA256 || decoded.ImplementationID != admission.Snapshot.Implementation.ImplementationID || decoded.ImageDigest != admission.Snapshot.ProgramImage() {
 		t.Fatalf("manifest lost frozen binding: %+v", decoded)
 	}
 	wantFiles := []cpup01.OutputFile{files[1], files[0], files[2], files[3]}

@@ -24,7 +24,7 @@ import (
 )
 
 func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application, error) {
-	clients, err := loadRuntimeClients(config.Runtime)
+	clients, err := loadRuntimeClients(config.Runtime, config.ImageRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +87,10 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed runtime configuration invalid")
 	}
+	// Training workloads must reference the shared tenant pull Secret before
+	// creation. The ensurer is Resource's narrow runtime client; ModelDev never
+	// writes the Secret and never receives credentials.
+	runtime.WithPullSecrets(clients.images)
 	if modelClient != nil {
 		storageHTTP, ok := clients.store.Options().HTTPClient.(*http.Client)
 		if !ok {
@@ -128,7 +132,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if modelClient != nil {
 		operations.WithRegistrationRecovery(runtime, admissions)
 	}
-	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), operations, modelFacts, middlewares...)
+	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), operations, modelFacts, clients.images, middlewares...)
 	if err != nil {
 		return failed("managed command listener configuration invalid")
 	}

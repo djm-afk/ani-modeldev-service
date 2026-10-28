@@ -15,21 +15,42 @@ import (
 	"unicode/utf8"
 )
 
+// SnapshotSchemaVersion remains the finetuning snapshot schema; its canonical
+// bytes and hash must not change. General training uses its own schema below.
 const SnapshotSchemaVersion = "ani.modeldev.execution-spec.v2.1"
+
+// TrainingSnapshotSchemaVersion is the hard-switched general-training schema.
+// A v2.1 training snapshot (the retired ImageVersionID identity) is rejected
+// outright: there is no legacy decoder and no dual-read path.
+const TrainingSnapshotSchemaVersion = "ani.modeldev.training-execution-spec.v1"
+
+// SchemaVersionFor returns the single schema a given kind may present.
+func SchemaVersionFor(kind string) string {
+	if kind == "FINETUNING" {
+		return SnapshotSchemaVersion
+	}
+	return TrainingSnapshotSchemaVersion
+}
 
 // Snapshot freezes trusted candidate identity and the entire executable plan.
 // Every resource UID created after admission belongs to runtime facts only.
 type Snapshot struct {
-	SchemaVersion    string                     `json:"schema_version"`
-	Kind             string                     `json:"kind"`
-	DeliveryMode     string                     `json:"delivery_mode"`
-	IdentityRef      IdentityRef                `json:"identity_ref"`
-	Implementation   ImplementationSnapshot     `json:"implementation"`
-	ComputeOrigin    ComputeOrigin              `json:"compute_origin"`
-	Timing           Timing                     `json:"timing"`
-	RuntimePlan      RuntimePlan                `json:"runtime_plan"`
-	Input            InputRef                   `json:"input"`
-	Program          ProgramRef                 `json:"program"`
+	SchemaVersion  string `json:"schema_version"`
+	Kind           string `json:"kind"`
+	DeliveryMode   string `json:"delivery_mode"`
+	IdentityRef    IdentityRef                `json:"identity_ref"`
+	Implementation ImplementationSnapshot     `json:"implementation"`
+	ComputeOrigin  ComputeOrigin              `json:"compute_origin"`
+	Timing         Timing                     `json:"timing"`
+	RuntimePlan    RuntimePlan                `json:"runtime_plan"`
+	Input          InputRef                   `json:"input"`
+	// Program carries the finetuning chain's trusted image identity and is
+	// absent for general training.
+	Program *ProgramRef `json:"program,omitempty"`
+	// TrainingProgram carries the selected catalogue training image and is
+	// absent for finetuning. Exactly one of Program/TrainingProgram is present,
+	// so the two chains never share a hash or a fallback.
+	TrainingProgram  *TrainingProgram          `json:"training_program,omitempty"`
 	Resources        CPUResources               `json:"resources"`
 	Environment      EnvironmentBindingSnapshot `json:"environment"`
 	Workspace        WorkspaceContract          `json:"workspace"`
@@ -165,14 +186,22 @@ func (snapshot Snapshot) canonical(requireRuntime bool) ([]byte, error) {
 	snapshot.Implementation.PipelineID = strings.ToLower(snapshot.Implementation.PipelineID)
 	snapshot.Implementation.PipelineVersionID = strings.ToLower(snapshot.Implementation.PipelineVersionID)
 	snapshot.Input.InputVersionID = strings.ToLower(snapshot.Input.InputVersionID)
-	snapshot.Program.ImageVersionID = strings.ToLower(snapshot.Program.ImageVersionID)
 	snapshot.Environment.BindingID = strings.ToLower(snapshot.Environment.BindingID)
 	snapshot.Environment.NamespaceUID = strings.ToLower(snapshot.Environment.NamespaceUID)
 	snapshot.Environment.ExperimentID = strings.ToLower(snapshot.Environment.ExperimentID)
 	snapshot.RuntimePlan.TargetJobs = append([]string{}, snapshot.RuntimePlan.TargetJobs...)
 	sort.Strings(snapshot.RuntimePlan.TargetJobs)
-	snapshot.Program.ResolvedArgs = append([]string{}, snapshot.Program.ResolvedArgs...)
-	snapshot.Program.ResolvedParameters = canonicalParameters(snapshot.Program.ResolvedParameters)
+	if snapshot.Program != nil {
+		program := *snapshot.Program
+		program.ImageVersionID = strings.ToLower(program.ImageVersionID)
+		program.ResolvedArgs = append([]string{}, program.ResolvedArgs...)
+		program.ResolvedParameters = canonicalParameters(program.ResolvedParameters)
+		snapshot.Program = &program
+	}
+	if snapshot.TrainingProgram != nil {
+		program := snapshot.TrainingProgram.canonical()
+		snapshot.TrainingProgram = &program
+	}
 	snapshot.OutputContract.RequiredFiles = append([]RequiredOutput{}, snapshot.OutputContract.RequiredFiles...)
 	sort.Slice(snapshot.OutputContract.RequiredFiles, func(i, j int) bool {
 		return snapshot.OutputContract.RequiredFiles[i].RelativePath < snapshot.OutputContract.RequiredFiles[j].RelativePath
@@ -226,7 +255,7 @@ func (snapshot Snapshot) ValidatePrepared() error { return snapshot.validate(fal
 
 func (snapshot Snapshot) validate(requireRuntime bool) error {
 	invalid := func(field string) error { return fmt.Errorf("%w: snapshot %s", ErrInvalidArgument, field) }
-	if snapshot.SchemaVersion != SnapshotSchemaVersion {
+	if snapshot.SchemaVersion != SchemaVersionFor(snapshot.Kind) {
 		return invalid("schema_version")
 	}
 	if (snapshot.Kind != "GENERAL_TRAINING" && snapshot.Kind != "FINETUNING") || snapshot.DeliveryMode != "SAVE_ARTIFACTS" {
@@ -258,10 +287,13 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 	if snapshot.ComputeOrigin.Validate() != nil || snapshot.Resources.RequestMillicpu != snapshot.ComputeOrigin.CPUMillis || snapshot.Resources.LimitMillicpu != snapshot.ComputeOrigin.CPUMillis || snapshot.Resources.RequestMemoryBytes != snapshot.ComputeOrigin.MemoryMiB*1024*1024 || snapshot.Resources.LimitMemoryBytes != snapshot.Resources.RequestMemoryBytes {
 		return invalid("compute origin resources")
 	}
-	for _, value := range []string{snapshot.Implementation.PipelineID, snapshot.Implementation.PipelineVersionID, snapshot.Input.InputVersionID, snapshot.Program.ImageVersionID, snapshot.Environment.BindingID, snapshot.Environment.NamespaceUID, snapshot.Environment.ExperimentID} {
+	for _, value := range []string{snapshot.Implementation.PipelineID, snapshot.Implementation.PipelineVersionID, snapshot.Input.InputVersionID, snapshot.Environment.BindingID, snapshot.Environment.NamespaceUID, snapshot.Environment.ExperimentID} {
 		if !validUUID(value) {
 			return invalid("fixed identity")
 		}
+	}
+	if snapshot.Program != nil && !validUUID(snapshot.Program.ImageVersionID) {
+		return invalid("fixed identity")
 	}
 	for _, value := range []string{snapshot.Implementation.PipelineIRSHA256, snapshot.Input.Object.SHA256, snapshot.Environment.BindingDigest} {
 		if !snapshotSHA256Pattern.MatchString(value) {
@@ -294,25 +326,38 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 	if object.ImmutableCopy != nil && !*object.ImmutableCopy {
 		return invalid("input immutable copy")
 	}
-	program := snapshot.Program
-	if !validSnapshotImage(program.ImageDigest) {
-		return invalid("image digest")
+	// Exactly one program representation is present, decided by kind. This is
+	// what keeps the training and finetuning hashes disjoint.
+	if snapshot.Kind == "FINETUNING" {
+		if snapshot.Program == nil || snapshot.TrainingProgram != nil {
+			return invalid("program")
+		}
+	} else if snapshot.Program != nil || snapshot.TrainingProgram == nil {
+		return invalid("program")
 	}
-	if len(program.Command) == 0 {
-		return invalid("command")
-	}
-	for _, value := range program.Command {
-		if !validSnapshotText(value) {
+	if snapshot.Program != nil {
+		program := *snapshot.Program
+		if !validSnapshotImage(program.ImageDigest) {
+			return invalid("image digest")
+		}
+		if len(program.Command) == 0 {
 			return invalid("command")
 		}
-	}
-	for _, value := range program.ResolvedArgs {
-		if !validSnapshotText(value) {
-			return invalid("resolved args")
+		for _, value := range program.Command {
+			if !validSnapshotText(value) {
+				return invalid("command")
+			}
 		}
-	}
-	if ValidateResolvedParameters(snapshot.Implementation.ImplementationID, program.ResolvedParameters) != nil {
-		return invalid("resolved parameters")
+		for _, value := range program.ResolvedArgs {
+			if !validSnapshotText(value) {
+				return invalid("resolved args")
+			}
+		}
+		if ValidateResolvedParameters(snapshot.Implementation.ImplementationID, program.ResolvedParameters) != nil {
+			return invalid("resolved parameters")
+		}
+	} else if snapshot.TrainingProgram.validate(snapshot.Implementation.ImplementationID) != nil {
+		return invalid("training program")
 	}
 	if snapshot.Kind == "FINETUNING" {
 		if field := invalidFinetuningSnapshot(snapshot); field != "" {
@@ -351,6 +396,55 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 	deadline := snapshot.DeadlineAt.UTC()
 	if deadline.IsZero() || deadline.Year() < 1 || deadline.Year() > 9999 {
 		return invalid("deadline_at")
+	}
+	return nil
+}
+
+// resolvedParameters returns the resolved parameter selection of whichever
+// program representation this snapshot carries. Exactly one is present.
+func (snapshot Snapshot) resolvedParameters() []Parameter {
+	if snapshot.Program != nil {
+		return snapshot.Program.ResolvedParameters
+	}
+	if snapshot.TrainingProgram != nil {
+		return snapshot.TrainingProgram.ResolvedParameters
+	}
+	return nil
+}
+
+// ProgramParameters is the exported form of resolvedParameters for adapters.
+func (snapshot Snapshot) ProgramParameters() []Parameter { return snapshot.resolvedParameters() }
+
+// ProgramImage is the complete runnable image of this snapshot. It is the only
+// executable image fact; callers never read a partially built reference.
+func (snapshot Snapshot) ProgramImage() string {
+	if snapshot.Program != nil {
+		return snapshot.Program.ImageDigest
+	}
+	if snapshot.TrainingProgram != nil {
+		return snapshot.TrainingProgram.RuntimeImage()
+	}
+	return ""
+}
+
+// ProgramCommand returns the frozen command of this snapshot.
+func (snapshot Snapshot) ProgramCommand() []string {
+	if snapshot.Program != nil {
+		return snapshot.Program.Command
+	}
+	if snapshot.TrainingProgram != nil {
+		return snapshot.TrainingProgram.Command
+	}
+	return nil
+}
+
+// ProgramArgs returns the frozen resolved arguments of this snapshot.
+func (snapshot Snapshot) ProgramArgs() []string {
+	if snapshot.Program != nil {
+		return snapshot.Program.ResolvedArgs
+	}
+	if snapshot.TrainingProgram != nil {
+		return snapshot.TrainingProgram.ResolvedArgs
 	}
 	return nil
 }

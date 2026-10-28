@@ -101,7 +101,7 @@ func TestTrainingCreateFreezesCPUWorkspaceAndFindsUncertainResultWithoutRecreate
 	}{
 		{[]string{"metadata", "name"}, f.plan.Name},
 		{[]string{"spec", "runtimeRef", "name"}, f.plan.Snapshot.RuntimePlan.Name},
-		{[]string{"spec", "trainer", "image"}, f.plan.Snapshot.Program.ImageDigest},
+		{[]string{"spec", "trainer", "image"}, f.plan.Snapshot.ProgramImage()},
 	} {
 		got, _, _ := unstructured.NestedString(job, field.path...)
 		if got != field.want {

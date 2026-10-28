@@ -16,7 +16,7 @@ import (
 
 func materialFixture(t *testing.T) (cpup01.ImplementationMaterial, []byte) {
 	t.Helper()
-	m := conformance.MaterialV21()
+	m := conformance.MaterialV3()
 	raw, err := m.Canonical()
 	if err != nil {
 		t.Fatal(err)
@@ -47,15 +47,15 @@ func TestInstalledFiniteImplementationMaterialHasExactBytesAndFreshCopies(t *tes
 	if err != nil || !reflect.DeepEqual(first, want) {
 		t.Fatal(err)
 	}
-	first.Program.Command[0] = "caller-mutation"
+	first.Training.Command[0] = "caller-mutation"
 	first.OutputContract.RequiredFiles[0].RelativePath = "caller-mutation"
 	again, err := catalogue.ReadImplementationMaterial(context.Background(), directory, "builtin.mlp", "cpu")
 	if err != nil || !reflect.DeepEqual(again, want) {
 		t.Fatal("caller mutated installed material", err)
 	}
 	// Installing another finite device file cannot replace the CPU selection.
-	other := conformance.MaterialV21()
-	other.Program.ImageVersionID = "66666666-6666-4666-8666-666666666666"
+	other := conformance.MaterialV3()
+	other.Training.Command = []string{"/opt/venv/bin/python", "-I", "/opt/cpu03/train_mlp_gpu.py"}
 	otherRaw, err := other.Canonical()
 	if err != nil {
 		t.Fatal(err)

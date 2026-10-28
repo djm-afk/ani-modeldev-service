@@ -26,14 +26,14 @@ func TestPreparePresenceOriginalIdentityAndFinalizeMismatchBoundaries(t *testing
 	if first.Snapshot.IdentityRef.IntentHash == second.Snapshot.IdentityRef.IntentHash {
 		t.Fatal("presence collapsed")
 	}
-	if len(first.Snapshot.Program.ResolvedParameters) != 4 {
+	if len(first.Snapshot.ProgramParameters()) != 4 {
 		t.Fatal("defaults incomplete")
 	}
 	for _, change := range []func(*cpup01.PreparedCandidate){func(c *cpup01.PreparedCandidate) {
 		c.Snapshot.IdentityRef.IntentHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	}, func(c *cpup01.PreparedCandidate) {
 		c.Snapshot.ComputeOrigin.ComputePresetID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
-	}, func(c *cpup01.PreparedCandidate) { c.Snapshot.Implementation.Version = "unrecognized" }, func(c *cpup01.PreparedCandidate) { c.Snapshot.Program.ResolvedParameters[0].Value = "0" }, func(c *cpup01.PreparedCandidate) {
+	}, func(c *cpup01.PreparedCandidate) { c.Snapshot.Implementation.Version = "unrecognized" }, func(c *cpup01.PreparedCandidate) { c.Snapshot.TrainingProgram.ResolvedParameters[0].Value = "0" }, func(c *cpup01.PreparedCandidate) {
 		c.Snapshot.Timing.StepTimeoutSeconds = c.Snapshot.Timing.ExecutionTimeoutMaxSeconds + 1
 	}} {
 		c := cloneCandidate(t, first)

@@ -5,6 +5,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
+
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func TestOptionalAdmissionResolutionValidatesShapeWithoutReadingMaterials(t *testing.T) {
@@ -14,6 +17,7 @@ func TestOptionalAdmissionResolutionValidatesShapeWithoutReadingMaterials(t *tes
 			config.Command = commandConfiguration()
 			if count != 0 {
 				config.Command.AdmissionResolution = admissionConfiguration(t, count)
+				config.ImageRuntime = imageRuntimeConfiguration(t)
 			}
 			// These references point beneath a new empty directory. Validate
 			// checks only shape; actual material loading belongs to startup.
@@ -59,6 +63,7 @@ func TestConfiguredAdmissionResolutionRejectsIncompleteMaterialShape(t *testing.
 			config := validConfig()
 			config.Command = commandConfiguration()
 			config.Command.AdmissionResolution = admissionConfiguration(t, 2)
+			config.ImageRuntime = imageRuntimeConfiguration(t)
 			tt.change(config.Command.AdmissionResolution)
 			err := config.Validate()
 			if err == nil {
@@ -101,6 +106,7 @@ func TestValidAdmissionResolutionDoesNotSkipRemainingServerValidation(t *testing
 			config := validConfig()
 			config.Command = commandConfiguration()
 			config.Command.AdmissionResolution = admissionConfiguration(t, 1)
+			config.ImageRuntime = imageRuntimeConfiguration(t)
 			tt.change(config)
 			if err := config.Validate(); err == nil {
 				t.Fatal("valid admission references bypassed server validation")
@@ -117,4 +123,19 @@ func admissionConfiguration(t *testing.T, count int) *AdmissionResolution {
 		admission.FactsFiles[i] = &AdmissionFactsFile{Path: filepath.Join(root, "sensitive-facts-"+strconv.Itoa(i)+".json"), Sha256: strings.Repeat("a", 64)}
 	}
 	return admission
+}
+
+// imageRuntimeConfiguration is the paired Resource dependency admission
+// resolution requires. Validate checks shape only, so the files need not exist.
+func imageRuntimeConfiguration(t *testing.T) *ImageRuntimeConnection {
+	t.Helper()
+	root := t.TempDir()
+	return &ImageRuntimeConnection{
+		Endpoint:        "127.0.0.1:19092",
+		CaFile:          filepath.Join(root, "ca.pem"),
+		CertificateFile: filepath.Join(root, "client.pem"),
+		PrivateKeyFile:  filepath.Join(root, "client.key"),
+		ServerName:      "ani-resource-image-runtime",
+		Timeout:         durationpb.New(5 * time.Second),
+	}
 }

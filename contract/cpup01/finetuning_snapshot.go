@@ -224,6 +224,10 @@ func invalidFinetuningSnapshot(snapshot Snapshot) string {
 	if fine == nil || fine.ParameterContractVersion != FinetuningParameterContractVersion {
 		return "finetuning contract"
 	}
+	if snapshot.Program == nil {
+		return "finetuning program"
+	}
+	program := *snapshot.Program
 	if snapshot.Input.Format != "JSON" || snapshot.Input.SchemaVersion != FinetuningInputSchemaVersion || snapshot.Input.RowCount == 0 || snapshot.Input.FeatureCount != 0 {
 		return "fixed JSON contract"
 	}
@@ -239,12 +243,12 @@ func invalidFinetuningSnapshot(snapshot Snapshot) string {
 	if !snapshotSHA256Pattern.MatchString(fine.RecipeSHA256) || !snapshotSHA256Pattern.MatchString(fine.MappingSHA256) {
 		return "program provenance"
 	}
-	configuration := FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: snapshot.Program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}
+	configuration := FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}
 	digest, err := configuration.Digest()
 	if err != nil || digest != fine.ResolvedConfigurationSHA256 {
 		return "resolved configuration"
 	}
-	if !slices.Equal(snapshot.Program.Command, []string{"/opt/venv/bin/python", "-I", "/opt/finetuning/finetune_entry.py"}) {
+	if !slices.Equal(program.Command, []string{"/opt/venv/bin/python", "-I", "/opt/finetuning/finetune_entry.py"}) {
 		return "finetuning command"
 	}
 	baseManifestHash, err := fine.BaseModel.BaseManifestSHA256()
@@ -254,15 +258,15 @@ func invalidFinetuningSnapshot(snapshot Snapshot) string {
 	arguments := func(mode string) []string {
 		return []string{mode, "--configuration", "/workspace/inputs/finetune_configuration.json", "--workspace", "/workspace", "--expected-input-sha256", snapshot.Input.Object.SHA256, "--expected-input-bytes", strconv.FormatInt(snapshot.Input.Object.SizeBytes, 10), "--expected-base-manifest-sha256", baseManifestHash}
 	}
-	if !slices.Equal(snapshot.Program.ResolvedArgs, arguments("train")) {
+	if !slices.Equal(program.ResolvedArgs, arguments("train")) {
 		return "resolved finetuning args"
 	}
 	for _, component := range []struct {
 		Program ProgramRef
 		Mode    string
 	}{{fine.ExportProgram, "export"}, {fine.VerifyProgram, "verify"}} {
-		program := component.Program
-		if !validUUID(program.ImageVersionID) || !validSnapshotImage(program.ImageDigest) || !slices.Equal(program.Command, snapshot.Program.Command) || len(program.ResolvedParameters) != 0 || !slices.Equal(program.ResolvedArgs, arguments(component.Mode)) {
+		item := component.Program
+		if !validUUID(item.ImageVersionID) || !validSnapshotImage(item.ImageDigest) || !slices.Equal(item.Command, program.Command) || len(item.ResolvedParameters) != 0 || !slices.Equal(item.ResolvedArgs, arguments(component.Mode)) {
 			return "component program"
 		}
 	}

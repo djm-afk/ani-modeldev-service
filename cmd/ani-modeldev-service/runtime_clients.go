@@ -22,6 +22,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/imageruntime"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/storagecredentials"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/traininglogs"
@@ -38,10 +39,13 @@ type runtimeClients struct {
 	store         *s3.Client
 	storageIssuer *storagecredentials.Issuer
 	logs          *traininglogs.Reader
-	close         func()
+	// images is ModelDev's narrow Resource ImageRuntime client. It is nil when
+	// the deployment declares no image runtime dependency.
+	images *imageruntime.Client
+	close  func()
 }
 
-func loadRuntimeClients(config *conf.ManagedRuntime) (runtimeClients, error) {
+func loadRuntimeClients(config *conf.ManagedRuntime, imageRuntime *conf.ImageRuntimeConnection) (runtimeClients, error) {
 	failure := func() (runtimeClients, error) {
 		return runtimeClients{}, errors.New("managed runtime materials unavailable or invalid")
 	}
@@ -146,7 +150,31 @@ func loadRuntimeClients(config *conf.ManagedRuntime) (runtimeClients, error) {
 		HTTPClient: storageHTTP, Credentials: credentials, RetryMaxAttempts: 1,
 		RequestChecksumCalculation: aws.RequestChecksumCalculationWhenRequired, ResponseChecksumValidation: aws.ResponseChecksumValidationWhenRequired,
 	})
-	return runtimeClients{certificate: certificate, binding: binding, kube: kube, runs: runs, store: store, storageIssuer: issuer, logs: traininglogs.New(core), close: func() { kubeHTTP.CloseIdleConnections(); storageHTTP.CloseIdleConnections(); issuer.Close() }}, nil
+	images, closeImages, err := loadImageRuntime(imageRuntime)
+	if err != nil {
+		kubeHTTP.CloseIdleConnections()
+		storageHTTP.CloseIdleConnections()
+		issuer.Close()
+		return failure()
+	}
+	return runtimeClients{certificate: certificate, binding: binding, kube: kube, runs: runs, store: store, storageIssuer: issuer, logs: traininglogs.New(core), images: images, close: func() { closeImages(); kubeHTTP.CloseIdleConnections(); storageHTTP.CloseIdleConnections(); issuer.Close() }}, nil
+}
+
+// loadImageRuntime requires every material when the dependency is declared, so
+// a partially materialised identity fails startup instead of silently losing
+// training image resolution or the shared pull Secret.
+func loadImageRuntime(config *conf.ImageRuntimeConnection) (*imageruntime.Client, func(), error) {
+	if config == nil {
+		return nil, func() {}, nil
+	}
+	client, closeClient, err := imageruntime.New(imageruntime.Config{
+		Endpoint: config.Endpoint, CAFile: config.CaFile, CertificateFile: config.CertificateFile,
+		PrivateKeyFile: config.PrivateKeyFile, ServerName: config.ServerName, Timeout: config.Timeout.AsDuration(),
+	})
+	if err != nil {
+		return nil, func() {}, err
+	}
+	return client, closeClient, nil
 }
 
 type mountedPipelineToken struct {

@@ -195,7 +195,7 @@ func mustRemove(t *testing.T, name string) {
 func mlpOutputFixture(t *testing.T, execution biz.Execution) map[string][]byte {
 	t.Helper()
 	parameters := map[string]string{}
-	for _, parameter := range execution.Snapshot.Program.ResolvedParameters {
+	for _, parameter := range execution.Snapshot.ProgramParameters() {
 		parameters[parameter.Name] = parameter.Value
 	}
 	epochs, _ := strconv.ParseInt(parameters["epochs"], 10, 64)
@@ -234,7 +234,7 @@ func TestCollectMLPUsesFrozenParametersAndIncludesPartialBatch(t *testing.T) {
 	rate, epochs, batch, seed := "1000", int64(2), int64(6), uint32(7)
 	execution.Intent.MLP = &cpup01.MLPParameters{LearningRate: &rate, Epochs: &epochs, BatchSize: &batch, Seed: &seed}
 	_, execution.IntentHash, _ = cpup01.CanonicalIntent(execution.Intent)
-	execution.Snapshot.Program.ResolvedParameters, _ = execution.Intent.ResolveParameters()
+	execution.Snapshot.TrainingProgram.ResolvedParameters, _ = execution.Intent.ResolveParameters()
 	execution.Snapshot.Input.RowCount = 17
 	rows := strings.Split(string(pipelineCSVFixture()), "\n")
 	input := []byte(strings.Join(rows[:18], "\n") + "\n")

@@ -1,1 +1,1 @@
-{"name":"CPU training","kind":"GENERAL_TRAINING","implementation_id":"builtin.mlp","compute_preset_id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","dataset_version_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","parameters":{}}
+{"name":"CPU training","kind":"GENERAL_TRAINING","implementation_id":"builtin.mlp","compute_preset_id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","dataset_version_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","parameters":{},"training_image_id":"img_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","training_image_scope":"platform"}

@@ -25,7 +25,7 @@ func (f *implementationQueryFacts) ReadImplementationMaterial(_ context.Context,
 		return cpup01.ImplementationMaterial{}, biz.ErrImplementationUnavailable
 	}
 	if id == "builtin.mlp" {
-		return conformance.MaterialV21(), nil
+		return conformance.MaterialV3(), nil
 	}
 	if id == "builtin.sft_lora" {
 		return conformance.FinetuningMaterialV21(), nil

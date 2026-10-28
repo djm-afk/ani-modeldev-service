@@ -100,7 +100,7 @@ func prepareFinetuningVertical(t *testing.T, rows int) finetuningVerticalFixture
 		t.Fatal("READY did not survive a new connection", e)
 	}
 	models := &finetuningModelBoundary{tenant: request.TenantID, base: conformance.FinetuningSnapshotV1().Finetuning.BaseModel}
-	f.resolver = biz.NewFinetuningAdmissionResolver(catalogue.NewReader(f.directory), input.New(f.openPool()), reader, models)
+	f.resolver = biz.NewFinetuningAdmissionResolver(catalogue.NewReader(f.directory), input.New(f.openPool()), reader, models, &fixtureImages{selection: conformance.TrainingImageSelectionV1()})
 	return finetuningVerticalFixture{resolutionFixture: f, importedFine: request, models: models, management: management}
 }
 func TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay(t *testing.T) {
@@ -119,7 +119,7 @@ func TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay(t *testi
 		t.Fatal(e)
 	}
 	s := resolved.Snapshot
-	if len(s.Program.ResolvedParameters) != 9 || s.Finetuning.ManagedSettings.LoraRank != 13 || s.Finetuning.ManagedSettings.LoraAlpha != 19 || s.Finetuning.ManagedSettings.DataSeed != 123 || s.Input.RowCount != 71 || s.Finetuning.ManagedSettings.PerDeviceTrainBatchSize != 2 || s.Finetuning.ManagedSettings.GradientAccumulationSteps != 3 {
+	if len(s.ProgramParameters()) != 9 || s.Finetuning.ManagedSettings.LoraRank != 13 || s.Finetuning.ManagedSettings.LoraAlpha != 19 || s.Finetuning.ManagedSettings.DataSeed != 123 || s.Input.RowCount != 71 || s.Finetuning.ManagedSettings.PerDeviceTrainBatchSize != 2 || s.Finetuning.ManagedSettings.GradientAccumulationSteps != 3 {
 		t.Fatal("full typed parameter consumption lost")
 	}
 	intent, e := contractpb.EncodeIntent(f.request.Intent)
@@ -144,7 +144,7 @@ func TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay(t *testi
 		t.Fatal("formal replay created another execution", e)
 	}
 	stored, e := execution.New(f.openPool()).Get(f.ctx, id.TenantID, id.ExecutionID)
-	if e != nil || stored.SpecHash != resolved.SpecHash || len(stored.Snapshot.Program.ResolvedParameters) != 9 {
+	if e != nil || stored.SpecHash != resolved.SpecHash || len(stored.Snapshot.ProgramParameters()) != 9 {
 		t.Fatal("inbox lost frozen plan", e)
 	}
 }

@@ -66,7 +66,7 @@ func OutputManifestBytes(admission AdmissionEnvelope, files []OutputFile) ([]byt
 		Schema:   "ani.modeldev.output-manifest.v1",
 		TenantID: strings.ToLower(admission.TenantID), OperationID: strings.ToLower(admission.OperationID), ExecutionID: strings.ToLower(admission.ExecutionID),
 		ExecutionSpecHash: admission.SpecHash, InputVersionID: strings.ToLower(admission.Snapshot.Input.InputVersionID), InputSHA256: admission.Snapshot.Input.Object.SHA256,
-		ImplementationID: admission.Snapshot.Implementation.ImplementationID, ImageDigest: admission.Snapshot.Program.ImageDigest,
+		ImplementationID: admission.Snapshot.Implementation.ImplementationID, ImageDigest: admission.Snapshot.ProgramImage(),
 		StorageState: "WORKSPACE_ONLY", Files: ordered,
 	}
 	canonical, err := encodeCanonicalJSON(manifest)

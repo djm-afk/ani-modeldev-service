@@ -39,17 +39,30 @@ def main():
     namespace_uid = "33333333-3333-4333-8333-333333333333"
     execution_id = "99999999-9999-4999-8999-999999999999"
     runtime_spec = {"template": {"spec": {"replicatedJobs": []}}}
+    tenant_id = "77777777-7777-4777-8777-777777777777"
+    cluster_id = "22222222-2222-4222-8222-222222222222"
+    namespace_name = "cpu-contract-fixture"
+    registry_authority = "registry.example.test"
+    # The shared Secret name is derived offline by the same contract rule the
+    # services use: tenant, cluster, namespace and registry authority.
+    pull_secret_scope = "\x00".join([tenant_id.lower(), cluster_id.lower(), namespace_name.lower(), registry_authority.lower()]).encode()
+    pull_secret_ref = "ani-pull-" + hashlib.sha256(pull_secret_scope).hexdigest()[:32]
     snapshot = {
-        "schema_version": "ani.modeldev.execution-spec.v2.1", "kind": "GENERAL_TRAINING", "delivery_mode": "SAVE_ARTIFACTS",
-        "identity_ref": {"tenant_id": "77777777-7777-4777-8777-777777777777", "actor": "governance:user:contract-test", "execution_id": execution_id, "operation_id": "88888888-8888-4888-8888-888888888888", "intent_hash": digest(intent_bytes)},
+        "schema_version": "ani.modeldev.training-execution-spec.v1", "kind": "GENERAL_TRAINING", "delivery_mode": "SAVE_ARTIFACTS",
+        "identity_ref": {"tenant_id": tenant_id, "actor": "governance:user:contract-test", "execution_id": execution_id, "operation_id": "88888888-8888-4888-8888-888888888888", "intent_hash": digest(intent_bytes)},
         "implementation": {"implementation_id": "builtin.mlp", "version": "1", "parameter_contract_version": "ani.mlp.parameters.v2.1", "pipeline_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "pipeline_version_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd", "pipeline_ir_sha256": "b" * 64},
         "compute_origin": {"compute_preset_id": intent["compute_preset_id"], "selection_digest": digest(b"compute-selection-v1\n" + selection_bytes), "selection": selection_bytes.decode(), "cpu_millis": "1000", "memory_mib": "1024", "device_mode": "cpu"},
         "timing": {"accepted_at": "2026-10-22T00:00:00Z", "execution_timeout_seconds": 3600, "execution_timeout_max_seconds": 7200, "step_timeout_seconds": 900, "execution_deadline_at": "2026-10-22T01:00:00Z"},
         "runtime_plan": {"generator_version": "contract-fixture-v1", "api_group": "trainer.kubeflow.org", "kind": "TrainingRuntime", "namespace": "cpu-contract-fixture", "name": "mdrt-" + digest((namespace_uid + "\n" + execution_id).encode())[:48], "expected_spec": runtime_spec, "expected_spec_sha256": digest(canonical(runtime_spec)), "defaulting_rules": "trainer-v2.1-explicit-v1", "target_jobs": ["node"]},
         "input": {"input_version_id": intent["dataset_version_id"], "object": {"storage_connection_id": "input-store-v1", "bucket": "cpu-inputs", "key": "fixed/input/data.csv", "version_id": "input-version-1", "size_bytes": "192456", "sha256": "d" * 64}, "format": "CSV", "schema_version": "ani.cpu.csv.v1", "row_count": 1027, "feature_count": 16},
-        "program": {"image_version_id": "ffffffff-ffff-4fff-8fff-ffffffffffff", "image_digest": "registry.example.test/cpu/mlp@sha256:" + "e" * 64, "command": ["python", "/opt/mlp/train.py"], "resolved_args": ["--data", "/inputs/data.csv", "--output", "/outputs"], "resolved_parameters": parameters},
+        # The training chain carries the resolved catalogue selection, not an
+        # image version identity. The two snapshot hashes stay disjoint.
+        "training_program": {
+            "image": {"image_id": "img_" + "a" * 32, "scope": "platform", "registry_authority": registry_authority, "digest": "sha256:" + "e" * 64, "reference": registry_authority + "/cpu/mlp@sha256:" + "e" * 64, "platform": {"os": "linux", "architecture": "amd64"}, "protocol_version": "ani.modeldev.training-image-protocol.v1", "pull_secret_ref": pull_secret_ref},
+            "command": ["python", "/opt/mlp/train.py"], "resolved_args": ["--data", "/inputs/data.csv", "--output", "/outputs"], "resolved_parameters": parameters,
+        },
         "resources": {"nodes": 1, "processes_per_node": 1, "request_millicpu": "1000", "limit_millicpu": "1000", "request_memory_bytes": "1073741824", "limit_memory_bytes": "1073741824"},
-        "environment": {"binding_id": "11111111-1111-4111-8111-111111111111", "binding_digest": "f" * 64, "cluster_id": "22222222-2222-4222-8222-222222222222", "namespace_name": "cpu-contract-fixture", "namespace_uid": namespace_uid, "kfp_connection_ref": "kfp-managed-v1", "experiment_id": "44444444-4444-4444-8444-444444444444", "identities": {"modeldev_control_identity_ref": "modeldev-control-v1", "kfp_step_service_account": "cpu-managed-step", "trainer_service_account": "cpu-training", "verifier_service_account": "cpu-verifier", "tenant_proxy_identity": "tenant:contract-fixture"}},
+        "environment": {"binding_id": "11111111-1111-4111-8111-111111111111", "binding_digest": "f" * 64, "cluster_id": cluster_id, "namespace_name": namespace_name, "namespace_uid": namespace_uid, "kfp_connection_ref": "kfp-managed-v1", "experiment_id": "44444444-4444-4444-8444-444444444444", "identities": {"modeldev_control_identity_ref": "modeldev-control-v1", "kfp_step_service_account": "cpu-managed-step", "trainer_service_account": "cpu-training", "verifier_service_account": "cpu-verifier", "tenant_proxy_identity": "tenant:contract-fixture"}},
         "workspace": {"mode": "EXECUTION_PVC", "storage_class": "task-workspace", "capacity_bytes": "2147483648", "input_subpath": "inputs", "training_subpath": "training", "reports_subpath": "reports", "publication_subpath": "publication"},
         "publication_scope": {"storage_connection_id": "artifact-store-v1", "bucket": "cpu-artifacts", "approved_prefix": "tenant-fixed/executions", "credential_reference": "modeldev-publish-v1"},
         "output_contract": {"schema_version": "ani.cpu.output.v1", "output_kind": "CHECKPOINT", "delivery_mode": "SAVE_ARTIFACTS", "required_files": sorted([{"role": "SUMMARY", "relative_path": "summary.json", "max_size_bytes": "4096"}, {"role": "CHECKPOINT", "relative_path": "model.pt", "max_size_bytes": "1048576"}, {"role": "MODEL_CONFIG", "relative_path": "model_config.json", "max_size_bytes": "4096"}, {"role": "METRICS", "relative_path": "metrics.jsonl", "max_size_bytes": "65536"}], key=lambda item: item["relative_path"]), "max_file_count": 16, "max_total_bytes": "2097152", "create_tar_bundle": True},

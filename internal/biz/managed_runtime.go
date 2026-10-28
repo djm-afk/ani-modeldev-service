@@ -17,6 +17,17 @@ type ManagedRuntime struct {
 	workspaces    PreparedWorkspaceVerifier
 	publications  PublicationVerifier
 	registrations *FinetuningRegistrationOrchestrator
+	images        TrainingImageEnsurer
+}
+
+// WithPullSecrets installs the Resource Secret ensurer used at the creation
+// boundary. It is optional only for finetuning-only deployments; a training
+// execution without it fails closed instead of creating a Pod that cannot pull.
+func (runtime *ManagedRuntime) WithPullSecrets(ensurer TrainingImageEnsurer) *ManagedRuntime {
+	if runtime != nil {
+		runtime.images = ensurer
+	}
+	return runtime
 }
 
 func (runtime *ManagedRuntime) WithModelRegistration(registry TrainedArtifactRegistry, copier TrainedArtifactCopier) (*ManagedRuntime, error) {
@@ -282,6 +293,14 @@ func (runtime *ManagedRuntime) materializeRuntime(ctx context.Context, result Ma
 	if err != nil {
 		return err
 	}
+	// The shared pull Secret is ensured only here: after durable acceptance and
+	// before creating the workload. The answer must be the reference frozen in
+	// the snapshot; a different name would silently run against another Secret.
+	// No database transaction is open at this point, and ModelDev never writes
+	// the Secret itself.
+	if err := runtime.ensurePullSecret(ctx, plan); err != nil {
+		return err
+	}
 	creationContext, cancel := context.WithDeadline(ctx, state.TrainingWindow.DeadlineAt)
 	defer cancel()
 	var binding RuntimeTemplateBinding
@@ -324,6 +343,28 @@ func (runtime *ManagedRuntime) materializeRuntime(ctx context.Context, result Ma
 	defer done()
 	_, err = runtime.repository.RecordRuntimeBinding(write, authority, binding)
 	return err
+}
+
+// ensurePullSecret asks Resource to make the shared Secret available and
+// compares the returned name with the frozen reference. The finetuning chain
+// owns its own trusted image and never enters this path.
+func (runtime *ManagedRuntime) ensurePullSecret(ctx context.Context, plan TrainingPlan) error {
+	program := plan.Snapshot.TrainingProgram
+	if program == nil {
+		return nil
+	}
+	if runtime.images == nil {
+		return ErrRuntimeNotReady
+	}
+	environment := plan.Snapshot.Environment
+	reference, err := runtime.images.EnsurePullSecret(ctx, plan.TenantID, environment.ClusterID, environment.NamespaceName, environment.NamespaceUID, program.Image.RegistryAuthority)
+	if err != nil {
+		return err
+	}
+	if reference != program.Image.PullSecretRef {
+		return ErrRuntimeConflict
+	}
+	return nil
 }
 
 // observe recovers a lost creation response by deterministic lookup only. It
