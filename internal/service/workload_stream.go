@@ -31,7 +31,7 @@ func (query *Query) GetExecutionLogStream(request *modeldevv1.GetExecutionLogStr
 	if err != nil {
 		return err
 	}
-	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 ||
+	if request == nil || !queryID(request.ExecutionId) || request.GetPodUid() == "" || len(request.ProtoReflect().GetUnknown()) != 0 ||
 		request.GetSinceBytes() < 0 || request.GetSinceBytes() > 1<<30 {
 		return status.Error(codes.InvalidArgument, "invalid log stream query")
 	}

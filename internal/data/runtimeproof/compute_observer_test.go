@@ -3,7 +3,6 @@ package runtimeproof_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -34,11 +33,7 @@ func TestComputeCleanupPreservesConfiguredTrainingObserver(t *testing.T) {
 			if denied {
 				observer.err = biz.ErrRuntimeNotReady
 			}
-			// Keep the test runnable against 886: the old cleanup bypasses the
-			// configured capability and wrongly succeeds even when it refuses.
-			if method := reflect.ValueOf(f.step.proof).MethodByName("WithTrainingRuntime"); method.IsValid() {
-				method.Call([]reflect.Value{reflect.ValueOf(observer)})
-			}
+			f.step.proof.WithTrainingRuntime(observer)
 			logReads := f.logReads // The original bounded tail was committed before closure.
 			result, err := f.worker(t).ReconcileOnce(context.Background())
 			if denied {

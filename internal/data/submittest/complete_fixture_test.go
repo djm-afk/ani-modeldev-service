@@ -27,6 +27,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const completeRunID = "55555555-6666-4777-8888-999999999999"
@@ -53,12 +55,18 @@ type completeFixture struct {
 	runSucceededAt       string
 	trainingContainer    string
 	trainingStarted      bool
+	traceTrainingCreate  bool
 	trainingDone         chan struct{}
 	trainingErr          error
+	trainingUncertain    bool
 	trainingLog          []byte
 	workspace            biz.WorkspaceBinding
 	stepDeletes          int
 	archivedStepStates   map[string]string
+	archivedStepFinishes map[string]string
+	runTasks             []any
+	facts                *lifecycle.Repository
+	computeDeletes       []string
 }
 
 func newCompleteFixture(t *testing.T) *completeFixture {
@@ -135,7 +143,7 @@ func newCompleteFixture(t *testing.T) *completeFixture {
 	f.storage = httptest.NewTLSServer(http.HandlerFunc(f.storageRequest))
 	t.Cleanup(f.storage.Close)
 	t.Cleanup(func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		if err := f.stopActualTraining(ctx); err != nil {
 			t.Errorf("actual training cleanup failed: %v", err)
@@ -155,6 +163,9 @@ func completeStepUID(step string) string {
 func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if f.traceTrainingCreate {
+		f.t.Logf("MAIN_FLOW_TRAIN_CREATE: %s %s", r.Method, r.URL.Path)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	if r.Header.Get("Authorization") != "Bearer synthetic-kube-owner" {
 		w.WriteHeader(401)
@@ -250,12 +261,30 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" && f.handleRetainedPodMutation(w, r) {
 		return
 	}
+	collections := map[string]bool{
+		"/api/v1/namespaces/" + ns + "/pods":                                         true,
+		"/apis/batch/v1/namespaces/" + ns + "/jobs":                                  true,
+		"/apis/jobset.x-k8s.io/v1alpha2/namespaces/" + ns + "/jobsets":               true,
+		"/apis/scheduling.volcano.sh/v1beta1/namespaces/" + ns + "/podgroups":        true,
+		"/apis/trainer.kubeflow.org/v1alpha1/namespaces/" + ns + "/trainjobs":        true,
+		"/apis/trainer.kubeflow.org/v1alpha1/namespaces/" + ns + "/trainingruntimes": true,
+		"/apis/argoproj.io/v1alpha1/namespaces/" + ns + "/workflows":                 true,
+	}
+	if r.Method == http.MethodDelete && collections[r.URL.Path[:strings.LastIndex(r.URL.Path, "/")]] {
+		f.deleteOriginalComputeLocked(w, r)
+		return
+	}
 	if r.Method != "GET" {
 		f.t.Error("unexpected Kubernetes mutation")
 		w.WriteHeader(405)
 		return
 	}
 	if r.URL.Path == "/api/v1/namespaces/"+ns+"/pods/actual-training-pod/log" {
+		if f.objects[strings.TrimSuffix(r.URL.Path, "/log")] == nil {
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(map[string]any{"apiVersion": "v1", "kind": "Status", "status": "Failure", "reason": "NotFound", "code": 404})
+			return
+		}
 		if r.URL.Query().Get("container") != "node" || r.URL.Query().Get("timestamps") != "true" || (r.URL.Query().Get("follow") != "" && r.URL.Query().Get("follow") != "false") || (r.URL.Query().Get("previous") != "" && r.URL.Query().Get("previous") != "false") {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -300,7 +329,7 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(object)
 		return
 	}
-	if strings.HasSuffix(r.URL.Path, "/pods") || strings.HasSuffix(r.URL.Path, "/jobs") {
+	if collections[r.URL.Path] {
 		items := []any{}
 		for p, o := range f.objects {
 			if strings.HasPrefix(p, r.URL.Path+"/") {
@@ -308,11 +337,78 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 				items = append(items, o)
 			}
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{"apiVersion": "v1", "kind": "List", "metadata": map[string]any{}, "items": items})
+		_ = json.NewEncoder(w).Encode(map[string]any{"apiVersion": "v1", "kind": "List", "metadata": map[string]any{"resourceVersion": "1"}, "items": items})
 		return
 	}
 	w.WriteHeader(404)
 	_ = json.NewEncoder(w).Encode(map[string]any{"apiVersion": "v1", "kind": "Status", "status": "Failure", "reason": "NotFound", "code": 404})
+}
+
+// Emulate Kubernetes' guarded Orphan removal, preserving every dependent's
+// original UID/status. The real repository must commit exits, logs and exact
+// delete intent before this external API can observe a mutation.
+func (f *completeFixture) deleteOriginalComputeLocked(w http.ResponseWriter, r *http.Request) {
+	object := f.objects[r.URL.Path]
+	if object == nil {
+		w.WriteHeader(http.StatusNotFound)
+		_ = json.NewEncoder(w).Encode(metav1.Status{TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Status"}, Status: "Failure", Reason: metav1.StatusReasonNotFound, Code: 404})
+		return
+	}
+	meta := object["metadata"].(map[string]any)
+	var options metav1.DeleteOptions
+	if json.NewDecoder(r.Body).Decode(&options) != nil || options.Preconditions == nil || options.Preconditions.UID == nil || string(*options.Preconditions.UID) != meta["uid"] || options.Preconditions.ResourceVersion == nil || *options.Preconditions.ResourceVersion != meta["resourceVersion"] || options.PropagationPolicy == nil || *options.PropagationPolicy != metav1.DeletePropagationOrphan {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+	finalizers, _ := meta["finalizers"].([]any)
+	if raw := meta["finalizers"]; raw != nil && finalizers == nil {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+	if len(finalizers) != 0 || f.facts == nil {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+	state, err := f.facts.GetRuntime(r.Context(), f.request.Admission.TenantID, f.request.Admission.ExecutionID)
+	if err != nil || state.ClosedAt == nil || state.StepExitCleanup == nil || state.StepExitCleanup.CompletedAt == nil || state.ComputeCleanup == nil || !state.ComputeCleanup.LogsReady {
+		f.t.Error("external compute DELETE preceded committed CLOSED/exits/logs/intent", err)
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+	matched := 0
+	for _, target := range state.ComputeCleanup.Requested {
+		if target.APIVersion == object["apiVersion"] && target.Kind == object["kind"] && target.Namespace == meta["namespace"] && target.Name == meta["name"] && target.UID == meta["uid"] {
+			matched++
+		}
+	}
+	if matched != 1 {
+		f.t.Error("external compute DELETE was outside the durable original target set")
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+	for _, child := range f.objects {
+		childMeta := child["metadata"].(map[string]any)
+		refs, _ := childMeta["ownerReferences"].([]any)
+		remaining := []any{}
+		for _, raw := range refs {
+			if raw.(map[string]any)["uid"] != meta["uid"] {
+				remaining = append(remaining, raw)
+			}
+		}
+		if len(remaining) != len(refs) {
+			childMeta["ownerReferences"] = remaining
+			version, err := strconv.Atoi(childMeta["resourceVersion"].(string))
+			if err != nil {
+				f.t.Error("external original child lost its API resourceVersion", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			childMeta["resourceVersion"] = strconv.Itoa(version + 1)
+		}
+	}
+	f.computeDeletes = append(f.computeDeletes, meta["uid"].(string))
+	delete(f.objects, r.URL.Path)
+	_ = json.NewEncoder(w).Encode(metav1.Status{TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Status"}, Status: "Success", Code: 200})
 }
 
 func (f *completeFixture) makeTrainingChildren(name string) {
@@ -355,28 +451,41 @@ func (f *completeFixture) makeTrainingChildren(name string) {
 }
 
 func (f *completeFixture) runTraining(name string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 	command := f.request.Admission.Snapshot.Program.Command
 	resources := f.request.Admission.Snapshot.Resources
 	cpu := fmt.Sprintf("%d.%03d", resources.LimitMillicpu/1000, resources.LimitMillicpu%1000)
 	memory := strconv.FormatInt(resources.LimitMemoryBytes, 10)
-	args := []string{"run", "--rm", "--name", f.trainingContainer, "--pull=never", "--network", "none", "--http-proxy=false", "--cpus", cpu, "--memory", memory, "--memory-swap", memory, "--pids-limit", "256", "--cap-drop", "all", "--security-opt", "no-new-privileges", "--read-only", "--userns", "keep-id:uid=10001,gid=10001", "--volume", f.source + ":/opt/ani-modeldev/training:ro,Z", "--volume", filepath.Join(f.root, f.workspace.InputSubpath) + ":/inputs:ro,Z", "--volume", filepath.Join(f.root, f.workspace.TrainingSubpath) + ":/outputs:rw,Z", "--volume", filepath.Join(f.root, f.workspace.WorkSubpath, "train") + ":/workspace/work/train:rw,Z", "--env", "TMPDIR=/workspace/work/train/tmp", "--env", "HF_HOME=/workspace/work/train/hf", "--env", "HF_DATASETS_CACHE=/workspace/work/train/hf/datasets", "--env", "MPLCONFIGDIR=/workspace/work/train/matplotlib", "--entrypoint", command[0], f.image}
+	args := []string{"run", "--name", f.trainingContainer, "--label", "modeldev.ani.io/test-run=" + f.trainingContainer, "--pull=never", "--network", "none", "--http-proxy=false", "--cpus", cpu, "--memory", memory, "--memory-swap", memory, "--pids-limit", "256", "--cap-drop", "all", "--security-opt", "no-new-privileges", "--read-only", "--userns", "keep-id:uid=10001,gid=10001", "--volume", f.source + ":/opt/ani-modeldev/training:ro,Z", "--volume", filepath.Join(f.root, f.workspace.InputSubpath) + ":/inputs:ro,Z", "--volume", filepath.Join(f.root, f.workspace.TrainingSubpath) + ":/outputs:rw,Z", "--volume", filepath.Join(f.root, f.workspace.WorkSubpath, "train") + ":/workspace/work/train:rw,Z", "--env", "TMPDIR=/workspace/work/train/tmp", "--env", "HF_HOME=/workspace/work/train/hf", "--env", "HF_DATASETS_CACHE=/workspace/work/train/hf/datasets", "--env", "MPLCONFIGDIR=/workspace/work/train/matplotlib", "--entrypoint", command[0], f.image}
 	args = append(args, command[1:]...)
 	args = append(args, f.request.Admission.Snapshot.Program.ResolvedArgs...)
 	output, err := exec.CommandContext(ctx, "podman", args...).CombinedOutput()
+	read, done := context.WithTimeout(context.Background(), 20*time.Second)
+	exitCode, exitErr := f.actualTrainingExit(read)
+	done()
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.trainingErr = err
 	f.trainingLog = output
+	f.trainingUncertain = exitErr != nil
+	f.t.Logf("MAIN_FLOW_ACTUAL_PROCESS: container=%s context_error=%v process_error=%v exit_proof_error=%v", f.trainingContainer, ctx.Err(), err, exitErr)
+	if f.trainingUncertain {
+		if f.trainingErr == nil {
+			f.trainingErr = exitErr
+		}
+		// A CLI exit never supplies a fabricated worker termination. Cleanup
+		// independently removes this exact task-owned container if necessary.
+		close(f.trainingDone)
+		return
+	}
 	ns := f.workspace.NamespaceName
 	phase, condition, setCondition := "Succeeded", "Complete", "Completed"
-	code := 0
-	if err != nil {
+	code := exitCode
+	if code != 0 {
 		phase = "Failed"
 		condition = "Failed"
 		setCondition = "Failed"
-		code = 1
 	}
 	status := func(typ string) map[string]any {
 		return map[string]any{"active": 0, "conditions": []any{map[string]any{"type": typ, "status": "True", "observedGeneration": 1, "reason": "ActualProcessExited", "lastTransitionTime": time.Now().UTC().Format(time.RFC3339)}}}
@@ -388,6 +497,32 @@ func (f *completeFixture) runTraining(name string) {
 	close(f.trainingDone)
 }
 
+func (f *completeFixture) actualTrainingExit(ctx context.Context) (int, error) {
+	raw, err := exec.CommandContext(ctx, "podman", "inspect", "--type", "container", f.trainingContainer).Output()
+	if err != nil {
+		return 0, fmt.Errorf("actual container exit not observed: %w", err)
+	}
+	var rows []struct {
+		ID     string `json:"Id"`
+		Name   string
+		Config struct{ Labels map[string]string }
+		State  struct {
+			Status   string
+			Running  *bool
+			Pid      *int
+			ExitCode *int
+		}
+	}
+	if json.Unmarshal(raw, &rows) != nil || len(rows) != 1 {
+		return 0, fmt.Errorf("actual container exit response invalid")
+	}
+	row := rows[0]
+	if len(row.ID) != 64 || strings.TrimPrefix(row.Name, "/") != f.trainingContainer || row.Config.Labels["modeldev.ani.io/test-run"] != f.trainingContainer || row.State.Status != "exited" || row.State.Running == nil || *row.State.Running || row.State.Pid == nil || *row.State.Pid != 0 || row.State.ExitCode == nil || *row.State.ExitCode < 0 || *row.State.ExitCode > 255 {
+		return 0, fmt.Errorf("task-owned actual container exit remains unproven")
+	}
+	return *row.State.ExitCode, nil
+}
+
 func (f *completeFixture) stopActualTraining(ctx context.Context) error {
 	f.mu.Lock()
 	started, container := f.trainingStarted, f.trainingContainer
@@ -397,23 +532,47 @@ func (f *completeFixture) stopActualTraining(ctx context.Context) error {
 	}
 	select {
 	case <-f.trainingDone:
-		return nil
+		return f.removeTrainingContainer(ctx, container)
 	default:
 	}
 	if output, err := exec.CommandContext(ctx, "podman", "stop", "--time", "1", container).CombinedOutput(); err != nil {
 		select {
 		case <-f.trainingDone:
-			return nil
+			return f.removeTrainingContainer(ctx, container)
 		default:
 			return fmt.Errorf("stop task-owned training container: %w: %s", err, output)
 		}
 	}
 	select {
 	case <-f.trainingDone:
-		return nil
+		return f.removeTrainingContainer(ctx, container)
 	case <-ctx.Done():
 		return ctx.Err()
 	}
+}
+
+func (f *completeFixture) removeTrainingContainer(ctx context.Context, container string) error {
+	check := exec.CommandContext(ctx, "podman", "container", "exists", container)
+	if err := check.Run(); err != nil {
+		if exit, ok := err.(*exec.ExitError); ok && exit.ExitCode() == 1 {
+			return nil
+		}
+		return fmt.Errorf("cannot establish task-owned container absence: %w", err)
+	}
+	label, err := exec.CommandContext(ctx, "podman", "inspect", "--format", `{{ index .Config.Labels "modeldev.ani.io/test-run" }}`, container).Output()
+	if err != nil || strings.TrimSpace(string(label)) != container {
+		return fmt.Errorf("cannot prove task-owned container identity before cleanup")
+	}
+	if output, err := exec.CommandContext(ctx, "podman", "rm", "--force", container).CombinedOutput(); err != nil {
+		return fmt.Errorf("remove task-owned uncertain container: %w: %s", err, output)
+	}
+	if err := exec.CommandContext(ctx, "podman", "container", "exists", container).Run(); err != nil {
+		if exit, ok := err.(*exec.ExitError); ok && exit.ExitCode() == 1 {
+			return nil
+		}
+		return fmt.Errorf("cannot confirm task-owned container cleanup: %w", err)
+	}
+	return fmt.Errorf("task-owned container remains after cleanup")
 }
 
 func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
@@ -426,13 +585,16 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method == "POST" && r.URL.Path == "/apis/v2beta1/runs" {
 		f.runCreates++
+		if f.currentRunTasksLocked() == nil {
+			w.WriteHeader(500)
+			return
+		}
 	} else if r.Method == "POST" && r.URL.Path == "/apis/v2beta1/runs/"+completeRunID+":terminate" {
 		f.runStops++
 		f.runStoppedAt = time.Now().UTC().Format(time.RFC3339Nano)
 		// Only KFP's external step processes are simulated here. Prepare has
 		// already returned from real component work; no training exit is set.
-		nodes := map[string]any{}
-		for _, step := range []string{"prepare", "train-wait", "collect", "publish", "close"} {
+		for _, step := range []string{"prepare", "train-wait", "collect", "publish", "close", "driver"} {
 			pod := f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-"+step]
 			if pod == nil {
 				continue
@@ -442,11 +604,22 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 				phase = "Failed"
 				pod["status"] = map[string]any{"phase": phase, "containerStatuses": []any{map[string]any{"name": "main", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": 143, "reason": "KFPStopped", "finishedAt": f.runStoppedAt}}}}}
 			}
-			nodes["main-"+step] = map[string]any{"id": "main-" + step, "name": "main-flow." + step, "type": "Pod", "phase": phase, "finishedAt": f.runStoppedAt}
+			f.completeWaitExitLocked(pod)
+		}
+		if f.currentRunTasksLocked() == nil {
+			w.WriteHeader(500)
+			return
 		}
 		workflow := f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+f.workspace.NamespaceName+"/workflows/main-flow"]
-		workflow["metadata"].(map[string]any)["labels"] = map[string]any{"workflows.argoproj.io/completed": "true"}
-		workflow["status"] = map[string]any{"phase": "Failed", "finishedAt": f.runStoppedAt, "conditions": []any{map[string]any{"type": "Completed", "status": "True"}}, "nodes": nodes}
+		labels, _ := workflow["metadata"].(map[string]any)["labels"].(map[string]any)
+		if labels == nil {
+			labels = map[string]any{}
+		}
+		labels["workflows.argoproj.io/completed"] = "true"
+		workflow["metadata"].(map[string]any)["labels"] = labels
+		status := workflow["status"].(map[string]any)
+		status["phase"], status["finishedAt"] = "Failed", f.runStoppedAt
+		status["conditions"] = []any{map[string]any{"type": "Completed", "status": "True"}}
 		_ = json.NewEncoder(w).Encode(map[string]any{})
 		return
 	} else if r.Method != "GET" || r.URL.Path != "/apis/v2beta1/runs/"+completeRunID {
@@ -454,39 +627,11 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s := f.request.Admission.Snapshot
-	tasks := []any{}
-	nodes := map[string]any{}
-	for _, step := range []string{"prepare", "train-wait", "collect", "publish", "close"} {
-		state := "RUNNING"
-		controller, nodeID := step+"-controller", "main-"+step
-		if f.skipped[step] {
-			tasks = append(tasks, map[string]any{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "state": "SKIPPED"})
-			nodes[controller] = map[string]any{"id": controller, "name": "main-flow." + step + "-controller", "displayName": step, "phase": "Skipped"}
-			continue
-		}
-		pod := f.objects["/api/v1/namespaces/"+s.Environment.NamespaceName+"/pods/main-"+step]
-		if pod == nil {
-			state = f.archivedStepStates[step]
-			if state == "" {
-				f.t.Error("KFP boundary lost task history independently of Pod cleanup")
-				w.WriteHeader(500)
-				return
-			}
-		} else if pod["status"].(map[string]any)["phase"] == "Succeeded" {
-			state = "SUCCEEDED"
-		} else if pod["status"].(map[string]any)["phase"] == "Failed" {
-			state = "FAILED"
-		}
-		phase := map[string]string{"RUNNING": "Running", "SUCCEEDED": "Succeeded", "FAILED": "Failed", "CANCELED": "Failed"}[state]
-		nodes[controller] = map[string]any{"id": controller, "name": "main-flow." + step + "-controller", "displayName": step, "phase": phase, "children": []any{nodeID}}
-		nodes[nodeID] = map[string]any{"id": nodeID, "name": "main-flow." + step, "displayName": "executor", "type": "Pod", "phase": phase, "boundaryID": controller, "templateName": "metadata-0-2-retry-system-container-impl"}
-		tasks = append(tasks, map[string]any{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "state": state, "child_tasks": []any{map[string]any{"pod_name": nodeID}}})
+	tasks := f.runTasks
+	if tasks == nil {
+		w.WriteHeader(500)
+		return
 	}
-	workflow := f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+s.Environment.NamespaceName+"/workflows/main-flow"]
-	if workflow["status"] == nil {
-		workflow["status"] = map[string]any{"phase": "Running"}
-	}
-	workflow["status"].(map[string]any)["nodes"] = nodes
 	run := map[string]any{"run_id": completeRunID, "experiment_id": s.Environment.ExperimentID, "display_name": "md-" + f.request.Admission.ExecutionID, "pipeline_version_reference": map[string]string{"pipeline_id": s.Implementation.PipelineID, "pipeline_version_id": s.Implementation.PipelineVersionID}, "runtime_config": map[string]any{"parameters": map[string]string{"execution_id": f.request.Admission.ExecutionID, "spec_hash": f.request.Admission.SpecHash}, "pipeline_root": f.request.Owner.PipelineRoot}, "service_account": s.Environment.Identities.KFPStepServiceAccount, "state": "RUNNING", "run_details": map[string]any{"task_details": tasks}}
 	if f.runStoppedAt != "" {
 		run["state"], run["finished_at"] = "CANCELED", f.runStoppedAt
@@ -496,30 +641,120 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(run)
 }
 
+// External controllers publish their native task/Pod graph when the boundary
+// changes state, before ModelDev independently reads Workflow and KFP Run.
+func (f *completeFixture) currentRunTasksLocked() []any {
+	s := f.request.Admission.Snapshot
+	tasks := []any{}
+	nodes := map[string]any{}
+	for _, step := range []string{"prepare", "train-wait", "collect", "publish", "close"} {
+		state := "RUNNING"
+		controller, nodeID := step+"-controller", "main-"+step
+		if f.skipped[step] {
+			tasks = append(tasks, map[string]any{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "state": "SKIPPED"})
+			nodes[controller] = map[string]any{"id": controller, "name": "main-flow." + step + "-controller", "displayName": step, "type": "DAG", "phase": "Skipped"}
+			continue
+		}
+		pod := f.objects["/api/v1/namespaces/"+s.Environment.NamespaceName+"/pods/main-"+step]
+		if pod == nil {
+			state = f.archivedStepStates[step]
+			if state == "" {
+				f.t.Error("KFP boundary lost task history independently of Pod cleanup")
+				return nil
+			}
+		} else if pod["status"].(map[string]any)["phase"] == "Succeeded" {
+			state = "SUCCEEDED"
+		} else if pod["status"].(map[string]any)["phase"] == "Failed" {
+			state = "FAILED"
+		}
+		phase := map[string]string{"RUNNING": "Running", "SUCCEEDED": "Succeeded", "FAILED": "Failed", "CANCELED": "Failed"}[state]
+		nodes[controller] = map[string]any{"id": controller, "name": "main-flow." + step + "-controller", "displayName": step, "type": "DAG", "phase": phase, "children": []any{nodeID}}
+		node := map[string]any{"id": nodeID, "name": "main-flow." + step, "displayName": "executor", "type": "Pod", "phase": phase, "boundaryID": controller, "templateName": "metadata-0-2-retry-system-container-impl"}
+		if state != "RUNNING" {
+			finished := f.archivedStepFinishes[step]
+			if pod != nil {
+				finished = completePodFinishedAt(pod)
+			}
+			if finished == "" {
+				f.t.Error("terminal KFP node lost its original Pod exit timestamp", step)
+				return nil
+			}
+			node["finishedAt"] = finished
+		}
+		nodes[nodeID] = node
+		tasks = append(tasks, map[string]any{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "state": state, "child_tasks": []any{map[string]any{"pod_name": nodeID}}})
+	}
+	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
+		phase, finished := "Running", f.archivedStepFinishes["driver"]
+		if pod := f.objects["/api/v1/namespaces/"+s.Environment.NamespaceName+"/pods/main-driver"]; pod != nil {
+			phase = pod["status"].(map[string]any)["phase"].(string)
+			finished = completePodFinishedAt(pod)
+		} else if state := f.archivedStepStates["driver"]; state != "" {
+			phase = map[string]string{"SUCCEEDED": "Succeeded", "FAILED": "Failed"}[state]
+		}
+		node := map[string]any{"id": "main-driver", "name": "main-flow.driver", "displayName": "driver", "type": "Pod", "phase": phase}
+		if finished != "" {
+			node["finishedAt"] = finished
+		}
+		nodes["main-driver"] = node
+	}
+	workflow := f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+s.Environment.NamespaceName+"/workflows/main-flow"]
+	if workflow["status"] == nil {
+		workflow["status"] = map[string]any{"phase": "Running"}
+	}
+	workflow["status"].(map[string]any)["nodes"] = nodes
+	f.runTasks = tasks
+	return tasks
+}
+
 // This is the explicit external KFP/Argo boundary. It acknowledges only Pods
 // whose real component work has already returned and been marked Succeeded.
 func (f *completeFixture) finishWorkflowNaturally() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	nodes := map[string]any{}
 	for _, step := range []string{"prepare", "train-wait", "collect", "publish", "close"} {
 		pod := f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-"+step]
 		if pod["status"].(map[string]any)["phase"] != "Succeeded" {
 			f.t.Fatal("external Workflow completion preceded actual component exit", step)
 		}
-		nodes["main-"+step] = map[string]any{"id": "main-" + step, "name": "main-flow." + step, "type": "Pod", "phase": "Succeeded", "finishedAt": time.Now().UTC().Format(time.RFC3339Nano)}
+		f.completeWaitExitLocked(pod)
 	}
 	f.runSucceededAt = time.Now().UTC().Format(time.RFC3339Nano)
 	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
 		pod := f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-driver"]
 		pod["status"] = map[string]any{"phase": "Succeeded", "containerStatuses": []any{map[string]any{"name": "main", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": 0, "finishedAt": f.runSucceededAt}}}}}
 		f.completeWaitExitLocked(pod)
-		nodes["main-driver"] = map[string]any{"id": "main-driver", "name": "main-flow.driver", "type": "Pod", "phase": "Succeeded", "finishedAt": f.runSucceededAt}
+	}
+	if f.currentRunTasksLocked() == nil {
+		f.t.Fatal("external Workflow completion lost its native task graph")
 	}
 	workflow := f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+f.workspace.NamespaceName+"/workflows/main-flow"]
-	workflow["metadata"].(map[string]any)["labels"] = map[string]any{"workflows.argoproj.io/completed": "true"}
+	labels, _ := workflow["metadata"].(map[string]any)["labels"].(map[string]any)
+	if labels == nil {
+		labels = map[string]any{}
+	}
+	labels["workflows.argoproj.io/completed"] = "true"
+	workflow["metadata"].(map[string]any)["labels"] = labels
 	workflow["metadata"].(map[string]any)["resourceVersion"] = "2"
-	workflow["status"] = map[string]any{"phase": "Succeeded", "finishedAt": f.runSucceededAt, "conditions": []any{map[string]any{"type": "Completed", "status": "True"}}, "nodes": nodes}
+	status := workflow["status"].(map[string]any)
+	status["phase"], status["finishedAt"] = "Succeeded", f.runSucceededAt
+	status["conditions"] = []any{map[string]any{"type": "Completed", "status": "True"}}
+}
+
+func completePodFinishedAt(pod map[string]any) string {
+	status, _ := pod["status"].(map[string]any)
+	containers, _ := status["containerStatuses"].([]any)
+	for _, raw := range containers {
+		container, _ := raw.(map[string]any)
+		if container["name"] != "main" {
+			continue
+		}
+		state, _ := container["state"].(map[string]any)
+		terminated, _ := state["terminated"].(map[string]any)
+		finished, _ := terminated["finishedAt"].(string)
+		return finished
+	}
+	return ""
 }
 
 func (f *completeFixture) storageRequest(w http.ResponseWriter, r *http.Request) {
@@ -604,5 +839,10 @@ func validFixtureDownload(r *http.Request) bool {
 func (f *completeFixture) finishPublisher() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-publish"]["status"] = map[string]any{"phase": "Succeeded", "containerStatuses": []any{map[string]any{"name": "main", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": 0, "finishedAt": time.Now().UTC().Format(time.RFC3339)}}}}}
+	pod := f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-publish"]
+	pod["status"] = map[string]any{"phase": "Succeeded", "containerStatuses": []any{map[string]any{"name": "main", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": 0, "finishedAt": time.Now().UTC().Format(time.RFC3339Nano)}}}}}
+	f.completeWaitExitLocked(pod)
+	if f.currentRunTasksLocked() == nil {
+		f.t.Fatal("external uploader completion lost its native task graph")
+	}
 }

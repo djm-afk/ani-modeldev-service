@@ -153,11 +153,7 @@ func closedRecoveryCloser(t *testing.T, f *computeCleanupFixture) (*biz.Executio
 		t.Fatal(err)
 	}
 	counted := &countedClosingRecovery{Verifier: f.step.proof}
-	closer, err := biz.NewExecutionCloser(managed, f.step.f.runs, counted, f.step.proof)
-	if err != nil {
-		t.Fatal(err)
-	}
-	closer, err = closer.WithComputeCleanup(f.step.proof)
+	closer, err := biz.NewExecutionCloser(managed, f.step.f.runs, counted, f.step.proof, f.step.proof)
 	if err != nil {
 		t.Fatal(err)
 	}

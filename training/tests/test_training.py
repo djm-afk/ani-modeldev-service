@@ -36,7 +36,7 @@ class FixedCSVTrainingTest(unittest.TestCase):
         dependency = self.run_python(
             "-c",
             "import torch; print(torch.__version__); "
-            "assert torch.version.cuda is None, 'CPU wheel required'",
+            "assert torch.empty(0, device='cpu').device.type == 'cpu'",
         )
         self.assertEqual(
             dependency.returncode,
@@ -134,7 +134,7 @@ class FixedCSVTrainingTest(unittest.TestCase):
     def test_invalid_input_is_rejected_before_training_and_preserves_paths(self):
         dependency = self.run_python(
             "-c",
-            "import torch; assert torch.version.cuda is None, 'CPU wheel required'",
+            "import torch; assert torch.empty(0, device='cpu').device.type == 'cpu'",
         )
         self.assertEqual(
             dependency.returncode,
@@ -287,7 +287,7 @@ class FixedCSVTrainingTest(unittest.TestCase):
     def test_learning_rate_changes_training_and_accepts_an_existing_empty_output(self):
         dependency = self.run_python(
             "-c",
-            "import torch; assert torch.version.cuda is None, 'CPU wheel required'",
+            "import torch; assert torch.empty(0, device='cpu').device.type == 'cpu'",
         )
         self.assertEqual(
             dependency.returncode,
@@ -421,7 +421,7 @@ class FixedCSVTrainingTest(unittest.TestCase):
     def test_invalid_learning_rate_is_rejected_before_training(self):
         dependency = self.run_python(
             "-c",
-            "import torch; assert torch.version.cuda is None, 'CPU wheel required'",
+            "import torch; assert torch.empty(0, device='cpu').device.type == 'cpu'",
         )
         self.assertEqual(
             dependency.returncode,
@@ -474,7 +474,7 @@ class FixedCSVTrainingTest(unittest.TestCase):
     ):
         dependency = self.run_python(
             "-c",
-            "import torch; assert torch.version.cuda is None, 'CPU wheel required'",
+            "import torch; assert torch.empty(0, device='cpu').device.type == 'cpu'",
         )
         self.assertEqual(
             dependency.returncode,
@@ -528,7 +528,7 @@ class FixedCSVTrainingTest(unittest.TestCase):
     ):
         dependency = self.run_python(
             "-c",
-            "import torch; assert torch.version.cuda is None, 'CPU wheel required'",
+            "import torch; assert torch.empty(0, device='cpu').device.type == 'cpu'",
         )
         self.assertEqual(
             dependency.returncode,

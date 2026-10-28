@@ -33,9 +33,7 @@ var _ biz.ExecutionRuntimeRepository = (*Repository)(nil)
 
 // ReadInTransaction validates runtime facts in the caller's shared identity lock
 // or repeatable-read snapshot. It never grants permission or starts a new
-// transaction. A pre-runtime schema is detected before issuing runtime SQL so
-// the fixed historical migration reader remains usable without swallowing an
-// undefined-table error or invalidating its transaction.
+// transaction. Missing current tables remain persistence/configuration errors.
 func ReadInTransaction(ctx context.Context, transaction pgx.Tx, tenant, execution string) (biz.ExecutionRuntime, error) {
 	if ctx == nil || transaction == nil {
 		return biz.ExecutionRuntime{}, biz.ErrPersistence
@@ -47,17 +45,6 @@ func ReadInTransaction(ctx context.Context, transaction pgx.Tx, tenant, executio
 	executionID, err := databaseID(execution)
 	if err != nil {
 		return biz.ExecutionRuntime{}, err
-	}
-	availability, err := lifecyclesql.New(transaction).RuntimeSchemaAvailable(ctx)
-	if err != nil {
-		return biz.ExecutionRuntime{}, biz.ErrPersistence
-	}
-	available, valid := availability.(bool)
-	if !valid {
-		return biz.ExecutionRuntime{}, biz.ErrPersistence
-	}
-	if !available {
-		return biz.ExecutionRuntime{}, biz.ErrExecutionNotFound
 	}
 	current, err := readRuntime(ctx, transaction, tenantID, executionID)
 	if err != nil {

@@ -110,7 +110,7 @@ func TestOwnerRecoveryProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	closer, err := biz.NewExecutionCloser(managed, runs, proof)
+	closer, err := biz.NewExecutionCloser(managed, runs, proof, proof, proof)
 	if err != nil {
 		t.Fatal(err)
 	}

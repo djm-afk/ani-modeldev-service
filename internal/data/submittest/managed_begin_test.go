@@ -277,10 +277,17 @@ func startMainFlowStepServer(t *testing.T, steps *biz.ManagedSteps, repository *
 	return startMainFlowStepHandler(t, service.NewRuntimeStep(steps, runtime))
 }
 
-func startMainFlowStepHandler(t *testing.T, handler modeldevv1.ModelDevStepServiceServer) (modeldevv1.ModelDevStepServiceClient, func()) {
+func startMainFlowStepHandler(t *testing.T, handler modeldevv1.ModelDevStepServiceServer, timeouts ...time.Duration) (modeldevv1.ModelDevStepServiceClient, func()) {
 	t.Helper()
+	timeout := 5 * time.Second
+	if len(timeouts) > 1 {
+		t.Fatal("at most one managed-step fixture timeout is allowed")
+	}
+	if len(timeouts) == 1 {
+		timeout = timeouts[0]
+	}
 	certificates := commandtls.New(t)
-	listener, err := server.NewManagedStepServer(&conf.Server_GRPC{Network: "tcp", Addr: "127.0.0.1:0", Timeout: durationpb.New(5 * time.Second)}, certificates.Server, handler)
+	listener, err := server.NewManagedStepServer(&conf.Server_GRPC{Network: "tcp", Addr: "127.0.0.1:0", Timeout: durationpb.New(timeout)}, certificates.Server, handler)
 	if err != nil {
 		t.Fatal(err)
 	}

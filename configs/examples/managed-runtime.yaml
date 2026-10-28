@@ -19,7 +19,7 @@ command:
   governance_dns_name: "${GOVERNANCE_DNS_NAME}"
 runtime:
   limits:
-    max_content_bytes: "${MAX_CONTENT_BYTES}"
+    max_content_bytes: "${MODELDEV_MAX_CONTENT_BYTES}"
   import_timeout_seconds: 1800
   model_resolution_timeout_seconds: 300
   step:

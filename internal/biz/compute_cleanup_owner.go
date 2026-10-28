@@ -6,23 +6,15 @@ import (
 	"time"
 )
 
-// WithComputeCleanup explicitly enables the existing owner's post-close work.
-// Older test assemblies retain their scoped step-only behavior; production
-// must provide both the persistent receipt port and the real boundary.
-func (closer *ExecutionCloser) WithComputeCleanup(boundary ComputeCleanupBoundary) (*ExecutionCloser, error) {
-	if closer == nil || closer.runtime == nil || closer.cleanup == nil || boundary == nil {
-		return nil, ErrRuntimeNotReady
-	}
-	if _, ok := closer.runtime.repository.(ComputeCleanupRepository); !ok {
-		return nil, ErrRuntimeNotReady
-	}
-	closer.compute = boundary
-	return closer, nil
-}
-
 func (closer *ExecutionCloser) reconcileComputeCleanup(ctx context.Context, result ManagedRuntimeResult, owner RunAuthorityCandidate, replayed bool) (ManagedRuntimeResult, error) {
 	state := result.Runtime
-	if closer.compute == nil || state.CloseEvidence == nil || state.CloseEvidence.NoDispatch {
+	if closer.compute == nil {
+		return result, ErrRuntimeNotReady
+	}
+	if state.CloseEvidence == nil {
+		return result, ErrRuntimeNotReady
+	}
+	if state.CloseEvidence.NoDispatch {
 		return runtimeResult(result, state, replayed)
 	}
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)

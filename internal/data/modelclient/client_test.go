@@ -118,6 +118,23 @@ func TestModelClientAllowsFinite3600sAndClosesOnce(t *testing.T) {
 	}
 }
 
+func TestModelClientResolutionBudgetKeepsConfiguredUint32SecondsRange(t *testing.T) {
+	for _, budget := range []time.Duration{25 * time.Hour, time.Duration(^uint32(0)) * time.Second} {
+		t.Run(budget.String(), func(t *testing.T) {
+			config := modelClientTestConfig(t, nil)
+			config.ResolutionTimeout = budget
+			client, closeClient, err := New(config)
+			if err != nil {
+				t.Fatalf("configured model resolution budget rejected: %v", err)
+			}
+			defer closeClient()
+			if client.resolutionTimeout != budget || client.timeout != config.Timeout {
+				t.Fatal("resolution and ordinary RPC budgets changed or were conflated")
+			}
+		})
+	}
+}
+
 func TestModelClientRejectsUnregisteredOrBorrowedIdentityAndUnboundedTimeout(t *testing.T) {
 	for _, test := range []struct {
 		name   string

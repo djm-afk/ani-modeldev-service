@@ -31,7 +31,6 @@ type Verifier struct {
 	runs     *kfp.Client
 	objects  *objectstore.Verifier
 	plans    PlanReader
-	logs     biz.TrainingLogReader
 	training biz.TrainingRuntime
 }
 

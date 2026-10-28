@@ -3,7 +3,7 @@
 复核日期：2026-10-16
 复核人：接手验证方（独立于原作者）
 复核对象：2026-10-15 已完成的 CORE_FLOW / M3-A
-对应文档：[CPU 微调手动验收手册](finetuning-manual-test.md)、[执行主链](finetuning-core-flow.md)、[后续工作交接](finetuning-next-handoff.md)
+对应文档：[CPU 微调手动验收手册](https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/2c946f65fcfd63ed010be26ed9aa595253ffb59d/docs/finetuning-manual-test.md)、[执行主链](finetuning-core-flow.md)、[后续工作交接](finetuning-next-handoff.md)
 
 ---
 

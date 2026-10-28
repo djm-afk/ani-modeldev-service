@@ -66,7 +66,15 @@ func TestStoppedTrainingLogsSurviveOriginalPodGarbageCollection(t *testing.T) {
 	defer pool.Close()
 	query := service.NewQuery(execution.New(pool), nil)
 	ctx := service.WithVerifiedGovernanceQuery(context.Background(), service.GovernanceDelivery{TenantID: f.step.f.execution.TenantID, RequestID: "stopped-original-pod-log-read"}, modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName)
-	logs, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: f.step.f.execution.ExecutionID})
+	state, err := lifecycle.New(pool).GetRuntime(ctx, f.step.f.execution.TenantID, f.step.f.execution.ExecutionID)
+	if err != nil {
+		t.Fatal("reconnected original worker facts", err)
+	}
+	source, err := biz.TrainingLogSourceFor(biz.QueryRecord{Execution: f.step.f.execution, Runtime: state}, "")
+	if err != nil {
+		t.Fatal("original persisted worker identity", err)
+	}
+	logs, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: f.step.f.execution.ExecutionID, PodUid: &source.PodUID, LogId: &source.LogID})
 	if err != nil || len(logs.GetLines()) != 1 || logs.GetLines()[0].GetText() != "actual retained training output" || logs.GetSource().GetResourceUid() != "training-pod-original" {
 		t.Fatalf("STOP_LOG_RETENTION_LOST: original worker logs must remain queryable after normal Stop/GC: %v %v", logs, err)
 	}

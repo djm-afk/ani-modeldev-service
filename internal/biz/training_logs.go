@@ -103,11 +103,7 @@ func RecordedTrainingLogsFor(record QueryRecord, source TrainingLogSource, optio
 		}
 	}
 	if len(logs) == 0 {
-		receipt := record.Runtime.ComputeCleanup
-		if receipt == nil || !receipt.LogsReady {
-			return TrainingLogResult{}, false, nil
-		}
-		logs = receipt.Logs
+		return TrainingLogResult{}, false, nil
 	}
 	if err := ValidateRecordedTrainingLogs(record, logs); err != nil {
 		return TrainingLogResult{}, false, err

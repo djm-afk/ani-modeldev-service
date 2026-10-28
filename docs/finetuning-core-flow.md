@@ -53,8 +53,10 @@ Natural close requires that publication and the original writer-absence proof.
 Model registration stays absent in queries; ResumeModelRegistration returns
 FailedPrecondition because this accepted execution has no registration target.
 
-See the Chinese [manual acceptance guide](finetuning-manual-test.md) for the
-completed cases, operator steps and original evidence. The [next-work handoff](finetuning-next-handoff.md)
+The former manual deployment and acceptance tools are retired. Their historical
+records remain in Git at checkpoint `2c946f65fcfd63ed010be26ed9aa595253ffb59d`.
+Current materials use [the execution material generator](../scripts/modeldev-execution-materials/README.md).
+The [next-work handoff](finetuning-next-handoff.md)
 describes the remaining Model, Gov/BFF and independent Inference integration.
 
 Run all generation, formatting, checks, image builds and workloads on Fedora.

@@ -48,6 +48,10 @@ func TestRuntimeSameNameReplacementCannotComputeButOriginalTrainingStillStops(t 
 	}
 	f.setTerminal(t, 7)
 	observed, err = a.ObserveTraining(ctx, f.plan, original, observed.Resources)
+	if err != nil || observed.WritersAbsent {
+		t.Fatalf("uncommitted terminal logs/exit released the original worker: %+v %v", observed, err)
+	}
+	observed, err = a.ObserveTraining(ctx, f.plan, original, observed.Resources)
 	if err != nil || !observed.WritersAbsent || observed.Outcome != "FAILED" {
 		t.Fatalf("original failed workers were not retained: %+v / %v", observed, err)
 	}

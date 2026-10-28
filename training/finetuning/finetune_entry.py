@@ -198,9 +198,8 @@ def factory_arguments(workspace, configuration, output):
             "preprocessing_batch_size": 1,
             "streaming": False,
             "overwrite_cache": True,
-            "cache_dir": os.environ["HF_HOME"],
+            "cache_dir": os.environ["HF_DATASETS_CACHE"],
             "dataloader_num_workers": 0,
-            "save_safetensors": True,
             "disable_tqdm": True,
             "gradient_checkpointing": True,
             "plot_loss": False,
@@ -292,8 +291,8 @@ def train(args):
         )
         # Pin the validated managed dtype before the framework can infer a
         # different precision from the base config and hardware capabilities.
-        # The real patcher and strict projection check still run, and run_sft
-        # receives these same parsed objects before loading any model weights.
+        # The real patcher and strict projection check still run; the native
+        # stages receive these objects before loading model weights.
         parsed[0].compute_dtype = getattr(
             torch, configuration["managed_settings"]["train_dtype"]
         )
@@ -514,9 +513,9 @@ def export(args):
     tokenizer = AutoTokenizer.from_pretrained(str(workspace / "training/adapter"), local_files_only=True, trust_remote_code=False)
     template, effective_template, template_body = consume_effective_template(workspace, plan, tokenizer, read_regular)
     effective_template_sha256 = hashlib.sha256(canonical(effective_template)).hexdigest()
-    summary = json.loads(read_regular(workspace / "reports/train/summary.json", 65536))
+    summary = json.loads(read_regular(workspace / "reports/train/summary.json", MAX_MANIFEST_BYTES))
     association = json.loads(
-        read_regular(workspace / "reports/train/adapter_manifest.json", 65536)
+        read_regular(workspace / "reports/train/adapter_manifest.json", MAX_MANIFEST_BYTES)
     )
     if (
         summary["status"] != "SUCCEEDED"
@@ -612,7 +611,7 @@ def verify(args):
     plan, capabilities = load_runtime_plan(workspace, args.expected_template_plan_sha256, read_regular)
     merged = workspace / "export/merged"
     manifest = json.loads(
-        read_regular(workspace / "reports/export/merged_manifest.json", 65536)
+        read_regular(workspace / "reports/export/merged_manifest.json", MAX_MANIFEST_BYTES)
     )
     if (
         manifest["files"] != inventory(merged)

@@ -61,6 +61,7 @@ func recordedLogQueryFixture(t *testing.T) (biz.QueryRecord, biz.TrainingLogSour
 		{Timestamp: observed.Add(-2 * time.Second), Text: "archived first"},
 		{Timestamp: observed.Add(-time.Second), Text: "archived final"},
 	}}}}}
+	record.Runtime.Observation.Resources[3].TrainingLog = &record.Runtime.ComputeCleanup.Logs[0]
 	ctx := WithVerifiedGovernanceQuery(context.Background(), GovernanceDelivery{TenantID: record.Execution.TenantID, RequestID: "request-archive"}, modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName)
 	return record, source, ctx
 }
@@ -68,7 +69,7 @@ func recordedLogQueryFixture(t *testing.T) (biz.QueryRecord, biz.TrainingLogSour
 func TestExecutionLogsUseOriginalArchiveWithoutLiveReader(t *testing.T) {
 	record, source, ctx := recordedLogQueryFixture(t)
 	query := NewQuery(recordedLogQueryRepository{record}, nil)
-	response, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, TailLines: 1})
+	response, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &source.PodUID, TailLines: 1})
 	if err != nil || len(response.GetLines()) != 1 || response.Lines[0].Text != "archived final" || !response.Truncated || response.Source.ResourceUid != "pod-original" || response.Source.LogId != source.LogID || response.Source.ContainerName != "node" || !response.ObservedAt.AsTime().Equal(record.Runtime.ComputeCleanup.Logs[0].Result.ObservedAt) {
 		t.Fatalf("original archived log unavailable after Pod removal: response=%v error=%v", response, err)
 	}
@@ -77,11 +78,13 @@ func TestExecutionLogsUseOriginalArchiveWithoutLiveReader(t *testing.T) {
 func TestExecutionLogsPreferArchiveAndUseLiveOnlyBeforeCaptureCommits(t *testing.T) {
 	for _, ready := range []bool{true, false} {
 		t.Run(map[bool]string{true: "committed archive", false: "capture pending"}[ready], func(t *testing.T) {
-			record, _, ctx := recordedLogQueryFixture(t)
-			record.Runtime.ComputeCleanup.LogsReady = ready
+			record, source, ctx := recordedLogQueryFixture(t)
+			if !ready {
+				record.Runtime.Observation.Resources[3].TrainingLog = nil
+			}
 			live := recordedLogLiveReader{biz.TrainingLogResult{ObservedAt: record.Runtime.Observation.ObservedAt, Lines: []biz.TrainingLogLine{{Timestamp: record.Runtime.Observation.ObservedAt, Text: "original live"}}}}
 			query := NewQuery(recordedLogQueryRepository{record}, nil, live)
-			response, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, TailLines: 1})
+			response, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &source.PodUID, TailLines: 1})
 			want := "original live"
 			if ready {
 				want = "archived final"
@@ -94,19 +97,19 @@ func TestExecutionLogsPreferArchiveAndUseLiveOnlyBeforeCaptureCommits(t *testing
 }
 
 func TestExecutionLogsRejectForeignArchiveInsteadOfLiveFallback(t *testing.T) {
-	record, _, ctx := recordedLogQueryFixture(t)
+	record, source, ctx := recordedLogQueryFixture(t)
 	record.Runtime.ComputeCleanup.Logs[0].Source.PodUID = "same-name-replacement"
 	live := recordedLogLiveReader{biz.TrainingLogResult{ObservedAt: record.Runtime.Observation.ObservedAt, Lines: []biz.TrainingLogLine{{Timestamp: record.Runtime.Observation.ObservedAt, Text: "live must not hide corrupt archive"}}}}
 	query := NewQuery(recordedLogQueryRepository{record}, nil, live)
-	if _, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID}); status.Code(err) != codes.Unavailable {
+	if _, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &source.PodUID}); status.Code(err) != codes.Unavailable {
 		t.Fatalf("foreign archive escaped identity validation: %v", err)
 	}
 }
 
 func TestExecutionLogArchiveStillRequiresCurrentExactQueryAuthorization(t *testing.T) {
-	record, _, ctx := recordedLogQueryFixture(t)
+	record, source, ctx := recordedLogQueryFixture(t)
 	query := NewQuery(recordedLogQueryRepository{record}, nil)
-	request := &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID}
+	request := &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &source.PodUID}
 	if _, err := query.GetExecutionLogs(context.Background(), request); status.Code(err) != codes.Unauthenticated {
 		t.Fatalf("archive bypassed current authorization: %v", err)
 	}
@@ -120,5 +123,28 @@ func TestExecutionLogArchiveStillRequiresCurrentExactQueryAuthorization(t *testi
 	request.LogId = &unknown
 	if _, err := query.GetExecutionLogs(ctx, request); status.Code(err) != codes.NotFound {
 		t.Fatalf("archive accepted foreign source log ID: %v", err)
+	}
+}
+
+func TestExecutionLogsRequireExplicitOriginalPodUID(t *testing.T) {
+	record, _, ctx := recordedLogQueryFixture(t)
+	query := NewQuery(recordedLogQueryRepository{record}, nil)
+	if _, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID}); status.Code(err) != codes.InvalidArgument {
+		t.Fatalf("missing original Pod UID selected an implicit worker: %v", err)
+	}
+}
+
+func TestExecutionLogsKeepOriginalDurablePodAfterGCWithoutLiveDiscovery(t *testing.T) {
+	record, source, ctx := recordedLogQueryFixture(t)
+	code := int32(0)
+	for index := range record.Runtime.Observation.Resources {
+		record.Runtime.Observation.Resources[index].APIObjectPresent = false
+	}
+	pod := &record.Runtime.Observation.Resources[3]
+	pod.Terminal, pod.ExitCode = true, &code
+	query := NewQuery(recordedLogQueryRepository{record}, nil)
+	response, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &source.PodUID, LogId: &source.LogID})
+	if err != nil || !response.Available || response.Source.ResourceUid != source.PodUID || len(response.Lines) != 2 || response.Lines[1].Text != "archived final" {
+		t.Fatalf("exact original Pod archive depended on live discovery: %v; %v", response, err)
 	}
 }

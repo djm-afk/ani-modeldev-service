@@ -30,3 +30,14 @@ func TestManagedStepsRequireCurrentTaskIdentityResolver(t *testing.T) {
 		t.Fatal("accepted a verifier without authenticated task identity")
 	}
 }
+
+func TestCleanupOnlyTailIsNotCurrentPerPodEvidence(t *testing.T) {
+	record, source := recordedLogFixture(t)
+	record.Runtime.Observation.Resources[3].TrainingLog = nil
+	if _, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 3, MaxBytes: 65536}); err != nil || found {
+		t.Fatal("cleanup-only archive substituted current per-Pod log", found, err)
+	}
+	if biz.ComputeCleanupLogsComplete(record.Execution, record.Runtime, record.Runtime.ComputeCleanup.Logs) {
+		t.Fatal("cleanup-only tail authorized release without original Pod durable log")
+	}
+}

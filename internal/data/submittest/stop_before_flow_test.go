@@ -151,21 +151,17 @@ func assembleRecoveryOwner(t *testing.T, f *completeFixture, pool *pgxpool.Pool)
 		t.Fatal(err)
 	}
 	dispatch := submission.New(pool)
-	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(s3.New(s3.Options{Region: "us-east-1"}), f.request.Admission.Snapshot.PublicationScope.StorageConnectionID), dispatch)
+	training := trainer.New(kube).WithTrainingLogs(newMainFlowTrainingLogReader(t, f))
+	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(s3.New(s3.Options{Region: "us-east-1"}), f.request.Admission.Snapshot.PublicationScope.StorageConnectionID), dispatch).WithTrainingRuntime(training)
 	steps, err := biz.NewManagedSteps(dispatch, execution.New(pool), identity, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	managed, err := biz.NewManagedRuntime(steps, lifecycle.New(pool), trainer.New(kube), proof, proof)
+	managed, err := biz.NewManagedRuntime(steps, lifecycle.New(pool), training, proof, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var closer *biz.ExecutionCloser
-	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
-		closer, err = biz.NewExecutionCloser(managed, runs, proof, proof)
-	} else {
-		closer, err = biz.NewExecutionCloser(managed, runs, proof)
-	}
+	closer, err := biz.NewExecutionCloser(managed, runs, proof, proof, proof)
 	if err != nil {
 		t.Fatal(err)
 	}

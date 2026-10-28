@@ -36,6 +36,7 @@ func recordedLogFixture(t *testing.T) (biz.QueryRecord, biz.TrainingLogSource) {
 			{Timestamp: observed.Add(-time.Second), Text: "last"},
 		},
 	}}}}
+	record.Runtime.Observation.Resources[3].TrainingLog = &record.Runtime.ComputeCleanup.Logs[0]
 	return record, source
 }
 
@@ -51,7 +52,7 @@ func TestRecordedTrainingLogsRetainOriginalTailWithoutLiveObjects(t *testing.T) 
 	}
 }
 
-func TestRecordedTrainingLogsKeepLegacyTailAlongsideNewPodEvidence(t *testing.T) {
+func TestRecordedTrainingLogsKeepOriginalTailAlongsideNewPodEvidence(t *testing.T) {
 	record, source := recordedLogFixture(t)
 	newPod := record.Runtime.Observation.Resources[3]
 	newPod.Name, newPod.UID = "later-pod", "later-pod"
@@ -65,7 +66,7 @@ func TestRecordedTrainingLogsKeepLegacyTailAlongsideNewPodEvidence(t *testing.T)
 	record.Runtime.Observation.Resources[4].TrainingLog = &newLog
 	result, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 1, MaxBytes: 65536})
 	if err != nil || !found || len(result.Lines) != 1 || result.Lines[0].Text != "last" {
-		t.Fatalf("a new Pod tail hid the original committed cleanup archive: found=%t result=%+v error=%v", found, result, err)
+		t.Fatalf("a new Pod tail hid the original per-Pod archive: found=%t result=%+v error=%v", found, result, err)
 	}
 }
 
@@ -106,6 +107,7 @@ func TestRecordedTrainingLogValidationRejectsForeignIdentityAndUnboundedPayload(
 		}},
 		{"duplicate original segment", func(r *biz.QueryRecord) {
 			r.Runtime.ComputeCleanup.Logs = append(r.Runtime.ComputeCleanup.Logs, r.Runtime.ComputeCleanup.Logs[0])
+			r.Runtime.Observation.Resources = append(r.Runtime.Observation.Resources, r.Runtime.Observation.Resources[3])
 		}},
 		{"unobserved log", func(r *biz.QueryRecord) { r.Runtime.ComputeCleanup.Logs[0].Result.ObservedAt = time.Time{} }},
 		{"invalid line timestamp", func(r *biz.QueryRecord) { r.Runtime.ComputeCleanup.Logs[0].Result.Lines[0].Timestamp = time.Time{} }},
@@ -142,6 +144,7 @@ func TestRecordedTrainingLogsWaitForCommittedCapture(t *testing.T) {
 	record, source := recordedLogFixture(t)
 	record.Runtime.ComputeCleanup.LogsReady = false
 	record.Runtime.ComputeCleanup.Logs[0].Result.Lines = nil
+	record.Runtime.Observation.Resources[3].TrainingLog = nil
 	if _, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 200, MaxBytes: 16384}); err != nil || found {
 		t.Fatalf("capture in progress blocked live fallback: found=%t error=%v", found, err)
 	}
@@ -193,6 +196,7 @@ func TestRecordedTrainingLogsRequireACommittedReceipt(t *testing.T) {
 	record.Runtime.Observation.Resources[3].Terminal = true
 	record.Runtime.Observation.Resources[3].ExitCode = &code
 	record.Runtime.ComputeCleanup = nil
+	record.Runtime.Observation.Resources[3].TrainingLog = nil
 	if _, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 3, MaxBytes: 65536}); err != nil || found {
 		t.Fatalf("missing receipt must not fabricate a tail: found=%t error=%v", found, err)
 	}

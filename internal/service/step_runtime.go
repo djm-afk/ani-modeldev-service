@@ -337,7 +337,7 @@ func runtimeTrainingStatus(result biz.ManagedRuntimeResult, claim biz.BeginManag
 }
 
 func decodeRuntimePrepared(candidate *modeldevv1.PreparedInputCandidate) (biz.WorkspaceBinding, cpup01.InputRef, error) {
-	if candidate == nil || candidate.Workspace == nil || candidate.Input == nil || candidate.PreparedManifest == nil ||
+	if candidate == nil || candidate.Workspace == nil || candidate.Input == nil || candidate.Input.PreparedDataset == nil || candidate.PreparedManifest == nil ||
 		candidate.PreparedManifest.RelativePath != "prepared-manifest.json" || candidate.PreparedManifest.SizeBytes <= 0 || !runtimeSHA256(candidate.PreparedManifest.Sha256) {
 		return biz.WorkspaceBinding{}, cpup01.InputRef{}, biz.ErrInvalidAdmission
 	}
@@ -351,7 +351,9 @@ func decodeRuntimePrepared(candidate *modeldevv1.PreparedInputCandidate) (biz.Wo
 	}
 	// The complete InputRef is compared with the immutable snapshot in biz;
 	// sharing an input_version_id alone never validates prepared bytes.
-	input := cpup01.InputRef{InputVersionID: candidate.Input.InputVersionId, Object: object, Format: candidate.Input.Format, SchemaVersion: candidate.Input.SchemaVersion, RowCount: candidate.Input.RowCount, FeatureCount: candidate.Input.FeatureCount}
+	derived := candidate.Input.PreparedDataset
+	input := cpup01.InputRef{InputVersionID: candidate.Input.InputVersionId, Object: object, Format: candidate.Input.Format, SchemaVersion: candidate.Input.SchemaVersion, RowCount: candidate.Input.RowCount, FeatureCount: candidate.Input.FeatureCount,
+		PreparedDataset: cpup01.PreparedDatasetFacts{Format: derived.Format, TransformID: derived.TransformId, SizeBytes: derived.SizeBytes, SHA256: derived.Sha256, RowCount: derived.RowCount}}
 	return biz.WorkspaceBinding{
 		Mode: strings.TrimPrefix(workspace.Mode.String(), "WORKSPACE_MODE_"), NamespaceName: workspace.NamespaceName, NamespaceUID: workspace.NamespaceUid,
 		PVCName: workspace.PvcName, PVCUID: workspace.PvcUid, InputSubpath: workspace.InputSubpath, TrainingSubpath: workspace.TrainingSubpath,

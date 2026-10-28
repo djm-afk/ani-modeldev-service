@@ -16,6 +16,22 @@ import (
 
 const exitEvidenceFinalizer = "modeldev.ani.io/training-exit-evidence"
 
+func TestCurrentWorkerRequiresExitProtection(t *testing.T) {
+	f := newTrainingFixture(t)
+	delete(f.pod["metadata"].(map[string]any), "finalizers")
+	a, ctx := f.adapter(t), context.Background()
+	handle, err := a.CreateTraining(ctx, f.plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.ObserveTraining(ctx, f.plan, handle, nil); !errors.Is(err, biz.ErrTrainingLogsUnavailable) {
+		t.Fatalf("unprotected worker without durable logs was accepted: %v", err)
+	}
+	if f.podPatches != 0 || f.deletes != 0 {
+		t.Fatal("missing current evidence permitted resource mutation")
+	}
+}
+
 func TestTrainingLogCaptureFailureRetainsOriginalPod(t *testing.T) {
 	f := newTrainingFixture(t)
 	f.pod["metadata"].(map[string]any)["resourceVersion"] = "1"
@@ -150,16 +166,20 @@ func TestTrainingRuntimeDriftBlocksLookupButOriginalStopAndObservationStillWork(
 		t.Fatal("drifted Runtime allowed normal lookup", err)
 	}
 	if err := a.StopTraining(ctx, f.plan, handle); err != nil {
-		t.Fatalf("upgrade blocked normal Stop of a legacy Run: %v", err)
+		t.Fatalf("Runtime drift blocked Stop of the original Run: %v", err)
 	}
 	f.setTerminal(t, 0)
-	observed, err := a.ObserveTraining(ctx, f.plan, handle, nil)
-	if err != nil || observed.Outcome != "SUCCEEDED" || !observed.WritersAbsent || f.podPatches != 0 || f.posts != 1 {
-		t.Fatalf("legacy exit observation lost its frozen contract: %+v err=%v", observed, err)
+	pending, err := a.ObserveTraining(ctx, f.plan, handle, nil)
+	if err != nil || pending.WritersAbsent {
+		t.Fatalf("uncommitted exit released original worker: %+v %v", pending, err)
+	}
+	observed, err := a.ObserveTraining(ctx, f.plan, handle, pending.Resources)
+	if err != nil || observed.Outcome != "SUCCEEDED" || !observed.WritersAbsent || f.podPatches != 1 || f.posts != 1 {
+		t.Fatalf("original exit observation lost its frozen contract: %+v err=%v", observed, err)
 	}
 	_ = unstructured.SetNestedField(f.runtime, "changed", "spec", "unexpected")
 	if _, err := a.FindTraining(ctx, f.plan); !errors.Is(err, biz.ErrRuntimeConflict) {
-		t.Fatalf("legacy compatibility bypassed Runtime digest validation: %v", err)
+		t.Fatalf("original close bypassed normal Runtime digest validation: %v", err)
 	}
 }
 

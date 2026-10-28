@@ -132,7 +132,7 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if err != nil {
 		return nil, err
 	}
-	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 ||
+	if request == nil || !queryID(request.ExecutionId) || request.GetPodUid() == "" || len(request.ProtoReflect().GetUnknown()) != 0 ||
 		(request.LogId != nil && !queryID(*request.LogId)) || request.TailLines > 1000 || request.MaxBytes > 65536 {
 		return nil, status.Error(codes.InvalidArgument, "invalid training log query")
 	}
@@ -152,6 +152,9 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	}
 	selection, err := query.selectLogTarget(ctx, record, request)
 	if err != nil {
+		if errors.Is(err, biz.ErrTrainingLogsUnavailable) {
+			return nil, queryError(err, scope.RequestID)
+		}
 		return nil, workloadError(err, scope.RequestID)
 	}
 	var result biz.TrainingLogResult
@@ -215,29 +218,36 @@ func queryLogError(err error, requestID string) error {
 	return queryError(err, requestID)
 }
 
-// selectLogTarget resolves exactly one container instance for a read. The
-// worker path stays compatible: no pod_uid and no container keeps the original
-// single-worker `node` behaviour, including its archived-tail fallback.
+// selectLogTarget binds the explicitly requested Pod UID to either its durable
+// original worker chain or the current authenticated workload scope.
 func (query *Query) selectLogTarget(ctx context.Context, record biz.QueryRecord, request *modeldevv1.GetExecutionLogsRequest) (biz.LogSelection, error) {
 	container := request.GetContainer()
 	podUID := request.GetPodUid()
 	previous := request.GetPrevious()
-	if podUID == "" && container == "" {
-		source, err := biz.TrainingLogSourceFor(record, request.GetLogId())
-		if err != nil {
-			return biz.LogSelection{}, err
+	if podUID == "" {
+		return biz.LogSelection{}, biz.ErrInvalidAdmission
+	}
+	if record.Runtime.Observation != nil && (container == "" || container == "node") {
+		for _, resource := range record.Runtime.Observation.Resources {
+			if resource.Kind != "Pod" || resource.UID != podUID {
+				continue
+			}
+			source, err := biz.TrainingLogSourceFor(record, biz.TrainerLogID(record.Execution.ExecutionID, podUID))
+			if err != nil {
+				return biz.LogSelection{}, err
+			}
+			if request.GetLogId() != "" && request.GetLogId() != source.LogID {
+				return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+			}
+			return biz.LogSelection{Kind: biz.LogSourceKindTrainer, LogID: source.LogID, Target: biz.ContainerLogTarget{
+				Namespace: source.Namespace, NamespaceUID: source.NamespaceUID, PodName: source.PodName,
+				PodUID: source.PodUID, ContainerName: source.ContainerName, Previous: previous,
+			}}, nil
 		}
-		return biz.LogSelection{Kind: biz.LogSourceKindTrainer, LogID: source.LogID, Target: biz.ContainerLogTarget{
-			Namespace: source.Namespace, NamespaceUID: source.NamespaceUID, PodName: source.PodName,
-			PodUID: source.PodUID, ContainerName: source.ContainerName, Previous: previous,
-		}}, nil
 	}
 	workload, err := query.logWorkloadScope(ctx, record)
 	if err != nil {
 		return biz.LogSelection{}, err
-	}
-	if podUID == "" {
-		return biz.LogSelection{}, biz.ErrWorkloadViewUnavailable
 	}
 	if workload.PipelineReadable() && query.steps != nil {
 		if pod, err := query.steps.StepPod(ctx, workload, podUID); err == nil {

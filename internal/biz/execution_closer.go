@@ -61,18 +61,17 @@ type ExecutionCloser struct {
 	compute ComputeCleanupBoundary
 }
 
-func NewExecutionCloser(runtime *ManagedRuntime, runs ManagedRunCloser, writers OwnerWriterVerifier, cleanup ...StepExitCleanupBoundary) (*ExecutionCloser, error) {
-	if runtime == nil || runs == nil || writers == nil || len(cleanup) > 1 {
+func NewExecutionCloser(runtime *ManagedRuntime, runs ManagedRunCloser, writers OwnerWriterVerifier, stepCleanup StepExitCleanupBoundary, computeCleanup ComputeCleanupBoundary) (*ExecutionCloser, error) {
+	if runtime == nil || runs == nil || writers == nil || stepCleanup == nil || computeCleanup == nil {
 		return nil, ErrRuntimeNotReady
 	}
-	closer := &ExecutionCloser{runtime: runtime, runs: runs, writers: writers}
-	if len(cleanup) == 1 {
-		if _, ok := runtime.repository.(StepExitCleanupRepository); !ok || cleanup[0] == nil {
-			return nil, ErrRuntimeNotReady
-		}
-		closer.cleanup = cleanup[0]
+	if _, ok := runtime.repository.(StepExitCleanupRepository); !ok {
+		return nil, ErrRuntimeNotReady
 	}
-	return closer, nil
+	if _, ok := runtime.repository.(ComputeCleanupRepository); !ok {
+		return nil, ErrRuntimeNotReady
+	}
+	return &ExecutionCloser{runtime: runtime, runs: runs, writers: writers, cleanup: stepCleanup, compute: computeCleanup}, nil
 }
 
 // Reconcile resumes closing the original durable execution. It must never
@@ -286,7 +285,7 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 func (closer *ExecutionCloser) reconcileStepExits(ctx context.Context, result ManagedRuntimeResult, owner RunAuthorityCandidate, replayed bool) (ManagedRuntimeResult, error) {
 	state := result.Runtime
 	if closer.cleanup == nil {
-		return runtimeResult(result, state, replayed)
+		return result, ErrRuntimeNotReady
 	}
 	if state.CloseEvidence == nil {
 		return result, ErrRuntimeNotReady

@@ -193,28 +193,28 @@ func TestCleanupRecoveryAppliedReplayAndDatabaseResolutionConstraints(t *testing
 	}
 }
 
-func TestCleanupRecoveryResolvesAuditWrittenBeforeResolutionFields(t *testing.T) {
+func TestCleanupRecoveryRejectsAuditMissingCurrentResolutionTimestamp(t *testing.T) {
 	pool, repository, plan := closedCleanupRecoveryFixture(t)
 	ctx := context.Background()
-	original, _, err := repository.ReserveCleanup(ctx, plan, "governance:user:9001")
-	if err != nil {
+	if _, _, err := repository.ReserveCleanup(ctx, plan, "governance:user:9001"); err != nil {
 		t.Fatal(err)
 	}
-	// Simulate the exact persisted shape of the old writer. In particular,
-	// time.Time's omitempty does not omit the new zero ReconciledAt field.
-	if _, err := pool.Exec(ctx, "UPDATE modeldev_execution_cleanup_audits SET receipt=receipt-'resolved_absent'-'reconciled_at'-'reconciled_from_phase' WHERE tenant_id=$1::uuid AND execution_id=$2::uuid AND plan_sha256=$3", plan.TenantID, plan.ExecutionID, plan.PlanHash); err != nil {
+	// The current writer emits this timestamp even when zero. Omitting it is
+	// an obsolete audit shape, distinct from current optional empty slices.
+	if _, err := pool.Exec(ctx, "UPDATE modeldev_execution_cleanup_audits SET receipt=receipt-'reconciled_at' WHERE tenant_id=$1::uuid AND execution_id=$2::uuid AND plan_sha256=$3", plan.TenantID, plan.ExecutionID, plan.PlanHash); err != nil {
 		t.Fatal(err)
 	}
 	before := readCleanupRecoveryAudit(t, pool, plan)
-	resolved, err := repository.ReconcileCleanup(ctx, plan.TenantID, plan.ExecutionID, plan.PlanHash, func(record biz.OperationRecord) (biz.CleanupReceipt, error) {
+	calls := 0
+	_, err := repository.ReconcileCleanup(ctx, plan.TenantID, plan.ExecutionID, plan.PlanHash, func(record biz.OperationRecord) (biz.CleanupReceipt, error) {
+		calls++
 		return cleanupResolution(record, plan), nil
 	})
-	if err != nil || resolved.Phase != "RECONCILED" || resolved.ReconciledFromPhase != "STARTED" || !reflect.DeepEqual(resolved.ResolvedAbsent, plan.Targets) {
-		t.Fatalf("OLD_CLEANUP_AUDIT_UPGRADE: original old-writer JSON could not reconcile: %+v %v", resolved, err)
+	if !errors.Is(err, biz.ErrPersistence) || calls != 0 {
+		t.Fatalf("obsolete audit reached external reconciliation: calls=%d error=%v", calls, err)
 	}
-	after := readCleanupRecoveryAudit(t, pool, plan)
-	if after.actor != before.actor || !after.started.Equal(before.started) || !reflect.DeepEqual(after.completed, before.completed) || resolved.Actor != original.Actor || !resolved.StartedAt.Equal(original.StartedAt) || !resolved.CompletedAt.IsZero() || !reflect.DeepEqual(resolved.Requested, original.Requested) || !reflect.DeepEqual(resolved.ConfirmedAbsent, original.ConfirmedAbsent) {
-		t.Fatal("old-writer reconciliation replaced original audit fields")
+	if after := readCleanupRecoveryAudit(t, pool, plan); !reflect.DeepEqual(after, before) {
+		t.Fatal("obsolete audit rejection rewrote original evidence")
 	}
 }
 

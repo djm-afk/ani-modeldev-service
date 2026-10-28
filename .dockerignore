@@ -4,6 +4,7 @@
 .tools
 .work
 .tmp
-bin
+bin/*
+!bin/ani-modeldev-step
 **/__pycache__
 **/*.pyc

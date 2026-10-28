@@ -113,13 +113,9 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed dispatch configuration invalid")
 	}
-	closer, err := biz.NewExecutionCloser(runtime, clients.runs, proof, proof)
+	closer, err := biz.NewExecutionCloser(runtime, clients.runs, proof, proof, proof)
 	if err != nil {
 		return failed("managed execution close configuration invalid")
-	}
-	closer, err = closer.WithComputeCleanup(proof.WithTrainingLogs(clients.logs))
-	if err != nil {
-		return failed("automatic compute cleanup configuration invalid")
 	}
 	operations, err := buildExecutionOperations(pool, clients, closer, proof, training)
 	if err != nil {

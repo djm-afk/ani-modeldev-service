@@ -155,9 +155,12 @@ func ComputeCleanupLogsComplete(execution Execution, state ExecutionRuntime, log
 		for _, resource := range state.Observation.Resources {
 			if resource.Kind == "Pod" {
 				pods++
+				if resource.TrainingLog == nil {
+					return false
+				}
 				found := false
 				for _, log := range logs {
-					found = found || log.Source.PodUID == resource.UID
+					found = found || reflect.DeepEqual(log, *resource.TrainingLog)
 				}
 				if !found {
 					return false

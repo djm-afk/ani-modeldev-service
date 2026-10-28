@@ -67,14 +67,31 @@ func collectedExecutionFixture(t *testing.T) (biz.OperationRecord, context.Conte
 				TrainingHandle: &handle,
 				Observation: &biz.TrainingRuntimeObservation{Handle: handle, ObservedAt: observed, Resources: []biz.RuntimeResource{
 					{APIVersion: "trainer.kubeflow.org/v1alpha1", Kind: "TrainJob", Namespace: "tenant-training", Name: "md-" + executionID, UID: handle.TrainJobUID, APIObjectPresent: false},
-					{APIVersion: "v1", Kind: "Pod", Namespace: "tenant-training", Name: "md-pod-0", UID: "pod-uid-0", OwnerUID: "job-original", APIObjectPresent: false, ExitCode: exitCodePointer(0)},
+					{APIVersion: "v1", Kind: "Pod", Namespace: "tenant-training", Name: "md-pod-0", UID: "pod-uid-0", OwnerUID: "job-original", APIObjectPresent: false, Terminal: true, ExitCode: exitCodePointer(0)},
+					{APIVersion: "jobset.x-k8s.io/v1alpha2", Kind: "JobSet", Namespace: "tenant-training", Name: "set-original", UID: "set-original", OwnerUID: handle.TrainJobUID, APIObjectPresent: false},
+					{APIVersion: "batch/v1", Kind: "Job", Namespace: "tenant-training", Name: "job-original", UID: "job-original", OwnerUID: "set-original", APIObjectPresent: false},
 				}},
-				ComputeCleanup: &biz.ComputeCleanupReceipt{LogsReady: true},
 			},
 		},
 	}
+	source, err := biz.TrainingLogSourceFor(record.QueryRecord, biz.TrainerLogID(executionID, "pod-uid-0"))
+	if err != nil {
+		t.Fatal("original collected worker source", err)
+	}
+	record.Runtime.Observation.Resources[1].TrainingLog = &biz.RecordedTrainingLog{Source: source, Result: biz.TrainingLogResult{ObservedAt: observed, Lines: []biz.TrainingLogLine{{Timestamp: observed, Text: "retained original worker"}}}}
 	ctx := WithVerifiedGovernanceQuery(context.Background(), GovernanceDelivery{TenantID: workloadTenantForTest, RequestID: "request-pods"}, modeldevv1.ModelDevQueryService_ListExecutionPods_FullMethodName)
 	return record, ctx
+}
+
+func TestRecycledPodDoesNotAdvertiseCleanupOnlyLog(t *testing.T) {
+	record, ctx := collectedExecutionFixture(t)
+	record.Runtime.Observation.Resources[1].TrainingLog = nil
+	record.Runtime.ComputeCleanup = &biz.ComputeCleanupReceipt{LogsReady: true}
+	query := NewQuery(recordedLogQueryRepository{}, nil).WithOperations(workloadQueryRepository{record}).WithWorkload(noWorkerPods{}, nil)
+	response, err := query.ListExecutionPods(ctx, &modeldevv1.ListExecutionPodsRequest{ExecutionId: record.Execution.ExecutionID, IncludeRecycled: true})
+	if err != nil || len(response.Pods) != 1 || response.Pods[0].LogAvailable {
+		t.Fatalf("cleanup-only flag advertised a readable original Pod log: %+v %v", response, err)
+	}
 }
 
 func exitCodePointer(value int32) *int32 { return &value }

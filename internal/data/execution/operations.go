@@ -52,8 +52,8 @@ func operationRecord(ctx context.Context, transaction pgx.Tx, tenant, execution 
 		return biz.OperationRecord{}, biz.ErrPersistence
 	}
 	if err == nil {
-		var receipt biz.CleanupReceipt
-		if json.Unmarshal(audit, &receipt) != nil || receipt.ExecutionID != execution {
+		receipt, decodeErr := decodeCurrentCleanupReceipt(audit)
+		if decodeErr != nil || receipt.ExecutionID != execution {
 			return biz.OperationRecord{}, biz.ErrPersistence
 		}
 		record.Cleanup = &receipt
@@ -98,8 +98,8 @@ func (repository *Repository) ReserveCleanup(ctx context.Context, plan biz.Clean
 	var previous []byte
 	err = transaction.QueryRow(ctx, "SELECT receipt FROM modeldev_execution_cleanup_audits WHERE tenant_id=$1::uuid AND execution_id=$2::uuid AND plan_sha256=$3", plan.TenantID, plan.ExecutionID, plan.PlanHash).Scan(&previous)
 	if err == nil {
-		var receipt biz.CleanupReceipt
-		if json.Unmarshal(previous, &receipt) != nil {
+		receipt, decodeErr := decodeCurrentCleanupReceipt(previous)
+		if decodeErr != nil {
 			return biz.CleanupReceipt{}, false, biz.ErrPersistence
 		}
 		return receipt, true, nil
@@ -253,8 +253,8 @@ func (repository *Repository) ReconcileCleanup(ctx context.Context, tenant, exec
 	if err != nil {
 		return original, biz.ErrPersistence
 	}
-	// Compare the actual stored JSON, including old-writer field omissions.
-	// Re-marshalling the new Go type would add a zero ReconciledAt timestamp.
+	// Compare the original stored JSON value; never replace the audit snapshot
+	// used by the optimistic concurrency guard with a re-encoded value.
 	result, err := transaction.Exec(ctx, "UPDATE modeldev_execution_cleanup_audits SET phase='RECONCILED',receipt=$4::jsonb WHERE tenant_id=$1::uuid AND execution_id=$2::uuid AND plan_sha256=$3 AND phase=$5 AND receipt=$6::jsonb AND plan=$7::jsonb AND actor=$8 AND started_at=$9", tenant, execution, hash, encoded, original.Phase, originalDatabaseReceipt, planBytes, original.Actor, original.StartedAt)
 	if err != nil {
 		return original, biz.ErrCleanupUncertain
@@ -264,6 +264,20 @@ func (repository *Repository) ReconcileCleanup(ctx context.Context, tenant, exec
 	}
 	if err := transaction.Commit(ctx); err != nil {
 		return original, biz.ErrCleanupUncertain
+	}
+	return receipt, nil
+}
+
+func decodeCurrentCleanupReceipt(encoded []byte) (biz.CleanupReceipt, error) {
+	// The current writer emits a timestamp string even before reconciliation.
+	// A missing/null field is not the current audit format. The other resolution
+	// fields intentionally remain optional until a real observation is recorded.
+	var stamp struct {
+		ReconciledAt *time.Time `json:"reconciled_at"`
+	}
+	var receipt biz.CleanupReceipt
+	if json.Unmarshal(encoded, &stamp) != nil || stamp.ReconciledAt == nil || json.Unmarshal(encoded, &receipt) != nil {
+		return biz.CleanupReceipt{}, biz.ErrPersistence
 	}
 	return receipt, nil
 }

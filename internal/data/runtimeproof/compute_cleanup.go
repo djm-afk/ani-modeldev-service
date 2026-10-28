@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/cleanup"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -25,11 +24,6 @@ func (verifier *Verifier) VerifyRecordedComputeWritersAbsent(ctx context.Context
 	return verifier.verifyComputeCleanupGraph(ctx, execution, owner, state, true)
 }
 
-func (verifier *Verifier) WithTrainingLogs(reader biz.TrainingLogReader) *Verifier {
-	verifier.logs = reader
-	return verifier
-}
-
 func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, execution biz.Execution, owner biz.RunAuthorityCandidate, state biz.ExecutionRuntime) ([]biz.RecordedTrainingLog, error) {
 	if verifier == nil || state.ComputeCleanup == nil || state.ComputeCleanup.LogsReady || state.ComputeCleanup.Attempts == 0 {
 		return nil, biz.ErrCleanupBlocked
@@ -41,6 +35,17 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 	if state.Training == nil || state.TrainingRejection != nil {
 		return logs, nil
 	}
+	for _, pod := range state.Observation.Resources {
+		if pod.Kind == "Pod" {
+			if pod.TrainingLog == nil {
+				return nil, biz.ErrTrainingLogsUnavailable
+			}
+			logs = append(logs, *pod.TrainingLog)
+		}
+	}
+	if !biz.ComputeCleanupLogsComplete(execution, state, logs) {
+		return nil, biz.ErrTrainingLogsUnavailable
+	}
 	// Reuse the real training observer before disposing any parent. Its full
 	// original owner chain, historical exits and creation stop remain required.
 	if verifier.training == nil {
@@ -49,34 +54,6 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 	fresh, err := verifier.training.ObserveTraining(ctx, *state.Training, *state.TrainingHandle, state.Observation.Resources)
 	if err != nil || !fresh.WritersAbsent || !sameTrainingResourcesAfterPodGC(execution, state, fresh.Resources) {
 		return nil, biz.ErrCleanupBlocked
-	}
-	for _, pod := range state.Observation.Resources {
-		if pod.Kind != "Pod" {
-			continue
-		}
-		if pod.TrainingLog != nil {
-			logs = append(logs, *pod.TrainingLog)
-			continue
-		}
-		if !pod.APIObjectPresent {
-			return nil, biz.ErrTrainingLogsUnavailable
-		}
-		if verifier.logs == nil {
-			return nil, biz.ErrTrainingLogsUnavailable
-		}
-		logID := uuid.NewSHA1(uuid.NameSpaceOID, []byte(execution.ExecutionID+":"+pod.UID+":node")).String()
-		source, err := biz.TrainingLogSourceFor(biz.QueryRecord{Execution: execution, Runtime: state}, logID)
-		if err != nil {
-			return nil, err
-		}
-		result, err := verifier.logs.ReadTrainingLogs(ctx, source, biz.TrainingLogOptions{TailLines: 1000, MaxBytes: 65536})
-		if err != nil {
-			return nil, err
-		}
-		logs = append(logs, biz.RecordedTrainingLog{Source: source, Result: result})
-	}
-	if !biz.ComputeCleanupLogsComplete(execution, state, logs) {
-		return nil, biz.ErrTrainingLogsUnavailable
 	}
 	return logs, nil
 }

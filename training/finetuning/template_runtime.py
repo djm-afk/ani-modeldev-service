@@ -152,8 +152,8 @@ def encoding_probes(tokenizer, template):
         messages = [{'role': 'user', 'content': prompt}, {'role': 'assistant', 'content': response}]
         source_ids, target_ids = template.encode_oneturn(tokenizer, messages)
         expected = source_ids + target_ids + ([tokenizer.eos_token_id] if template.efficient_eos else [])
-        actual = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=False)
-        boundary = tokenizer.apply_chat_template(messages[:1], tokenize=True, add_generation_prompt=True)
+        actual = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=False, return_dict=False)
+        boundary = tokenizer.apply_chat_template(messages[:1], tokenize=True, add_generation_prompt=True, return_dict=False)
         if list(actual) != expected or list(boundary) != source_ids:
             raise RuntimeFailure('TEMPLATE_ENCODING_MISMATCH', 'native formatter and exported tokenizer differ')
         results.append({'input_tokens': len(source_ids), 'target_tokens': len(expected)-len(source_ids), 'sha256': hashlib.sha256(canonical(expected)).hexdigest()})

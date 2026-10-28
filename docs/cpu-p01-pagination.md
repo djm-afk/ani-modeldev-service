@@ -44,8 +44,7 @@ PR#4 曾把四个列表迁移为 HMAC 签名游标（`limit`/`cursor` → `next_
 | Deployment env `ANI_CURSOR_SIGNING_KEY` | 不再需要，可移除 |
 | ConfigMap `md-fixed-config` 的 `config.yaml` 中 `cursor_signing_key` 占位符 | 不再需要，可移除 |
 
-`md-fixed-config` 是手工维护的 ConfigMap，`scripts/cpu-p01-manual/manual.py` 的 render
-会按种子重建 `config.yaml`。移除了占位符行后无需再补回。
+当前配置由正式部署材料提供；旧手工 ConfigMap renderer 已退役。
 
 ## 4 验证要点
 

@@ -81,7 +81,7 @@ func New(config Config) (*Client, func(), error) {
 	if !strings.HasPrefix(config.Actor, "modeldev:") || len(config.Actor) <= len("modeldev:") || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
 		return nil, nil, errors.New("model client requires a bounded audit actor")
 	}
-	if config.Timeout <= 0 || config.Timeout > maximumTimeout || config.ResolutionTimeout <= 0 || config.ResolutionTimeout > maximumTimeout {
+	if config.Timeout <= 0 || config.Timeout > maximumTimeout || config.ResolutionTimeout <= 0 {
 		return nil, nil, errors.New("invalid model client timeout")
 	}
 	certificate, err := tls.LoadX509KeyPair(config.CertificateFile, config.PrivateKeyFile)

@@ -116,7 +116,7 @@ func TestOperationsMTLSRequiresExactMethodAndTenantScope(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	closer, err := biz.NewExecutionCloser(runtime, runs, proof)
+	closer, err := biz.NewExecutionCloser(runtime, runs, proof, proof, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,7 +261,7 @@ func TestOperationsCleanupDurablyAuditsAndBlocksUnresolvedReplay(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	closer, err := biz.NewExecutionCloser(runtime, runs, proof)
+	closer, err := biz.NewExecutionCloser(runtime, runs, proof, proof, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
