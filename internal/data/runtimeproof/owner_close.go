@@ -82,6 +82,20 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	if err != nil || pods == nil || pods.GetContinue() != "" {
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 	}
+	if workspace == nil && rootAdmissionRejected(workflow, dispatch.Plan, authority.RunID, run, pods.Items) {
+		unique, err := verifier.rootAdmissionWorkflow(ctx, environment.NamespaceName, authority.RunID)
+		if err != nil {
+			return biz.ManagedCloseEvidence{}, err
+		}
+		if unique.GetName() != authority.WorkflowName || string(unique.GetUID()) != authority.WorkflowUID {
+			return biz.ManagedCloseEvidence{}, biz.ErrRunAuthorityConflict
+		}
+		current, err := workflows.Get(ctx, authority.WorkflowName, metav1.GetOptions{})
+		if err != nil || !sameObject(current, "argoproj.io/v1alpha1", "Workflow", environment.NamespaceName, authority.WorkflowName, authority.WorkflowUID) || current.GetDeletionTimestamp() != nil || current.GetResourceVersion() != proof.WorkflowResourceVersion {
+			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
+		}
+		return biz.ManagedCloseEvidence{RunID: authority.RunID, WorkflowUID: authority.WorkflowUID, OwnerTermination: &proof, ObservedAt: time.Now().UTC()}, nil
+	}
 	association := biz.ManagedStepAssociation{RunID: authority.RunID, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, WorkflowName: authority.WorkflowName, WorkflowUID: authority.WorkflowUID}
 	evidence := biz.ManagedCloseEvidence{RunID: authority.RunID, WorkflowUID: authority.WorkflowUID, OwnerTermination: &proof}
 	seenNames, seenUIDs, seenNodes := make(map[string]bool), make(map[string]bool), make(map[string]bool)
@@ -334,9 +348,9 @@ func serverDeniedAdmissionNode(workflow *unstructured.Unstructured, node map[str
 	if !ok {
 		return false
 	}
-	if node["templateName"] == "system-container-driver" {
+	if node["templateName"] == "system-container-driver" || node["templateName"] == "system-dag-driver" && node["displayName"] == "root-driver" && name == workflow.GetName()+".root-driver" {
 		prefix := "task '" + name + "' errored: "
-		if !strings.HasPrefix(message, prefix) || !rejectedAdmissionTemplate(workflow, "system-container-driver", false) {
+		if !strings.HasPrefix(message, prefix) || !rejectedAdmissionTemplate(workflow, node["templateName"].(string), false) {
 			return false
 		}
 		return serverWebhookAdmissionTimeout(workflow.GetNamespace(), strings.TrimPrefix(message, prefix))

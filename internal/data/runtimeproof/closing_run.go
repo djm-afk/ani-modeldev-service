@@ -108,11 +108,22 @@ func (verifier *Verifier) VerifyClosingRun(ctx context.Context, execution biz.Ex
 			return biz.RunAuthorityCandidate{}, biz.ErrRuntimeConflict
 		}
 	}
-	if candidate.WorkflowUID == "" {
-		return biz.RunAuthorityCandidate{}, biz.ErrRuntimeNotReady
+	rootRejected := candidate.WorkflowUID == ""
+	if rootRejected {
+		if !confirmed {
+			return biz.RunAuthorityCandidate{}, biz.ErrRuntimeNotReady
+		}
+		workflow, err := verifier.rootAdmissionWorkflow(ctx, env.NamespaceName, runID)
+		if err != nil {
+			return biz.RunAuthorityCandidate{}, err
+		}
+		candidate.WorkflowName, candidate.WorkflowUID = workflow.GetName(), string(workflow.GetUID())
 	}
 	workflow, err := verifier.kube.Resource(schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}).Namespace(env.NamespaceName).Get(ctx, candidate.WorkflowName, metav1.GetOptions{})
 	if err != nil || !sameObject(workflow, "argoproj.io/v1alpha1", "Workflow", env.NamespaceName, candidate.WorkflowName, candidate.WorkflowUID) || workflow.GetDeletionTimestamp() != nil {
+		return biz.RunAuthorityCandidate{}, biz.ErrRuntimeNotReady
+	}
+	if rootRejected && !rootAdmissionRejected(workflow, plan, runID, run, pods.Items) {
 		return biz.RunAuthorityCandidate{}, biz.ErrRuntimeNotReady
 	}
 	// A sole durably confirmed original Run permits owner-only recovery from
