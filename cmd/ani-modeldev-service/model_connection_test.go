@@ -32,7 +32,7 @@ func modelConnectionTestConfig(t *testing.T) *conf.GovernanceCommand {
 }
 
 func TestModelResourceFactorySharesExplicitLiveReaderAndOwnedCleanup(t *testing.T) {
-	client, reader, closeResources, err := loadModelResources(modelConnectionTestConfig(t))
+	client, reader, closeResources, err := loadModelResources(modelConnectionTestConfig(t), modelConnectionTestRuntime())
 	if err != nil || client == nil || reader == nil || closeResources == nil {
 		t.Fatal("complete live Model dependency rejected", err)
 	}
@@ -45,7 +45,7 @@ func TestModelResourceFactorySharesExplicitLiveReaderAndOwnedCleanup(t *testing.
 
 func TestModelResourceFactoryKeepsAbsentDependencyUnavailable(t *testing.T) {
 	for _, config := range []*conf.GovernanceCommand{nil, {}} {
-		client, reader, closeResources, err := loadModelResources(config)
+		client, reader, closeResources, err := loadModelResources(config, modelConnectionTestRuntime())
 		if err != nil || client != nil || reader != nil || closeResources == nil {
 			t.Fatal("absent Model manufactured a dependency", err)
 		}
@@ -59,7 +59,6 @@ func TestModelResourceFactoryRejectsAmbiguousIncompleteAndBorrowedMaterials(t *t
 		name   string
 		change func(*conf.GovernanceCommand)
 	}{
-		{"ambiguous controlled facts", func(c *conf.GovernanceCommand) { c.ControlledModelFacts = &conf.ControlledModelFacts{} }},
 		{"missing scope", func(c *conf.GovernanceCommand) { c.Model.BaseModelStorageScope = nil }},
 		{"wrong scope", func(c *conf.GovernanceCommand) { c.Model.BaseModelStorageScope.ApprovedPrefix = "../model" }},
 		{"borrowed identity", func(c *conf.GovernanceCommand) { c.Model.ClientDnsName = "ani-governance" }},
@@ -67,7 +66,7 @@ func TestModelResourceFactoryRejectsAmbiguousIncompleteAndBorrowedMaterials(t *t
 		t.Run(test.name, func(t *testing.T) {
 			c := modelConnectionTestConfig(t)
 			test.change(c)
-			client, reader, closeResources, err := loadModelResources(c)
+			client, reader, closeResources, err := loadModelResources(c, modelConnectionTestRuntime())
 			if err == nil || client != nil || reader != nil {
 				t.Fatal("invalid Model resources escaped factory")
 			}
@@ -78,10 +77,14 @@ func TestModelResourceFactoryRejectsAmbiguousIncompleteAndBorrowedMaterials(t *t
 
 func TestIntermediateCommandBuilderCannotOpenUnownedModelConnection(t *testing.T) {
 	c := modelConnectionTestConfig(t)
-	if _, err := buildCommandServerWithCapabilities(nil, c, nil, nil, nil, nil); err == nil {
+	if _, err := buildCommandServerWithCapabilities(nil, c, nil, nil, nil, nil, nil); err == nil {
 		t.Fatal("intermediate builder silently created a client without cleanup")
 	}
-	if _, err := buildCommandServerWithCapabilitiesAndModelFacts(nil, c, nil, nil, nil, nil, nil); err == nil {
+	if _, err := buildCommandServerWithCapabilitiesAndModelFacts(nil, c, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatal("live configuration accepted without shared read dependency")
 	}
+}
+
+func modelConnectionTestRuntime() *conf.ManagedRuntime {
+	return &conf.ManagedRuntime{Limits: &conf.RuntimeLimits{MaxContentBytes: 17179869184}}
 }

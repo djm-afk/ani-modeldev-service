@@ -51,7 +51,7 @@ func runtimeFixture(t *testing.T, lifetime ...time.Duration) (func() *pgxpool.Po
 	if _, err = repository.BindRunAuthority(ctx, authority); err != nil {
 		t.Fatal("runtime preflight authority", err)
 	}
-	workspace := biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, WorkSubpath: snapshot.Workspace.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 	startManagedRoleV21(t, lifecycle.New(pool), authority, "prepare")
 	t.Log("RUNTIME_PREFLIGHT PASS: real restricted PostgreSQL admission, dispatch and Run authority")
 	return open, admission, authority, workspace
@@ -175,8 +175,22 @@ func publicationFixture(t *testing.T, admission biz.Admission, authority biz.Run
 	version := "runtime-version-1"
 	publication := biz.RuntimePublication{ID: "ffffffff-1111-4222-8333-444444444444", LogicalKey: "main", ReceiptID: "runtime-receipt", Upload: biz.UploadCompletion{RunID: authority.RunID, WorkflowUID: authority.WorkflowUID, TaskID: "publish", PodUID: "upload-pod-uid", ContainerName: "main", CompletedAt: now, ObservedAt: now}, VerifiedAt: now}
 	var files []cpup01.OutputFile
-	for _, required := range admission.Snapshot.OutputContract.RequiredFiles {
-		file := cpup01.OutputFile{RelativePath: required.RelativePath, Role: required.Role, SizeBytes: 1, SHA256: strings.Repeat("2", 64)}
+	requiredFiles := append([]cpup01.RequiredOutput{}, admission.Snapshot.OutputContract.RequiredFiles...)
+	if admission.Snapshot.Kind == "FINETUNING" {
+		// Explicit synthetic collector observations at the repository boundary.
+		// The current contract has dynamic model/adapter inventories in addition
+		// to fixed reports; this fixture claims no training or byte verification.
+		requiredFiles = append(requiredFiles,
+			cpup01.RequiredOutput{RelativePath: "export/merged/config.json", Role: "HF_MODEL", InTar: true},
+			cpup01.RequiredOutput{RelativePath: "export/merged/model.safetensors", Role: "HF_MODEL", InTar: true},
+			cpup01.RequiredOutput{RelativePath: "export/merged/tokenizer.json", Role: "HF_MODEL", InTar: true},
+			cpup01.RequiredOutput{RelativePath: "export/merged/tokenizer_config.json", Role: "HF_MODEL", InTar: true},
+			cpup01.RequiredOutput{RelativePath: "training/adapter/adapter_config.json", Role: "LORA_ADAPTER"},
+			cpup01.RequiredOutput{RelativePath: "training/adapter/adapter_model.safetensors", Role: "LORA_ADAPTER"},
+		)
+	}
+	for _, required := range requiredFiles {
+		file := cpup01.OutputFile{RelativePath: required.RelativePath, Role: required.Role, InTar: required.InTar, SizeBytes: 1, SHA256: strings.Repeat("2", 64)}
 		files = append(files, file)
 		publication.Files = append(publication.Files, biz.PublishedRuntimeFile{ArtifactID: uuid.NewSHA1(uuid.NameSpaceOID, []byte(file.RelativePath)).String(), File: file, Object: cpup01.FixedObjectRef{StorageConnectionID: scope.StorageConnectionID, Bucket: scope.Bucket, Key: strings.TrimSuffix(scope.ApprovedPrefix, "/") + "/" + admission.ExecutionID + "/" + file.RelativePath, VersionID: &version, SizeBytes: file.SizeBytes, SHA256: file.SHA256}})
 	}

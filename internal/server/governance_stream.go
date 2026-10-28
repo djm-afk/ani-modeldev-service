@@ -31,6 +31,7 @@ func verifiedQueryMethods(query modeldevv1.ModelDevQueryServiceServer, extra Gov
 			modeldevv1.ModelDevQueryService_ListExecutionArtifacts_FullMethodName,
 			modeldevv1.ModelDevQueryService_AuthorizeArtifactDownload_FullMethodName,
 			modeldevv1.ModelDevQueryService_ListImplementations_FullMethodName,
+			modeldevv1.ModelDevQueryService_CheckFinetuningReadiness_FullMethodName,
 			modeldevv1.ModelDevQueryService_GetInputVersion_FullMethodName,
 			modeldevv1.ModelDevQueryService_ListInputVersions_FullMethodName,
 			modeldevv1.ModelDevQueryService_ListExecutionPods_FullMethodName,

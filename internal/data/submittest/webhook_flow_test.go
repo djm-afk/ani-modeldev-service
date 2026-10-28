@@ -57,25 +57,17 @@ func (f *completeFixture) admitModelDevSteps(t *testing.T) {
 	ns := f.workspace.NamespaceName
 	f.objects["/api/v1/namespaces/"+ns]["metadata"].(map[string]any)["labels"] = map[string]any{"ani.io/managed-by": "modeldev-flow-fixture"}
 	f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+ns+"/workflows/main-flow"]["metadata"].(map[string]any)["labels"] = map[string]any{"pipeline/runid": completeRunID}
-	oldPVC := f.workspace.PVCName
-	f.workspace.PVCName = "ani-kfp-workspace-" + f.request.Admission.ExecutionID
-	pvcBase := "/api/v1/namespaces/" + ns + "/persistentvolumeclaims/"
-	pvc := f.objects[pvcBase+oldPVC]
-	pvc["metadata"].(map[string]any)["name"] = f.workspace.PVCName
-	f.objects[pvcBase+f.workspace.PVCName] = pvc
-	delete(f.objects, pvcBase+oldPVC)
 	snapshot := f.request.Admission.Snapshot
-	release := conformance.ReleaseV1()
-	release.ReleaseID, release.PresetID = snapshot.Release.ReleaseID, snapshot.Release.PresetID
-	release.PipelineID, release.PipelineVersionID, release.PipelineIRSHA256 = snapshot.Implementation.PipelineID, snapshot.Implementation.PipelineVersionID, snapshot.Implementation.PipelineIRSHA256
-	release.Runtime, release.Resources, release.Workspace, release.OutputContract = snapshot.RuntimePlan.Reference(), snapshot.Resources, snapshot.Workspace, snapshot.OutputContract
-	release.Program.ImageVersionID, release.Program.ImageDigest, release.Program.Command = snapshot.Program.ImageVersionID, f.image, snapshot.Program.Command
-	raw, err := release.Canonical()
+	material := conformance.MaterialV21()
+	material.Implementation, material.Workspace, material.OutputContract = snapshot.Implementation, snapshot.Workspace, snapshot.OutputContract
+	material.Program.ImageID, material.Program.ImageVersion, material.Program.ImageScope = snapshot.Program.ImageID, snapshot.Program.ImageVersion, snapshot.Program.ImageScope
+	material.Program.ImageDigest, material.Program.Command = f.image, snapshot.Program.Command
+	raw, err := material.Canonical()
 	if err != nil {
 		t.Fatal(err)
 	}
-	releaseFile := filepath.Join(t.TempDir(), "release.json")
-	if err := os.WriteFile(releaseFile, raw, 0600); err != nil {
+	materialFile := filepath.Join(t.TempDir(), "material.json")
+	if err := os.WriteFile(materialFile, raw, 0600); err != nil {
 		t.Fatal(err)
 	}
 	componentImage := "registry.example.test/modeldev-step@sha256:" + strings.Repeat("a", 64)
@@ -83,7 +75,7 @@ func (f *completeFixture) admitModelDevSteps(t *testing.T) {
 	driverImage := "registry.example.test/kfp-driver@sha256:" + strings.Repeat("c", 64)
 	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion,
 		Bindings: []modeldevwebhook.NamespaceBinding{{Namespace: ns, NamespaceUID: f.workspace.NamespaceUID, OwnerLabel: modeldevwebhook.LabelBinding{Key: "ani.io/managed-by", Value: "modeldev-flow-fixture"}, ArgoCreator: "system:serviceaccount:kubeflow:argo", StepServiceAccount: snapshot.Environment.Identities.KFPStepServiceAccount, Profiles: []string{"cpu-v1"}, Driver: &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}}},
-		Profiles: []modeldevwebhook.Profile{{ID: "cpu-v1", Kind: "GENERAL_TRAINING", ReleaseFile: releaseFile, ReleaseSHA256: completeHash(raw), ComponentImage: componentImage, AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001, EphemeralStorageRequest: "1Gi", EphemeralStorageLimit: "2Gi"}}}
+		Profiles: []modeldevwebhook.Profile{{ID: "cpu-v1", Kind: "GENERAL_TRAINING", MaterialFile: materialFile, MaterialSHA256: completeHash(raw), ComponentImage: componentImage, AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001}}}
 	client, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", Timeout: 5 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
 	if err != nil {
 		t.Fatal(err)

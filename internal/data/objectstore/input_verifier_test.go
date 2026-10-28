@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
 )
@@ -35,7 +36,7 @@ func TestVerifyCSVReadsFixedVersionAndActualRegisteredShape(t *testing.T) {
 		_, _ = io.WriteString(w, payload)
 	}))
 	defer server.Close()
-	got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID, 32*1024*1024).VerifyCSV(context.Background(), scope, object)
+	got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID).VerifyCSV(context.Background(), scope, object)
 	if err != nil {
 		t.Fatalf("verify fixed CSV bytes: %v", err)
 	}
@@ -69,9 +70,6 @@ func TestVerifyCSVRejectsShapesTheRegisteredTrainerCannotConsume(t *testing.T) {
 		{"blank first row", "\r\n" + valid},
 		{"blank trailing row", valid + "\r\n"},
 		{"hexadecimal feature", strings.Replace(valid, "0.25", "0x1p-2", 1)},
-		// CPython csv.reader defaults to 128 Ki characters per field. This
-		// otherwise valid decimal remains below the full 32 MiB input budget.
-		{"feature exceeds registered Python field limit", strings.Replace(valid, "0.25", strings.Repeat(" ", 128*1024)+"0.25", 1)},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -81,7 +79,7 @@ func TestVerifyCSVRejectsShapesTheRegisteredTrainerCannotConsume(t *testing.T) {
 				_, _ = io.WriteString(w, tc.payload)
 			}))
 			defer server.Close()
-			got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID, 32*1024*1024).VerifyCSV(context.Background(), scope, object)
+			got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID).VerifyCSV(context.Background(), scope, object)
 			if !errors.Is(err, biz.ErrInputVerification) || !got.VerifiedAt.IsZero() || got.RowCount != 0 {
 				t.Fatal("trainer-incompatible bytes produced a verified input observation")
 			}
@@ -101,8 +99,8 @@ func TestVerifyCSVAcceptsActualNonFixedNonemptySampleCounts(t *testing.T) {
 				_, _ = io.WriteString(w, payload)
 			}))
 			defer server.Close()
-			got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID, 32<<20).VerifyCSV(context.Background(), scope, object)
-			if err != nil || got.RowCount != uint32(rows) || got.FeatureCount != 16 {
+			got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID).VerifyCSV(context.Background(), scope, object)
+			if err != nil || got.RowCount != int64(rows) || got.FeatureCount != 16 {
 				t.Fatalf("actual row count lost: got=%+v err=%v", got, err)
 			}
 		})
@@ -135,4 +133,30 @@ func inputCSVFixture(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return buffer.String()
+}
+
+func TestVerifyCSVAppliesLogicalRecordGuardInsteadOfDatasetOrFieldPolicy(t *testing.T) {
+	header := strings.Split(inputCSVFixture(t), "\r\n")[0] + "\r\n"
+	tail := "\"" + strings.Repeat(",0", 15) + ",1\r\n"
+	for _, extra := range []int{0, 1} {
+		row := "\"" + strings.Repeat("0", cpup01.MaxRecordBytes-1-len(tail)+extra) + tail
+		payload := header + row
+		scope, object := objectFixture(payload)
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("x-amz-version-id", "version-1")
+			_, _ = io.WriteString(w, payload)
+		}))
+		got, err := objectstore.NewVerifier(testS3Client(server), scope.StorageConnectionID).VerifyCSV(context.Background(), scope, object)
+		server.Close()
+		if extra == 0 {
+			if err != nil || got.RowCount != 1 || got.PreparedDataset.SizeBytes != int64(len(payload)) {
+				t.Fatalf("exact current logical-record guard rejected: %+v %v", got, err)
+			}
+		} else {
+			var violation *cpup01.LimitViolation
+			if !errors.As(err, &violation) || violation.Reason != "DATASET_RECORD_TOO_LARGE" || violation.Actual != int64(cpup01.MaxRecordBytes)+1 || violation.Limit != cpup01.MaxRecordBytes {
+				t.Fatalf("record guard lost actual/limit: %v", err)
+			}
+		}
+	}
 }

@@ -42,7 +42,7 @@ func TestOutputManifestBindsActualInventoryWithoutClaimingPublication(t *testing
 	if err := decoder.Decode(&decoded); err != nil {
 		t.Fatalf("manifest has unsupported or self-hash fields: %v", err)
 	}
-	if decoded.Schema != "ani.modeldev.output-manifest.v1" || decoded.StorageState != "WORKSPACE_ONLY" || decoded.TenantID != admission.TenantID || decoded.OperationID != admission.OperationID || decoded.ExecutionID != admission.ExecutionID || decoded.ExecutionSpecHash != admission.SpecHash || decoded.InputVersionID != admission.Snapshot.Input.InputVersionID || decoded.InputSHA256 != admission.Snapshot.Input.Object.SHA256 || decoded.ImplementationID != admission.Snapshot.Implementation.ImplementationID || decoded.ImageDigest != admission.Snapshot.Program.ImageDigest {
+	if decoded.Schema != "ani.modeldev.output-manifest.v3" || decoded.StorageState != "WORKSPACE_ONLY" || decoded.TenantID != admission.TenantID || decoded.OperationID != admission.OperationID || decoded.ExecutionID != admission.ExecutionID || decoded.ExecutionSpecHash != admission.SpecHash || decoded.InputVersionID != admission.Snapshot.Input.InputVersionID || decoded.InputSHA256 != admission.Snapshot.Input.Object.SHA256 || decoded.ImplementationID != admission.Snapshot.Implementation.ImplementationID || decoded.ImageDigest != admission.Snapshot.Program.ImageDigest {
 		t.Fatalf("manifest lost frozen binding: %+v", decoded)
 	}
 	wantFiles := []cpup01.OutputFile{files[1], files[0], files[2], files[3]}
@@ -64,7 +64,7 @@ func TestOutputManifestRejectsInvalidInventoryAndEnvelope(t *testing.T) {
 		{"missing file", func(_ *cpup01.AdmissionEnvelope, files *[]cpup01.OutputFile) { *files = (*files)[:3] }},
 		{"duplicate file", func(_ *cpup01.AdmissionEnvelope, files *[]cpup01.OutputFile) { (*files)[1] = (*files)[0] }},
 		{"extra file", func(_ *cpup01.AdmissionEnvelope, files *[]cpup01.OutputFile) {
-			*files = append(*files, cpup01.OutputFile{RelativePath: "result.json", Role: "SUMMARY", SizeBytes: 1, SHA256: strings.Repeat("a", 64)})
+			*files = append(*files, cpup01.OutputFile{RelativePath: "result.json", Role: "SUMMARY", InTar: true, SizeBytes: 1, SHA256: strings.Repeat("a", 64)})
 		}},
 		{"traversal", func(_ *cpup01.AdmissionEnvelope, files *[]cpup01.OutputFile) {
 			(*files)[0].RelativePath = "../model.pt"
@@ -72,7 +72,7 @@ func TestOutputManifestRejectsInvalidInventoryAndEnvelope(t *testing.T) {
 		{"role changed", func(_ *cpup01.AdmissionEnvelope, files *[]cpup01.OutputFile) { (*files)[0].Role = "SUMMARY" }},
 		{"empty file", func(_ *cpup01.AdmissionEnvelope, files *[]cpup01.OutputFile) { (*files)[0].SizeBytes = 0 }},
 		{"oversize", func(a *cpup01.AdmissionEnvelope, files *[]cpup01.OutputFile) {
-			(*files)[0].SizeBytes = a.Snapshot.OutputContract.MaxTotalBytes + 1
+			(*files)[0].SizeBytes = a.Snapshot.Limits.MaxContentBytes + 1
 		}},
 		{"etag instead of sha", func(_ *cpup01.AdmissionEnvelope, files *[]cpup01.OutputFile) {
 			(*files)[0].SHA256 = "d41d8cd98f00b204e9800998ecf8427e-2"
@@ -105,10 +105,10 @@ func manifestFixture(t *testing.T) (cpup01.AdmissionEnvelope, []cpup01.OutputFil
 	specHash, _ := snapshot.Digest()
 	admission := cpup01.AdmissionEnvelope{TenantID: snapshot.IdentityRef.TenantID, Actor: snapshot.IdentityRef.Actor, OperationID: snapshot.IdentityRef.OperationID, ExecutionID: snapshot.IdentityRef.ExecutionID, Intent: intent, IntentHash: hash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: snapshot.Timing.AcceptedAt}
 	files := []cpup01.OutputFile{
-		{RelativePath: "model.pt", Role: "CHECKPOINT", SizeBytes: 17, SHA256: strings.Repeat("a", 64)},
-		{RelativePath: "metrics.jsonl", Role: "METRICS", SizeBytes: 9, SHA256: strings.Repeat("b", 64)},
-		{RelativePath: "model_config.json", Role: "MODEL_CONFIG", SizeBytes: 8, SHA256: strings.Repeat("c", 64)},
-		{RelativePath: "summary.json", Role: "SUMMARY", SizeBytes: 7, SHA256: strings.Repeat("d", 64)},
+		{RelativePath: "model.pt", Role: "CHECKPOINT", InTar: true, SizeBytes: 17, SHA256: strings.Repeat("a", 64)},
+		{RelativePath: "metrics.jsonl", Role: "METRICS", InTar: true, SizeBytes: 9, SHA256: strings.Repeat("b", 64)},
+		{RelativePath: "model_config.json", Role: "MODEL_CONFIG", InTar: true, SizeBytes: 8, SHA256: strings.Repeat("c", 64)},
+		{RelativePath: "summary.json", Role: "SUMMARY", InTar: true, SizeBytes: 7, SHA256: strings.Repeat("d", 64)},
 	}
 	return admission, files
 }

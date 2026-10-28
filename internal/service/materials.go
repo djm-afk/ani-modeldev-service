@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"strconv"
 	"time"
 
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
@@ -26,9 +25,34 @@ func NewManagement(materials *biz.ManagedMaterials) *Management {
 	return &Management{materials: materials}
 }
 func materialsError(err error, requestID string) error {
+	var violation *cpup01.LimitViolation
 	switch {
 	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
 		return status.FromContextError(err).Err()
+	case errors.Is(err, biz.ErrInputValidationBusy):
+		return commandError(codes.ResourceExhausted, modeldevv1.ErrorReason_ERROR_REASON_INPUT_VALIDATION_BUSY, "input validation busy", requestID)
+	case errors.As(err, &violation) && violation != nil:
+		var reason modeldevv1.ErrorReason
+		switch violation.Reason {
+		case "CONTENT_LIMIT_EXCEEDED":
+			reason = modeldevv1.ErrorReason_ERROR_REASON_CONTENT_LIMIT_EXCEEDED
+		case "STRUCTURE_LIMIT_EXCEEDED":
+			reason = modeldevv1.ErrorReason_ERROR_REASON_STRUCTURE_LIMIT_EXCEEDED
+		case "DATASET_RECORD_TOO_LARGE":
+			reason = modeldevv1.ErrorReason_ERROR_REASON_DATASET_RECORD_TOO_LARGE
+		default:
+			return queryError(err, requestID)
+		}
+		failure := status.New(codes.FailedPrecondition, violation.Reason)
+		detailed, detailErr := failure.WithDetails(&modeldevv1.ErrorDetail{Reason: reason, SafeMessage: violation.Reason, CorrelationId: requestID, Kind: violation.Kind, LimitName: violation.LimitName, Actual: &violation.Actual, Limit: &violation.Limit})
+		if detailErr != nil {
+			return failure.Err()
+		}
+		return detailed.Err()
+	case errors.Is(err, biz.ErrInputSourceUnavailable):
+		return queryError(err, requestID)
+	case errors.Is(err, biz.ErrInputVerification):
+		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_DATASET_INVALID, "dataset content invalid", requestID)
 	case errors.Is(err, biz.ErrInvalidAdmission), errors.Is(err, biz.ErrInvalidInput), errors.Is(err, cpup01.ErrInvalidArgument):
 		return status.Error(codes.InvalidArgument, "invalid managed material request")
 	case errors.Is(err, biz.ErrInputNotFound):
@@ -57,7 +81,7 @@ func (m *Management) ImportCSV(ctx context.Context, r *modeldevv1.ImportCSVReque
 		return nil, status.Error(codes.InvalidArgument, "fixed object version required")
 	}
 	object := cpup01.FixedObjectRef{StorageConnectionID: r.Object.StorageConnectionId, Bucket: r.Object.Bucket, Key: r.Object.Key, VersionID: &version.VersionId, SizeBytes: r.Object.SizeBytes, SHA256: r.Object.Sha256}
-	value, err := m.materials.ImportCSV(ctx, biz.InputImport{TenantID: scope.TenantID, RequestID: scope.RequestID, Actor: scope.Actor, InputVersionID: r.InputVersionId, RequestedAt: r.RequestedAt.AsTime(), Object: object}, r.ImplementationId)
+	value, err := m.materials.ImportCSV(ctx, biz.InputImport{Format: "CSV", TenantID: scope.TenantID, RequestID: scope.RequestID, Actor: scope.Actor, InputVersionID: r.InputVersionId, RequestedAt: r.RequestedAt.AsTime(), Object: object}, r.ImplementationId)
 	if err != nil {
 		return nil, materialsError(err, scope.RequestID)
 	}
@@ -76,9 +100,13 @@ func inputVersionView(v biz.InputVersion) *modeldevv1.InputVersionView {
 	if v.Verification != nil {
 		out.RowCount = v.Verification.RowCount
 		out.FeatureCount = v.Verification.FeatureCount
+		facts := v.Verification.PreparedDataset
+		out.PreparedDataset = &trainingv1.PreparedDatasetFacts{Format: facts.Format, TransformId: facts.TransformID, SizeBytes: facts.SizeBytes, Sha256: facts.SHA256, RowCount: facts.RowCount}
 	}
 	if v.AlpacaVerification != nil {
 		out.RowCount = v.AlpacaVerification.RowCount
+		facts := v.AlpacaVerification.PreparedDataset
+		out.PreparedDataset = &trainingv1.PreparedDatasetFacts{Format: facts.Format, TransformId: facts.TransformID, SizeBytes: facts.SizeBytes, Sha256: facts.SHA256, RowCount: facts.RowCount}
 	}
 	if v.Failure != nil {
 		out.Failure = &modeldevv1.ErrorDetail{Reason: modeldevv1.ErrorReason_ERROR_REASON_INPUT_NOT_READY, SafeMessage: string(v.Failure.Code)}
@@ -211,6 +239,9 @@ func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImple
 	if q == nil || q.materials == nil {
 		return nil, queryError(biz.ErrPersistence, scope.RequestID)
 	}
+	if r.DeviceMode == nil || (*r.DeviceMode != "cpu" && *r.DeviceMode != "gpu") {
+		return nil, status.Error(codes.InvalidArgument, "explicit cpu or gpu device_mode required")
+	}
 	if r.Kind != nil && *r.Kind == trainingv1.ExecutionKind_EXECUTION_KIND_UNSPECIFIED {
 		return nil, status.Error(codes.InvalidArgument, "invalid implementation kind")
 	}
@@ -262,7 +293,7 @@ func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImple
 		case trainingv1.ExecutionKind_EXECUTION_KIND_FINETUNING:
 			view.Name = "LoRA supervised finetuning"
 		}
-		for _, mode := range []string{"cpu", "gpu"} {
+		for _, mode := range []string{*r.DeviceMode} {
 			if id == "builtin.sft_lora" && q.models == nil {
 				continue
 			}
@@ -270,12 +301,14 @@ func (q *Query) ListImplementations(ctx context.Context, r *modeldevv1.ListImple
 			if err == nil {
 				view.SupportedDeviceModes = append(view.SupportedDeviceModes, mode)
 				if material.Finetuning != nil {
-					for _, rule := range view.ParameterRules {
-						if rule.Name == "cutoff_len" {
-							rule.ValidationDescription += "; installed " + mode + " implementation upper bound=" + strconv.FormatInt(material.Finetuning.MaxSequenceLength, 10)
-						}
+					capabilities, err := contractpb.EncodeRuntimeCapabilities(material.Finetuning.RuntimeCapabilities)
+					if err != nil {
+						return nil, materialsError(biz.ErrImplementationUnavailable, scope.RequestID)
 					}
+					view.RuntimeCapabilities = capabilities
+					view.RuntimeCapabilitiesSha256, _ = material.Finetuning.RuntimeCapabilities.Digest()
 				}
+
 			} else if !errors.Is(err, biz.ErrImplementationUnavailable) && !errors.Is(err, biz.ErrAdmissionEnvironmentNotReady) {
 				return nil, materialsError(err, scope.RequestID)
 			}

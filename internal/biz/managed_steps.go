@@ -44,7 +44,7 @@ type ManagedRunVerifier interface {
 }
 
 // ManagedTaskIdentityResolver obtains the real logical task ID from verified
-// Run and workload membership. Legacy verifiers may omit this capability.
+// Run and workload membership. It is required at service construction.
 type ManagedTaskIdentityResolver interface {
 	ResolveManagedTaskID(context.Context, PipelineDispatchPlan, ManagedStepAssociation, string) (string, error)
 }
@@ -56,13 +56,18 @@ type ManagedSteps struct {
 	executions ExecutionRepository
 	workloads  ManagedWorkloadVerifier
 	runs       ManagedRunVerifier
+	tasks      ManagedTaskIdentityResolver
 }
 
 func NewManagedSteps(repository RunAuthorityRepository, executions ExecutionRepository, workloads ManagedWorkloadVerifier, runs ManagedRunVerifier) (*ManagedSteps, error) {
 	if repository == nil || executions == nil || workloads == nil || runs == nil {
 		return nil, ErrManagedStepUnavailable
 	}
-	return &ManagedSteps{repository: repository, executions: executions, workloads: workloads, runs: runs}, nil
+	tasks, ok := runs.(ManagedTaskIdentityResolver)
+	if !ok {
+		return nil, ErrManagedStepUnavailable
+	}
+	return &ManagedSteps{repository: repository, executions: executions, workloads: workloads, runs: runs, tasks: tasks}, nil
 }
 
 func (steps *ManagedSteps) Begin(ctx context.Context, token string, request BeginManagedExecutionRequest) (BeginManagedExecutionResult, error) {

@@ -107,11 +107,11 @@ func TestOperationsMTLSRequiresExactMethodAndTenantScope(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	steps, err := biz.NewManagedSteps(dispatch, repository, identity, runs)
+	proof := runtimeproof.New(kube, runs, nil, dispatch)
+	steps, err := biz.NewManagedSteps(dispatch, repository, identity, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	proof := runtimeproof.New(kube, runs, nil, dispatch)
 	runtime, err := biz.NewManagedRuntime(steps, lifecycle.New(pool), trainer.New(kube), proof, proof)
 	if err != nil {
 		t.Fatal(err)
@@ -252,11 +252,11 @@ func TestOperationsCleanupDurablyAuditsAndBlocksUnresolvedReplay(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	steps, err := biz.NewManagedSteps(dispatch, reader, identity, runs)
+	proof := runtimeproof.New(kube, runs, nil, dispatch)
+	steps, err := biz.NewManagedSteps(dispatch, reader, identity, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	proof := runtimeproof.New(kube, runs, nil, dispatch)
 	runtime, err := biz.NewManagedRuntime(steps, lifecycle.New(reopened), trainer.New(kube), proof, proof)
 	if err != nil {
 		t.Fatal(err)

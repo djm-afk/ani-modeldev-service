@@ -18,19 +18,48 @@ type implementationQueryFacts struct {
 	timing                 cpup01.TimingConfiguration
 	reads                  int
 	missingFinetuningFacts bool
+	bothModes              bool
 }
 
 func (f *implementationQueryFacts) ReadImplementationMaterial(_ context.Context, id, device string) (cpup01.ImplementationMaterial, error) {
-	if device != "cpu" {
+	if device != "cpu" && !(f.bothModes && device == "gpu") {
 		return cpup01.ImplementationMaterial{}, biz.ErrImplementationUnavailable
 	}
 	if id == "builtin.mlp" {
 		return conformance.MaterialV21(), nil
 	}
 	if id == "builtin.sft_lora" {
-		return conformance.FinetuningMaterialV21(), nil
+		material := conformance.FinetuningMaterialV21()
+		if device == "gpu" {
+			material.Program.ImageDigest = "registry.example.test/gpu/runtime@sha256:" + strings.Repeat("a", 64)
+			material.Finetuning.RuntimeCapabilities.ImageDigest = material.Program.ImageDigest
+			material.Finetuning.ExportProgram.ImageDigest = material.Program.ImageDigest
+			material.Finetuning.VerifyProgram.ImageDigest = material.Program.ImageDigest
+		}
+		return material, nil
 	}
 	return cpup01.ImplementationMaterial{}, biz.ErrImplementationUnavailable
+}
+
+func TestImplementationQueryKeepsModeCapabilitiesSeparate(t *testing.T) {
+	q, f := newImplementationQuery()
+	f.bothModes = true
+	cpu, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	mode := "gpu"
+	gpu, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: &mode})
+	if err != nil {
+		t.Fatal(err)
+	}
+	left, right := cpu.Implementations[1], gpu.Implementations[1]
+	if len(right.SupportedDeviceModes) != 1 || right.SupportedDeviceModes[0] != "gpu" || left.RuntimeCapabilities.ImageDigest == right.RuntimeCapabilities.ImageDigest || left.RuntimeCapabilitiesSha256 == right.RuntimeCapabilitiesSha256 {
+		t.Fatal("CPU/GPU runtime capability identities merged")
+	}
+	if _, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{}); status.Code(err) != codes.InvalidArgument {
+		t.Fatal("missing compute mode silently chose a runtime")
+	}
 }
 func (f *implementationQueryFacts) ReadAdmissionFacts(_ context.Context, tenant, id string) (biz.TenantAdmissionFacts, error) {
 	f.reads++
@@ -43,7 +72,7 @@ func (f *implementationQueryFacts) ReadAdmissionFacts(_ context.Context, tenant,
 func TestImplementationQueryKeepsInstalledCPUVisibleWithoutLoRAFacts(t *testing.T) {
 	q, f := newImplementationQuery()
 	f.missingFinetuningFacts = true
-	response, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{})
+	response, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU()})
 	if err != nil || len(response.Implementations) != 2 || !response.Implementations[0].Available || response.Implementations[1].Available || response.Implementations[1].StepTimeoutSeconds != 900 {
 		t.Fatal("uninstalled implementation hid real CPU facts", err)
 	}
@@ -66,14 +95,14 @@ func (directoryModelFacts) ResolveFinetuningModelFacts(context.Context, string, 
 func TestImplementationDirectoryRequiresActualModelDependencyForLoRA(t *testing.T) {
 	q, _ := newImplementationQuery()
 	q.WithFinetuningFacts(nil)
-	response, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{})
+	response, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU()})
 	if err != nil || len(response.Implementations) != 2 || !response.Implementations[0].Available || response.Implementations[1].Available || len(response.Implementations[1].SupportedDeviceModes) != 0 {
 		t.Fatal("installed program alone fabricated a Model dependency", err)
 	}
 }
 func TestImplementationQueryProjectsSameDefaultsAndFiniteRules(t *testing.T) {
 	q, _ := newImplementationQuery()
-	response, e := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{})
+	response, e := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU()})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -87,11 +116,10 @@ func TestImplementationQueryProjectsSameDefaultsAndFiniteRules(t *testing.T) {
 		want := 4
 		if view.ImplementationId == "builtin.sft_lora" {
 			want = 9
-			for _, rule := range view.ParameterRules {
-				if rule.Name == "cutoff_len" && !strings.Contains(rule.ValidationDescription, "cpu implementation upper bound=32768") {
-					t.Fatal("installed program bound hidden from rules query")
-				}
+			if view.RuntimeCapabilities == nil || view.RuntimeCapabilities.ImageDigest != conformance.FinetuningRuntimeCapabilities().ImageDigest || view.RuntimeCapabilitiesSha256 == "" {
+				t.Fatal("mode-specific actual capabilities missing")
 			}
+
 		}
 		if len(view.ParameterRules) != want {
 			t.Fatal("incomplete rules")
@@ -105,10 +133,10 @@ func TestImplementationQueryProjectsSameDefaultsAndFiniteRules(t *testing.T) {
 }
 func TestImplementationQueryAuthorizationUnknownFieldsAndPagination(t *testing.T) {
 	q, f := newImplementationQuery()
-	if _, e := q.ListImplementations(context.Background(), &modeldevv1.ListImplementationsRequest{}); status.Code(e) != codes.Unauthenticated || f.reads != 0 {
+	if _, e := q.ListImplementations(context.Background(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU()}); status.Code(e) != codes.Unauthenticated || f.reads != 0 {
 		t.Fatal("query read facts without authority")
 	}
-	request := &modeldevv1.ListImplementationsRequest{}
+	request := &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU()}
 	// Field 6 is not declared by the catalogue request, so an unknown wire field
 	// must be rejected instead of being ignored.
 	request.ProtoReflect().SetUnknown([]byte{0x32, 0})
@@ -116,12 +144,12 @@ func TestImplementationQueryAuthorizationUnknownFieldsAndPagination(t *testing.T
 		t.Fatal("unknown field accepted")
 	}
 	page, size := uint32(2), uint32(1)
-	response, e := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{Page: &modeldevv1.PageRequest{Page: &page, PageSize: &size}})
+	response, e := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU(), Page: &modeldevv1.PageRequest{Page: &page, PageSize: &size}})
 	if e != nil || response.Total != 2 || len(response.Implementations) != 1 || response.Implementations[0].ImplementationId != "builtin.sft_lora" {
 		t.Fatal("pagination rebuilt total", e)
 	}
 	zero := uint32(0)
-	if _, e := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{Page: &modeldevv1.PageRequest{Page: &zero}}); status.Code(e) != codes.InvalidArgument {
+	if _, e := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU(), Page: &modeldevv1.PageRequest{Page: &zero}}); status.Code(e) != codes.InvalidArgument {
 		t.Fatal("zero page accepted")
 	}
 }
@@ -141,7 +169,7 @@ func TestImplementationQueryFiltersByKindBeforeTotalAndPage(t *testing.T) {
 			// pageSize=2 covers both entries unfiltered, so a page that still
 			// reported total=2 would prove the filter ran after pagination.
 			page, size := uint32(2), uint32(2)
-			response, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{
+			response, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU(),
 				Page: &modeldevv1.PageRequest{Page: &page, PageSize: &size},
 				Kind: &test.kind,
 			})
@@ -149,7 +177,7 @@ func TestImplementationQueryFiltersByKindBeforeTotalAndPage(t *testing.T) {
 				t.Fatalf("filtered total or page window wrong: %v", err)
 			}
 			first, size2 := uint32(1), uint32(1)
-			response, err = q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{
+			response, err = q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU(),
 				Page: &modeldevv1.PageRequest{Page: &first, PageSize: &size2},
 				Kind: &test.kind,
 			})
@@ -159,7 +187,7 @@ func TestImplementationQueryFiltersByKindBeforeTotalAndPage(t *testing.T) {
 		})
 	}
 	unspecified := trainingv1.ExecutionKind_EXECUTION_KIND_UNSPECIFIED
-	if _, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{Kind: &unspecified}); status.Code(err) != codes.InvalidArgument {
+	if _, err := q.ListImplementations(implementationQueryContext(), &modeldevv1.ListImplementationsRequest{DeviceMode: implementationCPU(), Kind: &unspecified}); status.Code(err) != codes.InvalidArgument {
 		t.Fatal("UNSPECIFIED kind accepted as a filter")
 	}
 }
@@ -181,3 +209,5 @@ func TestHistoricalExecutionProjectionPreservesOriginalParametersAndTiming(t *te
 		t.Fatal("original observation changed")
 	}
 }
+
+func implementationCPU() *string { mode := "cpu"; return &mode }

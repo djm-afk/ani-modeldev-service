@@ -45,7 +45,7 @@ func TestFinetuningImportPersistsRealVerificationAndReplaysFixedObject(t *testin
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	i := biz.NewInputImporter(repo, managedImportVerifier(server, r.Scope.StorageConnectionID))
+	i := managedTestImporter(repo, managedImportVerifier(server, r.Scope.StorageConnectionID))
 	got, err := i.ImportFinetuningDataset(ctx, r)
 	if err != nil || got.State != biz.InputStateReady || got.Verification != nil || got.AlpacaVerification == nil || got.AlpacaVerification.RowCount != 2 || got.AlpacaVerification.ValidateFor(r) != nil {
 		t.Fatalf("JSON did not become verified READY: %+v %v", got, err)
@@ -63,9 +63,9 @@ func TestFinetuningImportPersistsRealVerificationAndReplaysFixedObject(t *testin
 	changed = *got.AlpacaVerification
 	changed.RowCount = 4294967295
 	if version, err := reader.RecordVerifiedAlpaca(ctx, r, changed); !errors.Is(err, biz.ErrInputVerification) || !reflect.DeepEqual(version, biz.InputVersion{}) {
-		t.Fatal("JSON proof exceeded PostgreSQL int4 storage", version, err)
+		t.Fatal("JSON proof contradicted its prepared row count", version, err)
 	}
-	replay, err := biz.NewInputImporter(reader, managedImportVerifier(server, r.Scope.StorageConnectionID)).ImportFinetuningDataset(ctx, r)
+	replay, err := managedTestImporter(reader, managedImportVerifier(server, r.Scope.StorageConnectionID)).ImportFinetuningDataset(ctx, r)
 	if err != nil || !reflect.DeepEqual(got, replay) || reads.Load() != 1 {
 		t.Fatal("replay reread or replaced original bytes")
 	}
@@ -75,7 +75,7 @@ func TestFinetuningImportPersistsRealVerificationAndReplaysFixedObject(t *testin
 		t.Fatal("same identity changed its fixed JSON object")
 	}
 	other = r
-	other.Format = ""
+	other.Format = "CSV"
 	if _, err := i.ImportCSV(ctx, other); !errors.Is(err, biz.ErrInputConflict) || reads.Load() != 1 {
 		t.Fatal("same import was reinterpreted as CSV")
 	}
@@ -116,7 +116,7 @@ func TestFinetuningImportRejectsContentDurablyWithoutCreatingReady(t *testing.T)
 				_, _ = io.WriteString(w, payload)
 			}))
 			defer server.Close()
-			i := biz.NewInputImporter(repo, managedImportVerifier(server, r.Scope.StorageConnectionID))
+			i := managedTestImporter(repo, managedImportVerifier(server, r.Scope.StorageConnectionID))
 			got, err := i.ImportFinetuningDataset(context.Background(), r)
 			if !errors.Is(err, biz.ErrInputVerification) || got.State != biz.InputStateRejected || got.AlpacaVerification != nil {
 				t.Fatalf("invalid content was not rejected: %+v %v", got, err)

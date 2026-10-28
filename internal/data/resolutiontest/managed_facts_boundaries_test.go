@@ -80,9 +80,9 @@ func TestManagedFactsPinsExactBytesBoundsSourcesAndRejectsDuplicateKeys(t *testi
 	requireManagedFactsLoadFailure(t, f.ctx, []admissionfacts.FileSource{original, changed}, admissionfacts.ErrInvalidFacts)
 	requireManagedFactsLoadFailure(t, f.ctx, nil, admissionfacts.ErrInvalidFacts)
 	requireManagedFactsLoadFailure(t, f.ctx, []admissionfacts.FileSource{pinManagedFactsBytes(t, nil)}, admissionfacts.ErrInvalidFacts)
-	maximum := append(bytes.Clone(raw), bytes.Repeat([]byte{' '}, 64*1024-len(raw))...)
+	maximum := append(bytes.Clone(raw), bytes.Repeat([]byte{' '}, cpup01.MaxMaterialBytes-len(raw))...)
 	if _, e := admissionfacts.Load(f.ctx, []admissionfacts.FileSource{pinManagedFactsBytes(t, maximum)}); e != nil {
-		t.Fatal("64KiB valid source rejected", e)
+		t.Fatal("valid source at current material limit rejected", e)
 	}
 	requireManagedFactsLoadFailure(t, f.ctx, []admissionfacts.FileSource{pinManagedFactsBytes(t, append(maximum, ' '))}, admissionfacts.ErrInvalidFacts)
 	sources := make([]admissionfacts.FileSource, 65)

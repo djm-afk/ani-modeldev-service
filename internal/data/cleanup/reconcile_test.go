@@ -290,7 +290,7 @@ func newCleanupResolutionFixture(t *testing.T) cleanupResolutionFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
-	workspace := biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "original-workspace", PVCUID: "pvc-uid", InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, PreparedManifestBytes: 1, PreparedManifestSHA256: strings.Repeat("b", 64)}
+	workspace := biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "original-workspace", PVCUID: "pvc-uid", InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, WorkSubpath: snapshot.Workspace.WorkSubpath, PreparedManifestBytes: 1, PreparedManifestSHA256: strings.Repeat("b", 64)}
 	training, err := biz.FreezeTrainingPlan(execution, workspace, execution.AcceptedAt)
 	if err != nil {
 		t.Fatal(err)

@@ -20,6 +20,7 @@ func ValidatePodTemplate(expected corev1.PodSpec, actual corev1.PodSpec) error {
 	wanted, worker := expected.Containers[0], actual.Containers[0]
 	if worker.Name != wanted.Name || worker.Image != wanted.Image || !reflect.DeepEqual(worker.Command, wanted.Command) ||
 		!reflect.DeepEqual(worker.Args, wanted.Args) || worker.WorkingDir != wanted.WorkingDir ||
+		!sameTrainingEnvironment(wanted.Env, worker.Env) || !reflect.DeepEqual(worker.EnvFrom, wanted.EnvFrom) ||
 		!reflect.DeepEqual(worker.VolumeMounts, wanted.VolumeMounts) || !reflect.DeepEqual(worker.SecurityContext, wanted.SecurityContext) ||
 		!reflect.DeepEqual(worker.Lifecycle, wanted.Lifecycle) || !reflect.DeepEqual(worker.LivenessProbe, wanted.LivenessProbe) ||
 		!reflect.DeepEqual(worker.ReadinessProbe, wanted.ReadinessProbe) || !reflect.DeepEqual(worker.StartupProbe, wanted.StartupProbe) ||
@@ -104,16 +105,52 @@ func ValidatePodResources(expected map[string]string, pod *unstructured.Unstruct
 		return biz.ErrRuntimeConflict
 	}
 	environment, _, err := unstructured.NestedSlice(container, "env")
-	if err != nil || len(environment) > 1 {
+	if err != nil {
 		return biz.ErrRuntimeConflict
 	}
-	if len(environment) == 1 {
-		entry, ok := environment[0].(map[string]any)
-		if !ok || entry["name"] != "JOB_COMPLETION_INDEX" || len(entry) != 2 {
+	var actualEnv []corev1.EnvVar
+	for _, value := range environment {
+		entry, ok := value.(map[string]any)
+		if !ok || len(entry) != 2 {
 			return biz.ErrRuntimeConflict
 		}
-		field, found, err := unstructured.NestedMap(entry, "valueFrom", "fieldRef")
-		if err != nil || !found || field["fieldPath"] != "metadata.labels['batch.kubernetes.io/job-completion-index']" || field["apiVersion"] != "v1" || len(field) != 2 {
+		if entry["name"] == "JOB_COMPLETION_INDEX" {
+			source, ok := entry["valueFrom"].(map[string]any)
+			if !ok || len(source) != 1 {
+				return biz.ErrRuntimeConflict
+			}
+			field, ok := source["fieldRef"].(map[string]any)
+			if !ok || len(field) != 2 {
+				return biz.ErrRuntimeConflict
+			}
+		} else {
+			if _, ok := entry["value"].(string); !ok {
+				return biz.ErrRuntimeConflict
+			}
+		}
+		var variable corev1.EnvVar
+		if runtime.DefaultUnstructuredConverter.FromUnstructured(entry, &variable) != nil {
+			return biz.ErrRuntimeConflict
+		}
+		actualEnv = append(actualEnv, variable)
+	}
+	// Resource validation also rejects environment injection; the executable
+	// comparison independently checks the frozen literal values.
+	allowed := map[string]string{"TMPDIR": "/workspace/work/train/tmp", "HF_HOME": "/workspace/work/train/hf", "HF_DATASETS_CACHE": "/workspace/work/train/hf/datasets", "MPLCONFIGDIR": "/workspace/work/train/matplotlib"}
+	seen := map[string]bool{}
+	for _, entry := range actualEnv {
+		if seen[entry.Name] {
+			return biz.ErrRuntimeConflict
+		}
+		seen[entry.Name] = true
+		if entry.Name == "JOB_COMPLETION_INDEX" {
+			if !completionIndexEnvironment(entry) {
+				return biz.ErrRuntimeConflict
+			}
+			continue
+		}
+		wanted, ok := allowed[entry.Name]
+		if !ok || entry.Value != wanted || entry.ValueFrom != nil {
 			return biz.ErrRuntimeConflict
 		}
 	}
@@ -124,6 +161,38 @@ func ValidatePodResources(expected map[string]string, pod *unstructured.Unstruct
 		}
 	}
 	return nil
+}
+
+// Job controller may append only its standard downward-API coordination
+// variable. All application environment must equal the immutable Runtime plan.
+func completionIndexEnvironment(value corev1.EnvVar) bool {
+	return value.Name == "JOB_COMPLETION_INDEX" && value.Value == "" && value.ValueFrom != nil && value.ValueFrom.FieldRef != nil &&
+		value.ValueFrom.FieldRef.APIVersion == "v1" && value.ValueFrom.FieldRef.FieldPath == "metadata.labels['batch.kubernetes.io/job-completion-index']" &&
+		value.ValueFrom.ResourceFieldRef == nil && value.ValueFrom.ConfigMapKeyRef == nil && value.ValueFrom.SecretKeyRef == nil
+}
+
+func sameTrainingEnvironment(expected, actual []corev1.EnvVar) bool {
+	filtered := make([]corev1.EnvVar, 0, len(actual))
+	coordination := false
+	for _, variable := range actual {
+		if variable.Name == "JOB_COMPLETION_INDEX" {
+			if coordination || !completionIndexEnvironment(variable) {
+				return false
+			}
+			coordination = true
+		} else {
+			filtered = append(filtered, variable)
+		}
+	}
+	if len(expected) != len(filtered) {
+		return false
+	}
+	for i := range expected {
+		if !reflect.DeepEqual(expected[i], filtered[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 func sameResourceVector(expected map[string]string, actual map[string]any) bool {

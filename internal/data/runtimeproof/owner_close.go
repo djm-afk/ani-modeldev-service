@@ -125,13 +125,9 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 		if (code == nil && abort == nil) || account != environment.Identities.KFPStepServiceAccount || seenNames[pod.GetName()] || seenUIDs[string(pod.GetUID())] {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeConflict
 		}
-		// Argo 3.7.8 common.AnnotationKeyNodeID defines the Pod-name fallback
-		// for older Pod naming. Ownership is checked before using the annotation.
+		// The current native node ID is mandatory independently of Pod name.
 		nodeID := pod.GetAnnotations()["workflows.argoproj.io/node-id"]
-		if nodeID == "" {
-			nodeID = pod.GetName()
-		}
-		if !nodes[nodeID] || seenNodes[nodeID] {
+		if nodeID == "" || !nodes[nodeID] || seenNodes[nodeID] {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 		}
 		seenNames[pod.GetName()], seenUIDs[string(pod.GetUID())], seenNodes[nodeID] = true, true, true
@@ -201,6 +197,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	if err != nil || !sameObject(current, "argoproj.io/v1alpha1", "Workflow", environment.NamespaceName, authority.WorkflowName, authority.WorkflowUID) || current.GetDeletionTimestamp() != nil || current.GetResourceVersion() != proof.WorkflowResourceVersion {
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 	}
+
 	sort.Slice(evidence.Resources, func(i, j int) bool { return evidence.Resources[i].UID < evidence.Resources[j].UID })
 	evidence.ObservedAt = time.Now().UTC()
 	return evidence, nil

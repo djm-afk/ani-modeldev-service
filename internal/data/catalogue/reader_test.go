@@ -55,7 +55,7 @@ func TestInstalledFiniteImplementationMaterialHasExactBytesAndFreshCopies(t *tes
 	}
 	// Installing another finite device file cannot replace the CPU selection.
 	other := conformance.MaterialV21()
-	other.Program.ImageVersionID = "66666666-6666-4666-8666-666666666666"
+	other.Program.ImageID = "img_66666666666666666666666666666666"
 	otherRaw, err := other.Canonical()
 	if err != nil {
 		t.Fatal(err)

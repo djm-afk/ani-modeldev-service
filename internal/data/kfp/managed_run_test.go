@@ -18,12 +18,14 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
 )
 
-func TestManagedRunLegacyFieldStillRequiresFrozenRun(t *testing.T) {
+func TestManagedRunRejectsTopLevelPodNameAndKeepsFrozenBinding(t *testing.T) {
 	input := fixtureCreateRequest(t, fixtureAdmission(t))
 	association := biz.ManagedStepAssociation{RunID: "55555555-6666-4777-8888-999999999999", PodName: "managed-prepare"}
-	// Legacy direct-name compatibility only. The captured-response test below
-	// demonstrates why production must resolve real Workflow node references.
+	// Current responses expose native child-node references; a top-level Pod
+	// name is a retired identity format, tested only as a rejection.
 	valid := `{"run_id":"55555555-6666-4777-8888-999999999999","experiment_id":"44444444-4444-4444-8444-444444444444","display_name":"md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","pipeline_version_reference":{"pipeline_id":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","pipeline_version_id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd"},"runtime_config":{"parameters":{"execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","spec_hash":"972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9"},"pipeline_root":"s3://fixture-kfp-artifacts/managed-root"},"service_account":"cpu-managed-step","run_details":{"task_details":[{"run_id":"55555555-6666-4777-8888-999999999999","task_id":"managed-prepare-task","display_name":"prepare","pod_name":"managed-prepare"}]}}`
+	legacy := valid
+	valid = strings.Replace(valid, `"pod_name":"managed-prepare"`, `"child_tasks":[{"pod_name":"native-executor-node"}]`, 1)
 	valid = strings.ReplaceAll(valid, "972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9", input.Plan.SpecHash)
 	var body atomic.Value
 	body.Store(valid)
@@ -45,21 +47,24 @@ func TestManagedRunLegacyFieldStillRequiresFrozenRun(t *testing.T) {
 		}
 		return "synthetic-fixture-token", nil
 	}))
-	if err := client.VerifyManagedRun(context.Background(), input.Plan, association, "prepare"); err != nil {
-		t.Fatalf("valid Run and KFP task association rejected: %v", err)
+	tasks, err := client.GetManagedTasks(context.Background(), input.Plan, association.RunID)
+	if err != nil || len(tasks) != 1 || tasks[0].PodName != "" || len(tasks[0].ChildTasks) != 1 || tasks[0].ChildTasks[0].PodName != "native-executor-node" {
+		t.Fatalf("current native Run references rejected: %+v %v", tasks, err)
 	}
+	legacy = strings.ReplaceAll(legacy, "972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9", input.Plan.SpecHash)
 	for _, invalid := range []string{
-		strings.Replace(valid, `"pod_name":"managed-prepare"`, `"pod_name":"unrelated-pod"`, 1),
-		strings.Replace(valid, `"display_name":"prepare"`, `"display_name":"train-wait"`, 1),
+		legacy,
+		strings.Replace(valid, `"task_id":"managed-prepare-task"`, `"task_id":"invalid task"`, 1),
 		strings.Replace(valid, input.Plan.SpecHash, strings.Repeat("f", 64), 1),
 		strings.Replace(valid, `"service_account":"cpu-managed-step"`, `"service_account":"ordinary-trainer"`, 1),
 		strings.TrimSuffix(valid, "}") + `,"run_details":{"task_details":[]}}`,
 	} {
 		body.Store(invalid)
-		if err := client.VerifyManagedRun(context.Background(), input.Plan, association, "prepare"); err == nil {
-			t.Error("unproven Run/task association accepted")
+		if _, err := client.GetManagedTasks(context.Background(), input.Plan, association.RunID); err == nil {
+			t.Error("retired or unproven Run binding accepted")
 		}
 	}
+
 	if calls.Load() != 6 {
 		t.Errorf("expected one GET for each verification, got %d", calls.Load())
 	}

@@ -359,7 +359,7 @@ func closedCleanupRecoveryFixture(t *testing.T) (*pgxpool.Pool, *execution.Repos
 	if _, err := dispatch.RecordSubmissionConfirmed(ctx, *reserved.SendPermit, biz.PipelineSubmissionObservation{State: biz.PipelineSubmissionConfirmed, RunID: authority.RunID}, time.Now().UTC().Truncate(time.Microsecond)); err != nil {
 		t.Fatal(err)
 	}
-	workspace := biz.WorkspaceBinding{Mode: a.Snapshot.Workspace.Mode, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(a.ExecutionID), PVCUID: "cleanup-workspace-uid", InputSubpath: a.Snapshot.Workspace.InputSubpath, TrainingSubpath: a.Snapshot.Workspace.TrainingSubpath, ReportsSubpath: a.Snapshot.Workspace.ReportsSubpath, PublicationSubpath: a.Snapshot.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: a.Snapshot.Workspace.Mode, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(a.ExecutionID), PVCUID: "cleanup-workspace-uid", InputSubpath: a.Snapshot.Workspace.InputSubpath, TrainingSubpath: a.Snapshot.Workspace.TrainingSubpath, ReportsSubpath: a.Snapshot.Workspace.ReportsSubpath, PublicationSubpath: a.Snapshot.Workspace.PublicationSubpath, WorkSubpath: a.Snapshot.Workspace.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 	runtime := lifecycle.New(pool)
 	startRole := func(role string) {
 		b := biz.FinetuningStepBinding{Role: role, SpecHash: a.SpecHash, RunID: authority.RunID, WorkflowUID: authority.WorkflowUID, TaskID: role + "-cleanup-task", PodName: role + "-cleanup-pod", PodUID: role + "-cleanup-pod-uid"}
@@ -400,7 +400,7 @@ func closedCleanupRecoveryFixture(t *testing.T) (*pgxpool.Pool, *execution.Repos
 	scope, version := a.Snapshot.PublicationScope, "cleanup-object-version"
 	var files []cpup01.OutputFile
 	for _, required := range a.Snapshot.OutputContract.RequiredFiles {
-		file := cpup01.OutputFile{RelativePath: required.RelativePath, Role: required.Role, SizeBytes: 1, SHA256: strings.Repeat("2", 64)}
+		file := cpup01.OutputFile{RelativePath: required.RelativePath, Role: required.Role, SizeBytes: 1, SHA256: strings.Repeat("2", 64), InTar: required.InTar}
 		files = append(files, file)
 		publication.Files = append(publication.Files, biz.PublishedRuntimeFile{ArtifactID: uuid.NewSHA1(uuid.NameSpaceOID, []byte(file.RelativePath)).String(), File: file, Object: cpup01.FixedObjectRef{StorageConnectionID: scope.StorageConnectionID, Bucket: scope.Bucket, Key: strings.TrimSuffix(scope.ApprovedPrefix, "/") + "/" + a.ExecutionID + "/" + file.RelativePath, VersionID: &version, SizeBytes: file.SizeBytes, SHA256: file.SHA256}})
 	}

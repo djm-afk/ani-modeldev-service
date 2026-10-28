@@ -13,6 +13,8 @@ import subprocess
 import sys
 import time
 
+from dataset_fixture import manifest_arguments
+
 
 def require(condition, message):
     if not condition:
@@ -104,19 +106,24 @@ print(json.dumps(packages, sort_keys=True))
     command(common + ["--rm", "--entrypoint", "/opt/venv/bin/python",
         "-v", f"{data_script}:/tool/make_data.py:ro,Z", "-v", f"{selected}:/selected:rw,Z",
         image_id, "-I", "/tool/make_data.py", "--output", "/selected/input.csv"], "fixture")
-    data = selected / "input.csv"
+    inputs = selected / "inputs"
+    inputs.mkdir()
+    data = inputs / "data.csv"
+    (selected / "input.csv").replace(data)
+    manifest_sha = manifest_arguments(data)[-1]
     selected_bytes = data.read_bytes()
     data_hash = hashlib.sha256(selected_bytes).hexdigest()
     (run_dir / "input-identity.json").write_text(json.dumps({"bytes": len(selected_bytes), "sha256": data_hash}) + "\n")
-    input_arguments = ["--data", "/selected/input.csv", "--output", "/output",
-        "--expected-input-sha256", data_hash, "--expected-input-bytes", str(len(selected_bytes)),
-        "--learning-rate", "0.01"]
+    input_arguments = ["--dataset-manifest", "/selected/inputs/dataset-manifest.json",
+        "--expected-dataset-manifest-sha256", manifest_sha, "--work-root", "/work/train",
+        "--output", "/output", "--learning-rate", "0.01"]
+
 
     def workload(recipe, output, *, detached=False):
         output.mkdir()
         run_options = ["--detach"] if detached else ["--rm"]
         return common + run_options + ["-v", f"{selected}:/selected:ro,Z", "-v", f"{output}:/output:rw,Z",
-            image_id] + input_arguments + ["--recipe", recipe]
+            "--tmpfs", "/work:rw,size=256m,mode=1777", image_id] + input_arguments + ["--recipe", recipe]
 
     def metrics(output):
         entries = [json.loads(line) for line in (output / "metrics.jsonl").read_text().splitlines()]

@@ -35,6 +35,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
+	workspaceio "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
@@ -128,12 +129,12 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(store, f.request.Admission.Snapshot.PublicationScope.StorageConnectionID, 64<<20), dispatch)
+	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(store, f.request.Admission.Snapshot.PublicationScope.StorageConnectionID), dispatch)
 	if !rejectedInput {
 		query := startMainFlowQuery(t, pool, store, f.request.Admission)
 		assertQueryAccess(t, ctx, query, f.request.Admission)
 	}
-	steps, err := biz.NewManagedSteps(dispatch, admissions, identity, runs)
+	steps, err := biz.NewManagedSteps(dispatch, admissions, identity, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,20 +143,16 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		t.Fatal(err)
 	}
 	client, stop := startMainFlowStepHandler(t, service.NewRuntimeStep(steps, managed))
-	inventoryPath := filepath.Join(f.root, f.workspace.ReportsSubpath, "collected-output.json")
-	candidatePath := filepath.Join(f.root, f.workspace.ReportsSubpath, "publication-candidate.json")
+	inventoryPath := filepath.Join(f.root, f.workspace.PublicationSubpath, "collected-output.json")
+	refPath := filepath.Join(t.TempDir(), "publication-ref.json")
 	tryInvoke := func(step, candidate string) error {
 		tokenFile := filepath.Join(t.TempDir(), "projected-token")
 		if err := os.WriteFile(tokenFile, []byte("synthetic-bound-"+step), 0600); err != nil {
 			t.Fatal(err)
 		}
-		mount := f.root
-		if step == "close" {
-			mount = ""
-		}
 		claim := f.stepContext(step)
 		claim.Identity.OperationId = "" // KFP carries only execution_id/spec_hash.
-		runner, err := component.New(component.Config{TenantID: f.request.Admission.TenantID, Context: claim, TokenFile: tokenFile, WorkspaceDirectory: mount, PVCName: f.workspace.PVCName, InventoryFile: inventoryPath, CandidateFile: candidate, TaskID: step + "-task", PollInterval: time.Second}, client, kube, store)
+		runner, err := component.New(component.Config{TenantID: f.request.Admission.TenantID, Context: claim, TokenFile: tokenFile, WorkspaceDirectory: f.root, PVCName: f.workspace.PVCName, InventoryFile: inventoryPath, PublicationRefFile: refPath, PublicationRef: candidate, PollInterval: time.Second}, client, kube, store)
 		if err != nil {
 			return err
 		}
@@ -198,7 +195,7 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		f.mu.Lock()
 		f.blobs["/"+original.Snapshot.Input.Object.Bucket+"/"+original.Snapshot.Input.Object.Key] = []byte("corrupt-fixed-version")
 		f.mu.Unlock()
-		if err := tryInvoke("prepare", candidatePath); err == nil {
+		if err := tryInvoke("prepare", ""); err == nil {
 			t.Fatal("corrupt input reached successful prepare")
 		}
 		f.mu.Lock()
@@ -208,7 +205,7 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 			delete(f.objects, "/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-"+step)
 		}
 		f.mu.Unlock()
-		if err := tryInvoke("close", filepath.Join(t.TempDir(), "no-publication-candidate.json")); err == nil {
+		if err := tryInvoke("close", ""); err == nil {
 			t.Fatal("failed pipeline was reported as successful")
 		}
 		failed, err := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
@@ -224,7 +221,7 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		t.Log("MAIN_FLOW_FAILURE: actual bad CSV rejected; no training or publication; skipped tasks proven; STEP_FAILED CLOSED persisted")
 		return
 	}
-	invoke("prepare", candidatePath)
+	invoke("prepare", "")
 	preparedFacts, err := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
 	if err != nil || preparedFacts.Workspace == nil {
 		t.Fatalf("prepare component did not persist workspace: %v", err)
@@ -253,7 +250,7 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 			t.Fatal(err)
 		}
 	}
-	invoke("train-wait", candidatePath)
+	invoke("train-wait", "")
 	if again, err := client.EnsureTraining(call("train-wait"), &modeldevv1.EnsureTrainingRequest{Context: f.stepContext("train-wait")}); err != nil || again.GetStatus().GetTrainjob().GetUid() != completeTrainUID {
 		t.Fatalf("duplicate Ensure changed training: %v", err)
 	}
@@ -281,17 +278,24 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		t.Fatalf("MLP did not execute 48 optimizer steps: %s", summary)
 	}
 	t.Log("MAIN_FLOW: exactly one TrainJob -> real CPU MLP completed 48 optimizer steps -> Pod exit observed")
-	invoke("collect", candidatePath)
+	invoke("collect", "")
 	var output biz.CollectedOutput
 	inventoryBytes, err := os.ReadFile(inventoryPath)
 	if err != nil || json.Unmarshal(inventoryBytes, &output) != nil {
 		t.Fatal("collect component did not produce its inventory")
 	}
-	invoke("publish", candidatePath)
-	var publication biz.RuntimePublication
-	candidateBytes, err := os.ReadFile(candidatePath)
-	if err != nil || json.Unmarshal(candidateBytes, &publication) != nil {
-		t.Fatal("publish component did not produce its candidate")
+	invoke("publish", "")
+	refBytes, err := os.ReadFile(refPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ref, err := cpup01.ParsePublicationRef(refBytes)
+	if err != nil {
+		t.Fatal("publish did not emit a current small reference", err)
+	}
+	publication, err := workspaceio.ReadPublicationCandidate(ctx, f.root, cpup01.AdmissionEnvelope(original.Admission), ref)
+	if err != nil {
+		t.Fatal("fixed PVC candidate did not match its small reference", err)
 	}
 	publishReport := &modeldevv1.ReportStepResultRequest{Context: f.stepContext("close"), ReportId: "22222222-2222-4222-8222-222222222222", Result: &modeldevv1.ReportStepResultRequest_Publication{Publication: publicationProto(publication)}}
 	if _, err := client.ReportStepResult(call("close"), publishReport); err == nil {
@@ -307,15 +311,11 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	}
 	t.Log("MAIN_FLOW: actual files + manifest + tar uploaded; completed uploader and remote bytes verified before publication")
 	// Simulated KFP acknowledges completed tasks only after their real component
-	// work above returns. The close task does not mount/write training outputs.
+	// work above returns. Close reads the original PVC through a read-only mount.
 	for _, step := range []string{"prepare", "train-wait", "collect"} {
 		f.finishStep(step)
 	}
-	closeCandidate := filepath.Join(t.TempDir(), "publication-candidate.json")
-	if err := os.WriteFile(closeCandidate, candidateBytes, 0600); err != nil {
-		t.Fatal(err)
-	}
-	invoke("close", closeCandidate)
+	invoke("close", string(refBytes))
 	closed, err := client.RequestExecutionClose(call("close"), &modeldevv1.RequestExecutionCloseRequest{Context: f.stepContext("close"), Reason: modeldevv1.CloseReason_CLOSE_REASON_NATURAL_TERMINAL})
 	if err != nil || closed.GetCloseState() != modeldevv1.CloseState_CLOSE_STATE_CLOSING || closed.GetCloseGeneration() == 0 || closed.GetAcceptedAt() == nil {
 		t.Fatalf("NATURAL_CLOSE_HANDOFF_NOT_IMPLEMENTED: normal close must deliver a durable fence and let its Workflow complete: %+v %v", closed, err)
@@ -442,18 +442,18 @@ func (f *completeFixture) stepContext(step string) *modeldevv1.StepContext {
 }
 func (f *completeFixture) workspaceProto() *trainingv1.WorkspaceRef {
 	b := f.workspace
-	return &trainingv1.WorkspaceRef{Mode: trainingv1.WorkspaceMode_WORKSPACE_MODE_EXECUTION_PVC, NamespaceName: b.NamespaceName, NamespaceUid: b.NamespaceUID, PvcName: b.PVCName, PvcUid: b.PVCUID, InputSubpath: b.InputSubpath, TrainingSubpath: b.TrainingSubpath, ReportsSubpath: b.ReportsSubpath, PublicationSubpath: b.PublicationSubpath}
+	return &trainingv1.WorkspaceRef{Mode: trainingv1.WorkspaceMode_WORKSPACE_MODE_EXECUTION_PVC, NamespaceName: b.NamespaceName, NamespaceUid: b.NamespaceUID, PvcName: b.PVCName, PvcUid: b.PVCUID, InputSubpath: b.InputSubpath, TrainingSubpath: b.TrainingSubpath, ReportsSubpath: b.ReportsSubpath, PublicationSubpath: b.PublicationSubpath, WorkSubpath: b.WorkSubpath}
 }
 func fixedObjectProto(o cpup01.FixedObjectRef) *trainingv1.FixedObjectRef {
 	return &trainingv1.FixedObjectRef{StorageConnectionId: o.StorageConnectionID, Bucket: o.Bucket, Key: o.Key, Immutability: &trainingv1.FixedObjectRef_VersionId{VersionId: *o.VersionID}, SizeBytes: o.SizeBytes, Sha256: o.SHA256}
 }
-func publicationProto(p biz.RuntimePublication) *modeldevv1.PublicationCandidate {
-	r := &modeldevv1.PublicationCandidate{LogicalPublicationKey: p.LogicalKey, ManifestObject: fixedObjectProto(p.Manifest), UploadTaskId: "publish-task", UploadPodUid: completeStepUID("publish")}
-	if p.Bundle != nil {
-		r.BundleObject = fixedObjectProto(*p.Bundle)
+func publicationProto(p cpup01.PublicationCandidate) *modeldevv1.PublicationCandidate {
+	r := &modeldevv1.PublicationCandidate{Schema: p.Schema, TenantId: p.TenantID, OperationId: p.OperationID, ExecutionId: p.ExecutionID, ExecutionSpecHash: p.ExecutionSpecHash, LogicalPublicationKey: p.LogicalPublicationKey, ManifestObject: fixedObjectProto(p.ManifestObject), UploadTaskId: p.UploadTaskID, UploadPodUid: p.UploadPodUID}
+	if p.BundleObject != nil {
+		r.BundleObject = fixedObjectProto(*p.BundleObject)
 	}
 	for _, f := range p.Files {
-		r.Files = append(r.Files, &modeldevv1.PublishedFileCandidate{File: &trainingv1.FileEntry{RelativePath: f.File.RelativePath, Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+f.File.Role]), SizeBytes: f.File.SizeBytes, Sha256: f.File.SHA256}, Object: fixedObjectProto(f.Object)})
+		r.Files = append(r.Files, &modeldevv1.PublishedFileCandidate{File: &trainingv1.FileEntry{RelativePath: f.File.RelativePath, Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+f.File.Role]), SizeBytes: f.File.SizeBytes, Sha256: f.File.SHA256, InTar: f.File.InTar}, Object: fixedObjectProto(f.Object)})
 	}
 	return r
 }

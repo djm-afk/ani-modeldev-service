@@ -111,7 +111,7 @@ func TestFinetuningResultAcknowledgementUsesFrozenRPCBudget(t *testing.T) {
 			compute, cancel := context.WithCancel(context.Background())
 			cancel()
 			started := time.Now()
-			err = runner.reportFinetuningResult(compute, cpup01.ComponentBudgets{RPCTimeoutSeconds: test.budget}, report)
+			err = runner.reportFinetuningResult(compute, cpup01.Timing{StepTimeoutSeconds: uint64(test.budget)}, report)
 			elapsed := time.Since(started)
 			select {
 			case <-server.done:

@@ -155,7 +155,7 @@ func TestFreezeImportInvalidRequestsNeitherCreateAnInputNorReserveItsIdentifiers
 		{"unversioned null object", func(c *biz.InputImport) { version := "null"; c.Object.VersionID = &version }},
 		{"unsupported immutable copy", func(c *biz.InputImport) { copy := true; c.Object.ImmutableCopy = &copy }},
 		{"zero size", func(c *biz.InputImport) { c.Object.SizeBytes = 0 }},
-		{"oversized object", func(c *biz.InputImport) { c.Object.SizeBytes = 32*1024*1024 + 1 }},
+		{"negative size", func(c *biz.InputImport) { c.Object.SizeBytes = -1 }},
 		{"missing digest", func(c *biz.InputImport) { c.Object.SHA256 = "" }},
 		{"noncanonical digest", func(c *biz.InputImport) { c.Object.SHA256 = strings.Repeat("A", 64) }},
 	} {

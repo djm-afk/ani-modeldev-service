@@ -18,7 +18,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	modelv1 "github.com/zhangzhe-ctrl/ani-model-service/api/model/v1"
+	modelv1 "github.com/liangzai006/ani-model-service/api/model/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -44,14 +45,17 @@ type Config struct {
 	Actor string
 	// Timeout bounds each unary RPC. Callers still inherit their own deadline.
 	Timeout time.Duration
+	// ResolutionTimeout is the independent read-only model-facts budget.
+	ResolutionTimeout time.Duration
 }
 
 // Client is safe for concurrent use once constructed.
 type Client struct {
-	connection *grpc.ClientConn
-	client     modelv1.ModelServiceClient
-	actor      string
-	timeout    time.Duration
+	connection        *grpc.ClientConn
+	client            modelv1.ModelServiceClient
+	actor             string
+	timeout           time.Duration
+	resolutionTimeout time.Duration
 }
 
 const maximumTimeout = 24 * time.Hour
@@ -77,7 +81,7 @@ func New(config Config) (*Client, func(), error) {
 	if !strings.HasPrefix(config.Actor, "modeldev:") || len(config.Actor) <= len("modeldev:") || len(config.Actor) > 253 || strings.ContainsAny(config.Actor, " \t\r\n") {
 		return nil, nil, errors.New("model client requires a bounded audit actor")
 	}
-	if config.Timeout <= 0 || config.Timeout > maximumTimeout {
+	if config.Timeout <= 0 || config.Timeout > maximumTimeout || config.ResolutionTimeout <= 0 || config.ResolutionTimeout > maximumTimeout {
 		return nil, nil, errors.New("invalid model client timeout")
 	}
 	certificate, err := tls.LoadX509KeyPair(config.CertificateFile, config.PrivateKeyFile)
@@ -111,15 +115,17 @@ func New(config Config) (*Client, func(), error) {
 	}
 	connection, err := grpc.NewClient(config.Endpoint,
 		grpc.WithDisableServiceConfig(), grpc.WithDisableRetry(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(cpup01.MaxControlRPCBytes), grpc.MaxCallSendMsgSize(cpup01.MaxControlRPCBytes)),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 	if err != nil {
 		return nil, nil, errors.New("invalid model client address")
 	}
 	return &Client{
-		connection: connection,
-		client:     modelv1.NewModelServiceClient(connection),
-		actor:      config.Actor,
-		timeout:    config.Timeout,
+		connection:        connection,
+		client:            modelv1.NewModelServiceClient(connection),
+		actor:             config.Actor,
+		timeout:           config.Timeout,
+		resolutionTimeout: config.ResolutionTimeout,
 	}, sync.OnceFunc(func() { _ = connection.Close() }), nil
 }
 
@@ -149,14 +155,21 @@ func hasExactDNSName(cert *x509.Certificate, name string) bool {
 // callContext replaces, rather than appends to, any inbound metadata. A caller
 // can never forward a forged tenant, actor, request ID or bearer token.
 func (c *Client) callContext(ctx context.Context, tenant string) (context.Context, context.CancelFunc, error) {
-	if c == nil || c.client == nil || c.timeout <= 0 {
+	if c == nil {
+		return nil, nil, status.Error(codes.Unavailable, "MODEL_ADAPTER_UNAVAILABLE")
+	}
+	return c.callContextBudget(ctx, tenant, c.timeout)
+}
+
+func (c *Client) callContextBudget(ctx context.Context, tenant string, budget time.Duration) (context.Context, context.CancelFunc, error) {
+	if c == nil || c.client == nil || budget <= 0 {
 		return nil, nil, status.Error(codes.Unavailable, "MODEL_ADAPTER_UNAVAILABLE")
 	}
 	parsed, err := uuid.Parse(tenant)
 	if err != nil || parsed == uuid.Nil || parsed.String() != tenant {
 		return nil, nil, status.Error(codes.InvalidArgument, "MODEL_TENANT_INVALID")
 	}
-	call, cancel := context.WithTimeout(ctx, c.timeout)
+	call, cancel := context.WithTimeout(ctx, budget)
 	call = metadata.NewOutgoingContext(call, metadata.Pairs(
 		"x-ani-tenant-id", tenant,
 		"x-ani-actor", c.actor,

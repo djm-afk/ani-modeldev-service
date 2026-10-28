@@ -1,19 +1,7 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    schema:
-      - "migrations/0001_execution.up.sql"
-      - "migrations/0002_execution_identity.up.sql"
-      - "migrations/0003_execution_close_intent.up.sql"
-      - "migrations/0007_pipeline_dispatch.up.sql"
-      - "migrations/0009_submission_uncertainty.up.sql"
-      - "migrations/0010_pipeline_confirmed_runs.up.sql"
-      - "migrations/0011_submission_not_sent.up.sql"
-      - "migrations/0012_execution_owner_revision.up.sql"
-      - "migrations/0013_run_authority.up.sql"
-      - "migrations/0014_execution_runtime.up.sql"
-      - "migrations/0015_fenced_unbound_runtime.up.sql"
-      - "migrations/0020_execution_list_order.up.sql"
+    schema: "migrations/0001_current_baseline.up.sql"
     queries: "internal/data/execution/queries.sql"
     gen:
       go:
@@ -21,12 +9,7 @@ sql:
         out: "internal/data/execution/sqlc"
         sql_package: "pgx/v5"
   - engine: "postgresql"
-    schema:
-      - "migrations/0004_input_import.up.sql"
-      - "migrations/0005_input_scope_credential_reference.up.sql"
-      - "migrations/0006_input_verification.up.sql"
-      - "migrations/0008_input_validation_failure.up.sql"
-      - "migrations/0016_finetuning_input.up.sql"
+    schema: "migrations/0001_current_baseline.up.sql"
     queries: "internal/data/input/queries.sql"
     gen:
       go:
@@ -34,16 +17,7 @@ sql:
         out: "internal/data/input/sqlc"
         sql_package: "pgx/v5"
   - engine: "postgresql"
-    schema:
-      - "migrations/0001_execution.up.sql"
-      - "migrations/0002_execution_identity.up.sql"
-      - "migrations/0003_execution_close_intent.up.sql"
-      - "migrations/0007_pipeline_dispatch.up.sql"
-      - "migrations/0009_submission_uncertainty.up.sql"
-      - "migrations/0010_pipeline_confirmed_runs.up.sql"
-      - "migrations/0011_submission_not_sent.up.sql"
-      - "migrations/0012_execution_owner_revision.up.sql"
-      - "migrations/0013_run_authority.up.sql"
+    schema: "migrations/0001_current_baseline.up.sql"
     queries: "internal/data/submission/queries.sql"
     gen:
       go:
@@ -51,20 +25,7 @@ sql:
         out: "internal/data/submission/sqlc"
         sql_package: "pgx/v5"
   - engine: "postgresql"
-    schema:
-      - "migrations/0001_execution.up.sql"
-      - "migrations/0002_execution_identity.up.sql"
-      - "migrations/0003_execution_close_intent.up.sql"
-      - "migrations/0007_pipeline_dispatch.up.sql"
-      - "migrations/0009_submission_uncertainty.up.sql"
-      - "migrations/0010_pipeline_confirmed_runs.up.sql"
-      - "migrations/0011_submission_not_sent.up.sql"
-      - "migrations/0012_execution_owner_revision.up.sql"
-      - "migrations/0013_run_authority.up.sql"
-      - "migrations/0014_execution_runtime.up.sql"
-      - "migrations/0015_fenced_unbound_runtime.up.sql"
-      - "migrations/0016_execution_cleanup_audit.up.sql"
-      - "migrations/0019_gpu_release_scope.up.sql"
+    schema: "migrations/0001_current_baseline.up.sql"
     queries: "internal/data/lifecycle/queries.sql"
     gen:
       go:

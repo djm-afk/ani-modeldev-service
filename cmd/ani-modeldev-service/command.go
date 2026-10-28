@@ -20,7 +20,6 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/finetuningmodel"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
@@ -28,7 +27,7 @@ import (
 
 // Command assembly consumes mounted references only. It does not run schema
 // migrations, create roles, enable readiness, or fall back to another listener.
-func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceCommand, middlewares ...middleware.Middleware) (*kratosgrpc.Server, func(), error) {
+func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceCommand, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, func(), error) {
 	if config == nil {
 		return nil, nil, errors.New("command configuration required")
 	}
@@ -36,12 +35,12 @@ func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceComma
 	if err != nil {
 		return nil, nil, err
 	}
-	_, models, closeModel, err := loadModelResources(config)
+	_, models, closeModel, err := loadModelResources(config, runtimeConfig)
 	if err != nil {
 		pool.Close()
 		return nil, nil, err
 	}
-	s, err := buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, nil, nil, nil, models, middlewares...)
+	s, err := buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, nil, nil, nil, models, runtimeConfig, middlewares...)
 	if err != nil {
 		pool.Close()
 		closeModel()
@@ -52,30 +51,25 @@ func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceComma
 
 // The runtime composition shares this restricted pool with all durable ports;
 // this builder never takes ownership of the caller's pool.
-func buildCommandServerWithPool(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
-	return buildCommandServerWithQuery(listener, config, pool, nil, middlewares...)
+func buildCommandServerWithPool(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+	return buildCommandServerWithQuery(listener, config, pool, nil, runtimeConfig, middlewares...)
 }
 
-func buildCommandServerWithQuery(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
-	return buildCommandServerWithCapabilities(listener, config, pool, query, nil, nil, middlewares...)
+func buildCommandServerWithQuery(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+	return buildCommandServerWithCapabilities(listener, config, pool, query, nil, nil, runtimeConfig, middlewares...)
 }
 
-func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
 	if config != nil && config.Model != nil {
 		return nil, errors.New("shared Model resources required")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	models, err := buildFinetuningModelFacts(ctx, config)
-	if err != nil {
-		return nil, err
-	}
-	return buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, query, verifier, operations, models, middlewares...)
+
+	return buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, query, verifier, operations, nil, runtimeConfig, middlewares...)
 }
 
-func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
 	failed := func(message string) (*kratosgrpc.Server, error) { return nil, errors.New(message) }
-	if config == nil || (config.Model != nil && models == nil) || (config.Model != nil && config.ControlledModelFacts != nil) {
+	if config == nil || (config.Model != nil && models == nil) {
 		return failed("shared Model resources required")
 	}
 	ca, err := readCommandMaterial(config.ClientCaFile, 1<<20)
@@ -109,6 +103,10 @@ func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC,
 	var admission modeldevv1.ModelDevAdmissionServiceServer
 	var management modeldevv1.ModelDevManagementServiceServer
 	if resolution := config.AdmissionResolution; resolution != nil {
+		limits, err := runtimeConfig.ContentLimits()
+		if err != nil {
+			return failed("command content limits required")
+		}
 		sources := make([]admissionfacts.FileSource, len(resolution.FactsFiles))
 		for i, file := range resolution.FactsFiles {
 			sources[i] = admissionfacts.FileSource{Path: file.GetPath(), SHA256: file.GetSha256()}
@@ -122,37 +120,24 @@ func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC,
 			return failed("command admission catalogue unavailable or invalid")
 		}
 		inputs := input.New(pool)
-		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models))
-		materials := biz.NewManagedMaterials(implementationMaterials, facts, inputs, biz.NewInputImporter(inputs, verifier))
+		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models, limits))
+		materials := biz.NewManagedMaterials(implementationMaterials, facts, inputs, biz.NewInputImporter(inputs, verifier, limits, runtimeConfig.ImportTimeout()))
 		management = service.NewManagement(materials)
+		source, sourceOK := models.(biz.FinetuningSourceFactsReader)
+		if models != nil && !sourceOK {
+			return failed("Model source-only read dependency required")
+		}
 		if query == nil {
-			query = service.NewQuery(execution.New(pool), nil).WithMaterials(materials).WithFinetuningFacts(models)
+			query = service.NewQuery(execution.New(pool), nil).WithMaterials(materials).WithFinetuningFacts(models).WithFinetuningReadiness(source, limits)
 		} else if concrete, ok := query.(*service.Query); ok {
-			concrete.WithMaterials(materials).WithFinetuningFacts(models)
+			concrete.WithMaterials(materials).WithFinetuningFacts(models).WithFinetuningReadiness(source, limits)
 		}
 	}
-	s, err := server.NewGovernanceServicesServer(listener, server.CommandTLS{Certificate: certificate, ClientCAs: roots, GovernanceDNSName: config.GovernanceDnsName}, command, admission, query, server.GovernanceServices{Management: management, Operations: operations}, middlewares...)
+	s, err := server.NewGovernanceServicesServer(listener, server.CommandTLS{Certificate: certificate, ClientCAs: roots, GovernanceDNSName: config.GovernanceDnsName}, command, admission, query, server.GovernanceServices{Management: management, Operations: operations, ModelResolutionTimeout: runtimeConfig.ModelResolutionTimeout(), ImportTimeout: runtimeConfig.ImportTimeout()}, middlewares...)
 	if err != nil {
 		return failed("command listener configuration invalid")
 	}
 	return s, nil
-}
-
-// This finite loader is only for the explicitly configured isolated boundary.
-// The production composition installs the shared live reader before assembly.
-func buildFinetuningModelFacts(ctx context.Context, config *conf.GovernanceCommand) (biz.FinetuningModelFactsReader, error) {
-	if config == nil || config.ControlledModelFacts == nil {
-		return nil, nil
-	}
-	sources := make([]finetuningmodel.FileSource, len(config.ControlledModelFacts.Files))
-	for i, file := range config.ControlledModelFacts.Files {
-		sources[i] = finetuningmodel.FileSource{Path: file.GetPath(), SHA256: file.GetSha256()}
-	}
-	reader, err := finetuningmodel.Load(ctx, sources)
-	if err != nil {
-		return nil, err
-	}
-	return reader, nil
 }
 
 func openCommandPool(config *conf.GovernanceCommand) (*pgxpool.Pool, error) {

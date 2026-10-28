@@ -26,6 +26,19 @@ func registrationReadyFixture(t *testing.T, edits ...func(*biz.Admission)) (func
 	open, admission, authority, binding := finetuningRuntimeFixture(t, time.Hour, edits...)
 	ctx := context.Background()
 	repository := lifecycle.New(open())
+	finishFinetuningArtifactStepsFixture(t, open(), repository, authority, binding)
+	if _, _, err := recordPublicationV21(t, repository, ctx, authority, publicationFixture(t, admission, authority)); err != nil {
+		t.Fatal("publication", err)
+	}
+	if _, replayed, err := repository.RecordRegistrationIntent(ctx, authority); err != nil || replayed {
+		t.Fatal("registration intent", err)
+	}
+	return open, admission, authority
+}
+
+func finishFinetuningArtifactStepsFixture(t *testing.T, pool *pgxpool.Pool, repository *lifecycle.Repository, authority biz.RunAuthorityCandidate, binding biz.FinetuningStepBinding) {
+	t.Helper()
+	ctx := context.Background()
 	for _, role := range []string{"export", "verify"} {
 		binding.Role = role
 		binding.TaskID = role + "-task"
@@ -36,7 +49,7 @@ func registrationReadyFixture(t *testing.T, edits ...func(*biz.Admission)) (func
 			t.Fatal("step reservation", err)
 		}
 		var now time.Time
-		if err := open().QueryRow(ctx, "SELECT clock_timestamp()").Scan(&now); err != nil {
+		if err := pool.QueryRow(ctx, "SELECT clock_timestamp()").Scan(&now); err != nil {
 			t.Fatal(err)
 		}
 		manifest := "reports/export/merged_manifest.json"
@@ -48,13 +61,6 @@ func registrationReadyFixture(t *testing.T, edits ...func(*biz.Admission)) (func
 			t.Fatal("step result", err)
 		}
 	}
-	if _, _, err := recordPublicationV21(t, repository, ctx, authority, publicationFixture(t, admission, authority)); err != nil {
-		t.Fatal("publication", err)
-	}
-	if _, replayed, err := repository.RecordRegistrationIntent(ctx, authority); err != nil || replayed {
-		t.Fatal("registration intent", err)
-	}
-	return open, admission, authority
 }
 
 func registrationObservation(t *testing.T, state biz.ExecutionRuntime, authority biz.RunAuthorityCandidate) biz.TrainedArtifactObservation {

@@ -96,17 +96,17 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	directory := t.TempDir()
 	material := conformance.MaterialV21()
 	writeMaterial(t, directory, material, "cpu")
-	imported := biz.InputImport{TenantID: identity.TenantID, RequestID: "12345678-1234-4234-8234-123456789abc", InputVersionID: intent.DatasetVersionID, Actor: identity.Actor, RequestedAt: snapshot.Timing.AcceptedAt.Add(-time.Minute), Scope: cpup01.StorageScope{StorageConnectionID: snapshot.Input.Object.StorageConnectionID, Bucket: snapshot.Input.Object.Bucket, ApprovedPrefix: "fixed/input"}, Object: snapshot.Input.Object}
+	imported := biz.InputImport{Format: "CSV", TenantID: identity.TenantID, RequestID: "12345678-1234-4234-8234-123456789abc", InputVersionID: intent.DatasetVersionID, Actor: identity.Actor, RequestedAt: snapshot.Timing.AcceptedAt.Add(-time.Minute), Scope: cpup01.StorageScope{StorageConnectionID: snapshot.Input.Object.StorageConnectionID, Bucket: snapshot.Input.Object.Bucket, ApprovedPrefix: "fixed/input"}, Object: snapshot.Input.Object}
 	repository := input.New(openPool())
 	if _, err := repository.FreezeImport(ctx, imported); err != nil {
 		t.Fatal("READY preflight freeze failed", err)
 	}
-	ready, err := repository.RecordVerifiedCSV(ctx, imported, biz.VerifiedCSV{VerifiedObject: biz.VerifiedObject{Object: imported.Object, VerifiedAt: imported.RequestedAt.Add(time.Second)}, SchemaVersion: "ani.cpu.csv.v1", RowCount: 1027, FeatureCount: 16})
+	ready, err := repository.RecordVerifiedCSV(ctx, imported, biz.VerifiedCSV{VerifiedObject: biz.VerifiedObject{Object: imported.Object, VerifiedAt: imported.RequestedAt.Add(time.Second)}, SchemaVersion: "ani.cpu.csv.v1", RowCount: 1027, FeatureCount: 16, PreparedDataset: cpup01.PreparedDatasetFacts{Format: "CPU_CSV", TransformID: "csv-identity-v3", SizeBytes: imported.Object.SizeBytes, SHA256: imported.Object.SHA256, RowCount: 1027}})
 	if err != nil {
 		t.Fatal("READY preflight proof failed", err)
 	}
 	facts := biz.TenantAdmissionFacts{TenantID: identity.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: imported.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
-	f := resolutionFixture{ctx: ctx, openPool: openPool, directory: directory, material: material, imported: imported, ready: ready, facts: facts, request: biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: snapshot.Timing.AcceptedAt}}
+	f := resolutionFixture{ctx: ctx, openPool: openPool, directory: directory, material: material, imported: imported, ready: ready, facts: facts, request: biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: time.Now().UTC().Truncate(time.Microsecond)}}
 	reader, err := admissionfacts.Load(ctx, []admissionfacts.FileSource{writeManagedFactsFixture(t, f)})
 	if err != nil {
 		t.Fatal("facts preflight", err)
@@ -114,7 +114,7 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	f.materials = &countedMaterials{reader: catalogue.NewReader(directory)}
 	f.inputs = &countedInputs{reader: input.New(openPool())}
 	f.factReader = &countedFacts{reader: reader}
-	f.resolver = biz.NewAdmissionResolver(f.materials, f.inputs, f.factReader)
+	f.resolver = biz.NewAdmissionResolver(f.materials, f.inputs, f.factReader, cpup01.ContentLimits{MaxContentBytes: 17179869184})
 	recovered, err := f.inputs.reader.Get(ctx, imported.TenantID, imported.InputVersionID)
 	if err != nil || !reflect.DeepEqual(ready, recovered) {
 		t.Fatal("READY unavailable across new PG connection", err)
@@ -183,7 +183,15 @@ func TestPrepareFinalizeFreezeCompleteCandidateWithoutWritesOrSecondReads(t *tes
 	if s.RuntimePlan.Name != cpup01.RuntimeName(s.Environment.NamespaceUID, s.IdentityRef.ExecutionID) || s.Timing.StepTimeoutSeconds != 900 || !s.DeadlineAt.Equal(f.request.AcceptedAt.Add(time.Hour)) || len(s.Program.ResolvedParameters) != 4 || s.Input.RowCount != 1027 {
 		t.Fatal("incomplete plan")
 	}
-	expected := []string{"--data", "/inputs/data.csv", "--output", "/outputs", "--learning-rate", "0.02", "--epochs", "5", "--batch-size", "37", "--seed", "7"}
+	manifest, err := cpup01.BuildDatasetManifest(cpup01.InputRef{InputVersionID: f.imported.InputVersionID, Format: f.imported.Format, Object: f.imported.Object, RowCount: f.ready.Verification.RowCount, PreparedDataset: f.ready.Verification.PreparedDataset})
+	if err != nil {
+		t.Fatal(err)
+	}
+	manifestSHA, err := manifest.Digest()
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := []string{"--dataset-manifest", "/inputs/dataset-manifest.json", "--expected-dataset-manifest-sha256", manifestSHA, "--work-root", "/workspace/work/train", "--output", "/outputs", "--learning-rate", "0.02", "--epochs", "5", "--batch-size", "37", "--seed", "7"}
 	if !reflect.DeepEqual(s.Program.ResolvedArgs, expected) {
 		t.Fatalf("typed parameters did not enter argv: %v", s.Program.ResolvedArgs)
 	}

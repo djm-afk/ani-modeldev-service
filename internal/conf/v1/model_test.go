@@ -1,7 +1,6 @@
 package conf
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -90,49 +89,14 @@ func modelConnectionConfiguration() *ModelConnection {
 // A configured controlled substitute must carry explicit absolute references
 // and lowercase SHA256 pins; an incomplete block is rejected rather than
 // silently disabling FINETUNING after an operator intended to enable it.
-func TestControlledModelFactsRequirePinnedMaterials(t *testing.T) {
-	tests := []struct {
-		name string
-		file *AdmissionFactsFile
-		ok   bool
-	}{
-		{name: "valid pin", file: &AdmissionFactsFile{Path: "/run/secrets/modeldev/model/base.json", Sha256: strings.Repeat("a", 64)}, ok: true},
-		{name: "relative path", file: &AdmissionFactsFile{Path: "base.json", Sha256: strings.Repeat("a", 64)}},
-		{name: "missing path", file: &AdmissionFactsFile{Sha256: strings.Repeat("a", 64)}},
-		{name: "short digest", file: &AdmissionFactsFile{Path: "/run/secrets/modeldev/model/base.json", Sha256: strings.Repeat("a", 63)}},
-		{name: "uppercase digest", file: &AdmissionFactsFile{Path: "/run/secrets/modeldev/model/base.json", Sha256: strings.Repeat("A", 64)}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := validConfig()
-			config.Command = commandConfiguration()
-			config.Command.ControlledModelFacts = &ControlledModelFacts{Files: []*AdmissionFactsFile{tt.file}}
-			err := config.Validate()
-			if tt.ok && err != nil {
-				t.Fatalf("valid controlled facts rejected: %v", err)
-			}
-			if !tt.ok && err == nil {
-				t.Fatal("invalid controlled facts accepted")
-			}
-		})
-	}
-	config := validConfig()
-	config.Command = commandConfiguration()
-	config.Command.ControlledModelFacts = &ControlledModelFacts{}
-	if err := config.Validate(); err == nil {
-		t.Fatal("empty controlled facts block accepted")
-	}
-}
 
-// An absent controlled substitute keeps the command composition valid so the
-// CPU command listener still starts with FINETUNING disabled.
-func TestAbsentControlledModelFactsKeepsCommandValid(t *testing.T) {
+func TestAbsentModelKeepsCommandValidAndFinetuningUnavailable(t *testing.T) {
 	config := validConfig()
 	config.Command = commandConfiguration()
-	if config.Command.ControlledModelFacts != nil {
-		t.Fatal("test precondition: controlled facts must be absent")
+	if config.Command.Model != nil {
+		t.Fatal("fixture unexpectedly configures a Model provider")
 	}
 	if err := config.Validate(); err != nil {
-		t.Fatalf("command without controlled facts was rejected: %v", err)
+		t.Fatal(err)
 	}
 }

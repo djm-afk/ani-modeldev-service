@@ -13,6 +13,7 @@ import tempfile
 import time
 import unittest
 
+from dataset_fixture import manifest_arguments
 
 TRAINING_ROOT = Path(__file__).resolve().parents[1]
 
@@ -45,7 +46,8 @@ class FixedCSVTrainingTest(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory(prefix="cpu03-training-") as temporary:
             root = Path(temporary)
-            data = root / "selected-input.csv"
+            data = root / "inputs/data.csv"
+            data.parent.mkdir()
             output = root / "execution-output"
             fixture = self.run_python(TRAINING_ROOT / "make_data.py", "--output", data)
             self.assertEqual(fixture.returncode, 0, fixture.stderr)
@@ -58,14 +60,9 @@ class FixedCSVTrainingTest(unittest.TestCase):
 
             trained = self.run_python(
                 TRAINING_ROOT / "train_mlp.py",
-                "--data",
-                data,
+                *manifest_arguments(data),
                 "--output",
                 output,
-                "--expected-input-sha256",
-                input_sha256,
-                "--expected-input-bytes",
-                len(input_bytes),
             )
             self.assertEqual(
                 trained.returncode,
@@ -177,7 +174,8 @@ class FixedCSVTrainingTest(unittest.TestCase):
                 with self.subTest(case=case):
                     case_root = root / case
                     case_root.mkdir()
-                    data = case_root / "selected-input.csv"
+                    data = case_root / "inputs/data.csv"
+                    data.parent.mkdir()
                     output = case_root / "execution-output"
                     rows = [row.copy() for row in fixed_rows]
                     if case == "empty_data":
@@ -235,14 +233,10 @@ class FixedCSVTrainingTest(unittest.TestCase):
                     }.get(case, "1")
                     rejected = self.run_python(
                         TRAINING_ROOT / "train_mlp.py",
-                        "--data",
-                        data,
+                        *manifest_arguments(data, expected_sha256=expected_sha256,
+                                            expected_bytes=expected_size),
                         "--output",
                         output,
-                        "--expected-input-sha256",
-                        expected_sha256,
-                        "--expected-input-bytes",
-                        expected_size,
                         environment_overrides={"WORLD_SIZE": world_size},
                     )
                     self.assertNotEqual(
@@ -302,20 +296,14 @@ class FixedCSVTrainingTest(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory(prefix="cpu03-learning-rate-") as temporary:
             root = Path(temporary)
-            data = root / "selected-input.csv"
+            data = root / "inputs/data.csv"
+            data.parent.mkdir()
             generated = self.run_python(
                 TRAINING_ROOT / "make_data.py", "--output", data
             )
             self.assertEqual(generated.returncode, 0, generated.stderr)
             input_bytes = data.read_bytes()
-            common = (
-                "--data",
-                data,
-                "--expected-input-sha256",
-                hashlib.sha256(input_bytes).hexdigest(),
-                "--expected-input-bytes",
-                len(input_bytes),
-            )
+            common = manifest_arguments(data)
             baseline_output = root / "default-rate-output"
             baseline = self.run_python(
                 TRAINING_ROOT / "train_mlp.py",
@@ -380,7 +368,8 @@ class FixedCSVTrainingTest(unittest.TestCase):
     def test_nondefault_parameters_partial_batches_and_non_decreasing_loss(self):
         with tempfile.TemporaryDirectory(prefix="mlp-open-parameters-") as temporary:
             root = Path(temporary)
-            data = root / "input.csv"
+            data = root / "inputs/data.csv"
+            data.parent.mkdir()
             with data.open("w", newline="") as stream:
                 writer = csv.writer(stream)
                 writer.writerow([f"x{i}" for i in range(16)] + ["label"])
@@ -391,14 +380,9 @@ class FixedCSVTrainingTest(unittest.TestCase):
                 output = root / f"output-{seed}"
                 result = self.run_python(
                     TRAINING_ROOT / "train_mlp.py",
-                    "--data",
-                    data,
+                    *manifest_arguments(data),
                     "--output",
                     output,
-                    "--expected-input-sha256",
-                    hashlib.sha256(contents).hexdigest(),
-                    "--expected-input-bytes",
-                    len(contents),
                     "--epochs",
                     "2",
                     "--batch-size",
@@ -460,7 +444,8 @@ class FixedCSVTrainingTest(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory(prefix="cpu03-rejected-rate-") as temporary:
             root = Path(temporary)
-            data = root / "selected-input.csv"
+            data = root / "inputs/data.csv"
+            data.parent.mkdir()
             generated = self.run_python(
                 TRAINING_ROOT / "make_data.py", "--output", data
             )
@@ -471,14 +456,9 @@ class FixedCSVTrainingTest(unittest.TestCase):
                     output = root / f"rejected-{number}"
                     rejected = self.run_python(
                         TRAINING_ROOT / "train_mlp.py",
-                        "--data",
-                        data,
+                        *manifest_arguments(data),
                         "--output",
                         output,
-                        "--expected-input-sha256",
-                        hashlib.sha256(input_bytes).hexdigest(),
-                        "--expected-input-bytes",
-                        len(input_bytes),
                         "--learning-rate",
                         rate,
                     )
@@ -503,7 +483,8 @@ class FixedCSVTrainingTest(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory(prefix="cpu03-fail-recipe-") as temporary:
             root = Path(temporary)
-            data = root / "selected-input.csv"
+            data = root / "inputs/data.csv"
+            data.parent.mkdir()
             output = root / "execution-output"
             generated = self.run_python(
                 TRAINING_ROOT / "make_data.py", "--output", data
@@ -512,14 +493,9 @@ class FixedCSVTrainingTest(unittest.TestCase):
             selected_bytes = data.read_bytes()
             failed = self.run_python(
                 TRAINING_ROOT / "train_mlp.py",
-                "--data",
-                data,
+                *manifest_arguments(data),
                 "--output",
                 output,
-                "--expected-input-sha256",
-                hashlib.sha256(selected_bytes).hexdigest(),
-                "--expected-input-bytes",
-                len(selected_bytes),
                 "--recipe",
                 "fail",
             )
@@ -561,7 +537,8 @@ class FixedCSVTrainingTest(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory(prefix="cpu03-stop-recipe-") as temporary:
             root = Path(temporary)
-            data = root / "selected-input.csv"
+            data = root / "inputs/data.csv"
+            data.parent.mkdir()
             output = root / "execution-output"
             stdout_path, stderr_path = root / "stdout.log", root / "stderr.log"
             generated = self.run_python(
@@ -573,14 +550,9 @@ class FixedCSVTrainingTest(unittest.TestCase):
                 sys.executable,
                 "-I",
                 str(TRAINING_ROOT / "train_mlp.py"),
-                "--data",
-                str(data),
+                *manifest_arguments(data),
                 "--output",
                 str(output),
-                "--expected-input-sha256",
-                hashlib.sha256(selected_bytes).hexdigest(),
-                "--expected-input-bytes",
-                str(len(selected_bytes)),
                 "--recipe",
                 "slow-stop",
             ]

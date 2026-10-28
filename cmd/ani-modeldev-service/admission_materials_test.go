@@ -68,7 +68,7 @@ func TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak(t *testing.T) {
 			change: func(t *testing.T, config *conf.AdmissionResolution) {
 				config.FactsFiles[0].Path = filepath.Join(t.TempDir(), "private-missing-facts.json")
 			},
-			message: "command admission facts unavailable or invalid",
+			message: "managed command listener configuration invalid",
 		},
 		{
 			name: "wrong facts byte pin",
@@ -80,14 +80,14 @@ func TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak(t *testing.T) {
 				}
 				config.FactsFiles[0].Sha256 = first + pin[1:]
 			},
-			message: "command admission facts unavailable or invalid",
+			message: "managed command listener configuration invalid",
 		},
 		{
 			name: "unavailable catalogue directory",
 			change: func(t *testing.T, config *conf.AdmissionResolution) {
 				config.CatalogueDirectory = filepath.Join(t.TempDir(), "private-missing-catalogue")
 			},
-			message: "command admission catalogue unavailable or invalid",
+			message: "managed command listener configuration invalid",
 		},
 	}
 	for _, test := range tests {
@@ -168,7 +168,7 @@ func TestAdmissionMaterialsEmptyDirectoryStartsButCannotPrepareImplementation(t 
 	if err != nil || executions != 0 || identities != 0 || closes != 0 || dispatches != 0 {
 		t.Fatalf("ADMISSION_MATERIAL_BEHAVIOR: rejected candidate persisted command facts: executions=%d identities=%d closes=%d dispatches=%d error=%v", executions, identities, closes, dispatches, err)
 	}
-	assertProductionNotReadyWithoutBusinessAdapters(t, fixture.config.Server.Admin.Addr)
+	waitForHTTP(t, "http://"+fixture.config.Server.Admin.Addr+"/readyz")
 }
 
 func requireAdmissionMaterialPoolReleased(t *testing.T, observer *pgxpool.Pool, applicationName string) {

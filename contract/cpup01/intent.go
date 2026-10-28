@@ -18,7 +18,7 @@ import (
 
 var ErrInvalidArgument = errors.New("INVALID_ARGUMENT")
 
-const IntentSchemaVersion = "ani.modeldev.intent.v2.1"
+const IntentSchemaVersion = "ani.modeldev.intent.v3"
 
 type Parameter struct {
 	Name  string `json:"name"`
@@ -38,6 +38,7 @@ type Intent struct {
 	BaseModelVersionID *string               `json:"base_model_version_id,omitempty"`
 	TargetModelID      *string               `json:"target_model_id,omitempty"`
 	NewModelName       *string               `json:"new_model_name,omitempty"`
+	FinetuningTemplate *string               `json:"finetuning_template,omitempty"`
 }
 
 type MLPParameters struct {
@@ -58,6 +59,7 @@ type intentWire struct {
 	BaseModelVersionID *string         `json:"base_model_version_id,omitempty"`
 	TargetModelID      *string         `json:"target_model_id,omitempty"`
 	NewModelName       *string         `json:"new_model_name,omitempty"`
+	FinetuningTemplate *string         `json:"finetuning_template,omitempty"`
 }
 
 func (i Intent) MarshalJSON() ([]byte, error) {
@@ -69,7 +71,7 @@ func (i Intent) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(intentWire{Name: i.Name, Kind: i.Kind, ImplementationID: i.ImplementationID, ComputePresetID: i.ComputePresetID, DatasetVersionID: i.DatasetVersionID, Parameters: p, TimeoutSeconds: i.TimeoutSeconds, BaseModelVersionID: i.BaseModelVersionID, TargetModelID: i.TargetModelID, NewModelName: i.NewModelName})
+	return json.Marshal(intentWire{Name: i.Name, Kind: i.Kind, ImplementationID: i.ImplementationID, ComputePresetID: i.ComputePresetID, DatasetVersionID: i.DatasetVersionID, Parameters: p, TimeoutSeconds: i.TimeoutSeconds, BaseModelVersionID: i.BaseModelVersionID, TargetModelID: i.TargetModelID, NewModelName: i.NewModelName, FinetuningTemplate: i.FinetuningTemplate})
 }
 
 func (i *Intent) UnmarshalJSON(raw []byte) error {
@@ -110,7 +112,7 @@ func DecodeCanonicalIntent(raw []byte) (Intent, error) {
 
 func parseIntent(raw []byte) (Intent, error) {
 	invalid := func() (Intent, error) { return Intent{}, fmt.Errorf("%w: intent JSON", ErrInvalidArgument) }
-	if len(raw) == 0 || len(raw) > 16384 || !utf8.Valid(raw) || !validUnicodeEscapes(raw) {
+	if len(raw) == 0 || len(raw) > MaxManifestBytes || !utf8.Valid(raw) || !validUnicodeEscapes(raw) {
 		return invalid()
 	}
 	scanner := json.NewDecoder(bytes.NewReader(raw))
@@ -130,7 +132,7 @@ func parseIntent(raw []byte) (Intent, error) {
 	if len(w.Parameters) == 0 || w.Parameters[0] != '{' {
 		return invalid()
 	}
-	i := Intent{Name: w.Name, Kind: w.Kind, ImplementationID: w.ImplementationID, ComputePresetID: w.ComputePresetID, DatasetVersionID: w.DatasetVersionID, TimeoutSeconds: w.TimeoutSeconds, BaseModelVersionID: w.BaseModelVersionID, TargetModelID: w.TargetModelID, NewModelName: w.NewModelName}
+	i := Intent{Name: w.Name, Kind: w.Kind, ImplementationID: w.ImplementationID, ComputePresetID: w.ComputePresetID, DatasetVersionID: w.DatasetVersionID, TimeoutSeconds: w.TimeoutSeconds, BaseModelVersionID: w.BaseModelVersionID, TargetModelID: w.TargetModelID, NewModelName: w.NewModelName, FinetuningTemplate: w.FinetuningTemplate}
 	p := json.NewDecoder(bytes.NewReader(w.Parameters))
 	p.DisallowUnknownFields()
 	switch i.Kind {
@@ -207,6 +209,11 @@ func CanonicalIntent(i Intent) ([]byte, string, error) {
 
 var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 var decimalPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`)
+var templateIDPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`)
+
+// The current decoder validates an identifier without consulting a registry.
+// New admission separately resolves it against the frozen runtime capability.
+func validTemplateID(value string) bool { return templateIDPattern.MatchString(value) }
 
 func validUUID(v string) bool {
 	return uuidPattern.MatchString(v) && v != "00000000-0000-0000-0000-000000000000"
@@ -230,7 +237,7 @@ func validateIntent(i Intent) error {
 	}
 	switch i.Kind {
 	case "GENERAL_TRAINING":
-		if i.ImplementationID != "builtin.mlp" || i.MLP == nil || i.Finetuning != nil || i.BaseModelVersionID != nil || i.TargetModelID != nil || i.NewModelName != nil {
+		if i.ImplementationID != "builtin.mlp" || i.MLP == nil || i.Finetuning != nil || i.BaseModelVersionID != nil || i.TargetModelID != nil || i.NewModelName != nil || i.FinetuningTemplate != nil {
 			return bad("implementation")
 		}
 	case "FINETUNING":
@@ -239,6 +246,9 @@ func validateIntent(i Intent) error {
 		}
 		if i.TargetModelID != nil && !validUUID(*i.TargetModelID) || i.NewModelName != nil && !validModelName(*i.NewModelName) {
 			return bad("model target")
+		}
+		if i.FinetuningTemplate != nil && !validTemplateID(*i.FinetuningTemplate) {
+			return bad("finetuning_template")
 		}
 	default:
 		return bad("kind")
@@ -249,7 +259,7 @@ func validateIntent(i Intent) error {
 
 func checkJSONValue(d *json.Decoder, depth int) error {
 	bad := func() error { return fmt.Errorf("%w: ambiguous JSON", ErrInvalidArgument) }
-	if depth > 8 {
+	if depth > MaxJSONDepth {
 		return bad()
 	}
 	token, err := d.Token()

@@ -38,7 +38,7 @@ func TestPipelineIOPreparesFixedCSVAndUploadsActualBytesWithoutOverwrite(t *test
 	contract := execution.Snapshot.Workspace
 	binding := biz.WorkspaceBinding{Mode: contract.Mode, NamespaceName: execution.Snapshot.Environment.NamespaceName, NamespaceUID: execution.Snapshot.Environment.NamespaceUID,
 		PVCName: "execution-workspace", PVCUID: "55555555-5555-4555-8555-555555555555", InputSubpath: contract.InputSubpath, TrainingSubpath: contract.TrainingSubpath,
-		ReportsSubpath: contract.ReportsSubpath, PublicationSubpath: contract.PublicationSubpath}
+		ReportsSubpath: contract.ReportsSubpath, PublicationSubpath: contract.PublicationSubpath, WorkSubpath: contract.WorkSubpath}
 	prepared, err := workspace.PrepareInput(context.Background(), client, execution, binding, root)
 	if err != nil {
 		t.Fatalf("prepare real fixed input through TLS S3: %v", err)
@@ -146,7 +146,7 @@ func TestPipelineIORejectsSymlinkMountAndUnfixedInputBeforeWriting(t *testing.T)
 	_, client := newPipelineS3(t, execution, csv)
 	contract := execution.Snapshot.Workspace
 	binding := biz.WorkspaceBinding{Mode: contract.Mode, NamespaceName: execution.Snapshot.Environment.NamespaceName, NamespaceUID: execution.Snapshot.Environment.NamespaceUID,
-		PVCName: "execution-workspace", PVCUID: "55555555-5555-4555-8555-555555555555", InputSubpath: contract.InputSubpath, TrainingSubpath: contract.TrainingSubpath, ReportsSubpath: contract.ReportsSubpath, PublicationSubpath: contract.PublicationSubpath}
+		PVCName: "execution-workspace", PVCUID: "55555555-5555-4555-8555-555555555555", InputSubpath: contract.InputSubpath, TrainingSubpath: contract.TrainingSubpath, ReportsSubpath: contract.ReportsSubpath, PublicationSubpath: contract.PublicationSubpath, WorkSubpath: contract.WorkSubpath}
 	outside, root := t.TempDir(), t.TempDir()
 	if err := os.Symlink(outside, filepath.Join(root, contract.InputSubpath)); err != nil {
 		t.Fatal(err)
@@ -177,7 +177,7 @@ func TestPrepareInputAtomicCreationRetryAndConflicts(t *testing.T) {
 			contract := execution.Snapshot.Workspace
 			binding := biz.WorkspaceBinding{Mode: contract.Mode, NamespaceName: execution.Snapshot.Environment.NamespaceName, NamespaceUID: execution.Snapshot.Environment.NamespaceUID,
 				PVCName: "execution-workspace", PVCUID: "55555555-5555-4555-8555-555555555555", InputSubpath: contract.InputSubpath, TrainingSubpath: contract.TrainingSubpath,
-				ReportsSubpath: contract.ReportsSubpath, PublicationSubpath: contract.PublicationSubpath}
+				ReportsSubpath: contract.ReportsSubpath, PublicationSubpath: contract.PublicationSubpath, WorkSubpath: contract.WorkSubpath}
 			root := t.TempDir()
 			inputDirectory := filepath.Join(root, contract.InputSubpath)
 			reportDirectory := filepath.Join(root, contract.ReportsSubpath)
@@ -268,6 +268,7 @@ type pipelineS3Store struct {
 	mu      sync.Mutex
 	objects map[string]pipelineS3Object
 	puts    int
+	gets    int
 }
 
 func newPipelineS3(t *testing.T, execution biz.Execution, csv []byte) (*pipelineS3Store, *s3.Client) {
@@ -278,6 +279,9 @@ func newPipelineS3(t *testing.T, execution biz.Execution, csv []byte) (*pipeline
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		store.mu.Lock()
 		defer store.mu.Unlock()
+		if r.Method == http.MethodGet {
+			store.gets++
+		}
 		object, exists := store.objects[r.URL.Path]
 		if r.Method == http.MethodPut {
 			if !strings.HasPrefix(r.URL.Path, prefix) || r.Header.Get("If-None-Match") != "*" {

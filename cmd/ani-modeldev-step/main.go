@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -36,8 +37,8 @@ type ownerConfig struct {
 	WorkspaceDirectory  string         `json:"workspace_directory"`
 	PVCName             string         `json:"pvc_name"`
 	InventoryFile       string         `json:"inventory_file"`
-	CandidateFile       string         `json:"candidate_file"`
-	TaskID              string         `json:"task_id"`
+	PublicationRefFile  string         `json:"publication_ref_file"`
+	PublicationRef      string         `json:"publication_ref"`
 	PollIntervalSeconds int            `json:"poll_interval_seconds"`
 	TimeoutSeconds      int            `json:"timeout_seconds"`
 	S3                  *storageConfig `json:"s3,omitempty"`
@@ -71,24 +72,11 @@ func execute(ctx context.Context, args []string) error {
 		return stageFailure("bootstrap", err)
 	}
 	step, config, claim := invocation.step, invocation.config, invocation.claim
-	if invocation.candidateJSON != nil {
-		// This input lives only in the control Pod's private temporary directory.
-		// It does not require the execution PVC or share a path with publishers.
-		directory, err := os.MkdirTemp("", "ani-modeldev-close-")
-		if err != nil {
-			return stageFailure("bootstrap", component.ErrConfiguration)
-		}
-		defer os.RemoveAll(directory)
-		config.CandidateFile = filepath.Join(directory, "publication.json")
-		if err := os.WriteFile(config.CandidateFile, []byte(*invocation.candidateJSON), 0600); err != nil {
-			return stageFailure("bootstrap", component.ErrConfiguration)
-		}
-	}
 	roots, err := trustedRoots(config.CAFile)
 	if err != nil {
 		return stageFailure("grpc-ca", err)
 	}
-	connection, err := grpc.NewClient(config.Target, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS13, RootCAs: roots, ServerName: config.ServerName})))
+	connection, err := grpc.NewClient(config.Target, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS13, RootCAs: roots, ServerName: config.ServerName})), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(cpup01.MaxControlRPCBytes), grpc.MaxCallSendMsgSize(cpup01.MaxControlRPCBytes)))
 	if err != nil {
 		return stageFailure("grpc-ca", component.ErrConfiguration)
 	}
@@ -123,7 +111,7 @@ func execute(ctx context.Context, args []string) error {
 			return stageFailure("storage-client", err)
 		}
 	}
-	runner, err := component.New(component.Config{TenantID: config.TenantID, Context: claim, TokenFile: config.TokenFile, WorkspaceDirectory: config.WorkspaceDirectory, PVCName: config.PVCName, InventoryFile: config.InventoryFile, CandidateFile: config.CandidateFile, CloseOnly: invocation.closeOnly, TaskID: config.TaskID, PollInterval: time.Duration(config.PollIntervalSeconds) * time.Second}, stepClient, kube, objects, baseObjects)
+	runner, err := component.New(component.Config{TenantID: config.TenantID, Context: claim, TokenFile: config.TokenFile, WorkspaceDirectory: config.WorkspaceDirectory, PVCName: config.PVCName, InventoryFile: config.InventoryFile, PublicationRefFile: config.PublicationRefFile, PublicationRef: config.PublicationRef, CloseOnly: invocation.closeOnly, PollInterval: time.Duration(config.PollIntervalSeconds) * time.Second}, stepClient, kube, objects, baseObjects)
 	if err != nil {
 		return stageFailure("runner", err)
 	}

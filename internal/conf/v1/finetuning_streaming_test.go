@@ -36,7 +36,8 @@ func TestFinetuningStreamingConfigurationBudgets(t *testing.T) {
 				CertificateFile: c.Command.CertificateFile, PrivateKeyFile: c.Command.PrivateKeyFile,
 				Kubernetes:    &HTTPSWorkloadConnection{Endpoint: "https://kube.example.test", CaFile: "/owner/kube-ca", TokenFile: "/owner/kube-token"},
 				Pipeline:      &HTTPSWorkloadConnection{Endpoint: "https://pipeline.example.test", CaFile: "/owner/pipeline-ca", TokenFile: "/owner/pipeline-token"},
-				ObjectStorage: &ObjectStorageConnection{Endpoint: "https://storage.example.test", CaFile: "/owner/storage-ca", CredentialsFile: "/owner/storage-credentials", Region: "us-east-1", ConnectionId: "artifact-store-v1", MaxObjectBytes: 64 << 20},
+				Limits:        &RuntimeLimits{MaxContentBytes: 64 << 20},
+				ObjectStorage: &ObjectStorageConnection{Endpoint: "https://storage.example.test", CaFile: "/owner/storage-ca", CredentialsFile: "/owner/storage-credentials", Region: "us-east-1", ConnectionId: "artifact-store-v1"},
 				BindingFile:   "/owner/binding.json", BindingSha256: strings.Repeat("a", 64), TokenAudience: "ani-managed-step",
 				ApiTimeout: durationpb.New(30 * time.Second), DispatchInterval: durationpb.New(time.Second), DispatchBatchSize: 4,
 			}

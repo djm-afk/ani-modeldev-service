@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
@@ -156,7 +157,7 @@ func (r waitingAdmissionFacts) ReadAdmissionFacts(ctx context.Context, tenant, i
 func TestAdmissionRPCCancellationReachesActualFactsRead(t *testing.T) {
 	f := prepareResolution(t)
 	waiting := waitingAdmissionFacts{delegate: f.factReader.reader, entered: make(chan struct{}), exited: make(chan error, 1)}
-	client := startAdmissionClient(t, f, biz.NewAdmissionResolver(f.materials, f.inputs, waiting))
+	client := startAdmissionClient(t, f, biz.NewAdmissionResolver(f.materials, f.inputs, waiting, cpup01.ContentLimits{MaxContentBytes: 17179869184}))
 	ctx, cancel := context.WithCancel(admissionRPCContext(f.ctx, f.request.IdentityRef.TenantID))
 	defer cancel()
 	result := make(chan error, 1)

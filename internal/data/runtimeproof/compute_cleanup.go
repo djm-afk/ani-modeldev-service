@@ -288,6 +288,7 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 			return biz.ErrCleanupConflict
 		}
 		object, err := verifier.kube.Resource(resource).Namespace(target.Namespace).Get(ctx, target.Name, metav1.GetOptions{})
+
 		if apierrors.IsNotFound(err) && (removalIntent || target.Kind == "TrainingRuntime" || retainedTerminalPod(execution, state, target)) {
 			continue
 		}

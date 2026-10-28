@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 )
 
 // These identities are authored only to exercise rendering. They do not name
@@ -28,10 +29,14 @@ func fixture(t *testing.T, id, device string) (facts, string, string) {
 		t.Fatal(err)
 	}
 	uuid := "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
-	i := image{VersionID: uuid, Digest: "registry.example.test/fixture@sha256:" + strings.Repeat("a", 64), EntrySHA256: entrySHA}
-	f := facts{SchemaVersion: "ani.modeldev.material-input.v2.1", ImplementationID: id, DeviceMode: device, TrainingImage: i, Pipeline: pipelineReceipt{Phase: "CONFIRMED", PipelineID: uuid, PipelineVersionID: uuid, PipelineIRSHA256: strings.Repeat("b", 64)}, WorkspaceStorageClass: "test-storage", WorkspaceCapacityBytes: 20 << 30}
+	i := image{ImageID: "img_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ImageVersion: 1, ImageScope: cpup01.ImageScopePlatform, Digest: "registry.example.test/fixture@sha256:" + strings.Repeat("a", 64), EntrySHA256: entrySHA, PythonExecutable: "/actual/image/python"}
+	f := facts{SchemaVersion: "ani.modeldev.material-input.v3", ImplementationID: id, DeviceMode: device, TrainingImage: i, Pipeline: pipelineReceipt{Phase: "CONFIRMED", PipelineID: uuid, PipelineVersionID: uuid, PipelineIRSHA256: strings.Repeat("b", 64)}, WorkspaceStorageClass: "test-storage", WorkspaceCapacityBytes: 20 << 30}
+	f.ComponentResources = conformance.ComponentResourceFixtures(cpup01.Implementations()[id].Kind)
 	if id == "builtin.sft_lora" {
-		f.Finetuning = &finetuningFacts{ExportImage: i, VerifyImage: i, MappingSHA256: mappingSHA, MaxSequenceLength: 32768, Budgets: cpup01.ComponentBudgets{RPCTimeoutSeconds: 30, MaxBaseModelBytes: 2 << 30, MaxBaseModelExpandedBytes: 4 << 30, MaxSpoolBytes: 8 << 30}}
+		capabilities := conformance.FinetuningRuntimeCapabilities()
+		capabilities.ImageDigest = i.Digest
+		capabilities.EntrypointSHA256 = entrySHA
+		f.Finetuning = &finetuningFacts{ExportImage: i, VerifyImage: i, MappingSHA256: mappingSHA, RuntimeCapabilities: capabilities}
 	}
 	return f, entrySHA, mappingSHA
 }
@@ -65,11 +70,11 @@ func TestFiniteCPULoRAMaterialsUseActualSourcesAndOneDefaultDefinition(t *testin
 							found = true
 						}
 					}
-					if !found || m.Program.Command[2] != "/opt/cpu03/train_mlp.py" {
+					if !found || m.Program.Command[2] != "/opt/ani-modeldev/training/train_mlp.py" {
 						t.Fatal("real MLP entry/all parameters missing")
 					}
 				} else {
-					if len(m.OutputContract.RequiredFiles) != 18 || m.Finetuning.ExportProgram.ImplementationSHA256 != entry || m.Finetuning.MappingSHA256 != mapping {
+					if len(m.OutputContract.RequiredFiles) != 8 || m.Finetuning.ExportProgram.ImplementationSHA256 != entry || m.Finetuning.MappingSHA256 != mapping {
 						t.Fatal("LoRA actual software inventory missing")
 					}
 					settings, err := managedSettings(device)

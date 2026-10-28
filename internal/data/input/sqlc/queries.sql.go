@@ -32,7 +32,7 @@ func (q *Queries) CountInputVersions(ctx context.Context, arg CountInputVersions
 }
 
 const getInputVersion = `-- name: GetInputVersion :one
-SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions
+SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions
 WHERE tenant_id = $1::uuid
   AND input_version_id = $2::uuid
 `
@@ -63,6 +63,56 @@ func (q *Queries) GetInputVersion(ctx context.Context, arg GetInputVersionParams
 		&i.VerifiedAt,
 		&i.VerifiedSchemaVersion,
 		&i.VerifiedRowCount,
+		&i.PreparedFormat,
+		&i.PreparedTransformID,
+		&i.PreparedSizeBytes,
+		&i.PreparedSha256,
+		&i.PreparedRowCount,
+		&i.VerifiedFeatureCount,
+		&i.FailureCode,
+		&i.FailureObservedAt,
+		&i.Format,
+	)
+	return i, err
+}
+
+const getInputVersionByRequestID = `-- name: GetInputVersionByRequestID :one
+SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions
+WHERE tenant_id = $1::uuid
+  AND request_id = $2::uuid
+`
+
+type GetInputVersionByRequestIDParams struct {
+	TenantID  pgtype.UUID
+	RequestID pgtype.UUID
+}
+
+func (q *Queries) GetInputVersionByRequestID(ctx context.Context, arg GetInputVersionByRequestIDParams) (ModeldevInputVersion, error) {
+	row := q.db.QueryRow(ctx, getInputVersionByRequestID, arg.TenantID, arg.RequestID)
+	var i ModeldevInputVersion
+	err := row.Scan(
+		&i.TenantID,
+		&i.InputVersionID,
+		&i.RequestID,
+		&i.Actor,
+		&i.RequestedAt,
+		&i.StorageConnectionID,
+		&i.Bucket,
+		&i.ApprovedPrefix,
+		&i.ObjectKey,
+		&i.ObjectVersionID,
+		&i.SizeBytes,
+		&i.Sha256,
+		&i.State,
+		&i.CredentialReference,
+		&i.VerifiedAt,
+		&i.VerifiedSchemaVersion,
+		&i.VerifiedRowCount,
+		&i.PreparedFormat,
+		&i.PreparedTransformID,
+		&i.PreparedSizeBytes,
+		&i.PreparedSha256,
+		&i.PreparedRowCount,
 		&i.VerifiedFeatureCount,
 		&i.FailureCode,
 		&i.FailureObservedAt,
@@ -83,7 +133,7 @@ INSERT INTO modeldev_input_versions (
     $9, $10, $11, $12, $13, $14
 )
 ON CONFLICT DO NOTHING
-RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, verified_feature_count, failure_code, failure_observed_at, format
+RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format
 `
 
 type InsertFrozenImportParams struct {
@@ -139,6 +189,11 @@ func (q *Queries) InsertFrozenImport(ctx context.Context, arg InsertFrozenImport
 		&i.VerifiedAt,
 		&i.VerifiedSchemaVersion,
 		&i.VerifiedRowCount,
+		&i.PreparedFormat,
+		&i.PreparedTransformID,
+		&i.PreparedSizeBytes,
+		&i.PreparedSha256,
+		&i.PreparedRowCount,
 		&i.VerifiedFeatureCount,
 		&i.FailureCode,
 		&i.FailureObservedAt,
@@ -148,7 +203,7 @@ func (q *Queries) InsertFrozenImport(ctx context.Context, arg InsertFrozenImport
 }
 
 const listInputVersions = `-- name: ListInputVersions :many
-SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions
+SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions
 WHERE tenant_id = $1::uuid
   AND ($2::text = '' OR state = $2::text)
   AND ($3::text = '' OR format = $3::text)
@@ -198,6 +253,11 @@ func (q *Queries) ListInputVersions(ctx context.Context, arg ListInputVersionsPa
 			&i.VerifiedAt,
 			&i.VerifiedSchemaVersion,
 			&i.VerifiedRowCount,
+			&i.PreparedFormat,
+			&i.PreparedTransformID,
+			&i.PreparedSizeBytes,
+			&i.PreparedSha256,
+			&i.PreparedRowCount,
 			&i.VerifiedFeatureCount,
 			&i.FailureCode,
 			&i.FailureObservedAt,
@@ -214,7 +274,7 @@ func (q *Queries) ListInputVersions(ctx context.Context, arg ListInputVersionsPa
 }
 
 const lockInputVersion = `-- name: LockInputVersion :one
-SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions
+SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions
 WHERE tenant_id = $1::uuid
   AND input_version_id = $2::uuid
 FOR UPDATE
@@ -246,6 +306,11 @@ func (q *Queries) LockInputVersion(ctx context.Context, arg LockInputVersionPara
 		&i.VerifiedAt,
 		&i.VerifiedSchemaVersion,
 		&i.VerifiedRowCount,
+		&i.PreparedFormat,
+		&i.PreparedTransformID,
+		&i.PreparedSizeBytes,
+		&i.PreparedSha256,
+		&i.PreparedRowCount,
 		&i.VerifiedFeatureCount,
 		&i.FailureCode,
 		&i.FailureObservedAt,
@@ -263,7 +328,7 @@ WHERE tenant_id = $4::uuid
   AND input_version_id = $5::uuid
   AND request_id = $6::uuid
   AND state = 'VALIDATING'
-RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, verified_feature_count, failure_code, failure_observed_at, format
+RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format
 `
 
 type RecordValidationFailureParams struct {
@@ -303,6 +368,11 @@ func (q *Queries) RecordValidationFailure(ctx context.Context, arg RecordValidat
 		&i.VerifiedAt,
 		&i.VerifiedSchemaVersion,
 		&i.VerifiedRowCount,
+		&i.PreparedFormat,
+		&i.PreparedTransformID,
+		&i.PreparedSizeBytes,
+		&i.PreparedSha256,
+		&i.PreparedRowCount,
 		&i.VerifiedFeatureCount,
 		&i.FailureCode,
 		&i.FailureObservedAt,
@@ -318,20 +388,30 @@ SET state = 'READY',
     verified_schema_version = $2,
     verified_row_count = $3,
     verified_feature_count = $4,
+    prepared_format = $5,
+    prepared_transform_id = $6,
+    prepared_size_bytes = $7,
+    prepared_sha256 = $8,
+    prepared_row_count = $9,
     failure_code = NULL,
     failure_observed_at = NULL
-WHERE tenant_id = $5::uuid
-  AND input_version_id = $6::uuid
-  AND request_id = $7::uuid
+WHERE tenant_id = $10::uuid
+  AND input_version_id = $11::uuid
+  AND request_id = $12::uuid
   AND state = 'VALIDATING'
-RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, verified_feature_count, failure_code, failure_observed_at, format
+RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format
 `
 
 type RecordVerifiedCSVParams struct {
 	VerifiedAt            pgtype.Timestamptz
 	VerifiedSchemaVersion pgtype.Text
-	VerifiedRowCount      pgtype.Int4
+	VerifiedRowCount      pgtype.Int8
 	VerifiedFeatureCount  pgtype.Int4
+	PreparedFormat        pgtype.Text
+	PreparedTransformID   pgtype.Text
+	PreparedSizeBytes     pgtype.Int8
+	PreparedSha256        pgtype.Text
+	PreparedRowCount      pgtype.Int8
 	TenantID              pgtype.UUID
 	InputVersionID        pgtype.UUID
 	RequestID             pgtype.UUID
@@ -343,6 +423,11 @@ func (q *Queries) RecordVerifiedCSV(ctx context.Context, arg RecordVerifiedCSVPa
 		arg.VerifiedSchemaVersion,
 		arg.VerifiedRowCount,
 		arg.VerifiedFeatureCount,
+		arg.PreparedFormat,
+		arg.PreparedTransformID,
+		arg.PreparedSizeBytes,
+		arg.PreparedSha256,
+		arg.PreparedRowCount,
 		arg.TenantID,
 		arg.InputVersionID,
 		arg.RequestID,
@@ -366,6 +451,11 @@ func (q *Queries) RecordVerifiedCSV(ctx context.Context, arg RecordVerifiedCSVPa
 		&i.VerifiedAt,
 		&i.VerifiedSchemaVersion,
 		&i.VerifiedRowCount,
+		&i.PreparedFormat,
+		&i.PreparedTransformID,
+		&i.PreparedSizeBytes,
+		&i.PreparedSha256,
+		&i.PreparedRowCount,
 		&i.VerifiedFeatureCount,
 		&i.FailureCode,
 		&i.FailureObservedAt,

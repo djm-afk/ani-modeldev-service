@@ -43,7 +43,7 @@ func TestMainFlowEarlyCloseBeforeBeginPersistsClosedWithoutTrainingPermit(t *tes
 	if err := os.WriteFile(tokenFile, []byte("synthetic-bound-close"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	runner, err := component.New(component.Config{TenantID: f.request.Admission.TenantID, Context: claim, TokenFile: tokenFile, CandidateFile: filepath.Join(t.TempDir(), "missing-candidate.json")}, client, nil, nil)
+	runner, err := component.New(component.Config{TenantID: f.request.Admission.TenantID, Context: claim, TokenFile: tokenFile}, client, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

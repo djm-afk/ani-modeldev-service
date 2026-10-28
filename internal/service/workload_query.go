@@ -222,7 +222,7 @@ func (query *Query) ListExecutionEvents(ctx context.Context, request *modeldevv1
 	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 {
 		return nil, status.Error(codes.InvalidArgument, "invalid event query")
 	}
-	eventScope, valid := biz.ParseEventScope(request.Scope, request.WarningOnly)
+	eventScope, valid := biz.ParseEventScope(request.Scope)
 	if !valid {
 		return nil, status.Error(codes.InvalidArgument, "invalid event scope")
 	}

@@ -1,2 +1,4 @@
 kfp==2.16.0
 kfp-kubernetes==2.16.0
+kfp-pipeline-spec==2.16.0
+kfp-server-api==2.16.0

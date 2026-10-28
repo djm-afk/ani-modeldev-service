@@ -20,9 +20,10 @@ var (
 // input shape. It is an observation, not a persisted READY input or access grant.
 type VerifiedCSV struct {
 	VerifiedObject
-	SchemaVersion string
-	RowCount      uint32
-	FeatureCount  uint32
+	SchemaVersion   string
+	RowCount        int64
+	FeatureCount    uint32
+	PreparedDataset cpup01.PreparedDatasetFacts
 }
 
 // ValidateFor binds a trusted byte observation to the already frozen request.
@@ -31,7 +32,7 @@ func (verified VerifiedCSV) ValidateFor(request InputImport) error {
 	object, expected := verified.Object, request.Object
 	when := verified.VerifiedAt.UTC()
 	if request.Validate() != nil || request.InputFormat() != "CSV" || when.IsZero() || when.Year() < 1 || when.Year() > 9999 || when.Before(request.RequestedAt) ||
-		verified.SchemaVersion != "ani.cpu.csv.v1" || verified.RowCount == 0 || verified.FeatureCount != 16 ||
+		verified.SchemaVersion != "ani.cpu.csv.v1" || verified.RowCount <= 0 || verified.FeatureCount != 16 || verified.PreparedDataset.ValidateForSource("CSV", object.SizeBytes, object.SHA256, verified.RowCount) != nil ||
 		object.StorageConnectionID != expected.StorageConnectionID || object.Bucket != expected.Bucket || object.Key != expected.Key ||
 		object.VersionID == nil || expected.VersionID == nil || *object.VersionID != *expected.VersionID || object.ImmutableCopy != nil ||
 		object.SizeBytes != expected.SizeBytes || object.SHA256 != expected.SHA256 {
@@ -113,16 +114,12 @@ func (request InputImport) Validate() error {
 	if !ValidStorageReference(scope.StorageConnectionID) || !ValidStorageReference(scope.Bucket) || object.StorageConnectionID != scope.StorageConnectionID || object.Bucket != scope.Bucket || !ValidStorageKey(scope.ApprovedPrefix) || !ValidStorageKey(object.Key) || !strings.HasPrefix(object.Key, scope.ApprovedPrefix+"/") {
 		return ErrInvalidInput
 	}
-	if object.VersionID == nil || object.ImmutableCopy != nil || !ValidStorageReference(*object.VersionID) || strings.EqualFold(*object.VersionID, "null") || object.SizeBytes <= 0 || object.SizeBytes > 32*1024*1024 || !closeSpecHashPattern.MatchString(object.SHA256) {
+	if object.VersionID == nil || object.ImmutableCopy != nil || !ValidStorageReference(*object.VersionID) || strings.EqualFold(*object.VersionID, "null") || object.SizeBytes <= 0 || !closeSpecHashPattern.MatchString(object.SHA256) {
 		return ErrInvalidInput
 	}
 	return nil
 }
 
-// Empty format retains the original CSV import contract for existing callers.
 func (request InputImport) InputFormat() string {
-	if request.Format == "" {
-		return "CSV"
-	}
 	return request.Format
 }

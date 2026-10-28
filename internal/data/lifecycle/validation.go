@@ -16,7 +16,7 @@ import (
 func validWorkspace(execution biz.Execution, workspace biz.WorkspaceBinding) bool {
 	frozen := execution.Snapshot.Workspace
 	environment := execution.Snapshot.Environment
-	return workspace.Mode == frozen.Mode && workspace.NamespaceName == environment.NamespaceName && workspace.NamespaceUID == environment.NamespaceUID && len(validation.IsDNS1123Subdomain(workspace.PVCName)) == 0 && validOpaqueID(workspace.PVCUID) && workspace.InputSubpath == frozen.InputSubpath && workspace.TrainingSubpath == frozen.TrainingSubpath && workspace.ReportsSubpath == frozen.ReportsSubpath && workspace.PublicationSubpath == frozen.PublicationSubpath && validDigest(workspace.PreparedManifestSHA256) && workspace.PreparedManifestBytes > 0
+	return workspace.Mode == frozen.Mode && workspace.NamespaceName == environment.NamespaceName && workspace.NamespaceUID == environment.NamespaceUID && len(validation.IsDNS1123Subdomain(workspace.PVCName)) == 0 && validOpaqueID(workspace.PVCUID) && workspace.InputSubpath == frozen.InputSubpath && workspace.TrainingSubpath == frozen.TrainingSubpath && workspace.ReportsSubpath == frozen.ReportsSubpath && workspace.PublicationSubpath == frozen.PublicationSubpath && workspace.WorkSubpath == frozen.WorkSubpath && validDigest(workspace.PreparedManifestSHA256) && workspace.PreparedManifestBytes > 0
 }
 func validOpaqueID(value string) bool {
 	if value == "" || len(value) > 128 {
@@ -195,26 +195,30 @@ func validPublication(execution biz.Execution, authority biz.RunAuthorityCandida
 	files := make([]cpup01.OutputFile, 0, len(publication.Files))
 	keys := make(map[string]bool)
 	artifactIDs := make(map[string]bool)
+	requiredPaths := make(map[string]bool, len(execution.Snapshot.OutputContract.RequiredFiles))
+	for _, required := range execution.Snapshot.OutputContract.RequiredFiles {
+		requiredPaths[required.RelativePath] = true
+	}
 	for _, file := range publication.Files {
 		if _, err := databaseID(file.ArtifactID); err != nil || artifactIDs[file.ArtifactID] {
 			return biz.ErrRuntimeConflict
 		}
 		artifactIDs[file.ArtifactID] = true
-		if !validPublicationObject(execution, file.Object) || file.File.SizeBytes != file.Object.SizeBytes || file.File.SHA256 != file.Object.SHA256 || keys[file.Object.Key] {
+		if !validPublicationObject(execution, file.Object) || requiredPaths[file.File.RelativePath] && file.Object.SizeBytes == 0 || file.File.SizeBytes != file.Object.SizeBytes || file.File.SHA256 != file.Object.SHA256 || keys[file.Object.Key] {
 			return biz.ErrRuntimeConflict
 		}
 		keys[file.Object.Key] = true
 		files = append(files, file.File)
 	}
 	manifest, digest, err := cpup01.OutputManifestBytes(cpup01.AdmissionEnvelope(execution.Admission), files)
-	if err != nil || !validPublicationObject(execution, publication.Manifest) || publication.Manifest.SizeBytes != int64(len(manifest)) || publication.Manifest.SHA256 != digest || keys[publication.Manifest.Key] {
+	if err != nil || !validPublicationObject(execution, publication.Manifest) || publication.Manifest.SizeBytes <= 0 || publication.Manifest.SizeBytes != int64(len(manifest)) || publication.Manifest.SHA256 != digest || keys[publication.Manifest.Key] {
 		return biz.ErrRuntimeConflict
 	}
 	keys[publication.Manifest.Key] = true
 	if execution.Snapshot.OutputContract.CreateTarBundle != (publication.Bundle != nil) {
 		return biz.ErrRuntimeConflict
 	}
-	if publication.Bundle != nil && (!validPublicationObject(execution, *publication.Bundle) || keys[publication.Bundle.Key]) {
+	if publication.Bundle != nil && (!validPublicationObject(execution, *publication.Bundle) || publication.Bundle.SizeBytes <= 0 || keys[publication.Bundle.Key]) {
 		return biz.ErrRuntimeConflict
 	}
 	return nil
@@ -223,7 +227,8 @@ func validPublicationObject(execution biz.Execution, object cpup01.FixedObjectRe
 	scope := execution.Snapshot.PublicationScope
 	versioned := object.VersionID != nil && *object.VersionID != "" && *object.VersionID != "null"
 	immutable := object.ImmutableCopy != nil && *object.ImmutableCopy
-	return object.StorageConnectionID == scope.StorageConnectionID && object.Bucket == scope.Bucket && biz.ValidStorageKey(object.Key) && strings.HasPrefix(object.Key, scope.ApprovedPrefix+"/") && object.SizeBytes > 0 && validDigest(object.SHA256) && (versioned || immutable)
+	validSize := object.SizeBytes > 0 || object.SizeBytes == 0 && object.SHA256 == cpup01.EmptyContentSHA256
+	return object.StorageConnectionID == scope.StorageConnectionID && object.Bucket == scope.Bucket && biz.ValidStorageKey(object.Key) && strings.HasPrefix(object.Key, scope.ApprovedPrefix+"/") && validSize && validDigest(object.SHA256) && (versioned || immutable)
 }
 func samePublication(left, right biz.RuntimePublication) bool {
 	// Verification may sample later read timestamps. That is evidence of the

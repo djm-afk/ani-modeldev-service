@@ -33,7 +33,8 @@ func TestProductionInputQueryUsesCurrentDelegation(t *testing.T) {
 		t.Fatalf("cross-tenant query = %v", err)
 	}
 	implementations := metadata.NewOutgoingContext(ctx, metadata.Pairs("x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", uuid.NewString(), "x-ani-data-scope", "tenant-all", "x-ani-authorized-method", modeldevv1.ModelDevQueryService_ListImplementations_FullMethodName))
-	list, err := client.ListImplementations(implementations, &modeldevv1.ListImplementationsRequest{})
+	mode := "cpu"
+	list, err := client.ListImplementations(implementations, &modeldevv1.ListImplementationsRequest{DeviceMode: &mode})
 	if err != nil || len(list.GetImplementations()) != 2 || list.Implementations[0].ImplementationId != "builtin.mlp" || !list.Implementations[0].Available || len(list.Implementations[0].ParameterRules) != 4 || list.Implementations[1].Available {
 		t.Fatalf("installed software availability and typed rules projection diverged: %v", err)
 	}

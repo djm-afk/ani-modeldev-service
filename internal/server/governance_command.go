@@ -12,6 +12,7 @@ import (
 	"github.com/go-kratos/kratos/v3/middleware"
 	kratosgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"google.golang.org/grpc"
 )
@@ -72,8 +73,10 @@ func NewGovernanceCommandServer(c *conf.Server_GRPC, security CommandTLS, comman
 }
 
 type GovernanceServices struct {
-	Management modeldevv1.ModelDevManagementServiceServer
-	Operations modeldevv1.ModelDevOperationsServiceServer
+	Management             modeldevv1.ModelDevManagementServiceServer
+	Operations             modeldevv1.ModelDevOperationsServiceServer
+	ModelResolutionTimeout time.Duration
+	ImportTimeout          time.Duration
 }
 
 func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command modeldevv1.ModelDevCommandServiceServer, admission modeldevv1.ModelDevAdmissionServiceServer, query modeldevv1.ModelDevQueryServiceServer, extra GovernanceServices, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
@@ -103,6 +106,12 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 		if info.FullMethod == modeldevv1.ModelDevOperationsService_ReconcileExecution_FullMethodName {
 			timeout = 5 * time.Minute
 		}
+		switch info.FullMethod {
+		case modeldevv1.ModelDevQueryService_CheckFinetuningReadiness_FullMethodName, modeldevv1.ModelDevAdmissionService_PrepareAdmission_FullMethodName:
+			timeout = modelResolutionTimeout(extra)
+		case modeldevv1.ModelDevManagementService_ImportCSV_FullMethodName, modeldevv1.ModelDevManagementService_ImportFinetuningDataset_FullMethodName:
+			timeout = inputImportTimeout(extra)
+		}
 		if timeout > 0 {
 			bounded, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
@@ -114,8 +123,11 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 		}
 		return next(verified, request)
 	}
-	transportTimeout := max(c.Timeout.AsDuration(), 5*time.Minute)
+	// The envelope permits each method's explicit receiver cap. Short methods
+	// still retain c.Timeout; every layer honors an earlier caller deadline.
+	transportTimeout := max(c.Timeout.AsDuration(), 5*time.Minute, modelResolutionTimeout(extra), inputImportTimeout(extra))
 	s := kratosgrpc.NewServer(
+		kratosgrpc.Options(grpc.MaxRecvMsgSize(cpup01.MaxControlRPCBytes), grpc.MaxSendMsgSize(cpup01.MaxControlRPCBytes)),
 		kratosgrpc.Network(c.Network), kratosgrpc.Address(c.Addr),
 		kratosgrpc.Timeout(transportTimeout),
 		kratosgrpc.TLSConfig(&tls.Config{
@@ -140,6 +152,20 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 		modeldevv1.RegisterModelDevOperationsServiceServer(s, extra.Operations)
 	}
 	return s, nil
+}
+
+func modelResolutionTimeout(extra GovernanceServices) time.Duration {
+	if extra.ModelResolutionTimeout > 0 {
+		return extra.ModelResolutionTimeout
+	}
+	return 300 * time.Second
+}
+
+func inputImportTimeout(extra GovernanceServices) time.Duration {
+	if extra.ImportTimeout > 0 {
+		return extra.ImportTimeout
+	}
+	return 1800 * time.Second
 }
 
 func validGovernanceCommandActor(actor string) bool {

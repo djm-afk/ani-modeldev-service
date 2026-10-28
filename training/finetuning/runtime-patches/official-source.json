@@ -1,0 +1,18 @@
+{
+  "llamafactory_source_version": "0.9.6.dev0",
+  "official_reference": "10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b",
+  "patches": [
+    {
+      "files": [
+        {
+          "after_sha256": "45af44a2a832ddcb144017fcf49916ca6b8e48d6e00f2208a763bd83e346d52a",
+          "before_sha256": "c596efb447fb50fc915f6aa5c4f228d5409fba83808e23015a1bcf3387a3ffbf",
+          "path": "src/llamafactory/data/converter.py"
+        }
+      ],
+      "path": "align-writer-batch-size.patch",
+      "sha256": "b06ddc25ab04024dfe8248da9eac5f64fce1097da7611df41941a0e654f65af4"
+    }
+  ],
+  "source_layer_sha256": "685e74443e687817f589b3d7bcc6f1a7ca65eac89c392eee8df2e94cec6460ee"
+}

@@ -101,11 +101,11 @@ func TestOwnerRecoveryProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	dispatch := submission.New(pool)
-	steps, err := biz.NewManagedSteps(dispatch, execution.New(pool), identity, runs)
+	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(s3.New(s3.Options{Region: "us-east-1"}), admission.Snapshot.PublicationScope.StorageConnectionID), dispatch)
+	steps, err := biz.NewManagedSteps(dispatch, execution.New(pool), identity, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(s3.New(s3.Options{Region: "us-east-1"}), admission.Snapshot.PublicationScope.StorageConnectionID, 64<<20), dispatch)
 	managed, err := biz.NewManagedRuntime(steps, lifecycle.New(pool), trainer.New(kube), proof, proof)
 	if err != nil {
 		t.Fatal(err)

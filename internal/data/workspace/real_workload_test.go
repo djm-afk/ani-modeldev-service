@@ -33,7 +33,7 @@ func TestCollectActualFedoraMLPArtifacts(t *testing.T) {
 			intent := conformance.IntentV1()
 			intent.MLP = &cpup01.MLPParameters{LearningRate: &vector.rate, Epochs: &vector.epochs, BatchSize: &vector.batch, Seed: &vector.seed}
 			snapshot.Program.ResolvedParameters, _ = intent.ResolveParameters()
-			snapshot.Input.RowCount = uint32(vector.rows)
+			snapshot.Input.RowCount = int64(vector.rows)
 			raw, err := os.ReadFile(filepath.Join(root, vector.name, "input.csv"))
 			if err != nil {
 				t.Fatal(err)
@@ -107,8 +107,7 @@ func TestCollectActualFedoraLoRAArtifacts(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"Modelfile", "added_tokens.json", "config.json", "generation_config.json", "merges.txt", "model.safetensors", "special_tokens_map.json", "tokenizer.json", "tokenizer_config.json", "vocab.json"} {
-		inTar := true
-		required = append(required, cpup01.RequiredOutput{Role: "HF_MODEL", RelativePath: "export/merged/" + name, MaxSizeBytes: 2 << 30, InTar: &inTar})
+		required = append(required, cpup01.RequiredOutput{Role: "HF_MODEL", RelativePath: "export/merged/" + name, InTar: true})
 	}
 	snapshot.OutputContract.RequiredFiles = required
 	execution := actualWorkloadExecution(t, snapshot, intent)

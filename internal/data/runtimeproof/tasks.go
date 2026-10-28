@@ -13,22 +13,6 @@ func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.Manag
 }
 
 func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured, kind string) ([]kfp.ManagedTask, error) {
-	// The original top-level Pod association is retained for older adapters.
-	// The live 2.16 response instead supplies controller node references.
-	legacy := len(tasks) > 0
-	for _, task := range tasks {
-		legacy = legacy && len(task.ChildTasks) == 0
-	}
-	if legacy {
-		for _, task := range tasks {
-			if task.PodName == "" && task.State != "SKIPPED" {
-				legacy = false
-			}
-		}
-		if legacy {
-			return tasks, nil
-		}
-	}
 	if workflow == nil || workflow.GetUID() == "" {
 		return nil, biz.ErrRuntimeNotReady
 	}

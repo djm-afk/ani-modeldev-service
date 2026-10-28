@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-	"math"
 	"strings"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
@@ -19,7 +18,7 @@ import (
 func (v *Verifier) VerifyOutputBundle(ctx context.Context, scope cpup01.StorageScope, object cpup01.FixedObjectRef, files []cpup01.OutputFile, manifest []byte) (biz.VerifiedObject, error) {
 	wanted := make(map[string]cpup01.OutputFile, len(files)+1)
 	for _, file := range files {
-		if file.RelativePath == "output-manifest.json" || wanted[file.RelativePath].RelativePath != "" || !biz.ValidStorageKey(file.RelativePath) || file.SizeBytes <= 0 {
+		if file.RelativePath == "output-manifest.json" || wanted[file.RelativePath].RelativePath != "" || !biz.ValidStorageKey(file.RelativePath) || file.SizeBytes < 0 {
 			return biz.VerifiedObject{}, biz.ErrObjectVerification
 		}
 		wanted[file.RelativePath] = file
@@ -32,84 +31,87 @@ func (v *Verifier) VerifyOutputBundle(ctx context.Context, scope cpup01.StorageS
 // VerifyFinetuningOutputBundle independently reads the fixed main model tar.
 // Adapter/platform reports remain separately verified objects; only the frozen
 // merged HF members may appear at the package root.
-func (v *Verifier) VerifyFinetuningOutputBundle(ctx context.Context, scope cpup01.StorageScope, object cpup01.FixedObjectRef, files []cpup01.OutputFile, contract cpup01.OutputContract) (biz.VerifiedObject, error) {
-	if contract.MaxTarBytes == nil || *contract.MaxTarBytes <= 0 || object.SizeBytes > *contract.MaxTarBytes {
+func (v *Verifier) VerifyFinetuningOutputBundle(ctx context.Context, scope cpup01.StorageScope, object cpup01.FixedObjectRef, files []cpup01.OutputFile, contract cpup01.OutputContract, limits cpup01.ContentLimits) (biz.VerifiedObject, error) {
+	maximum, err := cpup01.TarReadBound(limits.MaxContentBytes)
+	if err != nil || object.SizeBytes > maximum {
 		return biz.VerifiedObject{}, biz.ErrObjectVerification
 	}
-	wanted, err := finetuningTarMembers(files, contract)
+	wanted, err := finetuningTarMembers(files, contract, limits)
 	if err != nil {
 		return biz.VerifiedObject{}, err
 	}
-	return v.verify(ctx, scope, object, func(stream io.Reader) error { return validateFinetuningTar(stream, wanted, *contract.MaxTarBytes) })
+	return v.verify(ctx, scope, object, func(stream io.Reader) error { return validateFinetuningTar(stream, wanted, limits) })
 }
 
-// ValidateFinetuningOutputTar is also used to validate the original durable
-// workspace tar on publication retries. It performs no extraction or network
-// I/O, and callers separately enforce the stream's byte budget and identity.
-func ValidateFinetuningOutputTar(stream io.Reader, files []cpup01.OutputFile, contract cpup01.OutputContract) error {
-	wanted, err := finetuningTarMembers(files, contract)
+// ValidateFinetuningOutputTar verifies the actual merged model archive without
+// counting its bounded POSIX/PAX container overhead as model content.
+func ValidateFinetuningOutputTar(stream io.Reader, files []cpup01.OutputFile, contract cpup01.OutputContract, limits cpup01.ContentLimits) error {
+	wanted, err := finetuningTarMembers(files, contract, limits)
 	if err != nil {
 		return err
 	}
-	return validateFinetuningTar(stream, wanted, *contract.MaxTarBytes)
+	return validateFinetuningTar(stream, wanted, limits)
 }
 
-func validateFinetuningTar(stream io.Reader, wanted map[string]cpup01.OutputFile, maximum int64) error {
-	minimum := int64(1024)
-	for _, file := range wanted {
-		if file.SizeBytes <= 0 || file.SizeBytes > math.MaxInt64-1023 {
-			return biz.ErrObjectVerification
-		}
-		memberBytes := int64(512) + (file.SizeBytes+511)/512*512
-		if memberBytes > maximum-minimum {
-			return biz.ErrObjectVerification
-		}
-		minimum += memberBytes
+func validateFinetuningTar(stream io.Reader, wanted map[string]cpup01.OutputFile, limits cpup01.ContentLimits) error {
+	maximum, err := cpup01.TarReadBound(limits.MaxContentBytes)
+	if err != nil {
+		return biz.ErrObjectVerification
 	}
-	measured := &measuredReader{reader: io.LimitReader(stream, maximum+1)}
+	minimum := int64(1024)
+	var payload int64
+	for _, file := range wanted {
+		padding := (512 - file.SizeBytes%512) % 512
+		for _, size := range []int64{512, file.SizeBytes, padding} {
+			minimum, err = cpup01.CheckedAdd(minimum, size)
+			if err != nil {
+				return biz.ErrObjectVerification
+			}
+		}
+		payload, err = cpup01.CheckedAdd(payload, file.SizeBytes)
+		if err != nil || payload > limits.MaxContentBytes {
+			return biz.ErrObjectVerification
+		}
+	}
+	measured := &measuredReader{reader: io.LimitReader(stream, maximum)}
 	if err := verifyOutputTar(measured, wanted); err != nil {
 		return err
 	}
-	if measured.size < minimum || measured.size > maximum {
+	var extra [1]byte
+	n, probeErr := stream.Read(extra[:])
+	if n != 0 || probeErr != io.EOF || measured.size < minimum || measured.size-payload > maximum-limits.MaxContentBytes {
 		return biz.ErrObjectVerification
 	}
 	return nil
 }
 
-func finetuningTarMembers(files []cpup01.OutputFile, contract cpup01.OutputContract) (map[string]cpup01.OutputFile, error) {
-	if contract.SchemaVersion != "ani.finetune.output.v1" || contract.OutputKind != "MERGED_HF_MODEL" || !contract.CreateTarBundle || contract.MaxTarBytes == nil || *contract.MaxTarBytes <= 0 || len(files) != len(contract.RequiredFiles) || len(files) > 256 {
+func finetuningTarMembers(files []cpup01.OutputFile, contract cpup01.OutputContract, limits cpup01.ContentLimits) (map[string]cpup01.OutputFile, error) {
+	if contract.SchemaVersion != cpup01.OutputContractSchemaVersion || contract.OutputKind != "MERGED_HF_MODEL" || !contract.CreateTarBundle || len(files) == 0 || len(files) > cpup01.MaxOutputFiles || limits.Validate() != nil {
 		return nil, biz.ErrObjectVerification
 	}
 	wanted := map[string]cpup01.OutputFile{}
 	seen := map[string]bool{}
+	var total int64
 	for _, file := range files {
-		if seen[file.RelativePath] || !biz.ValidStorageKey(file.RelativePath) || file.SizeBytes <= 0 {
+		if seen[file.RelativePath] || !biz.ValidStorageKey(file.RelativePath) || len(file.RelativePath) > cpup01.MaxRelativePathBytes || file.SizeBytes < 0 {
 			return nil, biz.ErrObjectVerification
 		}
 		seen[file.RelativePath] = true
-		found := false
-		for _, required := range contract.RequiredFiles {
-			if required.RelativePath == file.RelativePath {
-				if required.Role != file.Role || file.SizeBytes > required.MaxSizeBytes || required.InTar == nil {
-					return nil, biz.ErrObjectVerification
-				}
-				found = true
-				if *required.InTar {
-					if required.Role != "HF_MODEL" || !strings.HasPrefix(file.RelativePath, "export/merged/") {
-						return nil, biz.ErrObjectVerification
-					}
-					name := strings.TrimPrefix(file.RelativePath, "export/merged/")
-					if !biz.ValidStorageKey(name) || wanted[name].RelativePath != "" {
-						return nil, biz.ErrObjectVerification
-					}
-					file.RelativePath = name
-					wanted[name] = file
-				}
-				break
-			}
-		}
-		if !found {
+		var err error
+		total, err = cpup01.CheckedAdd(total, file.SizeBytes)
+		if err != nil || total > limits.MaxContentBytes {
 			return nil, biz.ErrObjectVerification
+		}
+		if file.InTar {
+			if file.Role != "HF_MODEL" || !strings.HasPrefix(file.RelativePath, "export/merged/") {
+				return nil, biz.ErrObjectVerification
+			}
+			name := strings.TrimPrefix(file.RelativePath, "export/merged/")
+			if !biz.ValidStorageKey(name) || len(wanted) >= cpup01.MaxModelFiles {
+				return nil, biz.ErrObjectVerification
+			}
+			file.RelativePath = name
+			wanted[name] = file
 		}
 	}
 	if len(wanted) == 0 {
@@ -134,8 +136,13 @@ func verifyOutputTar(stream io.Reader, wanted map[string]cpup01.OutputFile) erro
 			return biz.ErrObjectVerification
 		}
 		file, ok := wanted[header.Name]
-		if !ok || seen[header.Name] || header.Typeflag != tar.TypeReg || header.Linkname != "" || header.Size != file.SizeBytes || header.Format != tar.FormatUSTAR || len(header.PAXRecords) != 0 {
+		if !ok || seen[header.Name] || header.Typeflag != tar.TypeReg || header.Linkname != "" || header.Size != file.SizeBytes || (header.Format != tar.FormatUSTAR && header.Format != tar.FormatPAX) {
 			return biz.ErrObjectVerification
+		}
+		for name := range header.PAXRecords {
+			if name != "path" {
+				return biz.ErrObjectVerification
+			}
 		}
 		seen[header.Name] = true
 		digest := sha256.New()

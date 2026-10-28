@@ -17,6 +17,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
@@ -49,7 +50,7 @@ func TestManagedInputImportFreezesBeforeReadingBytesAndCommitsReady(t *testing.T
 	verifier := managedImportVerifier(server, request.Scope.StorageConnectionID)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	ready, err := biz.NewInputImporter(repository, verifier).ImportCSV(ctx, request)
+	ready, err := managedTestImporter(repository, verifier).ImportCSV(ctx, request)
 	if err != nil {
 		t.Fatalf("import using real PostgreSQL and the S3 SDK boundary: %v", err)
 	}
@@ -88,7 +89,7 @@ func TestManagedInputImportRejectsBadRemoteProofWithoutExposingReady(t *testing.
 			defer server.Close()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			got, err := biz.NewInputImporter(input.New(openPool()), managedImportVerifier(server, request.Scope.StorageConnectionID)).ImportCSV(ctx, request)
+			got, err := managedTestImporter(input.New(openPool()), managedImportVerifier(server, request.Scope.StorageConnectionID)).ImportCSV(ctx, request)
 			if !errors.Is(err, biz.ErrInputVerification) || reads.Load() != 1 || got.State != biz.InputStateRejected || got.Verification != nil || got.Failure == nil || got.Failure.Code != biz.InputFailureContentRejected {
 				t.Fatalf("invalid remote proof exposed a ready input: %+v, %v", got, err)
 			}
@@ -96,7 +97,7 @@ func TestManagedInputImportRejectsBadRemoteProofWithoutExposingReady(t *testing.
 			if err != nil || !reflect.DeepEqual(stored, got) || !reflect.DeepEqual(stored.Import, request) {
 				t.Fatalf("failed verification lost or promoted the frozen request: %+v, %v", stored, err)
 			}
-			replayed, err := biz.NewInputImporter(input.New(openPool()), managedImportVerifier(server, request.Scope.StorageConnectionID)).ImportCSV(ctx, request)
+			replayed, err := managedTestImporter(input.New(openPool()), managedImportVerifier(server, request.Scope.StorageConnectionID)).ImportCSV(ctx, request)
 			if !errors.Is(err, biz.ErrInputVerification) || !reflect.DeepEqual(replayed, stored) || reads.Load() != 1 {
 				t.Fatalf("replaying rejected content fetched it again or lost the first failure: %+v, %v", replayed, err)
 			}
@@ -118,13 +119,13 @@ func TestManagedInputImportReplayAndConflictDoNotReadAnotherObject(t *testing.T)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	writer := openPool()
-	first, err := biz.NewInputImporter(input.New(writer), verifier).ImportCSV(ctx, request)
+	first, err := managedTestImporter(input.New(writer), verifier).ImportCSV(ctx, request)
 	if err != nil || first.State != biz.InputStateReady {
 		t.Fatalf("initial verified import: %+v, %v", first, err)
 	}
 	writer.Close()
 	reader := input.New(openPool())
-	importer := biz.NewInputImporter(reader, verifier)
+	importer := managedTestImporter(reader, verifier)
 	replayed, err := importer.ImportCSV(ctx, request)
 	if err != nil || !reflect.DeepEqual(replayed, first) || reads.Load() != 1 {
 		t.Fatalf("replay changed the fixed version, proof, or repeated verification: %+v, %v", replayed, err)
@@ -162,7 +163,7 @@ func TestManagedInputImportRetriesSourceFailureAgainstTheSameFrozenObject(t *tes
 	defer cancel()
 	writer := openPool()
 	verifier := managedImportVerifier(server, request.Scope.StorageConnectionID)
-	failed, err := biz.NewInputImporter(input.New(writer), verifier).ImportCSV(ctx, request)
+	failed, err := managedTestImporter(input.New(writer), verifier).ImportCSV(ctx, request)
 	if !errors.Is(err, biz.ErrInputSourceUnavailable) || err.Error() != "INPUT_SOURCE_UNAVAILABLE" || failed.State != biz.InputStateValidating || failed.Failure == nil || failed.Failure.Code != biz.InputFailureSourceUnavailable || failed.Verification != nil || reads.Load() != 1 {
 		t.Fatalf("temporary source error rejected content or was not saved: %+v, %v", failed, err)
 	}
@@ -172,7 +173,7 @@ func TestManagedInputImportRetriesSourceFailureAgainstTheSameFrozenObject(t *tes
 	writer.Close()
 	reader := input.New(openPool())
 	requireStoredInputVersion(t, ctx, reader, failed)
-	ready, err := biz.NewInputImporter(reader, verifier).ImportCSV(ctx, request)
+	ready, err := managedTestImporter(reader, verifier).ImportCSV(ctx, request)
 	if err != nil || ready.State != biz.InputStateReady || ready.Failure != nil || ready.Verification == nil || !reflect.DeepEqual(ready.Import, request) || reads.Load() != 2 {
 		t.Fatalf("retry did not verify the original fixed object: %+v, %v", ready, err)
 	}
@@ -198,7 +199,7 @@ func TestManagedInputImportCancellationRetainsFrozenRequestWithoutContentRejecti
 		err     error
 	}
 	finished := make(chan result, 1)
-	importer := biz.NewInputImporter(input.New(openPool()), managedImportVerifier(server, request.Scope.StorageConnectionID))
+	importer := managedTestImporter(input.New(openPool()), managedImportVerifier(server, request.Scope.StorageConnectionID))
 	go func() { got, err := importer.ImportCSV(ctx, request); finished <- result{got, err} }()
 	select {
 	case <-started:
@@ -244,5 +245,9 @@ func managedImportVerifier(server *httptest.Server, connectionID string) *object
 		Region: "fixture-region", BaseEndpoint: aws.String(server.URL), UsePathStyle: true,
 		Credentials: aws.AnonymousCredentials{}, HTTPClient: server.Client(), RetryMaxAttempts: 1,
 	})
-	return objectstore.NewVerifier(client, connectionID, 32*1024*1024)
+	return objectstore.NewVerifier(client, connectionID)
+}
+
+func managedTestImporter(repository biz.ManagedInputRepository, verifier biz.CSVVerifier) *biz.InputImporter {
+	return biz.NewInputImporter(repository, verifier, cpup01.ContentLimits{MaxContentBytes: 17179869184}, 1800*time.Second)
 }

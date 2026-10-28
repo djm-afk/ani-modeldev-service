@@ -9,6 +9,8 @@ import re
 import subprocess
 import sys
 
+from dataset_fixture import manifest_arguments
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -56,17 +58,16 @@ def main():
             common + ["/source/training/make_data.py", "--output", "/work/input.csv"],
             check=True,
         )
-    contents = (args.output / "input.csv").read_bytes()
+    inputs = args.output / "inputs"
+    inputs.mkdir()
+    data = inputs / "data.csv"
+    (args.output / "input.csv").replace(data)
+    manifest_args = manifest_arguments(data)
+    manifest_sha = manifest_args[-1]
     command = common + [
-        "/source/training/train_mlp.py",
-        "--data",
-        "/work/input.csv",
-        "--output",
-        "/work/result",
-        "--expected-input-sha256",
-        hashlib.sha256(contents).hexdigest(),
-        "--expected-input-bytes",
-        str(len(contents)),
+        "/source/training/train_mlp.py", "--dataset-manifest", "/work/inputs/dataset-manifest.json",
+        "--expected-dataset-manifest-sha256", manifest_sha, "--work-root", "/work/work/train",
+        "--output", "/work/result",
     ]
     if args.nondefault:
         command += [

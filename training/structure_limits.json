@@ -1,0 +1,16 @@
+{
+  "MaxArchiveEntries": 4096,
+  "MaxArchiveMetadataBytes": 16777216,
+  "MaxControlRPCBytes": 67108864,
+  "MaxJSONDepth": 64,
+  "MaxManifestBytes": 8388608,
+  "MaxMaterialBytes": 1048576,
+  "MaxModelConfigBytes": 8388608,
+  "MaxModelFiles": 1024,
+  "MaxOutputFiles": 2048,
+  "MaxPublicationCandidateBytes": 33554432,
+  "MaxPublicationRefBytes": 1024,
+  "MaxRecordBytes": 33554432,
+  "MaxRelativePathBytes": 1024,
+  "MaxStorageKeyBytes": 1024
+}

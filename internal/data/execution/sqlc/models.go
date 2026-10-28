@@ -34,6 +34,18 @@ type ModeldevExecution struct {
 	AcceptedAt        pgtype.Timestamptz
 }
 
+type ModeldevExecutionCleanupAudit struct {
+	TenantID    pgtype.UUID
+	ExecutionID pgtype.UUID
+	PlanSha256  string
+	Actor       string
+	Phase       string
+	Plan        []byte
+	Receipt     []byte
+	StartedAt   pgtype.Timestamptz
+	CompletedAt pgtype.Timestamptz
+}
+
 type ModeldevExecutionIdentity struct {
 	TenantID        pgtype.UUID
 	ExecutionID     pgtype.UUID
@@ -58,6 +70,37 @@ type ModeldevExecutionRuntime struct {
 	CloseRequestedAt      pgtype.Timestamptz
 	ClosedAt              pgtype.Timestamptz
 	AuthorityExecutionID  pgtype.UUID
+	GpuReleaseSealedAt    pgtype.Timestamptz
+	GpuReleaseScopeSha256 pgtype.Text
+}
+
+type ModeldevInputVersion struct {
+	TenantID              pgtype.UUID
+	InputVersionID        pgtype.UUID
+	RequestID             pgtype.UUID
+	Actor                 string
+	RequestedAt           pgtype.Timestamptz
+	StorageConnectionID   string
+	Bucket                string
+	ApprovedPrefix        string
+	ObjectKey             string
+	ObjectVersionID       string
+	SizeBytes             int64
+	Sha256                string
+	State                 string
+	CredentialReference   string
+	VerifiedAt            pgtype.Timestamptz
+	VerifiedSchemaVersion pgtype.Text
+	VerifiedRowCount      pgtype.Int8
+	PreparedFormat        pgtype.Text
+	PreparedTransformID   pgtype.Text
+	PreparedSizeBytes     pgtype.Int8
+	PreparedSha256        pgtype.Text
+	PreparedRowCount      pgtype.Int8
+	VerifiedFeatureCount  pgtype.Int4
+	FailureCode           pgtype.Text
+	FailureObservedAt     pgtype.Timestamptz
+	Format                string
 }
 
 type ModeldevPipelineConfirmedRun struct {

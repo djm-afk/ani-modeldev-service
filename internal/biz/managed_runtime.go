@@ -36,7 +36,7 @@ func (runtime *ManagedRuntime) WithModelRegistration(registry TrainedArtifactReg
 }
 
 func NewManagedRuntime(steps *ManagedSteps, repository ExecutionRuntimeRepository, trainer TrainingRuntime, workspaces PreparedWorkspaceVerifier, publications PublicationVerifier) (*ManagedRuntime, error) {
-	if steps == nil || repository == nil || trainer == nil || workspaces == nil || publications == nil {
+	if steps == nil || steps.tasks == nil || repository == nil || trainer == nil || workspaces == nil || publications == nil {
 		return nil, ErrRuntimeNotReady
 	}
 	return &ManagedRuntime{steps: steps, repository: repository, trainer: trainer, workspaces: workspaces, publications: publications}, nil
@@ -109,7 +109,7 @@ func (runtime *ManagedRuntime) authenticateOrCloseUnbound(ctx context.Context, t
 		if err != nil {
 			return ManagedRuntimeResult{}, err
 		}
-		evidence, err := runtime.publications.VerifyWritersAbsent(ctx, execution, a)
+		evidence, err := runtime.publications.VerifyWritersAbsent(ctx, execution, a, nil)
 		if err != nil {
 			return ManagedRuntimeResult{}, err
 		}
@@ -161,9 +161,9 @@ func (runtime *ManagedRuntime) Configuration(ctx context.Context, token string, 
 	if (task == "export" || task == "verify" || task == "register") && result.Execution.Snapshot.Kind != "FINETUNING" {
 		return ManagedRuntimeResult{}, ErrManagedStepUnauthorized
 	}
-	resolver, ok := runtime.steps.runs.(ManagedTaskIdentityResolver)
-	if !ok {
-		return result, nil
+	resolver := runtime.steps.tasks
+	if resolver == nil {
+		return ManagedRuntimeResult{}, ErrManagedStepUnavailable
 	}
 	dispatch, err := runtime.steps.repository.Get(ctx, request.TenantID, request.ExecutionID)
 	if err != nil {
@@ -394,10 +394,10 @@ func (runtime *ManagedRuntime) Publish(ctx context.Context, token string, reques
 		return result, err
 	}
 	state := result.Runtime
-	if state.Observation == nil || state.Observation.Outcome != "SUCCEEDED" || !state.Observation.WritersAbsent {
+	if state.Workspace == nil || state.Observation == nil || state.Observation.Outcome != "SUCCEEDED" || !state.Observation.WritersAbsent {
 		return ManagedRuntimeResult{}, ErrRuntimeNotReady
 	}
-	publication, err := runtime.publications.VerifyPublication(ctx, result.Execution, request.Association, candidate)
+	publication, err := runtime.publications.VerifyPublication(ctx, result.Execution, request.Association, *state.Workspace, candidate)
 	if err != nil {
 		return ManagedRuntimeResult{}, err
 	}
@@ -459,7 +459,7 @@ func (runtime *ManagedRuntime) Close(ctx context.Context, token string, request 
 			return runtimeResult(result, state, replayed)
 		}
 	}
-	evidence, err := runtime.publications.VerifyWritersAbsent(ctx, result.Execution, request.Association)
+	evidence, err := runtime.publications.VerifyWritersAbsent(ctx, result.Execution, request.Association, state.Workspace)
 	if err != nil {
 		return runtimeResult(result, state, replayed)
 	}

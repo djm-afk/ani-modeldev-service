@@ -18,13 +18,12 @@ import (
 // Verifier uses an owner-configured S3 client. Endpoints and credentials never
 // come from a component-supplied object reference.
 type Verifier struct {
-	client         *s3.Client
-	connectionID   string
-	maxObjectBytes int64
+	client       *s3.Client
+	connectionID string
 }
 
-func NewVerifier(client *s3.Client, connectionID string, maxObjectBytes int64) *Verifier {
-	return &Verifier{client: client, connectionID: connectionID, maxObjectBytes: maxObjectBytes}
+func NewVerifier(client *s3.Client, connectionID string) *Verifier {
+	return &Verifier{client: client, connectionID: connectionID}
 }
 
 // Verify reads an exact object version under the owner's approved storage scope.
@@ -45,10 +44,7 @@ func (v *Verifier) verify(ctx context.Context, scope cpup01.StorageScope, object
 		// prevents an observation; it does not establish invalid source bytes.
 		return biz.VerifiedObject{}, biz.ErrObjectSourceUnavailable
 	}
-	if v.maxObjectBytes <= 0 || object.SizeBytes > v.maxObjectBytes {
-		return biz.VerifiedObject{}, biz.ErrObjectSourceUnavailable
-	}
-	if object.VersionID == nil || object.ImmutableCopy != nil || !biz.ValidStorageReference(*object.VersionID) || strings.EqualFold(*object.VersionID, "null") || object.SizeBytes <= 0 || len(object.SHA256) != 64 || strings.ToLower(object.SHA256) != object.SHA256 {
+	if object.VersionID == nil || object.ImmutableCopy != nil || !biz.ValidStorageReference(*object.VersionID) || strings.EqualFold(*object.VersionID, "null") || object.SizeBytes < 0 || len(object.SHA256) != 64 || strings.ToLower(object.SHA256) != object.SHA256 {
 		return biz.VerifiedObject{}, biz.ErrObjectVerification
 	}
 	if _, err := hex.DecodeString(object.SHA256); err != nil {
@@ -90,8 +86,11 @@ func (v *Verifier) verify(ctx context.Context, scope cpup01.StorageScope, object
 	if extraErr != nil && extraErr != io.EOF || n == 0 && extraErr == nil {
 		return biz.VerifiedObject{}, biz.ErrObjectSourceUnavailable
 	}
-	if inspectErr != nil || response.VersionId == nil || *response.VersionId != version || measured.size != object.SizeBytes || n != 0 || hex.EncodeToString(digest.Sum(nil)) != object.SHA256 {
+	if response.VersionId == nil || *response.VersionId != version || measured.size != object.SizeBytes || n != 0 || hex.EncodeToString(digest.Sum(nil)) != object.SHA256 {
 		return biz.VerifiedObject{}, biz.ErrObjectVerification
+	}
+	if inspectErr != nil {
+		return biz.VerifiedObject{}, inspectErr
 	}
 	object.VersionID = &version
 	return biz.VerifiedObject{Object: object, VerifiedAt: time.Now().UTC()}, nil

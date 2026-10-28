@@ -24,11 +24,11 @@ var (
 // WorkspaceBinding is an observed runtime fact, separate from the immutable
 // execution snapshot. Its subpaths come exclusively from that snapshot.
 type WorkspaceBinding struct {
-	Mode                                                              string
-	NamespaceName, NamespaceUID, PVCName, PVCUID                      string
-	InputSubpath, TrainingSubpath, ReportsSubpath, PublicationSubpath string
-	PreparedManifestSHA256                                            string
-	PreparedManifestBytes                                             int64
+	Mode                                                                           string
+	NamespaceName, NamespaceUID, PVCName, PVCUID                                   string
+	InputSubpath, TrainingSubpath, ReportsSubpath, PublicationSubpath, WorkSubpath string
+	PreparedManifestSHA256                                                         string
+	PreparedManifestBytes                                                          int64
 }
 
 type TrainingPlan struct {
@@ -297,8 +297,8 @@ type PreparedWorkspaceVerifier interface {
 }
 
 type PublicationVerifier interface {
-	VerifyPublication(context.Context, Execution, ManagedStepAssociation, RuntimePublication) (RuntimePublication, error)
-	VerifyWritersAbsent(context.Context, Execution, ManagedStepAssociation) (ManagedCloseEvidence, error)
+	VerifyPublication(context.Context, Execution, ManagedStepAssociation, WorkspaceBinding, RuntimePublication) (RuntimePublication, error)
+	VerifyWritersAbsent(context.Context, Execution, ManagedStepAssociation, *WorkspaceBinding) (ManagedCloseEvidence, error)
 }
 
 type ManagedCloseEvidence struct {
@@ -348,7 +348,7 @@ func ValidateWorkspaceBinding(execution Execution, workspace WorkspaceBinding) e
 	want := execution.Snapshot.Workspace
 	if workspace.Mode != want.Mode || workspace.NamespaceName != execution.Snapshot.Environment.NamespaceName || workspace.NamespaceUID != execution.Snapshot.Environment.NamespaceUID ||
 		workspace.PVCName == "" || workspace.PVCUID == "" || workspace.InputSubpath != want.InputSubpath || workspace.TrainingSubpath != want.TrainingSubpath ||
-		workspace.ReportsSubpath != want.ReportsSubpath || workspace.PublicationSubpath != want.PublicationSubpath || workspace.PreparedManifestBytes <= 0 || !closeSpecHashPattern.MatchString(workspace.PreparedManifestSHA256) {
+		workspace.ReportsSubpath != want.ReportsSubpath || workspace.PublicationSubpath != want.PublicationSubpath || workspace.WorkSubpath != want.WorkSubpath || workspace.PreparedManifestBytes <= 0 || !closeSpecHashPattern.MatchString(workspace.PreparedManifestSHA256) {
 		return ErrRuntimeConflict
 	}
 	return nil

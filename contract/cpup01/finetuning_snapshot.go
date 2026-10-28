@@ -3,7 +3,9 @@ package cpup01
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"path"
 	"slices"
 	"sort"
 	"strconv"
@@ -31,7 +33,6 @@ type FinetuningManagedSettings struct {
 	FlashAttn                 string `json:"flash_attn"`
 	ReportTo                  string `json:"report_to"`
 	SaveStrategy              string `json:"save_strategy"`
-	Template                  string `json:"template"`
 	TrainDtype                string `json:"train_dtype"`
 	ExportDtype               string `json:"export_dtype"`
 	VerifyDtype               string `json:"verify_dtype"`
@@ -80,13 +81,13 @@ func (configuration FinetuningConfiguration) Digest() (string, error) {
 // inventory. Authorization/protected status are verified by the facts reader;
 // this document cannot manufacture them with a caller-supplied bool.
 type BaseModelRef struct {
-	ModelID   string          `json:"model_id"`
-	VersionID string          `json:"version_id"`
-	Family    string          `json:"family"`
-	Format    string          `json:"format"`
-	Object    FixedObjectRef  `json:"object"`
-	Scope     StorageScope    `json:"scope"`
-	Files     []BaseModelFile `json:"files"`
+	ModelID   string               `json:"model_id"`
+	VersionID string               `json:"version_id"`
+	Facts     NormalizedModelFacts `json:"facts"`
+	Format    string               `json:"format"`
+	Object    FixedObjectRef       `json:"object"`
+	Scope     StorageScope         `json:"scope"`
+	Files     []BaseModelFile      `json:"files"`
 }
 
 type BaseModelFile struct {
@@ -105,11 +106,11 @@ func (model BaseModelRef) BaseManifestBytes() ([]byte, error) {
 	}
 	files := make([]member, 0, len(model.Files))
 	seen := map[string]bool{}
-	if len(model.Files) == 0 || len(model.Files) > 128 {
+	if len(model.Files) == 0 || len(model.Files) > MaxModelFiles {
 		return nil, fmt.Errorf("%w: base model files", ErrInvalidArgument)
 	}
 	for _, file := range model.Files {
-		if !validSnapshotPath(file.Path) || seen[file.Path] || file.SizeBytes <= 0 || !snapshotSHA256Pattern.MatchString(file.SHA256) {
+		if !validSnapshotPath(file.Path) || seen[file.Path] || file.SizeBytes < 0 || file.SizeBytes == 0 && file.SHA256 != EmptyContentSHA256 || !snapshotSHA256Pattern.MatchString(file.SHA256) {
 			return nil, fmt.Errorf("%w: base model files", ErrInvalidArgument)
 		}
 		seen[file.Path] = true
@@ -117,9 +118,10 @@ func (model BaseModelRef) BaseManifestBytes() ([]byte, error) {
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].Path < files[j].Path })
 	return encodeCanonicalJSON(struct {
-		Schema string   `json:"schema"`
-		Files  []member `json:"files"`
-	}{Schema: "ani.finetune.base-manifest.v1", Files: files})
+		Schema string               `json:"schema"`
+		Files  []member             `json:"files"`
+		Facts  NormalizedModelFacts `json:"facts"`
+	}{Schema: "ani.finetune.base-manifest.v3", Files: files, Facts: model.Facts})
 }
 
 func (model BaseModelRef) BaseManifestSHA256() (string, error) {
@@ -129,13 +131,6 @@ func (model BaseModelRef) BaseManifestSHA256() (string, error) {
 	}
 	digest := sha256.Sum256(raw)
 	return hex.EncodeToString(digest[:]), nil
-}
-
-type ComponentBudgets struct {
-	RPCTimeoutSeconds         uint32 `json:"rpc_timeout_seconds"`
-	MaxBaseModelBytes         int64  `json:"max_base_model_bytes,string"`
-	MaxBaseModelExpandedBytes int64  `json:"max_base_model_expanded_bytes,string"`
-	MaxSpoolBytes             int64  `json:"max_spool_bytes,string"`
 }
 
 type FinetuningSnapshot struct {
@@ -149,7 +144,8 @@ type FinetuningSnapshot struct {
 	VerifyProgram               ProgramRef                `json:"verify_program"`
 	RecipeSHA256                string                    `json:"recipe_sha256"`
 	MappingSHA256               string                    `json:"mapping_sha256"`
-	Budgets                     ComponentBudgets          `json:"budgets"`
+	RuntimeCapabilities         RuntimeCapabilities       `json:"runtime_capabilities"`
+	TemplatePlan                TemplatePlan              `json:"template_plan"`
 }
 
 // RequiresModelRegistration keeps target presence as the canonical delivery
@@ -159,21 +155,20 @@ func (fine *FinetuningSnapshot) RequiresModelRegistration() bool {
 }
 
 func invalidFinetuningManagedSettings(settings FinetuningManagedSettings) string {
-	if settings.Stage != "sft" || settings.FinetuningType != "lora" || settings.LoraTarget != "all" || settings.LoraRank < 1 || settings.LoraAlpha < 1 || settings.CutoffLen < 1 || settings.PerDeviceTrainBatchSize < 1 || settings.GradientAccumulationSteps < 1 || settings.Seed < 0 || settings.Seed > 4294967295 || settings.DataSeed != settings.Seed || (settings.Device != "cpu" && settings.Device != "cuda") || settings.FP16 || settings.BF16 || settings.FlashAttn != "disabled" || settings.ReportTo != "none" || settings.SaveStrategy != "no" || settings.Template != "qwen" || settings.TrainDtype != "float32" || settings.ExportDtype != "float32" || settings.VerifyDtype != "float32" || settings.LRSchedulerType != "linear" || settings.WarmupRatio != "0" || settings.WeightDecay != "0" || validateFinetuningParameter(Parameter{Name: "lora_dropout", Type: "DECIMAL", Value: settings.LoraDropout}) != nil || settings.NumTrainEpochs != 3 || settings.Optim != "adamw_torch" || settings.LoggingSteps != 1 {
+	if settings.Stage != "sft" || settings.FinetuningType != "lora" || settings.LoraTarget != "all" || settings.LoraRank < 1 || settings.LoraAlpha < 1 || settings.CutoffLen < 1 || settings.PerDeviceTrainBatchSize < 1 || settings.GradientAccumulationSteps < 1 || settings.Seed < 0 || settings.Seed > 4294967295 || settings.DataSeed != settings.Seed || (settings.Device != "cpu" && settings.Device != "cuda") || settings.FP16 || settings.BF16 || settings.FlashAttn != "disabled" || settings.ReportTo != "none" || settings.SaveStrategy != "no" || settings.TrainDtype != "float32" || settings.ExportDtype != "float32" || settings.VerifyDtype != "float32" || settings.LRSchedulerType != "linear" || settings.WarmupRatio != "0" || settings.WeightDecay != "0" || validateFinetuningParameter(Parameter{Name: "lora_dropout", Type: "DECIMAL", Value: settings.LoraDropout}) != nil || settings.NumTrainEpochs != 3 || settings.Optim != "adamw_torch" || settings.LoggingSteps != 1 {
 		return "managed settings"
 	}
 	return ""
 }
 
-func invalidComponentBudgets(budgets ComponentBudgets) string {
-	if budgets.RPCTimeoutSeconds == 0 || budgets.MaxBaseModelBytes <= 0 || budgets.MaxBaseModelExpandedBytes <= 0 || budgets.MaxSpoolBytes < budgets.MaxBaseModelBytes {
-		return "component budgets"
-	}
-	return ""
-}
-
 func invalidFixedObject(object FixedObjectRef) string {
-	if !validSnapshotReference(object.StorageConnectionID) || !validSnapshotDNSName(object.Bucket) || !validSnapshotPath(object.Key) || object.SizeBytes <= 0 || !snapshotSHA256Pattern.MatchString(object.SHA256) {
+	if object.SizeBytes <= 0 {
+		return "empty fixed object"
+	}
+	return invalidFixedObjectAllowEmpty(object)
+}
+func invalidFixedObjectAllowEmpty(object FixedObjectRef) string {
+	if !validSnapshotReference(object.StorageConnectionID) || !validSnapshotDNSName(object.Bucket) || !validSnapshotPath(object.Key) || object.SizeBytes < 0 || !snapshotSHA256Pattern.MatchString(object.SHA256) {
 		return "fixed model object"
 	}
 	if (object.VersionID == nil) == (object.ImmutableCopy == nil) {
@@ -188,33 +183,29 @@ func invalidFixedObject(object FixedObjectRef) string {
 	return ""
 }
 
-func invalidBaseModel(model BaseModelRef, budgets ComponentBudgets) string {
-	if !validUUID(model.ModelID) || !validUUID(model.VersionID) || model.Family != "Qwen2.5-0.5B-Instruct" || model.Format != "safetensors" {
+func invalidBaseModel(model BaseModelRef, limits ContentLimits) string {
+	if !validUUID(model.ModelID) || !validUUID(model.VersionID) || model.Format != "safetensors" {
 		return "base model identity"
 	}
 	if field := invalidFixedObject(model.Object); field != "" {
 		return field
 	}
-	if model.Object.SizeBytes > budgets.MaxBaseModelBytes {
-		return "base model bounds"
-	}
 	if model.Scope.Validate() != nil || model.Scope.StorageConnectionID != model.Object.StorageConnectionID || model.Scope.Bucket != model.Object.Bucket || !strings.HasPrefix(model.Object.Key, model.Scope.ApprovedPrefix+"/") {
 		return "base model scope"
 	}
-	if len(model.Files) == 0 || len(model.Files) > 128 {
+	if len(model.Files) == 0 || len(model.Files) > MaxModelFiles {
 		return "base model files"
 	}
-	seen := map[string]bool{}
-	remaining := budgets.MaxBaseModelExpandedBytes
+	var total int64
 	for _, file := range model.Files {
-		if !validSnapshotPath(file.Path) || seen[file.Path] || file.SizeBytes <= 0 || file.SizeBytes > remaining || !snapshotSHA256Pattern.MatchString(file.SHA256) {
-			return "base model files"
+		var err error
+		total, err = CheckedAdd(total, file.SizeBytes)
+		if err != nil {
+			return "base model content"
 		}
-		seen[file.Path] = true
-		remaining -= file.SizeBytes
 	}
-	if !seen["config.json"] || !seen["model.safetensors"] || !seen["tokenizer_config.json"] || !seen["tokenizer.json"] {
-		return "base model HF files"
+	if total <= 0 || limits.Check(ContentBaseModel, total) != nil || model.Facts.ValidateFor(model.Files) != nil {
+		return "base model facts"
 	}
 	return ""
 }
@@ -224,35 +215,73 @@ func invalidFinetuningSnapshot(snapshot Snapshot) string {
 	if fine == nil || fine.ParameterContractVersion != FinetuningParameterContractVersion {
 		return "finetuning contract"
 	}
-	if snapshot.Input.Format != "JSON" || snapshot.Input.SchemaVersion != FinetuningInputSchemaVersion || snapshot.Input.RowCount == 0 || snapshot.Input.FeatureCount != 0 {
+	if snapshot.Input.Format != "JSON" || snapshot.Input.SchemaVersion != FinetuningInputSchemaVersion || snapshot.Input.RowCount <= 0 || snapshot.Input.FeatureCount != 0 {
 		return "fixed JSON contract"
 	}
 	if fine.TargetModelID != nil && fine.NewModelName != nil || fine.TargetModelID != nil && !validUUID(*fine.TargetModelID) || fine.NewModelName != nil && !validModelName(*fine.NewModelName) {
 		return "model target"
 	}
-	if field := invalidComponentBudgets(fine.Budgets); field != "" {
-		return field
-	}
-	if field := invalidBaseModel(fine.BaseModel, fine.Budgets); field != "" {
+	if field := invalidBaseModel(fine.BaseModel, snapshot.Limits); field != "" {
 		return field
 	}
 	if !snapshotSHA256Pattern.MatchString(fine.RecipeSHA256) || !snapshotSHA256Pattern.MatchString(fine.MappingSHA256) {
 		return "program provenance"
+	}
+	if fine.RuntimeCapabilities.ImageDigest != snapshot.Program.ImageDigest || fine.TemplatePlan.ValidateFor(fine.RuntimeCapabilities) != nil {
+		return "runtime template plan"
+	}
+	supported := false
+	for _, kind := range fine.RuntimeCapabilities.CausalLMModelTypes {
+		if kind == fine.BaseModel.Facts.ModelType {
+			supported = true
+			break
+		}
+	}
+	if !supported {
+		return "causal LM runtime capability"
+	}
+	for _, source := range fine.BaseModel.Facts.ContextSources {
+		found := false
+		for _, field := range fine.RuntimeCapabilities.ContextLimitFields {
+			if field.Source == source.SourcePath && field.Field == source.Field {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return "context source capability"
+		}
+	}
+
+	if fine.ManagedSettings.CutoffLen > fine.BaseModel.Facts.ContextLimit {
+		return "context limit"
 	}
 	configuration := FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: snapshot.Program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}
 	digest, err := configuration.Digest()
 	if err != nil || digest != fine.ResolvedConfigurationSHA256 {
 		return "resolved configuration"
 	}
-	if !slices.Equal(snapshot.Program.Command, []string{"/opt/venv/bin/python", "-I", "/opt/finetuning/finetune_entry.py"}) {
+	if len(snapshot.Program.Command) != 3 || !path.IsAbs(snapshot.Program.Command[0]) || snapshot.Program.Command[1] != "-I" || snapshot.Program.Command[2] != "/opt/ani-modeldev/training/finetuning/finetune_entry.py" {
 		return "finetuning command"
 	}
 	baseManifestHash, err := fine.BaseModel.BaseManifestSHA256()
 	if err != nil {
 		return "base model files"
 	}
+	dataset, err := BuildDatasetManifest(snapshot.Input)
+	if err != nil {
+		return "dataset manifest"
+	}
+	datasetDigest, err := dataset.Digest()
+	if err != nil {
+		return "dataset manifest"
+	}
+	planDigest, err := fine.TemplatePlan.Digest()
+	if err != nil {
+		return "template plan"
+	}
 	arguments := func(mode string) []string {
-		return []string{mode, "--configuration", "/workspace/inputs/finetune_configuration.json", "--workspace", "/workspace", "--expected-input-sha256", snapshot.Input.Object.SHA256, "--expected-input-bytes", strconv.FormatInt(snapshot.Input.Object.SizeBytes, 10), "--expected-base-manifest-sha256", baseManifestHash}
+		return []string{mode, "--configuration", "/workspace/inputs/finetune_configuration.json", "--workspace", "/workspace", "--dataset-manifest", "/workspace/inputs/dataset-manifest.json", "--expected-dataset-manifest-sha256", datasetDigest, "--expected-base-manifest-sha256", baseManifestHash, "--expected-template-plan-sha256", planDigest}
 	}
 	if !slices.Equal(snapshot.Program.ResolvedArgs, arguments("train")) {
 		return "resolved finetuning args"
@@ -262,7 +291,7 @@ func invalidFinetuningSnapshot(snapshot Snapshot) string {
 		Mode    string
 	}{{fine.ExportProgram, "export"}, {fine.VerifyProgram, "verify"}} {
 		program := component.Program
-		if !validUUID(program.ImageVersionID) || !validSnapshotImage(program.ImageDigest) || !slices.Equal(program.Command, snapshot.Program.Command) || len(program.ResolvedParameters) != 0 || !slices.Equal(program.ResolvedArgs, arguments(component.Mode)) {
+		if !validRegisteredImage(program.ImageID, program.ImageVersion, program.ImageScope) || !validSnapshotImage(program.ImageDigest) || !slices.Equal(program.Command, snapshot.Program.Command) || len(program.ResolvedParameters) != 0 || !slices.Equal(program.ResolvedArgs, arguments(component.Mode)) {
 			return "component program"
 		}
 	}
@@ -273,20 +302,23 @@ func canonicalFinetuningSnapshot(fine FinetuningSnapshot) FinetuningSnapshot {
 	fine.BaseModel.ModelID = strings.ToLower(fine.BaseModel.ModelID)
 	fine.BaseModel.VersionID = strings.ToLower(fine.BaseModel.VersionID)
 	fine.BaseModel.Files = append([]BaseModelFile{}, fine.BaseModel.Files...)
+	fine.BaseModel.Facts.TemplateSources = append([]TemplateSource{}, fine.BaseModel.Facts.TemplateSources...)
+	fine.BaseModel.Facts.WeightLayout.ShardPaths = append([]string{}, fine.BaseModel.Facts.WeightLayout.ShardPaths...)
+	if raw, err := fine.RuntimeCapabilities.Canonical(); err == nil {
+		_ = json.Unmarshal(raw, &fine.RuntimeCapabilities)
+	}
 	sort.Slice(fine.BaseModel.Files, func(i, j int) bool { return fine.BaseModel.Files[i].Path < fine.BaseModel.Files[j].Path })
 	if fine.TargetModelID != nil {
 		target := strings.ToLower(*fine.TargetModelID)
 		fine.TargetModelID = &target
 	}
-	fine.ExportProgram.ImageVersionID = strings.ToLower(fine.ExportProgram.ImageVersionID)
-	fine.VerifyProgram.ImageVersionID = strings.ToLower(fine.VerifyProgram.ImageVersionID)
 	fine.ExportProgram.ResolvedParameters = canonicalParameters(fine.ExportProgram.ResolvedParameters)
 	fine.VerifyProgram.ResolvedParameters = canonicalParameters(fine.VerifyProgram.ResolvedParameters)
 	return fine
 }
 
 func invalidFinetuningArguments(arguments []MaterialArgument, mode string) string {
-	want := []MaterialArgument{{Literal: mode}, {Literal: "--configuration"}, {Literal: "/workspace/inputs/finetune_configuration.json"}, {Literal: "--workspace"}, {Literal: "/workspace"}, {Literal: "--expected-input-sha256"}, {Source: "INPUT_SHA256"}, {Literal: "--expected-input-bytes"}, {Source: "INPUT_BYTES"}, {Literal: "--expected-base-manifest-sha256"}, {Source: "BASE_MANIFEST_SHA256"}}
+	want := []MaterialArgument{{Literal: mode}, {Literal: "--configuration"}, {Literal: "/workspace/inputs/finetune_configuration.json"}, {Literal: "--workspace"}, {Literal: "/workspace"}, {Literal: "--dataset-manifest"}, {Literal: "/workspace/inputs/dataset-manifest.json"}, {Literal: "--expected-dataset-manifest-sha256"}, {Source: "DATASET_MANIFEST_SHA256"}, {Literal: "--expected-base-manifest-sha256"}, {Source: "BASE_MANIFEST_SHA256"}, {Literal: "--expected-template-plan-sha256"}, {Source: "TEMPLATE_PLAN_SHA256"}}
 	if !slices.Equal(arguments, want) {
 		return "args template"
 	}

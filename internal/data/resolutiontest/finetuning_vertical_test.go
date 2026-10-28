@@ -80,27 +80,27 @@ func prepareFinetuningVertical(t *testing.T, rows int) finetuningVerticalFixture
 	}))
 	t.Cleanup(storage.Close)
 	client := s3.New(s3.Options{Region: "test", BaseEndpoint: aws.String(storage.URL), UsePathStyle: true, HTTPClient: storage.Client(), Credentials: aws.AnonymousCredentials{}, RetryMaxAttempts: 1})
-	f.facts.InputFilePath = "/workspace/inputs/data/finetune_data.json"
+	f.facts.InputFilePath = "/workspace/inputs/data/finetune_data.jsonl"
 	f.facts.OutputDirectoryPath = "/workspace/training"
 	reader, e := admissionfacts.Load(f.ctx, []admissionfacts.FileSource{writeManagedFactsFixture(t, f)})
 	if e != nil {
 		t.Fatal(e)
 	}
 	repository := input.New(f.openPool())
-	importer := biz.NewInputImporter(repository, objectstore.NewVerifier(client, request.Object.StorageConnectionID, 32<<20))
+	importer := biz.NewInputImporter(repository, objectstore.NewVerifier(client, request.Object.StorageConnectionID), cpup01.ContentLimits{MaxContentBytes: 17179869184}, 1800*time.Second)
 	management := service.NewManagement(biz.NewManagedMaterials(catalogue.NewReader(f.directory), reader, repository, importer))
 	scope := service.GovernanceDelivery{TenantID: request.TenantID, Actor: request.Actor, RequestID: request.RequestID}
 	ctx := service.WithVerifiedGovernanceQuery(f.ctx, scope, modeldevv1.ModelDevManagementService_ImportFinetuningDataset_FullMethodName)
 	imported, e := management.ImportFinetuningDataset(ctx, &modeldevv1.ImportFinetuningDatasetRequest{ImplementationId: intent.ImplementationID, InputVersionId: intent.DatasetVersionID, Format: "JSON", RequestedAt: timestamppb.New(request.RequestedAt), Object: &trainingv1.FixedObjectRef{StorageConnectionId: request.Object.StorageConnectionID, Bucket: request.Object.Bucket, Key: request.Object.Key, SizeBytes: request.Object.SizeBytes, Sha256: request.Object.SHA256, Immutability: &trainingv1.FixedObjectRef_VersionId{VersionId: version}}})
-	if e != nil || imported.InputVersion.State != modeldevv1.InputState_INPUT_STATE_READY || imported.InputVersion.RowCount != uint32(rows) {
+	if e != nil || imported.InputVersion.State != modeldevv1.InputState_INPUT_STATE_READY || imported.InputVersion.RowCount != int64(rows) {
 		t.Fatal("real import did not persist nonfixed READY", e)
 	}
 	stored, e := input.New(f.openPool()).Get(f.ctx, request.TenantID, intent.DatasetVersionID)
-	if e != nil || stored.AlpacaVerification == nil || stored.AlpacaVerification.RowCount != uint32(rows) {
+	if e != nil || stored.AlpacaVerification == nil || stored.AlpacaVerification.RowCount != int64(rows) {
 		t.Fatal("READY did not survive a new connection", e)
 	}
 	models := &finetuningModelBoundary{tenant: request.TenantID, base: conformance.FinetuningSnapshotV1().Finetuning.BaseModel}
-	f.resolver = biz.NewFinetuningAdmissionResolver(catalogue.NewReader(f.directory), input.New(f.openPool()), reader, models)
+	f.resolver = biz.NewFinetuningAdmissionResolver(catalogue.NewReader(f.directory), input.New(f.openPool()), reader, models, cpup01.ContentLimits{MaxContentBytes: 17179869184})
 	return finetuningVerticalFixture{resolutionFixture: f, importedFine: request, models: models, management: management}
 }
 func TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay(t *testing.T) {

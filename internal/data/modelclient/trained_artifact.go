@@ -12,7 +12,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
-	modelv1 "github.com/zhangzhe-ctrl/ani-model-service/api/model/v1"
+	modelv1 "github.com/liangzai006/ani-model-service/api/model/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

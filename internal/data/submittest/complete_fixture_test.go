@@ -25,6 +25,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/google/uuid"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
@@ -79,17 +80,26 @@ func newCompleteFixture(t *testing.T) *completeFixture {
 		t.Fatal(err)
 	}
 	snapshot := &f.request.Admission.Snapshot
+	snapshot.IdentityRef.Actor = f.request.Admission.Actor
 	// Freeze the actual locally qualified image manifest used by Podman. The
 	// external TrainJob substitute may not replace it with a synthetic digest.
 	snapshot.Program.ImageDigest = f.image
-	snapshot.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/cpu03/train_mlp.py"}
+	snapshot.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/ani-modeldev/training/train_mlp.py"}
 	snapshot.Input.Object.SizeBytes = int64(len(data))
 	snapshot.Input.Object.SHA256 = completeHash(data)
-	snapshot.Program.ResolvedArgs = []string{"--data", "/inputs/data.csv", "--output", "/outputs", "--expected-input-sha256", snapshot.Input.Object.SHA256, "--expected-input-bytes", fmt.Sprint(len(data)), "--learning-rate", "0.01"}
+	snapshot.Input.RowCount = 1024
+	snapshot.Input.PreparedDataset = cpup01.PreparedDatasetFacts{Format: "CPU_CSV", TransformID: "csv-identity-v3", SizeBytes: int64(len(data)), SHA256: snapshot.Input.Object.SHA256, RowCount: snapshot.Input.RowCount}
+	dataset, err := cpup01.BuildDatasetManifest(snapshot.Input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	datasetSHA, err := dataset.Digest()
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot.Program.ResolvedArgs = []string{"--dataset-manifest", "/inputs/dataset-manifest.json", "--expected-dataset-manifest-sha256", datasetSHA, "--work-root", "/workspace/work/train", "--output", "/outputs", "--learning-rate", "0.01"}
 	snapshot.Workspace.Mode = "EXECUTION_PVC"
-	snapshot.RuntimePlan.Name = "cpu-runtime-v1"
-	snapshot.RuntimePlan.TargetJobs = []string{"trainer"}
-	f.workspace = biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "md-" + f.request.Admission.ExecutionID, PVCUID: completePVCUID, InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath}
+	f.workspace = biz.WorkspaceBinding{Mode: snapshot.Workspace.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(f.request.Admission.ExecutionID), PVCUID: completePVCUID, InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, WorkSubpath: snapshot.Workspace.WorkSubpath}
 	ns := snapshot.Environment.NamespaceName
 	meta := func(name, uid string) map[string]any {
 		return map[string]any{"name": name, "namespace": ns, "uid": uid, "resourceVersion": "1", "generation": 1}
@@ -100,22 +110,17 @@ func newCompleteFixture(t *testing.T) *completeFixture {
 	f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+ns+"/workflows/main-flow"] = map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "metadata": meta("main-flow", completeWorkflowUID)}
 	for _, step := range []string{"prepare", "train-wait", "collect", "publish", "close"} {
 		m := meta("main-"+step, completeStepUID(step))
+		m["annotations"] = map[string]any{"workflows.argoproj.io/node-id": "main-" + step, "workflows.argoproj.io/node-name": "main-flow." + step}
 		m["ownerReferences"] = []any{map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": "main-flow", "uid": completeWorkflowUID, "controller": true}}
 		f.objects["/api/v1/namespaces/"+ns+"/pods/main-"+step] = map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": m, "spec": map[string]any{"serviceAccountName": snapshot.Environment.Identities.KFPStepServiceAccount, "volumes": []any{map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": f.workspace.PVCName}}}, "containers": []any{map[string]any{"name": "main", "volumeMounts": []any{map[string]any{"name": "workspace", "mountPath": "/workspace"}}}}}, "status": map[string]any{"phase": "Running"}}
 		if step == "close" {
-			f.objects["/api/v1/namespaces/"+ns+"/pods/main-"+step]["spec"] = map[string]any{"serviceAccountName": snapshot.Environment.Identities.KFPStepServiceAccount, "containers": []any{map[string]any{"name": "main"}}}
+			f.objects["/api/v1/namespaces/"+ns+"/pods/main-"+step]["spec"] = map[string]any{"serviceAccountName": snapshot.Environment.Identities.KFPStepServiceAccount, "volumes": []any{map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": f.workspace.PVCName}}}, "containers": []any{map[string]any{"name": "main", "volumeMounts": []any{map[string]any{"name": "workspace", "mountPath": "/workspace", "readOnly": true}}}}}
 		}
 	}
-	var runtime map[string]any
-	if err := json.Unmarshal([]byte(`{"apiVersion":"trainer.kubeflow.org/v1alpha1","kind":"ClusterTrainingRuntime","metadata":{"name":"cpu-runtime-v1","uid":"77777777-aaaa-4bbb-8ccc-111111111111"},"spec":{"mlPolicy":{"numNodes":1},"template":{"spec":{"failurePolicy":{"maxRestarts":0},"replicatedJobs":[{"name":"trainer","replicas":1,"template":{"metadata":{"labels":{"trainer.kubeflow.org/trainjob-ancestor-step":"trainer"}},"spec":{"parallelism":1,"completions":1,"backoffLimit":0,"template":{"spec":{"restartPolicy":"Never","automountServiceAccountToken":false,"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"fsGroup":10001},"containers":[{"name":"node","image":"registry.example.test/placeholder:never-used","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]}}}}}]}}}}`), &runtime); err != nil {
+	snapshot.RuntimePlan, err = biz.CompileRuntimePlan(*snapshot)
+	if err != nil {
 		t.Fatal(err)
 	}
-	runtimeJobs := runtime["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["replicatedJobs"].([]any)
-	runtimePod := runtimeJobs[0].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["template"].(map[string]any)
-	runtimePod["metadata"] = map[string]any{"finalizers": []any{"modeldev.ani.io/training-exit-evidence"}}
-	runtimeSpec, _ := json.Marshal(runtime["spec"])
-	snapshot.RuntimePlan.ExpectedSpecSHA256 = completeHash(runtimeSpec)
-	f.objects["/apis/trainer.kubeflow.org/v1alpha1/clustertrainingruntimes/cpu-runtime-v1"] = runtime
 	f.request.Admission.SpecHash, err = snapshot.Digest()
 	if err != nil {
 		t.Fatal(err)
@@ -176,6 +181,25 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 			valid = false
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"apiVersion": "authentication.k8s.io/v1", "kind": "TokenReview", "status": map[string]any{"authenticated": valid, "audiences": []string{"ani-modeldev-managed-step"}, "user": map[string]any{"username": "system:serviceaccount:" + ns + ":" + f.request.Admission.Snapshot.Environment.Identities.KFPStepServiceAccount, "uid": "99999999-aaaa-4bbb-8ccc-666666666666", "extra": map[string]any{"authentication.kubernetes.io/pod-name": []string{"main-" + step}, "authentication.kubernetes.io/pod-uid": []string{completeStepUID(step)}}}}})
+		return
+	}
+	runtimePath := "/apis/trainer.kubeflow.org/v1alpha1/namespaces/" + ns + "/trainingruntimes"
+	if r.Method == "POST" && r.URL.Path == runtimePath {
+		var object map[string]any
+		if json.NewDecoder(r.Body).Decode(&object) != nil {
+			w.WriteHeader(400)
+			return
+		}
+		meta := object["metadata"].(map[string]any)
+		key := runtimePath + "/" + meta["name"].(string)
+		if f.objects[key] != nil {
+			w.WriteHeader(409)
+			return
+		}
+		meta["uid"], meta["resourceVersion"], meta["generation"] = "77777777-aaaa-4bbb-8ccc-111111111111", "1", 1
+		f.objects[key] = object
+		w.WriteHeader(201)
+		_ = json.NewEncoder(w).Encode(object)
 		return
 	}
 	trainPath := "/apis/trainer.kubeflow.org/v1alpha1/namespaces/" + ns + "/trainjobs"
@@ -297,14 +321,35 @@ func (f *completeFixture) makeTrainingChildren(name string) {
 		return map[string]any{"apiVersion": api, "kind": kind, "metadata": map[string]any{"name": name, "namespace": ns, "uid": uid, "generation": 1, "resourceVersion": "1", "ownerReferences": []any{map[string]any{"apiVersion": ownerAPI, "kind": ownerKind, "name": ownerName, "uid": ownerUID, "controller": true}}}, "status": map[string]any{"conditions": []any{}}}
 	}
 	set := object("jobset.x-k8s.io/v1alpha2", "JobSet", name, completeSetUID, "trainer.kubeflow.org/v1alpha1", "TrainJob", name, completeTrainUID)
-	set["spec"] = map[string]any{"suspend": false}
+	var runtimeSpec map[string]any
+	if err := json.Unmarshal(f.request.Admission.Snapshot.RuntimePlan.ExpectedSpec, &runtimeSpec); err != nil {
+		f.t.Error(err)
+		return
+	}
+	setSpec := runtimeSpec["template"].(map[string]any)["spec"].(map[string]any)
+	setSpec["suspend"] = false
+	set["spec"] = setSpec
 	f.objects["/apis/jobset.x-k8s.io/v1alpha2/namespaces/"+ns+"/jobsets/"+name] = set
-	job := object("batch/v1", "Job", name+"-trainer-0", completeJobUID, "jobset.x-k8s.io/v1alpha2", "JobSet", name, completeSetUID)
-	job["spec"] = map[string]any{"parallelism": 1, "completions": 1, "backoffLimit": 0}
+	group := object("scheduling.volcano.sh/v1beta1", "PodGroup", name, "12345678-aaaa-4bbb-8ccc-111111111111", "trainer.kubeflow.org/v1alpha1", "TrainJob", name, completeTrainUID)
+	vector, err := biz.TrainingResourceVector(f.request.Admission.Snapshot)
+	if err != nil {
+		f.t.Error(err)
+		return
+	}
+	group["spec"] = map[string]any{"minMember": 1, "minResources": vector, "queue": "default"}
+	f.objects["/apis/scheduling.volcano.sh/v1beta1/namespaces/"+ns+"/podgroups/"+name] = group
+	nativeJob := setSpec["replicatedJobs"].([]any)[0].(map[string]any)
+	jobSpec := nativeJob["template"].(map[string]any)["spec"].(map[string]any)
+	job := object("batch/v1", "Job", name+"-node-0", completeJobUID, "jobset.x-k8s.io/v1alpha2", "JobSet", name, completeSetUID)
+	job["spec"] = jobSpec
 	job["status"].(map[string]any)["active"] = 1
-	f.objects["/apis/batch/v1/namespaces/"+ns+"/jobs/"+name+"-trainer-0"] = job
-	pod := object("v1", "Pod", "actual-training-pod", completePodUID, "batch/v1", "Job", name+"-trainer-0", completeJobUID)
-	pod["spec"] = map[string]any{"serviceAccountName": f.request.Admission.Snapshot.Environment.Identities.TrainerServiceAccount, "restartPolicy": "Never", "automountServiceAccountToken": false, "containers": []any{map[string]any{"name": "node"}}}
+	f.objects["/apis/batch/v1/namespaces/"+ns+"/jobs/"+name+"-node-0"] = job
+	pod := object("v1", "Pod", "actual-training-pod", completePodUID, "batch/v1", "Job", name+"-node-0", completeJobUID)
+	podTemplate := jobSpec["template"].(map[string]any)
+	pod["spec"] = podTemplate["spec"]
+	for key, value := range podTemplate["metadata"].(map[string]any) {
+		pod["metadata"].(map[string]any)[key] = value
+	}
 	pod["status"] = map[string]any{"phase": "Running", "containerStatuses": []any{map[string]any{"name": "node", "restartCount": 0, "state": map[string]any{"running": map[string]any{"startedAt": time.Now().UTC().Format(time.RFC3339)}}}}}
 	f.objects["/api/v1/namespaces/"+ns+"/pods/actual-training-pod"] = pod
 }
@@ -313,7 +358,10 @@ func (f *completeFixture) runTraining(name string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 	command := f.request.Admission.Snapshot.Program.Command
-	args := []string{"run", "--rm", "--name", f.trainingContainer, "--pull=never", "--network", "none", "--http-proxy=false", "--cpus", "2", "--memory", "2g", "--memory-swap", "2g", "--pids-limit", "256", "--cap-drop", "all", "--security-opt", "no-new-privileges", "--read-only", "--userns", "keep-id:uid=10001,gid=10001", "--volume", filepath.Join(f.root, f.workspace.InputSubpath) + ":/inputs:ro,Z", "--volume", filepath.Join(f.root, f.workspace.TrainingSubpath) + ":/outputs:rw,Z", "--entrypoint", command[0], f.image}
+	resources := f.request.Admission.Snapshot.Resources
+	cpu := fmt.Sprintf("%d.%03d", resources.LimitMillicpu/1000, resources.LimitMillicpu%1000)
+	memory := strconv.FormatInt(resources.LimitMemoryBytes, 10)
+	args := []string{"run", "--rm", "--name", f.trainingContainer, "--pull=never", "--network", "none", "--http-proxy=false", "--cpus", cpu, "--memory", memory, "--memory-swap", memory, "--pids-limit", "256", "--cap-drop", "all", "--security-opt", "no-new-privileges", "--read-only", "--userns", "keep-id:uid=10001,gid=10001", "--volume", f.source + ":/opt/ani-modeldev/training:ro,Z", "--volume", filepath.Join(f.root, f.workspace.InputSubpath) + ":/inputs:ro,Z", "--volume", filepath.Join(f.root, f.workspace.TrainingSubpath) + ":/outputs:rw,Z", "--volume", filepath.Join(f.root, f.workspace.WorkSubpath, "train") + ":/workspace/work/train:rw,Z", "--env", "TMPDIR=/workspace/work/train/tmp", "--env", "HF_HOME=/workspace/work/train/hf", "--env", "HF_DATASETS_CACHE=/workspace/work/train/hf/datasets", "--env", "MPLCONFIGDIR=/workspace/work/train/matplotlib", "--entrypoint", command[0], f.image}
 	args = append(args, command[1:]...)
 	args = append(args, f.request.Admission.Snapshot.Program.ResolvedArgs...)
 	output, err := exec.CommandContext(ctx, "podman", args...).CombinedOutput()
@@ -335,7 +383,7 @@ func (f *completeFixture) runTraining(name string) {
 	}
 	f.objects["/apis/trainer.kubeflow.org/v1alpha1/namespaces/"+ns+"/trainjobs/"+name]["status"] = status(condition)
 	f.objects["/apis/jobset.x-k8s.io/v1alpha2/namespaces/"+ns+"/jobsets/"+name]["status"] = status(setCondition)
-	f.objects["/apis/batch/v1/namespaces/"+ns+"/jobs/"+name+"-trainer-0"]["status"] = status(condition)
+	f.objects["/apis/batch/v1/namespaces/"+ns+"/jobs/"+name+"-node-0"]["status"] = status(condition)
 	f.objects["/api/v1/namespaces/"+ns+"/pods/actual-training-pod"]["status"] = map[string]any{"phase": phase, "containerStatuses": []any{map[string]any{"name": "node", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": code, "reason": phase, "finishedAt": time.Now().UTC().Format(time.RFC3339)}}}}}
 	close(f.trainingDone)
 }
@@ -407,10 +455,13 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	s := f.request.Admission.Snapshot
 	tasks := []any{}
+	nodes := map[string]any{}
 	for _, step := range []string{"prepare", "train-wait", "collect", "publish", "close"} {
 		state := "RUNNING"
+		controller, nodeID := step+"-controller", "main-"+step
 		if f.skipped[step] {
-			tasks = append(tasks, map[string]string{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "pod_name": "", "state": "SKIPPED"})
+			tasks = append(tasks, map[string]any{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "state": "SKIPPED"})
+			nodes[controller] = map[string]any{"id": controller, "name": "main-flow." + step + "-controller", "displayName": step, "phase": "Skipped"}
 			continue
 		}
 		pod := f.objects["/api/v1/namespaces/"+s.Environment.NamespaceName+"/pods/main-"+step]
@@ -426,8 +477,16 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 		} else if pod["status"].(map[string]any)["phase"] == "Failed" {
 			state = "FAILED"
 		}
-		tasks = append(tasks, map[string]string{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "pod_name": "main-" + step, "state": state})
+		phase := map[string]string{"RUNNING": "Running", "SUCCEEDED": "Succeeded", "FAILED": "Failed", "CANCELED": "Failed"}[state]
+		nodes[controller] = map[string]any{"id": controller, "name": "main-flow." + step + "-controller", "displayName": step, "phase": phase, "children": []any{nodeID}}
+		nodes[nodeID] = map[string]any{"id": nodeID, "name": "main-flow." + step, "displayName": "executor", "type": "Pod", "phase": phase, "boundaryID": controller, "templateName": "metadata-0-2-retry-system-container-impl"}
+		tasks = append(tasks, map[string]any{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "state": state, "child_tasks": []any{map[string]any{"pod_name": nodeID}}})
 	}
+	workflow := f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+s.Environment.NamespaceName+"/workflows/main-flow"]
+	if workflow["status"] == nil {
+		workflow["status"] = map[string]any{"phase": "Running"}
+	}
+	workflow["status"].(map[string]any)["nodes"] = nodes
 	run := map[string]any{"run_id": completeRunID, "experiment_id": s.Environment.ExperimentID, "display_name": "md-" + f.request.Admission.ExecutionID, "pipeline_version_reference": map[string]string{"pipeline_id": s.Implementation.PipelineID, "pipeline_version_id": s.Implementation.PipelineVersionID}, "runtime_config": map[string]any{"parameters": map[string]string{"execution_id": f.request.Admission.ExecutionID, "spec_hash": f.request.Admission.SpecHash}, "pipeline_root": f.request.Owner.PipelineRoot}, "service_account": s.Environment.Identities.KFPStepServiceAccount, "state": "RUNNING", "run_details": map[string]any{"task_details": tasks}}
 	if f.runStoppedAt != "" {
 		run["state"], run["finished_at"] = "CANCELED", f.runStoppedAt

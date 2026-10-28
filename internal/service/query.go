@@ -31,6 +31,8 @@ type Query struct {
 	steps                StepWorkloadReader
 	materials            *biz.ManagedMaterials
 	models               biz.FinetuningModelFactsReader
+	sourceFacts          biz.FinetuningSourceFactsReader
+	contentLimits        cpup01.ContentLimits
 	metrics              biz.MetricsObjectReader
 }
 
@@ -115,6 +117,9 @@ func validExecutionNameFilter(value string) bool {
 func queryError(err error, requestID string) error {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return status.FromContextError(err).Err()
+	}
+	if mapped, ok := finetuningModelError(err, requestID); ok {
+		return mapped
 	}
 	if errors.Is(err, biz.ErrExecutionNotFound) || errors.Is(err, biz.ErrArtifactNotFound) || errors.Is(err, biz.ErrTrainingLogNotFound) {
 		return commandError(codes.NotFound, modeldevv1.ErrorReason_ERROR_REASON_RESOURCE_NOT_FOUND, "resource unavailable", requestID)
@@ -339,7 +344,7 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if !valid {
 		return nil, biz.ErrPersistence
 	}
-	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: value.Snapshot.Program.ImageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageId: value.Snapshot.Program.ImageID, ImageVersion: value.Snapshot.Program.ImageVersion, ImageScope: string(value.Snapshot.Program.ImageScope), States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
 	view.ParameterContractVersion = value.Snapshot.Implementation.ParameterContractVersion
 	encoded, err := contractpb.EncodeSnapshot(value.Snapshot)
 	if err != nil {
@@ -385,7 +390,7 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 		// the file list stay owner-internal.
 		view.BaseModel = &modeldevv1.BaseModelIdentity{
 			ModelId: fine.BaseModel.ModelID, VersionId: fine.BaseModel.VersionID,
-			Family: fine.BaseModel.Family, Format: fine.BaseModel.Format,
+			Format: fine.BaseModel.Format,
 		}
 	}
 	if value.Close != nil {

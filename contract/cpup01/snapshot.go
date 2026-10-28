@@ -15,7 +15,7 @@ import (
 	"unicode/utf8"
 )
 
-const SnapshotSchemaVersion = "ani.modeldev.execution-spec.v2.1"
+const SnapshotSchemaVersion = "ani.modeldev.execution-spec.v3"
 
 // Snapshot freezes trusted candidate identity and the entire executable plan.
 // Every resource UID created after admission belongs to runtime facts only.
@@ -35,6 +35,7 @@ type Snapshot struct {
 	Workspace        WorkspaceContract          `json:"workspace"`
 	PublicationScope StorageScope               `json:"publication_scope"`
 	OutputContract   OutputContract             `json:"output_contract"`
+	Limits           ContentLimits              `json:"limits"`
 	DeadlineAt       time.Time                  `json:"deadline_at"`
 	Finetuning       *FinetuningSnapshot        `json:"finetuning,omitempty"`
 	GPU              *GPUPlan                   `json:"gpu,omitempty"`
@@ -59,16 +60,19 @@ type FixedObjectRef struct {
 }
 
 type InputRef struct {
-	InputVersionID string         `json:"input_version_id"`
-	Object         FixedObjectRef `json:"object"`
-	Format         string         `json:"format"`
-	SchemaVersion  string         `json:"schema_version"`
-	RowCount       uint32         `json:"row_count"`
-	FeatureCount   uint32         `json:"feature_count"`
+	InputVersionID  string               `json:"input_version_id"`
+	Object          FixedObjectRef       `json:"object"`
+	Format          string               `json:"format"`
+	SchemaVersion   string               `json:"schema_version"`
+	RowCount        int64                `json:"row_count,string"`
+	FeatureCount    uint32               `json:"feature_count"`
+	PreparedDataset PreparedDatasetFacts `json:"prepared_dataset"`
 }
 
 type ProgramRef struct {
-	ImageVersionID     string      `json:"image_version_id"`
+	ImageID            string      `json:"image_id"`
+	ImageVersion       int64       `json:"image_version,string"`
+	ImageScope         ImageScope  `json:"image_scope"`
 	ImageDigest        string      `json:"image_digest"`
 	Command            []string    `json:"command"`
 	ResolvedArgs       []string    `json:"resolved_args"`
@@ -111,6 +115,7 @@ type WorkspaceContract struct {
 	TrainingSubpath    string `json:"training_subpath"`
 	ReportsSubpath     string `json:"reports_subpath"`
 	PublicationSubpath string `json:"publication_subpath"`
+	WorkSubpath        string `json:"work_subpath"`
 }
 
 type StorageScope struct {
@@ -132,19 +137,14 @@ func (scope StorageScope) Validate() error {
 type RequiredOutput struct {
 	Role         string `json:"role"`
 	RelativePath string `json:"relative_path"`
-	MaxSizeBytes int64  `json:"max_size_bytes,string"`
-	InTar        *bool  `json:"in_tar,omitempty"`
+	InTar        bool   `json:"in_tar"`
 }
-
 type OutputContract struct {
 	SchemaVersion   string           `json:"schema_version"`
 	OutputKind      string           `json:"output_kind"`
 	DeliveryMode    string           `json:"delivery_mode"`
 	RequiredFiles   []RequiredOutput `json:"required_files"`
-	MaxFileCount    uint32           `json:"max_file_count"`
-	MaxTotalBytes   int64            `json:"max_total_bytes,string"`
 	CreateTarBundle bool             `json:"create_tar_bundle"`
-	MaxTarBytes     *int64           `json:"max_tar_bytes,string,omitempty"`
 }
 
 // Canonical validates and returns current-schema canonical UTF-8 bytes. It never resolves
@@ -165,7 +165,6 @@ func (snapshot Snapshot) canonical(requireRuntime bool) ([]byte, error) {
 	snapshot.Implementation.PipelineID = strings.ToLower(snapshot.Implementation.PipelineID)
 	snapshot.Implementation.PipelineVersionID = strings.ToLower(snapshot.Implementation.PipelineVersionID)
 	snapshot.Input.InputVersionID = strings.ToLower(snapshot.Input.InputVersionID)
-	snapshot.Program.ImageVersionID = strings.ToLower(snapshot.Program.ImageVersionID)
 	snapshot.Environment.BindingID = strings.ToLower(snapshot.Environment.BindingID)
 	snapshot.Environment.NamespaceUID = strings.ToLower(snapshot.Environment.NamespaceUID)
 	snapshot.Environment.ExperimentID = strings.ToLower(snapshot.Environment.ExperimentID)
@@ -201,7 +200,7 @@ func (snapshot Snapshot) Digest() (string, error) {
 
 func DecodeCanonicalSnapshot(raw []byte) (Snapshot, error) {
 	var s Snapshot
-	if len(raw) == 0 || len(raw) > 512*1024 {
+	if len(raw) == 0 || len(raw) > MaxManifestBytes {
 		return s, ErrInvalidArgument
 	}
 	d := json.NewDecoder(bytes.NewReader(raw))
@@ -228,6 +227,9 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 	invalid := func(field string) error { return fmt.Errorf("%w: snapshot %s", ErrInvalidArgument, field) }
 	if snapshot.SchemaVersion != SnapshotSchemaVersion {
 		return invalid("schema_version")
+	}
+	if snapshot.Limits.Validate() != nil || snapshot.Limits.Check(ContentDataset, snapshot.Input.Object.SizeBytes) != nil {
+		return invalid("frozen content limit")
 	}
 	if (snapshot.Kind != "GENERAL_TRAINING" && snapshot.Kind != "FINETUNING") || snapshot.DeliveryMode != "SAVE_ARTIFACTS" {
 		return invalid("capability")
@@ -258,7 +260,10 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 	if snapshot.ComputeOrigin.Validate() != nil || snapshot.Resources.RequestMillicpu != snapshot.ComputeOrigin.CPUMillis || snapshot.Resources.LimitMillicpu != snapshot.ComputeOrigin.CPUMillis || snapshot.Resources.RequestMemoryBytes != snapshot.ComputeOrigin.MemoryMiB*1024*1024 || snapshot.Resources.LimitMemoryBytes != snapshot.Resources.RequestMemoryBytes {
 		return invalid("compute origin resources")
 	}
-	for _, value := range []string{snapshot.Implementation.PipelineID, snapshot.Implementation.PipelineVersionID, snapshot.Input.InputVersionID, snapshot.Program.ImageVersionID, snapshot.Environment.BindingID, snapshot.Environment.NamespaceUID, snapshot.Environment.ExperimentID} {
+	if !validRegisteredImage(snapshot.Program.ImageID, snapshot.Program.ImageVersion, snapshot.Program.ImageScope) {
+		return invalid("registered image")
+	}
+	for _, value := range []string{snapshot.Implementation.PipelineID, snapshot.Implementation.PipelineVersionID, snapshot.Input.InputVersionID, snapshot.Environment.BindingID, snapshot.Environment.NamespaceUID, snapshot.Environment.ExperimentID} {
 		if !validUUID(value) {
 			return invalid("fixed identity")
 		}
@@ -278,7 +283,10 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 		return invalid("runtime plan")
 	}
 	input := snapshot.Input
-	if snapshot.Kind == "GENERAL_TRAINING" && (input.Format != "CSV" || input.SchemaVersion != "ani.cpu.csv.v1" || input.RowCount == 0 || input.FeatureCount != 16) {
+	if input.PreparedDataset.ValidateForSource(input.Format, input.Object.SizeBytes, input.Object.SHA256, input.RowCount) != nil {
+		return invalid("prepared dataset facts")
+	}
+	if snapshot.Kind == "GENERAL_TRAINING" && (input.Format != "CSV" || input.SchemaVersion != "ani.cpu.csv.v1" || input.RowCount <= 0 || input.FeatureCount != 16) {
 		return invalid("fixed CSV contract")
 	}
 	object := input.Object
@@ -397,7 +405,7 @@ func validSnapshotDNSName(value string) bool {
 }
 
 func validSnapshotPath(value string) bool {
-	return validSnapshotText(value) && value != "." && value != ".." && !path.IsAbs(value) && path.Clean(value) == value && !strings.HasPrefix(value, "../") && !strings.ContainsAny(value, `\*?[]`)
+	return len(value) <= MaxRelativePathBytes && validSnapshotText(value) && value != "." && value != ".." && !path.IsAbs(value) && path.Clean(value) == value && !strings.HasPrefix(value, "../") && !strings.ContainsAny(value, `\*?[]`)
 }
 
 func validSnapshotImage(value string) bool {

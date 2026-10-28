@@ -57,7 +57,7 @@ func finetuningRuntimeFixture(t *testing.T, lifetime time.Duration, edits ...fun
 	}
 	repository := lifecycle.New(pool)
 	w := snapshot.Workspace
-	workspace := biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, WorkSubpath: w.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 	startManagedRoleV21(t, repository, authority, "prepare")
 	if _, _, err := repository.RecordPrepared(ctx, authority, workspace); err != nil {
 		t.Fatal(err)

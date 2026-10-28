@@ -60,12 +60,12 @@ func (runner *Runner) configuration(ctx context.Context) (biz.Execution, *traini
 	if snapshot.Environment.NamespaceName != association.NamespaceName || snapshot.Environment.NamespaceUID != association.NamespaceUid {
 		return biz.Execution{}, nil, ErrConfiguration
 	}
-	if taskID := response.GetKfpTaskId(); taskID != "" {
-		if len(taskID) > 256 || strings.IndexFunc(taskID, func(r rune) bool { return r <= ' ' || r > '~' }) >= 0 || (runner.config.TaskID != "" && runner.config.TaskID != taskID) {
-			return biz.Execution{}, nil, ErrConfiguration
-		}
-		runner.config.TaskID = taskID
+	taskID := response.GetKfpTaskId()
+	if taskID == "" || len(taskID) > 256 || strings.IndexFunc(taskID, func(r rune) bool { return r <= ' ' || r > '~' }) >= 0 || runner.taskID != "" && runner.taskID != taskID {
+		return biz.Execution{}, nil, ErrConfiguration
 	}
+	runner.taskID = taskID
+
 	// Only the authenticated, canonically checked committed admission can fill
 	// the operation omitted by KFP's execution_id/spec_hash parameters.
 	runner.config.Context.Identity = proto.Clone(admission.Identity).(*trainingv1.ExecutionIdentity)
@@ -109,7 +109,7 @@ func (runner *Runner) prepare(ctx context.Context) error {
 		return ErrConfiguration
 	}
 	want := execution.Snapshot.Workspace
-	binding := biz.WorkspaceBinding{Mode: want.Mode, NamespaceName: environment.NamespaceName, NamespaceUID: environment.NamespaceUID, PVCName: runner.config.PVCName, PVCUID: string(pvc.GetUID()), InputSubpath: want.InputSubpath, TrainingSubpath: want.TrainingSubpath, ReportsSubpath: want.ReportsSubpath, PublicationSubpath: want.PublicationSubpath}
+	binding := biz.WorkspaceBinding{Mode: want.Mode, NamespaceName: environment.NamespaceName, NamespaceUID: environment.NamespaceUID, PVCName: runner.config.PVCName, PVCUID: string(pvc.GetUID()), InputSubpath: want.InputSubpath, TrainingSubpath: want.TrainingSubpath, ReportsSubpath: want.ReportsSubpath, PublicationSubpath: want.PublicationSubpath, WorkSubpath: want.WorkSubpath}
 	if err := ensureWorkspaceDirectories(runner.config.WorkspaceDirectory, want.TrainingSubpath, want.PublicationSubpath); err != nil {
 		return err
 	}
@@ -157,14 +157,14 @@ func (runner *Runner) collect(ctx context.Context) error {
 }
 
 func (runner *Runner) publish(ctx context.Context) error {
-	if runner.store == nil || !absoluteClean(runner.config.CandidateFile) {
+	if runner.store == nil || !absoluteClean(runner.config.PublicationRefFile) {
 		return ErrConfiguration
 	}
 	execution, binding, err := runner.configuration(ctx)
 	if err != nil {
 		return err
 	}
-	if runner.config.TaskID == "" {
+	if runner.taskID == "" {
 		return ErrConfiguration
 	}
 	if err := runner.checkWorkspace(execution, binding); err != nil {
@@ -186,16 +186,24 @@ func (runner *Runner) publish(ctx context.Context) error {
 		return err
 	}
 	a := runner.config.Context.Association
-	candidate.Upload = biz.UploadCompletion{RunID: a.KfpRunId, WorkflowUID: a.WorkflowUid, TaskID: runner.config.TaskID, PodUID: a.PodUid}
-	return writeJSON(runner.config.CandidateFile, candidate)
+	candidate.Upload = biz.UploadCompletion{RunID: a.KfpRunId, WorkflowUID: a.WorkflowUid, TaskID: runner.taskID, PodUID: a.PodUid}
+	complete := cpup01.PublicationCandidate{Schema: cpup01.PublicationCandidateSchemaVersion, TenantID: execution.TenantID, OperationID: execution.OperationID, ExecutionID: execution.ExecutionID, ExecutionSpecHash: execution.SpecHash, LogicalPublicationKey: candidate.LogicalKey, ManifestObject: candidate.Manifest, BundleObject: candidate.Bundle, UploadTaskID: candidate.Upload.TaskID, UploadPodUID: candidate.Upload.PodUID}
+	for _, file := range candidate.Files {
+		complete.Files = append(complete.Files, cpup01.PublishedFileCandidate{File: file.File, Object: file.Object})
+	}
+	ref, err := workspaceio.StorePublicationCandidate(ctx, runner.config.WorkspaceDirectory, cpup01.AdmissionEnvelope(execution.Admission), complete)
+	if err != nil {
+		return err
+	}
+	raw, err := ref.Canonical()
+	if err != nil {
+		return err
+	}
+	return writeRawJSON(runner.config.PublicationRefFile, raw, cpup01.MaxPublicationRefBytes)
 }
 
 func (runner *Runner) inventoryPath(execution biz.Execution) bool {
-	subpath := execution.Snapshot.Workspace.ReportsSubpath
-	if execution.Snapshot.Kind == "FINETUNING" {
-		subpath = execution.Snapshot.Workspace.PublicationSubpath
-	}
-	return reportPath(runner.config.InventoryFile, runner.config.WorkspaceDirectory, subpath)
+	return reportPath(runner.config.InventoryFile, runner.config.WorkspaceDirectory, execution.Snapshot.Workspace.PublicationSubpath)
 }
 
 func (runner *Runner) close(ctx context.Context) (firstError error) {
@@ -226,10 +234,12 @@ func (runner *Runner) close(ctx context.Context) (firstError error) {
 }
 
 func (runner *Runner) confirmPublication(ctx context.Context) error {
-	if runner.config.Context.Identity.OperationId == "" || runner.stepTiming == nil {
-		if _, _, err := runner.configuration(ctx); err != nil {
-			return err
-		}
+	execution, binding, err := runner.configuration(ctx)
+	if err != nil {
+		return err
+	}
+	if err := runner.checkWorkspace(execution, binding); err != nil {
+		return err
 	}
 	if runner.stepTiming == nil || runner.stepTiming.DeadlineAt == nil || runner.stepTiming.DeadlineAt.CheckValid() != nil {
 		return ErrConfiguration
@@ -240,11 +250,12 @@ func (runner *Runner) confirmPublication(ctx context.Context) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if !absoluteClean(runner.config.CandidateFile) {
+	ref, err := cpup01.ParsePublicationRef([]byte(runner.config.PublicationRef))
+	if err != nil {
 		return ErrConfiguration
 	}
-	var candidate biz.RuntimePublication
-	if err := readJSON(runner.config.CandidateFile, &candidate); err != nil {
+	candidate, err := workspaceio.ReadPublicationCandidate(ctx, runner.config.WorkspaceDirectory, cpup01.AdmissionEnvelope(execution.Admission), ref)
+	if err != nil {
 		return err
 	}
 	wire, err := candidateWire(candidate)
@@ -311,27 +322,27 @@ func (runner *Runner) checkWorkspace(execution biz.Execution, binding *trainingv
 		return ErrConfiguration
 	}
 	s := execution.Snapshot
-	if binding.Mode != trainingv1.WorkspaceMode_WORKSPACE_MODE_EXECUTION_PVC || binding.NamespaceName != s.Environment.NamespaceName || binding.NamespaceUid != s.Environment.NamespaceUID || binding.PvcUid == "" || binding.PvcName == "" || binding.InputSubpath != s.Workspace.InputSubpath || binding.TrainingSubpath != s.Workspace.TrainingSubpath || binding.ReportsSubpath != s.Workspace.ReportsSubpath || binding.PublicationSubpath != s.Workspace.PublicationSubpath {
+	if binding.Mode != trainingv1.WorkspaceMode_WORKSPACE_MODE_EXECUTION_PVC || binding.NamespaceName != s.Environment.NamespaceName || binding.NamespaceUid != s.Environment.NamespaceUID || binding.PvcUid == "" || binding.PvcName == "" || binding.InputSubpath != s.Workspace.InputSubpath || binding.TrainingSubpath != s.Workspace.TrainingSubpath || binding.ReportsSubpath != s.Workspace.ReportsSubpath || binding.PublicationSubpath != s.Workspace.PublicationSubpath || binding.WorkSubpath != s.Workspace.WorkSubpath {
 		return ErrConfiguration
 	}
 	return nil
 }
 
 func workspaceWire(b biz.WorkspaceBinding) *trainingv1.WorkspaceRef {
-	return &trainingv1.WorkspaceRef{Mode: trainingv1.WorkspaceMode(trainingv1.WorkspaceMode_value["WORKSPACE_MODE_"+b.Mode]), NamespaceName: b.NamespaceName, NamespaceUid: b.NamespaceUID, PvcName: b.PVCName, PvcUid: b.PVCUID, InputSubpath: b.InputSubpath, TrainingSubpath: b.TrainingSubpath, ReportsSubpath: b.ReportsSubpath, PublicationSubpath: b.PublicationSubpath}
+	return &trainingv1.WorkspaceRef{Mode: trainingv1.WorkspaceMode(trainingv1.WorkspaceMode_value["WORKSPACE_MODE_"+b.Mode]), NamespaceName: b.NamespaceName, NamespaceUid: b.NamespaceUID, PvcName: b.PVCName, PvcUid: b.PVCUID, InputSubpath: b.InputSubpath, TrainingSubpath: b.TrainingSubpath, ReportsSubpath: b.ReportsSubpath, PublicationSubpath: b.PublicationSubpath, WorkSubpath: b.WorkSubpath}
 }
 
-func candidateWire(candidate biz.RuntimePublication) (*modeldevv1.PublicationCandidate, error) {
-	if candidate.LogicalKey == "" || candidate.Upload.TaskID == "" || candidate.Upload.PodUID == "" || len(candidate.Files) == 0 {
+func candidateWire(candidate cpup01.PublicationCandidate) (*modeldevv1.PublicationCandidate, error) {
+	if candidate.LogicalPublicationKey == "" || candidate.UploadTaskID == "" || candidate.UploadPodUID == "" || len(candidate.Files) == 0 {
 		return nil, ErrConfiguration
 	}
-	manifest, err := objectWire(candidate.Manifest)
+	manifest, err := objectWire(candidate.ManifestObject)
 	if err != nil {
 		return nil, err
 	}
-	result := &modeldevv1.PublicationCandidate{LogicalPublicationKey: candidate.LogicalKey, ManifestObject: manifest, UploadTaskId: candidate.Upload.TaskID, UploadPodUid: candidate.Upload.PodUID}
-	if candidate.Bundle != nil {
-		result.BundleObject, err = objectWire(*candidate.Bundle)
+	result := &modeldevv1.PublicationCandidate{Schema: candidate.Schema, TenantId: candidate.TenantID, OperationId: candidate.OperationID, ExecutionId: candidate.ExecutionID, ExecutionSpecHash: candidate.ExecutionSpecHash, LogicalPublicationKey: candidate.LogicalPublicationKey, ManifestObject: manifest, UploadTaskId: candidate.UploadTaskID, UploadPodUid: candidate.UploadPodUID}
+	if candidate.BundleObject != nil {
+		result.BundleObject, err = objectWire(*candidate.BundleObject)
 		if err != nil {
 			return nil, err
 		}
@@ -345,7 +356,7 @@ func candidateWire(candidate biz.RuntimePublication) (*modeldevv1.PublicationCan
 		if !ok || role == 0 {
 			return nil, ErrConfiguration
 		}
-		result.Files = append(result.Files, &modeldevv1.PublishedFileCandidate{File: &trainingv1.FileEntry{RelativePath: file.File.RelativePath, Role: trainingv1.FileRole(role), SizeBytes: file.File.SizeBytes, Sha256: file.File.SHA256}, Object: object})
+		result.Files = append(result.Files, &modeldevv1.PublishedFileCandidate{File: &trainingv1.FileEntry{RelativePath: file.File.RelativePath, Role: trainingv1.FileRole(role), SizeBytes: file.File.SizeBytes, Sha256: file.File.SHA256, InTar: file.File.InTar}, Object: object})
 	}
 	return result, nil
 }
@@ -439,7 +450,7 @@ func readLimited(file *os.File, limit int64) ([]byte, error) {
 }
 
 func readJSON(name string, target any) error {
-	data, err := readRegular(name, 4<<20)
+	data, err := readRegular(name, cpup01.MaxManifestBytes)
 	if err != nil {
 		return err
 	}
@@ -460,7 +471,14 @@ func writeJSON(name string, value any) error {
 		return ErrConfiguration
 	}
 	data, err := json.Marshal(value)
-	if err != nil || len(data) > 4<<20 {
+	if err != nil || len(data) > cpup01.MaxManifestBytes {
+		return ErrConfiguration
+	}
+	return writeRawJSON(name, data, cpup01.MaxManifestBytes)
+}
+
+func writeRawJSON(name string, data []byte, maximum int) error {
+	if !absoluteClean(name) || len(data) == 0 || len(data) > maximum {
 		return ErrConfiguration
 	}
 	directory := filepath.Dir(name)

@@ -12,14 +12,15 @@ const AlpacaSchemaVersion = "ani.finetune.alpaca.v1"
 // nonempty Alpaca schema is independent of the implementation defaults.
 type VerifiedAlpaca struct {
 	VerifiedObject
-	SchemaVersion string
-	RowCount      uint32
+	SchemaVersion   string
+	RowCount        int64
+	PreparedDataset cpup01.PreparedDatasetFacts
 }
 
 func (v VerifiedAlpaca) ValidateFor(r InputImport) error {
 	o, want := v.Object, r.Object
 	t := v.VerifiedAt.UTC()
-	if r.Validate() != nil || r.InputFormat() != "JSON" || v.SchemaVersion != AlpacaSchemaVersion || v.RowCount == 0 ||
+	if r.Validate() != nil || r.InputFormat() != "JSON" || v.SchemaVersion != AlpacaSchemaVersion || v.RowCount <= 0 || v.PreparedDataset.ValidateForSource("JSON", o.SizeBytes, o.SHA256, v.RowCount) != nil ||
 		t.IsZero() || t.Year() < 1 || t.Year() > 9999 || t.Before(r.RequestedAt) ||
 		o.StorageConnectionID != want.StorageConnectionID || o.Bucket != want.Bucket || o.Key != want.Key ||
 		o.VersionID == nil || want.VersionID == nil || *o.VersionID != *want.VersionID || o.ImmutableCopy != nil ||
@@ -59,9 +60,17 @@ func (i *InputImporter) ImportFinetuningDataset(ctx context.Context, r InputImpo
 	if !ok {
 		return InputVersion{}, ErrPersistence
 	}
-	frozen, err := repo.FreezeImport(ctx, r)
+	if i.timeout <= 0 {
+		return InputVersion{}, ErrPersistence
+	}
+	ctx, cancel := context.WithTimeout(ctx, i.timeout)
+	defer cancel()
+	frozen, release, err := i.beginImport(ctx, r)
 	if err != nil {
 		return InputVersion{}, err
+	}
+	if release != nil {
+		defer release()
 	}
 	switch frozen.State {
 	case InputStateReady:

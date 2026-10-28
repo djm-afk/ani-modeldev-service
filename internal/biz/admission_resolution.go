@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
@@ -55,10 +54,11 @@ type AdmissionResolver struct {
 	inputs    AdmissionInputReader
 	facts     AdmissionFactsReader
 	models    FinetuningModelFactsReader
+	limits    cpup01.ContentLimits
 }
 
-func NewAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader) *AdmissionResolver {
-	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts}
+func NewAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader, limits cpup01.ContentLimits) *AdmissionResolver {
+	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts, limits: limits}
 }
 
 func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissionInput) (cpup01.PreparedCandidate, error) {
@@ -75,6 +75,10 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
 	}
 	if r == nil || r.materials == nil || r.inputs == nil || r.facts == nil {
+		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
+	}
+	limits := r.limits
+	if limits.Validate() != nil {
 		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
 	}
 	material, err := r.materials.ReadImplementationMaterial(ctx, intent.ImplementationID, request.ComputeOrigin.DeviceMode)
@@ -95,6 +99,13 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 	if err != nil {
 		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
 	}
+	// AcceptedAt is fixed before Prepare. Source resolution consumes this same
+	// execution window; a model-resolution timeout cannot renew it.
+	ctx, cancel := context.WithDeadline(ctx, timing.ExecutionDeadlineAt)
+	defer cancel()
+	if err := ctx.Err(); err != nil {
+		return cpup01.PreparedCandidate{}, err
+	}
 	version, err := r.inputs.Get(ctx, identity.TenantID, intent.DatasetVersionID)
 	if err != nil {
 		return cpup01.PreparedCandidate{}, err
@@ -106,6 +117,9 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 	if err != nil {
 		return cpup01.PreparedCandidate{}, err
 	}
+	if err := limits.Check(cpup01.ContentDataset, input.Object.SizeBytes); err != nil {
+		return cpup01.PreparedCandidate{}, err
+	}
 	if !compatibleAdmissionFacts(facts, input.Object, intent.Kind) {
 		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
 	}
@@ -115,22 +129,32 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 	}
 	var fine *cpup01.FinetuningSnapshot
 	if intent.Kind == "FINETUNING" {
-		fine, err = r.resolveFinetuningModelFacts(ctx, identity.TenantID, intent, material, parameters, input.Object, request.ComputeOrigin.DeviceMode)
+		fine, err = r.resolveFinetuningModelFacts(ctx, identity.TenantID, intent, material, parameters, input, request.ComputeOrigin.DeviceMode)
 		if err != nil {
+			return cpup01.PreparedCandidate{}, err
+		}
+		var baseBytes int64
+		for _, file := range fine.BaseModel.Files {
+			baseBytes, err = cpup01.CheckedAdd(baseBytes, file.SizeBytes)
+			if err != nil {
+				return cpup01.PreparedCandidate{}, err
+			}
+		}
+		if err := limits.Check(cpup01.ContentBaseModel, baseBytes); err != nil {
 			return cpup01.PreparedCandidate{}, err
 		}
 	}
 	var args []string
 	if fine != nil {
-		args, err = resolveFinetuningArguments(material.Program.ArgsTemplate, input.Object, fine.BaseModel)
+		args, err = resolveFinetuningArguments(material.Program.ArgsTemplate, input, fine.BaseModel, fine.TemplatePlan)
 	} else {
-		args, err = resolveAdmissionArguments(material.Program.ArgsTemplate, parameters, facts, input.Object)
+		args, err = resolveAdmissionArguments(material.Program.ArgsTemplate, parameters, facts, input)
 	}
 	if err != nil {
 		return cpup01.PreparedCandidate{}, err
 	}
 	memory := request.ComputeOrigin.MemoryMiB * 1024 * 1024
-	snapshot := cpup01.Snapshot{SchemaVersion: cpup01.SnapshotSchemaVersion, Kind: intent.Kind, DeliveryMode: "SAVE_ARTIFACTS", IdentityRef: identity, Implementation: material.Implementation, ComputeOrigin: request.ComputeOrigin, Timing: timing, Input: input, Program: cpup01.ProgramRef{ImageVersionID: material.Program.ImageVersionID, ImageDigest: material.Program.ImageDigest, Command: append([]string{}, material.Program.Command...), ResolvedArgs: args, ResolvedParameters: parameters}, Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: request.ComputeOrigin.CPUMillis, LimitMillicpu: request.ComputeOrigin.CPUMillis, RequestMemoryBytes: memory, LimitMemoryBytes: memory}, Environment: facts.Environment, Workspace: facts.Workspace, PublicationScope: facts.PublicationScope, OutputContract: material.OutputContract, DeadlineAt: timing.ExecutionDeadlineAt, Finetuning: fine}
+	snapshot := cpup01.Snapshot{SchemaVersion: cpup01.SnapshotSchemaVersion, Limits: limits, Kind: intent.Kind, DeliveryMode: "SAVE_ARTIFACTS", IdentityRef: identity, Implementation: material.Implementation, ComputeOrigin: request.ComputeOrigin, Timing: timing, Input: input, Program: cpup01.ProgramRef{ImageID: material.Program.ImageID, ImageVersion: material.Program.ImageVersion, ImageScope: material.Program.ImageScope, ImageDigest: material.Program.ImageDigest, Command: append([]string{}, material.Program.Command...), ResolvedArgs: args, ResolvedParameters: parameters}, Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: request.ComputeOrigin.CPUMillis, LimitMillicpu: request.ComputeOrigin.CPUMillis, RequestMemoryBytes: memory, LimitMemoryBytes: memory}, Environment: facts.Environment, Workspace: facts.Workspace, PublicationScope: facts.PublicationScope, OutputContract: material.OutputContract, DeadlineAt: timing.ExecutionDeadlineAt, Finetuning: fine}
 	gpuRequest, err := cpup01.GPURequestFor(request.ComputeOrigin)
 	if err != nil {
 		return cpup01.PreparedCandidate{}, ErrUnsupportedDevice
@@ -170,6 +194,11 @@ func (r *AdmissionResolver) Finalize(ctx context.Context, candidate cpup01.Prepa
 	}
 	// Finalize consumes the original candidate and already-validated formal ACC facts only.
 	snapshot := candidate.Snapshot
+	ctx, cancel := context.WithDeadline(ctx, snapshot.Timing.ExecutionDeadlineAt)
+	defer cancel()
+	if err := ctx.Err(); err != nil {
+		return AdmissionResolution{}, err
+	}
 	if snapshot.ComputeOrigin.DeviceMode == "cpu" {
 		if gpu != nil {
 			return AdmissionResolution{}, ErrAdmissionPlanMismatch
@@ -197,6 +226,9 @@ func (r *AdmissionResolver) Finalize(ctx context.Context, candidate cpup01.Prepa
 	if err != nil {
 		return AdmissionResolution{}, ErrAdmissionPlanMismatch
 	}
+	if err := ctx.Err(); err != nil {
+		return AdmissionResolution{}, err
+	}
 	return AdmissionResolution{Snapshot: normalized, SpecHash: hash}, nil
 }
 
@@ -215,7 +247,7 @@ func compatibleAdmissionFacts(f TenantAdmissionFacts, object cpup01.FixedObjectR
 	if kind == "GENERAL_TRAINING" && (f.InputFilePath != "/inputs/data.csv" || f.OutputDirectoryPath != "/outputs") {
 		return false
 	}
-	if kind == "FINETUNING" && (f.InputFilePath != "/workspace/inputs/data/finetune_data.json" || f.OutputDirectoryPath != "/workspace/training") {
+	if kind == "FINETUNING" && (f.InputFilePath != "/workspace/inputs/data/finetune_data.jsonl" || f.OutputDirectoryPath != "/workspace/training") {
 		return false
 	}
 	scope := f.InputScope
@@ -224,8 +256,16 @@ func compatibleAdmissionFacts(f TenantAdmissionFacts, object cpup01.FixedObjectR
 func validAdmissionContainerPath(value string) bool {
 	return path.IsAbs(value) && path.Clean(value) == value && ValidStorageKey(strings.TrimPrefix(value, "/")) && !strings.ContainsAny(value, "*?[]")
 }
-func resolveAdmissionArguments(template []cpup01.MaterialArgument, parameters []cpup01.Parameter, facts TenantAdmissionFacts, object cpup01.FixedObjectRef) ([]string, error) {
-	values := map[string]string{"INPUT_PATH": facts.InputFilePath, "OUTPUT_PATH": facts.OutputDirectoryPath, "INPUT_SHA256": object.SHA256, "INPUT_BYTES": strconv.FormatInt(object.SizeBytes, 10)}
+func resolveAdmissionArguments(template []cpup01.MaterialArgument, parameters []cpup01.Parameter, facts TenantAdmissionFacts, input cpup01.InputRef) ([]string, error) {
+	manifest, err := cpup01.BuildDatasetManifest(input)
+	if err != nil {
+		return nil, ErrImplementationUnavailable
+	}
+	digest, err := manifest.Digest()
+	if err != nil {
+		return nil, ErrImplementationUnavailable
+	}
+	values := map[string]string{"OUTPUT_PATH": facts.OutputDirectoryPath, "DATASET_MANIFEST_SHA256": digest}
 	for _, p := range parameters {
 		values[strings.ToUpper(p.Name)] = p.Value
 	}

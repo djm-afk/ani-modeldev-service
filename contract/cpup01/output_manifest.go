@@ -12,6 +12,7 @@ import (
 type OutputFile struct {
 	RelativePath string `json:"relative_path"`
 	Role         string `json:"role"`
+	InTar        bool   `json:"in_tar"`
 	SizeBytes    int64  `json:"size_bytes,string"`
 	SHA256       string `json:"sha256"`
 }
@@ -23,30 +24,46 @@ func OutputManifestBytes(admission AdmissionEnvelope, files []OutputFile) ([]byt
 		return nil, "", ErrInvalidArgument
 	}
 	contract := admission.Snapshot.OutputContract
-	if len(files) != len(contract.RequiredFiles) || uint64(len(files)) > uint64(contract.MaxFileCount) {
+	if len(files) == 0 || len(files) > MaxOutputFiles {
 		return nil, "", ErrInvalidArgument
 	}
-	remaining := contract.MaxTotalBytes
+	var total int64
+	var model, adapter bool
 	seen := make(map[string]bool, len(files))
+	required := make(map[string]RequiredOutput, len(contract.RequiredFiles))
+	for _, file := range contract.RequiredFiles {
+		required[file.RelativePath] = file
+	}
 	for _, file := range files {
-		if seen[file.RelativePath] || file.SizeBytes <= 0 || file.SizeBytes > remaining || len(file.SHA256) != 64 || strings.ToLower(file.SHA256) != file.SHA256 {
+		if seen[file.RelativePath] || !validSnapshotPath(file.RelativePath) || len(file.RelativePath) > MaxRelativePathBytes || file.SizeBytes < 0 || file.SizeBytes == 0 && file.SHA256 != EmptyContentSHA256 || (file.SizeBytes == 0 && (file.Role == "CHECKPOINT" || file.Role == "MODEL_CONFIG")) || !snapshotSHA256Pattern.MatchString(file.SHA256) {
 			return nil, "", ErrInvalidArgument
 		}
-		if _, err := hex.DecodeString(file.SHA256); err != nil {
-			return nil, "", ErrInvalidArgument
-		}
-		matched := false
-		for _, required := range contract.RequiredFiles {
-			if file.RelativePath == required.RelativePath && file.Role == required.Role && file.SizeBytes <= required.MaxSizeBytes {
-				matched = true
-				break
+		expected, fixed := required[file.RelativePath]
+		if fixed {
+			if file.Role != expected.Role || file.InTar != expected.InTar {
+				return nil, "", ErrInvalidArgument
 			}
+			delete(required, file.RelativePath)
+		} else {
+			if admission.Snapshot.Kind != "FINETUNING" {
+				return nil, "", ErrInvalidArgument
+			}
+			isModel := strings.HasPrefix(file.RelativePath, "export/merged/") && file.Role == "HF_MODEL" && file.InTar
+			isAdapter := strings.HasPrefix(file.RelativePath, "training/adapter/") && file.Role == "LORA_ADAPTER" && !file.InTar
+			if !isModel && !isAdapter {
+				return nil, "", ErrInvalidArgument
+			}
+			model, adapter = model || isModel, adapter || isAdapter
 		}
-		if !matched {
+		var err error
+		total, err = CheckedAdd(total, file.SizeBytes)
+		if err != nil {
 			return nil, "", ErrInvalidArgument
 		}
 		seen[file.RelativePath] = true
-		remaining -= file.SizeBytes
+	}
+	if len(required) != 0 || admission.Snapshot.Kind == "FINETUNING" && (!model || !adapter) || admission.Snapshot.Limits.Check(ContentOutput, total) != nil {
+		return nil, "", ErrInvalidArgument
 	}
 	ordered := append([]OutputFile{}, files...)
 	sort.Slice(ordered, func(i, j int) bool { return ordered[i].RelativePath < ordered[j].RelativePath })
@@ -63,7 +80,7 @@ func OutputManifestBytes(admission AdmissionEnvelope, files []OutputFile) ([]byt
 		StorageState      string       `json:"storage_state"`
 		Files             []OutputFile `json:"files"`
 	}{
-		Schema:   "ani.modeldev.output-manifest.v1",
+		Schema:   "ani.modeldev.output-manifest.v3",
 		TenantID: strings.ToLower(admission.TenantID), OperationID: strings.ToLower(admission.OperationID), ExecutionID: strings.ToLower(admission.ExecutionID),
 		ExecutionSpecHash: admission.SpecHash, InputVersionID: strings.ToLower(admission.Snapshot.Input.InputVersionID), InputSHA256: admission.Snapshot.Input.Object.SHA256,
 		ImplementationID: admission.Snapshot.Implementation.ImplementationID, ImageDigest: admission.Snapshot.Program.ImageDigest,

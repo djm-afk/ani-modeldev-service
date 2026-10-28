@@ -9,9 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"math"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -41,7 +39,7 @@ func PrepareInput(ctx context.Context, client *s3.Client, execution biz.Executio
 	want := execution.Snapshot.Workspace
 	if binding.Mode != want.Mode || binding.NamespaceName != execution.Snapshot.Environment.NamespaceName || binding.NamespaceUID != execution.Snapshot.Environment.NamespaceUID ||
 		binding.PVCName == "" || binding.PVCUID == "" || binding.InputSubpath != want.InputSubpath || binding.TrainingSubpath != want.TrainingSubpath ||
-		binding.ReportsSubpath != want.ReportsSubpath || binding.PublicationSubpath != want.PublicationSubpath {
+		binding.ReportsSubpath != want.ReportsSubpath || binding.PublicationSubpath != want.PublicationSubpath || binding.WorkSubpath != want.WorkSubpath {
 		return biz.WorkspaceBinding{}, biz.ErrRuntimeConflict
 	}
 	root, err := openPipelineRoot(directory)
@@ -49,33 +47,8 @@ func PrepareInput(ctx context.Context, client *s3.Client, execution biz.Executio
 		return biz.WorkspaceBinding{}, err
 	}
 	defer unix.Close(root)
-	input := execution.Snapshot.Input
-	// The immutable execution fixes this exact key and version; this narrowed
-	// scope grants no authority to read arbitrary component-selected objects.
-	scope := cpup01.StorageScope{StorageConnectionID: input.Object.StorageConnectionID, Bucket: input.Object.Bucket, ApprovedPrefix: path.Dir(input.Object.Key)}
-	verified, err := objectstore.NewVerifier(client, input.Object.StorageConnectionID, 32*1024*1024).VerifyCSV(ctx, scope, input.Object)
-	if err != nil {
+	if err := prepareWorkDirectories(ctx, root, want.WorkSubpath); err != nil {
 		return biz.WorkspaceBinding{}, err
-	}
-	if verified.SchemaVersion != input.SchemaVersion || verified.RowCount != input.RowCount || verified.FeatureCount != input.FeatureCount {
-		return biz.WorkspaceBinding{}, biz.ErrInputVerification
-	}
-	// The second read remains fixed to the verified version and is independently
-	// measured before it can become the trainer's local input.
-	response, err := client.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(input.Object.Bucket), Key: aws.String(input.Object.Key), VersionId: input.Object.VersionID})
-	if err != nil {
-		return biz.WorkspaceBinding{}, pipelineIOError(ctx, biz.ErrInputSourceUnavailable)
-	}
-	if response == nil || response.Body == nil {
-		return biz.WorkspaceBinding{}, biz.ErrInputSourceUnavailable
-	}
-	data, readErr := io.ReadAll(io.LimitReader(contextReader{ctx: ctx, reader: response.Body}, input.Object.SizeBytes+1))
-	closeErr := response.Body.Close()
-	if readErr != nil || closeErr != nil {
-		return biz.WorkspaceBinding{}, pipelineIOError(ctx, biz.ErrInputSourceUnavailable)
-	}
-	if response.VersionId == nil || input.Object.VersionID == nil || *response.VersionId != *input.Object.VersionID || int64(len(data)) != input.Object.SizeBytes || pipelineContentHash(data) != input.Object.SHA256 {
-		return biz.WorkspaceBinding{}, biz.ErrInputVerification
 	}
 	manifest, err := PreparedManifestBytes(execution, binding)
 	if err != nil {
@@ -91,7 +64,7 @@ func PrepareInput(ctx context.Context, client *s3.Client, execution biz.Executio
 		return biz.WorkspaceBinding{}, err
 	}
 	defer unix.Close(reports)
-	if err := writePipelineFile(ctx, inputs, "data.csv", data); err != nil {
+	if err := prepareFrozenDataset(ctx, client, inputs, execution.Snapshot.Input); err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
 	if err := writePipelineFile(ctx, reports, "prepared-manifest.json", manifest); err != nil {
@@ -106,6 +79,14 @@ func PrepareInput(ctx context.Context, client *s3.Client, execution biz.Executio
 // permission to use the claimed workspace.
 func PreparedManifestBytes(execution biz.Execution, binding biz.WorkspaceBinding) ([]byte, error) {
 	input := execution.Snapshot.Input
+	dataset, err := cpup01.BuildDatasetManifest(input)
+	if err != nil {
+		return nil, err
+	}
+	datasetHash, err := dataset.Digest()
+	if err != nil {
+		return nil, err
+	}
 	var baseArchive, baseFiles, datasetInfo, configuration *string
 	if fine := execution.Snapshot.Finetuning; fine != nil {
 		base, err := fine.BaseModel.BaseManifestSHA256()
@@ -125,15 +106,16 @@ func PreparedManifestBytes(execution biz.Execution, binding biz.WorkspaceBinding
 		SpecHash                    string  `json:"execution_spec_hash"`
 		InputVersionID              string  `json:"input_version_id"`
 		InputSHA256                 string  `json:"input_sha256"`
-		InputBytes                  int64   `json:"input_size_bytes"`
+		InputBytes                  int64   `json:"input_size_bytes,string"`
+		DatasetManifestSHA256       string  `json:"dataset_manifest_sha256"`
 		NamespaceUID                string  `json:"namespace_uid"`
 		PVCUID                      string  `json:"pvc_uid"`
 		BaseModelArchiveSHA256      *string `json:"base_model_archive_sha256,omitempty"`
 		BaseManifestSHA256          *string `json:"base_manifest_sha256,omitempty"`
 		DatasetInfoSHA256           *string `json:"dataset_info_sha256,omitempty"`
 		ResolvedConfigurationSHA256 *string `json:"resolved_configuration_sha256,omitempty"`
-	}{"ani.modeldev.prepared-manifest.v1", execution.TenantID, execution.OperationID, execution.ExecutionID, execution.SpecHash,
-		input.InputVersionID, input.Object.SHA256, input.Object.SizeBytes, binding.NamespaceUID, binding.PVCUID, baseArchive, baseFiles, datasetInfo, configuration})
+	}{"ani.modeldev.prepared-manifest.v3", execution.TenantID, execution.OperationID, execution.ExecutionID, execution.SpecHash,
+		input.InputVersionID, input.Object.SHA256, input.Object.SizeBytes, datasetHash, binding.NamespaceUID, binding.PVCUID, baseArchive, baseFiles, datasetInfo, configuration})
 }
 
 // UploadOutput sends independently collected actual files and the manifest.
@@ -163,7 +145,20 @@ func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Executio
 	files := append([]cpup01.OutputFile{}, output.Files...)
 	sort.Slice(files, func(i, j int) bool { return files[i].RelativePath < files[j].RelativePath })
 	spool := -1
-	var spoolRemaining int64
+	limits := execution.Snapshot.Limits
+	prefix := scope.ApprovedPrefix + "/" + execution.ExecutionID + "/"
+	keys := []string{prefix + "output-manifest.json"}
+	if execution.Snapshot.OutputContract.CreateTarBundle {
+		keys = append(keys, prefix+"bundle.tar")
+	}
+	for _, file := range files {
+		keys = append(keys, prefix+file.RelativePath)
+	}
+	for _, key := range keys {
+		if !biz.ValidStorageKey(key) || len(key) > cpup01.MaxStorageKeyBytes {
+			return biz.RuntimePublication{}, publicationFailure("validate", "storage-key", &cpup01.LimitViolation{Reason: "STRUCTURE_LIMIT_EXCEEDED", Kind: "storage_key", LimitName: "MaxStorageKeyBytes", Actual: int64(len(key)), Limit: cpup01.MaxStorageKeyBytes})
+		}
+	}
 	if execution.Snapshot.Kind == "FINETUNING" {
 		spool, err = openPipelineSubdirectory(root, execution.Snapshot.Workspace.PublicationSubpath+"/spool")
 		if err != nil {
@@ -174,12 +169,24 @@ func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Executio
 		if unix.Fstatfs(spool, &filesystem) != nil || filesystem.Type == unix.TMPFS_MAGIC {
 			return biz.RuntimePublication{}, publicationFailure("spool", "filesystem", biz.ErrInvalidWorkspaceOutput)
 		}
-		spoolRemaining = execution.Snapshot.Finetuning.Budgets.MaxSpoolBytes
+		var payload int64
 		for _, file := range files {
-			if file.SizeBytes <= 0 || file.SizeBytes > spoolRemaining {
-				return biz.RuntimePublication{}, publicationFailure("spool", "budget", biz.ErrInvalidWorkspaceOutput)
+			payload, err = cpup01.CheckedAdd(payload, file.SizeBytes)
+			if err != nil {
+				return biz.RuntimePublication{}, publicationFailure("spool", "overflow", err)
 			}
-			spoolRemaining -= file.SizeBytes
+		}
+		tarBytes, err := modelTarSize(files)
+		if err != nil {
+			return biz.RuntimePublication{}, publicationFailure("spool", "tar-size", err)
+		}
+		required, err := cpup01.CheckedAdd(payload, tarBytes)
+		if err == nil {
+			required, err = cpup01.CheckedAdd(required, int64(len(manifest))+cpup01.MaxPublicationCandidateBytes)
+		}
+		free, freeErr := cpup01.CheckedMultiply(int64(filesystem.Bavail), filesystem.Bsize)
+		if err != nil || freeErr != nil || free < required {
+			return biz.RuntimePublication{}, publicationFailure("spool", "disk-space", biz.ErrInvalidWorkspaceOutput)
 		}
 	}
 	// Capture and validate all inputs before emitting any upload. Unlinked
@@ -202,7 +209,7 @@ func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Executio
 	var bundleHash string
 	if execution.Snapshot.OutputContract.CreateTarBundle {
 		if execution.Snapshot.Kind == "FINETUNING" {
-			bundle, bundleBytes, bundleHash, err = bundleFinetuningFiles(ctx, execution.Snapshot.OutputContract, files, captured, spool, spoolRemaining)
+			bundle, bundleBytes, bundleHash, err = bundleFinetuningFiles(ctx, execution.Snapshot.OutputContract, files, captured, spool, limits)
 		} else {
 			bundle, bundleBytes, bundleHash, err = bundlePipelineFiles(ctx, files, captured, manifest)
 		}
@@ -212,26 +219,11 @@ func UploadOutput(ctx context.Context, client *s3.Client, execution biz.Executio
 		defer bundle.Close()
 	}
 	if execution.Snapshot.Kind == "FINETUNING" {
-		remaining := int64(8 << 30)
-		for _, file := range files {
-			if file.SizeBytes > remaining {
-				return biz.RuntimePublication{}, publicationFailure("inventory", "budget", biz.ErrInvalidWorkspaceOutput)
-			}
-			remaining -= file.SizeBytes
-		}
-		if bundleBytes > remaining {
-			return biz.RuntimePublication{}, publicationFailure("inventory", "budget", biz.ErrInvalidWorkspaceOutput)
-		}
-		remaining -= bundleBytes
-		if int64(len(manifest)) > remaining {
-			return biz.RuntimePublication{}, publicationFailure("inventory", "budget", biz.ErrInvalidWorkspaceOutput)
-		}
 		if err := verifyFinetuningInventory(ctx, root, execution.Snapshot.OutputContract); err != nil {
 			return biz.RuntimePublication{}, publicationFailure("inventory", "content", err)
 		}
 	}
 	candidate := biz.RuntimePublication{LogicalKey: "cpu-p01:" + execution.ExecutionID}
-	prefix := scope.ApprovedPrefix + "/" + execution.ExecutionID + "/"
 	for i, file := range files {
 		object, err := uploadPipelineObject(ctx, client, scope, prefix+file.RelativePath, file.SizeBytes, file.SHA256, captured[i], "put")
 		if err != nil {
@@ -343,7 +335,7 @@ func capturePipelineFile(ctx context.Context, root int, expected cpup01.OutputFi
 }
 
 func capturePipelineFileInto(ctx context.Context, root int, expected cpup01.OutputFile, spool int) (*os.File, error) {
-	if expected.SizeBytes <= 0 || !biz.ValidStorageKey(expected.RelativePath) {
+	if expected.SizeBytes < 0 || !biz.ValidStorageKey(expected.RelativePath) {
 		return nil, biz.ErrInvalidWorkspaceOutput
 	}
 	fd, err := openPipelineReadFile(root, expected.RelativePath)
@@ -417,33 +409,22 @@ func newPipelineTemporaryAt(spool int) (*os.File, error) {
 	return file, nil
 }
 
-func bundleFinetuningFiles(ctx context.Context, contract cpup01.OutputContract, files []cpup01.OutputFile, captured []*os.File, spool int, spoolRemaining int64) (*os.File, int64, string, error) {
-	if contract.MaxTarBytes == nil || *contract.MaxTarBytes <= 0 || len(files) != len(captured) {
+func bundleFinetuningFiles(ctx context.Context, contract cpup01.OutputContract, files []cpup01.OutputFile, captured []*os.File, spool int, limits cpup01.ContentLimits) (*os.File, int64, string, error) {
+	if limits.Validate() != nil || len(files) != len(captured) {
 		return nil, 0, "", biz.ErrInvalidWorkspaceOutput
 	}
-	if existing, size, hash, found, err := originalFinetuningBundle(ctx, spool, contract, files, spoolRemaining); found || err != nil {
+	if existing, size, hash, found, err := originalFinetuningBundle(ctx, spool, contract, files, limits); found || err != nil {
 		return existing, size, hash, err
 	}
 	inTar := map[string]bool{}
-	for _, required := range contract.RequiredFiles {
-		if required.InTar != nil && *required.InTar {
-			inTar[required.RelativePath] = true
-		}
-	}
-	size := int64(1024)
 	for _, file := range files {
-		if inTar[file.RelativePath] {
-			if file.SizeBytes <= 0 || file.SizeBytes > math.MaxInt64-1023 || !strings.HasPrefix(file.RelativePath, "export/merged/") {
-				return nil, 0, "", biz.ErrInvalidWorkspaceOutput
-			}
-			memberBytes := int64(512) + (file.SizeBytes+511)/512*512
-			if memberBytes > *contract.MaxTarBytes-size {
-				return nil, 0, "", biz.ErrInvalidWorkspaceOutput
-			}
-			size += memberBytes
+		if file.InTar {
+			inTar[file.RelativePath] = true
 		}
 	}
-	if len(inTar) == 0 || size > *contract.MaxTarBytes || size > spoolRemaining {
+	size, err := modelTarSize(files)
+	maximum, boundErr := cpup01.TarReadBound(limits.MaxContentBytes)
+	if err != nil || boundErr != nil || len(inTar) == 0 || size > maximum {
 		return nil, 0, "", biz.ErrInvalidWorkspaceOutput
 	}
 	name := ".finetuning-bundle-" + uuid.NewString()
@@ -467,7 +448,7 @@ func bundleFinetuningFiles(ctx context.Context, contract cpup01.OutputContract, 
 			if !biz.ValidStorageKey(member) {
 				return nil, 0, "", biz.ErrInvalidWorkspaceOutput
 			}
-			if writer.WriteHeader(&tar.Header{Name: member, Mode: 0600, Size: file.SizeBytes, Typeflag: tar.TypeReg, Format: tar.FormatUSTAR}) != nil {
+			if writer.WriteHeader(&tar.Header{Name: member, Mode: 0600, Size: file.SizeBytes, Typeflag: tar.TypeReg, Format: tar.FormatPAX}) != nil {
 				return nil, 0, "", biz.ErrInvalidWorkspaceOutput
 			}
 			if _, err := captured[i].Seek(0, io.SeekStart); err != nil {
@@ -496,7 +477,7 @@ func bundleFinetuningFiles(ctx context.Context, contract cpup01.OutputContract, 
 		if !errors.Is(err, unix.EEXIST) {
 			return nil, 0, "", biz.ErrInvalidWorkspaceOutput
 		}
-		existing, existingSize, existingHash, _, err := originalFinetuningBundle(ctx, spool, contract, files, spoolRemaining)
+		existing, existingSize, existingHash, _, err := originalFinetuningBundle(ctx, spool, contract, files, limits)
 		return existing, existingSize, existingHash, err
 	}
 	if unix.Unlinkat(spool, name, 0) != nil || unix.Fsync(spool) != nil {
@@ -506,7 +487,39 @@ func bundleFinetuningFiles(ctx context.Context, contract cpup01.OutputContract, 
 	return bundle, size, hex.EncodeToString(digest.Sum(nil)), nil
 }
 
-func originalFinetuningBundle(ctx context.Context, spool int, contract cpup01.OutputContract, files []cpup01.OutputFile, remaining int64) (*os.File, int64, string, bool, error) {
+// Header size comes from the same standard encoder used below, including
+// PAX long-path records. File data/padding are counted without reading copies.
+func modelTarSize(files []cpup01.OutputFile) (int64, error) {
+	size := int64(1024)
+	count := 0
+	for _, file := range files {
+		if !file.InTar {
+			continue
+		}
+		count++
+		if count > cpup01.MaxModelFiles || file.Role != "HF_MODEL" || !strings.HasPrefix(file.RelativePath, "export/merged/") || file.SizeBytes < 0 {
+			return 0, biz.ErrInvalidWorkspaceOutput
+		}
+		var header bytes.Buffer
+		writer := tar.NewWriter(&header)
+		if err := writer.WriteHeader(&tar.Header{Name: strings.TrimPrefix(file.RelativePath, "export/merged/"), Mode: 0600, Size: file.SizeBytes, Typeflag: tar.TypeReg, Format: tar.FormatPAX}); err != nil {
+			return 0, biz.ErrInvalidWorkspaceOutput
+		}
+		var err error
+		for _, amount := range []int64{int64(header.Len()), file.SizeBytes, (512 - file.SizeBytes%512) % 512} {
+			size, err = cpup01.CheckedAdd(size, amount)
+			if err != nil {
+				return 0, err
+			}
+		}
+	}
+	if count == 0 {
+		return 0, biz.ErrInvalidWorkspaceOutput
+	}
+	return size, nil
+}
+
+func originalFinetuningBundle(ctx context.Context, spool int, contract cpup01.OutputContract, files []cpup01.OutputFile, limits cpup01.ContentLimits) (*os.File, int64, string, bool, error) {
 	fd, err := unix.Openat(spool, "bundle.tar", unix.O_RDONLY|unix.O_NOFOLLOW|unix.O_NONBLOCK|unix.O_CLOEXEC, 0)
 	if errors.Is(err, unix.ENOENT) {
 		return nil, 0, "", false, nil
@@ -522,12 +535,16 @@ func originalFinetuningBundle(ctx context.Context, spool int, contract cpup01.Ou
 		}
 	}()
 	var before, after unix.Stat_t
-	if unix.Fstat(fd, &before) != nil || before.Mode&unix.S_IFMT != unix.S_IFREG || before.Nlink != 1 || before.Size <= 0 || before.Size > remaining || before.Size > *contract.MaxTarBytes {
+	maximum, boundErr := cpup01.TarReadBound(limits.MaxContentBytes)
+	if boundErr != nil {
+		return nil, 0, "", true, biz.ErrInvalidWorkspaceOutput
+	}
+	if unix.Fstat(fd, &before) != nil || before.Mode&unix.S_IFMT != unix.S_IFREG || before.Nlink != 1 || before.Size <= 0 || before.Size > maximum {
 		return nil, 0, "", true, biz.ErrInvalidWorkspaceOutput
 	}
 	digest := sha256.New()
 	reader := io.TeeReader(io.LimitReader(contextReader{ctx: ctx, reader: file}, before.Size), digest)
-	if err := objectstore.ValidateFinetuningOutputTar(reader, files, contract); err != nil {
+	if err := objectstore.ValidateFinetuningOutputTar(reader, files, contract, limits); err != nil {
 		return nil, 0, "", true, pipelineIOError(ctx, biz.ErrInvalidWorkspaceOutput)
 	}
 	position, err := file.Seek(0, io.SeekCurrent)
@@ -622,7 +639,7 @@ func uploadPipelineObject(ctx context.Context, client *s3.Client, scope cpup01.S
 	}
 	version := *existing.VersionId
 	object.VersionID = &version
-	verified, err := objectstore.NewVerifier(client, scope.StorageConnectionID, size).Verify(ctx, scope, object)
+	verified, err := objectstore.NewVerifier(client, scope.StorageConnectionID).Verify(ctx, scope, object)
 	if err != nil {
 		return cpup01.FixedObjectRef{}, publicationFailure(phase, "verify-existing", err)
 	}

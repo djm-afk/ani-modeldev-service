@@ -36,13 +36,14 @@ type Config struct {
 	WorkspaceDirectory string
 	PVCName            string
 	InventoryFile      string
-	CandidateFile      string
+	PublicationRefFile string
+	PublicationRef     string
 	CloseOnly          bool
-	TaskID             string
 	PollInterval       time.Duration
 }
 
 type Runner struct {
+	taskID        string
 	config        Config
 	client        modeldevv1.ModelDevStepServiceClient
 	kube          dynamic.Interface

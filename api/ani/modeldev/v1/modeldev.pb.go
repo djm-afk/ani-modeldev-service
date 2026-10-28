@@ -553,31 +553,42 @@ func (ParameterType) EnumDescriptor() ([]byte, []int) {
 type ErrorReason int32
 
 const (
-	ErrorReason_ERROR_REASON_UNSPECIFIED                ErrorReason = 0
-	ErrorReason_ERROR_REASON_INVALID_ARGUMENT           ErrorReason = 1
-	ErrorReason_ERROR_REASON_UNAUTHENTICATED            ErrorReason = 2
-	ErrorReason_ERROR_REASON_FORBIDDEN                  ErrorReason = 3
-	ErrorReason_ERROR_REASON_RESOURCE_NOT_FOUND         ErrorReason = 4
-	ErrorReason_ERROR_REASON_IDEMPOTENCY_CONFLICT       ErrorReason = 5
-	ErrorReason_ERROR_REASON_ENVIRONMENT_NOT_READY      ErrorReason = 6
-	ErrorReason_ERROR_REASON_UPSTREAM_UNAVAILABLE       ErrorReason = 8
-	ErrorReason_ERROR_REASON_SUBMISSIONS_PAUSED         ErrorReason = 9
-	ErrorReason_ERROR_REASON_CAPABILITY_NOT_ENABLED     ErrorReason = 10
-	ErrorReason_ERROR_REASON_MANUAL_REVIEW_REQUIRED     ErrorReason = 11
-	ErrorReason_ERROR_REASON_EXECUTION_CLOSING          ErrorReason = 12
-	ErrorReason_ERROR_REASON_ARTIFACT_NOT_PUBLISHED     ErrorReason = 13
-	ErrorReason_ERROR_REASON_AUTHORITY_MISMATCH         ErrorReason = 14
-	ErrorReason_ERROR_REASON_COMMAND_CONFLICT           ErrorReason = 15
-	ErrorReason_ERROR_REASON_TRAINING_FAILED            ErrorReason = 16
-	ErrorReason_ERROR_REASON_REQUIRED_OUTPUT_MISSING    ErrorReason = 17
-	ErrorReason_ERROR_REASON_INTEGRITY_MISMATCH         ErrorReason = 18
-	ErrorReason_ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN  ErrorReason = 19
-	ErrorReason_ERROR_REASON_DEADLINE_EXCEEDED          ErrorReason = 20
-	ErrorReason_ERROR_REASON_INPUT_TOO_LARGE            ErrorReason = 21
-	ErrorReason_ERROR_REASON_INPUT_NOT_READY            ErrorReason = 22
-	ErrorReason_ERROR_REASON_IMPLEMENTATION_UNAVAILABLE ErrorReason = 23
-	ErrorReason_ERROR_REASON_UNSUPPORTED_DEVICE         ErrorReason = 24
-	ErrorReason_ERROR_REASON_ADMISSION_PLAN_MISMATCH    ErrorReason = 25
+	ErrorReason_ERROR_REASON_UNSPECIFIED                     ErrorReason = 0
+	ErrorReason_ERROR_REASON_INVALID_ARGUMENT                ErrorReason = 1
+	ErrorReason_ERROR_REASON_UNAUTHENTICATED                 ErrorReason = 2
+	ErrorReason_ERROR_REASON_FORBIDDEN                       ErrorReason = 3
+	ErrorReason_ERROR_REASON_RESOURCE_NOT_FOUND              ErrorReason = 4
+	ErrorReason_ERROR_REASON_IDEMPOTENCY_CONFLICT            ErrorReason = 5
+	ErrorReason_ERROR_REASON_ENVIRONMENT_NOT_READY           ErrorReason = 6
+	ErrorReason_ERROR_REASON_UPSTREAM_UNAVAILABLE            ErrorReason = 8
+	ErrorReason_ERROR_REASON_SUBMISSIONS_PAUSED              ErrorReason = 9
+	ErrorReason_ERROR_REASON_CAPABILITY_NOT_ENABLED          ErrorReason = 10
+	ErrorReason_ERROR_REASON_MANUAL_REVIEW_REQUIRED          ErrorReason = 11
+	ErrorReason_ERROR_REASON_EXECUTION_CLOSING               ErrorReason = 12
+	ErrorReason_ERROR_REASON_ARTIFACT_NOT_PUBLISHED          ErrorReason = 13
+	ErrorReason_ERROR_REASON_AUTHORITY_MISMATCH              ErrorReason = 14
+	ErrorReason_ERROR_REASON_COMMAND_CONFLICT                ErrorReason = 15
+	ErrorReason_ERROR_REASON_TRAINING_FAILED                 ErrorReason = 16
+	ErrorReason_ERROR_REASON_REQUIRED_OUTPUT_MISSING         ErrorReason = 17
+	ErrorReason_ERROR_REASON_INTEGRITY_MISMATCH              ErrorReason = 18
+	ErrorReason_ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN       ErrorReason = 19
+	ErrorReason_ERROR_REASON_DEADLINE_EXCEEDED               ErrorReason = 20
+	ErrorReason_ERROR_REASON_INPUT_NOT_READY                 ErrorReason = 22
+	ErrorReason_ERROR_REASON_IMPLEMENTATION_UNAVAILABLE      ErrorReason = 23
+	ErrorReason_ERROR_REASON_UNSUPPORTED_DEVICE              ErrorReason = 24
+	ErrorReason_ERROR_REASON_ADMISSION_PLAN_MISMATCH         ErrorReason = 25
+	ErrorReason_ERROR_REASON_BASE_MODEL_INVALID              ErrorReason = 26
+	ErrorReason_ERROR_REASON_BASE_MODEL_UNSUPPORTED          ErrorReason = 27
+	ErrorReason_ERROR_REASON_CONTEXT_LIMIT_EXCEEDED          ErrorReason = 28
+	ErrorReason_ERROR_REASON_CONTEXT_LIMIT_UNKNOWN           ErrorReason = 29
+	ErrorReason_ERROR_REASON_FINETUNING_TEMPLATE_REQUIRED    ErrorReason = 30
+	ErrorReason_ERROR_REASON_FINETUNING_TEMPLATE_UNSUPPORTED ErrorReason = 31
+	ErrorReason_ERROR_REASON_CONTENT_LIMIT_EXCEEDED          ErrorReason = 32
+	ErrorReason_ERROR_REASON_STRUCTURE_LIMIT_EXCEEDED        ErrorReason = 33
+	ErrorReason_ERROR_REASON_DATASET_RECORD_TOO_LARGE        ErrorReason = 34
+	ErrorReason_ERROR_REASON_DATASET_INVALID                 ErrorReason = 35
+	ErrorReason_ERROR_REASON_INPUT_VALIDATION_BUSY           ErrorReason = 36
+	ErrorReason_ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE  ErrorReason = 37
 )
 
 // Enum value maps for ErrorReason.
@@ -603,38 +614,60 @@ var (
 		18: "ERROR_REASON_INTEGRITY_MISMATCH",
 		19: "ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN",
 		20: "ERROR_REASON_DEADLINE_EXCEEDED",
-		21: "ERROR_REASON_INPUT_TOO_LARGE",
 		22: "ERROR_REASON_INPUT_NOT_READY",
 		23: "ERROR_REASON_IMPLEMENTATION_UNAVAILABLE",
 		24: "ERROR_REASON_UNSUPPORTED_DEVICE",
 		25: "ERROR_REASON_ADMISSION_PLAN_MISMATCH",
+		26: "ERROR_REASON_BASE_MODEL_INVALID",
+		27: "ERROR_REASON_BASE_MODEL_UNSUPPORTED",
+		28: "ERROR_REASON_CONTEXT_LIMIT_EXCEEDED",
+		29: "ERROR_REASON_CONTEXT_LIMIT_UNKNOWN",
+		30: "ERROR_REASON_FINETUNING_TEMPLATE_REQUIRED",
+		31: "ERROR_REASON_FINETUNING_TEMPLATE_UNSUPPORTED",
+		32: "ERROR_REASON_CONTENT_LIMIT_EXCEEDED",
+		33: "ERROR_REASON_STRUCTURE_LIMIT_EXCEEDED",
+		34: "ERROR_REASON_DATASET_RECORD_TOO_LARGE",
+		35: "ERROR_REASON_DATASET_INVALID",
+		36: "ERROR_REASON_INPUT_VALIDATION_BUSY",
+		37: "ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE",
 	}
 	ErrorReason_value = map[string]int32{
-		"ERROR_REASON_UNSPECIFIED":                0,
-		"ERROR_REASON_INVALID_ARGUMENT":           1,
-		"ERROR_REASON_UNAUTHENTICATED":            2,
-		"ERROR_REASON_FORBIDDEN":                  3,
-		"ERROR_REASON_RESOURCE_NOT_FOUND":         4,
-		"ERROR_REASON_IDEMPOTENCY_CONFLICT":       5,
-		"ERROR_REASON_ENVIRONMENT_NOT_READY":      6,
-		"ERROR_REASON_UPSTREAM_UNAVAILABLE":       8,
-		"ERROR_REASON_SUBMISSIONS_PAUSED":         9,
-		"ERROR_REASON_CAPABILITY_NOT_ENABLED":     10,
-		"ERROR_REASON_MANUAL_REVIEW_REQUIRED":     11,
-		"ERROR_REASON_EXECUTION_CLOSING":          12,
-		"ERROR_REASON_ARTIFACT_NOT_PUBLISHED":     13,
-		"ERROR_REASON_AUTHORITY_MISMATCH":         14,
-		"ERROR_REASON_COMMAND_CONFLICT":           15,
-		"ERROR_REASON_TRAINING_FAILED":            16,
-		"ERROR_REASON_REQUIRED_OUTPUT_MISSING":    17,
-		"ERROR_REASON_INTEGRITY_MISMATCH":         18,
-		"ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN":  19,
-		"ERROR_REASON_DEADLINE_EXCEEDED":          20,
-		"ERROR_REASON_INPUT_TOO_LARGE":            21,
-		"ERROR_REASON_INPUT_NOT_READY":            22,
-		"ERROR_REASON_IMPLEMENTATION_UNAVAILABLE": 23,
-		"ERROR_REASON_UNSUPPORTED_DEVICE":         24,
-		"ERROR_REASON_ADMISSION_PLAN_MISMATCH":    25,
+		"ERROR_REASON_UNSPECIFIED":                     0,
+		"ERROR_REASON_INVALID_ARGUMENT":                1,
+		"ERROR_REASON_UNAUTHENTICATED":                 2,
+		"ERROR_REASON_FORBIDDEN":                       3,
+		"ERROR_REASON_RESOURCE_NOT_FOUND":              4,
+		"ERROR_REASON_IDEMPOTENCY_CONFLICT":            5,
+		"ERROR_REASON_ENVIRONMENT_NOT_READY":           6,
+		"ERROR_REASON_UPSTREAM_UNAVAILABLE":            8,
+		"ERROR_REASON_SUBMISSIONS_PAUSED":              9,
+		"ERROR_REASON_CAPABILITY_NOT_ENABLED":          10,
+		"ERROR_REASON_MANUAL_REVIEW_REQUIRED":          11,
+		"ERROR_REASON_EXECUTION_CLOSING":               12,
+		"ERROR_REASON_ARTIFACT_NOT_PUBLISHED":          13,
+		"ERROR_REASON_AUTHORITY_MISMATCH":              14,
+		"ERROR_REASON_COMMAND_CONFLICT":                15,
+		"ERROR_REASON_TRAINING_FAILED":                 16,
+		"ERROR_REASON_REQUIRED_OUTPUT_MISSING":         17,
+		"ERROR_REASON_INTEGRITY_MISMATCH":              18,
+		"ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN":       19,
+		"ERROR_REASON_DEADLINE_EXCEEDED":               20,
+		"ERROR_REASON_INPUT_NOT_READY":                 22,
+		"ERROR_REASON_IMPLEMENTATION_UNAVAILABLE":      23,
+		"ERROR_REASON_UNSUPPORTED_DEVICE":              24,
+		"ERROR_REASON_ADMISSION_PLAN_MISMATCH":         25,
+		"ERROR_REASON_BASE_MODEL_INVALID":              26,
+		"ERROR_REASON_BASE_MODEL_UNSUPPORTED":          27,
+		"ERROR_REASON_CONTEXT_LIMIT_EXCEEDED":          28,
+		"ERROR_REASON_CONTEXT_LIMIT_UNKNOWN":           29,
+		"ERROR_REASON_FINETUNING_TEMPLATE_REQUIRED":    30,
+		"ERROR_REASON_FINETUNING_TEMPLATE_UNSUPPORTED": 31,
+		"ERROR_REASON_CONTENT_LIMIT_EXCEEDED":          32,
+		"ERROR_REASON_STRUCTURE_LIMIT_EXCEEDED":        33,
+		"ERROR_REASON_DATASET_RECORD_TOO_LARGE":        34,
+		"ERROR_REASON_DATASET_INVALID":                 35,
+		"ERROR_REASON_INPUT_VALIDATION_BUSY":           36,
+		"ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE":  37,
 	}
 )
 
@@ -990,6 +1023,58 @@ func (x PodAvailability) Number() protoreflect.EnumNumber {
 // Deprecated: Use PodAvailability.Descriptor instead.
 func (PodAvailability) EnumDescriptor() ([]byte, []int) {
 	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{15}
+}
+
+type FinetuningAssessment int32
+
+const (
+	FinetuningAssessment_FINETUNING_ASSESSMENT_UNSPECIFIED       FinetuningAssessment = 0
+	FinetuningAssessment_FINETUNING_ASSESSMENT_ELIGIBLE          FinetuningAssessment = 1
+	FinetuningAssessment_FINETUNING_ASSESSMENT_TEMPLATE_REQUIRED FinetuningAssessment = 2
+	FinetuningAssessment_FINETUNING_ASSESSMENT_UNSUPPORTED       FinetuningAssessment = 3
+)
+
+// Enum value maps for FinetuningAssessment.
+var (
+	FinetuningAssessment_name = map[int32]string{
+		0: "FINETUNING_ASSESSMENT_UNSPECIFIED",
+		1: "FINETUNING_ASSESSMENT_ELIGIBLE",
+		2: "FINETUNING_ASSESSMENT_TEMPLATE_REQUIRED",
+		3: "FINETUNING_ASSESSMENT_UNSUPPORTED",
+	}
+	FinetuningAssessment_value = map[string]int32{
+		"FINETUNING_ASSESSMENT_UNSPECIFIED":       0,
+		"FINETUNING_ASSESSMENT_ELIGIBLE":          1,
+		"FINETUNING_ASSESSMENT_TEMPLATE_REQUIRED": 2,
+		"FINETUNING_ASSESSMENT_UNSUPPORTED":       3,
+	}
+)
+
+func (x FinetuningAssessment) Enum() *FinetuningAssessment {
+	p := new(FinetuningAssessment)
+	*p = x
+	return p
+}
+
+func (x FinetuningAssessment) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (FinetuningAssessment) Descriptor() protoreflect.EnumDescriptor {
+	return file_ani_modeldev_v1_modeldev_proto_enumTypes[16].Descriptor()
+}
+
+func (FinetuningAssessment) Type() protoreflect.EnumType {
+	return &file_ani_modeldev_v1_modeldev_proto_enumTypes[16]
+}
+
+func (x FinetuningAssessment) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use FinetuningAssessment.Descriptor instead.
+func (FinetuningAssessment) EnumDescriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{16}
 }
 
 type BeginFinetuningStepRequest struct {
@@ -1375,6 +1460,10 @@ type ErrorDetail struct {
 	SafeMessage   string                 `protobuf:"bytes,2,opt,name=safe_message,json=safeMessage,proto3" json:"safe_message,omitempty"`
 	Violations    []*FieldViolation      `protobuf:"bytes,3,rep,name=violations,proto3" json:"violations,omitempty"`
 	CorrelationId string                 `protobuf:"bytes,4,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	Kind          string                 `protobuf:"bytes,5,opt,name=kind,proto3" json:"kind,omitempty"`
+	LimitName     string                 `protobuf:"bytes,6,opt,name=limit_name,json=limitName,proto3" json:"limit_name,omitempty"`
+	Actual        *int64                 `protobuf:"varint,7,opt,name=actual,proto3,oneof" json:"actual,omitempty"`
+	Limit         *int64                 `protobuf:"varint,8,opt,name=limit,proto3,oneof" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1437,6 +1526,34 @@ func (x *ErrorDetail) GetCorrelationId() string {
 	return ""
 }
 
+func (x *ErrorDetail) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *ErrorDetail) GetLimitName() string {
+	if x != nil {
+		return x.LimitName
+	}
+	return ""
+}
+
+func (x *ErrorDetail) GetActual() int64 {
+	if x != nil && x.Actual != nil {
+		return *x.Actual
+	}
+	return 0
+}
+
+func (x *ErrorDetail) GetLimit() int64 {
+	if x != nil && x.Limit != nil {
+		return *x.Limit
+	}
+	return 0
+}
+
 // Shared typed intent, not a new HTTP facade. Governance owns CreateExecution
 // and StopExecution at the existing BFF. Its strict JSON adapter keeps the
 // implementation-specific parameters object and maps field presence to
@@ -1457,10 +1574,11 @@ type UserIntent struct {
 	//
 	//	*UserIntent_Mlp
 	//	*UserIntent_SftLora
-	Parameters     isUserIntent_Parameters `protobuf_oneof:"parameters"`
-	TimeoutSeconds *uint64                 `protobuf:"varint,16,opt,name=timeout_seconds,json=timeoutSeconds,proto3,oneof" json:"timeout_seconds,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	Parameters         isUserIntent_Parameters `protobuf_oneof:"parameters"`
+	TimeoutSeconds     *uint64                 `protobuf:"varint,16,opt,name=timeout_seconds,json=timeoutSeconds,proto3,oneof" json:"timeout_seconds,omitempty"`
+	FinetuningTemplate *string                 `protobuf:"bytes,17,opt,name=finetuning_template,json=finetuningTemplate,proto3,oneof" json:"finetuning_template,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *UserIntent) Reset() {
@@ -1579,6 +1697,13 @@ func (x *UserIntent) GetTimeoutSeconds() uint64 {
 		return *x.TimeoutSeconds
 	}
 	return 0
+}
+
+func (x *UserIntent) GetFinetuningTemplate() string {
+	if x != nil && x.FinetuningTemplate != nil {
+		return *x.FinetuningTemplate
+	}
+	return ""
 }
 
 type isUserIntent_Parameters interface {
@@ -2093,6 +2218,8 @@ type ImplementationView struct {
 	ExecutionTimeoutDefaultSeconds uint64                 `protobuf:"varint,9,opt,name=execution_timeout_default_seconds,json=executionTimeoutDefaultSeconds,proto3" json:"execution_timeout_default_seconds,omitempty"`
 	ExecutionTimeoutMaxSeconds     uint64                 `protobuf:"varint,10,opt,name=execution_timeout_max_seconds,json=executionTimeoutMaxSeconds,proto3" json:"execution_timeout_max_seconds,omitempty"`
 	StepTimeoutSeconds             uint64                 `protobuf:"varint,11,opt,name=step_timeout_seconds,json=stepTimeoutSeconds,proto3" json:"step_timeout_seconds,omitempty"`
+	RuntimeCapabilities            *RuntimeCapabilities   `protobuf:"bytes,12,opt,name=runtime_capabilities,json=runtimeCapabilities,proto3" json:"runtime_capabilities,omitempty"`
+	RuntimeCapabilitiesSha256      string                 `protobuf:"bytes,13,opt,name=runtime_capabilities_sha256,json=runtimeCapabilitiesSha256,proto3" json:"runtime_capabilities_sha256,omitempty"`
 	unknownFields                  protoimpl.UnknownFields
 	sizeCache                      protoimpl.SizeCache
 }
@@ -2204,6 +2331,20 @@ func (x *ImplementationView) GetStepTimeoutSeconds() uint64 {
 	return 0
 }
 
+func (x *ImplementationView) GetRuntimeCapabilities() *RuntimeCapabilities {
+	if x != nil {
+		return x.RuntimeCapabilities
+	}
+	return nil
+}
+
+func (x *ImplementationView) GetRuntimeCapabilitiesSha256() string {
+	if x != nil {
+		return x.RuntimeCapabilitiesSha256
+	}
+	return ""
+}
+
 // An absent kind returns every implementation. A specified kind is applied
 // before Total and the page window, and UNSPECIFIED is rejected rather than
 // treated as a filter.
@@ -2211,6 +2352,7 @@ type ListImplementationsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          *PageRequest           `protobuf:"bytes,1,opt,name=page,proto3" json:"page,omitempty"`
 	Kind          *v1.ExecutionKind      `protobuf:"varint,2,opt,name=kind,proto3,enum=ani.training.v1.ExecutionKind,oneof" json:"kind,omitempty"`
+	DeviceMode    *string                `protobuf:"bytes,3,opt,name=device_mode,json=deviceMode,proto3,oneof" json:"device_mode,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2257,6 +2399,13 @@ func (x *ListImplementationsRequest) GetKind() v1.ExecutionKind {
 		return *x.Kind
 	}
 	return v1.ExecutionKind(0)
+}
+
+func (x *ListImplementationsRequest) GetDeviceMode() string {
+	if x != nil && x.DeviceMode != nil {
+		return *x.DeviceMode
+	}
+	return ""
 }
 
 type ListImplementationsResponse struct {
@@ -2313,18 +2462,19 @@ func (x *ListImplementationsResponse) GetTotal() uint64 {
 
 // Public metadata omits backend object keys and credentials.
 type InputVersionView struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	InputVersionId string                 `protobuf:"bytes,1,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
-	State          InputState             `protobuf:"varint,2,opt,name=state,proto3,enum=ani.modeldev.v1.InputState" json:"state,omitempty"`
-	Format         string                 `protobuf:"bytes,3,opt,name=format,proto3" json:"format,omitempty"`
-	SizeBytes      int64                  `protobuf:"varint,4,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
-	Sha256         string                 `protobuf:"bytes,5,opt,name=sha256,proto3" json:"sha256,omitempty"`
-	RowCount       uint32                 `protobuf:"varint,6,opt,name=row_count,json=rowCount,proto3" json:"row_count,omitempty"`
-	FeatureCount   uint32                 `protobuf:"varint,7,opt,name=feature_count,json=featureCount,proto3" json:"feature_count,omitempty"`
-	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	Failure        *ErrorDetail           `protobuf:"bytes,9,opt,name=failure,proto3" json:"failure,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state           protoimpl.MessageState   `protogen:"open.v1"`
+	InputVersionId  string                   `protobuf:"bytes,1,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
+	State           InputState               `protobuf:"varint,2,opt,name=state,proto3,enum=ani.modeldev.v1.InputState" json:"state,omitempty"`
+	Format          string                   `protobuf:"bytes,3,opt,name=format,proto3" json:"format,omitempty"`
+	SizeBytes       int64                    `protobuf:"varint,4,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	Sha256          string                   `protobuf:"bytes,5,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	RowCount        int64                    `protobuf:"varint,6,opt,name=row_count,json=rowCount,proto3" json:"row_count,omitempty"`
+	FeatureCount    uint32                   `protobuf:"varint,7,opt,name=feature_count,json=featureCount,proto3" json:"feature_count,omitempty"`
+	CreatedAt       *timestamppb.Timestamp   `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Failure         *ErrorDetail             `protobuf:"bytes,9,opt,name=failure,proto3" json:"failure,omitempty"`
+	PreparedDataset *v1.PreparedDatasetFacts `protobuf:"bytes,10,opt,name=prepared_dataset,json=preparedDataset,proto3" json:"prepared_dataset,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *InputVersionView) Reset() {
@@ -2392,7 +2542,7 @@ func (x *InputVersionView) GetSha256() string {
 	return ""
 }
 
-func (x *InputVersionView) GetRowCount() uint32 {
+func (x *InputVersionView) GetRowCount() int64 {
 	if x != nil {
 		return x.RowCount
 	}
@@ -2416,6 +2566,13 @@ func (x *InputVersionView) GetCreatedAt() *timestamppb.Timestamp {
 func (x *InputVersionView) GetFailure() *ErrorDetail {
 	if x != nil {
 		return x.Failure
+	}
+	return nil
+}
+
+func (x *InputVersionView) GetPreparedDataset() *v1.PreparedDatasetFacts {
+	if x != nil {
+		return x.PreparedDataset
 	}
 	return nil
 }
@@ -2631,7 +2788,6 @@ type ExecutionView struct {
 	Name                        string                     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Kind                        v1.ExecutionKind           `protobuf:"varint,3,opt,name=kind,proto3,enum=ani.training.v1.ExecutionKind" json:"kind,omitempty"`
 	InputVersionId              string                     `protobuf:"bytes,6,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
-	ImageVersionId              string                     `protobuf:"bytes,7,opt,name=image_version_id,json=imageVersionId,proto3" json:"image_version_id,omitempty"`
 	States                      *ExecutionStates           `protobuf:"bytes,8,opt,name=states,proto3" json:"states,omitempty"`
 	CurrentStep                 PipelineStep               `protobuf:"varint,9,opt,name=current_step,json=currentStep,proto3,enum=ani.modeldev.v1.PipelineStep" json:"current_step,omitempty"`
 	StopRequested               bool                       `protobuf:"varint,10,opt,name=stop_requested,json=stopRequested,proto3" json:"stop_requested,omitempty"`
@@ -2660,6 +2816,9 @@ type ExecutionView struct {
 	// identity facts are published: the object key, storage scope and file list
 	// stay owner-internal. Absent for general training.
 	BaseModel     *BaseModelIdentity `protobuf:"bytes,32,opt,name=base_model,json=baseModel,proto3" json:"base_model,omitempty"`
+	ImageId       string             `protobuf:"bytes,33,opt,name=image_id,json=imageId,proto3" json:"image_id,omitempty"`
+	ImageVersion  int64              `protobuf:"varint,34,opt,name=image_version,json=imageVersion,proto3" json:"image_version,omitempty"`
+	ImageScope    string             `protobuf:"bytes,35,opt,name=image_scope,json=imageScope,proto3" json:"image_scope,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2718,13 +2877,6 @@ func (x *ExecutionView) GetKind() v1.ExecutionKind {
 func (x *ExecutionView) GetInputVersionId() string {
 	if x != nil {
 		return x.InputVersionId
-	}
-	return ""
-}
-
-func (x *ExecutionView) GetImageVersionId() string {
-	if x != nil {
-		return x.ImageVersionId
 	}
 	return ""
 }
@@ -2890,13 +3042,33 @@ func (x *ExecutionView) GetBaseModel() *BaseModelIdentity {
 	return nil
 }
 
+func (x *ExecutionView) GetImageId() string {
+	if x != nil {
+		return x.ImageId
+	}
+	return ""
+}
+
+func (x *ExecutionView) GetImageVersion() int64 {
+	if x != nil {
+		return x.ImageVersion
+	}
+	return 0
+}
+
+func (x *ExecutionView) GetImageScope() string {
+	if x != nil {
+		return x.ImageScope
+	}
+	return ""
+}
+
 // BaseModelIdentity is the publishable half of BaseModelRef. It names the base
 // model without revealing where the owner keeps its bytes.
 type BaseModelIdentity struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ModelId       string                 `protobuf:"bytes,1,opt,name=model_id,json=modelId,proto3" json:"model_id,omitempty"`
 	VersionId     string                 `protobuf:"bytes,2,opt,name=version_id,json=versionId,proto3" json:"version_id,omitempty"`
-	Family        string                 `protobuf:"bytes,3,opt,name=family,proto3" json:"family,omitempty"`
 	Format        string                 `protobuf:"bytes,4,opt,name=format,proto3" json:"format,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2942,13 +3114,6 @@ func (x *BaseModelIdentity) GetModelId() string {
 func (x *BaseModelIdentity) GetVersionId() string {
 	if x != nil {
 		return x.VersionId
-	}
-	return ""
-}
-
-func (x *BaseModelIdentity) GetFamily() string {
-	if x != nil {
-		return x.Family
 	}
 	return ""
 }
@@ -3462,8 +3627,8 @@ type GetExecutionLogsRequest struct {
 	LogId     *string `protobuf:"bytes,2,opt,name=log_id,json=logId,proto3,oneof" json:"log_id,omitempty"`
 	TailLines uint32  `protobuf:"varint,3,opt,name=tail_lines,json=tailLines,proto3" json:"tail_lines,omitempty"`
 	MaxBytes  uint32  `protobuf:"varint,4,opt,name=max_bytes,json=maxBytes,proto3" json:"max_bytes,omitempty"`
-	// Container selection stays outside the opaque log ID. An absent pod_uid
-	// keeps the single-worker behaviour; an absent container keeps `node`.
+	// Select the required pod_uid from ListExecutionPods. Container selection
+	// stays outside the opaque log ID; an absent container keeps `node`.
 	PodUid    *string `protobuf:"bytes,5,opt,name=pod_uid,json=podUid,proto3,oneof" json:"pod_uid,omitempty"`
 	Container *string `protobuf:"bytes,6,opt,name=container,proto3,oneof" json:"container,omitempty"`
 	// Reads the last terminated instance of the same container.
@@ -4779,9 +4944,7 @@ type ListExecutionEventsRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	ExecutionId string                 `protobuf:"bytes,1,opt,name=execution_id,json=executionId,proto3" json:"execution_id,omitempty"`
 	// key / all / warning; unspecified behaves as key.
-	Scope string `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
-	// Equivalent to scope=warning, kept for older clients.
-	WarningOnly   bool `protobuf:"varint,3,opt,name=warning_only,json=warningOnly,proto3" json:"warning_only,omitempty"`
+	Scope         string `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4828,13 +4991,6 @@ func (x *ListExecutionEventsRequest) GetScope() string {
 		return x.Scope
 	}
 	return ""
-}
-
-func (x *ListExecutionEventsRequest) GetWarningOnly() bool {
-	if x != nil {
-		return x.WarningOnly
-	}
-	return false
 }
 
 type ListExecutionEventsResponse struct {
@@ -5174,6 +5330,7 @@ type ExecutionSnapshot struct {
 	Timing           *ExecutionTiming            `protobuf:"bytes,17,opt,name=timing,proto3" json:"timing,omitempty"`
 	RuntimePlan      *RuntimePlan                `protobuf:"bytes,18,opt,name=runtime_plan,json=runtimePlan,proto3" json:"runtime_plan,omitempty"`
 	Gpu              *GPUPlan                    `protobuf:"bytes,19,opt,name=gpu,proto3" json:"gpu,omitempty"`
+	Limits           *ContentLimits              `protobuf:"bytes,20,opt,name=limits,proto3" json:"limits,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -5334,6 +5491,57 @@ func (x *ExecutionSnapshot) GetGpu() *GPUPlan {
 	return nil
 }
 
+func (x *ExecutionSnapshot) GetLimits() *ContentLimits {
+	if x != nil {
+		return x.Limits
+	}
+	return nil
+}
+
+type ContentLimits struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	MaxContentBytes int64                  `protobuf:"varint,1,opt,name=max_content_bytes,json=maxContentBytes,proto3" json:"max_content_bytes,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ContentLimits) Reset() {
+	*x = ContentLimits{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ContentLimits) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ContentLimits) ProtoMessage() {}
+
+func (x *ContentLimits) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ContentLimits.ProtoReflect.Descriptor instead.
+func (*ContentLimits) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *ContentLimits) GetMaxContentBytes() int64 {
+	if x != nil {
+		return x.MaxContentBytes
+	}
+	return 0
+}
+
 type StringPair struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -5344,7 +5552,7 @@ type StringPair struct {
 
 func (x *StringPair) Reset() {
 	*x = StringPair{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[53]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5356,7 +5564,7 @@ func (x *StringPair) String() string {
 func (*StringPair) ProtoMessage() {}
 
 func (x *StringPair) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[53]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5369,7 +5577,7 @@ func (x *StringPair) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StringPair.ProtoReflect.Descriptor instead.
 func (*StringPair) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{53}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *StringPair) GetKey() string {
@@ -5401,7 +5609,7 @@ type GPUExecutionSnapshot struct {
 
 func (x *GPUExecutionSnapshot) Reset() {
 	*x = GPUExecutionSnapshot{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[54]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5413,7 +5621,7 @@ func (x *GPUExecutionSnapshot) String() string {
 func (*GPUExecutionSnapshot) ProtoMessage() {}
 
 func (x *GPUExecutionSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[54]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5426,7 +5634,7 @@ func (x *GPUExecutionSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GPUExecutionSnapshot.ProtoReflect.Descriptor instead.
 func (*GPUExecutionSnapshot) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{54}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *GPUExecutionSnapshot) GetSchedulerName() string {
@@ -5491,7 +5699,7 @@ type GPUDisplaySnapshot struct {
 
 func (x *GPUDisplaySnapshot) Reset() {
 	*x = GPUDisplaySnapshot{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[55]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5503,7 +5711,7 @@ func (x *GPUDisplaySnapshot) String() string {
 func (*GPUDisplaySnapshot) ProtoMessage() {}
 
 func (x *GPUDisplaySnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[55]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5516,7 +5724,7 @@ func (x *GPUDisplaySnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GPUDisplaySnapshot.ProtoReflect.Descriptor instead.
 func (*GPUDisplaySnapshot) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{55}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *GPUDisplaySnapshot) GetProfileId() string {
@@ -5564,7 +5772,7 @@ type GPUPlan struct {
 
 func (x *GPUPlan) Reset() {
 	*x = GPUPlan{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[56]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5576,7 +5784,7 @@ func (x *GPUPlan) String() string {
 func (*GPUPlan) ProtoMessage() {}
 
 func (x *GPUPlan) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[56]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5589,7 +5797,7 @@ func (x *GPUPlan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GPUPlan.ProtoReflect.Descriptor instead.
 func (*GPUPlan) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{56}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *GPUPlan) GetExecution() *GPUExecutionSnapshot {
@@ -5624,7 +5832,6 @@ type FinetuningManagedSettings struct {
 	FlashAttn                 string                 `protobuf:"bytes,14,opt,name=flash_attn,json=flashAttn,proto3" json:"flash_attn,omitempty"`
 	ReportTo                  string                 `protobuf:"bytes,15,opt,name=report_to,json=reportTo,proto3" json:"report_to,omitempty"`
 	SaveStrategy              string                 `protobuf:"bytes,16,opt,name=save_strategy,json=saveStrategy,proto3" json:"save_strategy,omitempty"`
-	Template                  string                 `protobuf:"bytes,17,opt,name=template,proto3" json:"template,omitempty"`
 	TrainDtype                string                 `protobuf:"bytes,18,opt,name=train_dtype,json=trainDtype,proto3" json:"train_dtype,omitempty"`
 	ExportDtype               string                 `protobuf:"bytes,19,opt,name=export_dtype,json=exportDtype,proto3" json:"export_dtype,omitempty"`
 	VerifyDtype               string                 `protobuf:"bytes,20,opt,name=verify_dtype,json=verifyDtype,proto3" json:"verify_dtype,omitempty"`
@@ -5641,7 +5848,7 @@ type FinetuningManagedSettings struct {
 
 func (x *FinetuningManagedSettings) Reset() {
 	*x = FinetuningManagedSettings{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[57]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5653,7 +5860,7 @@ func (x *FinetuningManagedSettings) String() string {
 func (*FinetuningManagedSettings) ProtoMessage() {}
 
 func (x *FinetuningManagedSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[57]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5666,7 +5873,7 @@ func (x *FinetuningManagedSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FinetuningManagedSettings.ProtoReflect.Descriptor instead.
 func (*FinetuningManagedSettings) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{57}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *FinetuningManagedSettings) GetStage() string {
@@ -5781,13 +5988,6 @@ func (x *FinetuningManagedSettings) GetSaveStrategy() string {
 	return ""
 }
 
-func (x *FinetuningManagedSettings) GetTemplate() string {
-	if x != nil {
-		return x.Template
-	}
-	return ""
-}
-
 func (x *FinetuningManagedSettings) GetTrainDtype() string {
 	if x != nil {
 		return x.TrainDtype
@@ -5869,7 +6069,7 @@ type BaseModelFile struct {
 
 func (x *BaseModelFile) Reset() {
 	*x = BaseModelFile{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[58]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5881,7 +6081,7 @@ func (x *BaseModelFile) String() string {
 func (*BaseModelFile) ProtoMessage() {}
 
 func (x *BaseModelFile) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[58]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5894,7 +6094,7 @@ func (x *BaseModelFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BaseModelFile.ProtoReflect.Descriptor instead.
 func (*BaseModelFile) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{58}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *BaseModelFile) GetPath() string {
@@ -5922,18 +6122,18 @@ type BaseModelRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ModelId       string                 `protobuf:"bytes,1,opt,name=model_id,json=modelId,proto3" json:"model_id,omitempty"`
 	VersionId     string                 `protobuf:"bytes,2,opt,name=version_id,json=versionId,proto3" json:"version_id,omitempty"`
-	Family        string                 `protobuf:"bytes,3,opt,name=family,proto3" json:"family,omitempty"`
 	Format        string                 `protobuf:"bytes,4,opt,name=format,proto3" json:"format,omitempty"`
 	Object        *v1.FixedObjectRef     `protobuf:"bytes,5,opt,name=object,proto3" json:"object,omitempty"`
 	Scope         *StorageScope          `protobuf:"bytes,6,opt,name=scope,proto3" json:"scope,omitempty"`
 	Files         []*BaseModelFile       `protobuf:"bytes,7,rep,name=files,proto3" json:"files,omitempty"`
+	Facts         *NormalizedModelFacts  `protobuf:"bytes,8,opt,name=facts,proto3" json:"facts,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *BaseModelRef) Reset() {
 	*x = BaseModelRef{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[59]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5945,7 +6145,7 @@ func (x *BaseModelRef) String() string {
 func (*BaseModelRef) ProtoMessage() {}
 
 func (x *BaseModelRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[59]
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5958,7 +6158,7 @@ func (x *BaseModelRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BaseModelRef.ProtoReflect.Descriptor instead.
 func (*BaseModelRef) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{59}
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *BaseModelRef) GetModelId() string {
@@ -5971,13 +6171,6 @@ func (x *BaseModelRef) GetModelId() string {
 func (x *BaseModelRef) GetVersionId() string {
 	if x != nil {
 		return x.VersionId
-	}
-	return ""
-}
-
-func (x *BaseModelRef) GetFamily() string {
-	if x != nil {
-		return x.Family
 	}
 	return ""
 }
@@ -6010,72 +6203,11 @@ func (x *BaseModelRef) GetFiles() []*BaseModelFile {
 	return nil
 }
 
-type ComponentBudgets struct {
-	state                     protoimpl.MessageState `protogen:"open.v1"`
-	RpcTimeoutSeconds         uint32                 `protobuf:"varint,6,opt,name=rpc_timeout_seconds,json=rpcTimeoutSeconds,proto3" json:"rpc_timeout_seconds,omitempty"`
-	MaxBaseModelBytes         int64                  `protobuf:"varint,7,opt,name=max_base_model_bytes,json=maxBaseModelBytes,proto3" json:"max_base_model_bytes,omitempty"`
-	MaxSpoolBytes             int64                  `protobuf:"varint,8,opt,name=max_spool_bytes,json=maxSpoolBytes,proto3" json:"max_spool_bytes,omitempty"`
-	MaxBaseModelExpandedBytes int64                  `protobuf:"varint,9,opt,name=max_base_model_expanded_bytes,json=maxBaseModelExpandedBytes,proto3" json:"max_base_model_expanded_bytes,omitempty"`
-	unknownFields             protoimpl.UnknownFields
-	sizeCache                 protoimpl.SizeCache
-}
-
-func (x *ComponentBudgets) Reset() {
-	*x = ComponentBudgets{}
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[60]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ComponentBudgets) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ComponentBudgets) ProtoMessage() {}
-
-func (x *ComponentBudgets) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[60]
+func (x *BaseModelRef) GetFacts() *NormalizedModelFacts {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.Facts
 	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ComponentBudgets.ProtoReflect.Descriptor instead.
-func (*ComponentBudgets) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{60}
-}
-
-func (x *ComponentBudgets) GetRpcTimeoutSeconds() uint32 {
-	if x != nil {
-		return x.RpcTimeoutSeconds
-	}
-	return 0
-}
-
-func (x *ComponentBudgets) GetMaxBaseModelBytes() int64 {
-	if x != nil {
-		return x.MaxBaseModelBytes
-	}
-	return 0
-}
-
-func (x *ComponentBudgets) GetMaxSpoolBytes() int64 {
-	if x != nil {
-		return x.MaxSpoolBytes
-	}
-	return 0
-}
-
-func (x *ComponentBudgets) GetMaxBaseModelExpandedBytes() int64 {
-	if x != nil {
-		return x.MaxBaseModelExpandedBytes
-	}
-	return 0
+	return nil
 }
 
 type FinetuningSnapshot struct {
@@ -6090,7 +6222,10 @@ type FinetuningSnapshot struct {
 	VerifyProgram               *v1.ProgramRef             `protobuf:"bytes,8,opt,name=verify_program,json=verifyProgram,proto3" json:"verify_program,omitempty"`
 	RecipeSha256                string                     `protobuf:"bytes,9,opt,name=recipe_sha256,json=recipeSha256,proto3" json:"recipe_sha256,omitempty"`
 	MappingSha256               string                     `protobuf:"bytes,10,opt,name=mapping_sha256,json=mappingSha256,proto3" json:"mapping_sha256,omitempty"`
-	Budgets                     *ComponentBudgets          `protobuf:"bytes,11,opt,name=budgets,proto3" json:"budgets,omitempty"`
+	RuntimeCapabilities         *RuntimeCapabilities       `protobuf:"bytes,12,opt,name=runtime_capabilities,json=runtimeCapabilities,proto3" json:"runtime_capabilities,omitempty"`
+	TemplatePlan                *TemplatePlan              `protobuf:"bytes,13,opt,name=template_plan,json=templatePlan,proto3" json:"template_plan,omitempty"`
+	ModelType                   string                     `protobuf:"bytes,14,opt,name=model_type,json=modelType,proto3" json:"model_type,omitempty"`
+	ContextLimit                int64                      `protobuf:"varint,15,opt,name=context_limit,json=contextLimit,proto3" json:"context_limit,omitempty"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
@@ -6195,11 +6330,32 @@ func (x *FinetuningSnapshot) GetMappingSha256() string {
 	return ""
 }
 
-func (x *FinetuningSnapshot) GetBudgets() *ComponentBudgets {
+func (x *FinetuningSnapshot) GetRuntimeCapabilities() *RuntimeCapabilities {
 	if x != nil {
-		return x.Budgets
+		return x.RuntimeCapabilities
 	}
 	return nil
+}
+
+func (x *FinetuningSnapshot) GetTemplatePlan() *TemplatePlan {
+	if x != nil {
+		return x.TemplatePlan
+	}
+	return nil
+}
+
+func (x *FinetuningSnapshot) GetModelType() string {
+	if x != nil {
+		return x.ModelType
+	}
+	return ""
+}
+
+func (x *FinetuningSnapshot) GetContextLimit() int64 {
+	if x != nil {
+		return x.ContextLimit
+	}
+	return 0
 }
 
 type IdentityRef struct {
@@ -8773,6 +8929,11 @@ type PublicationCandidate struct {
 	BundleObject          *v1.FixedObjectRef        `protobuf:"bytes,4,opt,name=bundle_object,json=bundleObject,proto3" json:"bundle_object,omitempty"`
 	UploadTaskId          string                    `protobuf:"bytes,5,opt,name=upload_task_id,json=uploadTaskId,proto3" json:"upload_task_id,omitempty"`
 	UploadPodUid          string                    `protobuf:"bytes,6,opt,name=upload_pod_uid,json=uploadPodUid,proto3" json:"upload_pod_uid,omitempty"`
+	Schema                string                    `protobuf:"bytes,7,opt,name=schema,proto3" json:"schema,omitempty"`
+	TenantId              string                    `protobuf:"bytes,8,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	OperationId           string                    `protobuf:"bytes,9,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	ExecutionId           string                    `protobuf:"bytes,10,opt,name=execution_id,json=executionId,proto3" json:"execution_id,omitempty"`
+	ExecutionSpecHash     string                    `protobuf:"bytes,11,opt,name=execution_spec_hash,json=executionSpecHash,proto3" json:"execution_spec_hash,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -8845,6 +9006,41 @@ func (x *PublicationCandidate) GetUploadTaskId() string {
 func (x *PublicationCandidate) GetUploadPodUid() string {
 	if x != nil {
 		return x.UploadPodUid
+	}
+	return ""
+}
+
+func (x *PublicationCandidate) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *PublicationCandidate) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *PublicationCandidate) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *PublicationCandidate) GetExecutionId() string {
+	if x != nil {
+		return x.ExecutionId
+	}
+	return ""
+}
+
+func (x *PublicationCandidate) GetExecutionSpecHash() string {
+	if x != nil {
+		return x.ExecutionSpecHash
 	}
 	return ""
 }
@@ -9484,6 +9680,1166 @@ func (x *RequestExecutionCloseResponse) GetAcceptedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type RuntimePackage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Version       string                 `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RuntimePackage) Reset() {
+	*x = RuntimePackage{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[107]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuntimePackage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuntimePackage) ProtoMessage() {}
+
+func (x *RuntimePackage) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[107]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuntimePackage.ProtoReflect.Descriptor instead.
+func (*RuntimePackage) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{107}
+}
+
+func (x *RuntimePackage) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *RuntimePackage) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+type RegisteredTemplate struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	SourceSha256      string                 `protobuf:"bytes,2,opt,name=source_sha256,json=sourceSha256,proto3" json:"source_sha256,omitempty"`
+	SupportsSystem    bool                   `protobuf:"varint,3,opt,name=supports_system,json=supportsSystem,proto3" json:"supports_system,omitempty"`
+	SupportsMultiTurn bool                   `protobuf:"varint,4,opt,name=supports_multi_turn,json=supportsMultiTurn,proto3" json:"supports_multi_turn,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *RegisteredTemplate) Reset() {
+	*x = RegisteredTemplate{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[108]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisteredTemplate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisteredTemplate) ProtoMessage() {}
+
+func (x *RegisteredTemplate) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[108]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisteredTemplate.ProtoReflect.Descriptor instead.
+func (*RegisteredTemplate) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{108}
+}
+
+func (x *RegisteredTemplate) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *RegisteredTemplate) GetSourceSha256() string {
+	if x != nil {
+		return x.SourceSha256
+	}
+	return ""
+}
+
+func (x *RegisteredTemplate) GetSupportsSystem() bool {
+	if x != nil {
+		return x.SupportsSystem
+	}
+	return false
+}
+
+func (x *RegisteredTemplate) GetSupportsMultiTurn() bool {
+	if x != nil {
+		return x.SupportsMultiTurn
+	}
+	return false
+}
+
+type ContextLimitField struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Source        string                 `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	Field         string                 `protobuf:"bytes,2,opt,name=field,proto3" json:"field,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ContextLimitField) Reset() {
+	*x = ContextLimitField{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[109]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ContextLimitField) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ContextLimitField) ProtoMessage() {}
+
+func (x *ContextLimitField) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[109]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ContextLimitField.ProtoReflect.Descriptor instead.
+func (*ContextLimitField) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{109}
+}
+
+func (x *ContextLimitField) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *ContextLimitField) GetField() string {
+	if x != nil {
+		return x.Field
+	}
+	return ""
+}
+
+type RuntimeCapabilities struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	SchemaVersion       string                 `protobuf:"bytes,1,opt,name=schema_version,json=schemaVersion,proto3" json:"schema_version,omitempty"`
+	ImageDigest         string                 `protobuf:"bytes,2,opt,name=image_digest,json=imageDigest,proto3" json:"image_digest,omitempty"`
+	EntrypointSha256    string                 `protobuf:"bytes,3,opt,name=entrypoint_sha256,json=entrypointSha256,proto3" json:"entrypoint_sha256,omitempty"`
+	Packages            []*RuntimePackage      `protobuf:"bytes,4,rep,name=packages,proto3" json:"packages,omitempty"`
+	CausalLmModelTypes  []string               `protobuf:"bytes,5,rep,name=causal_lm_model_types,json=causalLmModelTypes,proto3" json:"causal_lm_model_types,omitempty"`
+	RegisteredTemplates []*RegisteredTemplate  `protobuf:"bytes,6,rep,name=registered_templates,json=registeredTemplates,proto3" json:"registered_templates,omitempty"`
+	ContextLimitFields  []*ContextLimitField   `protobuf:"bytes,7,rep,name=context_limit_fields,json=contextLimitFields,proto3" json:"context_limit_fields,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *RuntimeCapabilities) Reset() {
+	*x = RuntimeCapabilities{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[110]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuntimeCapabilities) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuntimeCapabilities) ProtoMessage() {}
+
+func (x *RuntimeCapabilities) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[110]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuntimeCapabilities.ProtoReflect.Descriptor instead.
+func (*RuntimeCapabilities) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{110}
+}
+
+func (x *RuntimeCapabilities) GetSchemaVersion() string {
+	if x != nil {
+		return x.SchemaVersion
+	}
+	return ""
+}
+
+func (x *RuntimeCapabilities) GetImageDigest() string {
+	if x != nil {
+		return x.ImageDigest
+	}
+	return ""
+}
+
+func (x *RuntimeCapabilities) GetEntrypointSha256() string {
+	if x != nil {
+		return x.EntrypointSha256
+	}
+	return ""
+}
+
+func (x *RuntimeCapabilities) GetPackages() []*RuntimePackage {
+	if x != nil {
+		return x.Packages
+	}
+	return nil
+}
+
+func (x *RuntimeCapabilities) GetCausalLmModelTypes() []string {
+	if x != nil {
+		return x.CausalLmModelTypes
+	}
+	return nil
+}
+
+func (x *RuntimeCapabilities) GetRegisteredTemplates() []*RegisteredTemplate {
+	if x != nil {
+		return x.RegisteredTemplates
+	}
+	return nil
+}
+
+func (x *RuntimeCapabilities) GetContextLimitFields() []*ContextLimitField {
+	if x != nil {
+		return x.ContextLimitFields
+	}
+	return nil
+}
+
+type FileFact struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	SizeBytes     int64                  `protobuf:"varint,2,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	Sha256        string                 `protobuf:"bytes,3,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileFact) Reset() {
+	*x = FileFact{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[111]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileFact) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileFact) ProtoMessage() {}
+
+func (x *FileFact) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[111]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileFact.ProtoReflect.Descriptor instead.
+func (*FileFact) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{111}
+}
+
+func (x *FileFact) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *FileFact) GetSizeBytes() int64 {
+	if x != nil {
+		return x.SizeBytes
+	}
+	return 0
+}
+
+func (x *FileFact) GetSha256() string {
+	if x != nil {
+		return x.Sha256
+	}
+	return ""
+}
+
+type ContextLimitFact struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SourcePath    string                 `protobuf:"bytes,1,opt,name=source_path,json=sourcePath,proto3" json:"source_path,omitempty"`
+	SourceSha256  string                 `protobuf:"bytes,2,opt,name=source_sha256,json=sourceSha256,proto3" json:"source_sha256,omitempty"`
+	Field         string                 `protobuf:"bytes,3,opt,name=field,proto3" json:"field,omitempty"`
+	Value         int64                  `protobuf:"varint,4,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ContextLimitFact) Reset() {
+	*x = ContextLimitFact{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[112]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ContextLimitFact) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ContextLimitFact) ProtoMessage() {}
+
+func (x *ContextLimitFact) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[112]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ContextLimitFact.ProtoReflect.Descriptor instead.
+func (*ContextLimitFact) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{112}
+}
+
+func (x *ContextLimitFact) GetSourcePath() string {
+	if x != nil {
+		return x.SourcePath
+	}
+	return ""
+}
+
+func (x *ContextLimitFact) GetSourceSha256() string {
+	if x != nil {
+		return x.SourceSha256
+	}
+	return ""
+}
+
+func (x *ContextLimitFact) GetField() string {
+	if x != nil {
+		return x.Field
+	}
+	return ""
+}
+
+func (x *ContextLimitFact) GetValue() int64 {
+	if x != nil {
+		return x.Value
+	}
+	return 0
+}
+
+type WeightLayout struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kind          string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	EntryPath     string                 `protobuf:"bytes,2,opt,name=entry_path,json=entryPath,proto3" json:"entry_path,omitempty"`
+	ShardPaths    []string               `protobuf:"bytes,3,rep,name=shard_paths,json=shardPaths,proto3" json:"shard_paths,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeightLayout) Reset() {
+	*x = WeightLayout{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[113]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeightLayout) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeightLayout) ProtoMessage() {}
+
+func (x *WeightLayout) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[113]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeightLayout.ProtoReflect.Descriptor instead.
+func (*WeightLayout) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{113}
+}
+
+func (x *WeightLayout) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *WeightLayout) GetEntryPath() string {
+	if x != nil {
+		return x.EntryPath
+	}
+	return ""
+}
+
+func (x *WeightLayout) GetShardPaths() []string {
+	if x != nil {
+		return x.ShardPaths
+	}
+	return nil
+}
+
+type TemplateSource struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kind          string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Default       bool                   `protobuf:"varint,4,opt,name=default,proto3" json:"default,omitempty"`
+	SizeBytes     int64                  `protobuf:"varint,5,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	Sha256        string                 `protobuf:"bytes,6,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TemplateSource) Reset() {
+	*x = TemplateSource{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[114]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TemplateSource) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TemplateSource) ProtoMessage() {}
+
+func (x *TemplateSource) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[114]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TemplateSource.ProtoReflect.Descriptor instead.
+func (*TemplateSource) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{114}
+}
+
+func (x *TemplateSource) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *TemplateSource) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *TemplateSource) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *TemplateSource) GetDefault() bool {
+	if x != nil {
+		return x.Default
+	}
+	return false
+}
+
+func (x *TemplateSource) GetSizeBytes() int64 {
+	if x != nil {
+		return x.SizeBytes
+	}
+	return 0
+}
+
+func (x *TemplateSource) GetSha256() string {
+	if x != nil {
+		return x.Sha256
+	}
+	return ""
+}
+
+type NormalizedModelFacts struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	ModelType           string                 `protobuf:"bytes,1,opt,name=model_type,json=modelType,proto3" json:"model_type,omitempty"`
+	Architectures       []string               `protobuf:"bytes,2,rep,name=architectures,proto3" json:"architectures,omitempty"`
+	OriginalDtype       string                 `protobuf:"bytes,3,opt,name=original_dtype,json=originalDtype,proto3" json:"original_dtype,omitempty"`
+	ContextLimit        int64                  `protobuf:"varint,4,opt,name=context_limit,json=contextLimit,proto3" json:"context_limit,omitempty"`
+	ContextSources      []*ContextLimitFact    `protobuf:"bytes,5,rep,name=context_sources,json=contextSources,proto3" json:"context_sources,omitempty"`
+	ConfigFile          *FileFact              `protobuf:"bytes,6,opt,name=config_file,json=configFile,proto3" json:"config_file,omitempty"`
+	TokenizerConfigFile *FileFact              `protobuf:"bytes,7,opt,name=tokenizer_config_file,json=tokenizerConfigFile,proto3" json:"tokenizer_config_file,omitempty"`
+	WeightLayout        *WeightLayout          `protobuf:"bytes,8,opt,name=weight_layout,json=weightLayout,proto3" json:"weight_layout,omitempty"`
+	TemplateSources     []*TemplateSource      `protobuf:"bytes,9,rep,name=template_sources,json=templateSources,proto3" json:"template_sources,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *NormalizedModelFacts) Reset() {
+	*x = NormalizedModelFacts{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[115]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NormalizedModelFacts) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NormalizedModelFacts) ProtoMessage() {}
+
+func (x *NormalizedModelFacts) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[115]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NormalizedModelFacts.ProtoReflect.Descriptor instead.
+func (*NormalizedModelFacts) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{115}
+}
+
+func (x *NormalizedModelFacts) GetModelType() string {
+	if x != nil {
+		return x.ModelType
+	}
+	return ""
+}
+
+func (x *NormalizedModelFacts) GetArchitectures() []string {
+	if x != nil {
+		return x.Architectures
+	}
+	return nil
+}
+
+func (x *NormalizedModelFacts) GetOriginalDtype() string {
+	if x != nil {
+		return x.OriginalDtype
+	}
+	return ""
+}
+
+func (x *NormalizedModelFacts) GetContextLimit() int64 {
+	if x != nil {
+		return x.ContextLimit
+	}
+	return 0
+}
+
+func (x *NormalizedModelFacts) GetContextSources() []*ContextLimitFact {
+	if x != nil {
+		return x.ContextSources
+	}
+	return nil
+}
+
+func (x *NormalizedModelFacts) GetConfigFile() *FileFact {
+	if x != nil {
+		return x.ConfigFile
+	}
+	return nil
+}
+
+func (x *NormalizedModelFacts) GetTokenizerConfigFile() *FileFact {
+	if x != nil {
+		return x.TokenizerConfigFile
+	}
+	return nil
+}
+
+func (x *NormalizedModelFacts) GetWeightLayout() *WeightLayout {
+	if x != nil {
+		return x.WeightLayout
+	}
+	return nil
+}
+
+func (x *NormalizedModelFacts) GetTemplateSources() []*TemplateSource {
+	if x != nil {
+		return x.TemplateSources
+	}
+	return nil
+}
+
+type TemplatePlan struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	SchemaVersion             string                 `protobuf:"bytes,1,opt,name=schema_version,json=schemaVersion,proto3" json:"schema_version,omitempty"`
+	Mode                      string                 `protobuf:"bytes,2,opt,name=mode,proto3" json:"mode,omitempty"`
+	SelectionSource           string                 `protobuf:"bytes,3,opt,name=selection_source,json=selectionSource,proto3" json:"selection_source,omitempty"`
+	TemplateId                *string                `protobuf:"bytes,4,opt,name=template_id,json=templateId,proto3,oneof" json:"template_id,omitempty"`
+	Source                    *TemplateSource        `protobuf:"bytes,5,opt,name=source,proto3" json:"source,omitempty"`
+	SourceSha256              string                 `protobuf:"bytes,6,opt,name=source_sha256,json=sourceSha256,proto3" json:"source_sha256,omitempty"`
+	RuntimeCapabilitiesSha256 string                 `protobuf:"bytes,7,opt,name=runtime_capabilities_sha256,json=runtimeCapabilitiesSha256,proto3" json:"runtime_capabilities_sha256,omitempty"`
+	ImageDigest               string                 `protobuf:"bytes,8,opt,name=image_digest,json=imageDigest,proto3" json:"image_digest,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *TemplatePlan) Reset() {
+	*x = TemplatePlan{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[116]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TemplatePlan) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TemplatePlan) ProtoMessage() {}
+
+func (x *TemplatePlan) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[116]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TemplatePlan.ProtoReflect.Descriptor instead.
+func (*TemplatePlan) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{116}
+}
+
+func (x *TemplatePlan) GetSchemaVersion() string {
+	if x != nil {
+		return x.SchemaVersion
+	}
+	return ""
+}
+
+func (x *TemplatePlan) GetMode() string {
+	if x != nil {
+		return x.Mode
+	}
+	return ""
+}
+
+func (x *TemplatePlan) GetSelectionSource() string {
+	if x != nil {
+		return x.SelectionSource
+	}
+	return ""
+}
+
+func (x *TemplatePlan) GetTemplateId() string {
+	if x != nil && x.TemplateId != nil {
+		return *x.TemplateId
+	}
+	return ""
+}
+
+func (x *TemplatePlan) GetSource() *TemplateSource {
+	if x != nil {
+		return x.Source
+	}
+	return nil
+}
+
+func (x *TemplatePlan) GetSourceSha256() string {
+	if x != nil {
+		return x.SourceSha256
+	}
+	return ""
+}
+
+func (x *TemplatePlan) GetRuntimeCapabilitiesSha256() string {
+	if x != nil {
+		return x.RuntimeCapabilitiesSha256
+	}
+	return ""
+}
+
+func (x *TemplatePlan) GetImageDigest() string {
+	if x != nil {
+		return x.ImageDigest
+	}
+	return ""
+}
+
+type StructureLimits struct {
+	state                        protoimpl.MessageState `protogen:"open.v1"`
+	MaxModelFiles                int64                  `protobuf:"varint,1,opt,name=max_model_files,json=maxModelFiles,proto3" json:"max_model_files,omitempty"`
+	MaxOutputFiles               int64                  `protobuf:"varint,2,opt,name=max_output_files,json=maxOutputFiles,proto3" json:"max_output_files,omitempty"`
+	MaxArchiveEntries            int64                  `protobuf:"varint,3,opt,name=max_archive_entries,json=maxArchiveEntries,proto3" json:"max_archive_entries,omitempty"`
+	MaxRelativePathBytes         int64                  `protobuf:"varint,4,opt,name=max_relative_path_bytes,json=maxRelativePathBytes,proto3" json:"max_relative_path_bytes,omitempty"`
+	MaxStorageKeyBytes           int64                  `protobuf:"varint,5,opt,name=max_storage_key_bytes,json=maxStorageKeyBytes,proto3" json:"max_storage_key_bytes,omitempty"`
+	MaxManifestBytes             int64                  `protobuf:"varint,6,opt,name=max_manifest_bytes,json=maxManifestBytes,proto3" json:"max_manifest_bytes,omitempty"`
+	MaxModelConfigBytes          int64                  `protobuf:"varint,7,opt,name=max_model_config_bytes,json=maxModelConfigBytes,proto3" json:"max_model_config_bytes,omitempty"`
+	MaxMaterialBytes             int64                  `protobuf:"varint,8,opt,name=max_material_bytes,json=maxMaterialBytes,proto3" json:"max_material_bytes,omitempty"`
+	MaxArchiveMetadataBytes      int64                  `protobuf:"varint,9,opt,name=max_archive_metadata_bytes,json=maxArchiveMetadataBytes,proto3" json:"max_archive_metadata_bytes,omitempty"`
+	MaxRecordBytes               int64                  `protobuf:"varint,10,opt,name=max_record_bytes,json=maxRecordBytes,proto3" json:"max_record_bytes,omitempty"`
+	MaxJsonDepth                 int64                  `protobuf:"varint,11,opt,name=max_json_depth,json=maxJsonDepth,proto3" json:"max_json_depth,omitempty"`
+	MaxControlRpcBytes           int64                  `protobuf:"varint,12,opt,name=max_control_rpc_bytes,json=maxControlRpcBytes,proto3" json:"max_control_rpc_bytes,omitempty"`
+	MaxPublicationCandidateBytes int64                  `protobuf:"varint,13,opt,name=max_publication_candidate_bytes,json=maxPublicationCandidateBytes,proto3" json:"max_publication_candidate_bytes,omitempty"`
+	MaxPublicationRefBytes       int64                  `protobuf:"varint,14,opt,name=max_publication_ref_bytes,json=maxPublicationRefBytes,proto3" json:"max_publication_ref_bytes,omitempty"`
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
+}
+
+func (x *StructureLimits) Reset() {
+	*x = StructureLimits{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[117]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StructureLimits) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StructureLimits) ProtoMessage() {}
+
+func (x *StructureLimits) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[117]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StructureLimits.ProtoReflect.Descriptor instead.
+func (*StructureLimits) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{117}
+}
+
+func (x *StructureLimits) GetMaxModelFiles() int64 {
+	if x != nil {
+		return x.MaxModelFiles
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxOutputFiles() int64 {
+	if x != nil {
+		return x.MaxOutputFiles
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxArchiveEntries() int64 {
+	if x != nil {
+		return x.MaxArchiveEntries
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxRelativePathBytes() int64 {
+	if x != nil {
+		return x.MaxRelativePathBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxStorageKeyBytes() int64 {
+	if x != nil {
+		return x.MaxStorageKeyBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxManifestBytes() int64 {
+	if x != nil {
+		return x.MaxManifestBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxModelConfigBytes() int64 {
+	if x != nil {
+		return x.MaxModelConfigBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxMaterialBytes() int64 {
+	if x != nil {
+		return x.MaxMaterialBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxArchiveMetadataBytes() int64 {
+	if x != nil {
+		return x.MaxArchiveMetadataBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxRecordBytes() int64 {
+	if x != nil {
+		return x.MaxRecordBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxJsonDepth() int64 {
+	if x != nil {
+		return x.MaxJsonDepth
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxControlRpcBytes() int64 {
+	if x != nil {
+		return x.MaxControlRpcBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxPublicationCandidateBytes() int64 {
+	if x != nil {
+		return x.MaxPublicationCandidateBytes
+	}
+	return 0
+}
+
+func (x *StructureLimits) GetMaxPublicationRefBytes() int64 {
+	if x != nil {
+		return x.MaxPublicationRefBytes
+	}
+	return 0
+}
+
+type CheckFinetuningReadinessRequest struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	BaseModelVersionId string                 `protobuf:"bytes,1,opt,name=base_model_version_id,json=baseModelVersionId,proto3" json:"base_model_version_id,omitempty"`
+	ComputePresetId    string                 `protobuf:"bytes,2,opt,name=compute_preset_id,json=computePresetId,proto3" json:"compute_preset_id,omitempty"`
+	FinetuningTemplate *string                `protobuf:"bytes,3,opt,name=finetuning_template,json=finetuningTemplate,proto3,oneof" json:"finetuning_template,omitempty"`
+	ComputeOrigin      *ComputeOrigin         `protobuf:"bytes,4,opt,name=compute_origin,json=computeOrigin,proto3" json:"compute_origin,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *CheckFinetuningReadinessRequest) Reset() {
+	*x = CheckFinetuningReadinessRequest{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[118]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckFinetuningReadinessRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckFinetuningReadinessRequest) ProtoMessage() {}
+
+func (x *CheckFinetuningReadinessRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[118]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckFinetuningReadinessRequest.ProtoReflect.Descriptor instead.
+func (*CheckFinetuningReadinessRequest) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{118}
+}
+
+func (x *CheckFinetuningReadinessRequest) GetBaseModelVersionId() string {
+	if x != nil {
+		return x.BaseModelVersionId
+	}
+	return ""
+}
+
+func (x *CheckFinetuningReadinessRequest) GetComputePresetId() string {
+	if x != nil {
+		return x.ComputePresetId
+	}
+	return ""
+}
+
+func (x *CheckFinetuningReadinessRequest) GetFinetuningTemplate() string {
+	if x != nil && x.FinetuningTemplate != nil {
+		return *x.FinetuningTemplate
+	}
+	return ""
+}
+
+func (x *CheckFinetuningReadinessRequest) GetComputeOrigin() *ComputeOrigin {
+	if x != nil {
+		return x.ComputeOrigin
+	}
+	return nil
+}
+
+type CheckFinetuningReadinessResponse struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	Assessment                FinetuningAssessment   `protobuf:"varint,1,opt,name=assessment,proto3,enum=ani.modeldev.v1.FinetuningAssessment" json:"assessment,omitempty"`
+	Reason                    ErrorReason            `protobuf:"varint,2,opt,name=reason,proto3,enum=ani.modeldev.v1.ErrorReason" json:"reason,omitempty"`
+	TemplateCandidates        []*RegisteredTemplate  `protobuf:"bytes,3,rep,name=template_candidates,json=templateCandidates,proto3" json:"template_candidates,omitempty"`
+	RuntimeCapabilities       *RuntimeCapabilities   `protobuf:"bytes,4,opt,name=runtime_capabilities,json=runtimeCapabilities,proto3" json:"runtime_capabilities,omitempty"`
+	RuntimeCapabilitiesSha256 string                 `protobuf:"bytes,5,opt,name=runtime_capabilities_sha256,json=runtimeCapabilitiesSha256,proto3" json:"runtime_capabilities_sha256,omitempty"`
+	Limits                    *ContentLimits         `protobuf:"bytes,6,opt,name=limits,proto3" json:"limits,omitempty"`
+	StructureLimits           *StructureLimits       `protobuf:"bytes,7,opt,name=structure_limits,json=structureLimits,proto3" json:"structure_limits,omitempty"`
+	RuntimeValidationRequired bool                   `protobuf:"varint,8,opt,name=runtime_validation_required,json=runtimeValidationRequired,proto3" json:"runtime_validation_required,omitempty"`
+	ModelId                   string                 `protobuf:"bytes,9,opt,name=model_id,json=modelId,proto3" json:"model_id,omitempty"`
+	ModelVersionId            string                 `protobuf:"bytes,10,opt,name=model_version_id,json=modelVersionId,proto3" json:"model_version_id,omitempty"`
+	TemplatePlan              *TemplatePlan          `protobuf:"bytes,11,opt,name=template_plan,json=templatePlan,proto3" json:"template_plan,omitempty"`
+	ModelType                 string                 `protobuf:"bytes,12,opt,name=model_type,json=modelType,proto3" json:"model_type,omitempty"`
+	ContextLimit              int64                  `protobuf:"varint,13,opt,name=context_limit,json=contextLimit,proto3" json:"context_limit,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *CheckFinetuningReadinessResponse) Reset() {
+	*x = CheckFinetuningReadinessResponse{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[119]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckFinetuningReadinessResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckFinetuningReadinessResponse) ProtoMessage() {}
+
+func (x *CheckFinetuningReadinessResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[119]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckFinetuningReadinessResponse.ProtoReflect.Descriptor instead.
+func (*CheckFinetuningReadinessResponse) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{119}
+}
+
+func (x *CheckFinetuningReadinessResponse) GetAssessment() FinetuningAssessment {
+	if x != nil {
+		return x.Assessment
+	}
+	return FinetuningAssessment_FINETUNING_ASSESSMENT_UNSPECIFIED
+}
+
+func (x *CheckFinetuningReadinessResponse) GetReason() ErrorReason {
+	if x != nil {
+		return x.Reason
+	}
+	return ErrorReason_ERROR_REASON_UNSPECIFIED
+}
+
+func (x *CheckFinetuningReadinessResponse) GetTemplateCandidates() []*RegisteredTemplate {
+	if x != nil {
+		return x.TemplateCandidates
+	}
+	return nil
+}
+
+func (x *CheckFinetuningReadinessResponse) GetRuntimeCapabilities() *RuntimeCapabilities {
+	if x != nil {
+		return x.RuntimeCapabilities
+	}
+	return nil
+}
+
+func (x *CheckFinetuningReadinessResponse) GetRuntimeCapabilitiesSha256() string {
+	if x != nil {
+		return x.RuntimeCapabilitiesSha256
+	}
+	return ""
+}
+
+func (x *CheckFinetuningReadinessResponse) GetLimits() *ContentLimits {
+	if x != nil {
+		return x.Limits
+	}
+	return nil
+}
+
+func (x *CheckFinetuningReadinessResponse) GetStructureLimits() *StructureLimits {
+	if x != nil {
+		return x.StructureLimits
+	}
+	return nil
+}
+
+func (x *CheckFinetuningReadinessResponse) GetRuntimeValidationRequired() bool {
+	if x != nil {
+		return x.RuntimeValidationRequired
+	}
+	return false
+}
+
+func (x *CheckFinetuningReadinessResponse) GetModelId() string {
+	if x != nil {
+		return x.ModelId
+	}
+	return ""
+}
+
+func (x *CheckFinetuningReadinessResponse) GetModelVersionId() string {
+	if x != nil {
+		return x.ModelVersionId
+	}
+	return ""
+}
+
+func (x *CheckFinetuningReadinessResponse) GetTemplatePlan() *TemplatePlan {
+	if x != nil {
+		return x.TemplatePlan
+	}
+	return nil
+}
+
+func (x *CheckFinetuningReadinessResponse) GetModelType() string {
+	if x != nil {
+		return x.ModelType
+	}
+	return ""
+}
+
+func (x *CheckFinetuningReadinessResponse) GetContextLimit() int64 {
+	if x != nil {
+		return x.ContextLimit
+	}
+	return 0
+}
+
+type PublicationRef struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        string                 `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	SizeBytes     int64                  `protobuf:"varint,2,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	Sha256        string                 `protobuf:"bytes,3,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PublicationRef) Reset() {
+	*x = PublicationRef{}
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[120]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PublicationRef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PublicationRef) ProtoMessage() {}
+
+func (x *PublicationRef) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_modeldev_proto_msgTypes[120]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PublicationRef.ProtoReflect.Descriptor instead.
+func (*PublicationRef) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_modeldev_proto_rawDescGZIP(), []int{120}
+}
+
+func (x *PublicationRef) GetSchema() string {
+	if x != nil {
+		return x.Schema
+	}
+	return ""
+}
+
+func (x *PublicationRef) GetSizeBytes() int64 {
+	if x != nil {
+		return x.SizeBytes
+	}
+	return 0
+}
+
+func (x *PublicationRef) GetSha256() string {
+	if x != nil {
+		return x.Sha256
+	}
+	return ""
+}
+
 var File_ani_modeldev_v1_modeldev_proto protoreflect.FileDescriptor
 
 const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
@@ -9514,14 +10870,21 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\vpublication\x18\x02 \x01(\v2$.ani.modeldev.v1.VerifiedPublicationR\vpublication\">\n" +
 	"\x0eFieldViolation\x12\x14\n" +
 	"\x05field\x18\x01 \x01(\tR\x05field\x12\x16\n" +
-	"\x06reason\x18\x02 \x01(\tR\x06reason\"\xce\x01\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\xce\x02\n" +
 	"\vErrorDetail\x124\n" +
 	"\x06reason\x18\x01 \x01(\x0e2\x1c.ani.modeldev.v1.ErrorReasonR\x06reason\x12!\n" +
 	"\fsafe_message\x18\x02 \x01(\tR\vsafeMessage\x12?\n" +
 	"\n" +
 	"violations\x18\x03 \x03(\v2\x1f.ani.modeldev.v1.FieldViolationR\n" +
 	"violations\x12%\n" +
-	"\x0ecorrelation_id\x18\x04 \x01(\tR\rcorrelationId\"\xe4\x05\n" +
+	"\x0ecorrelation_id\x18\x04 \x01(\tR\rcorrelationId\x12\x12\n" +
+	"\x04kind\x18\x05 \x01(\tR\x04kind\x12\x1d\n" +
+	"\n" +
+	"limit_name\x18\x06 \x01(\tR\tlimitName\x12\x1b\n" +
+	"\x06actual\x18\a \x01(\x03H\x00R\x06actual\x88\x01\x01\x12\x19\n" +
+	"\x05limit\x18\b \x01(\x03H\x01R\x05limit\x88\x01\x01B\t\n" +
+	"\a_actualB\b\n" +
+	"\x06_limit\"\xb2\x06\n" +
 	"\n" +
 	"UserIntent\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x122\n" +
@@ -9535,13 +10898,15 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x11compute_preset_id\x18\r \x01(\tR\x0fcomputePresetId\x122\n" +
 	"\x03mlp\x18\x0e \x01(\v2\x1e.ani.modeldev.v1.MLPParametersH\x00R\x03mlp\x12B\n" +
 	"\bsft_lora\x18\x0f \x01(\v2%.ani.modeldev.v1.FinetuningParametersH\x00R\asftLora\x12,\n" +
-	"\x0ftimeout_seconds\x18\x10 \x01(\x04H\x04R\x0etimeoutSeconds\x88\x01\x01B\f\n" +
+	"\x0ftimeout_seconds\x18\x10 \x01(\x04H\x04R\x0etimeoutSeconds\x88\x01\x01\x124\n" +
+	"\x13finetuning_template\x18\x11 \x01(\tH\x05R\x12finetuningTemplate\x88\x01\x01B\f\n" +
 	"\n" +
 	"parametersB\x18\n" +
 	"\x16_base_model_version_idB\x12\n" +
 	"\x10_target_model_idB\x11\n" +
 	"\x0f_new_model_nameB\x12\n" +
-	"\x10_timeout_secondsJ\x04\b\x03\x10\x04J\x04\b\x05\x10\x06J\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\t\x10\n" +
+	"\x10_timeout_secondsB\x16\n" +
+	"\x14_finetuning_templateJ\x04\b\x03\x10\x04J\x04\b\x05\x10\x06J\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\t\x10\n" +
 	"R\tpreset_idR\x10image_version_idR\x12general_parametersR\x13source_execution_idR\n" +
 	"finetuning\"\xc8\x01\n" +
 	"\rMLPParameters\x12(\n" +
@@ -9607,7 +10972,7 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x16numeric_representation\x18\f \x01(\tR\x15numericRepresentation\x125\n" +
 	"\x16validation_description\x18\r \x01(\tR\x15validationDescriptionB\x14\n" +
 	"\x12_minimum_inclusiveB\x14\n" +
-	"\x12_maximum_inclusive\"\xbe\x04\n" +
+	"\x12_maximum_inclusive\"\xd7\x05\n" +
 	"\x12ImplementationView\x12+\n" +
 	"\x11implementation_id\x18\x01 \x01(\tR\x10implementationId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x122\n" +
@@ -9620,14 +10985,19 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"!execution_timeout_default_seconds\x18\t \x01(\x04R\x1eexecutionTimeoutDefaultSeconds\x12A\n" +
 	"\x1dexecution_timeout_max_seconds\x18\n" +
 	" \x01(\x04R\x1aexecutionTimeoutMaxSeconds\x120\n" +
-	"\x14step_timeout_seconds\x18\v \x01(\x04R\x12stepTimeoutSeconds\"\x90\x01\n" +
+	"\x14step_timeout_seconds\x18\v \x01(\x04R\x12stepTimeoutSeconds\x12W\n" +
+	"\x14runtime_capabilities\x18\f \x01(\v2$.ani.modeldev.v1.RuntimeCapabilitiesR\x13runtimeCapabilities\x12>\n" +
+	"\x1bruntime_capabilities_sha256\x18\r \x01(\tR\x19runtimeCapabilitiesSha256\"\xc6\x01\n" +
 	"\x1aListImplementationsRequest\x120\n" +
 	"\x04page\x18\x01 \x01(\v2\x1c.ani.modeldev.v1.PageRequestR\x04page\x127\n" +
-	"\x04kind\x18\x02 \x01(\x0e2\x1e.ani.training.v1.ExecutionKindH\x00R\x04kind\x88\x01\x01B\a\n" +
-	"\x05_kind\"\x82\x01\n" +
+	"\x04kind\x18\x02 \x01(\x0e2\x1e.ani.training.v1.ExecutionKindH\x00R\x04kind\x88\x01\x01\x12$\n" +
+	"\vdevice_mode\x18\x03 \x01(\tH\x01R\n" +
+	"deviceMode\x88\x01\x01B\a\n" +
+	"\x05_kindB\x0e\n" +
+	"\f_device_mode\"\x82\x01\n" +
 	"\x1bListImplementationsResponse\x12M\n" +
 	"\x0fimplementations\x18\x01 \x03(\v2#.ani.modeldev.v1.ImplementationViewR\x0fimplementations\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x04R\x05total\"\xf3\x02\n" +
+	"\x05total\x18\x02 \x01(\x04R\x05total\"\xc5\x03\n" +
 	"\x10InputVersionView\x12(\n" +
 	"\x10input_version_id\x18\x01 \x01(\tR\x0einputVersionId\x121\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x1b.ani.modeldev.v1.InputStateR\x05state\x12\x16\n" +
@@ -9635,11 +11005,13 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\n" +
 	"size_bytes\x18\x04 \x01(\x03R\tsizeBytes\x12\x16\n" +
 	"\x06sha256\x18\x05 \x01(\tR\x06sha256\x12\x1b\n" +
-	"\trow_count\x18\x06 \x01(\rR\browCount\x12#\n" +
+	"\trow_count\x18\x06 \x01(\x03R\browCount\x12#\n" +
 	"\rfeature_count\x18\a \x01(\rR\ffeatureCount\x129\n" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x126\n" +
-	"\afailure\x18\t \x01(\v2\x1c.ani.modeldev.v1.ErrorDetailR\afailure\"B\n" +
+	"\afailure\x18\t \x01(\v2\x1c.ani.modeldev.v1.ErrorDetailR\afailure\x12P\n" +
+	"\x10prepared_dataset\x18\n" +
+	" \x01(\v2%.ani.training.v1.PreparedDatasetFactsR\x0fpreparedDataset\"B\n" +
 	"\x16GetInputVersionRequest\x12(\n" +
 	"\x10input_version_id\x18\x01 \x01(\tR\x0einputVersionId\"a\n" +
 	"\x17GetInputVersionResponse\x12F\n" +
@@ -9652,13 +11024,12 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\a_format\"\x8e\x01\n" +
 	"\x19ListInputVersionsResponse\x12H\n" +
 	"\x0einput_versions\x18\x01 \x03(\v2!.ani.modeldev.v1.InputVersionViewR\rinputVersions\x12\x14\n" +
-	"\x05total\x18\x03 \x01(\x04R\x05totalJ\x04\b\x02\x10\x03R\vnext_cursor\"\xda\r\n" +
+	"\x05total\x18\x03 \x01(\x04R\x05totalJ\x04\b\x02\x10\x03R\vnext_cursor\"\xa9\x0e\n" +
 	"\rExecutionView\x12>\n" +
 	"\bidentity\x18\x01 \x01(\v2\".ani.training.v1.ExecutionIdentityR\bidentity\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x122\n" +
 	"\x04kind\x18\x03 \x01(\x0e2\x1e.ani.training.v1.ExecutionKindR\x04kind\x12(\n" +
-	"\x10input_version_id\x18\x06 \x01(\tR\x0einputVersionId\x12(\n" +
-	"\x10image_version_id\x18\a \x01(\tR\x0eimageVersionId\x128\n" +
+	"\x10input_version_id\x18\x06 \x01(\tR\x0einputVersionId\x128\n" +
 	"\x06states\x18\b \x01(\v2 .ani.modeldev.v1.ExecutionStatesR\x06states\x12@\n" +
 	"\fcurrent_step\x18\t \x01(\x0e2\x1d.ani.modeldev.v1.PipelineStepR\vcurrentStep\x12%\n" +
 	"\x0estop_requested\x18\n" +
@@ -9686,14 +11057,17 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\ahistory\x18\x1e \x01(\v2%.ani.modeldev.v1.ExecutionHistoryViewR\ahistory\x123\n" +
 	"\x05steps\x18\x1f \x03(\v2\x1d.ani.modeldev.v1.StepProgressR\x05steps\x12A\n" +
 	"\n" +
-	"base_model\x18  \x01(\v2\".ani.modeldev.v1.BaseModelIdentityR\tbaseModelJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x11\x10\x12J\x04\b\x12\x10\x13R\tpreset_idR\n" +
-	"release_idR\x13source_execution_idR\x0erelease_digest\"}\n" +
+	"base_model\x18  \x01(\v2\".ani.modeldev.v1.BaseModelIdentityR\tbaseModel\x12\x19\n" +
+	"\bimage_id\x18! \x01(\tR\aimageId\x12#\n" +
+	"\rimage_version\x18\" \x01(\x03R\fimageVersion\x12\x1f\n" +
+	"\vimage_scope\x18# \x01(\tR\n" +
+	"imageScopeJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\a\x10\bJ\x04\b\x11\x10\x12J\x04\b\x12\x10\x13R\tpreset_idR\n" +
+	"release_idR\x10image_version_idR\x13source_execution_idR\x0erelease_digest\"s\n" +
 	"\x11BaseModelIdentity\x12\x19\n" +
 	"\bmodel_id\x18\x01 \x01(\tR\amodelId\x12\x1d\n" +
 	"\n" +
 	"version_id\x18\x02 \x01(\tR\tversionId\x12\x16\n" +
-	"\x06family\x18\x03 \x01(\tR\x06family\x12\x16\n" +
-	"\x06format\x18\x04 \x01(\tR\x06format\"\x8a\x02\n" +
+	"\x06format\x18\x04 \x01(\tR\x06formatJ\x04\b\x03\x10\x04R\x06family\"\x8a\x02\n" +
 	"\fStepProgress\x12\x12\n" +
 	"\x04role\x18\x01 \x01(\tR\x04role\x12\x14\n" +
 	"\x05state\x18\x02 \x01(\tR\x05state\x129\n" +
@@ -9887,11 +11261,10 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x04pods\x18\x01 \x03(\v2\x18.ani.modeldev.v1.PodViewR\x04pods\x12;\n" +
 	"\vobserved_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"observedAt\x12D\n" +
-	"\favailability\x18\x03 \x01(\x0e2 .ani.modeldev.v1.PodAvailabilityR\favailability\"x\n" +
+	"\favailability\x18\x03 \x01(\x0e2 .ani.modeldev.v1.PodAvailabilityR\favailability\"i\n" +
 	"\x1aListExecutionEventsRequest\x12!\n" +
 	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\x12\x14\n" +
-	"\x05scope\x18\x02 \x01(\tR\x05scope\x12!\n" +
-	"\fwarning_only\x18\x03 \x01(\bR\vwarningOnly\"\xd3\x01\n" +
+	"\x05scope\x18\x02 \x01(\tR\x05scopeJ\x04\b\x03\x10\x04R\fwarning_only\"\xd3\x01\n" +
 	"\x1bListExecutionEventsResponse\x122\n" +
 	"\x06events\x18\x01 \x03(\v2\x1a.ani.modeldev.v1.EventViewR\x06events\x12;\n" +
 	"\vobserved_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
@@ -9921,7 +11294,7 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x15storage_connection_id\x18\x01 \x01(\tR\x13storageConnectionId\x12\x16\n" +
 	"\x06bucket\x18\x02 \x01(\tR\x06bucket\x12'\n" +
 	"\x0fapproved_prefix\x18\x03 \x01(\tR\x0eapprovedPrefix\x121\n" +
-	"\x14credential_reference\x18\x04 \x01(\tR\x13credentialReference\"\x8f\t\n" +
+	"\x14credential_reference\x18\x04 \x01(\tR\x13credentialReference\"\xc7\t\n" +
 	"\x11ExecutionSnapshot\x12%\n" +
 	"\x0eschema_version\x18\x01 \x01(\tR\rschemaVersion\x122\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x1e.ani.training.v1.ExecutionKindR\x04kind\x12B\n" +
@@ -9944,7 +11317,10 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x0ecompute_origin\x18\x10 \x01(\v2\x1e.ani.modeldev.v1.ComputeOriginR\rcomputeOrigin\x128\n" +
 	"\x06timing\x18\x11 \x01(\v2 .ani.modeldev.v1.ExecutionTimingR\x06timing\x12?\n" +
 	"\fruntime_plan\x18\x12 \x01(\v2\x1c.ani.modeldev.v1.RuntimePlanR\vruntimePlan\x12*\n" +
-	"\x03gpu\x18\x13 \x01(\v2\x18.ani.modeldev.v1.GPUPlanR\x03gpuJ\x04\b\x04\x10\x05R\arelease\"4\n" +
+	"\x03gpu\x18\x13 \x01(\v2\x18.ani.modeldev.v1.GPUPlanR\x03gpu\x126\n" +
+	"\x06limits\x18\x14 \x01(\v2\x1e.ani.modeldev.v1.ContentLimitsR\x06limitsJ\x04\b\x04\x10\x05R\arelease\";\n" +
+	"\rContentLimits\x12*\n" +
+	"\x11max_content_bytes\x18\x01 \x01(\x03R\x0fmaxContentBytes\"4\n" +
 	"\n" +
 	"StringPair\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
@@ -9967,7 +11343,7 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x04mode\x18\x05 \x01(\tR\x04mode\"\x8d\x01\n" +
 	"\aGPUPlan\x12C\n" +
 	"\texecution\x18\x01 \x01(\v2%.ani.modeldev.v1.GPUExecutionSnapshotR\texecution\x12=\n" +
-	"\adisplay\x18\x02 \x01(\v2#.ani.modeldev.v1.GPUDisplaySnapshotR\adisplay\"\xa3\a\n" +
+	"\adisplay\x18\x02 \x01(\v2#.ani.modeldev.v1.GPUDisplaySnapshotR\adisplay\"\x97\a\n" +
 	"\x19FinetuningManagedSettings\x12\x14\n" +
 	"\x05stage\x18\x01 \x01(\tR\x05stage\x12'\n" +
 	"\x0ffinetuning_type\x18\x02 \x01(\tR\x0efinetuningType\x12\x1f\n" +
@@ -9989,8 +11365,7 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\n" +
 	"flash_attn\x18\x0e \x01(\tR\tflashAttn\x12\x1b\n" +
 	"\treport_to\x18\x0f \x01(\tR\breportTo\x12#\n" +
-	"\rsave_strategy\x18\x10 \x01(\tR\fsaveStrategy\x12\x1a\n" +
-	"\btemplate\x18\x11 \x01(\tR\btemplate\x12\x1f\n" +
+	"\rsave_strategy\x18\x10 \x01(\tR\fsaveStrategy\x12\x1f\n" +
 	"\vtrain_dtype\x18\x12 \x01(\tR\n" +
 	"trainDtype\x12!\n" +
 	"\fexport_dtype\x18\x13 \x01(\tR\vexportDtype\x12!\n" +
@@ -10001,27 +11376,21 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\flora_dropout\x18\x18 \x01(\tR\vloraDropout\x12(\n" +
 	"\x10num_train_epochs\x18\x19 \x01(\x03R\x0enumTrainEpochs\x12\x14\n" +
 	"\x05optim\x18\x1a \x01(\tR\x05optim\x12#\n" +
-	"\rlogging_steps\x18\x1b \x01(\x03R\floggingSteps\"Z\n" +
+	"\rlogging_steps\x18\x1b \x01(\x03R\floggingStepsJ\x04\b\x11\x10\x12R\btemplate\"Z\n" +
 	"\rBaseModelFile\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x1d\n" +
 	"\n" +
 	"size_bytes\x18\x02 \x01(\x03R\tsizeBytes\x12\x16\n" +
-	"\x06sha256\x18\x03 \x01(\tR\x06sha256\"\x9c\x02\n" +
+	"\x06sha256\x18\x03 \x01(\tR\x06sha256\"\xcf\x02\n" +
 	"\fBaseModelRef\x12\x19\n" +
 	"\bmodel_id\x18\x01 \x01(\tR\amodelId\x12\x1d\n" +
 	"\n" +
 	"version_id\x18\x02 \x01(\tR\tversionId\x12\x16\n" +
-	"\x06family\x18\x03 \x01(\tR\x06family\x12\x16\n" +
 	"\x06format\x18\x04 \x01(\tR\x06format\x127\n" +
 	"\x06object\x18\x05 \x01(\v2\x1f.ani.training.v1.FixedObjectRefR\x06object\x123\n" +
 	"\x05scope\x18\x06 \x01(\v2\x1d.ani.modeldev.v1.StorageScopeR\x05scope\x124\n" +
-	"\x05files\x18\a \x03(\v2\x1e.ani.modeldev.v1.BaseModelFileR\x05files\"\x96\x03\n" +
-	"\x10ComponentBudgets\x12.\n" +
-	"\x13rpc_timeout_seconds\x18\x06 \x01(\rR\x11rpcTimeoutSeconds\x12/\n" +
-	"\x14max_base_model_bytes\x18\a \x01(\x03R\x11maxBaseModelBytes\x12&\n" +
-	"\x0fmax_spool_bytes\x18\b \x01(\x03R\rmaxSpoolBytes\x12@\n" +
-	"\x1dmax_base_model_expanded_bytes\x18\t \x01(\x03R\x19maxBaseModelExpandedBytesJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03J\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\n" +
-	"\x10\vR\x17prepare_timeout_secondsR\x16export_timeout_secondsR\x16verify_timeout_secondsR\x17collect_timeout_secondsR\x17publish_timeout_secondsR\x18training_timeout_seconds\"\xbb\x05\n" +
+	"\x05files\x18\a \x03(\v2\x1e.ani.modeldev.v1.BaseModelFileR\x05files\x12;\n" +
+	"\x05facts\x18\b \x01(\v2%.ani.modeldev.v1.NormalizedModelFactsR\x05factsJ\x04\b\x03\x10\x04R\x06family\"\xee\x06\n" +
 	"\x12FinetuningSnapshot\x12<\n" +
 	"\x1aparameter_contract_version\x18\x01 \x01(\tR\x18parameterContractVersion\x12<\n" +
 	"\n" +
@@ -10034,10 +11403,14 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x0everify_program\x18\b \x01(\v2\x1b.ani.training.v1.ProgramRefR\rverifyProgram\x12#\n" +
 	"\rrecipe_sha256\x18\t \x01(\tR\frecipeSha256\x12%\n" +
 	"\x0emapping_sha256\x18\n" +
-	" \x01(\tR\rmappingSha256\x12;\n" +
-	"\abudgets\x18\v \x01(\v2!.ani.modeldev.v1.ComponentBudgetsR\abudgetsB\x12\n" +
+	" \x01(\tR\rmappingSha256\x12W\n" +
+	"\x14runtime_capabilities\x18\f \x01(\v2$.ani.modeldev.v1.RuntimeCapabilitiesR\x13runtimeCapabilities\x12B\n" +
+	"\rtemplate_plan\x18\r \x01(\v2\x1d.ani.modeldev.v1.TemplatePlanR\ftemplatePlan\x12\x1d\n" +
+	"\n" +
+	"model_type\x18\x0e \x01(\tR\tmodelType\x12#\n" +
+	"\rcontext_limit\x18\x0f \x01(\x03R\fcontextLimitB\x12\n" +
 	"\x10_target_model_idB\x11\n" +
-	"\x0f_new_model_name\"\xa7\x01\n" +
+	"\x0f_new_model_nameJ\x04\b\v\x10\fR\abudgets\"\xa7\x01\n" +
 	"\vIdentityRef\x12\x1b\n" +
 	"\ttenant_id\x18\x01 \x01(\tR\btenantId\x12\x14\n" +
 	"\x05actor\x18\x02 \x01(\tR\x05actor\x12!\n" +
@@ -10254,14 +11627,20 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x05input\x18\x03 \x01(\v2\x19.ani.training.v1.InputRefR\x05input\"\x81\x01\n" +
 	"\x16PublishedFileCandidate\x12.\n" +
 	"\x04file\x18\x01 \x01(\v2\x1a.ani.training.v1.FileEntryR\x04file\x127\n" +
-	"\x06object\x18\x02 \x01(\v2\x1f.ani.training.v1.FixedObjectRefR\x06object\"\xe9\x02\n" +
+	"\x06object\x18\x02 \x01(\v2\x1f.ani.training.v1.FixedObjectRefR\x06object\"\x94\x04\n" +
 	"\x14PublicationCandidate\x126\n" +
 	"\x17logical_publication_key\x18\x01 \x01(\tR\x15logicalPublicationKey\x12=\n" +
 	"\x05files\x18\x02 \x03(\v2'.ani.modeldev.v1.PublishedFileCandidateR\x05files\x12H\n" +
 	"\x0fmanifest_object\x18\x03 \x01(\v2\x1f.ani.training.v1.FixedObjectRefR\x0emanifestObject\x12D\n" +
 	"\rbundle_object\x18\x04 \x01(\v2\x1f.ani.training.v1.FixedObjectRefR\fbundleObject\x12$\n" +
 	"\x0eupload_task_id\x18\x05 \x01(\tR\fuploadTaskId\x12$\n" +
-	"\x0eupload_pod_uid\x18\x06 \x01(\tR\fuploadPodUid\"r\n" +
+	"\x0eupload_pod_uid\x18\x06 \x01(\tR\fuploadPodUid\x12\x16\n" +
+	"\x06schema\x18\a \x01(\tR\x06schema\x12\x1b\n" +
+	"\ttenant_id\x18\b \x01(\tR\btenantId\x12!\n" +
+	"\foperation_id\x18\t \x01(\tR\voperationId\x12!\n" +
+	"\fexecution_id\x18\n" +
+	" \x01(\tR\vexecutionId\x12.\n" +
+	"\x13execution_spec_hash\x18\v \x01(\tR\x11executionSpecHash\"r\n" +
 	"\vStepFailure\x126\n" +
 	"\afailure\x18\x01 \x01(\v2\x1c.ani.modeldev.v1.ErrorDetailR\afailure\x12+\n" +
 	"\x04logs\x18\x02 \x03(\v2\x17.ani.training.v1.LogRefR\x04logs\"\x90\x03\n" +
@@ -10312,7 +11691,119 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"closeState\x12\x1a\n" +
 	"\breplayed\x18\x03 \x01(\bR\breplayed\x12;\n" +
 	"\vaccepted_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"acceptedAt*\x84\x03\n" +
+	"acceptedAt\">\n" +
+	"\x0eRuntimePackage\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\tR\aversion\"\xa2\x01\n" +
+	"\x12RegisteredTemplate\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12#\n" +
+	"\rsource_sha256\x18\x02 \x01(\tR\fsourceSha256\x12'\n" +
+	"\x0fsupports_system\x18\x03 \x01(\bR\x0esupportsSystem\x12.\n" +
+	"\x13supports_multi_turn\x18\x04 \x01(\bR\x11supportsMultiTurn\"A\n" +
+	"\x11ContextLimitField\x12\x16\n" +
+	"\x06source\x18\x01 \x01(\tR\x06source\x12\x14\n" +
+	"\x05field\x18\x02 \x01(\tR\x05field\"\xaa\x03\n" +
+	"\x13RuntimeCapabilities\x12%\n" +
+	"\x0eschema_version\x18\x01 \x01(\tR\rschemaVersion\x12!\n" +
+	"\fimage_digest\x18\x02 \x01(\tR\vimageDigest\x12+\n" +
+	"\x11entrypoint_sha256\x18\x03 \x01(\tR\x10entrypointSha256\x12;\n" +
+	"\bpackages\x18\x04 \x03(\v2\x1f.ani.modeldev.v1.RuntimePackageR\bpackages\x121\n" +
+	"\x15causal_lm_model_types\x18\x05 \x03(\tR\x12causalLmModelTypes\x12V\n" +
+	"\x14registered_templates\x18\x06 \x03(\v2#.ani.modeldev.v1.RegisteredTemplateR\x13registeredTemplates\x12T\n" +
+	"\x14context_limit_fields\x18\a \x03(\v2\".ani.modeldev.v1.ContextLimitFieldR\x12contextLimitFields\"U\n" +
+	"\bFileFact\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x1d\n" +
+	"\n" +
+	"size_bytes\x18\x02 \x01(\x03R\tsizeBytes\x12\x16\n" +
+	"\x06sha256\x18\x03 \x01(\tR\x06sha256\"\x84\x01\n" +
+	"\x10ContextLimitFact\x12\x1f\n" +
+	"\vsource_path\x18\x01 \x01(\tR\n" +
+	"sourcePath\x12#\n" +
+	"\rsource_sha256\x18\x02 \x01(\tR\fsourceSha256\x12\x14\n" +
+	"\x05field\x18\x03 \x01(\tR\x05field\x12\x14\n" +
+	"\x05value\x18\x04 \x01(\x03R\x05value\"b\n" +
+	"\fWeightLayout\x12\x12\n" +
+	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\x1d\n" +
+	"\n" +
+	"entry_path\x18\x02 \x01(\tR\tentryPath\x12\x1f\n" +
+	"\vshard_paths\x18\x03 \x03(\tR\n" +
+	"shardPaths\"\x9d\x01\n" +
+	"\x0eTemplateSource\x12\x12\n" +
+	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x18\n" +
+	"\adefault\x18\x04 \x01(\bR\adefault\x12\x1d\n" +
+	"\n" +
+	"size_bytes\x18\x05 \x01(\x03R\tsizeBytes\x12\x16\n" +
+	"\x06sha256\x18\x06 \x01(\tR\x06sha256\"\x8e\x04\n" +
+	"\x14NormalizedModelFacts\x12\x1d\n" +
+	"\n" +
+	"model_type\x18\x01 \x01(\tR\tmodelType\x12$\n" +
+	"\rarchitectures\x18\x02 \x03(\tR\rarchitectures\x12%\n" +
+	"\x0eoriginal_dtype\x18\x03 \x01(\tR\roriginalDtype\x12#\n" +
+	"\rcontext_limit\x18\x04 \x01(\x03R\fcontextLimit\x12J\n" +
+	"\x0fcontext_sources\x18\x05 \x03(\v2!.ani.modeldev.v1.ContextLimitFactR\x0econtextSources\x12:\n" +
+	"\vconfig_file\x18\x06 \x01(\v2\x19.ani.modeldev.v1.FileFactR\n" +
+	"configFile\x12M\n" +
+	"\x15tokenizer_config_file\x18\a \x01(\v2\x19.ani.modeldev.v1.FileFactR\x13tokenizerConfigFile\x12B\n" +
+	"\rweight_layout\x18\b \x01(\v2\x1d.ani.modeldev.v1.WeightLayoutR\fweightLayout\x12J\n" +
+	"\x10template_sources\x18\t \x03(\v2\x1f.ani.modeldev.v1.TemplateSourceR\x0ftemplateSources\"\xeb\x02\n" +
+	"\fTemplatePlan\x12%\n" +
+	"\x0eschema_version\x18\x01 \x01(\tR\rschemaVersion\x12\x12\n" +
+	"\x04mode\x18\x02 \x01(\tR\x04mode\x12)\n" +
+	"\x10selection_source\x18\x03 \x01(\tR\x0fselectionSource\x12$\n" +
+	"\vtemplate_id\x18\x04 \x01(\tH\x00R\n" +
+	"templateId\x88\x01\x01\x127\n" +
+	"\x06source\x18\x05 \x01(\v2\x1f.ani.modeldev.v1.TemplateSourceR\x06source\x12#\n" +
+	"\rsource_sha256\x18\x06 \x01(\tR\fsourceSha256\x12>\n" +
+	"\x1bruntime_capabilities_sha256\x18\a \x01(\tR\x19runtimeCapabilitiesSha256\x12!\n" +
+	"\fimage_digest\x18\b \x01(\tR\vimageDigestB\x0e\n" +
+	"\f_template_id\"\xd0\x05\n" +
+	"\x0fStructureLimits\x12&\n" +
+	"\x0fmax_model_files\x18\x01 \x01(\x03R\rmaxModelFiles\x12(\n" +
+	"\x10max_output_files\x18\x02 \x01(\x03R\x0emaxOutputFiles\x12.\n" +
+	"\x13max_archive_entries\x18\x03 \x01(\x03R\x11maxArchiveEntries\x125\n" +
+	"\x17max_relative_path_bytes\x18\x04 \x01(\x03R\x14maxRelativePathBytes\x121\n" +
+	"\x15max_storage_key_bytes\x18\x05 \x01(\x03R\x12maxStorageKeyBytes\x12,\n" +
+	"\x12max_manifest_bytes\x18\x06 \x01(\x03R\x10maxManifestBytes\x123\n" +
+	"\x16max_model_config_bytes\x18\a \x01(\x03R\x13maxModelConfigBytes\x12,\n" +
+	"\x12max_material_bytes\x18\b \x01(\x03R\x10maxMaterialBytes\x12;\n" +
+	"\x1amax_archive_metadata_bytes\x18\t \x01(\x03R\x17maxArchiveMetadataBytes\x12(\n" +
+	"\x10max_record_bytes\x18\n" +
+	" \x01(\x03R\x0emaxRecordBytes\x12$\n" +
+	"\x0emax_json_depth\x18\v \x01(\x03R\fmaxJsonDepth\x121\n" +
+	"\x15max_control_rpc_bytes\x18\f \x01(\x03R\x12maxControlRpcBytes\x12E\n" +
+	"\x1fmax_publication_candidate_bytes\x18\r \x01(\x03R\x1cmaxPublicationCandidateBytes\x129\n" +
+	"\x19max_publication_ref_bytes\x18\x0e \x01(\x03R\x16maxPublicationRefBytes\"\x95\x02\n" +
+	"\x1fCheckFinetuningReadinessRequest\x121\n" +
+	"\x15base_model_version_id\x18\x01 \x01(\tR\x12baseModelVersionId\x12*\n" +
+	"\x11compute_preset_id\x18\x02 \x01(\tR\x0fcomputePresetId\x124\n" +
+	"\x13finetuning_template\x18\x03 \x01(\tH\x00R\x12finetuningTemplate\x88\x01\x01\x12E\n" +
+	"\x0ecompute_origin\x18\x04 \x01(\v2\x1e.ani.modeldev.v1.ComputeOriginR\rcomputeOriginB\x16\n" +
+	"\x14_finetuning_template\"\xa0\x06\n" +
+	" CheckFinetuningReadinessResponse\x12E\n" +
+	"\n" +
+	"assessment\x18\x01 \x01(\x0e2%.ani.modeldev.v1.FinetuningAssessmentR\n" +
+	"assessment\x124\n" +
+	"\x06reason\x18\x02 \x01(\x0e2\x1c.ani.modeldev.v1.ErrorReasonR\x06reason\x12T\n" +
+	"\x13template_candidates\x18\x03 \x03(\v2#.ani.modeldev.v1.RegisteredTemplateR\x12templateCandidates\x12W\n" +
+	"\x14runtime_capabilities\x18\x04 \x01(\v2$.ani.modeldev.v1.RuntimeCapabilitiesR\x13runtimeCapabilities\x12>\n" +
+	"\x1bruntime_capabilities_sha256\x18\x05 \x01(\tR\x19runtimeCapabilitiesSha256\x126\n" +
+	"\x06limits\x18\x06 \x01(\v2\x1e.ani.modeldev.v1.ContentLimitsR\x06limits\x12K\n" +
+	"\x10structure_limits\x18\a \x01(\v2 .ani.modeldev.v1.StructureLimitsR\x0fstructureLimits\x12>\n" +
+	"\x1bruntime_validation_required\x18\b \x01(\bR\x19runtimeValidationRequired\x12\x19\n" +
+	"\bmodel_id\x18\t \x01(\tR\amodelId\x12(\n" +
+	"\x10model_version_id\x18\n" +
+	" \x01(\tR\x0emodelVersionId\x12B\n" +
+	"\rtemplate_plan\x18\v \x01(\v2\x1d.ani.modeldev.v1.TemplatePlanR\ftemplatePlan\x12\x1d\n" +
+	"\n" +
+	"model_type\x18\f \x01(\tR\tmodelType\x12#\n" +
+	"\rcontext_limit\x18\r \x01(\x03R\fcontextLimit\"_\n" +
+	"\x0ePublicationRef\x12\x16\n" +
+	"\x06schema\x18\x01 \x01(\tR\x06schema\x12\x1d\n" +
+	"\n" +
+	"size_bytes\x18\x02 \x01(\x03R\tsizeBytes\x12\x16\n" +
+	"\x06sha256\x18\x03 \x01(\tR\x06sha256*\x84\x03\n" +
 	"\fComputeState\x12\x1d\n" +
 	"\x19COMPUTE_STATE_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16COMPUTE_STATE_ACCEPTED\x10\x01\x12\x1c\n" +
@@ -10378,7 +11869,7 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x15PARAMETER_TYPE_STRING\x10\x01\x12\x1a\n" +
 	"\x16PARAMETER_TYPE_INTEGER\x10\x02\x12\x1a\n" +
 	"\x16PARAMETER_TYPE_BOOLEAN\x10\x03\x12\x1a\n" +
-	"\x16PARAMETER_TYPE_DECIMAL\x10\x04*\xde\a\n" +
+	"\x16PARAMETER_TYPE_DECIMAL\x10\x04*\xda\v\n" +
 	"\vErrorReason\x12\x1c\n" +
 	"\x18ERROR_REASON_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dERROR_REASON_INVALID_ARGUMENT\x10\x01\x12 \n" +
@@ -10401,11 +11892,22 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x1fERROR_REASON_INTEGRITY_MISMATCH\x10\x12\x12*\n" +
 	"&ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN\x10\x13\x12\"\n" +
 	"\x1eERROR_REASON_DEADLINE_EXCEEDED\x10\x14\x12 \n" +
-	"\x1cERROR_REASON_INPUT_TOO_LARGE\x10\x15\x12 \n" +
 	"\x1cERROR_REASON_INPUT_NOT_READY\x10\x16\x12+\n" +
 	"'ERROR_REASON_IMPLEMENTATION_UNAVAILABLE\x10\x17\x12#\n" +
 	"\x1fERROR_REASON_UNSUPPORTED_DEVICE\x10\x18\x12(\n" +
-	"$ERROR_REASON_ADMISSION_PLAN_MISMATCH\x10\x19\"\x04\b\a\x10\a*\"ERROR_REASON_NO_COMPATIBLE_RELEASE*\xab\x01\n" +
+	"$ERROR_REASON_ADMISSION_PLAN_MISMATCH\x10\x19\x12#\n" +
+	"\x1fERROR_REASON_BASE_MODEL_INVALID\x10\x1a\x12'\n" +
+	"#ERROR_REASON_BASE_MODEL_UNSUPPORTED\x10\x1b\x12'\n" +
+	"#ERROR_REASON_CONTEXT_LIMIT_EXCEEDED\x10\x1c\x12&\n" +
+	"\"ERROR_REASON_CONTEXT_LIMIT_UNKNOWN\x10\x1d\x12-\n" +
+	")ERROR_REASON_FINETUNING_TEMPLATE_REQUIRED\x10\x1e\x120\n" +
+	",ERROR_REASON_FINETUNING_TEMPLATE_UNSUPPORTED\x10\x1f\x12'\n" +
+	"#ERROR_REASON_CONTENT_LIMIT_EXCEEDED\x10 \x12)\n" +
+	"%ERROR_REASON_STRUCTURE_LIMIT_EXCEEDED\x10!\x12)\n" +
+	"%ERROR_REASON_DATASET_RECORD_TOO_LARGE\x10\"\x12 \n" +
+	"\x1cERROR_REASON_DATASET_INVALID\x10#\x12&\n" +
+	"\"ERROR_REASON_INPUT_VALIDATION_BUSY\x10$\x12/\n" +
+	"+ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE\x10%\"\x04\b\a\x10\a\"\x04\b\x15\x10\x15*\"ERROR_REASON_NO_COMPATIBLE_RELEASE*\x1cERROR_REASON_INPUT_TOO_LARGE*\xab\x01\n" +
 	"\x13KfpRunTerminalState\x12&\n" +
 	"\"KFP_RUN_TERMINAL_STATE_UNSPECIFIED\x10\x00\x12$\n" +
 	" KFP_RUN_TERMINAL_STATE_SUCCEEDED\x10\x01\x12!\n" +
@@ -10438,9 +11940,16 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x1ePOD_AVAILABILITY_NEVER_CREATED\x10\x03\x12\x1d\n" +
 	"\x19POD_AVAILABILITY_REJECTED\x10\x04\x12\x1d\n" +
 	"\x19POD_AVAILABILITY_ORPHANED\x10\x05\x12%\n" +
-	"!POD_AVAILABILITY_CREATION_PENDING\x10\x062\xdb\t\n" +
+	"!POD_AVAILABILITY_CREATION_PENDING\x10\x06*\xb5\x01\n" +
+	"\x14FinetuningAssessment\x12%\n" +
+	"!FINETUNING_ASSESSMENT_UNSPECIFIED\x10\x00\x12\"\n" +
+	"\x1eFINETUNING_ASSESSMENT_ELIGIBLE\x10\x01\x12+\n" +
+	"'FINETUNING_ASSESSMENT_TEMPLATE_REQUIRED\x10\x02\x12%\n" +
+	"!FINETUNING_ASSESSMENT_UNSUPPORTED\x10\x032\xdc\n" +
+	"\n" +
 	"\x14ModelDevQueryService\x12p\n" +
-	"\x13ListImplementations\x12+.ani.modeldev.v1.ListImplementationsRequest\x1a,.ani.modeldev.v1.ListImplementationsResponse\x12d\n" +
+	"\x13ListImplementations\x12+.ani.modeldev.v1.ListImplementationsRequest\x1a,.ani.modeldev.v1.ListImplementationsResponse\x12\x7f\n" +
+	"\x18CheckFinetuningReadiness\x120.ani.modeldev.v1.CheckFinetuningReadinessRequest\x1a1.ani.modeldev.v1.CheckFinetuningReadinessResponse\x12d\n" +
 	"\x0fGetInputVersion\x12'.ani.modeldev.v1.GetInputVersionRequest\x1a(.ani.modeldev.v1.GetInputVersionResponse\x12j\n" +
 	"\x11ListInputVersions\x12).ani.modeldev.v1.ListInputVersionsRequest\x1a*.ani.modeldev.v1.ListInputVersionsResponse\x12[\n" +
 	"\fGetExecution\x12$.ani.modeldev.v1.GetExecutionRequest\x1a%.ani.modeldev.v1.GetExecutionResponse\x12a\n" +
@@ -10482,8 +11991,8 @@ func file_ani_modeldev_v1_modeldev_proto_rawDescGZIP() []byte {
 	return file_ani_modeldev_v1_modeldev_proto_rawDescData
 }
 
-var file_ani_modeldev_v1_modeldev_proto_enumTypes = make([]protoimpl.EnumInfo, 16)
-var file_ani_modeldev_v1_modeldev_proto_msgTypes = make([]protoimpl.MessageInfo, 107)
+var file_ani_modeldev_v1_modeldev_proto_enumTypes = make([]protoimpl.EnumInfo, 17)
+var file_ani_modeldev_v1_modeldev_proto_msgTypes = make([]protoimpl.MessageInfo, 121)
 var file_ani_modeldev_v1_modeldev_proto_goTypes = []any{
 	(ComputeState)(0),                          // 0: ani.modeldev.v1.ComputeState
 	(DeliveryState)(0),                         // 1: ani.modeldev.v1.DeliveryState
@@ -10501,415 +12010,455 @@ var file_ani_modeldev_v1_modeldev_proto_goTypes = []any{
 	(FrameKind)(0),                             // 13: ani.modeldev.v1.FrameKind
 	(PodLayer)(0),                              // 14: ani.modeldev.v1.PodLayer
 	(PodAvailability)(0),                       // 15: ani.modeldev.v1.PodAvailability
-	(*BeginFinetuningStepRequest)(nil),         // 16: ani.modeldev.v1.BeginFinetuningStepRequest
-	(*BeginFinetuningStepResponse)(nil),        // 17: ani.modeldev.v1.BeginFinetuningStepResponse
-	(*ReportFinetuningStepResultRequest)(nil),  // 18: ani.modeldev.v1.ReportFinetuningStepResultRequest
-	(*ReportFinetuningStepResultResponse)(nil), // 19: ani.modeldev.v1.ReportFinetuningStepResultResponse
-	(*RegisterModelRequest)(nil),               // 20: ani.modeldev.v1.RegisterModelRequest
-	(*RegisterModelResponse)(nil),              // 21: ani.modeldev.v1.RegisterModelResponse
-	(*FieldViolation)(nil),                     // 22: ani.modeldev.v1.FieldViolation
-	(*ErrorDetail)(nil),                        // 23: ani.modeldev.v1.ErrorDetail
-	(*UserIntent)(nil),                         // 24: ani.modeldev.v1.UserIntent
-	(*MLPParameters)(nil),                      // 25: ani.modeldev.v1.MLPParameters
-	(*FinetuningParameters)(nil),               // 26: ani.modeldev.v1.FinetuningParameters
-	(*ParameterSelection)(nil),                 // 27: ani.modeldev.v1.ParameterSelection
-	(*ExecutionStates)(nil),                    // 28: ani.modeldev.v1.ExecutionStates
-	(*PageRequest)(nil),                        // 29: ani.modeldev.v1.PageRequest
-	(*ParameterRule)(nil),                      // 30: ani.modeldev.v1.ParameterRule
-	(*ImplementationView)(nil),                 // 31: ani.modeldev.v1.ImplementationView
-	(*ListImplementationsRequest)(nil),         // 32: ani.modeldev.v1.ListImplementationsRequest
-	(*ListImplementationsResponse)(nil),        // 33: ani.modeldev.v1.ListImplementationsResponse
-	(*InputVersionView)(nil),                   // 34: ani.modeldev.v1.InputVersionView
-	(*GetInputVersionRequest)(nil),             // 35: ani.modeldev.v1.GetInputVersionRequest
-	(*GetInputVersionResponse)(nil),            // 36: ani.modeldev.v1.GetInputVersionResponse
-	(*ListInputVersionsRequest)(nil),           // 37: ani.modeldev.v1.ListInputVersionsRequest
-	(*ListInputVersionsResponse)(nil),          // 38: ani.modeldev.v1.ListInputVersionsResponse
-	(*ExecutionView)(nil),                      // 39: ani.modeldev.v1.ExecutionView
-	(*BaseModelIdentity)(nil),                  // 40: ani.modeldev.v1.BaseModelIdentity
-	(*StepProgress)(nil),                       // 41: ani.modeldev.v1.StepProgress
-	(*ExecutionHistoryView)(nil),               // 42: ani.modeldev.v1.ExecutionHistoryView
-	(*ModelRegistrationView)(nil),              // 43: ani.modeldev.v1.ModelRegistrationView
-	(*GetExecutionRequest)(nil),                // 44: ani.modeldev.v1.GetExecutionRequest
-	(*GetExecutionResponse)(nil),               // 45: ani.modeldev.v1.GetExecutionResponse
-	(*ListExecutionsRequest)(nil),              // 46: ani.modeldev.v1.ListExecutionsRequest
-	(*ListExecutionsResponse)(nil),             // 47: ani.modeldev.v1.ListExecutionsResponse
-	(*GetExecutionLogsRequest)(nil),            // 48: ani.modeldev.v1.GetExecutionLogsRequest
-	(*LogLine)(nil),                            // 49: ani.modeldev.v1.LogLine
-	(*GetExecutionLogsResponse)(nil),           // 50: ani.modeldev.v1.GetExecutionLogsResponse
-	(*GetExecutionLogStreamRequest)(nil),       // 51: ani.modeldev.v1.GetExecutionLogStreamRequest
-	(*GetExecutionLogStreamResponse)(nil),      // 52: ani.modeldev.v1.GetExecutionLogStreamResponse
-	(*ArtifactView)(nil),                       // 53: ani.modeldev.v1.ArtifactView
-	(*ListExecutionArtifactsRequest)(nil),      // 54: ani.modeldev.v1.ListExecutionArtifactsRequest
-	(*ListExecutionArtifactsResponse)(nil),     // 55: ani.modeldev.v1.ListExecutionArtifactsResponse
-	(*AuthorizeArtifactDownloadRequest)(nil),   // 56: ani.modeldev.v1.AuthorizeArtifactDownloadRequest
-	(*AuthorizeArtifactDownloadResponse)(nil),  // 57: ani.modeldev.v1.AuthorizeArtifactDownloadResponse
-	(*ContainerView)(nil),                      // 58: ani.modeldev.v1.ContainerView
-	(*PodView)(nil),                            // 59: ani.modeldev.v1.PodView
-	(*EventView)(nil),                          // 60: ani.modeldev.v1.EventView
-	(*ListExecutionPodsRequest)(nil),           // 61: ani.modeldev.v1.ListExecutionPodsRequest
-	(*ListExecutionPodsResponse)(nil),          // 62: ani.modeldev.v1.ListExecutionPodsResponse
-	(*ListExecutionEventsRequest)(nil),         // 63: ani.modeldev.v1.ListExecutionEventsRequest
-	(*ListExecutionEventsResponse)(nil),        // 64: ani.modeldev.v1.ListExecutionEventsResponse
-	(*RuntimeIdentityRefs)(nil),                // 65: ani.modeldev.v1.RuntimeIdentityRefs
-	(*EnvironmentBindingSnapshot)(nil),         // 66: ani.modeldev.v1.EnvironmentBindingSnapshot
-	(*StorageScope)(nil),                       // 67: ani.modeldev.v1.StorageScope
-	(*ExecutionSnapshot)(nil),                  // 68: ani.modeldev.v1.ExecutionSnapshot
-	(*StringPair)(nil),                         // 69: ani.modeldev.v1.StringPair
-	(*GPUExecutionSnapshot)(nil),               // 70: ani.modeldev.v1.GPUExecutionSnapshot
-	(*GPUDisplaySnapshot)(nil),                 // 71: ani.modeldev.v1.GPUDisplaySnapshot
-	(*GPUPlan)(nil),                            // 72: ani.modeldev.v1.GPUPlan
-	(*FinetuningManagedSettings)(nil),          // 73: ani.modeldev.v1.FinetuningManagedSettings
-	(*BaseModelFile)(nil),                      // 74: ani.modeldev.v1.BaseModelFile
-	(*BaseModelRef)(nil),                       // 75: ani.modeldev.v1.BaseModelRef
-	(*ComponentBudgets)(nil),                   // 76: ani.modeldev.v1.ComponentBudgets
-	(*FinetuningSnapshot)(nil),                 // 77: ani.modeldev.v1.FinetuningSnapshot
-	(*IdentityRef)(nil),                        // 78: ani.modeldev.v1.IdentityRef
-	(*ImplementationSnapshot)(nil),             // 79: ani.modeldev.v1.ImplementationSnapshot
-	(*ComputeOrigin)(nil),                      // 80: ani.modeldev.v1.ComputeOrigin
-	(*ExecutionTiming)(nil),                    // 81: ani.modeldev.v1.ExecutionTiming
-	(*RuntimePlan)(nil),                        // 82: ani.modeldev.v1.RuntimePlan
-	(*PrepareAdmissionRequest)(nil),            // 83: ani.modeldev.v1.PrepareAdmissionRequest
-	(*PrepareAdmissionResponse)(nil),           // 84: ani.modeldev.v1.PrepareAdmissionResponse
-	(*FinalizeAdmissionRequest)(nil),           // 85: ani.modeldev.v1.FinalizeAdmissionRequest
-	(*FinalizeAdmissionResponse)(nil),          // 86: ani.modeldev.v1.FinalizeAdmissionResponse
-	(*AcceptExecutionRequest)(nil),             // 87: ani.modeldev.v1.AcceptExecutionRequest
-	(*AcceptExecutionResponse)(nil),            // 88: ani.modeldev.v1.AcceptExecutionResponse
-	(*ApplyCloseIntentRequest)(nil),            // 89: ani.modeldev.v1.ApplyCloseIntentRequest
-	(*ApplyCloseIntentResponse)(nil),           // 90: ani.modeldev.v1.ApplyCloseIntentResponse
-	(*RunAssociation)(nil),                     // 91: ani.modeldev.v1.RunAssociation
-	(*StepContext)(nil),                        // 92: ani.modeldev.v1.StepContext
-	(*AuthorityBinding)(nil),                   // 93: ani.modeldev.v1.AuthorityBinding
-	(*BeginExecutionRequest)(nil),              // 94: ani.modeldev.v1.BeginExecutionRequest
-	(*BeginExecutionResponse)(nil),             // 95: ani.modeldev.v1.BeginExecutionResponse
-	(*StepTiming)(nil),                         // 96: ani.modeldev.v1.StepTiming
-	(*BeginManagedStepRequest)(nil),            // 97: ani.modeldev.v1.BeginManagedStepRequest
-	(*BeginManagedStepResponse)(nil),           // 98: ani.modeldev.v1.BeginManagedStepResponse
-	(*GetExecutionConfigurationRequest)(nil),   // 99: ani.modeldev.v1.GetExecutionConfigurationRequest
-	(*GetExecutionConfigurationResponse)(nil),  // 100: ani.modeldev.v1.GetExecutionConfigurationResponse
-	(*GetStorageCredentialsRequest)(nil),       // 101: ani.modeldev.v1.GetStorageCredentialsRequest
-	(*TemporaryStorageCredentials)(nil),        // 102: ani.modeldev.v1.TemporaryStorageCredentials
-	(*GetStorageCredentialsResponse)(nil),      // 103: ani.modeldev.v1.GetStorageCredentialsResponse
-	(*EnsureTrainingRequest)(nil),              // 104: ani.modeldev.v1.EnsureTrainingRequest
-	(*ResourceRef)(nil),                        // 105: ani.modeldev.v1.ResourceRef
-	(*ObservedCondition)(nil),                  // 106: ani.modeldev.v1.ObservedCondition
-	(*ResourceObservation)(nil),                // 107: ani.modeldev.v1.ResourceObservation
-	(*TrainingStatus)(nil),                     // 108: ani.modeldev.v1.TrainingStatus
-	(*EnsureTrainingResponse)(nil),             // 109: ani.modeldev.v1.EnsureTrainingResponse
-	(*GetTrainingStatusRequest)(nil),           // 110: ani.modeldev.v1.GetTrainingStatusRequest
-	(*GetTrainingStatusResponse)(nil),          // 111: ani.modeldev.v1.GetTrainingStatusResponse
-	(*PreparedInputCandidate)(nil),             // 112: ani.modeldev.v1.PreparedInputCandidate
-	(*PublishedFileCandidate)(nil),             // 113: ani.modeldev.v1.PublishedFileCandidate
-	(*PublicationCandidate)(nil),               // 114: ani.modeldev.v1.PublicationCandidate
-	(*StepFailure)(nil),                        // 115: ani.modeldev.v1.StepFailure
-	(*ReportStepResultRequest)(nil),            // 116: ani.modeldev.v1.ReportStepResultRequest
-	(*VerifiedPublication)(nil),                // 117: ani.modeldev.v1.VerifiedPublication
-	(*UploadCompletionEvidence)(nil),           // 118: ani.modeldev.v1.UploadCompletionEvidence
-	(*VerifiedPublishedFile)(nil),              // 119: ani.modeldev.v1.VerifiedPublishedFile
-	(*ReportStepResultResponse)(nil),           // 120: ani.modeldev.v1.ReportStepResultResponse
-	(*RequestExecutionCloseRequest)(nil),       // 121: ani.modeldev.v1.RequestExecutionCloseRequest
-	(*RequestExecutionCloseResponse)(nil),      // 122: ani.modeldev.v1.RequestExecutionCloseResponse
-	(*timestamppb.Timestamp)(nil),              // 123: google.protobuf.Timestamp
-	(*v1.ManifestRef)(nil),                     // 124: ani.training.v1.ManifestRef
-	(v1.ExecutionKind)(0),                      // 125: ani.training.v1.ExecutionKind
-	(*v1.Parameter)(nil),                       // 126: ani.training.v1.Parameter
-	(*v1.ExecutionIdentity)(nil),               // 127: ani.training.v1.ExecutionIdentity
-	(*v1.Metric)(nil),                          // 128: ani.training.v1.Metric
-	(*v1.LogRef)(nil),                          // 129: ani.training.v1.LogRef
-	(v1.FileRole)(0),                           // 130: ani.training.v1.FileRole
-	(v1.DeliveryMode)(0),                       // 131: ani.training.v1.DeliveryMode
-	(*v1.InputRef)(nil),                        // 132: ani.training.v1.InputRef
-	(*v1.ProgramRef)(nil),                      // 133: ani.training.v1.ProgramRef
-	(*v1.CPUResources)(nil),                    // 134: ani.training.v1.CPUResources
-	(*v1.WorkspaceContract)(nil),               // 135: ani.training.v1.WorkspaceContract
-	(*v1.OutputContract)(nil),                  // 136: ani.training.v1.OutputContract
-	(*v1.FixedObjectRef)(nil),                  // 137: ani.training.v1.FixedObjectRef
-	(*v1.WorkspaceRef)(nil),                    // 138: ani.training.v1.WorkspaceRef
-	(*v1.FileEntry)(nil),                       // 139: ani.training.v1.FileEntry
-	(*v1.TrainingResult)(nil),                  // 140: ani.training.v1.TrainingResult
+	(FinetuningAssessment)(0),                  // 16: ani.modeldev.v1.FinetuningAssessment
+	(*BeginFinetuningStepRequest)(nil),         // 17: ani.modeldev.v1.BeginFinetuningStepRequest
+	(*BeginFinetuningStepResponse)(nil),        // 18: ani.modeldev.v1.BeginFinetuningStepResponse
+	(*ReportFinetuningStepResultRequest)(nil),  // 19: ani.modeldev.v1.ReportFinetuningStepResultRequest
+	(*ReportFinetuningStepResultResponse)(nil), // 20: ani.modeldev.v1.ReportFinetuningStepResultResponse
+	(*RegisterModelRequest)(nil),               // 21: ani.modeldev.v1.RegisterModelRequest
+	(*RegisterModelResponse)(nil),              // 22: ani.modeldev.v1.RegisterModelResponse
+	(*FieldViolation)(nil),                     // 23: ani.modeldev.v1.FieldViolation
+	(*ErrorDetail)(nil),                        // 24: ani.modeldev.v1.ErrorDetail
+	(*UserIntent)(nil),                         // 25: ani.modeldev.v1.UserIntent
+	(*MLPParameters)(nil),                      // 26: ani.modeldev.v1.MLPParameters
+	(*FinetuningParameters)(nil),               // 27: ani.modeldev.v1.FinetuningParameters
+	(*ParameterSelection)(nil),                 // 28: ani.modeldev.v1.ParameterSelection
+	(*ExecutionStates)(nil),                    // 29: ani.modeldev.v1.ExecutionStates
+	(*PageRequest)(nil),                        // 30: ani.modeldev.v1.PageRequest
+	(*ParameterRule)(nil),                      // 31: ani.modeldev.v1.ParameterRule
+	(*ImplementationView)(nil),                 // 32: ani.modeldev.v1.ImplementationView
+	(*ListImplementationsRequest)(nil),         // 33: ani.modeldev.v1.ListImplementationsRequest
+	(*ListImplementationsResponse)(nil),        // 34: ani.modeldev.v1.ListImplementationsResponse
+	(*InputVersionView)(nil),                   // 35: ani.modeldev.v1.InputVersionView
+	(*GetInputVersionRequest)(nil),             // 36: ani.modeldev.v1.GetInputVersionRequest
+	(*GetInputVersionResponse)(nil),            // 37: ani.modeldev.v1.GetInputVersionResponse
+	(*ListInputVersionsRequest)(nil),           // 38: ani.modeldev.v1.ListInputVersionsRequest
+	(*ListInputVersionsResponse)(nil),          // 39: ani.modeldev.v1.ListInputVersionsResponse
+	(*ExecutionView)(nil),                      // 40: ani.modeldev.v1.ExecutionView
+	(*BaseModelIdentity)(nil),                  // 41: ani.modeldev.v1.BaseModelIdentity
+	(*StepProgress)(nil),                       // 42: ani.modeldev.v1.StepProgress
+	(*ExecutionHistoryView)(nil),               // 43: ani.modeldev.v1.ExecutionHistoryView
+	(*ModelRegistrationView)(nil),              // 44: ani.modeldev.v1.ModelRegistrationView
+	(*GetExecutionRequest)(nil),                // 45: ani.modeldev.v1.GetExecutionRequest
+	(*GetExecutionResponse)(nil),               // 46: ani.modeldev.v1.GetExecutionResponse
+	(*ListExecutionsRequest)(nil),              // 47: ani.modeldev.v1.ListExecutionsRequest
+	(*ListExecutionsResponse)(nil),             // 48: ani.modeldev.v1.ListExecutionsResponse
+	(*GetExecutionLogsRequest)(nil),            // 49: ani.modeldev.v1.GetExecutionLogsRequest
+	(*LogLine)(nil),                            // 50: ani.modeldev.v1.LogLine
+	(*GetExecutionLogsResponse)(nil),           // 51: ani.modeldev.v1.GetExecutionLogsResponse
+	(*GetExecutionLogStreamRequest)(nil),       // 52: ani.modeldev.v1.GetExecutionLogStreamRequest
+	(*GetExecutionLogStreamResponse)(nil),      // 53: ani.modeldev.v1.GetExecutionLogStreamResponse
+	(*ArtifactView)(nil),                       // 54: ani.modeldev.v1.ArtifactView
+	(*ListExecutionArtifactsRequest)(nil),      // 55: ani.modeldev.v1.ListExecutionArtifactsRequest
+	(*ListExecutionArtifactsResponse)(nil),     // 56: ani.modeldev.v1.ListExecutionArtifactsResponse
+	(*AuthorizeArtifactDownloadRequest)(nil),   // 57: ani.modeldev.v1.AuthorizeArtifactDownloadRequest
+	(*AuthorizeArtifactDownloadResponse)(nil),  // 58: ani.modeldev.v1.AuthorizeArtifactDownloadResponse
+	(*ContainerView)(nil),                      // 59: ani.modeldev.v1.ContainerView
+	(*PodView)(nil),                            // 60: ani.modeldev.v1.PodView
+	(*EventView)(nil),                          // 61: ani.modeldev.v1.EventView
+	(*ListExecutionPodsRequest)(nil),           // 62: ani.modeldev.v1.ListExecutionPodsRequest
+	(*ListExecutionPodsResponse)(nil),          // 63: ani.modeldev.v1.ListExecutionPodsResponse
+	(*ListExecutionEventsRequest)(nil),         // 64: ani.modeldev.v1.ListExecutionEventsRequest
+	(*ListExecutionEventsResponse)(nil),        // 65: ani.modeldev.v1.ListExecutionEventsResponse
+	(*RuntimeIdentityRefs)(nil),                // 66: ani.modeldev.v1.RuntimeIdentityRefs
+	(*EnvironmentBindingSnapshot)(nil),         // 67: ani.modeldev.v1.EnvironmentBindingSnapshot
+	(*StorageScope)(nil),                       // 68: ani.modeldev.v1.StorageScope
+	(*ExecutionSnapshot)(nil),                  // 69: ani.modeldev.v1.ExecutionSnapshot
+	(*ContentLimits)(nil),                      // 70: ani.modeldev.v1.ContentLimits
+	(*StringPair)(nil),                         // 71: ani.modeldev.v1.StringPair
+	(*GPUExecutionSnapshot)(nil),               // 72: ani.modeldev.v1.GPUExecutionSnapshot
+	(*GPUDisplaySnapshot)(nil),                 // 73: ani.modeldev.v1.GPUDisplaySnapshot
+	(*GPUPlan)(nil),                            // 74: ani.modeldev.v1.GPUPlan
+	(*FinetuningManagedSettings)(nil),          // 75: ani.modeldev.v1.FinetuningManagedSettings
+	(*BaseModelFile)(nil),                      // 76: ani.modeldev.v1.BaseModelFile
+	(*BaseModelRef)(nil),                       // 77: ani.modeldev.v1.BaseModelRef
+	(*FinetuningSnapshot)(nil),                 // 78: ani.modeldev.v1.FinetuningSnapshot
+	(*IdentityRef)(nil),                        // 79: ani.modeldev.v1.IdentityRef
+	(*ImplementationSnapshot)(nil),             // 80: ani.modeldev.v1.ImplementationSnapshot
+	(*ComputeOrigin)(nil),                      // 81: ani.modeldev.v1.ComputeOrigin
+	(*ExecutionTiming)(nil),                    // 82: ani.modeldev.v1.ExecutionTiming
+	(*RuntimePlan)(nil),                        // 83: ani.modeldev.v1.RuntimePlan
+	(*PrepareAdmissionRequest)(nil),            // 84: ani.modeldev.v1.PrepareAdmissionRequest
+	(*PrepareAdmissionResponse)(nil),           // 85: ani.modeldev.v1.PrepareAdmissionResponse
+	(*FinalizeAdmissionRequest)(nil),           // 86: ani.modeldev.v1.FinalizeAdmissionRequest
+	(*FinalizeAdmissionResponse)(nil),          // 87: ani.modeldev.v1.FinalizeAdmissionResponse
+	(*AcceptExecutionRequest)(nil),             // 88: ani.modeldev.v1.AcceptExecutionRequest
+	(*AcceptExecutionResponse)(nil),            // 89: ani.modeldev.v1.AcceptExecutionResponse
+	(*ApplyCloseIntentRequest)(nil),            // 90: ani.modeldev.v1.ApplyCloseIntentRequest
+	(*ApplyCloseIntentResponse)(nil),           // 91: ani.modeldev.v1.ApplyCloseIntentResponse
+	(*RunAssociation)(nil),                     // 92: ani.modeldev.v1.RunAssociation
+	(*StepContext)(nil),                        // 93: ani.modeldev.v1.StepContext
+	(*AuthorityBinding)(nil),                   // 94: ani.modeldev.v1.AuthorityBinding
+	(*BeginExecutionRequest)(nil),              // 95: ani.modeldev.v1.BeginExecutionRequest
+	(*BeginExecutionResponse)(nil),             // 96: ani.modeldev.v1.BeginExecutionResponse
+	(*StepTiming)(nil),                         // 97: ani.modeldev.v1.StepTiming
+	(*BeginManagedStepRequest)(nil),            // 98: ani.modeldev.v1.BeginManagedStepRequest
+	(*BeginManagedStepResponse)(nil),           // 99: ani.modeldev.v1.BeginManagedStepResponse
+	(*GetExecutionConfigurationRequest)(nil),   // 100: ani.modeldev.v1.GetExecutionConfigurationRequest
+	(*GetExecutionConfigurationResponse)(nil),  // 101: ani.modeldev.v1.GetExecutionConfigurationResponse
+	(*GetStorageCredentialsRequest)(nil),       // 102: ani.modeldev.v1.GetStorageCredentialsRequest
+	(*TemporaryStorageCredentials)(nil),        // 103: ani.modeldev.v1.TemporaryStorageCredentials
+	(*GetStorageCredentialsResponse)(nil),      // 104: ani.modeldev.v1.GetStorageCredentialsResponse
+	(*EnsureTrainingRequest)(nil),              // 105: ani.modeldev.v1.EnsureTrainingRequest
+	(*ResourceRef)(nil),                        // 106: ani.modeldev.v1.ResourceRef
+	(*ObservedCondition)(nil),                  // 107: ani.modeldev.v1.ObservedCondition
+	(*ResourceObservation)(nil),                // 108: ani.modeldev.v1.ResourceObservation
+	(*TrainingStatus)(nil),                     // 109: ani.modeldev.v1.TrainingStatus
+	(*EnsureTrainingResponse)(nil),             // 110: ani.modeldev.v1.EnsureTrainingResponse
+	(*GetTrainingStatusRequest)(nil),           // 111: ani.modeldev.v1.GetTrainingStatusRequest
+	(*GetTrainingStatusResponse)(nil),          // 112: ani.modeldev.v1.GetTrainingStatusResponse
+	(*PreparedInputCandidate)(nil),             // 113: ani.modeldev.v1.PreparedInputCandidate
+	(*PublishedFileCandidate)(nil),             // 114: ani.modeldev.v1.PublishedFileCandidate
+	(*PublicationCandidate)(nil),               // 115: ani.modeldev.v1.PublicationCandidate
+	(*StepFailure)(nil),                        // 116: ani.modeldev.v1.StepFailure
+	(*ReportStepResultRequest)(nil),            // 117: ani.modeldev.v1.ReportStepResultRequest
+	(*VerifiedPublication)(nil),                // 118: ani.modeldev.v1.VerifiedPublication
+	(*UploadCompletionEvidence)(nil),           // 119: ani.modeldev.v1.UploadCompletionEvidence
+	(*VerifiedPublishedFile)(nil),              // 120: ani.modeldev.v1.VerifiedPublishedFile
+	(*ReportStepResultResponse)(nil),           // 121: ani.modeldev.v1.ReportStepResultResponse
+	(*RequestExecutionCloseRequest)(nil),       // 122: ani.modeldev.v1.RequestExecutionCloseRequest
+	(*RequestExecutionCloseResponse)(nil),      // 123: ani.modeldev.v1.RequestExecutionCloseResponse
+	(*RuntimePackage)(nil),                     // 124: ani.modeldev.v1.RuntimePackage
+	(*RegisteredTemplate)(nil),                 // 125: ani.modeldev.v1.RegisteredTemplate
+	(*ContextLimitField)(nil),                  // 126: ani.modeldev.v1.ContextLimitField
+	(*RuntimeCapabilities)(nil),                // 127: ani.modeldev.v1.RuntimeCapabilities
+	(*FileFact)(nil),                           // 128: ani.modeldev.v1.FileFact
+	(*ContextLimitFact)(nil),                   // 129: ani.modeldev.v1.ContextLimitFact
+	(*WeightLayout)(nil),                       // 130: ani.modeldev.v1.WeightLayout
+	(*TemplateSource)(nil),                     // 131: ani.modeldev.v1.TemplateSource
+	(*NormalizedModelFacts)(nil),               // 132: ani.modeldev.v1.NormalizedModelFacts
+	(*TemplatePlan)(nil),                       // 133: ani.modeldev.v1.TemplatePlan
+	(*StructureLimits)(nil),                    // 134: ani.modeldev.v1.StructureLimits
+	(*CheckFinetuningReadinessRequest)(nil),    // 135: ani.modeldev.v1.CheckFinetuningReadinessRequest
+	(*CheckFinetuningReadinessResponse)(nil),   // 136: ani.modeldev.v1.CheckFinetuningReadinessResponse
+	(*PublicationRef)(nil),                     // 137: ani.modeldev.v1.PublicationRef
+	(*timestamppb.Timestamp)(nil),              // 138: google.protobuf.Timestamp
+	(*v1.ManifestRef)(nil),                     // 139: ani.training.v1.ManifestRef
+	(v1.ExecutionKind)(0),                      // 140: ani.training.v1.ExecutionKind
+	(*v1.Parameter)(nil),                       // 141: ani.training.v1.Parameter
+	(*v1.PreparedDatasetFacts)(nil),            // 142: ani.training.v1.PreparedDatasetFacts
+	(*v1.ExecutionIdentity)(nil),               // 143: ani.training.v1.ExecutionIdentity
+	(*v1.Metric)(nil),                          // 144: ani.training.v1.Metric
+	(*v1.LogRef)(nil),                          // 145: ani.training.v1.LogRef
+	(v1.FileRole)(0),                           // 146: ani.training.v1.FileRole
+	(v1.DeliveryMode)(0),                       // 147: ani.training.v1.DeliveryMode
+	(*v1.InputRef)(nil),                        // 148: ani.training.v1.InputRef
+	(*v1.ProgramRef)(nil),                      // 149: ani.training.v1.ProgramRef
+	(*v1.CPUResources)(nil),                    // 150: ani.training.v1.CPUResources
+	(*v1.WorkspaceContract)(nil),               // 151: ani.training.v1.WorkspaceContract
+	(*v1.OutputContract)(nil),                  // 152: ani.training.v1.OutputContract
+	(*v1.FixedObjectRef)(nil),                  // 153: ani.training.v1.FixedObjectRef
+	(*v1.WorkspaceRef)(nil),                    // 154: ani.training.v1.WorkspaceRef
+	(*v1.FileEntry)(nil),                       // 155: ani.training.v1.FileEntry
+	(*v1.TrainingResult)(nil),                  // 156: ani.training.v1.TrainingResult
 }
 var file_ani_modeldev_v1_modeldev_proto_depIdxs = []int32{
-	92,  // 0: ani.modeldev.v1.BeginFinetuningStepRequest.context:type_name -> ani.modeldev.v1.StepContext
-	123, // 1: ani.modeldev.v1.BeginFinetuningStepResponse.admitted_at:type_name -> google.protobuf.Timestamp
-	123, // 2: ani.modeldev.v1.BeginFinetuningStepResponse.deadline_at:type_name -> google.protobuf.Timestamp
-	92,  // 3: ani.modeldev.v1.ReportFinetuningStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
-	123, // 4: ani.modeldev.v1.ReportFinetuningStepResultRequest.started_at:type_name -> google.protobuf.Timestamp
-	123, // 5: ani.modeldev.v1.ReportFinetuningStepResultRequest.finished_at:type_name -> google.protobuf.Timestamp
-	124, // 6: ani.modeldev.v1.ReportFinetuningStepResultRequest.result_manifest:type_name -> ani.training.v1.ManifestRef
-	28,  // 7: ani.modeldev.v1.ReportFinetuningStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	92,  // 8: ani.modeldev.v1.RegisterModelRequest.context:type_name -> ani.modeldev.v1.StepContext
-	28,  // 9: ani.modeldev.v1.RegisterModelResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	117, // 10: ani.modeldev.v1.RegisterModelResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
+	93,  // 0: ani.modeldev.v1.BeginFinetuningStepRequest.context:type_name -> ani.modeldev.v1.StepContext
+	138, // 1: ani.modeldev.v1.BeginFinetuningStepResponse.admitted_at:type_name -> google.protobuf.Timestamp
+	138, // 2: ani.modeldev.v1.BeginFinetuningStepResponse.deadline_at:type_name -> google.protobuf.Timestamp
+	93,  // 3: ani.modeldev.v1.ReportFinetuningStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
+	138, // 4: ani.modeldev.v1.ReportFinetuningStepResultRequest.started_at:type_name -> google.protobuf.Timestamp
+	138, // 5: ani.modeldev.v1.ReportFinetuningStepResultRequest.finished_at:type_name -> google.protobuf.Timestamp
+	139, // 6: ani.modeldev.v1.ReportFinetuningStepResultRequest.result_manifest:type_name -> ani.training.v1.ManifestRef
+	29,  // 7: ani.modeldev.v1.ReportFinetuningStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	93,  // 8: ani.modeldev.v1.RegisterModelRequest.context:type_name -> ani.modeldev.v1.StepContext
+	29,  // 9: ani.modeldev.v1.RegisterModelResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	118, // 10: ani.modeldev.v1.RegisterModelResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
 	9,   // 11: ani.modeldev.v1.ErrorDetail.reason:type_name -> ani.modeldev.v1.ErrorReason
-	22,  // 12: ani.modeldev.v1.ErrorDetail.violations:type_name -> ani.modeldev.v1.FieldViolation
-	125, // 13: ani.modeldev.v1.UserIntent.kind:type_name -> ani.training.v1.ExecutionKind
-	25,  // 14: ani.modeldev.v1.UserIntent.mlp:type_name -> ani.modeldev.v1.MLPParameters
-	26,  // 15: ani.modeldev.v1.UserIntent.sft_lora:type_name -> ani.modeldev.v1.FinetuningParameters
-	126, // 16: ani.modeldev.v1.ParameterSelection.values:type_name -> ani.training.v1.Parameter
+	23,  // 12: ani.modeldev.v1.ErrorDetail.violations:type_name -> ani.modeldev.v1.FieldViolation
+	140, // 13: ani.modeldev.v1.UserIntent.kind:type_name -> ani.training.v1.ExecutionKind
+	26,  // 14: ani.modeldev.v1.UserIntent.mlp:type_name -> ani.modeldev.v1.MLPParameters
+	27,  // 15: ani.modeldev.v1.UserIntent.sft_lora:type_name -> ani.modeldev.v1.FinetuningParameters
+	141, // 16: ani.modeldev.v1.ParameterSelection.values:type_name -> ani.training.v1.Parameter
 	0,   // 17: ani.modeldev.v1.ExecutionStates.compute_state:type_name -> ani.modeldev.v1.ComputeState
 	1,   // 18: ani.modeldev.v1.ExecutionStates.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
 	2,   // 19: ani.modeldev.v1.ExecutionStates.resource_state:type_name -> ani.modeldev.v1.ResourceState
 	3,   // 20: ani.modeldev.v1.ExecutionStates.close_state:type_name -> ani.modeldev.v1.CloseState
 	8,   // 21: ani.modeldev.v1.ParameterRule.type:type_name -> ani.modeldev.v1.ParameterType
-	126, // 22: ani.modeldev.v1.ParameterRule.default_value:type_name -> ani.training.v1.Parameter
-	126, // 23: ani.modeldev.v1.ParameterRule.allowed_values:type_name -> ani.training.v1.Parameter
-	126, // 24: ani.modeldev.v1.ParameterRule.minimum:type_name -> ani.training.v1.Parameter
-	126, // 25: ani.modeldev.v1.ParameterRule.maximum:type_name -> ani.training.v1.Parameter
-	125, // 26: ani.modeldev.v1.ImplementationView.kind:type_name -> ani.training.v1.ExecutionKind
-	30,  // 27: ani.modeldev.v1.ImplementationView.parameter_rules:type_name -> ani.modeldev.v1.ParameterRule
-	29,  // 28: ani.modeldev.v1.ListImplementationsRequest.page:type_name -> ani.modeldev.v1.PageRequest
-	125, // 29: ani.modeldev.v1.ListImplementationsRequest.kind:type_name -> ani.training.v1.ExecutionKind
-	31,  // 30: ani.modeldev.v1.ListImplementationsResponse.implementations:type_name -> ani.modeldev.v1.ImplementationView
-	5,   // 31: ani.modeldev.v1.InputVersionView.state:type_name -> ani.modeldev.v1.InputState
-	123, // 32: ani.modeldev.v1.InputVersionView.created_at:type_name -> google.protobuf.Timestamp
-	23,  // 33: ani.modeldev.v1.InputVersionView.failure:type_name -> ani.modeldev.v1.ErrorDetail
-	34,  // 34: ani.modeldev.v1.GetInputVersionResponse.input_version:type_name -> ani.modeldev.v1.InputVersionView
-	29,  // 35: ani.modeldev.v1.ListInputVersionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
-	5,   // 36: ani.modeldev.v1.ListInputVersionsRequest.state:type_name -> ani.modeldev.v1.InputState
-	34,  // 37: ani.modeldev.v1.ListInputVersionsResponse.input_versions:type_name -> ani.modeldev.v1.InputVersionView
-	127, // 38: ani.modeldev.v1.ExecutionView.identity:type_name -> ani.training.v1.ExecutionIdentity
-	125, // 39: ani.modeldev.v1.ExecutionView.kind:type_name -> ani.training.v1.ExecutionKind
-	28,  // 40: ani.modeldev.v1.ExecutionView.states:type_name -> ani.modeldev.v1.ExecutionStates
-	6,   // 41: ani.modeldev.v1.ExecutionView.current_step:type_name -> ani.modeldev.v1.PipelineStep
-	123, // 42: ani.modeldev.v1.ExecutionView.accepted_at:type_name -> google.protobuf.Timestamp
-	123, // 43: ani.modeldev.v1.ExecutionView.deadline_at:type_name -> google.protobuf.Timestamp
-	123, // 44: ani.modeldev.v1.ExecutionView.observed_at:type_name -> google.protobuf.Timestamp
-	23,  // 45: ani.modeldev.v1.ExecutionView.failure:type_name -> ani.modeldev.v1.ErrorDetail
-	128, // 46: ani.modeldev.v1.ExecutionView.metrics:type_name -> ani.training.v1.Metric
-	26,  // 47: ani.modeldev.v1.ExecutionView.explicit_finetuning:type_name -> ani.modeldev.v1.FinetuningParameters
-	126, // 48: ani.modeldev.v1.ExecutionView.resolved_parameters:type_name -> ani.training.v1.Parameter
-	73,  // 49: ani.modeldev.v1.ExecutionView.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
-	80,  // 50: ani.modeldev.v1.ExecutionView.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
-	81,  // 51: ani.modeldev.v1.ExecutionView.timing:type_name -> ani.modeldev.v1.ExecutionTiming
-	25,  // 52: ani.modeldev.v1.ExecutionView.explicit_mlp:type_name -> ani.modeldev.v1.MLPParameters
-	43,  // 53: ani.modeldev.v1.ExecutionView.model_registration:type_name -> ani.modeldev.v1.ModelRegistrationView
-	42,  // 54: ani.modeldev.v1.ExecutionView.history:type_name -> ani.modeldev.v1.ExecutionHistoryView
-	41,  // 55: ani.modeldev.v1.ExecutionView.steps:type_name -> ani.modeldev.v1.StepProgress
-	40,  // 56: ani.modeldev.v1.ExecutionView.base_model:type_name -> ani.modeldev.v1.BaseModelIdentity
-	123, // 57: ani.modeldev.v1.StepProgress.started_at:type_name -> google.protobuf.Timestamp
-	123, // 58: ani.modeldev.v1.StepProgress.finished_at:type_name -> google.protobuf.Timestamp
-	123, // 59: ani.modeldev.v1.StepProgress.deadline_at:type_name -> google.protobuf.Timestamp
-	123, // 60: ani.modeldev.v1.ExecutionHistoryView.observed_at:type_name -> google.protobuf.Timestamp
-	10,  // 61: ani.modeldev.v1.ExecutionHistoryView.run_state:type_name -> ani.modeldev.v1.KfpRunTerminalState
-	123, // 62: ani.modeldev.v1.ExecutionHistoryView.run_finished_at:type_name -> google.protobuf.Timestamp
-	11,  // 63: ani.modeldev.v1.ExecutionHistoryView.workflow_phase:type_name -> ani.modeldev.v1.WorkflowTerminalPhase
-	123, // 64: ani.modeldev.v1.ExecutionHistoryView.workflow_finished_at:type_name -> google.protobuf.Timestamp
-	39,  // 65: ani.modeldev.v1.GetExecutionResponse.execution:type_name -> ani.modeldev.v1.ExecutionView
-	29,  // 66: ani.modeldev.v1.ListExecutionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
-	0,   // 67: ani.modeldev.v1.ListExecutionsRequest.compute_state:type_name -> ani.modeldev.v1.ComputeState
-	1,   // 68: ani.modeldev.v1.ListExecutionsRequest.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
-	3,   // 69: ani.modeldev.v1.ListExecutionsRequest.close_state:type_name -> ani.modeldev.v1.CloseState
-	39,  // 70: ani.modeldev.v1.ListExecutionsResponse.executions:type_name -> ani.modeldev.v1.ExecutionView
-	123, // 71: ani.modeldev.v1.LogLine.timestamp:type_name -> google.protobuf.Timestamp
-	129, // 72: ani.modeldev.v1.GetExecutionLogsResponse.source:type_name -> ani.training.v1.LogRef
-	49,  // 73: ani.modeldev.v1.GetExecutionLogsResponse.lines:type_name -> ani.modeldev.v1.LogLine
-	123, // 74: ani.modeldev.v1.GetExecutionLogsResponse.observed_at:type_name -> google.protobuf.Timestamp
-	12,  // 75: ani.modeldev.v1.GetExecutionLogsResponse.source_kind:type_name -> ani.modeldev.v1.LogSourceKind
-	13,  // 76: ani.modeldev.v1.GetExecutionLogStreamResponse.kind:type_name -> ani.modeldev.v1.FrameKind
-	130, // 77: ani.modeldev.v1.ArtifactView.role:type_name -> ani.training.v1.FileRole
-	1,   // 78: ani.modeldev.v1.ArtifactView.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
-	123, // 79: ani.modeldev.v1.ArtifactView.verified_at:type_name -> google.protobuf.Timestamp
-	29,  // 80: ani.modeldev.v1.ListExecutionArtifactsRequest.page:type_name -> ani.modeldev.v1.PageRequest
-	53,  // 81: ani.modeldev.v1.ListExecutionArtifactsResponse.artifacts:type_name -> ani.modeldev.v1.ArtifactView
-	53,  // 82: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.artifact:type_name -> ani.modeldev.v1.ArtifactView
-	123, // 83: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.expires_at:type_name -> google.protobuf.Timestamp
-	123, // 84: ani.modeldev.v1.ContainerView.started_at:type_name -> google.protobuf.Timestamp
-	123, // 85: ani.modeldev.v1.ContainerView.finished_at:type_name -> google.protobuf.Timestamp
-	58,  // 86: ani.modeldev.v1.ContainerView.last_state:type_name -> ani.modeldev.v1.ContainerView
-	123, // 87: ani.modeldev.v1.PodView.created_at:type_name -> google.protobuf.Timestamp
-	123, // 88: ani.modeldev.v1.PodView.start_time:type_name -> google.protobuf.Timestamp
-	123, // 89: ani.modeldev.v1.PodView.deletion_timestamp:type_name -> google.protobuf.Timestamp
-	14,  // 90: ani.modeldev.v1.PodView.layer:type_name -> ani.modeldev.v1.PodLayer
-	15,  // 91: ani.modeldev.v1.PodView.availability:type_name -> ani.modeldev.v1.PodAvailability
-	58,  // 92: ani.modeldev.v1.PodView.containers:type_name -> ani.modeldev.v1.ContainerView
-	58,  // 93: ani.modeldev.v1.PodView.init_containers:type_name -> ani.modeldev.v1.ContainerView
-	58,  // 94: ani.modeldev.v1.PodView.ephemeral_containers:type_name -> ani.modeldev.v1.ContainerView
-	123, // 95: ani.modeldev.v1.EventView.first_timestamp:type_name -> google.protobuf.Timestamp
-	123, // 96: ani.modeldev.v1.EventView.last_timestamp:type_name -> google.protobuf.Timestamp
-	14,  // 97: ani.modeldev.v1.ListExecutionPodsRequest.layer:type_name -> ani.modeldev.v1.PodLayer
-	59,  // 98: ani.modeldev.v1.ListExecutionPodsResponse.pods:type_name -> ani.modeldev.v1.PodView
-	123, // 99: ani.modeldev.v1.ListExecutionPodsResponse.observed_at:type_name -> google.protobuf.Timestamp
-	15,  // 100: ani.modeldev.v1.ListExecutionPodsResponse.availability:type_name -> ani.modeldev.v1.PodAvailability
-	60,  // 101: ani.modeldev.v1.ListExecutionEventsResponse.events:type_name -> ani.modeldev.v1.EventView
-	123, // 102: ani.modeldev.v1.ListExecutionEventsResponse.observed_at:type_name -> google.protobuf.Timestamp
-	65,  // 103: ani.modeldev.v1.EnvironmentBindingSnapshot.identities:type_name -> ani.modeldev.v1.RuntimeIdentityRefs
-	125, // 104: ani.modeldev.v1.ExecutionSnapshot.kind:type_name -> ani.training.v1.ExecutionKind
-	131, // 105: ani.modeldev.v1.ExecutionSnapshot.delivery_mode:type_name -> ani.training.v1.DeliveryMode
-	132, // 106: ani.modeldev.v1.ExecutionSnapshot.input:type_name -> ani.training.v1.InputRef
-	133, // 107: ani.modeldev.v1.ExecutionSnapshot.program:type_name -> ani.training.v1.ProgramRef
-	134, // 108: ani.modeldev.v1.ExecutionSnapshot.resources:type_name -> ani.training.v1.CPUResources
-	66,  // 109: ani.modeldev.v1.ExecutionSnapshot.environment:type_name -> ani.modeldev.v1.EnvironmentBindingSnapshot
-	135, // 110: ani.modeldev.v1.ExecutionSnapshot.workspace:type_name -> ani.training.v1.WorkspaceContract
-	67,  // 111: ani.modeldev.v1.ExecutionSnapshot.publication_scope:type_name -> ani.modeldev.v1.StorageScope
-	136, // 112: ani.modeldev.v1.ExecutionSnapshot.output_contract:type_name -> ani.training.v1.OutputContract
-	123, // 113: ani.modeldev.v1.ExecutionSnapshot.deadline_at:type_name -> google.protobuf.Timestamp
-	77,  // 114: ani.modeldev.v1.ExecutionSnapshot.finetuning:type_name -> ani.modeldev.v1.FinetuningSnapshot
-	79,  // 115: ani.modeldev.v1.ExecutionSnapshot.implementation:type_name -> ani.modeldev.v1.ImplementationSnapshot
-	78,  // 116: ani.modeldev.v1.ExecutionSnapshot.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
-	80,  // 117: ani.modeldev.v1.ExecutionSnapshot.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
-	81,  // 118: ani.modeldev.v1.ExecutionSnapshot.timing:type_name -> ani.modeldev.v1.ExecutionTiming
-	82,  // 119: ani.modeldev.v1.ExecutionSnapshot.runtime_plan:type_name -> ani.modeldev.v1.RuntimePlan
-	72,  // 120: ani.modeldev.v1.ExecutionSnapshot.gpu:type_name -> ani.modeldev.v1.GPUPlan
-	69,  // 121: ani.modeldev.v1.GPUExecutionSnapshot.node_selector:type_name -> ani.modeldev.v1.StringPair
-	69,  // 122: ani.modeldev.v1.GPUExecutionSnapshot.pod_annotations:type_name -> ani.modeldev.v1.StringPair
-	69,  // 123: ani.modeldev.v1.GPUExecutionSnapshot.resources:type_name -> ani.modeldev.v1.StringPair
-	70,  // 124: ani.modeldev.v1.GPUPlan.execution:type_name -> ani.modeldev.v1.GPUExecutionSnapshot
-	71,  // 125: ani.modeldev.v1.GPUPlan.display:type_name -> ani.modeldev.v1.GPUDisplaySnapshot
-	137, // 126: ani.modeldev.v1.BaseModelRef.object:type_name -> ani.training.v1.FixedObjectRef
-	67,  // 127: ani.modeldev.v1.BaseModelRef.scope:type_name -> ani.modeldev.v1.StorageScope
-	74,  // 128: ani.modeldev.v1.BaseModelRef.files:type_name -> ani.modeldev.v1.BaseModelFile
-	75,  // 129: ani.modeldev.v1.FinetuningSnapshot.base_model:type_name -> ani.modeldev.v1.BaseModelRef
-	73,  // 130: ani.modeldev.v1.FinetuningSnapshot.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
-	133, // 131: ani.modeldev.v1.FinetuningSnapshot.export_program:type_name -> ani.training.v1.ProgramRef
-	133, // 132: ani.modeldev.v1.FinetuningSnapshot.verify_program:type_name -> ani.training.v1.ProgramRef
-	76,  // 133: ani.modeldev.v1.FinetuningSnapshot.budgets:type_name -> ani.modeldev.v1.ComponentBudgets
-	123, // 134: ani.modeldev.v1.ExecutionTiming.accepted_at:type_name -> google.protobuf.Timestamp
-	123, // 135: ani.modeldev.v1.ExecutionTiming.execution_deadline_at:type_name -> google.protobuf.Timestamp
-	24,  // 136: ani.modeldev.v1.PrepareAdmissionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
-	78,  // 137: ani.modeldev.v1.PrepareAdmissionRequest.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
-	123, // 138: ani.modeldev.v1.PrepareAdmissionRequest.accepted_at:type_name -> google.protobuf.Timestamp
-	68,  // 139: ani.modeldev.v1.FinalizeAdmissionResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	127, // 140: ani.modeldev.v1.AcceptExecutionRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
-	68,  // 141: ani.modeldev.v1.AcceptExecutionRequest.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	123, // 142: ani.modeldev.v1.AcceptExecutionRequest.accepted_at:type_name -> google.protobuf.Timestamp
-	24,  // 143: ani.modeldev.v1.AcceptExecutionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
-	127, // 144: ani.modeldev.v1.AcceptExecutionResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	28,  // 145: ani.modeldev.v1.AcceptExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	127, // 146: ani.modeldev.v1.ApplyCloseIntentRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
-	4,   // 147: ani.modeldev.v1.ApplyCloseIntentRequest.reason:type_name -> ani.modeldev.v1.CloseReason
-	123, // 148: ani.modeldev.v1.ApplyCloseIntentRequest.requested_at:type_name -> google.protobuf.Timestamp
-	127, // 149: ani.modeldev.v1.ApplyCloseIntentResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	3,   // 150: ani.modeldev.v1.ApplyCloseIntentResponse.close_state:type_name -> ani.modeldev.v1.CloseState
-	127, // 151: ani.modeldev.v1.StepContext.identity:type_name -> ani.training.v1.ExecutionIdentity
-	91,  // 152: ani.modeldev.v1.StepContext.association:type_name -> ani.modeldev.v1.RunAssociation
-	6,   // 153: ani.modeldev.v1.StepContext.step:type_name -> ani.modeldev.v1.PipelineStep
-	123, // 154: ani.modeldev.v1.AuthorityBinding.bound_at:type_name -> google.protobuf.Timestamp
-	92,  // 155: ani.modeldev.v1.BeginExecutionRequest.context:type_name -> ani.modeldev.v1.StepContext
-	93,  // 156: ani.modeldev.v1.BeginExecutionResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
-	28,  // 157: ani.modeldev.v1.BeginExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	96,  // 158: ani.modeldev.v1.BeginExecutionResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	6,   // 159: ani.modeldev.v1.StepTiming.role:type_name -> ani.modeldev.v1.PipelineStep
-	123, // 160: ani.modeldev.v1.StepTiming.admitted_at:type_name -> google.protobuf.Timestamp
-	123, // 161: ani.modeldev.v1.StepTiming.deadline_at:type_name -> google.protobuf.Timestamp
-	92,  // 162: ani.modeldev.v1.BeginManagedStepRequest.context:type_name -> ani.modeldev.v1.StepContext
-	96,  // 163: ani.modeldev.v1.BeginManagedStepResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	92,  // 164: ani.modeldev.v1.GetExecutionConfigurationRequest.context:type_name -> ani.modeldev.v1.StepContext
-	127, // 165: ani.modeldev.v1.GetExecutionConfigurationResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	68,  // 166: ani.modeldev.v1.GetExecutionConfigurationResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	93,  // 167: ani.modeldev.v1.GetExecutionConfigurationResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
-	138, // 168: ani.modeldev.v1.GetExecutionConfigurationResponse.workspace:type_name -> ani.training.v1.WorkspaceRef
-	28,  // 169: ani.modeldev.v1.GetExecutionConfigurationResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	87,  // 170: ani.modeldev.v1.GetExecutionConfigurationResponse.admission:type_name -> ani.modeldev.v1.AcceptExecutionRequest
-	96,  // 171: ani.modeldev.v1.GetExecutionConfigurationResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	92,  // 172: ani.modeldev.v1.GetStorageCredentialsRequest.context:type_name -> ani.modeldev.v1.StepContext
-	123, // 173: ani.modeldev.v1.TemporaryStorageCredentials.expires_at:type_name -> google.protobuf.Timestamp
-	127, // 174: ani.modeldev.v1.GetStorageCredentialsResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	6,   // 175: ani.modeldev.v1.GetStorageCredentialsResponse.step:type_name -> ani.modeldev.v1.PipelineStep
-	102, // 176: ani.modeldev.v1.GetStorageCredentialsResponse.credentials:type_name -> ani.modeldev.v1.TemporaryStorageCredentials
-	92,  // 177: ani.modeldev.v1.EnsureTrainingRequest.context:type_name -> ani.modeldev.v1.StepContext
-	123, // 178: ani.modeldev.v1.ObservedCondition.observed_at:type_name -> google.protobuf.Timestamp
-	105, // 179: ani.modeldev.v1.ResourceObservation.resource:type_name -> ani.modeldev.v1.ResourceRef
-	106, // 180: ani.modeldev.v1.ResourceObservation.conditions:type_name -> ani.modeldev.v1.ObservedCondition
-	123, // 181: ani.modeldev.v1.ResourceObservation.observed_at:type_name -> google.protobuf.Timestamp
-	127, // 182: ani.modeldev.v1.TrainingStatus.identity:type_name -> ani.training.v1.ExecutionIdentity
-	7,   // 183: ani.modeldev.v1.TrainingStatus.create_state:type_name -> ani.modeldev.v1.ExternalCreateState
-	105, // 184: ani.modeldev.v1.TrainingStatus.trainjob:type_name -> ani.modeldev.v1.ResourceRef
-	107, // 185: ani.modeldev.v1.TrainingStatus.resource_history:type_name -> ani.modeldev.v1.ResourceObservation
-	28,  // 186: ani.modeldev.v1.TrainingStatus.states:type_name -> ani.modeldev.v1.ExecutionStates
-	123, // 187: ani.modeldev.v1.TrainingStatus.observed_at:type_name -> google.protobuf.Timestamp
-	123, // 188: ani.modeldev.v1.TrainingStatus.training_admitted_at:type_name -> google.protobuf.Timestamp
-	123, // 189: ani.modeldev.v1.TrainingStatus.training_deadline_at:type_name -> google.protobuf.Timestamp
-	108, // 190: ani.modeldev.v1.EnsureTrainingResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
-	92,  // 191: ani.modeldev.v1.GetTrainingStatusRequest.context:type_name -> ani.modeldev.v1.StepContext
-	108, // 192: ani.modeldev.v1.GetTrainingStatusResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
-	138, // 193: ani.modeldev.v1.PreparedInputCandidate.workspace:type_name -> ani.training.v1.WorkspaceRef
-	124, // 194: ani.modeldev.v1.PreparedInputCandidate.prepared_manifest:type_name -> ani.training.v1.ManifestRef
-	132, // 195: ani.modeldev.v1.PreparedInputCandidate.input:type_name -> ani.training.v1.InputRef
-	139, // 196: ani.modeldev.v1.PublishedFileCandidate.file:type_name -> ani.training.v1.FileEntry
-	137, // 197: ani.modeldev.v1.PublishedFileCandidate.object:type_name -> ani.training.v1.FixedObjectRef
-	113, // 198: ani.modeldev.v1.PublicationCandidate.files:type_name -> ani.modeldev.v1.PublishedFileCandidate
-	137, // 199: ani.modeldev.v1.PublicationCandidate.manifest_object:type_name -> ani.training.v1.FixedObjectRef
-	137, // 200: ani.modeldev.v1.PublicationCandidate.bundle_object:type_name -> ani.training.v1.FixedObjectRef
-	23,  // 201: ani.modeldev.v1.StepFailure.failure:type_name -> ani.modeldev.v1.ErrorDetail
-	129, // 202: ani.modeldev.v1.StepFailure.logs:type_name -> ani.training.v1.LogRef
-	92,  // 203: ani.modeldev.v1.ReportStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
-	112, // 204: ani.modeldev.v1.ReportStepResultRequest.prepared:type_name -> ani.modeldev.v1.PreparedInputCandidate
-	140, // 205: ani.modeldev.v1.ReportStepResultRequest.training_result:type_name -> ani.training.v1.TrainingResult
-	114, // 206: ani.modeldev.v1.ReportStepResultRequest.publication:type_name -> ani.modeldev.v1.PublicationCandidate
-	115, // 207: ani.modeldev.v1.ReportStepResultRequest.failure:type_name -> ani.modeldev.v1.StepFailure
-	127, // 208: ani.modeldev.v1.VerifiedPublication.identity:type_name -> ani.training.v1.ExecutionIdentity
-	119, // 209: ani.modeldev.v1.VerifiedPublication.files:type_name -> ani.modeldev.v1.VerifiedPublishedFile
-	137, // 210: ani.modeldev.v1.VerifiedPublication.manifest_object:type_name -> ani.training.v1.FixedObjectRef
-	137, // 211: ani.modeldev.v1.VerifiedPublication.bundle_object:type_name -> ani.training.v1.FixedObjectRef
-	123, // 212: ani.modeldev.v1.VerifiedPublication.remote_verified_at:type_name -> google.protobuf.Timestamp
-	118, // 213: ani.modeldev.v1.VerifiedPublication.upload_completion:type_name -> ani.modeldev.v1.UploadCompletionEvidence
-	123, // 214: ani.modeldev.v1.UploadCompletionEvidence.completed_at:type_name -> google.protobuf.Timestamp
-	123, // 215: ani.modeldev.v1.UploadCompletionEvidence.observed_at:type_name -> google.protobuf.Timestamp
-	139, // 216: ani.modeldev.v1.VerifiedPublishedFile.file:type_name -> ani.training.v1.FileEntry
-	137, // 217: ani.modeldev.v1.VerifiedPublishedFile.object:type_name -> ani.training.v1.FixedObjectRef
-	123, // 218: ani.modeldev.v1.VerifiedPublishedFile.remote_verified_at:type_name -> google.protobuf.Timestamp
-	28,  // 219: ani.modeldev.v1.ReportStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	117, // 220: ani.modeldev.v1.ReportStepResultResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
-	92,  // 221: ani.modeldev.v1.RequestExecutionCloseRequest.context:type_name -> ani.modeldev.v1.StepContext
-	4,   // 222: ani.modeldev.v1.RequestExecutionCloseRequest.reason:type_name -> ani.modeldev.v1.CloseReason
-	3,   // 223: ani.modeldev.v1.RequestExecutionCloseResponse.close_state:type_name -> ani.modeldev.v1.CloseState
-	123, // 224: ani.modeldev.v1.RequestExecutionCloseResponse.accepted_at:type_name -> google.protobuf.Timestamp
-	32,  // 225: ani.modeldev.v1.ModelDevQueryService.ListImplementations:input_type -> ani.modeldev.v1.ListImplementationsRequest
-	35,  // 226: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:input_type -> ani.modeldev.v1.GetInputVersionRequest
-	37,  // 227: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:input_type -> ani.modeldev.v1.ListInputVersionsRequest
-	44,  // 228: ani.modeldev.v1.ModelDevQueryService.GetExecution:input_type -> ani.modeldev.v1.GetExecutionRequest
-	46,  // 229: ani.modeldev.v1.ModelDevQueryService.ListExecutions:input_type -> ani.modeldev.v1.ListExecutionsRequest
-	48,  // 230: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:input_type -> ani.modeldev.v1.GetExecutionLogsRequest
-	51,  // 231: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogStream:input_type -> ani.modeldev.v1.GetExecutionLogStreamRequest
-	54,  // 232: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:input_type -> ani.modeldev.v1.ListExecutionArtifactsRequest
-	56,  // 233: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:input_type -> ani.modeldev.v1.AuthorizeArtifactDownloadRequest
-	61,  // 234: ani.modeldev.v1.ModelDevQueryService.ListExecutionPods:input_type -> ani.modeldev.v1.ListExecutionPodsRequest
-	63,  // 235: ani.modeldev.v1.ModelDevQueryService.ListExecutionEvents:input_type -> ani.modeldev.v1.ListExecutionEventsRequest
-	83,  // 236: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:input_type -> ani.modeldev.v1.PrepareAdmissionRequest
-	85,  // 237: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:input_type -> ani.modeldev.v1.FinalizeAdmissionRequest
-	87,  // 238: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:input_type -> ani.modeldev.v1.AcceptExecutionRequest
-	89,  // 239: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:input_type -> ani.modeldev.v1.ApplyCloseIntentRequest
-	94,  // 240: ani.modeldev.v1.ModelDevStepService.BeginExecution:input_type -> ani.modeldev.v1.BeginExecutionRequest
-	97,  // 241: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:input_type -> ani.modeldev.v1.BeginManagedStepRequest
-	99,  // 242: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:input_type -> ani.modeldev.v1.GetExecutionConfigurationRequest
-	101, // 243: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:input_type -> ani.modeldev.v1.GetStorageCredentialsRequest
-	104, // 244: ani.modeldev.v1.ModelDevStepService.EnsureTraining:input_type -> ani.modeldev.v1.EnsureTrainingRequest
-	110, // 245: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:input_type -> ani.modeldev.v1.GetTrainingStatusRequest
-	116, // 246: ani.modeldev.v1.ModelDevStepService.ReportStepResult:input_type -> ani.modeldev.v1.ReportStepResultRequest
-	121, // 247: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:input_type -> ani.modeldev.v1.RequestExecutionCloseRequest
-	16,  // 248: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:input_type -> ani.modeldev.v1.BeginFinetuningStepRequest
-	18,  // 249: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:input_type -> ani.modeldev.v1.ReportFinetuningStepResultRequest
-	20,  // 250: ani.modeldev.v1.ModelDevStepService.RegisterModel:input_type -> ani.modeldev.v1.RegisterModelRequest
-	33,  // 251: ani.modeldev.v1.ModelDevQueryService.ListImplementations:output_type -> ani.modeldev.v1.ListImplementationsResponse
-	36,  // 252: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:output_type -> ani.modeldev.v1.GetInputVersionResponse
-	38,  // 253: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:output_type -> ani.modeldev.v1.ListInputVersionsResponse
-	45,  // 254: ani.modeldev.v1.ModelDevQueryService.GetExecution:output_type -> ani.modeldev.v1.GetExecutionResponse
-	47,  // 255: ani.modeldev.v1.ModelDevQueryService.ListExecutions:output_type -> ani.modeldev.v1.ListExecutionsResponse
-	50,  // 256: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:output_type -> ani.modeldev.v1.GetExecutionLogsResponse
-	52,  // 257: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogStream:output_type -> ani.modeldev.v1.GetExecutionLogStreamResponse
-	55,  // 258: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:output_type -> ani.modeldev.v1.ListExecutionArtifactsResponse
-	57,  // 259: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:output_type -> ani.modeldev.v1.AuthorizeArtifactDownloadResponse
-	62,  // 260: ani.modeldev.v1.ModelDevQueryService.ListExecutionPods:output_type -> ani.modeldev.v1.ListExecutionPodsResponse
-	64,  // 261: ani.modeldev.v1.ModelDevQueryService.ListExecutionEvents:output_type -> ani.modeldev.v1.ListExecutionEventsResponse
-	84,  // 262: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:output_type -> ani.modeldev.v1.PrepareAdmissionResponse
-	86,  // 263: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:output_type -> ani.modeldev.v1.FinalizeAdmissionResponse
-	88,  // 264: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:output_type -> ani.modeldev.v1.AcceptExecutionResponse
-	90,  // 265: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:output_type -> ani.modeldev.v1.ApplyCloseIntentResponse
-	95,  // 266: ani.modeldev.v1.ModelDevStepService.BeginExecution:output_type -> ani.modeldev.v1.BeginExecutionResponse
-	98,  // 267: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:output_type -> ani.modeldev.v1.BeginManagedStepResponse
-	100, // 268: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:output_type -> ani.modeldev.v1.GetExecutionConfigurationResponse
-	103, // 269: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:output_type -> ani.modeldev.v1.GetStorageCredentialsResponse
-	109, // 270: ani.modeldev.v1.ModelDevStepService.EnsureTraining:output_type -> ani.modeldev.v1.EnsureTrainingResponse
-	111, // 271: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:output_type -> ani.modeldev.v1.GetTrainingStatusResponse
-	120, // 272: ani.modeldev.v1.ModelDevStepService.ReportStepResult:output_type -> ani.modeldev.v1.ReportStepResultResponse
-	122, // 273: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:output_type -> ani.modeldev.v1.RequestExecutionCloseResponse
-	17,  // 274: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:output_type -> ani.modeldev.v1.BeginFinetuningStepResponse
-	19,  // 275: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:output_type -> ani.modeldev.v1.ReportFinetuningStepResultResponse
-	21,  // 276: ani.modeldev.v1.ModelDevStepService.RegisterModel:output_type -> ani.modeldev.v1.RegisterModelResponse
-	251, // [251:277] is the sub-list for method output_type
-	225, // [225:251] is the sub-list for method input_type
-	225, // [225:225] is the sub-list for extension type_name
-	225, // [225:225] is the sub-list for extension extendee
-	0,   // [0:225] is the sub-list for field type_name
+	141, // 22: ani.modeldev.v1.ParameterRule.default_value:type_name -> ani.training.v1.Parameter
+	141, // 23: ani.modeldev.v1.ParameterRule.allowed_values:type_name -> ani.training.v1.Parameter
+	141, // 24: ani.modeldev.v1.ParameterRule.minimum:type_name -> ani.training.v1.Parameter
+	141, // 25: ani.modeldev.v1.ParameterRule.maximum:type_name -> ani.training.v1.Parameter
+	140, // 26: ani.modeldev.v1.ImplementationView.kind:type_name -> ani.training.v1.ExecutionKind
+	31,  // 27: ani.modeldev.v1.ImplementationView.parameter_rules:type_name -> ani.modeldev.v1.ParameterRule
+	127, // 28: ani.modeldev.v1.ImplementationView.runtime_capabilities:type_name -> ani.modeldev.v1.RuntimeCapabilities
+	30,  // 29: ani.modeldev.v1.ListImplementationsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	140, // 30: ani.modeldev.v1.ListImplementationsRequest.kind:type_name -> ani.training.v1.ExecutionKind
+	32,  // 31: ani.modeldev.v1.ListImplementationsResponse.implementations:type_name -> ani.modeldev.v1.ImplementationView
+	5,   // 32: ani.modeldev.v1.InputVersionView.state:type_name -> ani.modeldev.v1.InputState
+	138, // 33: ani.modeldev.v1.InputVersionView.created_at:type_name -> google.protobuf.Timestamp
+	24,  // 34: ani.modeldev.v1.InputVersionView.failure:type_name -> ani.modeldev.v1.ErrorDetail
+	142, // 35: ani.modeldev.v1.InputVersionView.prepared_dataset:type_name -> ani.training.v1.PreparedDatasetFacts
+	35,  // 36: ani.modeldev.v1.GetInputVersionResponse.input_version:type_name -> ani.modeldev.v1.InputVersionView
+	30,  // 37: ani.modeldev.v1.ListInputVersionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	5,   // 38: ani.modeldev.v1.ListInputVersionsRequest.state:type_name -> ani.modeldev.v1.InputState
+	35,  // 39: ani.modeldev.v1.ListInputVersionsResponse.input_versions:type_name -> ani.modeldev.v1.InputVersionView
+	143, // 40: ani.modeldev.v1.ExecutionView.identity:type_name -> ani.training.v1.ExecutionIdentity
+	140, // 41: ani.modeldev.v1.ExecutionView.kind:type_name -> ani.training.v1.ExecutionKind
+	29,  // 42: ani.modeldev.v1.ExecutionView.states:type_name -> ani.modeldev.v1.ExecutionStates
+	6,   // 43: ani.modeldev.v1.ExecutionView.current_step:type_name -> ani.modeldev.v1.PipelineStep
+	138, // 44: ani.modeldev.v1.ExecutionView.accepted_at:type_name -> google.protobuf.Timestamp
+	138, // 45: ani.modeldev.v1.ExecutionView.deadline_at:type_name -> google.protobuf.Timestamp
+	138, // 46: ani.modeldev.v1.ExecutionView.observed_at:type_name -> google.protobuf.Timestamp
+	24,  // 47: ani.modeldev.v1.ExecutionView.failure:type_name -> ani.modeldev.v1.ErrorDetail
+	144, // 48: ani.modeldev.v1.ExecutionView.metrics:type_name -> ani.training.v1.Metric
+	27,  // 49: ani.modeldev.v1.ExecutionView.explicit_finetuning:type_name -> ani.modeldev.v1.FinetuningParameters
+	141, // 50: ani.modeldev.v1.ExecutionView.resolved_parameters:type_name -> ani.training.v1.Parameter
+	75,  // 51: ani.modeldev.v1.ExecutionView.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
+	81,  // 52: ani.modeldev.v1.ExecutionView.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
+	82,  // 53: ani.modeldev.v1.ExecutionView.timing:type_name -> ani.modeldev.v1.ExecutionTiming
+	26,  // 54: ani.modeldev.v1.ExecutionView.explicit_mlp:type_name -> ani.modeldev.v1.MLPParameters
+	44,  // 55: ani.modeldev.v1.ExecutionView.model_registration:type_name -> ani.modeldev.v1.ModelRegistrationView
+	43,  // 56: ani.modeldev.v1.ExecutionView.history:type_name -> ani.modeldev.v1.ExecutionHistoryView
+	42,  // 57: ani.modeldev.v1.ExecutionView.steps:type_name -> ani.modeldev.v1.StepProgress
+	41,  // 58: ani.modeldev.v1.ExecutionView.base_model:type_name -> ani.modeldev.v1.BaseModelIdentity
+	138, // 59: ani.modeldev.v1.StepProgress.started_at:type_name -> google.protobuf.Timestamp
+	138, // 60: ani.modeldev.v1.StepProgress.finished_at:type_name -> google.protobuf.Timestamp
+	138, // 61: ani.modeldev.v1.StepProgress.deadline_at:type_name -> google.protobuf.Timestamp
+	138, // 62: ani.modeldev.v1.ExecutionHistoryView.observed_at:type_name -> google.protobuf.Timestamp
+	10,  // 63: ani.modeldev.v1.ExecutionHistoryView.run_state:type_name -> ani.modeldev.v1.KfpRunTerminalState
+	138, // 64: ani.modeldev.v1.ExecutionHistoryView.run_finished_at:type_name -> google.protobuf.Timestamp
+	11,  // 65: ani.modeldev.v1.ExecutionHistoryView.workflow_phase:type_name -> ani.modeldev.v1.WorkflowTerminalPhase
+	138, // 66: ani.modeldev.v1.ExecutionHistoryView.workflow_finished_at:type_name -> google.protobuf.Timestamp
+	40,  // 67: ani.modeldev.v1.GetExecutionResponse.execution:type_name -> ani.modeldev.v1.ExecutionView
+	30,  // 68: ani.modeldev.v1.ListExecutionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	0,   // 69: ani.modeldev.v1.ListExecutionsRequest.compute_state:type_name -> ani.modeldev.v1.ComputeState
+	1,   // 70: ani.modeldev.v1.ListExecutionsRequest.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
+	3,   // 71: ani.modeldev.v1.ListExecutionsRequest.close_state:type_name -> ani.modeldev.v1.CloseState
+	40,  // 72: ani.modeldev.v1.ListExecutionsResponse.executions:type_name -> ani.modeldev.v1.ExecutionView
+	138, // 73: ani.modeldev.v1.LogLine.timestamp:type_name -> google.protobuf.Timestamp
+	145, // 74: ani.modeldev.v1.GetExecutionLogsResponse.source:type_name -> ani.training.v1.LogRef
+	50,  // 75: ani.modeldev.v1.GetExecutionLogsResponse.lines:type_name -> ani.modeldev.v1.LogLine
+	138, // 76: ani.modeldev.v1.GetExecutionLogsResponse.observed_at:type_name -> google.protobuf.Timestamp
+	12,  // 77: ani.modeldev.v1.GetExecutionLogsResponse.source_kind:type_name -> ani.modeldev.v1.LogSourceKind
+	13,  // 78: ani.modeldev.v1.GetExecutionLogStreamResponse.kind:type_name -> ani.modeldev.v1.FrameKind
+	146, // 79: ani.modeldev.v1.ArtifactView.role:type_name -> ani.training.v1.FileRole
+	1,   // 80: ani.modeldev.v1.ArtifactView.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
+	138, // 81: ani.modeldev.v1.ArtifactView.verified_at:type_name -> google.protobuf.Timestamp
+	30,  // 82: ani.modeldev.v1.ListExecutionArtifactsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	54,  // 83: ani.modeldev.v1.ListExecutionArtifactsResponse.artifacts:type_name -> ani.modeldev.v1.ArtifactView
+	54,  // 84: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.artifact:type_name -> ani.modeldev.v1.ArtifactView
+	138, // 85: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.expires_at:type_name -> google.protobuf.Timestamp
+	138, // 86: ani.modeldev.v1.ContainerView.started_at:type_name -> google.protobuf.Timestamp
+	138, // 87: ani.modeldev.v1.ContainerView.finished_at:type_name -> google.protobuf.Timestamp
+	59,  // 88: ani.modeldev.v1.ContainerView.last_state:type_name -> ani.modeldev.v1.ContainerView
+	138, // 89: ani.modeldev.v1.PodView.created_at:type_name -> google.protobuf.Timestamp
+	138, // 90: ani.modeldev.v1.PodView.start_time:type_name -> google.protobuf.Timestamp
+	138, // 91: ani.modeldev.v1.PodView.deletion_timestamp:type_name -> google.protobuf.Timestamp
+	14,  // 92: ani.modeldev.v1.PodView.layer:type_name -> ani.modeldev.v1.PodLayer
+	15,  // 93: ani.modeldev.v1.PodView.availability:type_name -> ani.modeldev.v1.PodAvailability
+	59,  // 94: ani.modeldev.v1.PodView.containers:type_name -> ani.modeldev.v1.ContainerView
+	59,  // 95: ani.modeldev.v1.PodView.init_containers:type_name -> ani.modeldev.v1.ContainerView
+	59,  // 96: ani.modeldev.v1.PodView.ephemeral_containers:type_name -> ani.modeldev.v1.ContainerView
+	138, // 97: ani.modeldev.v1.EventView.first_timestamp:type_name -> google.protobuf.Timestamp
+	138, // 98: ani.modeldev.v1.EventView.last_timestamp:type_name -> google.protobuf.Timestamp
+	14,  // 99: ani.modeldev.v1.ListExecutionPodsRequest.layer:type_name -> ani.modeldev.v1.PodLayer
+	60,  // 100: ani.modeldev.v1.ListExecutionPodsResponse.pods:type_name -> ani.modeldev.v1.PodView
+	138, // 101: ani.modeldev.v1.ListExecutionPodsResponse.observed_at:type_name -> google.protobuf.Timestamp
+	15,  // 102: ani.modeldev.v1.ListExecutionPodsResponse.availability:type_name -> ani.modeldev.v1.PodAvailability
+	61,  // 103: ani.modeldev.v1.ListExecutionEventsResponse.events:type_name -> ani.modeldev.v1.EventView
+	138, // 104: ani.modeldev.v1.ListExecutionEventsResponse.observed_at:type_name -> google.protobuf.Timestamp
+	66,  // 105: ani.modeldev.v1.EnvironmentBindingSnapshot.identities:type_name -> ani.modeldev.v1.RuntimeIdentityRefs
+	140, // 106: ani.modeldev.v1.ExecutionSnapshot.kind:type_name -> ani.training.v1.ExecutionKind
+	147, // 107: ani.modeldev.v1.ExecutionSnapshot.delivery_mode:type_name -> ani.training.v1.DeliveryMode
+	148, // 108: ani.modeldev.v1.ExecutionSnapshot.input:type_name -> ani.training.v1.InputRef
+	149, // 109: ani.modeldev.v1.ExecutionSnapshot.program:type_name -> ani.training.v1.ProgramRef
+	150, // 110: ani.modeldev.v1.ExecutionSnapshot.resources:type_name -> ani.training.v1.CPUResources
+	67,  // 111: ani.modeldev.v1.ExecutionSnapshot.environment:type_name -> ani.modeldev.v1.EnvironmentBindingSnapshot
+	151, // 112: ani.modeldev.v1.ExecutionSnapshot.workspace:type_name -> ani.training.v1.WorkspaceContract
+	68,  // 113: ani.modeldev.v1.ExecutionSnapshot.publication_scope:type_name -> ani.modeldev.v1.StorageScope
+	152, // 114: ani.modeldev.v1.ExecutionSnapshot.output_contract:type_name -> ani.training.v1.OutputContract
+	138, // 115: ani.modeldev.v1.ExecutionSnapshot.deadline_at:type_name -> google.protobuf.Timestamp
+	78,  // 116: ani.modeldev.v1.ExecutionSnapshot.finetuning:type_name -> ani.modeldev.v1.FinetuningSnapshot
+	80,  // 117: ani.modeldev.v1.ExecutionSnapshot.implementation:type_name -> ani.modeldev.v1.ImplementationSnapshot
+	79,  // 118: ani.modeldev.v1.ExecutionSnapshot.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
+	81,  // 119: ani.modeldev.v1.ExecutionSnapshot.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
+	82,  // 120: ani.modeldev.v1.ExecutionSnapshot.timing:type_name -> ani.modeldev.v1.ExecutionTiming
+	83,  // 121: ani.modeldev.v1.ExecutionSnapshot.runtime_plan:type_name -> ani.modeldev.v1.RuntimePlan
+	74,  // 122: ani.modeldev.v1.ExecutionSnapshot.gpu:type_name -> ani.modeldev.v1.GPUPlan
+	70,  // 123: ani.modeldev.v1.ExecutionSnapshot.limits:type_name -> ani.modeldev.v1.ContentLimits
+	71,  // 124: ani.modeldev.v1.GPUExecutionSnapshot.node_selector:type_name -> ani.modeldev.v1.StringPair
+	71,  // 125: ani.modeldev.v1.GPUExecutionSnapshot.pod_annotations:type_name -> ani.modeldev.v1.StringPair
+	71,  // 126: ani.modeldev.v1.GPUExecutionSnapshot.resources:type_name -> ani.modeldev.v1.StringPair
+	72,  // 127: ani.modeldev.v1.GPUPlan.execution:type_name -> ani.modeldev.v1.GPUExecutionSnapshot
+	73,  // 128: ani.modeldev.v1.GPUPlan.display:type_name -> ani.modeldev.v1.GPUDisplaySnapshot
+	153, // 129: ani.modeldev.v1.BaseModelRef.object:type_name -> ani.training.v1.FixedObjectRef
+	68,  // 130: ani.modeldev.v1.BaseModelRef.scope:type_name -> ani.modeldev.v1.StorageScope
+	76,  // 131: ani.modeldev.v1.BaseModelRef.files:type_name -> ani.modeldev.v1.BaseModelFile
+	132, // 132: ani.modeldev.v1.BaseModelRef.facts:type_name -> ani.modeldev.v1.NormalizedModelFacts
+	77,  // 133: ani.modeldev.v1.FinetuningSnapshot.base_model:type_name -> ani.modeldev.v1.BaseModelRef
+	75,  // 134: ani.modeldev.v1.FinetuningSnapshot.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
+	149, // 135: ani.modeldev.v1.FinetuningSnapshot.export_program:type_name -> ani.training.v1.ProgramRef
+	149, // 136: ani.modeldev.v1.FinetuningSnapshot.verify_program:type_name -> ani.training.v1.ProgramRef
+	127, // 137: ani.modeldev.v1.FinetuningSnapshot.runtime_capabilities:type_name -> ani.modeldev.v1.RuntimeCapabilities
+	133, // 138: ani.modeldev.v1.FinetuningSnapshot.template_plan:type_name -> ani.modeldev.v1.TemplatePlan
+	138, // 139: ani.modeldev.v1.ExecutionTiming.accepted_at:type_name -> google.protobuf.Timestamp
+	138, // 140: ani.modeldev.v1.ExecutionTiming.execution_deadline_at:type_name -> google.protobuf.Timestamp
+	25,  // 141: ani.modeldev.v1.PrepareAdmissionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
+	79,  // 142: ani.modeldev.v1.PrepareAdmissionRequest.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
+	138, // 143: ani.modeldev.v1.PrepareAdmissionRequest.accepted_at:type_name -> google.protobuf.Timestamp
+	69,  // 144: ani.modeldev.v1.FinalizeAdmissionResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	143, // 145: ani.modeldev.v1.AcceptExecutionRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
+	69,  // 146: ani.modeldev.v1.AcceptExecutionRequest.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	138, // 147: ani.modeldev.v1.AcceptExecutionRequest.accepted_at:type_name -> google.protobuf.Timestamp
+	25,  // 148: ani.modeldev.v1.AcceptExecutionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
+	143, // 149: ani.modeldev.v1.AcceptExecutionResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	29,  // 150: ani.modeldev.v1.AcceptExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	143, // 151: ani.modeldev.v1.ApplyCloseIntentRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
+	4,   // 152: ani.modeldev.v1.ApplyCloseIntentRequest.reason:type_name -> ani.modeldev.v1.CloseReason
+	138, // 153: ani.modeldev.v1.ApplyCloseIntentRequest.requested_at:type_name -> google.protobuf.Timestamp
+	143, // 154: ani.modeldev.v1.ApplyCloseIntentResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	3,   // 155: ani.modeldev.v1.ApplyCloseIntentResponse.close_state:type_name -> ani.modeldev.v1.CloseState
+	143, // 156: ani.modeldev.v1.StepContext.identity:type_name -> ani.training.v1.ExecutionIdentity
+	92,  // 157: ani.modeldev.v1.StepContext.association:type_name -> ani.modeldev.v1.RunAssociation
+	6,   // 158: ani.modeldev.v1.StepContext.step:type_name -> ani.modeldev.v1.PipelineStep
+	138, // 159: ani.modeldev.v1.AuthorityBinding.bound_at:type_name -> google.protobuf.Timestamp
+	93,  // 160: ani.modeldev.v1.BeginExecutionRequest.context:type_name -> ani.modeldev.v1.StepContext
+	94,  // 161: ani.modeldev.v1.BeginExecutionResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
+	29,  // 162: ani.modeldev.v1.BeginExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	97,  // 163: ani.modeldev.v1.BeginExecutionResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	6,   // 164: ani.modeldev.v1.StepTiming.role:type_name -> ani.modeldev.v1.PipelineStep
+	138, // 165: ani.modeldev.v1.StepTiming.admitted_at:type_name -> google.protobuf.Timestamp
+	138, // 166: ani.modeldev.v1.StepTiming.deadline_at:type_name -> google.protobuf.Timestamp
+	93,  // 167: ani.modeldev.v1.BeginManagedStepRequest.context:type_name -> ani.modeldev.v1.StepContext
+	97,  // 168: ani.modeldev.v1.BeginManagedStepResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	93,  // 169: ani.modeldev.v1.GetExecutionConfigurationRequest.context:type_name -> ani.modeldev.v1.StepContext
+	143, // 170: ani.modeldev.v1.GetExecutionConfigurationResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	69,  // 171: ani.modeldev.v1.GetExecutionConfigurationResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	94,  // 172: ani.modeldev.v1.GetExecutionConfigurationResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
+	154, // 173: ani.modeldev.v1.GetExecutionConfigurationResponse.workspace:type_name -> ani.training.v1.WorkspaceRef
+	29,  // 174: ani.modeldev.v1.GetExecutionConfigurationResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	88,  // 175: ani.modeldev.v1.GetExecutionConfigurationResponse.admission:type_name -> ani.modeldev.v1.AcceptExecutionRequest
+	97,  // 176: ani.modeldev.v1.GetExecutionConfigurationResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	93,  // 177: ani.modeldev.v1.GetStorageCredentialsRequest.context:type_name -> ani.modeldev.v1.StepContext
+	138, // 178: ani.modeldev.v1.TemporaryStorageCredentials.expires_at:type_name -> google.protobuf.Timestamp
+	143, // 179: ani.modeldev.v1.GetStorageCredentialsResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	6,   // 180: ani.modeldev.v1.GetStorageCredentialsResponse.step:type_name -> ani.modeldev.v1.PipelineStep
+	103, // 181: ani.modeldev.v1.GetStorageCredentialsResponse.credentials:type_name -> ani.modeldev.v1.TemporaryStorageCredentials
+	93,  // 182: ani.modeldev.v1.EnsureTrainingRequest.context:type_name -> ani.modeldev.v1.StepContext
+	138, // 183: ani.modeldev.v1.ObservedCondition.observed_at:type_name -> google.protobuf.Timestamp
+	106, // 184: ani.modeldev.v1.ResourceObservation.resource:type_name -> ani.modeldev.v1.ResourceRef
+	107, // 185: ani.modeldev.v1.ResourceObservation.conditions:type_name -> ani.modeldev.v1.ObservedCondition
+	138, // 186: ani.modeldev.v1.ResourceObservation.observed_at:type_name -> google.protobuf.Timestamp
+	143, // 187: ani.modeldev.v1.TrainingStatus.identity:type_name -> ani.training.v1.ExecutionIdentity
+	7,   // 188: ani.modeldev.v1.TrainingStatus.create_state:type_name -> ani.modeldev.v1.ExternalCreateState
+	106, // 189: ani.modeldev.v1.TrainingStatus.trainjob:type_name -> ani.modeldev.v1.ResourceRef
+	108, // 190: ani.modeldev.v1.TrainingStatus.resource_history:type_name -> ani.modeldev.v1.ResourceObservation
+	29,  // 191: ani.modeldev.v1.TrainingStatus.states:type_name -> ani.modeldev.v1.ExecutionStates
+	138, // 192: ani.modeldev.v1.TrainingStatus.observed_at:type_name -> google.protobuf.Timestamp
+	138, // 193: ani.modeldev.v1.TrainingStatus.training_admitted_at:type_name -> google.protobuf.Timestamp
+	138, // 194: ani.modeldev.v1.TrainingStatus.training_deadline_at:type_name -> google.protobuf.Timestamp
+	109, // 195: ani.modeldev.v1.EnsureTrainingResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
+	93,  // 196: ani.modeldev.v1.GetTrainingStatusRequest.context:type_name -> ani.modeldev.v1.StepContext
+	109, // 197: ani.modeldev.v1.GetTrainingStatusResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
+	154, // 198: ani.modeldev.v1.PreparedInputCandidate.workspace:type_name -> ani.training.v1.WorkspaceRef
+	139, // 199: ani.modeldev.v1.PreparedInputCandidate.prepared_manifest:type_name -> ani.training.v1.ManifestRef
+	148, // 200: ani.modeldev.v1.PreparedInputCandidate.input:type_name -> ani.training.v1.InputRef
+	155, // 201: ani.modeldev.v1.PublishedFileCandidate.file:type_name -> ani.training.v1.FileEntry
+	153, // 202: ani.modeldev.v1.PublishedFileCandidate.object:type_name -> ani.training.v1.FixedObjectRef
+	114, // 203: ani.modeldev.v1.PublicationCandidate.files:type_name -> ani.modeldev.v1.PublishedFileCandidate
+	153, // 204: ani.modeldev.v1.PublicationCandidate.manifest_object:type_name -> ani.training.v1.FixedObjectRef
+	153, // 205: ani.modeldev.v1.PublicationCandidate.bundle_object:type_name -> ani.training.v1.FixedObjectRef
+	24,  // 206: ani.modeldev.v1.StepFailure.failure:type_name -> ani.modeldev.v1.ErrorDetail
+	145, // 207: ani.modeldev.v1.StepFailure.logs:type_name -> ani.training.v1.LogRef
+	93,  // 208: ani.modeldev.v1.ReportStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
+	113, // 209: ani.modeldev.v1.ReportStepResultRequest.prepared:type_name -> ani.modeldev.v1.PreparedInputCandidate
+	156, // 210: ani.modeldev.v1.ReportStepResultRequest.training_result:type_name -> ani.training.v1.TrainingResult
+	115, // 211: ani.modeldev.v1.ReportStepResultRequest.publication:type_name -> ani.modeldev.v1.PublicationCandidate
+	116, // 212: ani.modeldev.v1.ReportStepResultRequest.failure:type_name -> ani.modeldev.v1.StepFailure
+	143, // 213: ani.modeldev.v1.VerifiedPublication.identity:type_name -> ani.training.v1.ExecutionIdentity
+	120, // 214: ani.modeldev.v1.VerifiedPublication.files:type_name -> ani.modeldev.v1.VerifiedPublishedFile
+	153, // 215: ani.modeldev.v1.VerifiedPublication.manifest_object:type_name -> ani.training.v1.FixedObjectRef
+	153, // 216: ani.modeldev.v1.VerifiedPublication.bundle_object:type_name -> ani.training.v1.FixedObjectRef
+	138, // 217: ani.modeldev.v1.VerifiedPublication.remote_verified_at:type_name -> google.protobuf.Timestamp
+	119, // 218: ani.modeldev.v1.VerifiedPublication.upload_completion:type_name -> ani.modeldev.v1.UploadCompletionEvidence
+	138, // 219: ani.modeldev.v1.UploadCompletionEvidence.completed_at:type_name -> google.protobuf.Timestamp
+	138, // 220: ani.modeldev.v1.UploadCompletionEvidence.observed_at:type_name -> google.protobuf.Timestamp
+	155, // 221: ani.modeldev.v1.VerifiedPublishedFile.file:type_name -> ani.training.v1.FileEntry
+	153, // 222: ani.modeldev.v1.VerifiedPublishedFile.object:type_name -> ani.training.v1.FixedObjectRef
+	138, // 223: ani.modeldev.v1.VerifiedPublishedFile.remote_verified_at:type_name -> google.protobuf.Timestamp
+	29,  // 224: ani.modeldev.v1.ReportStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	118, // 225: ani.modeldev.v1.ReportStepResultResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
+	93,  // 226: ani.modeldev.v1.RequestExecutionCloseRequest.context:type_name -> ani.modeldev.v1.StepContext
+	4,   // 227: ani.modeldev.v1.RequestExecutionCloseRequest.reason:type_name -> ani.modeldev.v1.CloseReason
+	3,   // 228: ani.modeldev.v1.RequestExecutionCloseResponse.close_state:type_name -> ani.modeldev.v1.CloseState
+	138, // 229: ani.modeldev.v1.RequestExecutionCloseResponse.accepted_at:type_name -> google.protobuf.Timestamp
+	124, // 230: ani.modeldev.v1.RuntimeCapabilities.packages:type_name -> ani.modeldev.v1.RuntimePackage
+	125, // 231: ani.modeldev.v1.RuntimeCapabilities.registered_templates:type_name -> ani.modeldev.v1.RegisteredTemplate
+	126, // 232: ani.modeldev.v1.RuntimeCapabilities.context_limit_fields:type_name -> ani.modeldev.v1.ContextLimitField
+	129, // 233: ani.modeldev.v1.NormalizedModelFacts.context_sources:type_name -> ani.modeldev.v1.ContextLimitFact
+	128, // 234: ani.modeldev.v1.NormalizedModelFacts.config_file:type_name -> ani.modeldev.v1.FileFact
+	128, // 235: ani.modeldev.v1.NormalizedModelFacts.tokenizer_config_file:type_name -> ani.modeldev.v1.FileFact
+	130, // 236: ani.modeldev.v1.NormalizedModelFacts.weight_layout:type_name -> ani.modeldev.v1.WeightLayout
+	131, // 237: ani.modeldev.v1.NormalizedModelFacts.template_sources:type_name -> ani.modeldev.v1.TemplateSource
+	131, // 238: ani.modeldev.v1.TemplatePlan.source:type_name -> ani.modeldev.v1.TemplateSource
+	81,  // 239: ani.modeldev.v1.CheckFinetuningReadinessRequest.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
+	16,  // 240: ani.modeldev.v1.CheckFinetuningReadinessResponse.assessment:type_name -> ani.modeldev.v1.FinetuningAssessment
+	9,   // 241: ani.modeldev.v1.CheckFinetuningReadinessResponse.reason:type_name -> ani.modeldev.v1.ErrorReason
+	125, // 242: ani.modeldev.v1.CheckFinetuningReadinessResponse.template_candidates:type_name -> ani.modeldev.v1.RegisteredTemplate
+	127, // 243: ani.modeldev.v1.CheckFinetuningReadinessResponse.runtime_capabilities:type_name -> ani.modeldev.v1.RuntimeCapabilities
+	70,  // 244: ani.modeldev.v1.CheckFinetuningReadinessResponse.limits:type_name -> ani.modeldev.v1.ContentLimits
+	134, // 245: ani.modeldev.v1.CheckFinetuningReadinessResponse.structure_limits:type_name -> ani.modeldev.v1.StructureLimits
+	133, // 246: ani.modeldev.v1.CheckFinetuningReadinessResponse.template_plan:type_name -> ani.modeldev.v1.TemplatePlan
+	33,  // 247: ani.modeldev.v1.ModelDevQueryService.ListImplementations:input_type -> ani.modeldev.v1.ListImplementationsRequest
+	135, // 248: ani.modeldev.v1.ModelDevQueryService.CheckFinetuningReadiness:input_type -> ani.modeldev.v1.CheckFinetuningReadinessRequest
+	36,  // 249: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:input_type -> ani.modeldev.v1.GetInputVersionRequest
+	38,  // 250: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:input_type -> ani.modeldev.v1.ListInputVersionsRequest
+	45,  // 251: ani.modeldev.v1.ModelDevQueryService.GetExecution:input_type -> ani.modeldev.v1.GetExecutionRequest
+	47,  // 252: ani.modeldev.v1.ModelDevQueryService.ListExecutions:input_type -> ani.modeldev.v1.ListExecutionsRequest
+	49,  // 253: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:input_type -> ani.modeldev.v1.GetExecutionLogsRequest
+	52,  // 254: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogStream:input_type -> ani.modeldev.v1.GetExecutionLogStreamRequest
+	55,  // 255: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:input_type -> ani.modeldev.v1.ListExecutionArtifactsRequest
+	57,  // 256: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:input_type -> ani.modeldev.v1.AuthorizeArtifactDownloadRequest
+	62,  // 257: ani.modeldev.v1.ModelDevQueryService.ListExecutionPods:input_type -> ani.modeldev.v1.ListExecutionPodsRequest
+	64,  // 258: ani.modeldev.v1.ModelDevQueryService.ListExecutionEvents:input_type -> ani.modeldev.v1.ListExecutionEventsRequest
+	84,  // 259: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:input_type -> ani.modeldev.v1.PrepareAdmissionRequest
+	86,  // 260: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:input_type -> ani.modeldev.v1.FinalizeAdmissionRequest
+	88,  // 261: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:input_type -> ani.modeldev.v1.AcceptExecutionRequest
+	90,  // 262: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:input_type -> ani.modeldev.v1.ApplyCloseIntentRequest
+	95,  // 263: ani.modeldev.v1.ModelDevStepService.BeginExecution:input_type -> ani.modeldev.v1.BeginExecutionRequest
+	98,  // 264: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:input_type -> ani.modeldev.v1.BeginManagedStepRequest
+	100, // 265: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:input_type -> ani.modeldev.v1.GetExecutionConfigurationRequest
+	102, // 266: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:input_type -> ani.modeldev.v1.GetStorageCredentialsRequest
+	105, // 267: ani.modeldev.v1.ModelDevStepService.EnsureTraining:input_type -> ani.modeldev.v1.EnsureTrainingRequest
+	111, // 268: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:input_type -> ani.modeldev.v1.GetTrainingStatusRequest
+	117, // 269: ani.modeldev.v1.ModelDevStepService.ReportStepResult:input_type -> ani.modeldev.v1.ReportStepResultRequest
+	122, // 270: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:input_type -> ani.modeldev.v1.RequestExecutionCloseRequest
+	17,  // 271: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:input_type -> ani.modeldev.v1.BeginFinetuningStepRequest
+	19,  // 272: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:input_type -> ani.modeldev.v1.ReportFinetuningStepResultRequest
+	21,  // 273: ani.modeldev.v1.ModelDevStepService.RegisterModel:input_type -> ani.modeldev.v1.RegisterModelRequest
+	34,  // 274: ani.modeldev.v1.ModelDevQueryService.ListImplementations:output_type -> ani.modeldev.v1.ListImplementationsResponse
+	136, // 275: ani.modeldev.v1.ModelDevQueryService.CheckFinetuningReadiness:output_type -> ani.modeldev.v1.CheckFinetuningReadinessResponse
+	37,  // 276: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:output_type -> ani.modeldev.v1.GetInputVersionResponse
+	39,  // 277: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:output_type -> ani.modeldev.v1.ListInputVersionsResponse
+	46,  // 278: ani.modeldev.v1.ModelDevQueryService.GetExecution:output_type -> ani.modeldev.v1.GetExecutionResponse
+	48,  // 279: ani.modeldev.v1.ModelDevQueryService.ListExecutions:output_type -> ani.modeldev.v1.ListExecutionsResponse
+	51,  // 280: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:output_type -> ani.modeldev.v1.GetExecutionLogsResponse
+	53,  // 281: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogStream:output_type -> ani.modeldev.v1.GetExecutionLogStreamResponse
+	56,  // 282: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:output_type -> ani.modeldev.v1.ListExecutionArtifactsResponse
+	58,  // 283: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:output_type -> ani.modeldev.v1.AuthorizeArtifactDownloadResponse
+	63,  // 284: ani.modeldev.v1.ModelDevQueryService.ListExecutionPods:output_type -> ani.modeldev.v1.ListExecutionPodsResponse
+	65,  // 285: ani.modeldev.v1.ModelDevQueryService.ListExecutionEvents:output_type -> ani.modeldev.v1.ListExecutionEventsResponse
+	85,  // 286: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:output_type -> ani.modeldev.v1.PrepareAdmissionResponse
+	87,  // 287: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:output_type -> ani.modeldev.v1.FinalizeAdmissionResponse
+	89,  // 288: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:output_type -> ani.modeldev.v1.AcceptExecutionResponse
+	91,  // 289: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:output_type -> ani.modeldev.v1.ApplyCloseIntentResponse
+	96,  // 290: ani.modeldev.v1.ModelDevStepService.BeginExecution:output_type -> ani.modeldev.v1.BeginExecutionResponse
+	99,  // 291: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:output_type -> ani.modeldev.v1.BeginManagedStepResponse
+	101, // 292: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:output_type -> ani.modeldev.v1.GetExecutionConfigurationResponse
+	104, // 293: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:output_type -> ani.modeldev.v1.GetStorageCredentialsResponse
+	110, // 294: ani.modeldev.v1.ModelDevStepService.EnsureTraining:output_type -> ani.modeldev.v1.EnsureTrainingResponse
+	112, // 295: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:output_type -> ani.modeldev.v1.GetTrainingStatusResponse
+	121, // 296: ani.modeldev.v1.ModelDevStepService.ReportStepResult:output_type -> ani.modeldev.v1.ReportStepResultResponse
+	123, // 297: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:output_type -> ani.modeldev.v1.RequestExecutionCloseResponse
+	18,  // 298: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:output_type -> ani.modeldev.v1.BeginFinetuningStepResponse
+	20,  // 299: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:output_type -> ani.modeldev.v1.ReportFinetuningStepResultResponse
+	22,  // 300: ani.modeldev.v1.ModelDevStepService.RegisterModel:output_type -> ani.modeldev.v1.RegisterModelResponse
+	274, // [274:301] is the sub-list for method output_type
+	247, // [247:274] is the sub-list for method input_type
+	247, // [247:247] is the sub-list for extension type_name
+	247, // [247:247] is the sub-list for extension extendee
+	0,   // [0:247] is the sub-list for field type_name
 }
 
 func init() { file_ani_modeldev_v1_modeldev_proto_init() }
@@ -10917,6 +12466,7 @@ func file_ani_modeldev_v1_modeldev_proto_init() {
 	if File_ani_modeldev_v1_modeldev_proto != nil {
 		return
 	}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[7].OneofWrappers = []any{}
 	file_ani_modeldev_v1_modeldev_proto_msgTypes[8].OneofWrappers = []any{
 		(*UserIntent_Mlp)(nil),
 		(*UserIntent_SftLora)(nil),
@@ -10946,13 +12496,15 @@ func file_ani_modeldev_v1_modeldev_proto_init() {
 		(*ReportStepResultRequest_Publication)(nil),
 		(*ReportStepResultRequest_Failure)(nil),
 	}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[116].OneofWrappers = []any{}
+	file_ani_modeldev_v1_modeldev_proto_msgTypes[118].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ani_modeldev_v1_modeldev_proto_rawDesc), len(file_ani_modeldev_v1_modeldev_proto_rawDesc)),
-			NumEnums:      16,
-			NumMessages:   107,
+			NumEnums:      17,
+			NumMessages:   121,
 			NumExtensions: 0,
 			NumServices:   4,
 		},

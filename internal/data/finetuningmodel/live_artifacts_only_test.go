@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	modelv1 "github.com/zhangzhe-ctrl/ani-model-service/api/model/v1"
+	modelv1 "github.com/liangzai006/ani-model-service/api/model/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
@@ -28,7 +28,7 @@ func TestLiveModelReaderArtifactsOnlyKeepsVerifiedBaseWithoutTarget(t *testing.T
 				remote.response.Target = nil
 			}
 			boundary := &artifactsOnlyModelBoundary{liveModelBoundary: remote}
-			reader, err := NewLive(boundary, scope)
+			reader, err := NewLive(boundary, scope, modelTestLimits)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -44,5 +44,19 @@ func TestLiveModelReaderArtifactsOnlyKeepsVerifiedBaseWithoutTarget(t *testing.T
 				t.Fatal("base-only request fabricated a write target or skipped Model verification")
 			}
 		})
+	}
+}
+
+func TestLiveSourceFactsReadinessNeedsNoFabricatedTrainingIntent(t *testing.T) {
+	remote, scope, intent, material := liveModelFixture(t)
+	remote.response.Target = nil
+	boundary := &artifactsOnlyModelBoundary{liveModelBoundary: remote}
+	reader, err := NewLive(boundary, scope, modelTestLimits)
+	if err != nil {
+		t.Fatal(err)
+	}
+	base, err := reader.ResolveFinetuningSourceFacts(context.Background(), remote.response.TenantId, *intent.BaseModelVersionID, material)
+	if err != nil || base.VersionID != *intent.BaseModelVersionID || boundary.targetObserved || remote.calls != 1 {
+		t.Fatalf("source-only readiness facts: %+v %v", base, err)
 	}
 }

@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	modelv1 "github.com/zhangzhe-ctrl/ani-model-service/api/model/v1"
+	modelv1 "github.com/liangzai006/ani-model-service/api/model/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -47,7 +47,7 @@ func modelClientTestSetup(t *testing.T, mutate func(*x509.Certificate)) (Config,
 	if os.WriteFile(certFile, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certificate.Certificate[0]}), 0600) != nil || os.WriteFile(keyFile, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: key}), 0600) != nil {
 		t.Fatal("synthetic certificate write failed")
 	}
-	return Config{Endpoint: "127.0.0.1:19090", CAFile: files.CAFile, ClientDNSName: ClientDNSName, CertificateFile: certFile, PrivateKeyFile: keyFile, ServerName: "ani-model.ani.internal", Actor: "modeldev:service", Timeout: time.Hour}, certs
+	return Config{Endpoint: "127.0.0.1:19090", CAFile: files.CAFile, ClientDNSName: ClientDNSName, CertificateFile: certFile, PrivateKeyFile: keyFile, ServerName: "ani-model.ani.internal", Actor: "modeldev:service", Timeout: time.Hour, ResolutionTimeout: 300 * time.Second}, certs
 }
 
 type modelPrepareTLSBoundary struct {
@@ -124,6 +124,7 @@ func TestModelClientRejectsUnregisteredOrBorrowedIdentityAndUnboundedTimeout(t *
 		change func(*Config)
 		cert   func(*x509.Certificate)
 	}{
+		{"missing resolution budget", func(c *Config) { c.ResolutionTimeout = 0 }, nil},
 		{"over24h", func(c *Config) { c.Timeout = 24*time.Hour + time.Second }, nil},
 		{"old client alias", func(c *Config) { c.ClientDNSName = "ani-modeldev.ani.internal" }, nil},
 		{"borrowed actor", func(c *Config) { c.Actor = "governance:user:42" }, nil},

@@ -58,7 +58,7 @@ func preparedRuntimeV21(t *testing.T, stepSeconds uint64) (func() *pgxpool.Pool,
 	if _, _, err := repository.ReserveManagedStep(ctx, authority, binding); err != nil {
 		t.Fatal("prepare window", err)
 	}
-	workspace := biz.WorkspaceBinding{Mode: s.Workspace.Mode, NamespaceName: s.Environment.NamespaceName, NamespaceUID: s.Environment.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(a.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: s.Workspace.InputSubpath, TrainingSubpath: s.Workspace.TrainingSubpath, ReportsSubpath: s.Workspace.ReportsSubpath, PublicationSubpath: s.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: s.Workspace.Mode, NamespaceName: s.Environment.NamespaceName, NamespaceUID: s.Environment.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(a.ExecutionID), PVCUID: "dddddddd-eeee-4fff-8111-222222222222", InputSubpath: s.Workspace.InputSubpath, TrainingSubpath: s.Workspace.TrainingSubpath, ReportsSubpath: s.Workspace.ReportsSubpath, PublicationSubpath: s.Workspace.PublicationSubpath, WorkSubpath: s.Workspace.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 	if _, _, err := repository.RecordPrepared(ctx, authority, workspace); err != nil {
 		t.Fatal("prepared", err)
 	}

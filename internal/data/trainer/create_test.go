@@ -497,7 +497,7 @@ func newTrainingFixture(t *testing.T) *trainingFixture {
 	accepted := time.Now().UTC().Truncate(time.Microsecond)
 	seed.DeadlineAt = accepted.Add(time.Hour)
 	admission := admissionfixture.Bind(t, biz.Admission{TenantID: "11111111-1111-4111-8111-111111111111", OperationID: "33333333-3333-4333-8333-333333333333", ExecutionID: "22222222-2222-4222-8222-222222222222", Actor: "governance:user:trainer-fixture", Intent: conformance.IntentV1(), Snapshot: seed, AcceptedAt: accepted})
-	workspace := biz.WorkspaceBinding{Mode: seed.Workspace.Mode, NamespaceName: "cpu-execution", NamespaceUID: trainingNamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: workspaceUID, InputSubpath: seed.Workspace.InputSubpath, TrainingSubpath: seed.Workspace.TrainingSubpath, ReportsSubpath: seed.Workspace.ReportsSubpath, PublicationSubpath: seed.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: seed.Workspace.Mode, NamespaceName: "cpu-execution", NamespaceUID: trainingNamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: workspaceUID, InputSubpath: seed.Workspace.InputSubpath, TrainingSubpath: seed.Workspace.TrainingSubpath, ReportsSubpath: seed.Workspace.ReportsSubpath, PublicationSubpath: seed.Workspace.PublicationSubpath, WorkSubpath: seed.Workspace.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 	_ = unstructured.SetNestedField(f.pvc, workspace.PVCName, "metadata", "name")
 	plan, err := biz.FreezeTrainingPlan(biz.Execution{Admission: admission}, workspace, accepted)
 	if err != nil {

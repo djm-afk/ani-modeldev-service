@@ -29,13 +29,13 @@ func EncodeParameters(parameters []cpup01.Parameter) ([]*trainingv1.Parameter, e
 
 func EncodeManagedSettings(value cpup01.FinetuningManagedSettings) *modeldevv1.FinetuningManagedSettings {
 	return &modeldevv1.FinetuningManagedSettings{
-		Stage: value.Stage, FinetuningType: value.FinetuningType, LoraTarget: value.LoraTarget, LoraRank: value.LoraRank, LoraAlpha: value.LoraAlpha, CutoffLen: value.CutoffLen, PerDeviceTrainBatchSize: value.PerDeviceTrainBatchSize, GradientAccumulationSteps: value.GradientAccumulationSteps, Seed: value.Seed, DataSeed: value.DataSeed, Device: value.Device, Fp16: value.FP16, Bf16: value.BF16, FlashAttn: value.FlashAttn, ReportTo: value.ReportTo, SaveStrategy: value.SaveStrategy, Template: value.Template, TrainDtype: value.TrainDtype, ExportDtype: value.ExportDtype, VerifyDtype: value.VerifyDtype, LrSchedulerType: value.LRSchedulerType, WarmupRatio: value.WarmupRatio, WeightDecay: value.WeightDecay, LoraDropout: value.LoraDropout, NumTrainEpochs: value.NumTrainEpochs, Optim: value.Optim, LoggingSteps: value.LoggingSteps,
+		Stage: value.Stage, FinetuningType: value.FinetuningType, LoraTarget: value.LoraTarget, LoraRank: value.LoraRank, LoraAlpha: value.LoraAlpha, CutoffLen: value.CutoffLen, PerDeviceTrainBatchSize: value.PerDeviceTrainBatchSize, GradientAccumulationSteps: value.GradientAccumulationSteps, Seed: value.Seed, DataSeed: value.DataSeed, Device: value.Device, Fp16: value.FP16, Bf16: value.BF16, FlashAttn: value.FlashAttn, ReportTo: value.ReportTo, SaveStrategy: value.SaveStrategy, TrainDtype: value.TrainDtype, ExportDtype: value.ExportDtype, VerifyDtype: value.VerifyDtype, LrSchedulerType: value.LRSchedulerType, WarmupRatio: value.WarmupRatio, WeightDecay: value.WeightDecay, LoraDropout: value.LoraDropout, NumTrainEpochs: value.NumTrainEpochs, Optim: value.Optim, LoggingSteps: value.LoggingSteps,
 	}
 }
 
 func decodeManagedSettings(value *modeldevv1.FinetuningManagedSettings) cpup01.FinetuningManagedSettings {
 	return cpup01.FinetuningManagedSettings{
-		Stage: value.Stage, FinetuningType: value.FinetuningType, LoraTarget: value.LoraTarget, LoraRank: value.LoraRank, LoraAlpha: value.LoraAlpha, CutoffLen: value.CutoffLen, PerDeviceTrainBatchSize: value.PerDeviceTrainBatchSize, GradientAccumulationSteps: value.GradientAccumulationSteps, Seed: value.Seed, DataSeed: value.DataSeed, Device: value.Device, FP16: value.Fp16, BF16: value.Bf16, FlashAttn: value.FlashAttn, ReportTo: value.ReportTo, SaveStrategy: value.SaveStrategy, Template: value.Template, TrainDtype: value.TrainDtype, ExportDtype: value.ExportDtype, VerifyDtype: value.VerifyDtype, LRSchedulerType: value.LrSchedulerType, WarmupRatio: value.WarmupRatio, WeightDecay: value.WeightDecay, LoraDropout: value.LoraDropout, NumTrainEpochs: value.NumTrainEpochs, Optim: value.Optim, LoggingSteps: value.LoggingSteps,
+		Stage: value.Stage, FinetuningType: value.FinetuningType, LoraTarget: value.LoraTarget, LoraRank: value.LoraRank, LoraAlpha: value.LoraAlpha, CutoffLen: value.CutoffLen, PerDeviceTrainBatchSize: value.PerDeviceTrainBatchSize, GradientAccumulationSteps: value.GradientAccumulationSteps, Seed: value.Seed, DataSeed: value.DataSeed, Device: value.Device, FP16: value.Fp16, BF16: value.Bf16, FlashAttn: value.FlashAttn, ReportTo: value.ReportTo, SaveStrategy: value.SaveStrategy, TrainDtype: value.TrainDtype, ExportDtype: value.ExportDtype, VerifyDtype: value.VerifyDtype, LRSchedulerType: value.LrSchedulerType, WarmupRatio: value.WarmupRatio, WeightDecay: value.WeightDecay, LoraDropout: value.LoraDropout, NumTrainEpochs: value.NumTrainEpochs, Optim: value.Optim, LoggingSteps: value.LoggingSteps,
 	}
 }
 
@@ -73,7 +73,7 @@ func decodeFixedObject(message *trainingv1.FixedObjectRef) (cpup01.FixedObjectRe
 
 func encodeProgram(value cpup01.ProgramRef) *trainingv1.ProgramRef {
 	parameters, _ := encodeParameters(value.ResolvedParameters)
-	return &trainingv1.ProgramRef{ImageVersionId: value.ImageVersionID, ImageDigest: value.ImageDigest, Command: cloneStrings(value.Command), ResolvedArgs: cloneStrings(value.ResolvedArgs), ResolvedParameters: parameters}
+	return &trainingv1.ProgramRef{ImageId: value.ImageID, ImageVersion: value.ImageVersion, ImageScope: string(value.ImageScope), ImageDigest: value.ImageDigest, Command: cloneStrings(value.Command), ResolvedArgs: cloneStrings(value.ResolvedArgs), ResolvedParameters: parameters}
 }
 
 func decodeProgram(value *trainingv1.ProgramRef) (cpup01.ProgramRef, error) {
@@ -84,7 +84,7 @@ func decodeProgram(value *trainingv1.ProgramRef) (cpup01.ProgramRef, error) {
 	if err != nil {
 		return cpup01.ProgramRef{}, err
 	}
-	return cpup01.ProgramRef{ImageVersionID: value.ImageVersionId, ImageDigest: value.ImageDigest, Command: cloneStrings(value.Command), ResolvedArgs: cloneStrings(value.ResolvedArgs), ResolvedParameters: parameters}, nil
+	return cpup01.ProgramRef{ImageID: value.ImageId, ImageVersion: value.ImageVersion, ImageScope: cpup01.ImageScope(value.ImageScope), ImageDigest: value.ImageDigest, Command: cloneStrings(value.Command), ResolvedArgs: cloneStrings(value.ResolvedArgs), ResolvedParameters: parameters}, nil
 }
 
 func encodeFinetuningSnapshot(value cpup01.FinetuningSnapshot) *modeldevv1.FinetuningSnapshot {
@@ -92,15 +92,21 @@ func encodeFinetuningSnapshot(value cpup01.FinetuningSnapshot) *modeldevv1.Finet
 	for _, file := range value.BaseModel.Files {
 		files = append(files, &modeldevv1.BaseModelFile{Path: file.Path, SizeBytes: file.SizeBytes, Sha256: file.SHA256})
 	}
+	facts := new(modeldevv1.NormalizedModelFacts)
+	capabilities := new(modeldevv1.RuntimeCapabilities)
+	plan := new(modeldevv1.TemplatePlan)
+	if encodeCurrent(value.BaseModel.Facts, facts) != nil || encodeCurrent(value.RuntimeCapabilities, capabilities) != nil || encodeCurrent(value.TemplatePlan, plan) != nil {
+		return nil
+	}
 	return &modeldevv1.FinetuningSnapshot{
-		ParameterContractVersion: value.ParameterContractVersion, BaseModel: &modeldevv1.BaseModelRef{ModelId: value.BaseModel.ModelID, VersionId: value.BaseModel.VersionID, Family: value.BaseModel.Family, Format: value.BaseModel.Format, Object: encodeFixedObject(value.BaseModel.Object), Scope: &modeldevv1.StorageScope{StorageConnectionId: value.BaseModel.Scope.StorageConnectionID, Bucket: value.BaseModel.Scope.Bucket, ApprovedPrefix: value.BaseModel.Scope.ApprovedPrefix, CredentialReference: value.BaseModel.Scope.CredentialReference}, Files: files},
+		ParameterContractVersion: value.ParameterContractVersion, BaseModel: &modeldevv1.BaseModelRef{ModelId: value.BaseModel.ModelID, VersionId: value.BaseModel.VersionID, Format: value.BaseModel.Format, Object: encodeFixedObject(value.BaseModel.Object), Scope: &modeldevv1.StorageScope{StorageConnectionId: value.BaseModel.Scope.StorageConnectionID, Bucket: value.BaseModel.Scope.Bucket, ApprovedPrefix: value.BaseModel.Scope.ApprovedPrefix, CredentialReference: value.BaseModel.Scope.CredentialReference}, Files: files, Facts: facts},
 		TargetModelId: cloneString(value.TargetModelID), NewModelName: cloneString(value.NewModelName), ManagedSettings: EncodeManagedSettings(value.ManagedSettings), ResolvedConfigurationSha256: value.ResolvedConfigurationSHA256, ExportProgram: encodeProgram(value.ExportProgram), VerifyProgram: encodeProgram(value.VerifyProgram), RecipeSha256: value.RecipeSHA256, MappingSha256: value.MappingSHA256,
-		Budgets: &modeldevv1.ComponentBudgets{RpcTimeoutSeconds: value.Budgets.RPCTimeoutSeconds, MaxBaseModelBytes: value.Budgets.MaxBaseModelBytes, MaxBaseModelExpandedBytes: value.Budgets.MaxBaseModelExpandedBytes, MaxSpoolBytes: value.Budgets.MaxSpoolBytes},
+		RuntimeCapabilities: capabilities, TemplatePlan: plan,
 	}
 }
 
 func decodeFinetuningSnapshot(message *modeldevv1.FinetuningSnapshot) (cpup01.FinetuningSnapshot, error) {
-	if message.BaseModel == nil || message.BaseModel.Scope == nil || message.ManagedSettings == nil || message.Budgets == nil {
+	if message.BaseModel == nil || message.BaseModel.Scope == nil || message.ManagedSettings == nil || message.BaseModel.Facts == nil || message.RuntimeCapabilities == nil || message.TemplatePlan == nil {
 		return cpup01.FinetuningSnapshot{}, invalid("missing finetuning snapshot fields")
 	}
 	object, err := decodeFixedObject(message.BaseModel.Object)
@@ -122,9 +128,15 @@ func decodeFinetuningSnapshot(message *modeldevv1.FinetuningSnapshot) (cpup01.Fi
 		}
 		files = append(files, cpup01.BaseModelFile{Path: file.Path, SizeBytes: file.SizeBytes, SHA256: file.Sha256})
 	}
+	var facts cpup01.NormalizedModelFacts
+	var capabilities cpup01.RuntimeCapabilities
+	var plan cpup01.TemplatePlan
+	if decodeCurrent(message.BaseModel.Facts, &facts) != nil || decodeCurrent(message.RuntimeCapabilities, &capabilities) != nil || decodeCurrent(message.TemplatePlan, &plan) != nil {
+		return cpup01.FinetuningSnapshot{}, invalid("current frozen model facts")
+	}
 	return cpup01.FinetuningSnapshot{
-		ParameterContractVersion: message.ParameterContractVersion, BaseModel: cpup01.BaseModelRef{ModelID: message.BaseModel.ModelId, VersionID: message.BaseModel.VersionId, Family: message.BaseModel.Family, Format: message.BaseModel.Format, Object: object, Scope: cpup01.StorageScope{StorageConnectionID: message.BaseModel.Scope.StorageConnectionId, Bucket: message.BaseModel.Scope.Bucket, ApprovedPrefix: message.BaseModel.Scope.ApprovedPrefix, CredentialReference: message.BaseModel.Scope.CredentialReference}, Files: files},
+		ParameterContractVersion: message.ParameterContractVersion, BaseModel: cpup01.BaseModelRef{ModelID: message.BaseModel.ModelId, VersionID: message.BaseModel.VersionId, Format: message.BaseModel.Format, Object: object, Scope: cpup01.StorageScope{StorageConnectionID: message.BaseModel.Scope.StorageConnectionId, Bucket: message.BaseModel.Scope.Bucket, ApprovedPrefix: message.BaseModel.Scope.ApprovedPrefix, CredentialReference: message.BaseModel.Scope.CredentialReference}, Files: files, Facts: facts},
 		TargetModelID: cloneString(message.TargetModelId), NewModelName: cloneString(message.NewModelName), ManagedSettings: decodeManagedSettings(message.ManagedSettings), ResolvedConfigurationSHA256: message.ResolvedConfigurationSha256, ExportProgram: export, VerifyProgram: verify, RecipeSHA256: message.RecipeSha256, MappingSHA256: message.MappingSha256,
-		Budgets: cpup01.ComponentBudgets{RPCTimeoutSeconds: message.Budgets.RpcTimeoutSeconds, MaxBaseModelBytes: message.Budgets.MaxBaseModelBytes, MaxBaseModelExpandedBytes: message.Budgets.MaxBaseModelExpandedBytes, MaxSpoolBytes: message.Budgets.MaxSpoolBytes},
+		RuntimeCapabilities: capabilities, TemplatePlan: plan,
 	}, nil
 }

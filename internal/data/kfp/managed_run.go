@@ -26,8 +26,8 @@ type ManagedTaskReference struct {
 }
 
 // ManagedTask is an observation from KFP's frozen Run, not a callback claim.
-// PodName retains the raw top-level API field for legacy fixtures; neither it
-// nor ChildTasks proves a real Pod identity without the actual Workflow graph.
+// PodName is populated only by native Workflow/Pod resolution; the raw KFP
+// top-level legacy field is never accepted as an identity.
 type ManagedTask struct {
 	RunID, ID, Name, PodName, State string
 	ChildTasks                      []ManagedTaskReference
@@ -39,33 +39,6 @@ type ManagedRun struct {
 	State      string
 	FinishedAt time.Time
 	Tasks      []ManagedTask
-}
-
-// VerifyManagedRun retains the legacy direct-name fixture contract.
-// Deprecated: production workload verification must resolve the raw KFP node
-// references through the actual Workflow and verify the resulting current Pod.
-func (client *Client) VerifyManagedRun(ctx context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation, taskName string) error {
-	if len(validation.IsDNS1123Subdomain(association.PodName)) != 0 || taskName == "" {
-		return ErrManagedRunUnverified
-	}
-	tasks, err := client.GetManagedTasks(ctx, plan, association.RunID)
-	if err != nil {
-		return err
-	}
-	matches := 0
-	for _, task := range tasks {
-		if task.PodName != association.PodName {
-			continue
-		}
-		if task.RunID != association.RunID || task.Name != taskName {
-			return ErrManagedRunUnverified
-		}
-		matches++
-	}
-	if matches != 1 {
-		return ErrManagedRunUnverified
-	}
-	return nil
 }
 
 // GetManagedTasks always reads the actual authenticated GetRun endpoint and
@@ -154,8 +127,11 @@ func (client *Client) GetManagedRun(ctx context.Context, plan biz.PipelineDispat
 		if !ok {
 			return ManagedRun{}, ErrManagedRunUnverified
 		}
+		if _, retired := task["pod_name"]; retired {
+			return ManagedRun{}, ErrManagedRunUnverified
+		}
 		observed := ManagedTask{}
-		for key, target := range map[string]*string{"run_id": &observed.RunID, "task_id": &observed.ID, "display_name": &observed.Name, "pod_name": &observed.PodName, "state": &observed.State} {
+		for key, target := range map[string]*string{"run_id": &observed.RunID, "task_id": &observed.ID, "display_name": &observed.Name, "state": &observed.State} {
 			if value, present := task[key]; present {
 				text, ok := value.(string)
 				if !ok {
@@ -168,9 +144,6 @@ func (client *Client) GetManagedRun(ctx context.Context, plan biz.PipelineDispat
 			return ManagedRun{}, ErrManagedRunUnverified
 		}
 		seenTasks[observed.ID] = true
-		if observed.PodName != "" && len(validation.IsDNS1123Subdomain(observed.PodName)) != 0 {
-			return ManagedRun{}, ErrManagedRunUnverified
-		}
 		if value, present := task["child_tasks"]; present {
 			children, ok := value.([]any)
 			if !ok {

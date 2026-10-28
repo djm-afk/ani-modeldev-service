@@ -32,9 +32,9 @@ func TestManagedEnsureRequiresPreparedCompletionBeforeRuntimeReservation(t *test
 			store := &preparedGateStore{}
 			if test.name != "missing durable preparation" {
 				w := snapshot.Workspace
-				store.state.Workspace = &biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: a.NamespaceName, NamespaceUID: a.NamespaceUID, PVCName: "original-pvc", PVCUID: "88888888-8888-4888-8888-888888888888", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestBytes: 1, PreparedManifestSHA256: strings.Repeat("b", 64)}
+				store.state.Workspace = &biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: a.NamespaceName, NamespaceUID: a.NamespaceUID, PVCName: "original-pvc", PVCUID: "88888888-8888-4888-8888-888888888888", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, WorkSubpath: w.WorkSubpath, PreparedManifestBytes: 1, PreparedManifestSHA256: strings.Repeat("b", 64)}
 			}
-			steps, err := biz.NewManagedSteps(&taskIdentityAuthority{dispatch: dispatch, authority: authority}, &preparedGateExecutions{execution: execution}, &taskIdentityWorkload{calls: &calls}, &taskIdentityLegacyRuns{calls: &calls})
+			steps, err := biz.NewManagedSteps(&taskIdentityAuthority{dispatch: dispatch, authority: authority}, &preparedGateExecutions{execution: execution}, &taskIdentityWorkload{calls: &calls}, &taskIdentityRuns{calls: &calls, taskID: "prepare-task"})
 			if err != nil {
 				t.Fatal(err)
 			}

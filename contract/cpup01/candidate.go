@@ -8,7 +8,7 @@ import (
 	"reflect"
 )
 
-const CandidateSchemaVersion = "ani.modeldev.prepared-candidate.v2.1"
+const CandidateSchemaVersion = "ani.modeldev.prepared-candidate.v3"
 
 // PreparedCandidate is a complete frozen read-only observation. It is neither
 // a durable receipt nor authority to start compute. Finalize only adds the
@@ -71,7 +71,7 @@ func (c PreparedCandidate) Validate() error {
 			return ErrInvalidArgument
 		}
 	}
-	if c.Intent.Kind == "FINETUNING" && (s.Finetuning == nil || c.Intent.BaseModelVersionID == nil || s.Finetuning.BaseModel.VersionID != *c.Intent.BaseModelVersionID || !sameOptionalUUID(c.Intent.TargetModelID, s.Finetuning.TargetModelID) || !sameOptionalString(c.Intent.NewModelName, s.Finetuning.NewModelName)) {
+	if c.Intent.Kind == "FINETUNING" && (s.Finetuning == nil || c.Intent.BaseModelVersionID == nil || s.Finetuning.BaseModel.VersionID != *c.Intent.BaseModelVersionID || !sameOptionalUUID(c.Intent.TargetModelID, s.Finetuning.TargetModelID) || !sameOptionalString(c.Intent.NewModelName, s.Finetuning.NewModelName) || !templateMatchesIntent(c.Intent, s.Finetuning.TemplatePlan)) {
 		return ErrInvalidArgument
 	}
 	return nil
@@ -117,7 +117,7 @@ func (c PreparedCandidate) Digest() (string, error) {
 }
 func DecodePreparedCandidate(raw []byte, hash string) (PreparedCandidate, error) {
 	var c PreparedCandidate
-	if len(raw) == 0 || len(raw) > 512*1024 {
+	if len(raw) == 0 || len(raw) > MaxManifestBytes {
 		return c, ErrInvalidArgument
 	}
 	d := json.NewDecoder(bytes.NewReader(raw))

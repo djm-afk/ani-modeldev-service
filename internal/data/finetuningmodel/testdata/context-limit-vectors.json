@@ -1,0 +1,15 @@
+[
+ {"name":"minimum","config":128,"tokenizer":64,"want":64},
+ {"name":"tokenizer missing","config":256,"want":256},
+ {"name":"model missing","tokenizer":96,"want":96},
+ {"name":"tokenizer infinity sentinel","config":8192,"tokenizer":1000000000000000019884624838656,"want":8192},
+ {"name":"max int64 sentinel","tokenizer":9223372036854775807,"error":"CONTEXT_LIMIT_UNKNOWN"},
+ {"name":"no finite boundary","error":"CONTEXT_LIMIT_UNKNOWN"},
+ {"name":"negative declared limit","config":-1,"tokenizer":64,"error":"BASE_MODEL_INVALID"},
+ {"name":"decimal syntax","config":128.0,"tokenizer":64,"error":"BASE_MODEL_INVALID"},
+ {"name":"exponent syntax","config":1e3,"tokenizer":64,"error":"BASE_MODEL_INVALID"},
+ {"name":"string limit","config":128,"tokenizer":"64","error":"BASE_MODEL_INVALID"},
+ {"name":"zero declared limit","config":128,"tokenizer":0,"error":"BASE_MODEL_INVALID"},
+ {"name":"null declared limit","config":null,"tokenizer":128,"error":"BASE_MODEL_INVALID"},
+ {"name":"finite int64 maximum","config":9223372036854775807,"want":9223372036854775807}
+]

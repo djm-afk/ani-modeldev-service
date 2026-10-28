@@ -433,7 +433,7 @@ func TestFinetuningCoreFlow(t *testing.T) {
 	}
 	defer pool.Close()
 	inputs := input.New(pool)
-	importer := biz.NewInputImporter(inputs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, 32<<20))
+	importer := biz.NewInputImporter(inputs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), cpup01.ContentLimits{MaxContentBytes: 17179869184}, 1800*time.Second)
 	if f.Input.TenantID != f.TenantID || f.Input.Actor != f.Actor || f.Input.InputFormat() != "JSON" {
 		t.Fatal("input fixture outside test scope")
 	}
@@ -453,7 +453,7 @@ func TestFinetuningCoreFlow(t *testing.T) {
 	if err != nil {
 		t.Fatal("pinned managed facts unavailable", err)
 	}
-	resolver := biz.NewFinetuningAdmissionResolver(catalogue.NewReader(config.Command.AdmissionResolution.CatalogueDirectory), inputs, facts, coreFlowModelFixture{tenant: f.TenantID, base: f.BaseModel})
+	resolver := biz.NewFinetuningAdmissionResolver(catalogue.NewReader(config.Command.AdmissionResolution.CatalogueDirectory), inputs, facts, coreFlowModelFixture{tenant: f.TenantID, base: f.BaseModel}, cpup01.ContentLimits{MaxContentBytes: 17179869184})
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)

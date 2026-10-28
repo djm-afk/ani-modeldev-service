@@ -140,8 +140,8 @@ func newFixtureRuntimeClient(t *testing.T, f *completeFixture, pool *pgxpool.Poo
 		t.Fatal(err)
 	}
 	dispatch := submission.New(pool)
-	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(store, f.request.Admission.Snapshot.PublicationScope.StorageConnectionID, 64<<20), dispatch)
-	steps, err := biz.NewManagedSteps(dispatch, execution.New(pool), identity, runs)
+	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(store, f.request.Admission.Snapshot.PublicationScope.StorageConnectionID), dispatch)
+	steps, err := biz.NewManagedSteps(dispatch, execution.New(pool), identity, proof)
 	if err != nil {
 		t.Fatal(err)
 	}

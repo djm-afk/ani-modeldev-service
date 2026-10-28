@@ -12,6 +12,7 @@ import (
 	"github.com/go-kratos/kratos/v3/middleware"
 	kratosgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,6 +27,7 @@ func NewManagedStepServer(c *conf.Server_GRPC, certificate tls.Certificate, step
 		return nil, errors.New("valid managed Step TLS certificate and handler required")
 	}
 	s := kratosgrpc.NewServer(
+		kratosgrpc.Options(grpc.MaxRecvMsgSize(cpup01.MaxControlRPCBytes), grpc.MaxSendMsgSize(cpup01.MaxControlRPCBytes)),
 		kratosgrpc.Network(c.Network), kratosgrpc.Address(c.Addr),
 		kratosgrpc.Timeout(c.Timeout.AsDuration()),
 		kratosgrpc.TLSConfig(&tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{certificate}}),

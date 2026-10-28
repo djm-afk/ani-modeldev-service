@@ -29,6 +29,16 @@ func TestFinetuningAllFieldsConsumeWithoutApprovalSet(t *testing.T) {
 		t.Fatal(e)
 	}
 	s.Input.RowCount = 71
+	s.Input.PreparedDataset.RowCount = 71
+	dataset, _ := cpup01.BuildDatasetManifest(s.Input)
+	datasetDigest, _ := dataset.Digest()
+	for _, args := range [][]string{s.Program.ResolvedArgs, s.Finetuning.ExportProgram.ResolvedArgs, s.Finetuning.VerifyProgram.ResolvedArgs} {
+		for index, arg := range args {
+			if arg == "--expected-dataset-manifest-sha256" {
+				args[index+1] = datasetDigest
+			}
+		}
+	}
 	if e := s.Validate(); e != nil {
 		t.Fatal(e)
 	}

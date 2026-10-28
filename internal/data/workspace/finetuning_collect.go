@@ -15,6 +15,7 @@ import (
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/finetuningmodel"
 	"golang.org/x/sys/unix"
 )
 
@@ -60,24 +61,29 @@ func openPipelineReadFile(root int, relative string) (int, error) {
 
 func collectFinetuning(ctx context.Context, root int, execution biz.Execution) (biz.CollectedOutput, error) {
 	contract := execution.Snapshot.OutputContract
-	if err := verifyFinetuningInventory(ctx, root, contract); err != nil {
+	dynamic, err := finetuningOutputInventory(ctx, root, contract)
+	if err != nil {
 		return biz.CollectedOutput{}, err
 	}
-	files := make([]biz.CollectedFile, 0, len(contract.RequiredFiles))
-	remaining := contract.MaxTotalBytes
-	for _, required := range contract.RequiredFiles {
-		limit := required.MaxSizeBytes
-		if remaining < limit {
-			limit = remaining
+	files := make([]biz.CollectedFile, 0, len(dynamic))
+	remaining := execution.Snapshot.Limits.MaxContentBytes
+	for _, required := range dynamic {
+		limit := remaining
+		if required.Role != "METRICS" && required.Role != "HF_MODEL" && required.Role != "LORA_ADAPTER" && limit > cpup01.MaxManifestBytes {
+			limit = cpup01.MaxManifestBytes
 		}
 		file, err := collectFile(ctx, root, required.RelativePath, required.Role, limit)
 		if err != nil {
 			return biz.CollectedOutput{}, err
 		}
+		file.InTar = required.InTar
 		files = append(files, file)
 		remaining -= file.SizeBytes
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].RelativePath < files[j].RelativePath })
+	if err := verifyProducedModelLayout(ctx, root, execution, files); err != nil {
+		return biz.CollectedOutput{}, err
+	}
 	if err := verifyFinetuningReports(ctx, root, execution, files); err != nil {
 		return biz.CollectedOutput{}, err
 	}
@@ -88,26 +94,80 @@ func collectFinetuning(ctx context.Context, root int, execution biz.Execution) (
 	return biz.CollectedOutput{ExecutionID: execution.ExecutionID, ExecutionSpecHash: execution.SpecHash, StorageState: "WORKSPACE_ONLY", Files: files, Manifest: manifest, ManifestSHA256: hash}, nil
 }
 
-func verifyFinetuningInventory(ctx context.Context, root int, contract cpup01.OutputContract) error {
+// Only the two current producer manifests extend the fixed platform reports.
+// Neither directory discovery nor a material can invent extra published paths.
+func finetuningOutputInventory(ctx context.Context, root int, contract cpup01.OutputContract) ([]cpup01.RequiredOutput, error) {
+	required := append([]cpup01.RequiredOutput{}, contract.RequiredFiles...)
 	wanted := map[string]bool{}
-	for _, file := range contract.RequiredFiles {
+	for _, file := range required {
 		wanted[file.RelativePath] = true
+	}
+	for _, section := range []struct {
+		manifest, prefix, role string
+		inTar                  bool
+	}{
+		{"reports/train/adapter_manifest.json", "training/adapter/", "LORA_ADAPTER", false},
+		{"reports/export/merged_manifest.json", "export/merged/", "HF_MODEL", true},
+	} {
+		raw, err := readCurrentReport(ctx, root, section.manifest)
+		if err != nil {
+			return nil, err
+		}
+		var report struct {
+			Files []finetuningMember `json:"files"`
+		}
+		if decodeFinetuningReport(raw, &report) != nil || len(report.Files) == 0 || len(report.Files) > cpup01.MaxModelFiles {
+			return nil, biz.ErrInvalidWorkspaceOutput
+		}
+		for _, file := range report.Files {
+			name := section.prefix + file.Path
+			if !biz.ValidStorageKey(file.Path) || len(file.Path) > cpup01.MaxRelativePathBytes || !biz.ValidStorageKey(name) || len(name) > cpup01.MaxRelativePathBytes || wanted[name] || file.Bytes < 0 || len(file.SHA256) != 64 {
+				return nil, biz.ErrInvalidWorkspaceOutput
+			}
+			wanted[name] = true
+			required = append(required, cpup01.RequiredOutput{Role: section.role, RelativePath: name, InTar: section.inTar})
+		}
+	}
+	if len(required) > cpup01.MaxOutputFiles {
+		return nil, biz.ErrInvalidWorkspaceOutput
 	}
 	actual := map[string]bool{}
 	for _, directory := range []string{"training/adapter", "export/merged", "reports/train", "reports/export", "reports/verify"} {
-		if err := walkFinetuningOutputs(ctx, root, directory, actual, wanted, contract.MaxFileCount); err != nil {
-			return err
+		if err := walkFinetuningOutputs(ctx, root, directory, actual, wanted, cpup01.MaxOutputFiles); err != nil {
+			return nil, err
 		}
 	}
 	if len(actual) != len(wanted) {
-		return biz.ErrInvalidWorkspaceOutput
+		return nil, biz.ErrInvalidWorkspaceOutput
 	}
 	for name := range actual {
 		if !wanted[name] {
-			return biz.ErrInvalidWorkspaceOutput
+			return nil, biz.ErrInvalidWorkspaceOutput
 		}
 	}
-	return nil
+	return required, nil
+}
+
+func verifyFinetuningInventory(ctx context.Context, root int, contract cpup01.OutputContract) error {
+	_, err := finetuningOutputInventory(ctx, root, contract)
+	return err
+}
+
+func readCurrentReport(ctx context.Context, root int, name string) ([]byte, error) {
+	fact, err := collectFile(ctx, root, name, "SOURCE_METADATA", cpup01.MaxManifestBytes)
+	if err != nil {
+		return nil, err
+	}
+	capture, err := capturePipelineFile(ctx, root, fact)
+	if err != nil {
+		return nil, err
+	}
+	defer capture.Close()
+	raw, err := io.ReadAll(io.LimitReader(capture, cpup01.MaxManifestBytes))
+	if err != nil || int64(len(raw)) != fact.SizeBytes {
+		return nil, biz.ErrInvalidWorkspaceOutput
+	}
+	return raw, nil
 }
 
 func walkFinetuningOutputs(ctx context.Context, root int, relative string, files, wanted map[string]bool, maximum uint32) error {
@@ -180,7 +240,7 @@ func reportMembers(files []cpup01.OutputFile, prefix string) []finetuningMember 
 func readFinetuningReport(ctx context.Context, root int, relative string, files []cpup01.OutputFile) ([]byte, error) {
 	for _, file := range files {
 		if file.RelativePath == relative {
-			if file.SizeBytes > 64*1024 {
+			if file.SizeBytes > cpup01.MaxManifestBytes {
 				return nil, biz.ErrInvalidWorkspaceOutput
 			}
 			captured, err := capturePipelineFile(ctx, root, file)
@@ -188,7 +248,7 @@ func readFinetuningReport(ctx context.Context, root int, relative string, files 
 				return nil, err
 			}
 			defer captured.Close()
-			content, err := io.ReadAll(io.LimitReader(captured, 64*1024+1))
+			content, err := io.ReadAll(io.LimitReader(captured, cpup01.MaxManifestBytes))
 			if err != nil || int64(len(content)) != file.SizeBytes {
 				return nil, biz.ErrInvalidWorkspaceOutput
 			}
@@ -230,7 +290,7 @@ func decodeFinetuningReport(raw []byte, value any) error {
 }
 
 func checkFinetuningReportJSON(decoder *json.Decoder, depth int) error {
-	if depth > 16 {
+	if depth > cpup01.MaxJSONDepth {
 		return biz.ErrInvalidWorkspaceOutput
 	}
 	token, err := decoder.Token()
@@ -283,12 +343,31 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 	if err != nil {
 		return invalid
 	}
+	templateRaw, err := readFinetuningReport(ctx, root, "reports/train/effective-template.json", files)
+	if err != nil {
+		return invalid
+	}
+	effectiveTemplate, err := cpup01.ParseEffectiveTemplate(templateRaw)
+	if err != nil || effectiveTemplate.ValidateFor(fine.TemplatePlan, fine.RuntimeCapabilities) != nil {
+		return invalid
+	}
+	templateSHA := pipelineContentHash(templateRaw)
+	matchedBody := false
+	for _, file := range files {
+		if file.RelativePath == cpup01.EffectiveTemplateRelativePath {
+			matchedBody = file.SizeBytes == effectiveTemplate.TemplateFile.SizeBytes && file.SHA256 == effectiveTemplate.TemplateFile.SHA256
+		}
+	}
+	if !matchedBody {
+		return invalid
+	}
 	resolved := cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: execution.Snapshot.Program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}
 	resolvedBytes, err := resolved.Canonical()
 	if err != nil {
 		return invalid
 	}
 	var summary struct {
+		EffectiveTemplateSHA256      string             `json:"effective_template_sha256"`
 		Schema                       string             `json:"schema"`
 		Status                       string             `json:"status"`
 		Samples                      int64              `json:"samples"`
@@ -321,7 +400,7 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 	if err != nil || decodeFinetuningReport(raw, &summary) != nil {
 		return invalid
 	}
-	if summary.Schema != "ani.finetune.summary.v1" || summary.Status != "SUCCEEDED" || summary.SourceSamples != int64(execution.Snapshot.Input.RowCount) || summary.Samples < 1 || summary.Samples > summary.SourceSamples || summary.DroppedSamples == nil || *summary.DroppedSamples != summary.SourceSamples-summary.Samples || summary.OptimizerSteps <= 0 || summary.Steps != summary.OptimizerSteps || summary.InputSHA256 != execution.Snapshot.Input.Object.SHA256 || summary.InputBytes != execution.Snapshot.Input.Object.SizeBytes || summary.BaseManifestSHA256 != baseHash || summary.ParameterContractVersion != fine.ParameterContractVersion || summary.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || summary.EffectiveConfigurationSHA256 != fine.ResolvedConfigurationSHA256 {
+	if summary.EffectiveTemplateSHA256 != templateSHA || summary.Schema != "ani.finetune.summary.v1" || summary.Status != "SUCCEEDED" || summary.SourceSamples != int64(execution.Snapshot.Input.RowCount) || summary.Samples < 1 || summary.Samples > summary.SourceSamples || summary.DroppedSamples == nil || *summary.DroppedSamples != summary.SourceSamples-summary.Samples || summary.OptimizerSteps <= 0 || summary.Steps != summary.OptimizerSteps || summary.InputSHA256 != execution.Snapshot.Input.Object.SHA256 || summary.InputBytes != execution.Snapshot.Input.Object.SizeBytes || summary.BaseManifestSHA256 != baseHash || summary.ParameterContractVersion != fine.ParameterContractVersion || summary.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || summary.EffectiveConfigurationSHA256 != fine.ResolvedConfigurationSHA256 {
 		return invalid
 	}
 	if summary.Device != fine.ManagedSettings.Device || len(summary.TrainDtypes) != 1 || summary.TrainDtypes[0] != fine.ManagedSettings.TrainDtype || summary.AdapterDtype != "float32" ||
@@ -363,6 +442,7 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		return invalid
 	}
 	var association struct {
+		EffectiveTemplateSHA256     string             `json:"effective_template_sha256"`
 		Schema                      string             `json:"schema"`
 		InputSHA256                 string             `json:"input_sha256"`
 		BaseManifestSHA256          string             `json:"base_manifest_sha256"`
@@ -370,11 +450,12 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		Files                       []finetuningMember `json:"files"`
 	}
 	raw, err = readFinetuningReport(ctx, root, "reports/train/adapter_manifest.json", files)
-	if err != nil || decodeFinetuningReport(raw, &association) != nil || association.Schema != "ani.finetune.adapter-manifest.v1" || association.InputSHA256 != summary.InputSHA256 || association.BaseManifestSHA256 != baseHash || association.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || !sameFinetuningMembers(association.Files, adapter) {
+	if err != nil || decodeFinetuningReport(raw, &association) != nil || association.EffectiveTemplateSHA256 != templateSHA || association.Schema != "ani.finetune.adapter-manifest.v1" || association.InputSHA256 != summary.InputSHA256 || association.BaseManifestSHA256 != baseHash || association.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || !sameFinetuningMembers(association.Files, adapter) {
 		return invalid
 	}
 	adapterManifestHash := pipelineContentHash(raw)
 	var merged struct {
+		EffectiveTemplateSHA256     string             `json:"effective_template_sha256"`
 		Schema                      string             `json:"schema"`
 		ResolvedConfigurationSHA256 string             `json:"resolved_configuration_sha256"`
 		Dtype                       string             `json:"dtype"`
@@ -385,7 +466,7 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		Files                       []finetuningMember `json:"files"`
 	}
 	raw, err = readFinetuningReport(ctx, root, "reports/export/merged_manifest.json", files)
-	if err != nil || decodeFinetuningReport(raw, &merged) != nil || merged.Schema != "ani.finetune.merged-manifest.v1" || merged.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || merged.Dtype != fine.ManagedSettings.ExportDtype || merged.InputSHA256 != summary.InputSHA256 || merged.BaseManifestSHA256 != baseHash || merged.AdapterManifestSHA256 != adapterManifestHash || !sameFinetuningMembers(merged.AdapterFiles, adapter) || !sameFinetuningMembers(merged.Files, reportMembers(files, "export/merged/")) {
+	if err != nil || decodeFinetuningReport(raw, &merged) != nil || merged.EffectiveTemplateSHA256 != templateSHA || merged.Schema != "ani.finetune.merged-manifest.v1" || merged.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || merged.Dtype != fine.ManagedSettings.ExportDtype || merged.InputSHA256 != summary.InputSHA256 || merged.BaseManifestSHA256 != baseHash || merged.AdapterManifestSHA256 != adapterManifestHash || !sameFinetuningMembers(merged.AdapterFiles, adapter) || !sameFinetuningMembers(merged.Files, reportMembers(files, "export/merged/")) {
 		return invalid
 	}
 	mergedHash := pipelineContentHash(raw)
@@ -399,6 +480,7 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		return invalid
 	}
 	var verified struct {
+		EffectiveTemplateSHA256     string  `json:"effective_template_sha256"`
 		Schema                      string  `json:"schema"`
 		Status                      string  `json:"status"`
 		Dtype                       string  `json:"dtype"`
@@ -409,7 +491,7 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		GeneratedTokenIDs           []int64 `json:"generated_token_ids"`
 	}
 	raw, err = readFinetuningReport(ctx, root, "reports/verify/verify.json", files)
-	if err != nil || decodeFinetuningReport(raw, &verified) != nil || verified.Schema != "ani.finetune.verify.v1" || verified.Status != "PASSED" || verified.Dtype != fine.ManagedSettings.VerifyDtype || verified.Device != "cpu" || verified.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || verified.MergedManifestSHA256 != mergedHash || !verified.FiniteLogits || len(verified.GeneratedTokenIDs) == 0 || len(verified.GeneratedTokenIDs) > 8 {
+	if err != nil || decodeFinetuningReport(raw, &verified) != nil || verified.EffectiveTemplateSHA256 != templateSHA || verified.Schema != "ani.finetune.verify.v1" || verified.Status != "PASSED" || verified.Dtype != fine.ManagedSettings.VerifyDtype || verified.Device != "cpu" || verified.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || verified.MergedManifestSHA256 != mergedHash || !verified.FiniteLogits || len(verified.GeneratedTokenIDs) == 0 || len(verified.GeneratedTokenIDs) > 8 {
 		return invalid
 	}
 	return verifyFinetuningMetrics(ctx, root, files, summary.OptimizerSteps, summary.MetricSamples)
@@ -454,6 +536,41 @@ func verifyMetricFile(ctx context.Context, root int, files []cpup01.OutputFile, 
 	}
 	if scanner.Err() != nil || lastStep != steps || count != samples || count == 0 {
 		return pipelineIOError(ctx, biz.ErrInvalidWorkspaceOutput)
+	}
+	return nil
+}
+
+func verifyProducedModelLayout(ctx context.Context, root int, execution biz.Execution, files []cpup01.OutputFile) error {
+	inventory := []cpup01.BaseModelFile{}
+	for _, file := range files {
+		if strings.HasPrefix(file.RelativePath, "export/merged/") {
+			inventory = append(inventory, cpup01.BaseModelFile{Path: strings.TrimPrefix(file.RelativePath, "export/merged/"), SizeBytes: file.SizeBytes, SHA256: file.SHA256})
+		}
+	}
+	var index []byte
+	for _, file := range inventory {
+		if file.Path == "model.safetensors.index.json" {
+			var err error
+			index, err = readFinetuningReport(ctx, root, "export/merged/"+file.Path, files)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if _, err := finetuningmodel.NormalizeWeightLayout(inventory, index); err != nil {
+		return biz.ErrInvalidWorkspaceOutput
+	}
+	for _, name := range []string{"config.json", "tokenizer_config.json"} {
+		raw, err := readFinetuningReport(ctx, root, "export/merged/"+name, files)
+		if err != nil || len(raw) == 0 {
+			return biz.ErrInvalidWorkspaceOutput
+		}
+		var config struct {
+			ModelType string `json:"model_type"`
+		}
+		if decodeFinetuningReport(raw, &config) != nil || name == "config.json" && config.ModelType != execution.Snapshot.Finetuning.BaseModel.Facts.ModelType {
+			return biz.ErrInvalidWorkspaceOutput
+		}
 	}
 	return nil
 }

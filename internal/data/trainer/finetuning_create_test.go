@@ -83,17 +83,16 @@ func TestFinetuningTrainingPartitionsWritesAndPreservesOriginalLookupDeadline(t 
 			t.Fatal("Trainer override volume names collide")
 		}
 		seen[name] = true
-		if name == "ft-tmp" {
-			disk := v["emptyDir"].(map[string]any)
-			if disk["sizeLimit"] != "4Gi" || disk["medium"] == "Memory" {
-				t.Fatal("cache became an unbounded or memory volume")
-			}
-		} else if v["persistentVolumeClaim"].(map[string]any)["claimName"] != f.plan.Workspace.PVCName {
-			t.Fatal("partition escaped the original PVC")
+		if _, exists := v["emptyDir"]; exists {
+			t.Fatal("training cache escaped execution PVC")
 		}
+		if v["persistentVolumeClaim"].(map[string]any)["claimName"] != f.plan.Workspace.PVCName {
+			t.Fatal("partition escaped original PVC")
+		}
+
 	}
 	container := spec["containers"].([]any)[0].(map[string]any)
-	if len(container) != 8 {
+	if len(container) != 9 {
 		t.Fatal("container overrides include credentials or unsupported security fields")
 	}
 	mounts := container["volumeMounts"].([]any)
@@ -104,7 +103,7 @@ func TestFinetuningTrainingPartitionsWritesAndPreservesOriginalLookupDeadline(t 
 		"/workspace/inputs":           {"inputs", true},
 		"/workspace/training/adapter": {"training/adapter", false},
 		"/workspace/reports/train":    {"reports/train", false},
-		"/tmp":                        {"", false},
+		"/workspace/work/train":       {"work/train", false},
 	}
 	for _, value := range mounts {
 		m := value.(map[string]any)

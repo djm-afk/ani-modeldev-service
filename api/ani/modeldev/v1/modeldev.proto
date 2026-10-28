@@ -11,6 +11,7 @@ option go_package = "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/model
 // the actor saved at admission is audit data, not permanent access permission.
 service ModelDevQueryService {
   rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse);
+  rpc CheckFinetuningReadiness(CheckFinetuningReadinessRequest) returns (CheckFinetuningReadinessResponse);
   rpc GetInputVersion(GetInputVersionRequest) returns (GetInputVersionResponse);
   rpc ListInputVersions(ListInputVersionsRequest) returns (ListInputVersionsResponse);
   // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE The registration recovery operation returns this same original execution projection.
@@ -209,11 +210,24 @@ enum ErrorReason {
   ERROR_REASON_INTEGRITY_MISMATCH = 18;
   ERROR_REASON_UPSTREAM_RESULT_UNCERTAIN = 19;
   ERROR_REASON_DEADLINE_EXCEEDED = 20;
-  ERROR_REASON_INPUT_TOO_LARGE = 21;
+  reserved 21;
+  reserved "ERROR_REASON_INPUT_TOO_LARGE";
   ERROR_REASON_INPUT_NOT_READY = 22;
   ERROR_REASON_IMPLEMENTATION_UNAVAILABLE = 23;
   ERROR_REASON_UNSUPPORTED_DEVICE = 24;
   ERROR_REASON_ADMISSION_PLAN_MISMATCH = 25;
+  ERROR_REASON_BASE_MODEL_INVALID = 26;
+  ERROR_REASON_BASE_MODEL_UNSUPPORTED = 27;
+  ERROR_REASON_CONTEXT_LIMIT_EXCEEDED = 28;
+  ERROR_REASON_CONTEXT_LIMIT_UNKNOWN = 29;
+  ERROR_REASON_FINETUNING_TEMPLATE_REQUIRED = 30;
+  ERROR_REASON_FINETUNING_TEMPLATE_UNSUPPORTED = 31;
+  ERROR_REASON_CONTENT_LIMIT_EXCEEDED = 32;
+  ERROR_REASON_STRUCTURE_LIMIT_EXCEEDED = 33;
+  ERROR_REASON_DATASET_RECORD_TOO_LARGE = 34;
+  ERROR_REASON_DATASET_INVALID = 35;
+  ERROR_REASON_INPUT_VALIDATION_BUSY = 36;
+  ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE = 37;
 }
 
 message FieldViolation {
@@ -229,6 +243,10 @@ message ErrorDetail {
   string safe_message = 2;
   repeated FieldViolation violations = 3;
   string correlation_id = 4;
+  string kind = 5;
+  string limit_name = 6;
+  optional int64 actual = 7;
+  optional int64 limit = 8;
 }
 
 // Shared typed intent, not a new HTTP facade. Governance owns CreateExecution
@@ -250,6 +268,7 @@ message UserIntent {
   string compute_preset_id = 13;
   oneof parameters { MLPParameters mlp = 14; FinetuningParameters sft_lora = 15; }
   optional uint64 timeout_seconds = 16;
+  optional string finetuning_template = 17;
 }
 
 message MLPParameters {
@@ -302,6 +321,8 @@ message ImplementationView {
  string version = 4; string parameter_contract_version = 5; repeated ParameterRule parameter_rules = 6;
  repeated string supported_device_modes = 7; bool available = 8;
  uint64 execution_timeout_default_seconds = 9; uint64 execution_timeout_max_seconds = 10; uint64 step_timeout_seconds = 11;
+ RuntimeCapabilities runtime_capabilities = 12;
+ string runtime_capabilities_sha256 = 13;
 }
 // An absent kind returns every implementation. A specified kind is applied
 // before Total and the page window, and UNSPECIFIED is rejected rather than
@@ -309,6 +330,7 @@ message ImplementationView {
 message ListImplementationsRequest {
   PageRequest page = 1;
   optional ani.training.v1.ExecutionKind kind = 2;
+  optional string device_mode = 3;
 }
 message ListImplementationsResponse { repeated ImplementationView implementations = 1; uint64 total = 2; }
 
@@ -319,10 +341,11 @@ message InputVersionView {
   string format = 3;
   int64 size_bytes = 4;
   string sha256 = 5;
-  uint32 row_count = 6;
+  int64 row_count = 6;
   uint32 feature_count = 7;
   google.protobuf.Timestamp created_at = 8;
   ErrorDetail failure = 9;
+  ani.training.v1.PreparedDatasetFacts prepared_dataset = 10;
 }
 
 message GetInputVersionRequest {
@@ -358,7 +381,8 @@ message ExecutionView {
   reserved 4, 5;
   reserved "preset_id", "release_id";
   string input_version_id = 6;
-  string image_version_id = 7;
+  reserved 7;
+  reserved "image_version_id";
   ExecutionStates states = 8;
   PipelineStep current_step = 9;
   bool stop_requested = 10;
@@ -389,6 +413,9 @@ message ExecutionView {
   // identity facts are published: the object key, storage scope and file list
   // stay owner-internal. Absent for general training.
   BaseModelIdentity base_model = 32;
+  string image_id = 33;
+  int64 image_version = 34;
+  string image_scope = 35;
 }
 
 // BaseModelIdentity is the publishable half of BaseModelRef. It names the base
@@ -396,7 +423,8 @@ message ExecutionView {
 message BaseModelIdentity {
   string model_id = 1;
   string version_id = 2;
-  string family = 3;
+  reserved 3;
+  reserved "family";
   string format = 4;
 }
 
@@ -483,8 +511,8 @@ message GetExecutionLogsRequest {
   optional string log_id = 2;
   uint32 tail_lines = 3;
   uint32 max_bytes = 4;
-  // Container selection stays outside the opaque log ID. An absent pod_uid
-  // keeps the single-worker behaviour; an absent container keeps `node`.
+  // Select the required pod_uid from ListExecutionPods. Container selection
+  // stays outside the opaque log ID; an absent container keeps `node`.
   optional string pod_uid = 5;
   optional string container = 6;
   // Reads the last terminated instance of the same container.
@@ -687,8 +715,8 @@ message ListExecutionEventsRequest {
   string execution_id = 1;
   // key / all / warning; unspecified behaves as key.
   string scope = 2;
-  // Equivalent to scope=warning, kept for older clients.
-  bool warning_only = 3;
+  reserved 3;
+  reserved "warning_only";
 }
 
 message ListExecutionEventsResponse {
@@ -750,7 +778,10 @@ message ExecutionSnapshot {
   ExecutionTiming timing = 17;
   RuntimePlan runtime_plan = 18;
   GPUPlan gpu = 19;
+  ContentLimits limits = 20;
 }
+
+message ContentLimits { int64 max_content_bytes = 1; }
 
 message StringPair { string key = 1; string value = 2; }
 message GPUExecutionSnapshot {
@@ -791,7 +822,8 @@ message FinetuningManagedSettings {
   string flash_attn = 14;
   string report_to = 15;
   string save_strategy = 16;
-  string template = 17;
+  reserved 17;
+  reserved "template";
   string train_dtype = 18;
   string export_dtype = 19;
   string verify_dtype = 20;
@@ -813,20 +845,13 @@ message BaseModelFile {
 message BaseModelRef {
   string model_id = 1;
   string version_id = 2;
-  string family = 3;
+  reserved 3;
+  reserved "family";
   string format = 4;
   ani.training.v1.FixedObjectRef object = 5;
   StorageScope scope = 6;
   repeated BaseModelFile files = 7;
-}
-
-message ComponentBudgets {
-  reserved 1, 2, 3, 4, 5, 10;
-  reserved "prepare_timeout_seconds", "export_timeout_seconds", "verify_timeout_seconds", "collect_timeout_seconds", "publish_timeout_seconds", "training_timeout_seconds";
-  uint32 rpc_timeout_seconds = 6;
-  int64 max_base_model_bytes = 7;
-  int64 max_spool_bytes = 8;
-  int64 max_base_model_expanded_bytes = 9;
+  NormalizedModelFacts facts = 8;
 }
 
 message FinetuningSnapshot {
@@ -840,7 +865,12 @@ message FinetuningSnapshot {
   ani.training.v1.ProgramRef verify_program = 8;
   string recipe_sha256 = 9;
   string mapping_sha256 = 10;
-  ComponentBudgets budgets = 11;
+  reserved 11;
+  reserved "budgets";
+  RuntimeCapabilities runtime_capabilities = 12;
+  TemplatePlan template_plan = 13;
+  string model_type = 14;
+  int64 context_limit = 15;
 }
 
 message IdentityRef {
@@ -1106,6 +1136,11 @@ message PublicationCandidate {
   ani.training.v1.FixedObjectRef bundle_object = 4;
   string upload_task_id = 5;
   string upload_pod_uid = 6;
+  string schema = 7;
+  string tenant_id = 8;
+  string operation_id = 9;
+  string execution_id = 10;
+  string execution_spec_hash = 11;
 }
 
 message StepFailure {
@@ -1175,3 +1210,86 @@ message RequestExecutionCloseResponse {
   bool replayed = 3;
   google.protobuf.Timestamp accepted_at = 4;
 }
+
+message RuntimePackage { string name = 1; string version = 2; }
+message RegisteredTemplate { string id = 1; string source_sha256 = 2; bool supports_system = 3; bool supports_multi_turn = 4; }
+message ContextLimitField { string source = 1; string field = 2; }
+message RuntimeCapabilities {
+  string schema_version = 1;
+  string image_digest = 2;
+  string entrypoint_sha256 = 3;
+  repeated RuntimePackage packages = 4;
+  repeated string causal_lm_model_types = 5;
+  repeated RegisteredTemplate registered_templates = 6;
+  repeated ContextLimitField context_limit_fields = 7;
+}
+message FileFact { string path = 1; int64 size_bytes = 2; string sha256 = 3; }
+message ContextLimitFact { string source_path = 1; string source_sha256 = 2; string field = 3; int64 value = 4; }
+message WeightLayout { string kind = 1; string entry_path = 2; repeated string shard_paths = 3; }
+message TemplateSource { string kind = 1; string path = 2; string name = 3; bool default = 4; int64 size_bytes = 5; string sha256 = 6; }
+message NormalizedModelFacts {
+  string model_type = 1;
+  repeated string architectures = 2;
+  string original_dtype = 3;
+  int64 context_limit = 4;
+  repeated ContextLimitFact context_sources = 5;
+  FileFact config_file = 6;
+  FileFact tokenizer_config_file = 7;
+  WeightLayout weight_layout = 8;
+  repeated TemplateSource template_sources = 9;
+}
+message TemplatePlan {
+  string schema_version = 1;
+  string mode = 2;
+  string selection_source = 3;
+  optional string template_id = 4;
+  TemplateSource source = 5;
+  string source_sha256 = 6;
+  string runtime_capabilities_sha256 = 7;
+  string image_digest = 8;
+}
+message StructureLimits {
+  int64 max_model_files = 1;
+  int64 max_output_files = 2;
+  int64 max_archive_entries = 3;
+  int64 max_relative_path_bytes = 4;
+  int64 max_storage_key_bytes = 5;
+  int64 max_manifest_bytes = 6;
+  int64 max_model_config_bytes = 7;
+  int64 max_material_bytes = 8;
+  int64 max_archive_metadata_bytes = 9;
+  int64 max_record_bytes = 10;
+  int64 max_json_depth = 11;
+  int64 max_control_rpc_bytes = 12;
+  int64 max_publication_candidate_bytes = 13;
+  int64 max_publication_ref_bytes = 14;
+}
+enum FinetuningAssessment {
+  FINETUNING_ASSESSMENT_UNSPECIFIED = 0;
+  FINETUNING_ASSESSMENT_ELIGIBLE = 1;
+  FINETUNING_ASSESSMENT_TEMPLATE_REQUIRED = 2;
+  FINETUNING_ASSESSMENT_UNSUPPORTED = 3;
+}
+message CheckFinetuningReadinessRequest {
+  string base_model_version_id = 1;
+  string compute_preset_id = 2;
+  optional string finetuning_template = 3;
+  ComputeOrigin compute_origin = 4;
+}
+message CheckFinetuningReadinessResponse {
+  FinetuningAssessment assessment = 1;
+  ErrorReason reason = 2;
+  repeated RegisteredTemplate template_candidates = 3;
+  RuntimeCapabilities runtime_capabilities = 4;
+  string runtime_capabilities_sha256 = 5;
+  ContentLimits limits = 6;
+  StructureLimits structure_limits = 7;
+  bool runtime_validation_required = 8;
+  string model_id = 9;
+  string model_version_id = 10;
+  TemplatePlan template_plan = 11;
+  string model_type = 12;
+  int64 context_limit = 13;
+}
+
+message PublicationRef { string schema = 1; int64 size_bytes = 2; string sha256 = 3; }

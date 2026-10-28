@@ -9,8 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -31,26 +33,76 @@ type mountRule struct {
 
 func roleMounts(kind string) map[string]map[string]mountRule {
 	roles := map[string]map[string]mountRule{
-		"workspace-name": {}, "train-wait": {}, "close": {}, "finalize-close": {},
+		"workspace-name": {}, "train-wait": {}, "finalize-close": {},
 		"prepare": {"/workspace": {"", false}},
-		"collect": {"/workspace": {"", false}}, "publish": {"/workspace": {"", false}},
+		"close":   {"/workspace": {"", true}},
+	}
+	for _, role := range []string{"collect", "publish"} {
+		roles[role] = map[string]mountRule{"/workspace": {"", true}, "/workspace/publication": {"publication", false}, "/workspace/work/" + role: {"work/" + role, false}}
 	}
 	if kind == "FINETUNING" {
-		roles["register"] = map[string]mountRule{}
+		roles["register"] = map[string]mountRule{"/workspace": {"", true}}
 		roles["export"] = map[string]mountRule{
-			"/workspace/inputs": {"inputs", true}, "/workspace/training": {"training", true},
-			"/workspace/reports/train": {"reports/train", true}, "/workspace/export": {"export", false},
-			"/workspace/reports/export": {"reports/export", false},
+			"/workspace/inputs": {"inputs", true}, "/workspace/training": {"training", true}, "/workspace/reports/train": {"reports/train", true}, "/workspace/export": {"export", false}, "/workspace/reports/export": {"reports/export", false}, "/workspace/work/export": {"work/export", false},
 		}
 		roles["verify"] = map[string]mountRule{
-			"/workspace/inputs": {"inputs", true}, "/workspace/training": {"training", true},
-			"/workspace/reports/train": {"reports/train", true}, "/workspace/export": {"export", true},
-			"/workspace/reports/export": {"reports/export", true}, "/workspace/reports/verify": {"reports/verify", false},
+			"/workspace/inputs": {"inputs", true}, "/workspace/training": {"training", true}, "/workspace/reports/train": {"reports/train", true}, "/workspace/export": {"export", true}, "/workspace/reports/export": {"reports/export", true}, "/workspace/reports/verify": {"reports/verify", false}, "/workspace/work/verify": {"work/verify", false},
 		}
-		roles["collect"] = map[string]mountRule{"/workspace": {"", true}, "/workspace/publication": {"publication", false}}
-		roles["publish"] = map[string]mountRule{"/workspace": {"", true}, "/workspace/publication": {"publication", false}}
 	}
 	return roles
+}
+
+func componentResourcesMatch(actual corev1.ResourceRequirements, expected cpup01.ComponentResources) bool {
+	if len(actual.Claims) != 0 {
+		return false
+	}
+	for _, pair := range []struct {
+		actual               corev1.ResourceList
+		cpu, memory, storage string
+	}{{actual.Requests, expected.CPURequest, expected.MemoryRequest, expected.EphemeralStorageRequest}, {actual.Limits, expected.CPULimit, expected.MemoryLimit, expected.EphemeralStorageLimit}} {
+		for key := range pair.actual {
+			if key != corev1.ResourceCPU && key != corev1.ResourceMemory && key != corev1.ResourceEphemeralStorage {
+				return false
+			}
+		}
+		for key, text := range map[corev1.ResourceName]string{corev1.ResourceCPU: pair.cpu, corev1.ResourceMemory: pair.memory} {
+			want, err := resource.ParseQuantity(text)
+			got, ok := pair.actual[key]
+			if err != nil || !ok || got.Cmp(want) != 0 {
+				return false
+			}
+		}
+		if got, ok := pair.actual[corev1.ResourceEphemeralStorage]; ok {
+			want, err := resource.ParseQuantity(pair.storage)
+			if err != nil || got.Cmp(want) != 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func componentWorkEnvironment(container corev1.Container, role string) bool {
+	if role != "prepare" && role != "export" && role != "verify" && role != "collect" && role != "publish" {
+		return true
+	}
+	work := "/workspace/work/" + role
+	expected := map[string]string{"TMPDIR": work + "/tmp", "HF_HOME": work + "/hf", "HF_DATASETS_CACHE": work + "/hf/datasets", "MPLCONFIGDIR": work + "/matplotlib"}
+	seen := map[string]bool{}
+	if len(container.EnvFrom) != 0 {
+		return false
+	}
+	for _, entry := range container.Env {
+		wanted, managed := expected[entry.Name]
+		if !managed {
+			continue
+		}
+		if seen[entry.Name] || entry.ValueFrom != nil || entry.Value != wanted {
+			return false
+		}
+		seen[entry.Name] = true
+	}
+	return len(seen) == len(expected)
 }
 
 type patchOperation struct {
@@ -210,6 +262,11 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 	if !ok {
 		return denied(request, "unknown_role")
 	}
+	componentResources := profile.material.ComponentResources[labels[RoleLabel]]
+	digest, err := componentResources.Digest()
+	if err != nil || pod.Annotations["ani.modeldev/component-resources-sha256"] != digest {
+		return denied(request, "component_resources")
+	}
 	if profile.PipelineVersionLabel != "" && workflow.GetLabels()[profile.PipelineVersionLabel] != profile.material.Implementation.PipelineVersionID || profile.PipelineVersionAnnotation != "" && workflow.GetAnnotations()[profile.PipelineVersionAnnotation] != profile.material.Implementation.PipelineVersionID {
 		return denied(request, "pipeline_version")
 	}
@@ -261,7 +318,10 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 			}
 			if main {
 				mainFound = true
-				if container.Image != profile.ComponentImage {
+				if !componentWorkEnvironment(container, labels[RoleLabel]) {
+					return denied(request, "work_environment")
+				}
+				if container.Image != profile.ComponentImage || !componentResourcesMatch(container.Resources, componentResources) {
 					return denied(request, "image_contract")
 				}
 			} else if !slices.Contains(profile.AllowedSupportImages, container.Image) {
@@ -272,6 +332,27 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 			}
 			if container.SecurityContext != nil && (container.SecurityContext.Privileged != nil && *container.SecurityContext.Privileged || container.SecurityContext.Capabilities != nil && len(container.SecurityContext.Capabilities.Add) != 0) {
 				return denied(request, "privileged_container")
+			}
+			if main {
+				control := false
+				for _, mount := range container.VolumeMounts {
+					if mount.MountPath != "/tmp" {
+						continue
+					}
+					for _, volume := range pod.Spec.Volumes {
+						if volume.Name != mount.Name {
+							continue
+						}
+						want, err := resource.ParseQuantity(componentResources.EphemeralStorageLimit)
+						if control || err != nil || volume.EmptyDir == nil || volume.EmptyDir.Medium != "" || volume.EmptyDir.SizeLimit == nil || volume.EmptyDir.SizeLimit.Cmp(want) != 0 || mount.SubPath != "" || mount.SubPathExpr != "" || mount.ReadOnly {
+							return denied(request, "control_io")
+						}
+						control = true
+					}
+				}
+				if !control {
+					return denied(request, "control_io")
+				}
 			}
 			seenMounts := map[string]bool{}
 			for _, mount := range container.VolumeMounts {
@@ -336,8 +417,8 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 			builder.remove(append(append([]string{}, prefix...), "seccompProfile", "localhostProfile")...)
 			main := category.name == "containers" && container.Name == "main"
 			if main {
-				builder.set(profile.EphemeralStorageRequest, "spec", category.name, fmt.Sprint(i), "resources", "requests", "ephemeral-storage")
-				builder.set(profile.EphemeralStorageLimit, "spec", category.name, fmt.Sprint(i), "resources", "limits", "ephemeral-storage")
+				builder.set(componentResources.EphemeralStorageRequest, "spec", category.name, fmt.Sprint(i), "resources", "requests", "ephemeral-storage")
+				builder.set(componentResources.EphemeralStorageLimit, "spec", category.name, fmt.Sprint(i), "resources", "limits", "ephemeral-storage")
 			}
 			for j, mount := range container.VolumeMounts {
 				if pvcNames[mount.Name] {
