@@ -11,16 +11,9 @@ import (
 
 	"github.com/go-kratos/kratos/v3/middleware"
 	kratosgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
-	"github.com/google/uuid"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
-	"google.golang.org/grpc/status"
 )
 
 // CommandServerDNSName is the registered server identity for the Governance ->
@@ -115,62 +108,11 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 			defer cancel()
 			ctx = bounded
 		}
-		denied := status.Error(codes.Unauthenticated, "authenticated Governance delivery required")
-		remote, ok := peer.FromContext(ctx)
-		if !ok {
-			return nil, denied
+		verified, err := verifyGovernancePeer(ctx, info.FullMethod, security, roots, verifyPeer, admission, query, extra)
+		if err != nil {
+			return nil, err
 		}
-		tlsInfo, ok := remote.AuthInfo.(credentials.TLSInfo)
-		if !ok || verifyPeer(tlsInfo.State) != nil {
-			return nil, denied
-		}
-		allowed := info.FullMethod == modeldevv1.ModelDevCommandService_ApplyCloseIntent_FullMethodName ||
-			info.FullMethod == modeldevv1.ModelDevCommandService_AcceptExecution_FullMethodName ||
-			(admission != nil && (info.FullMethod == modeldevv1.ModelDevAdmissionService_PrepareAdmission_FullMethodName || info.FullMethod == modeldevv1.ModelDevAdmissionService_FinalizeAdmission_FullMethodName))
-		isQuery := query != nil && (info.FullMethod == modeldevv1.ModelDevQueryService_GetExecution_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_ListExecutions_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_ListExecutionArtifacts_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_AuthorizeArtifactDownload_FullMethodName)
-		isQuery = isQuery || (query != nil && (info.FullMethod == modeldevv1.ModelDevQueryService_ListImplementations_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_GetInputVersion_FullMethodName || info.FullMethod == modeldevv1.ModelDevQueryService_ListInputVersions_FullMethodName))
-		isQuery = isQuery || (extra.Management != nil && (info.FullMethod == modeldevv1.ModelDevManagementService_ImportCSV_FullMethodName || info.FullMethod == modeldevv1.ModelDevManagementService_ImportFinetuningDataset_FullMethodName))
-		isQuery = isQuery || (extra.Operations != nil && (info.FullMethod == modeldevv1.ModelDevOperationsService_InspectExecution_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_ReconcileExecution_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_PlanExecutionCleanup_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_ApplyExecutionCleanup_FullMethodName || info.FullMethod == modeldevv1.ModelDevOperationsService_ResumeModelRegistration_FullMethodName))
-		allowed = allowed || isQuery
-		if !allowed {
-			return nil, status.Error(codes.PermissionDenied, "Governance delivery does not permit this method")
-		}
-		md, ok := metadata.FromIncomingContext(ctx)
-		if !ok {
-			return nil, denied
-		}
-		// User credentials and forwarded certificate headers cannot accompany
-		// these workload requests or substitute for the actual TLS peer.
-		for _, key := range []string{"authorization", "proxy-authorization", "cookie", "x-forwarded-client-cert", "ani-workload-token", "ani-delegation"} {
-			if len(md.Get(key)) != 0 {
-				return nil, denied
-			}
-		}
-		single := func(key string) string {
-			values := md.Get(key)
-			if len(values) != 1 {
-				return ""
-			}
-			return values[0]
-		}
-		delivery := service.GovernanceDelivery{TenantID: single("x-ani-tenant-id"), Actor: single("x-ani-actor"), RequestID: single("x-ani-request-id")}
-		canonicalID := func(value string) bool {
-			id, err := uuid.Parse(value)
-			return err == nil && id != uuid.Nil && id.String() == value
-		}
-		if !canonicalID(delivery.TenantID) || !canonicalID(delivery.RequestID) || !validGovernanceCommandActor(delivery.Actor) {
-			return nil, denied
-		}
-		if isQuery {
-			// Only this freshly authenticated BFF workload can assert the current
-			// actor's exact method and tenant-wide data permission. Ordinary command
-			// delivery, admission history and user-supplied headers grant none.
-			if single("x-ani-authorized-method") != info.FullMethod || single("x-ani-data-scope") != "tenant-all" {
-				return nil, status.Error(codes.PermissionDenied, "current query authorization required")
-			}
-			return next(service.WithVerifiedGovernanceQuery(ctx, delivery, info.FullMethod), request)
-		}
-		return next(service.WithVerifiedGovernanceDelivery(ctx, delivery), request)
+		return next(verified, request)
 	}
 	transportTimeout := max(c.Timeout.AsDuration(), 5*time.Minute)
 	s := kratosgrpc.NewServer(
@@ -181,9 +123,7 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 			ClientCAs: roots, Certificates: []tls.Certificate{security.Certificate},
 		}),
 		kratosgrpc.UnaryInterceptor(authenticate),
-		kratosgrpc.StreamInterceptor(func(any, grpc.ServerStream, *grpc.StreamServerInfo, grpc.StreamHandler) error {
-			return status.Error(codes.PermissionDenied, "Governance delivery does not permit streaming")
-		}),
+		kratosgrpc.StreamInterceptor(authenticateStream(security, roots, verifyPeer, query)),
 		kratosgrpc.Middleware(middlewares...), kratosgrpc.DisableReflection(),
 	)
 	modeldevv1.RegisterModelDevCommandServiceServer(s, command)

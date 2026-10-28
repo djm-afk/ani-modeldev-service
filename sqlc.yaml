@@ -13,6 +13,7 @@ sql:
       - "migrations/0013_run_authority.up.sql"
       - "migrations/0014_execution_runtime.up.sql"
       - "migrations/0015_fenced_unbound_runtime.up.sql"
+      - "migrations/0020_execution_list_order.up.sql"
     queries: "internal/data/execution/queries.sql"
     gen:
       go:

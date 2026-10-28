@@ -182,6 +182,12 @@ func TrainingLogSourceFor(record QueryRecord, logID string) (TrainingLogSource, 
 		if logID != "" && logID != id {
 			continue
 		}
+		// After Pod GC a live read is impossible, so the recorded receipt is the
+		// only source left. That is permitted solely for a worker whose original
+		// exit was observed: a gone Pod with no terminal exit could have been
+		// killed before its tail was captured, and calling that a readable log
+		// would invent evidence. The persisted owner chain below still has to
+		// match UID for UID either way.
 		if selected != nil || pod.APIVersion != "v1" || pod.Namespace != namespace || !pod.APIObjectPresent && (!pod.Terminal || pod.ExitCode == nil) {
 			return TrainingLogSource{}, ErrTrainingLogsUnavailable
 		}

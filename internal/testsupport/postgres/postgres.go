@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -118,14 +119,44 @@ func (fixture *schemaFixture) migrationTransaction(t *testing.T, ctx context.Con
 	return transaction
 }
 
+// migrationSQL drops a file's own outer transaction control. The fixture owns
+// the transaction so that every migration in the set shares one commit, but
+// 0019 wraps itself in BEGIN/COMMIT; letting that through would commit the
+// caller's transaction early and leave every later file running against a
+// closed one. Only the outer pair is removed, so the plpgsql BEGIN inside a
+// function body survives.
+func migrationSQL(t *testing.T, path string) string {
+	t.Helper()
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("CPU04_DB_PREFLIGHT: cannot read migration %s; behavior NOT_RUN", filepath.Base(path))
+	}
+	lines := strings.Split(string(raw), "\n")
+	first, last := -1, -1
+	for index, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "--") {
+			continue
+		}
+		if first < 0 {
+			first = index
+		}
+		last = index
+	}
+	if first < 0 {
+		t.Fatalf("CPU04_DB_PREFLIGHT: migration %s is empty; behavior NOT_RUN", filepath.Base(path))
+	}
+	if strings.EqualFold(strings.TrimSpace(lines[first]), "BEGIN;") && strings.EqualFold(strings.TrimSpace(lines[last]), "COMMIT;") {
+		lines = append(lines[:last], lines[last+1:]...)
+		lines = append(lines[:first], lines[first+1:]...)
+	}
+	return strings.Join(lines, "\n")
+}
+
 func applyMigrationFiles(t *testing.T, ctx context.Context, transaction pgx.Tx, migrations []string) {
 	t.Helper()
 	for _, migrationPath := range migrations {
-		migration, err := os.ReadFile(migrationPath)
-		if err != nil {
-			t.Fatalf("CPU04_DB_PREFLIGHT: cannot read migration %s; behavior NOT_RUN", filepath.Base(migrationPath))
-		}
-		if _, err := transaction.Exec(ctx, string(migration)); err != nil {
+		if _, err := transaction.Exec(ctx, migrationSQL(t, migrationPath)); err != nil {
 			t.Fatalf("CPU04_DB_PREFLIGHT: migration %s failed; behavior NOT_RUN", filepath.Base(migrationPath))
 		}
 	}

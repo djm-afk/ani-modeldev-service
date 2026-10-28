@@ -25,8 +25,11 @@ const (
 	ModelDevQueryService_GetExecution_FullMethodName              = "/ani.modeldev.v1.ModelDevQueryService/GetExecution"
 	ModelDevQueryService_ListExecutions_FullMethodName            = "/ani.modeldev.v1.ModelDevQueryService/ListExecutions"
 	ModelDevQueryService_GetExecutionLogs_FullMethodName          = "/ani.modeldev.v1.ModelDevQueryService/GetExecutionLogs"
+	ModelDevQueryService_GetExecutionLogStream_FullMethodName     = "/ani.modeldev.v1.ModelDevQueryService/GetExecutionLogStream"
 	ModelDevQueryService_ListExecutionArtifacts_FullMethodName    = "/ani.modeldev.v1.ModelDevQueryService/ListExecutionArtifacts"
 	ModelDevQueryService_AuthorizeArtifactDownload_FullMethodName = "/ani.modeldev.v1.ModelDevQueryService/AuthorizeArtifactDownload"
+	ModelDevQueryService_ListExecutionPods_FullMethodName         = "/ani.modeldev.v1.ModelDevQueryService/ListExecutionPods"
+	ModelDevQueryService_ListExecutionEvents_FullMethodName       = "/ani.modeldev.v1.ModelDevQueryService/ListExecutionEvents"
 )
 
 // ModelDevQueryServiceClient is the client API for ModelDevQueryService service.
@@ -43,8 +46,14 @@ type ModelDevQueryServiceClient interface {
 	GetExecution(ctx context.Context, in *GetExecutionRequest, opts ...grpc.CallOption) (*GetExecutionResponse, error)
 	ListExecutions(ctx context.Context, in *ListExecutionsRequest, opts ...grpc.CallOption) (*ListExecutionsResponse, error)
 	GetExecutionLogs(ctx context.Context, in *GetExecutionLogsRequest, opts ...grpc.CallOption) (*GetExecutionLogsResponse, error)
+	// Server-streaming live logs of one already-authorized container. The first
+	// frame is READY or REJECTED; later frames are DATA or the closing frame.
+	GetExecutionLogStream(ctx context.Context, in *GetExecutionLogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetExecutionLogStreamResponse], error)
 	ListExecutionArtifacts(ctx context.Context, in *ListExecutionArtifactsRequest, opts ...grpc.CallOption) (*ListExecutionArtifactsResponse, error)
 	AuthorizeArtifactDownload(ctx context.Context, in *AuthorizeArtifactDownloadRequest, opts ...grpc.CallOption) (*AuthorizeArtifactDownloadResponse, error)
+	// Live Kubernetes views. These are real-time reads, never part of ExecutionView.
+	ListExecutionPods(ctx context.Context, in *ListExecutionPodsRequest, opts ...grpc.CallOption) (*ListExecutionPodsResponse, error)
+	ListExecutionEvents(ctx context.Context, in *ListExecutionEventsRequest, opts ...grpc.CallOption) (*ListExecutionEventsResponse, error)
 }
 
 type modelDevQueryServiceClient struct {
@@ -115,6 +124,25 @@ func (c *modelDevQueryServiceClient) GetExecutionLogs(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *modelDevQueryServiceClient) GetExecutionLogStream(ctx context.Context, in *GetExecutionLogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetExecutionLogStreamResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &ModelDevQueryService_ServiceDesc.Streams[0], ModelDevQueryService_GetExecutionLogStream_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GetExecutionLogStreamRequest, GetExecutionLogStreamResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ModelDevQueryService_GetExecutionLogStreamClient = grpc.ServerStreamingClient[GetExecutionLogStreamResponse]
+
 func (c *modelDevQueryServiceClient) ListExecutionArtifacts(ctx context.Context, in *ListExecutionArtifactsRequest, opts ...grpc.CallOption) (*ListExecutionArtifactsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListExecutionArtifactsResponse)
@@ -135,6 +163,26 @@ func (c *modelDevQueryServiceClient) AuthorizeArtifactDownload(ctx context.Conte
 	return out, nil
 }
 
+func (c *modelDevQueryServiceClient) ListExecutionPods(ctx context.Context, in *ListExecutionPodsRequest, opts ...grpc.CallOption) (*ListExecutionPodsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListExecutionPodsResponse)
+	err := c.cc.Invoke(ctx, ModelDevQueryService_ListExecutionPods_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modelDevQueryServiceClient) ListExecutionEvents(ctx context.Context, in *ListExecutionEventsRequest, opts ...grpc.CallOption) (*ListExecutionEventsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListExecutionEventsResponse)
+	err := c.cc.Invoke(ctx, ModelDevQueryService_ListExecutionEvents_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ModelDevQueryServiceServer is the server API for ModelDevQueryService service.
 // All implementations must embed UnimplementedModelDevQueryServiceServer
 // for forward compatibility.
@@ -149,8 +197,14 @@ type ModelDevQueryServiceServer interface {
 	GetExecution(context.Context, *GetExecutionRequest) (*GetExecutionResponse, error)
 	ListExecutions(context.Context, *ListExecutionsRequest) (*ListExecutionsResponse, error)
 	GetExecutionLogs(context.Context, *GetExecutionLogsRequest) (*GetExecutionLogsResponse, error)
+	// Server-streaming live logs of one already-authorized container. The first
+	// frame is READY or REJECTED; later frames are DATA or the closing frame.
+	GetExecutionLogStream(*GetExecutionLogStreamRequest, grpc.ServerStreamingServer[GetExecutionLogStreamResponse]) error
 	ListExecutionArtifacts(context.Context, *ListExecutionArtifactsRequest) (*ListExecutionArtifactsResponse, error)
 	AuthorizeArtifactDownload(context.Context, *AuthorizeArtifactDownloadRequest) (*AuthorizeArtifactDownloadResponse, error)
+	// Live Kubernetes views. These are real-time reads, never part of ExecutionView.
+	ListExecutionPods(context.Context, *ListExecutionPodsRequest) (*ListExecutionPodsResponse, error)
+	ListExecutionEvents(context.Context, *ListExecutionEventsRequest) (*ListExecutionEventsResponse, error)
 	mustEmbedUnimplementedModelDevQueryServiceServer()
 }
 
@@ -179,11 +233,20 @@ func (UnimplementedModelDevQueryServiceServer) ListExecutions(context.Context, *
 func (UnimplementedModelDevQueryServiceServer) GetExecutionLogs(context.Context, *GetExecutionLogsRequest) (*GetExecutionLogsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetExecutionLogs not implemented")
 }
+func (UnimplementedModelDevQueryServiceServer) GetExecutionLogStream(*GetExecutionLogStreamRequest, grpc.ServerStreamingServer[GetExecutionLogStreamResponse]) error {
+	return status.Error(codes.Unimplemented, "method GetExecutionLogStream not implemented")
+}
 func (UnimplementedModelDevQueryServiceServer) ListExecutionArtifacts(context.Context, *ListExecutionArtifactsRequest) (*ListExecutionArtifactsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListExecutionArtifacts not implemented")
 }
 func (UnimplementedModelDevQueryServiceServer) AuthorizeArtifactDownload(context.Context, *AuthorizeArtifactDownloadRequest) (*AuthorizeArtifactDownloadResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AuthorizeArtifactDownload not implemented")
+}
+func (UnimplementedModelDevQueryServiceServer) ListExecutionPods(context.Context, *ListExecutionPodsRequest) (*ListExecutionPodsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListExecutionPods not implemented")
+}
+func (UnimplementedModelDevQueryServiceServer) ListExecutionEvents(context.Context, *ListExecutionEventsRequest) (*ListExecutionEventsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListExecutionEvents not implemented")
 }
 func (UnimplementedModelDevQueryServiceServer) mustEmbedUnimplementedModelDevQueryServiceServer() {}
 func (UnimplementedModelDevQueryServiceServer) testEmbeddedByValue()                              {}
@@ -314,6 +377,17 @@ func _ModelDevQueryService_GetExecutionLogs_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ModelDevQueryService_GetExecutionLogStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetExecutionLogStreamRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ModelDevQueryServiceServer).GetExecutionLogStream(m, &grpc.GenericServerStream[GetExecutionLogStreamRequest, GetExecutionLogStreamResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ModelDevQueryService_GetExecutionLogStreamServer = grpc.ServerStreamingServer[GetExecutionLogStreamResponse]
+
 func _ModelDevQueryService_ListExecutionArtifacts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListExecutionArtifactsRequest)
 	if err := dec(in); err != nil {
@@ -346,6 +420,42 @@ func _ModelDevQueryService_AuthorizeArtifactDownload_Handler(srv interface{}, ct
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ModelDevQueryServiceServer).AuthorizeArtifactDownload(ctx, req.(*AuthorizeArtifactDownloadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModelDevQueryService_ListExecutionPods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListExecutionPodsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevQueryServiceServer).ListExecutionPods(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevQueryService_ListExecutionPods_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevQueryServiceServer).ListExecutionPods(ctx, req.(*ListExecutionPodsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModelDevQueryService_ListExecutionEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListExecutionEventsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevQueryServiceServer).ListExecutionEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevQueryService_ListExecutionEvents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevQueryServiceServer).ListExecutionEvents(ctx, req.(*ListExecutionEventsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -389,8 +499,22 @@ var ModelDevQueryService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "AuthorizeArtifactDownload",
 			Handler:    _ModelDevQueryService_AuthorizeArtifactDownload_Handler,
 		},
+		{
+			MethodName: "ListExecutionPods",
+			Handler:    _ModelDevQueryService_ListExecutionPods_Handler,
+		},
+		{
+			MethodName: "ListExecutionEvents",
+			Handler:    _ModelDevQueryService_ListExecutionEvents_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetExecutionLogStream",
+			Handler:       _ModelDevQueryService_GetExecutionLogStream_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "ani/modeldev/v1/modeldev.proto",
 }
 

@@ -344,34 +344,46 @@ func (q *Queries) InsertExecutionIdentity(ctx context.Context, arg InsertExecuti
 }
 
 const listTenantExecutionIDs = `-- name: ListTenantExecutionIDs :many
-SELECT execution_id
+SELECT execution_id, accepted_at
 FROM modeldev_executions
 WHERE tenant_id = $1::uuid
-  AND execution_id > $2::uuid
-ORDER BY execution_id
+  AND (
+      $2::timestamptz IS NULL
+      OR (accepted_at, execution_id) < ($2::timestamptz, $3::uuid)
+  )
+ORDER BY accepted_at DESC, execution_id DESC
 LIMIT 128
 `
 
 type ListTenantExecutionIDsParams struct {
 	TenantID         pgtype.UUID
+	AfterAcceptedAt  pgtype.Timestamptz
 	AfterExecutionID pgtype.UUID
+}
+
+type ListTenantExecutionIDsRow struct {
+	ExecutionID pgtype.UUID
+	AcceptedAt  pgtype.Timestamptz
 }
 
 // A bounded scan within one tenant and snapshot. State filters use the same
 // validated aggregate projection as GetExecution before filling a page.
-func (q *Queries) ListTenantExecutionIDs(ctx context.Context, arg ListTenantExecutionIDsParams) ([]pgtype.UUID, error) {
-	rows, err := q.db.Query(ctx, listTenantExecutionIDs, arg.TenantID, arg.AfterExecutionID)
+// The walk follows acceptance time, newest first, so the first page of a list
+// is the most recent work. execution_id breaks ties; two rows admitted in the
+// same microsecond still have one stable order. A NULL cursor starts the walk.
+func (q *Queries) ListTenantExecutionIDs(ctx context.Context, arg ListTenantExecutionIDsParams) ([]ListTenantExecutionIDsRow, error) {
+	rows, err := q.db.Query(ctx, listTenantExecutionIDs, arg.TenantID, arg.AfterAcceptedAt, arg.AfterExecutionID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []pgtype.UUID
+	var items []ListTenantExecutionIDsRow
 	for rows.Next() {
-		var execution_id pgtype.UUID
-		if err := rows.Scan(&execution_id); err != nil {
+		var i ListTenantExecutionIDsRow
+		if err := rows.Scan(&i.ExecutionID, &i.AcceptedAt); err != nil {
 			return nil, err
 		}
-		items = append(items, execution_id)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

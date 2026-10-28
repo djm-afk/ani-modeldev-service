@@ -123,6 +123,48 @@ func CompileRuntimePlan(snapshot cpup01.Snapshot) (cpup01.RuntimePlan, error) {
 	return plan, nil
 }
 
+// RuntimePlanSchedulesPodGroup reports whether the frozen Runtime plan asks
+// Trainer to create a Volcano PodGroup. Read-only details follow the plan that
+// this execution actually froze: a plan compiled with podGroupPolicy.volcano
+// requires the group, an older deployment plan without it never has one. The
+// execution contract itself is unchanged by this query.
+func RuntimePlanSchedulesPodGroup(plan cpup01.RuntimePlan) (bool, error) {
+	var spec map[string]any
+	if len(plan.ExpectedSpec) == 0 || json.Unmarshal(plan.ExpectedSpec, &spec) != nil {
+		return false, ErrInvalidAdmission
+	}
+	policy, found, err := unstructuredNestedMap(spec, "podGroupPolicy")
+	if err != nil {
+		return false, ErrInvalidAdmission
+	}
+	if !found {
+		return false, nil
+	}
+	if len(policy) != 1 {
+		return false, ErrInvalidAdmission
+	}
+	volcano, found, err := unstructuredNestedMap(policy, "volcano")
+	if err != nil || !found {
+		return false, ErrInvalidAdmission
+	}
+	if len(volcano) != 0 {
+		return false, ErrInvalidAdmission
+	}
+	return true, nil
+}
+
+func unstructuredNestedMap(object map[string]any, key string) (map[string]any, bool, error) {
+	value, found := object[key]
+	if !found {
+		return nil, false, nil
+	}
+	nested, ok := value.(map[string]any)
+	if !ok {
+		return nil, false, ErrInvalidAdmission
+	}
+	return nested, true, nil
+}
+
 // TrainingResourceVector is the single TRAIN requests/limits source used by
 // both the complete Runtime template and TrainJob resourcesPerNode.
 func TrainingResourceVector(snapshot cpup01.Snapshot) (map[string]string, error) {

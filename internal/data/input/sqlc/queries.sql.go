@@ -15,15 +15,17 @@ const countInputVersions = `-- name: CountInputVersions :one
 SELECT count(*) FROM modeldev_input_versions
 WHERE tenant_id = $1::uuid
   AND ($2::text = '' OR state = $2::text)
+  AND ($3::text = '' OR format = $3::text)
 `
 
 type CountInputVersionsParams struct {
-	TenantID    pgtype.UUID
-	StateFilter string
+	TenantID     pgtype.UUID
+	StateFilter  string
+	FormatFilter string
 }
 
 func (q *Queries) CountInputVersions(ctx context.Context, arg CountInputVersionsParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countInputVersions, arg.TenantID, arg.StateFilter)
+	row := q.db.QueryRow(ctx, countInputVersions, arg.TenantID, arg.StateFilter, arg.FormatFilter)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -149,22 +151,25 @@ const listInputVersions = `-- name: ListInputVersions :many
 SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions
 WHERE tenant_id = $1::uuid
   AND ($2::text = '' OR state = $2::text)
+  AND ($3::text = '' OR format = $3::text)
 ORDER BY input_version_id
-LIMIT $4::integer
-OFFSET $3::integer
+LIMIT $5::integer
+OFFSET $4::integer
 `
 
 type ListInputVersionsParams struct {
-	TenantID    pgtype.UUID
-	StateFilter string
-	RowOffset   int32
-	RowLimit    int32
+	TenantID     pgtype.UUID
+	StateFilter  string
+	FormatFilter string
+	RowOffset    int32
+	RowLimit     int32
 }
 
 func (q *Queries) ListInputVersions(ctx context.Context, arg ListInputVersionsParams) ([]ModeldevInputVersion, error) {
 	rows, err := q.db.Query(ctx, listInputVersions,
 		arg.TenantID,
 		arg.StateFilter,
+		arg.FormatFilter,
 		arg.RowOffset,
 		arg.RowLimit,
 	)

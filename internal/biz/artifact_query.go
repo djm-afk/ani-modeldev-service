@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
@@ -31,16 +32,29 @@ type ExecutionQuery struct {
 	Compute  ComputeState
 	Delivery DeliveryState
 	Close    CloseState
+	// Name is an already lower-cased substring. The admitted name lives in the
+	// immutable intent, so matching here reads the same value the list reports
+	// instead of a duplicated column that could drift from it.
+	Name string
 }
 
-func (query ExecutionQuery) Matches(states ExecutionStates) bool {
-	return (query.Compute == "" || query.Compute == states.Compute) &&
-		(query.Delivery == "" || query.Delivery == states.Delivery) &&
-		(query.Close == "" || query.Close == states.Close)
+func (query ExecutionQuery) Matches(execution Execution) bool {
+	return (query.Compute == "" || query.Compute == execution.States.Compute) &&
+		(query.Delivery == "" || query.Delivery == execution.States.Delivery) &&
+		(query.Close == "" || query.Close == execution.States.Close) &&
+		(query.Name == "" || strings.Contains(strings.ToLower(execution.Intent.Name), query.Name))
 }
 
 type ArtifactSigner interface {
 	SignDownload(context.Context, cpup01.StorageScope, cpup01.FixedObjectRef) (DownloadGrant, error)
+}
+
+// MetricsObjectReader reads one already published object version so a query can
+// derive its metrics. It is a read-only observation channel: the owner supplies
+// the client and connection, and the caller cannot select an endpoint or
+// credential. A read failure never invalidates the execution.
+type MetricsObjectReader interface {
+	ReadObject(context.Context, cpup01.StorageScope, cpup01.FixedObjectRef, int64) ([]byte, error)
 }
 
 type DownloadGrant struct {

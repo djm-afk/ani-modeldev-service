@@ -147,6 +147,57 @@ func TestRecordedTrainingLogsWaitForCommittedCapture(t *testing.T) {
 	}
 }
 
+// A collected worker Pod is gone from the Kubernetes API: APIObjectPresent is
+// false while every persisted owner UID stays intact. A gone worker whose
+// original exit was observed keeps its archived tail; a gone worker with no
+// observed exit has no evidence at all and must be refused, as must a foreign
+// owner chain.
+func TestRecordedTrainingLogsSurvivePodGarbageCollection(t *testing.T) {
+	record, source := recordedLogFixture(t)
+	code := int32(0)
+	for index := range record.Runtime.Observation.Resources {
+		record.Runtime.Observation.Resources[index].APIObjectPresent = false
+	}
+	pod := &record.Runtime.Observation.Resources[3]
+	pod.Terminal, pod.ExitCode = true, &code
+
+	resolved, err := biz.TrainingLogSourceFor(record, source.LogID)
+	if err != nil || resolved != source {
+		t.Fatalf("collected Pod identity unresolved: %+v %v", resolved, err)
+	}
+	result, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 3, MaxBytes: 65536})
+	if err != nil || !found || len(result.Lines) != 3 || result.Lines[2].Text != "last" {
+		t.Fatalf("archived tail unavailable after Pod GC: found=%t result=%+v error=%v", found, result, err)
+	}
+
+	pod.Terminal, pod.ExitCode = false, nil
+	if _, err := biz.TrainingLogSourceFor(record, source.LogID); err != biz.ErrTrainingLogsUnavailable {
+		t.Fatalf("a gone worker with no observed exit was treated as readable: %v", err)
+	}
+
+	pod.Terminal, pod.ExitCode = true, &code
+	pod.OwnerUID = "foreign-job"
+	if _, err := biz.TrainingLogSourceFor(record, source.LogID); err == nil {
+		t.Fatal("a foreign owner chain was accepted after Pod GC")
+	}
+}
+
+// Without a recorded receipt a collected Pod has nothing left to read; that is
+// a distinct unavailability rather than an empty successful tail.
+func TestRecordedTrainingLogsRequireACommittedReceipt(t *testing.T) {
+	record, source := recordedLogFixture(t)
+	code := int32(0)
+	for index := range record.Runtime.Observation.Resources {
+		record.Runtime.Observation.Resources[index].APIObjectPresent = false
+	}
+	record.Runtime.Observation.Resources[3].Terminal = true
+	record.Runtime.Observation.Resources[3].ExitCode = &code
+	record.Runtime.ComputeCleanup = nil
+	if _, found, err := biz.RecordedTrainingLogsFor(record, source, biz.TrainingLogOptions{TailLines: 3, MaxBytes: 65536}); err != nil || found {
+		t.Fatalf("missing receipt must not fabricate a tail: found=%t error=%v", found, err)
+	}
+}
+
 func TestCleanupCannotTreatGoneStartedPodAsNoWorker(t *testing.T) {
 	record, _ := recordedLogFixture(t)
 	code := int32(143)

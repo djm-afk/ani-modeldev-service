@@ -25,6 +25,21 @@ const (
 	ExitEvidenceFinalizer = "modeldev.ani.io/step-exit-evidence"
 )
 
+// Metric labels feed the observability canonical records. They stay out of the
+// frozen Runtime plan: mutating the Pod template would change
+// runtime-spec-sha256, so admission patches them instead. Operators consume
+// them through the kube-state-metrics allowlist.
+const (
+	TenantLabel         = "ani.io/tenant-id"
+	InstanceLabel       = "ani.io/instance-id"
+	WorkloadKindLabel   = "ani.io/workload-kind"
+	WorkloadKindTrainer = "trainer"
+	// NamespaceTenantLabel is set by the platform when it creates a tenant
+	// namespace. Step Pods have no tenant annotation, so the verified namespace
+	// label is their tenant source.
+	NamespaceTenantLabel = "ani.io/resource-tenant-id"
+)
+
 var ErrConfiguration = errors.New("invalid modeldev webhook configuration")
 
 type LabelBinding struct {

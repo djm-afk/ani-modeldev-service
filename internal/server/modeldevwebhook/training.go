@@ -70,6 +70,12 @@ func (handler *Handler) admitTraining(ctx context.Context, request *admissionv1.
 	if !canonicalUUID(execution) || !canonicalUUID(annotations["modeldev.ani.io/tenant-id"]) || !sha256Pattern.MatchString(annotations["modeldev.ani.io/execution-spec-sha256"]) || train.GetName() != "md-"+execution {
 		return denied(request, "training_plan")
 	}
+	// Worker and step Pods must report the same tenant. The TrainJob annotation is
+	// the execution's own claim; the namespace label is the platform's. They can
+	// only agree for the tenant that owns this namespace.
+	if namespace.Labels[NamespaceTenantLabel] != annotations["modeldev.ani.io/tenant-id"] {
+		return denied(request, "namespace_identity")
+	}
 	name, _, _ := unstructured.NestedString(train.Object, "spec", "runtimeRef", "name")
 	kind, _, _ := unstructured.NestedString(train.Object, "spec", "runtimeRef", "kind")
 	api, _, _ := unstructured.NestedString(train.Object, "spec", "runtimeRef", "apiGroup")
@@ -141,5 +147,22 @@ func (handler *Handler) admitTraining(ctx context.Context, request *admissionv1.
 	if len(expectedFinalizers) != 1 || expectedFinalizers[0] != "modeldev.ani.io/training-exit-evidence" || !slices.Contains(pod.Finalizers, expectedFinalizers[0]) {
 		return denied(request, "training_retention")
 	}
-	return &admissionv1.AdmissionResponse{UID: request.UID, Allowed: true}, "training_verified"
+	// Metric labels come from the verified TrainJob annotations, never from the
+	// request. A requested label with a different value is replaced, so it cannot
+	// attribute this Pod to another execution or tenant.
+	builder := patchBuilder{object: raw}
+	for key, value := range map[string]string{TenantLabel: annotations["modeldev.ani.io/tenant-id"], InstanceLabel: execution, WorkloadKindLabel: WorkloadKindTrainer} {
+		builder.set(value, "metadata", "labels", key)
+	}
+	response := &admissionv1.AdmissionResponse{UID: request.UID, Allowed: true}
+	if len(builder.operations) != 0 {
+		patch, err := json.Marshal(builder.operations)
+		if err != nil {
+			return denied(request, "patch_unavailable")
+		}
+		kind := admissionv1.PatchTypeJSONPatch
+		response.Patch, response.PatchType = patch, &kind
+		return response, "mutated"
+	}
+	return response, "training_verified"
 }

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"sort"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
@@ -19,11 +21,24 @@ import (
 
 type Query struct {
 	modeldevv1.UnimplementedModelDevQueryServiceServer
-	repository biz.ArtifactQueryRepository
-	signer     biz.ArtifactSigner
-	logs       biz.TrainingLogReader
-	materials  *biz.ManagedMaterials
-	models     biz.FinetuningModelFactsReader
+	repository           biz.ArtifactQueryRepository
+	operationsRepository biz.ExecutionOperationsRepository
+	signer               biz.ArtifactSigner
+	logs                 biz.TrainingLogReader
+	containers           biz.ContainerLogReader
+	streams              biz.ContainerLogStreamer
+	workers              ExecutionWorkloadReader
+	steps                StepWorkloadReader
+	materials            *biz.ManagedMaterials
+	models               biz.FinetuningModelFactsReader
+	metrics              biz.MetricsObjectReader
+}
+
+// WithOperations installs the read used by the live workload views, whose
+// authorization needs dispatch, authority and rejection evidence together.
+func (query *Query) WithOperations(operations biz.ExecutionOperationsRepository) *Query {
+	query.operationsRepository = operations
+	return query
 }
 
 // WithFinetuningFacts records the actual read dependency assembled by the
@@ -35,6 +50,13 @@ func (query *Query) WithFinetuningFacts(models biz.FinetuningModelFactsReader) *
 
 func (query *Query) WithMaterials(materials *biz.ManagedMaterials) *Query {
 	query.materials = materials
+	return query
+}
+
+// WithMetrics installs the published-object reader used to derive training
+// curves. Without it metrics stay absent; the detail response is unaffected.
+func (query *Query) WithMetrics(metrics biz.MetricsObjectReader) *Query {
+	query.metrics = metrics
 	return query
 }
 
@@ -74,6 +96,22 @@ func queryID(value string) bool {
 	return err == nil && id != uuid.Nil && id.String() == value
 }
 
+// validExecutionNameFilter mirrors the admitted name shape: a non-blank,
+// non-control substring of at most 80 runes. Longer or control-bearing input
+// cannot match a stored name, so rejecting it keeps an impossible query from
+// looking like an empty tenant.
+func validExecutionNameFilter(value string) bool {
+	if !utf8.ValidString(value) || strings.TrimSpace(value) == "" || utf8.RuneCountInString(value) > 80 {
+		return false
+	}
+	for _, r := range value {
+		if unicode.IsControl(r) {
+			return false
+		}
+	}
+	return true
+}
+
 func queryError(err error, requestID string) error {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return status.FromContextError(err).Err()
@@ -100,10 +138,6 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
-	source, err := biz.TrainingLogSourceFor(record, request.GetLogId())
-	if err != nil {
-		return nil, queryError(err, scope.RequestID)
-	}
 	options := biz.TrainingLogOptions{TailLines: request.TailLines, MaxBytes: request.MaxBytes}
 	if options.TailLines == 0 {
 		options.TailLines = 200
@@ -111,24 +145,167 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if options.MaxBytes == 0 {
 		options.MaxBytes = 16384
 	}
-	result, recorded, err := biz.RecordedTrainingLogsFor(record, source, options)
+	selection, err := query.selectLogTarget(ctx, record, request)
 	if err != nil {
-		return nil, queryError(err, scope.RequestID)
+		return nil, workloadError(err, scope.RequestID)
 	}
-	if !recorded {
-		if query.logs == nil {
-			return nil, queryError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
-		}
-		result, err = query.logs.ReadTrainingLogs(ctx, source, options)
+	var result biz.TrainingLogResult
+	if selection.Kind == biz.LogSourceKindTrainer && selection.Target.ContainerName == "node" && !selection.Target.Previous {
+		source, err := trainingSource(record, selection)
 		if err != nil {
 			return nil, queryError(err, scope.RequestID)
 		}
+		archived, recorded, err := biz.RecordedTrainingLogsFor(record, source, options)
+		if err != nil {
+			return nil, queryError(err, scope.RequestID)
+		}
+		if recorded {
+			result = archived
+		} else {
+			if query.logs == nil {
+				return nil, queryError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
+			}
+			result, err = query.logs.ReadTrainingLogs(ctx, source, options)
+			if err != nil {
+				return nil, queryError(err, scope.RequestID)
+			}
+		}
+	} else {
+		if query.containers == nil {
+			return nil, workloadError(biz.ErrTrainingLogsUnavailable, scope.RequestID)
+		}
+		result, err = query.containers.ReadContainerLogs(ctx, selection.Target, options)
+		if err != nil {
+			return nil, queryLogError(err, scope.RequestID)
+		}
 	}
-	response := &modeldevv1.GetExecutionLogsResponse{Source: &trainingv1.LogRef{LogId: source.LogID, ResourceUid: source.PodUID, ContainerName: source.ContainerName}, Truncated: result.Truncated, ObservedAt: timestamppb.New(result.ObservedAt)}
+	response := &modeldevv1.GetExecutionLogsResponse{
+		Source:        &trainingv1.LogRef{LogId: selection.LogID, ResourceUid: selection.Target.PodUID, ContainerName: selection.Target.ContainerName},
+		Truncated:     result.Truncated,
+		ObservedAt:    timestamppb.New(result.ObservedAt),
+		SourceKind:    logSourceKindValue(selection.Kind),
+		ContainerName: selection.Target.ContainerName,
+		Previous:      selection.Target.Previous,
+		Available:     true,
+	}
 	for _, line := range result.Lines {
 		response.Lines = append(response.Lines, &modeldevv1.LogLine{Timestamp: timestamppb.New(line.Timestamp), Text: line.Text})
 	}
 	return response, nil
+}
+
+func logSourceKindValue(kind biz.LogSourceKind) modeldevv1.LogSourceKind {
+	if kind == biz.LogSourceKindKFPStep {
+		return modeldevv1.LogSourceKind_LOG_SOURCE_KIND_KFP_STEP
+	}
+	return modeldevv1.LogSourceKind_LOG_SOURCE_KIND_TRAINER
+}
+
+// queryLogError distinguishes a missing previous instance from a plain
+// unavailable log so the client can offer the right next action.
+func queryLogError(err error, requestID string) error {
+	if errors.Is(err, biz.ErrLogPreviousUnavailable) {
+		return commandError(codes.NotFound, modeldevv1.ErrorReason_ERROR_REASON_RESOURCE_NOT_FOUND, "previous container instance unavailable", requestID)
+	}
+	return queryError(err, requestID)
+}
+
+// selectLogTarget resolves exactly one container instance for a read. The
+// worker path stays compatible: no pod_uid and no container keeps the original
+// single-worker `node` behaviour, including its archived-tail fallback.
+func (query *Query) selectLogTarget(ctx context.Context, record biz.QueryRecord, request *modeldevv1.GetExecutionLogsRequest) (biz.LogSelection, error) {
+	container := request.GetContainer()
+	podUID := request.GetPodUid()
+	previous := request.GetPrevious()
+	if podUID == "" && container == "" {
+		source, err := biz.TrainingLogSourceFor(record, request.GetLogId())
+		if err != nil {
+			return biz.LogSelection{}, err
+		}
+		return biz.LogSelection{Kind: biz.LogSourceKindTrainer, LogID: source.LogID, Target: biz.ContainerLogTarget{
+			Namespace: source.Namespace, NamespaceUID: source.NamespaceUID, PodName: source.PodName,
+			PodUID: source.PodUID, ContainerName: source.ContainerName, Previous: previous,
+		}}, nil
+	}
+	workload, err := query.logWorkloadScope(ctx, record)
+	if err != nil {
+		return biz.LogSelection{}, err
+	}
+	if podUID == "" {
+		return biz.LogSelection{}, biz.ErrWorkloadViewUnavailable
+	}
+	if workload.PipelineReadable() && query.steps != nil {
+		if pod, err := query.steps.StepPod(ctx, workload, podUID); err == nil {
+			logID := biz.StepLogID(workload.ExecutionID, pod.UID)
+			if request.GetLogId() != "" && request.GetLogId() != logID {
+				return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+			}
+			return biz.LogSelection{Kind: biz.LogSourceKindKFPStep, LogID: logID, Target: biz.ContainerLogTarget{
+				Namespace: workload.NamespaceName, NamespaceUID: workload.NamespaceUID, PodName: pod.Name,
+				PodUID: pod.UID, ContainerName: containerOr(container, biz.DefaultContainerFor(biz.LogSourceKindKFPStep)), Previous: previous,
+			}}, nil
+		} else if !errors.Is(err, biz.ErrTrainingLogNotFound) {
+			return biz.LogSelection{}, err
+		} else if request.GetLogId() == biz.StepLogID(workload.ExecutionID, podUID) {
+			// The credential proves the caller asked for this step Pod, but the
+			// Pod is gone. M1 has no KFP archive reader, so the answer is an
+			// explicit unavailable step log rather than a worker fallback.
+			return biz.LogSelection{}, biz.ErrStepLogsUnavailable
+		}
+	}
+	if query.workers == nil || !workload.WorkerReadable() {
+		return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+	}
+	pods, err := query.workers.ListWorkerPods(ctx, workload)
+	if err != nil {
+		return biz.LogSelection{}, err
+	}
+	for _, pod := range pods {
+		if pod.UID != podUID {
+			continue
+		}
+		return biz.LogSelection{Kind: biz.LogSourceKindTrainer, LogID: workerLogID(workload.ExecutionID, pod.UID), Target: biz.ContainerLogTarget{
+			Namespace: workload.NamespaceName, NamespaceUID: workload.NamespaceUID, PodName: pod.Name,
+			PodUID: pod.UID, ContainerName: containerOr(container, biz.DefaultContainerFor(biz.LogSourceKindTrainer)), Previous: previous,
+		}}, nil
+	}
+	return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+}
+
+// logWorkloadScope resolves the read boundary for a container log request. The
+// pipeline plane needs the frozen Run authority, which only the operation
+// aggregate carries, so a step log can never be addressed from a bare record.
+func (query *Query) logWorkloadScope(ctx context.Context, record biz.QueryRecord) (biz.ExecutionWorkloadScope, error) {
+	aggregate := biz.OperationRecord{QueryRecord: record}
+	if query.operationsRepository != nil {
+		committed, err := query.operationsRepository.GetOperationRecord(ctx, record.Execution.TenantID, record.Execution.ExecutionID)
+		if err != nil {
+			return biz.ExecutionWorkloadScope{}, err
+		}
+		aggregate = committed
+	}
+	return biz.ExecutionWorkloadScopeFor(aggregate)
+}
+
+func containerOr(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
+// trainingSource re-derives the durable worker identity for a selection so an
+// archived tail is checked against the same owner chain the live read used.
+func trainingSource(record biz.QueryRecord, selection biz.LogSelection) (biz.TrainingLogSource, error) {
+	source, err := biz.TrainingLogSourceFor(record, selection.LogID)
+	if err != nil {
+		return biz.TrainingLogSource{}, err
+	}
+	if source.Namespace != selection.Target.Namespace || source.PodName != selection.Target.PodName ||
+		source.PodUID != selection.Target.PodUID || source.ContainerName != selection.Target.ContainerName {
+		return biz.TrainingLogSource{}, biz.ErrTrainingLogsUnavailable
+	}
+	return source, nil
 }
 
 func (query *Query) GetExecution(ctx context.Context, request *modeldevv1.GetExecutionRequest) (*modeldevv1.GetExecutionResponse, error) {
@@ -150,6 +327,9 @@ func (query *Query) GetExecution(ctx context.Context, request *modeldevv1.GetExe
 	if err != nil {
 		return nil, queryError(err, scope.RequestID)
 	}
+	// The curve needs one object read per execution, so only the single-execution
+	// detail fills it. A list keeps deriving everything from committed facts.
+	view.Metrics = query.executionMetrics(ctx, record)
 	return &modeldevv1.GetExecutionResponse{Execution: view}, nil
 }
 
@@ -201,6 +381,12 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 		}
 		view.ManagedSettings = contractpb.EncodeManagedSettings(fine.ManagedSettings)
 		view.ResolvedConfigurationSha256 = fine.ResolvedConfigurationSHA256
+		// Publish only the base model identity: object key, storage scope and
+		// the file list stay owner-internal.
+		view.BaseModel = &modeldevv1.BaseModelIdentity{
+			ModelId: fine.BaseModel.ModelID, VersionId: fine.BaseModel.VersionID,
+			Family: fine.BaseModel.Family, Format: fine.BaseModel.Format,
+		}
 	}
 	if value.Close != nil {
 		view.StopRequested = value.Close.Reason == biz.CloseReasonUserStop
@@ -225,6 +411,13 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 			view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_VERIFY
 		}
 	}
+	// A running collect supersedes the step that produced its inputs, but never
+	// publish: once publish is admitted or published, the later facts decide.
+	// The collect step state uses the same predicate, so the timeline and
+	// current_step cannot disagree.
+	if step := currentStepFromFacts(record.Runtime); step != modeldevv1.PipelineStep_PIPELINE_STEP_UNSPECIFIED {
+		view.CurrentStep = step
+	}
 	if record.Runtime.Publication != nil {
 		view.CurrentStep = modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH
 		view.ObservedAt = timestamppb.New(record.Runtime.Publication.VerifiedAt)
@@ -248,6 +441,7 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if err != nil {
 		return nil, err
 	}
+	view.Steps = executionSteps(value, record.Runtime)
 	return view, nil
 }
 
@@ -364,6 +558,14 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 			return nil, status.Error(codes.InvalidArgument, "invalid close filter")
 		}
 		filter.Close = biz.CloseState(strings.TrimPrefix(name, "CLOSE_STATE_"))
+	}
+	if request.Name != nil {
+		if !validExecutionNameFilter(*request.Name) {
+			return nil, status.Error(codes.InvalidArgument, "invalid name filter")
+		}
+		// The name is matched case-insensitively as a substring, so it is
+		// folded once here rather than per scanned row.
+		filter.Name = strings.ToLower(*request.Name)
 	}
 	if query == nil || query.repository == nil {
 		return nil, queryError(biz.ErrPersistence, scope.RequestID)
