@@ -30,9 +30,13 @@ import (
 // This is the real early-close path: a dispatch is confirmed, but no normal
 // step ever binds. Closing records its independent owner, exits and Pod removal
 // through restricted PostgreSQL adapters before every pool is discarded.
-func newClosedRecoveryCleanupFixture(t *testing.T) (*computeCleanupFixture, biz.ExecutionRuntime) {
+func newClosedRecoveryCleanupFixture(t *testing.T, captured ...bool) (*computeCleanupFixture, biz.ExecutionRuntime) {
 	t.Helper()
 	f := newOwnerCloseFixture(t)
+	useCaptured := len(captured) == 1 && captured[0]
+	if useCaptured {
+		f = capturedEvictedOwner(t)
+	}
 	f.execution.AcceptedAt = time.Now().UTC().Truncate(time.Microsecond)
 	f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(time.Hour)
 	f.execution.Admission = admissionfixture.Bind(t, f.execution.Admission)
@@ -65,7 +69,9 @@ func newClosedRecoveryCleanupFixture(t *testing.T) (*computeCleanupFixture, biz.
 	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = f.dispatch.Plan.Environment.ExperimentID, f.dispatch.Plan.DisplayName, f.dispatch.Plan.Environment.Identities.KFPStepServiceAccount
 	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": f.dispatch.Plan.PipelineID, "pipeline_version_id": f.dispatch.Plan.PipelineVersionID}
 	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": f.dispatch.Plan.ExecutionID, "spec_hash": f.dispatch.Plan.SpecHash}, "pipeline_root": f.dispatch.Plan.Owner.PipelineRoot}
-	f.terminateExternalRecords(t)
+	if !useCaptured {
+		f.terminateExternalRecords(t)
+	}
 	f.workflow.SetResourceVersion("1")
 	step := &stepRetentionFixture{f: f, open: open, pods: map[string]*unstructured.Unstructured{}, workspace: biz.WorkspaceBinding{NamespaceName: f.authority().NamespaceName}}
 	for i := range f.pods {

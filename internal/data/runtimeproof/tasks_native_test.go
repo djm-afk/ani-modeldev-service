@@ -2,6 +2,20 @@ package runtimeproof
 
 import "testing"
 
+func TestRecordedCurrentMetadataExecutorsResolveOriginalEvictedPods(t *testing.T) {
+	workflow, raw, pods := recordedTasksFrom(t, "testdata/kubelet-1.35.8-initialized-evicted-owner.json")
+	tasks, err := resolvedManagedTasksForKind(workflow, raw, pods, "GENERAL_TRAINING")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, expected := range map[string]string{"workspace-name": "md-9tbrj-1827742978", "close-finalizer": "md-9tbrj-4153363017"} {
+		task, err := oneTask(tasks, name)
+		if err != nil || task.PodName != expected || task.State != "FAILED" {
+			t.Fatalf("current native %s association did not retain original Pod and failed state: %+v %v", name, task, err)
+		}
+	}
+}
+
 func TestRecordedNativeMetadataExecutorsResolveActualTaskPods(t *testing.T) {
 	workflow, raw, pods := recordedTasksFrom(t, "testdata/kfp-2.16-metadata-executors.json")
 	tasks, err := resolvedManagedTasksForKind(workflow, raw, pods, "FINETUNING")

@@ -40,5 +40,7 @@ class RuntimeFrozenFactsTests(unittest.TestCase):
    self.assertEqual(failure['optimizer_steps'],0)
    self.assertEqual(failure['phase'],'train')
    self.assertEqual(failure['reason'],'RUNTIME_EXECUTION_FAILED')
+   self.assertEqual(failure['phase_measurements']['phases'][0]['name'],'input_validate')
+   self.assertEqual(failure['phase_measurements']['phases'][0]['outcome'],'FAILED')
    self.assertFalse((root/'reports/train/summary.json').exists())
 if __name__=='__main__':unittest.main()

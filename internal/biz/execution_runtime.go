@@ -77,6 +77,9 @@ type RuntimeResource struct {
 	// InitializationAbort is owner-only Pod evidence, never a main-container
 	// exit or permission for a managed step, training writer, or publication.
 	InitializationAbort *PodInitializationAbort `json:",omitempty"`
+	// SandboxTermination is an owner-only kubelet post-termination marker.
+	// It preserves missing process status without inventing an actual exit.
+	SandboxTermination *PodSandboxTermination `json:",omitempty"`
 }
 
 // TrainingControllerSuspension is a controller acknowledgement, distinct from

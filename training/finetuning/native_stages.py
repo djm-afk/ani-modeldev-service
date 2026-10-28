@@ -53,7 +53,7 @@ def _truncation_facts(dataset, template, tokenizer, processor, data_args):
     return count, removed_tokens
 
 
-def run_managed_sft(parsed, *, tokenizer_module, template, callbacks, observe_dataset):
+def run_managed_sft(parsed, *, tokenizer_module, template, callbacks, observe_dataset, measurements):
     from llamafactory.data import SFTDataCollatorWith4DAttentionMask
     from llamafactory.data.loader import _get_merged_dataset, _get_preprocessed_dataset
     from llamafactory.extras.constants import IGNORE_INDEX
@@ -69,13 +69,18 @@ def run_managed_sft(parsed, *, tokenizer_module, template, callbacks, observe_da
             or training_args.do_predict or not training_args.do_train or finetuning_args.use_asft_loss):
         raise RuntimeFailure('RUNTIME_UNSUPPORTED', 'native parsed stages differ from managed SFT')
     tokenizer, processor = tokenizer_module['tokenizer'], tokenizer_module['processor']
-    with training_args.main_process_first(desc='load dataset', local=not data_args.data_shared_file_system):
-        aligned = _get_merged_dataset(data_args.dataset, model_args, data_args, training_args, 'sft')
+    with measurements.phase('load_convert'):
+        with training_args.main_process_first(desc='load dataset', local=not data_args.data_shared_file_system):
+            aligned = _get_merged_dataset(data_args.dataset, model_args, data_args, training_args, 'sft')
     aligned_cache = _disk_cache_files(aligned)
-    truncated_samples, truncated_tokens = _truncation_facts(aligned, template, tokenizer, processor, data_args)
-    with training_args.main_process_first(desc='pre-process dataset', local=not data_args.data_shared_file_system):
-        dataset = _get_preprocessed_dataset(aligned, data_args, training_args, 'sft', template, tokenizer, processor, is_eval=False)
+    measurements.record_dataset_cache_files('aligned', aligned_cache)
+    with measurements.phase('truncate'):
+        truncated_samples, truncated_tokens = _truncation_facts(aligned, template, tokenizer, processor, data_args)
+    with measurements.phase('tokenize'):
+        with training_args.main_process_first(desc='pre-process dataset', local=not data_args.data_shared_file_system):
+            dataset = _get_preprocessed_dataset(aligned, data_args, training_args, 'sft', template, tokenizer, processor, is_eval=False)
     tokenized_cache = _disk_cache_files(dataset)
+    measurements.record_dataset_cache_files('tokenized', tokenized_cache)
     if not len(dataset):
         raise RuntimeFailure('INPUT_INVALID', 'no effective training samples')
     effective_tokens, at_cutoff, maximum, observed = 0, 0, 0, 0
@@ -93,24 +98,27 @@ def run_managed_sft(parsed, *, tokenizer_module, template, callbacks, observe_da
                      'samples_at_cutoff': at_cutoff, 'max_effective_tokens': maximum,
                      'truncated_samples': truncated_samples, 'truncated_tokens': truncated_tokens,
                      'aligned_cache_files': aligned_cache, 'tokenized_cache_files': tokenized_cache})
-    model = load_model(tokenizer, model_args, finetuning_args, training_args.do_train)
-    collator = SFTDataCollatorWith4DAttentionMask(
-        template=template, model=model, pad_to_multiple_of=8,
-        label_pad_token_id=IGNORE_INDEX if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id,
-        block_diag_attn=model_args.block_diag_attn, neat_packing=data_args.neat_packing,
-        attn_implementation=getattr(model.config, '_attn_implementation', None),
-        compute_dtype=model_args.compute_dtype, **tokenizer_module)
-    generation = generating_args.to_dict(obey_generation_config=True)
-    generation['eos_token_id'] = list(dict.fromkeys(template.get_stop_token_ids(tokenizer)))
-    generation['pad_token_id'] = tokenizer.pad_token_id
-    trainer = CustomSeq2SeqTrainer(model=model, args=training_args, finetuning_args=finetuning_args,
-                                  data_collator=collator, callbacks=callbacks, gen_kwargs=generation,
-                                  ref_model=None, train_dataset=dataset, **tokenizer_module)
-    result = trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
-    trainer.save_model()
-    trainer.log_metrics('train', result.metrics)
-    trainer.save_metrics('train', result.metrics)
-    trainer.save_state()
+    with measurements.phase('model_load'):
+        model = load_model(tokenizer, model_args, finetuning_args, training_args.do_train)
+        collator = SFTDataCollatorWith4DAttentionMask(
+            template=template, model=model, pad_to_multiple_of=8,
+            label_pad_token_id=IGNORE_INDEX if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id,
+            block_diag_attn=model_args.block_diag_attn, neat_packing=data_args.neat_packing,
+            attn_implementation=getattr(model.config, '_attn_implementation', None),
+            compute_dtype=model_args.compute_dtype, **tokenizer_module)
+        generation = generating_args.to_dict(obey_generation_config=True)
+        generation['eos_token_id'] = list(dict.fromkeys(template.get_stop_token_ids(tokenizer)))
+        generation['pad_token_id'] = tokenizer.pad_token_id
+        trainer = CustomSeq2SeqTrainer(model=model, args=training_args, finetuning_args=finetuning_args,
+                                      data_collator=collator, callbacks=callbacks, gen_kwargs=generation,
+                                      ref_model=None, train_dataset=dataset, **tokenizer_module)
+    with measurements.phase('optimizer'):
+        result = trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
+    with measurements.phase('adapter_save'):
+        trainer.save_model()
+        trainer.log_metrics('train', result.metrics)
+        trainer.save_metrics('train', result.metrics)
+        trainer.save_state()
     return result
 
 

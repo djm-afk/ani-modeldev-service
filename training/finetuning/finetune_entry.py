@@ -37,6 +37,7 @@ from configuration import (
     load_configuration,
     projection,
 )
+from phase_measurement import PhaseMeasurements
 
 from template_runtime import (
     PACKAGES, RuntimeFailure, configure_work_directory, resolve_context_limit,
@@ -163,6 +164,14 @@ def inputs(args, *, verify_data=True):
     return workspace, configuration, dataset
 
 
+def measured_inputs(args, role, *, verify_data=True):
+    measurements = PhaseMeasurements(args.workspace, role)
+    args.phase_measurements = measurements
+    with measurements.phase('input_validate'):
+        workspace, configuration, dataset = inputs(args, verify_data=verify_data)
+    return workspace, configuration, dataset, measurements
+
+
 def factory_arguments(workspace, configuration, output):
     p = {item["name"]: item["value"] for item in configuration["parameters"]}
     managed = configuration["managed_settings"]
@@ -266,7 +275,7 @@ def effective_projection(parsed):
 
 def train(args):
     work = configure_work_directory(args.workspace, "train")
-    workspace, configuration, dataset = inputs(args)
+    workspace, configuration, dataset, measurements = measured_inputs(args, 'train')
     plan, capabilities = load_runtime_plan(workspace, args.expected_template_plan_sha256, read_regular)
     source_samples = int(dataset["row_count"])
     versions = runtime(configuration["managed_settings"]["device"])
@@ -395,7 +404,7 @@ def train(args):
                     truncated_tokens = statistics["truncated_tokens"]
 
                 run_managed_sft(parsed, callbacks=[Callback()], tokenizer_module=tokenizer_module,
-                                template=template, observe_dataset=observe_dataset)
+                                template=template, observe_dataset=observe_dataset, measurements=measurements)
                 if steps != parsed[2].max_steps or not losses:
                     raise ValueError(
                         "training did not reach its approved optimizer limit or produced no metrics"
@@ -475,6 +484,7 @@ def train(args):
                     "peak_process_rss_bytes": str(
                         resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
                     ),
+                    "phase_measurements": measurements.report(),
                     "error": error,
                 }
                 effective_parameters = {
@@ -503,10 +513,29 @@ def train(args):
     )
 
 
-def export(args):
+def export_arguments(workspace, merged, *, export_size):
+    if type(export_size) is not int or export_size <= 0:
+        raise ValueError('export_size must be a positive integer number of GB')
+    return {
+        "model_name_or_path": str(workspace / "inputs/model"),
+        "adapter_name_or_path": str(workspace / "training/adapter"),
+        "finetuning_type": "lora",
+        "export_dir": str(merged),
+        "export_size": export_size,
+        "export_device": "cpu",
+        "infer_dtype": "float32",
+        "trust_remote_code": False,
+        "resize_vocab": True,
+        "cache_dir": os.environ["HF_HOME"],
+    }
+
+
+def export(args, *, export_size=3):
     configure_work_directory(args.workspace, "export")
+    workspace = checked_path(args.workspace)
+    arguments = export_arguments(workspace, workspace / 'export/merged', export_size=export_size)
     started = time.monotonic()
-    workspace, configuration, dataset = inputs(args, verify_data=False)
+    workspace, configuration, dataset, measurements = measured_inputs(args, 'export', verify_data=False)
     runtime()
     plan, capabilities = load_runtime_plan(workspace, args.expected_template_plan_sha256, read_regular)
     from transformers import AutoTokenizer
@@ -538,20 +567,10 @@ def export(args):
     reports = empty_output(workspace / "reports/export")
     from native_stages import export_managed
 
-    export_managed(
-        {
-            "model_name_or_path": str(workspace / "inputs/model"),
-            "adapter_name_or_path": str(workspace / "training/adapter"),
-            "finetuning_type": "lora",
-            "export_dir": str(merged),
-            "export_size": 3,
-            "export_device": "cpu",
-            "infer_dtype": "float32",
-            "trust_remote_code": False,
-            "resize_vocab": True,
-            "cache_dir": os.environ["HF_HOME"],
-        }, tokenizer_module={"tokenizer": tokenizer, "processor": None}, effective_template=effective_template,
-    )
+    with measurements.phase('export'):
+        export_managed(
+            arguments, tokenizer_module={"tokenizer": tokenizer, "processor": None}, effective_template=effective_template,
+        )
     exported_tokenizer = AutoTokenizer.from_pretrained(str(merged), local_files_only=True, trust_remote_code=False)
     assert_effective_tokenizer(exported_tokenizer, effective_template, template_body)
     encoding_probes(exported_tokenizer, template)
@@ -599,6 +618,7 @@ def export(args):
             "peak_process_rss_bytes": str(
                 resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
             ),
+            "phase_measurements": measurements.report(),
         },
     )
 
@@ -606,7 +626,7 @@ def export(args):
 def verify(args):
     configure_work_directory(args.workspace, "verify")
     started = time.monotonic()
-    workspace, configuration, dataset = inputs(args, verify_data=False)
+    workspace, configuration, dataset, measurements = measured_inputs(args, 'verify', verify_data=False)
     runtime()
     plan, capabilities = load_runtime_plan(workspace, args.expected_template_plan_sha256, read_regular)
     merged = workspace / "export/merged"
@@ -628,41 +648,42 @@ def verify(args):
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    tokenizer = AutoTokenizer.from_pretrained(
-        str(merged), local_files_only=True, trust_remote_code=False
-    )
-    template, effective_template, template_body = consume_effective_template(workspace, plan, tokenizer, read_regular)
-    effective_template_sha256 = hashlib.sha256(canonical(effective_template)).hexdigest()
-    if manifest["effective_template_sha256"] != effective_template_sha256:
-        raise RuntimeFailure("TEMPLATE_ENCODING_MISMATCH", "export template identity differs")
-    model = (
-        AutoModelForCausalLM.from_pretrained(
-            str(merged),
-            torch_dtype=torch.float32,
-            local_files_only=True,
-            trust_remote_code=False,
-            attn_implementation="eager",
+    with measurements.phase('verify'):
+        tokenizer = AutoTokenizer.from_pretrained(
+            str(merged), local_files_only=True, trust_remote_code=False
         )
-        .to("cpu")
-        .eval()
-    )
-    if {p.dtype for p in model.parameters()} != {torch.float32}:
-        raise ValueError("verify model precision differs from locked loader")
-    prompt = tokenizer.apply_chat_template(
-        [{"role": "user", "content": "What is two plus two?"}],
-        tokenize=False,
-        add_generation_prompt=True,
-    )
-    encoded = tokenizer(prompt, return_tensors="pt")
-    with torch.inference_mode():
-        logits = model(**encoded).logits
-        if not torch.isfinite(logits).all():
-            raise ValueError("merged model produced non-finite logits")
-        output = model.generate(**encoded, max_new_tokens=8, do_sample=False)
-    generated = output[0, encoded["input_ids"].shape[-1] :].tolist()
-    generated_text = tokenizer.decode(generated, skip_special_tokens=True)
-    if not generated or not generated_text.strip():
-        raise ValueError("merged model generated no nonempty text")
+        template, effective_template, template_body = consume_effective_template(workspace, plan, tokenizer, read_regular)
+        effective_template_sha256 = hashlib.sha256(canonical(effective_template)).hexdigest()
+        if manifest["effective_template_sha256"] != effective_template_sha256:
+            raise RuntimeFailure("TEMPLATE_ENCODING_MISMATCH", "export template identity differs")
+        model = (
+            AutoModelForCausalLM.from_pretrained(
+                str(merged),
+                torch_dtype=torch.float32,
+                local_files_only=True,
+                trust_remote_code=False,
+                attn_implementation="eager",
+            )
+            .to("cpu")
+            .eval()
+        )
+        if {p.dtype for p in model.parameters()} != {torch.float32}:
+            raise ValueError("verify model precision differs from locked loader")
+        prompt = tokenizer.apply_chat_template(
+            [{"role": "user", "content": "What is two plus two?"}],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+        encoded = tokenizer(prompt, return_tensors="pt")
+        with torch.inference_mode():
+            logits = model(**encoded).logits
+            if not torch.isfinite(logits).all():
+                raise ValueError("merged model produced non-finite logits")
+            output = model.generate(**encoded, max_new_tokens=8, do_sample=False)
+        generated = output[0, encoded["input_ids"].shape[-1] :].tolist()
+        generated_text = tokenizer.decode(generated, skip_special_tokens=True)
+        if not generated or not generated_text.strip():
+            raise ValueError("merged model generated no nonempty text")
     write_json(
         reports / "verify.json",
         {
@@ -682,6 +703,7 @@ def verify(args):
             "peak_process_rss_bytes": str(
                 resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
             ),
+            "phase_measurements": measurements.report(),
         },
     )
 
@@ -727,6 +749,7 @@ def main():
                 "dataset_manifest_sha256": args.expected_dataset_manifest_sha256,
                 "base_manifest_sha256": args.expected_base_manifest_sha256,
                 "template_plan_sha256": args.expected_template_plan_sha256,
+                "phase_measurements": args.phase_measurements.report() if hasattr(args, 'phase_measurements') else None,
             })
         except BaseException:
             pass

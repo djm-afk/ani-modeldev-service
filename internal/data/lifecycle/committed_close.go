@@ -12,7 +12,7 @@ import (
 // newer command fence. A timestamp alone never establishes writer absence.
 func validateCommittedClose(ctx context.Context, current *runtimeTransaction) error {
 	state, admitted := current.state, current.execution
-	if state.CloseGeneration == 0 || state.CloseRequestedAt.IsZero() || state.ClosedAt.Before(state.CloseRequestedAt) || state.CloseEvidence == nil || state.CloseReviewReason != "" {
+	if state.CloseGeneration == 0 || state.CloseRequestedAt.IsZero() || state.ClosedAt.Before(state.CloseRequestedAt) || state.CloseEvidence == nil || state.CloseReviewReason != "" || !validSandboxTerminationScope(state, *state.CloseEvidence) {
 		return biz.ErrPersistence
 	}
 	if !runtimeCreationSettled(state) {

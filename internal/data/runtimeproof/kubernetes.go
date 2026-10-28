@@ -57,6 +57,13 @@ func (v *Verifier) ResolveManagedTaskID(ctx context.Context, plan biz.PipelineDi
 	if err != nil || !sameObject(pod, "v1", "Pod", association.NamespaceName, association.PodName, association.PodUID) || pod.GetDeletionTimestamp() != nil || !workflowOwner(pod, association) {
 		return "", biz.ErrRuntimeNotReady
 	}
+	phase, _ := textAt(pod, "status", "phase")
+	reason, _ := textAt(pod, "status", "reason")
+	if phase == "Failed" && reason == "Evicted" {
+		// The owner can retain post-termination absence evidence. An evicted
+		// Pod cannot use that evidence as a current managed caller identity.
+		return "", biz.ErrRuntimeNotReady
+	}
 	account, _ := textAt(pod, "spec", "serviceAccountName")
 	if account != plan.Environment.Identities.KFPStepServiceAccount {
 		return "", biz.ErrRuntimeConflict

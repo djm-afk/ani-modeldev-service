@@ -93,9 +93,9 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 	allTerminal := true
 	allSuccessful := true
 	for _, resource := range history {
-		// Initialization abort proves only an owner-controlled KFP Pod. It
+		// Aborted initialization or sandbox termination proves only an owner-controlled KFP Pod. It
 		// cannot replace any training controller or writer exit observation.
-		if resource.InitializationAbort != nil {
+		if resource.InitializationAbort != nil || resource.SandboxTermination != nil {
 			return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 		}
 		switch resource.Kind {
@@ -278,7 +278,14 @@ func validCloseEvidence(authority biz.RunAuthorityCandidate, reason string, evid
 			return false
 		}
 		if abort := resource.InitializationAbort; abort != nil {
-			if evidence.OwnerTermination == nil || reason == "NATURAL_TERMINAL" || resource.ExitCode != nil || !resource.CreationDisabled || !validOpaqueID(abort.PodResourceVersion) || len(validation.IsDNS1123Subdomain(abort.NodeName)) != 0 || !abort.ValidAt(evidence.ObservedAt) {
+			if evidence.OwnerTermination == nil || reason == "NATURAL_TERMINAL" || resource.ExitCode != nil || resource.SandboxTermination != nil || !resource.CreationDisabled || !validOpaqueID(abort.PodResourceVersion) || len(validation.IsDNS1123Subdomain(abort.NodeName)) != 0 || !abort.ValidAt(evidence.ObservedAt) {
+				return false
+			}
+			seen[resource.UID] = true
+			continue
+		}
+		if proof := resource.SandboxTermination; proof != nil {
+			if evidence.OwnerTermination == nil || reason == "NATURAL_TERMINAL" || resource.ExitCode != nil || resource.TrainingLog != nil || !resource.CreationDisabled || !validOpaqueID(proof.PodResourceVersion) || len(validation.IsDNS1123Subdomain(proof.NodeName)) != 0 || !proof.ValidAt(evidence.ObservedAt) {
 				return false
 			}
 			seen[resource.UID] = true
@@ -291,6 +298,20 @@ func validCloseEvidence(authority biz.RunAuthorityCandidate, reason string, evid
 			return false
 		}
 		seen[resource.UID] = true
+	}
+	return true
+}
+
+// Keep this pre-workspace proof restriction at persistence boundaries too;
+// a caller's prior external verification cannot replace committed state.
+func validSandboxTerminationScope(state biz.ExecutionRuntime, evidence biz.ManagedCloseEvidence) bool {
+	if state.Workspace == nil {
+		return true
+	}
+	for _, resource := range evidence.Resources {
+		if resource.SandboxTermination != nil {
+			return false
+		}
 	}
 	return true
 }

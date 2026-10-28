@@ -339,6 +339,14 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 	if fine == nil {
 		return invalid
 	}
+	dataset, err := cpup01.BuildDatasetManifest(execution.Snapshot.Input)
+	if err != nil {
+		return invalid
+	}
+	datasetSHA, err := dataset.Digest()
+	if err != nil {
+		return invalid
+	}
 	baseHash, err := fine.BaseModel.BaseManifestSHA256()
 	if err != nil {
 		return invalid
@@ -386,6 +394,9 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		MetricSamples                int64              `json:"metric_samples"`
 		InputSHA256                  string             `json:"input_sha256"`
 		InputBytes                   int64              `json:"input_bytes,string"`
+		DatasetManifestSHA256        string             `json:"dataset_manifest_sha256"`
+		PreparedInputSHA256          string             `json:"prepared_input_sha256"`
+		PreparedInputBytes           int64              `json:"prepared_input_bytes,string"`
 		BaseManifestSHA256           string             `json:"base_manifest_sha256"`
 		ParameterContractVersion     string             `json:"parameter_contract_version"`
 		ResolvedConfigurationSHA256  string             `json:"resolved_configuration_sha256"`
@@ -401,6 +412,9 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		return invalid
 	}
 	if summary.EffectiveTemplateSHA256 != templateSHA || summary.Schema != "ani.finetune.summary.v1" || summary.Status != "SUCCEEDED" || summary.SourceSamples != int64(execution.Snapshot.Input.RowCount) || summary.Samples < 1 || summary.Samples > summary.SourceSamples || summary.DroppedSamples == nil || *summary.DroppedSamples != summary.SourceSamples-summary.Samples || summary.OptimizerSteps <= 0 || summary.Steps != summary.OptimizerSteps || summary.InputSHA256 != execution.Snapshot.Input.Object.SHA256 || summary.InputBytes != execution.Snapshot.Input.Object.SizeBytes || summary.BaseManifestSHA256 != baseHash || summary.ParameterContractVersion != fine.ParameterContractVersion || summary.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || summary.EffectiveConfigurationSHA256 != fine.ResolvedConfigurationSHA256 {
+		return invalid
+	}
+	if summary.DatasetManifestSHA256 != datasetSHA || summary.PreparedInputSHA256 != dataset.PreparedSHA256 || summary.PreparedInputBytes != dataset.PreparedSizeBytes {
 		return invalid
 	}
 	if summary.Device != fine.ManagedSettings.Device || len(summary.TrainDtypes) != 1 || summary.TrainDtypes[0] != fine.ManagedSettings.TrainDtype || summary.AdapterDtype != "float32" ||
@@ -445,12 +459,18 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		EffectiveTemplateSHA256     string             `json:"effective_template_sha256"`
 		Schema                      string             `json:"schema"`
 		InputSHA256                 string             `json:"input_sha256"`
+		DatasetManifestSHA256       string             `json:"dataset_manifest_sha256"`
+		PreparedInputSHA256         string             `json:"prepared_input_sha256"`
+		PreparedInputBytes          int64              `json:"prepared_input_bytes,string"`
 		BaseManifestSHA256          string             `json:"base_manifest_sha256"`
 		ResolvedConfigurationSHA256 string             `json:"resolved_configuration_sha256"`
 		Files                       []finetuningMember `json:"files"`
 	}
 	raw, err = readFinetuningReport(ctx, root, "reports/train/adapter_manifest.json", files)
-	if err != nil || decodeFinetuningReport(raw, &association) != nil || association.EffectiveTemplateSHA256 != templateSHA || association.Schema != "ani.finetune.adapter-manifest.v1" || association.InputSHA256 != summary.InputSHA256 || association.BaseManifestSHA256 != baseHash || association.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || !sameFinetuningMembers(association.Files, adapter) {
+	if err != nil || decodeFinetuningReport(raw, &association) != nil || association.EffectiveTemplateSHA256 != templateSHA || association.Schema != "ani.finetune.adapter-manifest.v3" || association.InputSHA256 != summary.InputSHA256 || association.BaseManifestSHA256 != baseHash || association.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || !sameFinetuningMembers(association.Files, adapter) {
+		return invalid
+	}
+	if association.DatasetManifestSHA256 != datasetSHA || association.PreparedInputSHA256 != dataset.PreparedSHA256 || association.PreparedInputBytes != dataset.PreparedSizeBytes {
 		return invalid
 	}
 	adapterManifestHash := pipelineContentHash(raw)
@@ -460,13 +480,19 @@ func verifyFinetuningReports(ctx context.Context, root int, execution biz.Execut
 		ResolvedConfigurationSHA256 string             `json:"resolved_configuration_sha256"`
 		Dtype                       string             `json:"dtype"`
 		InputSHA256                 string             `json:"input_sha256"`
+		DatasetManifestSHA256       string             `json:"dataset_manifest_sha256"`
+		PreparedInputSHA256         string             `json:"prepared_input_sha256"`
+		PreparedInputBytes          int64              `json:"prepared_input_bytes,string"`
 		BaseManifestSHA256          string             `json:"base_manifest_sha256"`
 		AdapterManifestSHA256       string             `json:"adapter_manifest_sha256"`
 		AdapterFiles                []finetuningMember `json:"adapter_files"`
 		Files                       []finetuningMember `json:"files"`
 	}
 	raw, err = readFinetuningReport(ctx, root, "reports/export/merged_manifest.json", files)
-	if err != nil || decodeFinetuningReport(raw, &merged) != nil || merged.EffectiveTemplateSHA256 != templateSHA || merged.Schema != "ani.finetune.merged-manifest.v1" || merged.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || merged.Dtype != fine.ManagedSettings.ExportDtype || merged.InputSHA256 != summary.InputSHA256 || merged.BaseManifestSHA256 != baseHash || merged.AdapterManifestSHA256 != adapterManifestHash || !sameFinetuningMembers(merged.AdapterFiles, adapter) || !sameFinetuningMembers(merged.Files, reportMembers(files, "export/merged/")) {
+	if err != nil || decodeFinetuningReport(raw, &merged) != nil || merged.EffectiveTemplateSHA256 != templateSHA || merged.Schema != "ani.finetune.merged-manifest.v3" || merged.ResolvedConfigurationSHA256 != fine.ResolvedConfigurationSHA256 || merged.Dtype != fine.ManagedSettings.ExportDtype || merged.InputSHA256 != summary.InputSHA256 || merged.BaseManifestSHA256 != baseHash || merged.AdapterManifestSHA256 != adapterManifestHash || !sameFinetuningMembers(merged.AdapterFiles, adapter) || !sameFinetuningMembers(merged.Files, reportMembers(files, "export/merged/")) {
+		return invalid
+	}
+	if merged.DatasetManifestSHA256 != datasetSHA || merged.PreparedInputSHA256 != dataset.PreparedSHA256 || merged.PreparedInputBytes != dataset.PreparedSizeBytes {
 		return invalid
 	}
 	mergedHash := pipelineContentHash(raw)

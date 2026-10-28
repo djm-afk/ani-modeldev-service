@@ -147,6 +147,13 @@ func ProjectRuntimeStates(base ExecutionStates, runtime ExecutionRuntime) (Execu
 			return ExecutionStates{}, ErrInvalidExecutionStateFacts
 		}
 		states.Close = CloseStateClosed
+		// Runtime readers validate committed owner termination independently
+		// of the close intent. It covers failures before a training observation
+		// exists, but a later pipeline failure cannot erase successful training.
+		owner := runtime.CloseEvidence.OwnerTermination
+		if owner != nil && owner.RunState == "FAILED" && (owner.WorkflowPhase == "Failed" || owner.WorkflowPhase == "Error") && states.Compute != ComputeStateSucceeded {
+			states.Compute = ComputeStateFailed
+		}
 	}
 	return states, nil
 }

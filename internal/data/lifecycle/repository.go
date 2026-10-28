@@ -589,7 +589,7 @@ func (repository *Repository) ConfirmRuntimeClosed(ctx context.Context, authorit
 		if generation == 0 || current.state.CloseGeneration != generation {
 			return false, biz.ErrRuntimeConflict
 		}
-		if !validExecutionCloseEvidence(current.execution, authority, current.state.CloseReason, evidence) {
+		if !validSandboxTerminationScope(current.state, evidence) || !validExecutionCloseEvidence(current.execution, authority, current.state.CloseReason, evidence) {
 			return false, biz.ErrRuntimeNotReady
 		}
 		if !finetuningStartsTerminated(current.state, authority, evidence) {

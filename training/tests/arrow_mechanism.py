@@ -17,6 +17,7 @@ TRAINING = Path('/opt/ani-modeldev/training')
 sys.path.insert(0, str(TRAINING))
 sys.path.insert(0, str(TRAINING / 'finetuning'))
 from template_runtime import configure_work_directory
+from phase_measurement import PhaseMeasurements
 
 
 def fixture(workspace):
@@ -145,7 +146,8 @@ def measure(workspace, expected_sha):
     try:
         try:
             run_managed_sft(parsed, tokenizer_module={'tokenizer': tokenizer, 'processor': None},
-                            template=template, callbacks=[], observe_dataset=done)
+                            template=template, callbacks=[], observe_dataset=done,
+                            measurements=PhaseMeasurements(workspace, 'train'))
         except PreprocessingObserved:
             pass
     finally:

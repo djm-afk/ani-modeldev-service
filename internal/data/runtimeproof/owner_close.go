@@ -123,10 +123,19 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 		}
 		terminal, _, completed, code := terminatedPod(pod)
 		var abort *biz.PodInitializationAbort
+		var sandbox *biz.PodSandboxTermination
 		if !terminal && owned {
 			abort = ownerInitializationAbort(pod, observedAt)
 			if abort != nil {
 				terminal, completed = true, abort.DeletedAt
+			}
+		}
+		if !terminal && owned && workspace == nil {
+			sandbox = observeSandboxTermination(pod, observedAt, true)
+			if sandbox != nil {
+				// The marker proves absence at observation. Sandbox readiness's
+				// transition time is not an invented process completion time.
+				terminal, completed = true, observedAt
 			}
 		}
 		if !terminal || pod.GetUID() == "" || pod.GetName() == "" || completed.After(observedAt) {
@@ -136,7 +145,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 			continue
 		}
 		account, _ := textAt(pod, "spec", "serviceAccountName")
-		if (code == nil && abort == nil) || account != environment.Identities.KFPStepServiceAccount || seenNames[pod.GetName()] || seenUIDs[string(pod.GetUID())] {
+		if (code == nil && abort == nil && sandbox == nil) || account != environment.Identities.KFPStepServiceAccount || seenNames[pod.GetName()] || seenUIDs[string(pod.GetUID())] {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeConflict
 		}
 		// The current native node ID is mandatory independently of Pod name.
@@ -147,6 +156,9 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 		seenNames[pod.GetName()], seenUIDs[string(pod.GetUID())], seenNodes[nodeID] = true, true, true
 		if abort != nil {
 			evidence.Resources = append(evidence.Resources, biz.RuntimeResource{APIVersion: "v1", Kind: "Pod", Namespace: pod.GetNamespace(), Name: pod.GetName(), UID: string(pod.GetUID()), OwnerUID: authority.WorkflowUID, APIObjectPresent: true, CreationDisabled: true, Terminal: true, InitializationAbort: abort})
+			abortedPods[pod.GetName()] = string(pod.GetUID())
+		} else if sandbox != nil {
+			evidence.Resources = append(evidence.Resources, biz.RuntimeResource{APIVersion: "v1", Kind: "Pod", Namespace: pod.GetNamespace(), Name: pod.GetName(), UID: string(pod.GetUID()), OwnerUID: authority.WorkflowUID, APIObjectPresent: true, CreationDisabled: true, Terminal: true, SandboxTermination: sandbox})
 			abortedPods[pod.GetName()] = string(pod.GetUID())
 		} else {
 			evidence.Resources = append(evidence.Resources, podFact(pod, authority.WorkflowUID, *code))
@@ -199,11 +211,17 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	}
 	// A controller mutation/retry during enumeration invalidates this observation.
 	for _, resource := range evidence.Resources {
-		if resource.InitializationAbort == nil {
+		version := ""
+		if resource.InitializationAbort != nil {
+			version = resource.InitializationAbort.PodResourceVersion
+		} else if resource.SandboxTermination != nil {
+			version = resource.SandboxTermination.PodResourceVersion
+		}
+		if version == "" {
 			continue
 		}
 		current, err := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "pods"}).Namespace(environment.NamespaceName).Get(ctx, resource.Name, metav1.GetOptions{})
-		if err != nil || !sameObject(current, "v1", "Pod", environment.NamespaceName, resource.Name, abortedPods[resource.Name]) || current.GetResourceVersion() != resource.InitializationAbort.PodResourceVersion {
+		if err != nil || !sameObject(current, "v1", "Pod", environment.NamespaceName, resource.Name, abortedPods[resource.Name]) || current.GetResourceVersion() != version {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 		}
 	}

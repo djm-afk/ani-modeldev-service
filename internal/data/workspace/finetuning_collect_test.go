@@ -172,6 +172,80 @@ func TestFinetuningCollectRejectsInventoryAndActualReportConflicts(t *testing.T)
 	}
 }
 
+func TestFinetuningCollectRejectsLegacyProducerManifestVersions(t *testing.T) {
+	for _, report := range []struct{ path, schema string }{
+		{"reports/train/adapter_manifest.json", "ani.finetune.adapter-manifest.v1"},
+		{"reports/export/merged_manifest.json", "ani.finetune.merged-manifest.v1"},
+	} {
+		t.Run(report.path, func(t *testing.T) {
+			directory, execution, contents := finetuningOutputWorkspace(t)
+			replaceReport(t, directory, contents, report.path, "schema", report.schema)
+			refreshFinetuningReportLinks(t, directory, contents)
+			if output, err := workspace.Collect(context.Background(), directory, execution); !errors.Is(err, biz.ErrInvalidWorkspaceOutput) || len(output.Files) != 0 {
+				t.Fatalf("retired manifest version produced collected output: %v", err)
+			}
+		})
+	}
+}
+
+func TestFinetuningCollectBindsProducerDatasetIdentityToFrozenInput(t *testing.T) {
+	reports := []string{"reports/train/summary.json", "reports/train/adapter_manifest.json", "reports/export/merged_manifest.json"}
+	for _, field := range []string{"dataset_manifest_sha256", "prepared_input_sha256", "prepared_input_bytes"} {
+		for _, report := range reports {
+			for _, mode := range []string{"missing", "wrong"} {
+				t.Run(report+"/"+field+"/"+mode, func(t *testing.T) {
+					directory, execution, contents := finetuningOutputWorkspace(t)
+					if mode == "missing" {
+						var value map[string]any
+						if err := json.Unmarshal(contents[report], &value); err != nil {
+							t.Fatal(err)
+						}
+						delete(value, field)
+						raw, err := json.Marshal(value)
+						if err != nil {
+							t.Fatal(err)
+						}
+						contents[report] = raw
+						writeFile(t, filepath.Join(directory, report), raw)
+					} else {
+						value := strings.Repeat("0", 64)
+						if field == "prepared_input_bytes" {
+							value = stringNumber(execution.Snapshot.Input.PreparedDataset.SizeBytes + 1)
+						}
+						replaceReport(t, directory, contents, report, field, value)
+					}
+					refreshFinetuningReportLinks(t, directory, contents)
+					if output, err := workspace.Collect(context.Background(), directory, execution); !errors.Is(err, biz.ErrInvalidWorkspaceOutput) || len(output.Files) != 0 {
+						t.Fatalf("unfrozen producer dataset identity produced collected output: %v", err)
+					}
+				})
+			}
+		}
+		t.Run("all reports agree on wrong "+field, func(t *testing.T) {
+			directory, execution, contents := finetuningOutputWorkspace(t)
+			value := strings.Repeat("0", 64)
+			if field == "prepared_input_bytes" {
+				value = stringNumber(execution.Snapshot.Input.PreparedDataset.SizeBytes + 1)
+			}
+			for _, report := range reports {
+				replaceReport(t, directory, contents, report, field, value)
+			}
+			refreshFinetuningReportLinks(t, directory, contents)
+			if output, err := workspace.Collect(context.Background(), directory, execution); !errors.Is(err, biz.ErrInvalidWorkspaceOutput) || len(output.Files) != 0 {
+				t.Fatalf("self-consistent reports overrode the frozen input: %v", err)
+			}
+		})
+	}
+}
+
+func refreshFinetuningReportLinks(t *testing.T, directory string, contents map[string][]byte) {
+	t.Helper()
+	// Keep downstream hashes true so rejection cannot be caused merely by a
+	// broken report link instead of the identity/version under test.
+	replaceReport(t, directory, contents, "reports/export/merged_manifest.json", "adapter_manifest_sha256", pipelineDigest(contents["reports/train/adapter_manifest.json"]))
+	replaceReport(t, directory, contents, "reports/verify/verify.json", "merged_manifest_sha256", pipelineDigest(contents["reports/export/merged_manifest.json"]))
+}
+
 func TestFinetuningPublishRejectsLocalMutationBeforeAnyPUT(t *testing.T) {
 	for _, mode := range []string{"nested symlink", "changed after collection", "spool symlink", "original tar changed"} {
 		t.Run(mode, func(t *testing.T) {
@@ -424,6 +498,14 @@ func finetuningOutputWorkspaceWith(t *testing.T, customize func(*cpup01.Snapshot
 	encode := func(name string, value any) {
 		if report, ok := value.(map[string]any); ok {
 			report["effective_template_sha256"] = pipelineDigest(contents["reports/train/effective-template.json"])
+			switch name {
+			case "reports/train/summary.json", "reports/train/adapter_manifest.json", "reports/export/merged_manifest.json":
+				// These fields and the v3 manifest tags are emitted by the
+				// current finetune_entry.py producer, not inferred from output.
+				report["dataset_manifest_sha256"] = datasetSHA
+				report["prepared_input_sha256"] = snapshot.Input.PreparedDataset.SHA256
+				report["prepared_input_bytes"] = stringNumber(snapshot.Input.PreparedDataset.SizeBytes)
+			}
 		}
 		raw, err := json.Marshal(value)
 		if err != nil {
@@ -445,8 +527,8 @@ func finetuningOutputWorkspaceWith(t *testing.T, customize func(*cpup01.Snapshot
 	}
 	contents["reports/train/metrics.jsonl"] = metrics.Bytes()
 	encode("reports/train/summary.json", map[string]any{"schema": "ani.finetune.summary.v1", "status": "SUCCEEDED", "samples": samples, "source_samples": samples, "dropped_samples": 0, "effective_token_count": samples * 48, "max_effective_tokens": 48, "samples_at_cutoff": 0, "truncated_samples": 0, "truncated_tokens": 0, "device": "cpu", "train_dtypes": []string{"float32"}, "adapter_dtype": "float32", "optimizer_steps": maxSteps, "steps": maxSteps, "metric_samples": maxSteps, "input_sha256": snapshot.Input.Object.SHA256, "input_bytes": stringNumber(snapshot.Input.Object.SizeBytes), "base_manifest_sha256": baseHash, "parameter_contract_version": cpup01.FinetuningParameterContractVersion, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "effective_configuration": json.RawMessage(effective), "effective_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "learning_rate": parameters["learning_rate"], "max_steps": maxSteps, "recipe_sha256": pipelineDigest(settings), "adapter_files": members("training/adapter/")})
-	encode("reports/train/adapter_manifest.json", map[string]any{"schema": "ani.finetune.adapter-manifest.v1", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "files": members("training/adapter/")})
-	encode("reports/export/merged_manifest.json", map[string]any{"schema": "ani.finetune.merged-manifest.v1", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "adapter_manifest_sha256": pipelineDigest(contents["reports/train/adapter_manifest.json"]), "adapter_files": members("training/adapter/"), "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "dtype": "float32", "files": members("export/merged/")})
+	encode("reports/train/adapter_manifest.json", map[string]any{"schema": "ani.finetune.adapter-manifest.v3", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "files": members("training/adapter/")})
+	encode("reports/export/merged_manifest.json", map[string]any{"schema": "ani.finetune.merged-manifest.v3", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "adapter_manifest_sha256": pipelineDigest(contents["reports/train/adapter_manifest.json"]), "adapter_files": members("training/adapter/"), "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "dtype": "float32", "files": members("export/merged/")})
 	encode("reports/export/export.json", map[string]any{"schema": "ani.finetune.export.v1", "status": "SUCCEEDED", "dtype": "float32"})
 	encode("reports/verify/verify.json", map[string]any{"schema": "ani.finetune.verify.v1", "status": "PASSED", "dtype": "float32", "device": "cpu", "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "merged_manifest_sha256": pipelineDigest(contents["reports/export/merged_manifest.json"]), "finite_logits": true, "generated_token_ids": []int64{1, 2}})
 	// Fedora /tmp is tmpfs. Use this checkout's private disk-backed work area
