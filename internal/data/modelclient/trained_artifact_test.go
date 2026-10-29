@@ -56,6 +56,13 @@ func artifactFixture() (biz.TrainedArtifactRequest, biz.TrainedArtifactSession, 
 	return input, s, r
 }
 
+func artifactCallContext(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
+	return ctx
+}
+
 func TestTrainedArtifactAdapterUsesOriginalFiniteProtocolOncePerOperation(t *testing.T) {
 	in, session, stored := artifactFixture()
 	prepareCalls, reads, tickets, completes := 0, 0, 0, 0
@@ -97,7 +104,7 @@ func TestTrainedArtifactAdapterUsesOriginalFiniteProtocolOncePerOperation(t *tes
 		return &modelv1.CompleteTrainedArtifactResponse{RegistrationId: session.RegistrationID, StoragePath: session.StoragePath, ModelId: "55555555-5555-4555-8555-555555555555", ModelVersionId: "66666666-6666-4666-8666-666666666666", ModelVersionStatus: "ready", SizeBytes: stored.SizeBytes, ChecksumSha256: stored.ChecksumSha256}, nil
 	}
 	client := &Client{client: boundary, actor: "modeldev:service", timeout: time.Hour}
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("authorization", "borrowed", "cookie", "session", "x-ani-tenant-id", "foreign"))
+	ctx := metadata.NewOutgoingContext(artifactCallContext(t), metadata.Pairs("authorization", "borrowed", "cookie", "session", "x-ani-tenant-id", "foreign"))
 	got, err := client.PrepareArtifact(ctx, in)
 	if err != nil || got != session || prepareCalls != 1 || reads != 0 {
 		t.Fatal("prepare retried or performed hidden read", err)
@@ -157,7 +164,7 @@ func TestTrainedArtifactReadRejectsChangedOriginalSemantics(t *testing.T) {
 				calls++
 				return &modelv1.GetTrainedArtifactRegistrationResponse{Registration: r, UploadedObject: &modelv1.TrainedArtifactObjectObservation{State: modelv1.TrainedArtifactObjectObservation_STATE_MISSING}}, nil
 			}}
-			_, err := (&Client{client: b, actor: "modeldev:service", timeout: time.Hour}).ReadArtifact(context.Background(), in)
+			_, err := (&Client{client: b, actor: "modeldev:service", timeout: time.Hour}).ReadArtifact(artifactCallContext(t), in)
 			if !errors.Is(err, biz.ErrModelDependencyUnavailable) || calls != 1 {
 				t.Fatal("changed original session accepted", err)
 			}
@@ -173,7 +180,7 @@ func TestTrainedArtifactMissAndUnknownWriteNeverRetryOrLeakTicket(t *testing.T) 
 			calls++
 			return nil, status.Error(code, "https://storage.example/?secret=must-not-escape")
 		}}
-		_, err := (&Client{client: b, actor: "modeldev:service", timeout: time.Hour}).ReadArtifact(context.Background(), in)
+		_, err := (&Client{client: b, actor: "modeldev:service", timeout: time.Hour}).ReadArtifact(artifactCallContext(t), in)
 		if !errors.Is(err, biz.ErrModelDependencyUnavailable) || strings.Contains(err.Error(), "secret") || calls != 1 {
 			t.Fatal("miss/unknown retried or exposed signed storage data")
 		}
