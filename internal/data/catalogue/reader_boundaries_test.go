@@ -52,11 +52,15 @@ func TestMaterialRejectsAmbiguousIncompleteAndUnsafeSoftware(t *testing.T) {
 		"uppercase UUID": mutate(func(m *cpup01.ImplementationMaterial) {
 			m.Implementation.PipelineVersionID = "AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA"
 		}),
-		"IR absent":         mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.PipelineIRSHA256 = "" }),
-		"floating image":    mutate(func(m *cpup01.ImplementationMaterial) { m.Training.DefaultImage.ImageID = "registry.example.test/mlp:latest" }),
-		"unknown scope":     mutate(func(m *cpup01.ImplementationMaterial) { m.Training.DefaultImage.Scope = "global" }),
-		"missing image":     mutate(func(m *cpup01.ImplementationMaterial) { m.Training.DefaultImage = cpup01.DefaultTrainingImage{} }),
-		"pinned digest":     mutate(func(m *cpup01.ImplementationMaterial) { m.Program = &cpup01.MaterialProgram{ImageVersionID: "11111111-1111-4111-8111-111111111111", ImageDigest: "registry.example.test/mlp@sha256:" + strings.Repeat("a", 64)} }),
+		"IR absent": mutate(func(m *cpup01.ImplementationMaterial) { m.Implementation.PipelineIRSHA256 = "" }),
+		"floating image": mutate(func(m *cpup01.ImplementationMaterial) {
+			m.Training.DefaultImage.ImageID = "registry.example.test/mlp:latest"
+		}),
+		"unknown scope": mutate(func(m *cpup01.ImplementationMaterial) { m.Training.DefaultImage.Scope = "global" }),
+		"missing image": mutate(func(m *cpup01.ImplementationMaterial) { m.Training.DefaultImage = cpup01.DefaultTrainingImage{} }),
+		"pinned digest": mutate(func(m *cpup01.ImplementationMaterial) {
+			m.Program = &cpup01.MaterialProgram{ImageVersionID: "11111111-1111-4111-8111-111111111111", ImageDigest: "registry.example.test/mlp@sha256:" + strings.Repeat("a", 64)}
+		}),
 		"shell":             mutate(func(m *cpup01.ImplementationMaterial) { m.Training.Command = []string{"sh", "-c", "train"} }),
 		"arbitrary source":  mutate(func(m *cpup01.ImplementationMaterial) { m.Training.ArgsTemplate[1].Source = "USER_SCRIPT" }),
 		"mixed argument":    mutate(func(m *cpup01.ImplementationMaterial) { m.Training.ArgsTemplate[1].Literal = "/arbitrary" }),

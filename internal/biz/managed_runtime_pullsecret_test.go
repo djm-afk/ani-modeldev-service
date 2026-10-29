@@ -128,7 +128,7 @@ func newPullSecretRuntimeFixture(t *testing.T) *pullSecretRuntimeFixture {
 		NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "md-" + admission.ExecutionID,
 		PVCUID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", InputSubpath: snapshot.Workspace.InputSubpath,
 		TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath,
-		PublicationSubpath: snapshot.Workspace.PublicationSubpath,
+		PublicationSubpath:     snapshot.Workspace.PublicationSubpath,
 		PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256,
 	}
 	return &pullSecretRuntimeFixture{
@@ -250,7 +250,7 @@ func (r *recordingTrainingRuntime) CreateRuntime(_ context.Context, plan biz.Tra
 	r.plan = plan
 	return biz.RuntimeTemplateBinding{
 		NamespaceUID: plan.Workspace.NamespaceUID, Name: plan.Snapshot.RuntimePlan.Name,
-		UID: "99999999-9999-4999-8999-999999999999",
+		UID:                "99999999-9999-4999-8999-999999999999",
 		ObservedSpecSHA256: plan.Snapshot.RuntimePlan.ExpectedSpecSHA256,
 	}, nil
 }

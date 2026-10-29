@@ -35,22 +35,22 @@ func SchemaVersionFor(kind string) string {
 // Snapshot freezes trusted candidate identity and the entire executable plan.
 // Every resource UID created after admission belongs to runtime facts only.
 type Snapshot struct {
-	SchemaVersion  string `json:"schema_version"`
-	Kind           string `json:"kind"`
-	DeliveryMode   string `json:"delivery_mode"`
-	IdentityRef    IdentityRef                `json:"identity_ref"`
-	Implementation ImplementationSnapshot     `json:"implementation"`
-	ComputeOrigin  ComputeOrigin              `json:"compute_origin"`
-	Timing         Timing                     `json:"timing"`
-	RuntimePlan    RuntimePlan                `json:"runtime_plan"`
-	Input          InputRef                   `json:"input"`
+	SchemaVersion  string                 `json:"schema_version"`
+	Kind           string                 `json:"kind"`
+	DeliveryMode   string                 `json:"delivery_mode"`
+	IdentityRef    IdentityRef            `json:"identity_ref"`
+	Implementation ImplementationSnapshot `json:"implementation"`
+	ComputeOrigin  ComputeOrigin          `json:"compute_origin"`
+	Timing         Timing                 `json:"timing"`
+	RuntimePlan    RuntimePlan            `json:"runtime_plan"`
+	Input          InputRef               `json:"input"`
 	// Program carries the finetuning chain's trusted image identity and is
 	// absent for general training.
 	Program *ProgramRef `json:"program,omitempty"`
 	// TrainingProgram carries the selected catalogue training image and is
 	// absent for finetuning. Exactly one of Program/TrainingProgram is present,
 	// so the two chains never share a hash or a fallback.
-	TrainingProgram  *TrainingProgram          `json:"training_program,omitempty"`
+	TrainingProgram  *TrainingProgram           `json:"training_program,omitempty"`
 	Resources        CPUResources               `json:"resources"`
 	Environment      EnvironmentBindingSnapshot `json:"environment"`
 	Workspace        WorkspaceContract          `json:"workspace"`

@@ -264,6 +264,7 @@ func compatibleAdmissionFacts(f TenantAdmissionFacts, object cpup01.FixedObjectR
 func validAdmissionContainerPath(value string) bool {
 	return path.IsAbs(value) && path.Clean(value) == value && ValidStorageKey(strings.TrimPrefix(value, "/")) && !strings.ContainsAny(value, "*?[]")
 }
+
 // resolveTrainingProgram freezes the catalogue selection and the trusted
 // command/args contract. It only reads Resource's resolution: Prepare must stay
 // read-only, so no Secret is written and Kubernetes is never touched here. The

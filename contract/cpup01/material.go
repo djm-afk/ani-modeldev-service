@@ -25,10 +25,10 @@ type ImplementationMaterial struct {
 	Implementation ImplementationSnapshot `json:"implementation"`
 	// Training is present only for general training. Program is present only for
 	// finetuning, whose image identity stays exactly as it was.
-	Training       *TrainingMaterial  `json:"training,omitempty"`
-	Program        *MaterialProgram   `json:"program,omitempty"`
-	Workspace      WorkspaceContract  `json:"workspace"`
-	OutputContract OutputContract     `json:"output_contract"`
+	Training       *TrainingMaterial   `json:"training,omitempty"`
+	Program        *MaterialProgram    `json:"program,omitempty"`
+	Workspace      WorkspaceContract   `json:"workspace"`
+	OutputContract OutputContract      `json:"output_contract"`
 	Finetuning     *FinetuningMaterial `json:"finetuning,omitempty"`
 }
 

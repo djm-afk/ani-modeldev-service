@@ -165,10 +165,16 @@ func TestPullSecretNameCoversEveryScopeDimension(t *testing.T) {
 		}
 	}
 	for _, mutate := range []func() (string, error){
-		func() (string, error) { return cpup01.PullSecretName("88888888-8888-4888-8888-888888888888", cluster, namespace, registry) },
-		func() (string, error) { return cpup01.PullSecretName(tenant, "33333333-3333-4333-8333-333333333333", namespace, registry) },
+		func() (string, error) {
+			return cpup01.PullSecretName("88888888-8888-4888-8888-888888888888", cluster, namespace, registry)
+		},
+		func() (string, error) {
+			return cpup01.PullSecretName(tenant, "33333333-3333-4333-8333-333333333333", namespace, registry)
+		},
 		func() (string, error) { return cpup01.PullSecretName(tenant, cluster, "other-namespace", registry) },
-		func() (string, error) { return cpup01.PullSecretName(tenant, cluster, namespace, "registry.example.test:8443") },
+		func() (string, error) {
+			return cpup01.PullSecretName(tenant, cluster, namespace, "registry.example.test:8443")
+		},
 	} {
 		if got, err := mutate(); err != nil || got == base {
 			t.Fatalf("scope dimension did not change the name: %s %v", got, err)
@@ -195,7 +201,9 @@ func TestTrainingImageSelectionRejectsInconsistentFacts(t *testing.T) {
 		mutate func(*cpup01.TrainingImageSelection)
 	}{
 		{"digest without prefix", func(s *cpup01.TrainingImageSelection) { s.Digest = strings.Repeat("e", 64) }},
-		{"reference without digest", func(s *cpup01.TrainingImageSelection) { s.Reference = conformance.RegistryAuthority + "/cpu/mlp:latest" }},
+		{"reference without digest", func(s *cpup01.TrainingImageSelection) {
+			s.Reference = conformance.RegistryAuthority + "/cpu/mlp:latest"
+		}},
 		{"reference outside authority", func(s *cpup01.TrainingImageSelection) {
 			s.Reference = "registry.other.test/cpu/mlp@" + s.Digest
 		}},

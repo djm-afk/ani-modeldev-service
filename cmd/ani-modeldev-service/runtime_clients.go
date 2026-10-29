@@ -157,7 +157,12 @@ func loadRuntimeClients(config *conf.ManagedRuntime, imageRuntime *conf.ImageRun
 		issuer.Close()
 		return failure()
 	}
-	return runtimeClients{certificate: certificate, binding: binding, kube: kube, runs: runs, store: store, storageIssuer: issuer, logs: traininglogs.New(core), images: images, close: func() { closeImages(); kubeHTTP.CloseIdleConnections(); storageHTTP.CloseIdleConnections(); issuer.Close() }}, nil
+	return runtimeClients{certificate: certificate, binding: binding, kube: kube, runs: runs, store: store, storageIssuer: issuer, logs: traininglogs.New(core), images: images, close: func() {
+		closeImages()
+		kubeHTTP.CloseIdleConnections()
+		storageHTTP.CloseIdleConnections()
+		issuer.Close()
+	}}, nil
 }
 
 // loadImageRuntime requires every material when the dependency is declared, so
