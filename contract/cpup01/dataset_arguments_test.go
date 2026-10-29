@@ -9,7 +9,7 @@ import (
 
 func TestCurrentMaterialOnlyUsesFrozenDatasetManifest(t *testing.T) {
 	material := conformance.MaterialV21()
-	material.Program.ArgsTemplate = []cpup01.MaterialArgument{
+	material.Training.ArgsTemplate = []cpup01.MaterialArgument{
 		{Literal: "--dataset-manifest"}, {Literal: "/inputs/dataset-manifest.json"},
 		{Literal: "--expected-dataset-manifest-sha256"}, {Source: "DATASET_MANIFEST_SHA256"},
 		{Literal: "--work-root"}, {Literal: "/workspace/work/train"},
@@ -18,7 +18,7 @@ func TestCurrentMaterialOnlyUsesFrozenDatasetManifest(t *testing.T) {
 	if _, err := material.Canonical(); err != nil {
 		t.Fatalf("current frozen manifest source rejected: %v", err)
 	}
-	material.Program.ArgsTemplate[3].Source = "INPUT_SHA256"
+	material.Training.ArgsTemplate[3].Source = "INPUT_SHA256"
 	if _, err := material.Canonical(); err == nil {
 		t.Fatal("obsolete dataset byte identity source was accepted")
 	}

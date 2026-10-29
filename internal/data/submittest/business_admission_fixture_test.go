@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -81,13 +82,14 @@ func prepareMainFlowAdmission(t *testing.T, ctx context.Context, f *completeFixt
 		Workspace           cpup01.WorkspaceContract          `json:"workspace"`
 		InputFilePath       string                            `json:"input_file_path"`
 		OutputDirectoryPath string                            `json:"output_directory_path"`
+		TargetPlatform      cpup01.TrainingPlatform           `json:"target_platform"`
 		EnvironmentEvidence evidence                          `json:"environment_evidence"`
 		ApplicationEvidence evidence                          `json:"application_evidence"`
 	}{
 		SchemaVersion: "ani.modeldev.managed-admission-facts.v3", ResourceTenantID: request.TenantID,
 		ImplementationID: snapshot.Implementation.ImplementationID,
 		Environment:      snapshot.Environment, InputScope: inputScope, PublicationScope: snapshot.PublicationScope,
-		Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}, Workspace: snapshot.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs",
+		Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}, Workspace: snapshot.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", TargetPlatform: cpup01.TrainingPlatform{OS: "linux", Architecture: "amd64"},
 		EnvironmentEvidence: evidence{Reference: "boundary-fixture:environment", SHA256: completeHash(environmentBytes)},
 		ApplicationEvidence: evidence{Reference: "boundary-fixture:cpu-mlp-material", SHA256: completeHash(rawMaterial)},
 	}
@@ -103,7 +105,19 @@ func prepareMainFlowAdmission(t *testing.T, ctx context.Context, f *completeFixt
 	if err != nil {
 		t.Fatalf("BFF_ADMISSION_PREFLIGHT: pinned facts file load failed: %v", err)
 	}
-	resolver := biz.NewAdmissionResolver(catalogue.NewReader(directory), inputs, facts, snapshot.Limits)
+	resolver := biz.NewAdmissionResolver(catalogue.NewReader(directory), inputs, facts, submissionImages{}, snapshot.Limits)
 	t.Log("BFF_ADMISSION_READY: actual fixed CSV verified and persisted READY; canonical catalogue and pinned facts file loaded")
 	return service.NewAdmission(resolver), selection, f.request.Admission.Intent
+}
+
+// submissionImages is the synthetic catalogue answer for the boundary fixture.
+type submissionImages struct{}
+
+func (submissionImages) ResolveTrainingImage(_ context.Context, _ string, id, scope string, platform cpup01.TrainingPlatform) (biz.TrainingImageResolution, error) {
+	digest := "sha256:" + strings.Repeat("e", 64)
+	return biz.TrainingImageResolution{ImageID: id, Scope: scope, ImageVersion: 1, Reference: "registry.example.test/cpu/mlp@" + digest, Digest: digest, RegistryAuthority: "registry.example.test", Platform: platform}, nil
+}
+
+func (submissionImages) EnsurePullSecret(_ context.Context, tenant, cluster, namespace, _, registry string) (string, error) {
+	return cpup01.PullSecretName(tenant, cluster, namespace, registry)
 }

@@ -35,6 +35,18 @@ func (material preparedVerticalMaterial) ReadImplementationMaterial(context.Cont
 
 type preparedVerticalFacts struct{ value biz.TenantAdmissionFacts }
 
+// preparedVerticalImages is the catalogue answer for the synthetic fixture.
+type preparedVerticalImages struct{}
+
+func (preparedVerticalImages) ResolveTrainingImage(_ context.Context, _ string, id, scope string, platform cpup01.TrainingPlatform) (biz.TrainingImageResolution, error) {
+	digest := "sha256:" + "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+	return biz.TrainingImageResolution{ImageID: id, Scope: scope, ImageVersion: 1, Reference: "registry.example.test/cpu/mlp@" + digest, Digest: digest, RegistryAuthority: "registry.example.test", Platform: platform}, nil
+}
+
+func (preparedVerticalImages) EnsurePullSecret(_ context.Context, tenant, cluster, namespace, _, registry string) (string, error) {
+	return cpup01.PullSecretName(tenant, cluster, namespace, registry)
+}
+
 func (facts preparedVerticalFacts) ReadAdmissionFacts(context.Context, string, string) (biz.TenantAdmissionFacts, error) {
 	return facts.value, nil
 }
@@ -70,8 +82,8 @@ func TestRealImportPreparedFactsAndAcceptedExecutionDriveSingleReadPrepare(t *te
 	}
 	identity := snapshot.IdentityRef
 	identity.TenantID, identity.Actor, identity.IntentHash = request.TenantID, request.Actor, intentHash
-	facts := biz.TenantAdmissionFacts{TenantID: request.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: request.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
-	resolver := biz.NewAdmissionResolver(preparedVerticalMaterial{material}, input.New(open()), preparedVerticalFacts{facts}, limits)
+	facts := biz.TenantAdmissionFacts{TenantID: request.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: request.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}, TargetPlatform: cpup01.TrainingPlatform{OS: "linux", Architecture: "amd64"}}
+	resolver := biz.NewAdmissionResolver(preparedVerticalMaterial{material}, input.New(open()), preparedVerticalFacts{facts}, preparedVerticalImages{}, limits)
 	candidate, err := resolver.Prepare(ctx, biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: time.Now().UTC().Truncate(time.Microsecond)})
 	if err != nil || candidate.Snapshot.Input.PreparedDataset != ready.Verification.PreparedDataset {
 		t.Fatalf("Prepare lost durable input observations: %+v %v", candidate.Snapshot.Input, err)

@@ -100,7 +100,7 @@ func prepareFinetuningVertical(t *testing.T, rows int) finetuningVerticalFixture
 		t.Fatal("READY did not survive a new connection", e)
 	}
 	models := &finetuningModelBoundary{tenant: request.TenantID, base: conformance.FinetuningSnapshotV1().Finetuning.BaseModel}
-	f.resolver = biz.NewFinetuningAdmissionResolver(catalogue.NewReader(f.directory), input.New(f.openPool()), reader, models, cpup01.ContentLimits{MaxContentBytes: 17179869184})
+	f.resolver = biz.NewFinetuningAdmissionResolver(catalogue.NewReader(f.directory), input.New(f.openPool()), reader, models, nil, cpup01.ContentLimits{MaxContentBytes: 17179869184})
 	return finetuningVerticalFixture{resolutionFixture: f, importedFine: request, models: models, management: management}
 }
 func TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay(t *testing.T) {

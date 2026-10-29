@@ -66,6 +66,14 @@ func (c Certificates) ClientCertificate(t testing.TB, mutate func(*x509.Certific
 	return c.issue(t, GovernanceDNSName, x509.ExtKeyUsageClientAuth, mutate)
 }
 
+// ClientCertificateFor mints one synthetic client identity with an explicit DNS
+// SAN so a cross-repository caller check can use its production literal name.
+// The CA and key stay private to test storage.
+func (c Certificates) ClientCertificateFor(t testing.TB, name string) tls.Certificate {
+	t.Helper()
+	return c.issue(t, name, x509.ExtKeyUsageClientAuth, nil)
+}
+
 func (c Certificates) issue(t testing.TB, name string, usage x509.ExtKeyUsage, mutate func(*x509.Certificate)) tls.Certificate {
 	t.Helper()
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

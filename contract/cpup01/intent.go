@@ -39,6 +39,11 @@ type Intent struct {
 	TargetModelID      *string               `json:"target_model_id,omitempty"`
 	NewModelName       *string               `json:"new_model_name,omitempty"`
 	FinetuningTemplate *string               `json:"finetuning_template,omitempty"`
+	// TrainingImageID and TrainingImageScope select the catalogue training image.
+	// Training accepts the pair or neither (trusted material default); finetuning
+	// has neither because its image identity is frozen by the material.
+	TrainingImageID    *string `json:"training_image_id,omitempty"`
+	TrainingImageScope *string `json:"training_image_scope,omitempty"`
 }
 
 type MLPParameters struct {
@@ -60,6 +65,8 @@ type intentWire struct {
 	TargetModelID      *string         `json:"target_model_id,omitempty"`
 	NewModelName       *string         `json:"new_model_name,omitempty"`
 	FinetuningTemplate *string         `json:"finetuning_template,omitempty"`
+	TrainingImageID    *string         `json:"training_image_id,omitempty"`
+	TrainingImageScope *string         `json:"training_image_scope,omitempty"`
 }
 
 func (i Intent) MarshalJSON() ([]byte, error) {
@@ -71,7 +78,7 @@ func (i Intent) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(intentWire{Name: i.Name, Kind: i.Kind, ImplementationID: i.ImplementationID, ComputePresetID: i.ComputePresetID, DatasetVersionID: i.DatasetVersionID, Parameters: p, TimeoutSeconds: i.TimeoutSeconds, BaseModelVersionID: i.BaseModelVersionID, TargetModelID: i.TargetModelID, NewModelName: i.NewModelName, FinetuningTemplate: i.FinetuningTemplate})
+	return json.Marshal(intentWire{Name: i.Name, Kind: i.Kind, ImplementationID: i.ImplementationID, ComputePresetID: i.ComputePresetID, DatasetVersionID: i.DatasetVersionID, Parameters: p, TimeoutSeconds: i.TimeoutSeconds, BaseModelVersionID: i.BaseModelVersionID, TargetModelID: i.TargetModelID, NewModelName: i.NewModelName, FinetuningTemplate: i.FinetuningTemplate, TrainingImageID: i.TrainingImageID, TrainingImageScope: i.TrainingImageScope})
 }
 
 func (i *Intent) UnmarshalJSON(raw []byte) error {
@@ -132,7 +139,7 @@ func parseIntent(raw []byte) (Intent, error) {
 	if len(w.Parameters) == 0 || w.Parameters[0] != '{' {
 		return invalid()
 	}
-	i := Intent{Name: w.Name, Kind: w.Kind, ImplementationID: w.ImplementationID, ComputePresetID: w.ComputePresetID, DatasetVersionID: w.DatasetVersionID, TimeoutSeconds: w.TimeoutSeconds, BaseModelVersionID: w.BaseModelVersionID, TargetModelID: w.TargetModelID, NewModelName: w.NewModelName, FinetuningTemplate: w.FinetuningTemplate}
+	i := Intent{Name: w.Name, Kind: w.Kind, ImplementationID: w.ImplementationID, ComputePresetID: w.ComputePresetID, DatasetVersionID: w.DatasetVersionID, TimeoutSeconds: w.TimeoutSeconds, BaseModelVersionID: w.BaseModelVersionID, TargetModelID: w.TargetModelID, NewModelName: w.NewModelName, FinetuningTemplate: w.FinetuningTemplate, TrainingImageID: w.TrainingImageID, TrainingImageScope: w.TrainingImageScope}
 	p := json.NewDecoder(bytes.NewReader(w.Parameters))
 	p.DisallowUnknownFields()
 	switch i.Kind {
@@ -168,6 +175,14 @@ func CanonicalIntent(i Intent) ([]byte, string, error) {
 	if i.TargetModelID != nil {
 		v := strings.ToLower(*i.TargetModelID)
 		i.TargetModelID = &v
+	}
+	if i.TrainingImageID != nil {
+		v := strings.ToLower(*i.TrainingImageID)
+		i.TrainingImageID = &v
+	}
+	if i.TrainingImageScope != nil {
+		v := strings.ToLower(*i.TrainingImageScope)
+		i.TrainingImageScope = &v
 	}
 	if i.MLP != nil {
 		p := *i.MLP
@@ -240,6 +255,15 @@ func validateIntent(i Intent) error {
 		if i.ImplementationID != "builtin.mlp" || i.MLP == nil || i.Finetuning != nil || i.BaseModelVersionID != nil || i.TargetModelID != nil || i.NewModelName != nil || i.FinetuningTemplate != nil {
 			return bad("implementation")
 		}
+		// The catalogue selection is optional: absence means the trusted material
+		// default. A partial pair is never defaulted, and a bare reference, tag or
+		// digest is not a catalogue selection.
+		if (i.TrainingImageID == nil) != (i.TrainingImageScope == nil) {
+			return bad("training image")
+		}
+		if i.TrainingImageID != nil && (!registeredImageIDPattern.MatchString(*i.TrainingImageID) || (ImageScope(*i.TrainingImageScope) != ImageScopePlatform && ImageScope(*i.TrainingImageScope) != ImageScopeTenant)) {
+			return bad("training image")
+		}
 	case "FINETUNING":
 		if i.ImplementationID != "builtin.sft_lora" || i.Finetuning == nil || i.MLP != nil || i.BaseModelVersionID == nil || !validUUID(*i.BaseModelVersionID) || i.TargetModelID != nil && i.NewModelName != nil {
 			return bad("implementation or model target")
@@ -249,6 +273,10 @@ func validateIntent(i Intent) error {
 		}
 		if i.FinetuningTemplate != nil && !validTemplateID(*i.FinetuningTemplate) {
 			return bad("finetuning_template")
+		}
+		// The finetuning chain keeps the image frozen by its material.
+		if i.TrainingImageID != nil || i.TrainingImageScope != nil {
+			return bad("training image")
 		}
 	default:
 		return bad("kind")

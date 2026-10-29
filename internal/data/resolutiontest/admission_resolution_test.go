@@ -105,7 +105,7 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	if err != nil {
 		t.Fatal("READY preflight proof failed", err)
 	}
-	facts := biz.TenantAdmissionFacts{TenantID: identity.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: imported.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
+	facts := biz.TenantAdmissionFacts{TenantID: identity.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: imported.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}, TargetPlatform: cpup01.TrainingPlatform{OS: "linux", Architecture: "amd64"}}
 	f := resolutionFixture{ctx: ctx, openPool: openPool, directory: directory, material: material, imported: imported, ready: ready, facts: facts, request: biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: time.Now().UTC().Truncate(time.Microsecond)}}
 	reader, err := admissionfacts.Load(ctx, []admissionfacts.FileSource{writeManagedFactsFixture(t, f)})
 	if err != nil {
@@ -114,7 +114,7 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	f.materials = &countedMaterials{reader: catalogue.NewReader(directory)}
 	f.inputs = &countedInputs{reader: input.New(openPool())}
 	f.factReader = &countedFacts{reader: reader}
-	f.resolver = biz.NewAdmissionResolver(f.materials, f.inputs, f.factReader, cpup01.ContentLimits{MaxContentBytes: 17179869184})
+	f.resolver = biz.NewAdmissionResolver(f.materials, f.inputs, f.factReader, fixtureImages{}, cpup01.ContentLimits{MaxContentBytes: 17179869184})
 	recovered, err := f.inputs.reader.Get(ctx, imported.TenantID, imported.InputVersionID)
 	if err != nil || !reflect.DeepEqual(ready, recovered) {
 		t.Fatal("READY unavailable across new PG connection", err)

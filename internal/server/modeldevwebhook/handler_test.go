@@ -92,7 +92,14 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 			t.Fatal(err)
 		}
 		digest := sha256.Sum256(raw)
-		profiles = append(profiles, modeldevwebhook.Profile{ID: id, Kind: kind, MaterialFile: path, MaterialSHA256: hex.EncodeToString(digest[:]), ComponentImage: release.Program.ImageDigest,
+		// General training no longer pins an image in its material, so the step
+		// component image is synthetic here. Finetuning keeps its material-bound
+		// export/verify identity, which the configuration cross-checks.
+		componentImage := "registry.example.test/modeldev-step@sha256:" + strings.Repeat("e", 64)
+		if release.Finetuning != nil {
+			componentImage = release.Program.ImageDigest
+		}
+		profiles = append(profiles, modeldevwebhook.Profile{ID: id, Kind: kind, MaterialFile: path, MaterialSHA256: hex.EncodeToString(digest[:]), ComponentImage: componentImage,
 			AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001})
 	}
 	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles,

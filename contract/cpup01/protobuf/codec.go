@@ -16,7 +16,7 @@ func EncodeIntent(i cpup01.Intent) (*modeldevv1.UserIntent, error) {
 	if _, _, err := cpup01.CanonicalIntent(i); err != nil {
 		return nil, err
 	}
-	m := &modeldevv1.UserIntent{Name: i.Name, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+i.Kind]), ImplementationId: i.ImplementationID, ComputePresetId: i.ComputePresetID, DatasetVersionId: i.DatasetVersionID, TimeoutSeconds: cloneUint64(i.TimeoutSeconds), BaseModelVersionId: cloneString(i.BaseModelVersionID), TargetModelId: cloneString(i.TargetModelID), NewModelName: cloneString(i.NewModelName), FinetuningTemplate: cloneString(i.FinetuningTemplate)}
+	m := &modeldevv1.UserIntent{Name: i.Name, Kind: trainingv1.ExecutionKind(trainingv1.ExecutionKind_value["EXECUTION_KIND_"+i.Kind]), ImplementationId: i.ImplementationID, ComputePresetId: i.ComputePresetID, DatasetVersionId: i.DatasetVersionID, TimeoutSeconds: cloneUint64(i.TimeoutSeconds), BaseModelVersionId: cloneString(i.BaseModelVersionID), TargetModelId: cloneString(i.TargetModelID), NewModelName: cloneString(i.NewModelName), FinetuningTemplate: cloneString(i.FinetuningTemplate), TrainingImageId: cloneString(i.TrainingImageID), TrainingImageScope: cloneString(i.TrainingImageScope)}
 	if i.MLP != nil {
 		p := i.MLP
 		m.Parameters = &modeldevv1.UserIntent_Mlp{Mlp: &modeldevv1.MLPParameters{LearningRate: cloneString(p.LearningRate), Epochs: cloneInt64(p.Epochs), BatchSize: cloneInt64(p.BatchSize), Seed: cloneUint32(p.Seed)}}
@@ -31,7 +31,7 @@ func DecodeIntent(m *modeldevv1.UserIntent) (cpup01.Intent, error) {
 	if m == nil || checkMessage(m.ProtoReflect(), 0) != nil {
 		return cpup01.Intent{}, invalid("intent")
 	}
-	i := cpup01.Intent{Name: m.Name, Kind: strings.TrimPrefix(m.Kind.String(), "EXECUTION_KIND_"), ImplementationID: m.ImplementationId, ComputePresetID: m.ComputePresetId, DatasetVersionID: m.DatasetVersionId, TimeoutSeconds: cloneUint64(m.TimeoutSeconds), BaseModelVersionID: cloneString(m.BaseModelVersionId), TargetModelID: cloneString(m.TargetModelId), NewModelName: cloneString(m.NewModelName), FinetuningTemplate: cloneString(m.FinetuningTemplate)}
+	i := cpup01.Intent{Name: m.Name, Kind: strings.TrimPrefix(m.Kind.String(), "EXECUTION_KIND_"), ImplementationID: m.ImplementationId, ComputePresetID: m.ComputePresetId, DatasetVersionID: m.DatasetVersionId, TimeoutSeconds: cloneUint64(m.TimeoutSeconds), BaseModelVersionID: cloneString(m.BaseModelVersionId), TargetModelID: cloneString(m.TargetModelId), NewModelName: cloneString(m.NewModelName), FinetuningTemplate: cloneString(m.FinetuningTemplate), TrainingImageID: cloneString(m.TrainingImageId), TrainingImageScope: cloneString(m.TrainingImageScope)}
 	switch p := m.Parameters.(type) {
 	case *modeldevv1.UserIntent_Mlp:
 		if p == nil || p.Mlp == nil {
@@ -111,6 +111,9 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 		OutputContract:   &trainingv1.OutputContract{SchemaVersion: snapshot.OutputContract.SchemaVersion, OutputKind: trainingv1.OutputKind(trainingv1.OutputKind_value["OUTPUT_KIND_"+snapshot.OutputContract.OutputKind]), DeliveryMode: trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS, RequiredFiles: files, CreateTarBundle: snapshot.OutputContract.CreateTarBundle},
 		DeadlineAt:       timestamppb.New(snapshot.DeadlineAt.UTC()),
 	}
+	if snapshot.TrainingImage != nil {
+		message.TrainingImage = encodeTrainingImage(*snapshot.TrainingImage)
+	}
 	if snapshot.Finetuning != nil {
 		message.Finetuning = encodeFinetuningSnapshot(*snapshot.Finetuning)
 	}
@@ -184,6 +187,13 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 		PublicationScope: cpup01.StorageScope{StorageConnectionID: message.PublicationScope.StorageConnectionId, Bucket: message.PublicationScope.Bucket, ApprovedPrefix: message.PublicationScope.ApprovedPrefix, CredentialReference: message.PublicationScope.CredentialReference},
 		OutputContract:   cpup01.OutputContract{SchemaVersion: message.OutputContract.SchemaVersion, OutputKind: strings.TrimPrefix(message.OutputContract.OutputKind.String(), "OUTPUT_KIND_"), DeliveryMode: strings.TrimPrefix(message.OutputContract.DeliveryMode.String(), "DELIVERY_MODE_"), RequiredFiles: files, CreateTarBundle: message.OutputContract.CreateTarBundle},
 		DeadlineAt:       message.DeadlineAt.AsTime(),
+	}
+	if message.TrainingImage != nil {
+		facts, err := decodeTrainingImage(message.TrainingImage)
+		if err != nil {
+			return cpup01.Snapshot{}, err
+		}
+		snapshot.TrainingImage = &facts
 	}
 	if message.Finetuning != nil {
 		fine, err := decodeFinetuningSnapshot(message.Finetuning)
@@ -307,6 +317,31 @@ func cloneStrings(values []string) []string {
 		return nil
 	}
 	return append([]string{}, values...)
+}
+
+func encodeTrainingImage(facts cpup01.TrainingImageFacts) *modeldevv1.TrainingImageFacts {
+	return &modeldevv1.TrainingImageFacts{
+		RegistryAuthority: facts.RegistryAuthority,
+		Platform:          &modeldevv1.TrainingPlatform{Os: facts.Platform.OS, Architecture: facts.Platform.Architecture, Variant: facts.Platform.Variant},
+		ProtocolVersion:   facts.ProtocolVersion,
+		PullSecretRef:     facts.PullSecretRef,
+	}
+}
+
+func decodeTrainingImage(message *modeldevv1.TrainingImageFacts) (cpup01.TrainingImageFacts, error) {
+	if message == nil || message.Platform == nil {
+		return cpup01.TrainingImageFacts{}, invalid("training image")
+	}
+	return cpup01.TrainingImageFacts{
+		RegistryAuthority: message.RegistryAuthority,
+		Platform: cpup01.TrainingPlatform{
+			OS:           message.Platform.Os,
+			Architecture: message.Platform.Architecture,
+			Variant:      message.Platform.Variant,
+		},
+		ProtocolVersion: message.ProtocolVersion,
+		PullSecretRef:   message.PullSecretRef,
+	}, nil
 }
 
 func invalid(reason string) error {

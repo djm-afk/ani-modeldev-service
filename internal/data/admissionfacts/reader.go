@@ -56,8 +56,12 @@ type document struct {
 	Workspace           cpup01.WorkspaceContract          `json:"workspace"`
 	InputFilePath       string                            `json:"input_file_path"`
 	OutputDirectoryPath string                            `json:"output_directory_path"`
-	EnvironmentEvidence evidenceReference                 `json:"environment_evidence"`
-	ApplicationEvidence evidenceReference                 `json:"application_evidence"`
+	// TargetPlatform pins the OCI platform of this environment. General
+	// training resolves its image against it; it is never inferred from the
+	// CPU/GPU device name or the image name.
+	TargetPlatform      cpup01.TrainingPlatform `json:"target_platform"`
+	EnvironmentEvidence evidenceReference       `json:"environment_evidence"`
+	ApplicationEvidence evidenceReference       `json:"application_evidence"`
 }
 
 type evidenceReference struct {
@@ -124,7 +128,7 @@ func (reader *Reader) ReadAdmissionFacts(ctx context.Context, tenantID, implemen
 	if !found {
 		return biz.TenantAdmissionFacts{}, biz.ErrAdmissionEnvironmentNotReady
 	}
-	return biz.TenantAdmissionFacts{TenantID: value.ResourceTenantID, Environment: value.Environment, InputScope: value.InputScope, PublicationScope: value.PublicationScope, Workspace: value.Workspace, InputFilePath: value.InputFilePath, OutputDirectoryPath: value.OutputDirectoryPath, Timing: value.Timing}, nil
+	return biz.TenantAdmissionFacts{TenantID: value.ResourceTenantID, Environment: value.Environment, InputScope: value.InputScope, PublicationScope: value.PublicationScope, Workspace: value.Workspace, InputFilePath: value.InputFilePath, OutputDirectoryPath: value.OutputDirectoryPath, Timing: value.Timing, TargetPlatform: value.TargetPlatform}, nil
 }
 
 func readDocument(ctx context.Context, source FileSource) (document, error) {

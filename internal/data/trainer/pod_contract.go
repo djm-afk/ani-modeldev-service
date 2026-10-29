@@ -26,6 +26,7 @@ func ValidatePodTemplate(expected corev1.PodSpec, actual corev1.PodSpec) error {
 		!reflect.DeepEqual(worker.ReadinessProbe, wanted.ReadinessProbe) || !reflect.DeepEqual(worker.StartupProbe, wanted.StartupProbe) ||
 		worker.Stdin != wanted.Stdin || worker.StdinOnce != wanted.StdinOnce || worker.TTY != wanted.TTY ||
 		!reflect.DeepEqual(actual.Volumes, expected.Volumes) || !reflect.DeepEqual(actual.SecurityContext, expected.SecurityContext) ||
+		!reflect.DeepEqual(actual.ImagePullSecrets, expected.ImagePullSecrets) ||
 		actual.ServiceAccountName != expected.ServiceAccountName || actual.SchedulerName != expected.SchedulerName ||
 		!reflect.DeepEqual(actual.RuntimeClassName, expected.RuntimeClassName) || !reflect.DeepEqual(actual.NodeSelector, expected.NodeSelector) ||
 		actual.RestartPolicy != corev1.RestartPolicyNever || actual.AutomountServiceAccountToken == nil || *actual.AutomountServiceAccountToken ||

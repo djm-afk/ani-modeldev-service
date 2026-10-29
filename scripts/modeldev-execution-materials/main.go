@@ -148,22 +148,26 @@ func material(f facts, entrySHA, mappingSHA string) (cpup01.ImplementationMateri
 	}
 	m := cpup01.ImplementationMaterial{SchemaVersion: cpup01.MaterialSchemaVersion, Implementation: cpup01.ImplementationSnapshot{ImplementationID: f.ImplementationID, Version: definition.Version, ParameterContractVersion: definition.ParameterContractVersion, PipelineID: f.Pipeline.PipelineID, PipelineVersionID: f.Pipeline.PipelineVersionID, PipelineIRSHA256: f.Pipeline.PipelineIRSHA256}, Workspace: cpup01.WorkspaceContract{Mode: "EXECUTION_PVC", StorageClass: f.WorkspaceStorageClass, CapacityBytes: f.WorkspaceCapacityBytes, InputSubpath: "inputs", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication", WorkSubpath: "work"}}
 	m.ComponentResources = f.ComponentResources
-	m.Program = cpup01.MaterialProgram{ImageID: f.TrainingImage.ImageID, ImageVersion: f.TrainingImage.ImageVersion, ImageScope: f.TrainingImage.ImageScope, ImageDigest: f.TrainingImage.Digest}
 	if f.ImplementationID == "builtin.mlp" {
 		if f.Finetuning != nil {
 			return bad()
 		}
-		m.Program.Command = []string{f.TrainingImage.PythonExecutable, "-I", "/opt/ani-modeldev/training/train_mlp.py"}
+		// Training names only the catalogue default. Resource resolves the
+		// version and digest at admission, so the material cannot pin a stale
+		// image and the same path serves a user selection.
+		m.Training = &cpup01.TrainingMaterial{DefaultImage: cpup01.DefaultTrainingImage{ImageID: f.TrainingImage.ImageID, Scope: f.TrainingImage.ImageScope}}
+		m.Training.Command = []string{f.TrainingImage.PythonExecutable, "-I", "/opt/ani-modeldev/training/train_mlp.py"}
 		device := "cpu"
 		if f.DeviceMode == "gpu" {
 			device = "cuda"
 		}
-		m.Program.ArgsTemplate = []cpup01.MaterialArgument{{Literal: "--dataset-manifest"}, {Literal: "/inputs/dataset-manifest.json"}, {Literal: "--expected-dataset-manifest-sha256"}, {Source: "DATASET_MANIFEST_SHA256"}, {Literal: "--work-root"}, {Literal: "/workspace/work/train"}, {Literal: "--output"}, {Source: "OUTPUT_PATH"}, {Literal: "--learning-rate"}, {Source: "LEARNING_RATE"}, {Literal: "--epochs"}, {Source: "EPOCHS"}, {Literal: "--batch-size"}, {Source: "BATCH_SIZE"}, {Literal: "--seed"}, {Source: "SEED"}, {Literal: "--device"}, {Literal: device}}
+		m.Training.ArgsTemplate = []cpup01.MaterialArgument{{Literal: "--dataset-manifest"}, {Literal: "/inputs/dataset-manifest.json"}, {Literal: "--expected-dataset-manifest-sha256"}, {Source: "DATASET_MANIFEST_SHA256"}, {Literal: "--work-root"}, {Literal: "/workspace/work/train"}, {Literal: "--output"}, {Source: "OUTPUT_PATH"}, {Literal: "--learning-rate"}, {Source: "LEARNING_RATE"}, {Literal: "--epochs"}, {Source: "EPOCHS"}, {Literal: "--batch-size"}, {Source: "BATCH_SIZE"}, {Literal: "--seed"}, {Source: "SEED"}, {Literal: "--device"}, {Literal: device}}
 		m.OutputContract = cpup01.OutputContract{SchemaVersion: cpup01.OutputContractSchemaVersion, OutputKind: "CHECKPOINT", DeliveryMode: "SAVE_ARTIFACTS", RequiredFiles: []cpup01.RequiredOutput{{Role: "METRICS", RelativePath: "metrics.jsonl", InTar: true}, {Role: "CHECKPOINT", RelativePath: "model.pt", InTar: true}, {Role: "MODEL_CONFIG", RelativePath: "model_config.json", InTar: true}, {Role: "SUMMARY", RelativePath: "summary.json", InTar: true}}, CreateTarBundle: false}
 	} else {
 		if f.Finetuning == nil || f.Finetuning.RuntimeCapabilities.EntrypointSHA256 != entrySHA || f.Finetuning.RuntimeCapabilities.ImageDigest != f.TrainingImage.Digest || f.Finetuning.ExportImage.Digest != f.TrainingImage.Digest || f.Finetuning.VerifyImage.Digest != f.TrainingImage.Digest || f.Finetuning.MappingSHA256 != mappingSHA || f.Finetuning.ExportImage.EntrySHA256 != entrySHA || f.Finetuning.VerifyImage.EntrySHA256 != entrySHA {
 			return bad()
 		}
+		m.Program = &cpup01.MaterialProgram{ImageID: f.TrainingImage.ImageID, ImageVersion: f.TrainingImage.ImageVersion, ImageScope: f.TrainingImage.ImageScope, ImageDigest: f.TrainingImage.Digest}
 		m.Program.Command = []string{f.TrainingImage.PythonExecutable, "-I", "/opt/ani-modeldev/training/finetuning/finetune_entry.py"}
 		m.Program.ArgsTemplate = arguments("train")
 		settings, err := managedSettings(f.DeviceMode)

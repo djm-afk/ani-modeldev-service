@@ -40,7 +40,7 @@ func buildCommandServer(listener *conf.Server_GRPC, config *conf.GovernanceComma
 		pool.Close()
 		return nil, nil, err
 	}
-	s, err := buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, nil, nil, nil, models, runtimeConfig, middlewares...)
+	s, err := buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, nil, nil, nil, models, nil, runtimeConfig, middlewares...)
 	if err != nil {
 		pool.Close()
 		closeModel()
@@ -64,10 +64,10 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 		return nil, errors.New("shared Model resources required")
 	}
 
-	return buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, query, verifier, operations, nil, runtimeConfig, middlewares...)
+	return buildCommandServerWithCapabilitiesAndModelFacts(listener, config, pool, query, verifier, operations, nil, nil, runtimeConfig, middlewares...)
 }
 
-func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, images biz.TrainingImageResolver, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
 	failed := func(message string) (*kratosgrpc.Server, error) { return nil, errors.New(message) }
 	if config == nil || (config.Model != nil && models == nil) {
 		return failed("shared Model resources required")
@@ -120,7 +120,7 @@ func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC,
 			return failed("command admission catalogue unavailable or invalid")
 		}
 		inputs := input.New(pool)
-		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models, limits))
+		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models, images, limits))
 		materials := biz.NewManagedMaterials(implementationMaterials, facts, inputs, biz.NewInputImporter(inputs, verifier, limits, runtimeConfig.ImportTimeout()))
 		management = service.NewManagement(materials)
 		source, sourceOK := models.(biz.FinetuningSourceFactsReader)

@@ -13,6 +13,11 @@ message Bootstrap {
   GovernanceCommand command = 2;
   // Presence assembles the managed execution main flow alongside command.
   ManagedRuntime runtime = 3;
+  // Resource ImageRuntime mTLS dependency shared by admission resolution and
+  // the training creation boundary. Presence enables training image resolution
+  // and the shared pull Secret; absence rejects training admission instead of
+  // falling back to a local image identity.
+  ImageRuntimeConnection image_runtime = 4;
 }
 
 message ManagedRuntime {
@@ -41,6 +46,18 @@ message ManagedRuntime {
 
 message RuntimeLimits {
   int64 max_content_bytes = 1;
+}
+
+// ImageRuntimeConnection is ModelDev's narrow Resource runtime identity. It
+// carries no registry credentials and cannot select an endpoint per request.
+message ImageRuntimeConnection {
+  string endpoint = 1;
+  string ca_file = 2;
+  string certificate_file = 3;
+  string private_key_file = 4;
+  // The exact DNS SAN required on the Resource runtime server certificate.
+  string server_name = 5;
+  google.protobuf.Duration timeout = 6;
 }
 
 // Independent ModelDev owner identity for the finite GPU close RPC.

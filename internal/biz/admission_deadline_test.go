@@ -42,7 +42,7 @@ func TestPrepareConsumesFrozenExecutionDeadlineWithoutRenewal(t *testing.T) {
 	identity.IntentHash = hash
 	accepted := time.Now().UTC().Truncate(time.Microsecond).Add(-900 * time.Millisecond)
 	boundary := &deadlineAdmissionBoundary{material: conformance.MaterialV21(), facts: biz.TenantAdmissionFacts{TenantID: identity.TenantID, Workspace: snapshot.Workspace, Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}}
-	resolver := biz.NewAdmissionResolver(boundary, boundary, boundary, snapshot.Limits)
+	resolver := biz.NewAdmissionResolver(boundary, boundary, boundary, nil, snapshot.Limits)
 	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	defer cancel()
 	_, err = resolver.Prepare(ctx, biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: accepted})
@@ -58,7 +58,7 @@ func TestFinalizeRejectsExpiredOriginalCandidateWithoutRenewal(t *testing.T) {
 	if err := candidate.Validate(); err != nil {
 		t.Fatal("invalid tracer candidate", err)
 	}
-	resolver := biz.NewAdmissionResolver(nil, nil, nil, snapshot.Limits)
+	resolver := biz.NewAdmissionResolver(nil, nil, nil, nil, snapshot.Limits)
 	if _, err := resolver.Finalize(context.Background(), candidate, nil); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("expired candidate was finalized: %v", err)
 	}
