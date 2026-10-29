@@ -135,7 +135,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	}
 	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, images, config.Runtime, middlewares...)
 	if err != nil {
-		return failed("managed command listener configuration invalid")
+		return failed("managed command listener configuration invalid: " + err.Error())
 	}
 	var releaseReconcilers []*biz.GPUReleaseReconciler
 	if gpuRelease != nil {
