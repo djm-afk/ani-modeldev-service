@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"errors"
-	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -14,19 +12,17 @@ import (
 
 // One composition owns one Model connection for both immutable source reads
 // and original registration operations. No request creates another connection.
-func loadModelResources(config *conf.GovernanceCommand) (*modelclient.Client, biz.FinetuningModelFactsReader, func(), error) {
+func loadModelResources(config *conf.GovernanceCommand, runtimeConfig *conf.ManagedRuntime) (*modelclient.Client, biz.FinetuningModelFactsReader, func(), error) {
 	noop := func() {}
 	if config == nil {
 		return nil, nil, noop, nil
 	}
-	if config.Model != nil && config.ControlledModelFacts != nil {
-		return nil, nil, noop, errors.New("live and controlled Model facts cannot be combined")
-	}
 	if config.Model == nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		reader, err := buildFinetuningModelFacts(ctx, config)
-		return nil, reader, noop, err
+		return nil, nil, noop, nil
+	}
+	limits, err := runtimeConfig.ContentLimits()
+	if err != nil {
+		return nil, nil, noop, errors.New("Model content policy required")
 	}
 	c := config.Model
 	if c.BaseModelStorageScope == nil {
@@ -37,11 +33,11 @@ func loadModelResources(config *conf.GovernanceCommand) (*modelclient.Client, bi
 	if scope.Validate() != nil {
 		return nil, nil, noop, errors.New("invalid Model base storage scope")
 	}
-	client, closeClient, err := modelclient.New(modelclient.Config{Endpoint: c.Endpoint, CAFile: c.CaFile, ClientDNSName: c.ClientDnsName, CertificateFile: c.CertificateFile, PrivateKeyFile: c.PrivateKeyFile, ServerName: c.ServerName, Actor: c.Actor, Timeout: c.Timeout.AsDuration()})
+	client, closeClient, err := modelclient.New(modelclient.Config{Endpoint: c.Endpoint, CAFile: c.CaFile, ClientDNSName: c.ClientDnsName, CertificateFile: c.CertificateFile, PrivateKeyFile: c.PrivateKeyFile, ServerName: c.ServerName, Actor: c.Actor, Timeout: c.Timeout.AsDuration(), ResolutionTimeout: runtimeConfig.ModelResolutionTimeout()})
 	if err != nil {
 		return nil, nil, noop, errors.New("Model connection materials invalid or unavailable")
 	}
-	reader, err := finetuningmodel.NewLive(client, scope)
+	reader, err := finetuningmodel.NewLive(client, scope, limits)
 	if err != nil {
 		closeClient()
 		return nil, nil, noop, errors.New("Model read dependency invalid")

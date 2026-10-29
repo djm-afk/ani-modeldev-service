@@ -41,7 +41,7 @@ func TestFinetuningCollectPublishReadsFrozenHFBytesAndOnlyPackagesMergedMembers(
 	if candidate.Bundle == nil || candidate.ID != "" || candidate.ReceiptID != "" || !candidate.VerifiedAt.IsZero() {
 		t.Fatal("uploader lost bundle or forged publication receipt")
 	}
-	verifier := objectstore.NewVerifier(client, execution.Snapshot.PublicationScope.StorageConnectionID, 3<<30)
+	verifier := objectstore.NewVerifier(client, execution.Snapshot.PublicationScope.StorageConnectionID)
 	for _, file := range candidate.Files {
 		if !bytes.Equal(pipelineGet(t, client, file.Object), contents[file.File.RelativePath]) {
 			t.Fatal("published file differs from collector bytes")
@@ -50,7 +50,7 @@ func TestFinetuningCollectPublishReadsFrozenHFBytesAndOnlyPackagesMergedMembers(
 			t.Fatal(err)
 		}
 	}
-	if _, err := verifier.VerifyFinetuningOutputBundle(context.Background(), execution.Snapshot.PublicationScope, *candidate.Bundle, output.Files, execution.Snapshot.OutputContract); err != nil {
+	if _, err := verifier.VerifyFinetuningOutputBundle(context.Background(), execution.Snapshot.PublicationScope, *candidate.Bundle, output.Files, execution.Snapshot.OutputContract, execution.Snapshot.Limits); err != nil {
 		t.Fatal(err)
 	}
 	archive := tar.NewReader(bytes.NewReader(pipelineGet(t, client, *candidate.Bundle)))
@@ -154,8 +154,9 @@ func TestFinetuningCollectRejectsInventoryAndActualReportConflicts(t *testing.T)
 		{"dynamic file changed without updated manifest", func(t *testing.T, d string, _ *biz.Execution, _ map[string][]byte) {
 			writeFile(t, filepath.Join(d, "export/merged/model.safetensors"), []byte("other dynamic weights"))
 		}},
-		{"per-file bound", func(t *testing.T, _ string, e *biz.Execution, _ map[string][]byte) {
-			e.Snapshot.OutputContract.RequiredFiles[0].MaxSizeBytes = 1
+		{"frozen content limit", func(t *testing.T, d string, e *biz.Execution, _ map[string][]byte) {
+			e.Snapshot.Limits.MaxContentBytes = e.Snapshot.Input.Object.SizeBytes
+			writeFile(t, filepath.Join(d, "export/merged/model.safetensors"), bytes.Repeat([]byte("w"), int(e.Snapshot.Limits.MaxContentBytes)))
 			refreshSpec(t, e)
 		}},
 	}
@@ -171,20 +172,84 @@ func TestFinetuningCollectRejectsInventoryAndActualReportConflicts(t *testing.T)
 	}
 }
 
-func TestFinetuningPublishRejectsLocalMutationAndSpoolBudgetBeforeAnyPUT(t *testing.T) {
-	for _, mode := range []string{"nested symlink", "changed after collection", "spool symlink", "spool budget", "tar budget", "original tar changed"} {
+func TestFinetuningCollectRejectsLegacyProducerManifestVersions(t *testing.T) {
+	for _, report := range []struct{ path, schema string }{
+		{"reports/train/adapter_manifest.json", "ani.finetune.adapter-manifest.v1"},
+		{"reports/export/merged_manifest.json", "ani.finetune.merged-manifest.v1"},
+	} {
+		t.Run(report.path, func(t *testing.T) {
+			directory, execution, contents := finetuningOutputWorkspace(t)
+			replaceReport(t, directory, contents, report.path, "schema", report.schema)
+			refreshFinetuningReportLinks(t, directory, contents)
+			if output, err := workspace.Collect(context.Background(), directory, execution); !errors.Is(err, biz.ErrInvalidWorkspaceOutput) || len(output.Files) != 0 {
+				t.Fatalf("retired manifest version produced collected output: %v", err)
+			}
+		})
+	}
+}
+
+func TestFinetuningCollectBindsProducerDatasetIdentityToFrozenInput(t *testing.T) {
+	reports := []string{"reports/train/summary.json", "reports/train/adapter_manifest.json", "reports/export/merged_manifest.json"}
+	for _, field := range []string{"dataset_manifest_sha256", "prepared_input_sha256", "prepared_input_bytes"} {
+		for _, report := range reports {
+			for _, mode := range []string{"missing", "wrong"} {
+				t.Run(report+"/"+field+"/"+mode, func(t *testing.T) {
+					directory, execution, contents := finetuningOutputWorkspace(t)
+					if mode == "missing" {
+						var value map[string]any
+						if err := json.Unmarshal(contents[report], &value); err != nil {
+							t.Fatal(err)
+						}
+						delete(value, field)
+						raw, err := json.Marshal(value)
+						if err != nil {
+							t.Fatal(err)
+						}
+						contents[report] = raw
+						writeFile(t, filepath.Join(directory, report), raw)
+					} else {
+						value := strings.Repeat("0", 64)
+						if field == "prepared_input_bytes" {
+							value = stringNumber(execution.Snapshot.Input.PreparedDataset.SizeBytes + 1)
+						}
+						replaceReport(t, directory, contents, report, field, value)
+					}
+					refreshFinetuningReportLinks(t, directory, contents)
+					if output, err := workspace.Collect(context.Background(), directory, execution); !errors.Is(err, biz.ErrInvalidWorkspaceOutput) || len(output.Files) != 0 {
+						t.Fatalf("unfrozen producer dataset identity produced collected output: %v", err)
+					}
+				})
+			}
+		}
+		t.Run("all reports agree on wrong "+field, func(t *testing.T) {
+			directory, execution, contents := finetuningOutputWorkspace(t)
+			value := strings.Repeat("0", 64)
+			if field == "prepared_input_bytes" {
+				value = stringNumber(execution.Snapshot.Input.PreparedDataset.SizeBytes + 1)
+			}
+			for _, report := range reports {
+				replaceReport(t, directory, contents, report, field, value)
+			}
+			refreshFinetuningReportLinks(t, directory, contents)
+			if output, err := workspace.Collect(context.Background(), directory, execution); !errors.Is(err, biz.ErrInvalidWorkspaceOutput) || len(output.Files) != 0 {
+				t.Fatalf("self-consistent reports overrode the frozen input: %v", err)
+			}
+		})
+	}
+}
+
+func refreshFinetuningReportLinks(t *testing.T, directory string, contents map[string][]byte) {
+	t.Helper()
+	// Keep downstream hashes true so rejection cannot be caused merely by a
+	// broken report link instead of the identity/version under test.
+	replaceReport(t, directory, contents, "reports/export/merged_manifest.json", "adapter_manifest_sha256", pipelineDigest(contents["reports/train/adapter_manifest.json"]))
+	replaceReport(t, directory, contents, "reports/verify/verify.json", "merged_manifest_sha256", pipelineDigest(contents["reports/export/merged_manifest.json"]))
+}
+
+func TestFinetuningPublishRejectsLocalMutationBeforeAnyPUT(t *testing.T) {
+	for _, mode := range []string{"nested symlink", "changed after collection", "spool symlink", "original tar changed"} {
 		t.Run(mode, func(t *testing.T) {
 			d, e, _ := finetuningOutputWorkspace(t)
-			if mode == "spool budget" {
-				e.Snapshot.Finetuning.Budgets.MaxBaseModelBytes = 1
-				e.Snapshot.Finetuning.BaseModel.Object.SizeBytes = 1
-				e.Snapshot.Finetuning.Budgets.MaxSpoolBytes = 1
-				refreshSpec(t, &e)
-			}
-			if mode == "tar budget" {
-				*e.Snapshot.OutputContract.MaxTarBytes = 1024
-				refreshSpec(t, &e)
-			}
 			output, err := workspace.Collect(context.Background(), d, e)
 			if err != nil {
 				t.Fatal(err)
@@ -303,7 +368,7 @@ func TestFinetuningMainTarVerificationRejectsUnapprovedStructureWithValidOuterSH
 			object.SizeBytes = int64(len(payload))
 			object.SHA256 = pipelineDigest(payload)
 			store.corrupt(object, payload)
-			verified, err := objectstore.NewVerifier(client, e.Snapshot.PublicationScope.StorageConnectionID, 3<<30).VerifyFinetuningOutputBundle(context.Background(), e.Snapshot.PublicationScope, object, output.Files, e.Snapshot.OutputContract)
+			verified, err := objectstore.NewVerifier(client, e.Snapshot.PublicationScope.StorageConnectionID).VerifyFinetuningOutputBundle(context.Background(), e.Snapshot.PublicationScope, object, output.Files, e.Snapshot.OutputContract, e.Snapshot.Limits)
 			if mode == "zero padding" {
 				if err != nil || verified.VerifiedAt.IsZero() {
 					t.Fatalf("standard zero padding rejected: %v", err)
@@ -363,6 +428,16 @@ func finetuningOutputWorkspaceWith(t *testing.T, customize func(*cpup01.Snapshot
 	if customize != nil {
 		customize(&snapshot, &intent)
 	}
+	snapshot.Input.PreparedDataset.RowCount = snapshot.Input.RowCount
+	dataset, _ := cpup01.BuildDatasetManifest(snapshot.Input)
+	datasetSHA, _ := dataset.Digest()
+	for _, args := range [][]string{snapshot.Program.ResolvedArgs, snapshot.Finetuning.ExportProgram.ResolvedArgs, snapshot.Finetuning.VerifyProgram.ResolvedArgs} {
+		for i := range args {
+			if i > 0 && args[i-1] == "--expected-dataset-manifest-sha256" {
+				args[i] = datasetSHA
+			}
+		}
+	}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
@@ -375,11 +450,23 @@ func finetuningOutputWorkspaceWith(t *testing.T, customize func(*cpup01.Snapshot
 	e := biz.Execution{Admission: biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, AcceptedAt: snapshot.Timing.AcceptedAt}}
 	refreshSpec(t, &e)
 	contents := map[string][]byte{}
-	for _, file := range snapshot.OutputContract.RequiredFiles {
-		if file.Role == "HF_MODEL" || file.Role == "LORA_ADAPTER" {
-			contents[file.RelativePath] = []byte("synthetic " + file.RelativePath)
-		}
+	for _, name := range []string{"config.json", "tokenizer.json", "tokenizer_config.json", "model.safetensors"} {
+		contents["export/merged/"+name] = []byte("synthetic " + name)
 	}
+	contents["export/merged/config.json"] = []byte(`{"model_type":"qwen2"}`)
+	contents["export/merged/tokenizer_config.json"] = []byte(`{}`)
+	for _, name := range []string{"adapter_config.json", "adapter_model.safetensors"} {
+		contents["training/adapter/"+name] = []byte("synthetic " + name)
+	}
+	contents["reports/train/effective-template.jinja"] = []byte("{{ messages }}")
+	plan := snapshot.Finetuning.TemplatePlan
+	planSHA, _ := plan.Digest()
+	template := cpup01.EffectiveTemplate{SchemaVersion: cpup01.EffectiveTemplateSchemaVersion, VocabSize: 3, TemplatePlanSHA256: planSHA, RuntimeCapabilitiesSHA256: plan.RuntimeCapabilitiesSHA256, ImageDigest: plan.ImageDigest, SourceSHA256: plan.SourceSHA256, TemplateFile: cpup01.FileFact{Path: cpup01.EffectiveTemplateRelativePath, SizeBytes: int64(len(contents[cpup01.EffectiveTemplateRelativePath])), SHA256: pipelineDigest(contents[cpup01.EffectiveTemplateRelativePath])}, SpecialTokens: []cpup01.SpecialToken{{Name: "eos_token", Token: "<end>", ID: 2}}, EOSIDs: []int64{2}}
+	templateRaw, err := template.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	contents["reports/train/effective-template.json"] = templateRaw
 	baseHash, err := snapshot.Finetuning.BaseModel.BaseManifestSHA256()
 	if err != nil {
 		t.Fatal(err)
@@ -409,6 +496,17 @@ func finetuningOutputWorkspaceWith(t *testing.T, customize func(*cpup01.Snapshot
 		return files
 	}
 	encode := func(name string, value any) {
+		if report, ok := value.(map[string]any); ok {
+			report["effective_template_sha256"] = pipelineDigest(contents["reports/train/effective-template.json"])
+			switch name {
+			case "reports/train/summary.json", "reports/train/adapter_manifest.json", "reports/export/merged_manifest.json":
+				// These fields and the v3 manifest tags are emitted by the
+				// current finetune_entry.py producer, not inferred from output.
+				report["dataset_manifest_sha256"] = datasetSHA
+				report["prepared_input_sha256"] = snapshot.Input.PreparedDataset.SHA256
+				report["prepared_input_bytes"] = stringNumber(snapshot.Input.PreparedDataset.SizeBytes)
+			}
+		}
 		raw, err := json.Marshal(value)
 		if err != nil {
 			t.Fatal(err)
@@ -429,8 +527,8 @@ func finetuningOutputWorkspaceWith(t *testing.T, customize func(*cpup01.Snapshot
 	}
 	contents["reports/train/metrics.jsonl"] = metrics.Bytes()
 	encode("reports/train/summary.json", map[string]any{"schema": "ani.finetune.summary.v1", "status": "SUCCEEDED", "samples": samples, "source_samples": samples, "dropped_samples": 0, "effective_token_count": samples * 48, "max_effective_tokens": 48, "samples_at_cutoff": 0, "truncated_samples": 0, "truncated_tokens": 0, "device": "cpu", "train_dtypes": []string{"float32"}, "adapter_dtype": "float32", "optimizer_steps": maxSteps, "steps": maxSteps, "metric_samples": maxSteps, "input_sha256": snapshot.Input.Object.SHA256, "input_bytes": stringNumber(snapshot.Input.Object.SizeBytes), "base_manifest_sha256": baseHash, "parameter_contract_version": cpup01.FinetuningParameterContractVersion, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "effective_configuration": json.RawMessage(effective), "effective_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "learning_rate": parameters["learning_rate"], "max_steps": maxSteps, "recipe_sha256": pipelineDigest(settings), "adapter_files": members("training/adapter/")})
-	encode("reports/train/adapter_manifest.json", map[string]any{"schema": "ani.finetune.adapter-manifest.v1", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "files": members("training/adapter/")})
-	encode("reports/export/merged_manifest.json", map[string]any{"schema": "ani.finetune.merged-manifest.v1", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "adapter_manifest_sha256": pipelineDigest(contents["reports/train/adapter_manifest.json"]), "adapter_files": members("training/adapter/"), "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "dtype": "float32", "files": members("export/merged/")})
+	encode("reports/train/adapter_manifest.json", map[string]any{"schema": "ani.finetune.adapter-manifest.v3", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "files": members("training/adapter/")})
+	encode("reports/export/merged_manifest.json", map[string]any{"schema": "ani.finetune.merged-manifest.v3", "input_sha256": snapshot.Input.Object.SHA256, "base_manifest_sha256": baseHash, "adapter_manifest_sha256": pipelineDigest(contents["reports/train/adapter_manifest.json"]), "adapter_files": members("training/adapter/"), "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "dtype": "float32", "files": members("export/merged/")})
 	encode("reports/export/export.json", map[string]any{"schema": "ani.finetune.export.v1", "status": "SUCCEEDED", "dtype": "float32"})
 	encode("reports/verify/verify.json", map[string]any{"schema": "ani.finetune.verify.v1", "status": "PASSED", "dtype": "float32", "device": "cpu", "resolved_configuration_sha256": snapshot.Finetuning.ResolvedConfigurationSHA256, "merged_manifest_sha256": pipelineDigest(contents["reports/export/merged_manifest.json"]), "finite_logits": true, "generated_token_ids": []int64{1, 2}})
 	// Fedora /tmp is tmpfs. Use this checkout's private disk-backed work area
@@ -489,5 +587,84 @@ func TestFinetuningCollectUsesAllResolvedParametersWithoutCombinationApproval(t 
 	})
 	if _, err := workspace.Collect(context.Background(), directory, execution); err != nil {
 		t.Fatalf("valid independent rank/alpha and nondefault batch/accumulation/cutoff/seed must collect: %v", err)
+	}
+}
+
+func TestDynamicCollectorRejectsShardIndexReferencingAnAbsentShard(t *testing.T) {
+	directory, execution, contents := finetuningOutputWorkspace(t)
+	mustRemove(t, filepath.Join(directory, "export/merged/model.safetensors"))
+	delete(contents, "export/merged/model.safetensors")
+	for name, data := range map[string][]byte{
+		"export/merged/model-00001-of-00001.safetensors": []byte("actual fixture shard"),
+		"export/merged/model.safetensors.index.json":     []byte(`{"weight_map":{"layer.weight":"missing.safetensors"}}`),
+	} {
+		contents[name] = data
+		writeFile(t, filepath.Join(directory, name), data)
+	}
+	updateMergedInventory(t, directory, contents)
+	if output, err := workspace.Collect(context.Background(), directory, execution); !errors.Is(err, biz.ErrInvalidWorkspaceOutput) || len(output.Files) != 0 {
+		t.Fatalf("index points outside actual manifest but collector accepted it: %v", err)
+	}
+}
+
+func updateMergedInventory(t *testing.T, directory string, contents map[string][]byte) {
+	t.Helper()
+	names := []string{}
+	for name := range contents {
+		if strings.HasPrefix(name, "export/merged/") {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+	members := []map[string]string{}
+	for _, name := range names {
+		data := contents[name]
+		members = append(members, map[string]string{"path": strings.TrimPrefix(name, "export/merged/"), "bytes": stringBytes(data), "sha256": pipelineDigest(data)})
+	}
+	replaceReport(t, directory, contents, "reports/export/merged_manifest.json", "files", members)
+	replaceReport(t, directory, contents, "reports/verify/verify.json", "merged_manifest_sha256", pipelineDigest(contents["reports/export/merged_manifest.json"]))
+}
+
+func TestDynamicCollectorPublishesActualShardsAndEmptyLongPathAncillary(t *testing.T) {
+	directory, execution, contents := finetuningOutputWorkspace(t)
+	mustRemove(t, filepath.Join(directory, "export/merged/model.safetensors"))
+	delete(contents, "export/merged/model.safetensors")
+	extraName := "export/merged/" + strings.Repeat("长", 70) + ".txt"
+	for name, data := range map[string][]byte{
+		"export/merged/model-00001-of-00002.safetensors": []byte("first actual fixture shard"),
+		"export/merged/model-00002-of-00002.safetensors": []byte("second actual fixture shard"),
+		"export/merged/model.safetensors.index.json":     []byte(`{"metadata":{},"weight_map":{"first.weight":"model-00001-of-00002.safetensors","second.weight":"model-00002-of-00002.safetensors","second.bias":"model-00002-of-00002.safetensors"}}`),
+		extraName: []byte{},
+	} {
+		contents[name] = data
+		writeFile(t, filepath.Join(directory, name), data)
+	}
+	updateMergedInventory(t, directory, contents)
+	output, err := workspace.Collect(context.Background(), directory, execution)
+	if err != nil {
+		t.Fatal("valid actual sharded output refused", err)
+	}
+	foundEmpty := false
+	for _, file := range output.Files {
+		if file.RelativePath == extraName {
+			foundEmpty = file.InTar && file.SizeBytes == 0 && file.SHA256 == cpup01.EmptyContentSHA256
+		}
+	}
+	if !foundEmpty {
+		t.Fatal("zero-byte ancillary fact was lost")
+	}
+	_, client := newPipelineS3(t, execution, nil)
+	published, err := workspace.UploadOutput(context.Background(), client, execution, directory, output)
+	if err != nil || published.Bundle == nil {
+		t.Fatal("actual dynamic upload/tar failed", err)
+	}
+	verifier := objectstore.NewVerifier(client, execution.Snapshot.PublicationScope.StorageConnectionID)
+	if _, err := verifier.VerifyFinetuningOutputBundle(context.Background(), execution.Snapshot.PublicationScope, *published.Bundle, output.Files, execution.Snapshot.OutputContract, execution.Snapshot.Limits); err != nil {
+		t.Fatal("published shard tar failed independent readback", err)
+	}
+	for _, file := range published.Files {
+		if _, err := verifier.Verify(context.Background(), execution.Snapshot.PublicationScope, file.Object); err != nil {
+			t.Fatal("published member failed actual SHA readback", err)
+		}
 	}
 }

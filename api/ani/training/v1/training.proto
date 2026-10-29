@@ -96,8 +96,17 @@ message InputRef {
   FixedObjectRef object = 2;
   string format = 3;
   string schema_version = 4;
-  uint32 row_count = 5;
+  int64 row_count = 5;
   uint32 feature_count = 6;
+  PreparedDatasetFacts prepared_dataset = 7;
+}
+
+message PreparedDatasetFacts {
+  string format = 1;
+  string transform_id = 2;
+  int64 size_bytes = 3;
+  string sha256 = 4;
+  int64 row_count = 5;
 }
 
 message RuntimeRef {
@@ -110,12 +119,16 @@ message RuntimeRef {
 }
 
 message ProgramRef {
-  string image_version_id = 1;
+  reserved 1;
+  reserved "image_version_id";
   // Full immutable registry reference, including @sha256:<digest>.
   string image_digest = 2;
   repeated string command = 3;
   repeated string resolved_args = 4;
   repeated Parameter resolved_parameters = 5;
+  string image_id = 6;
+  int64 image_version = 7;
+  string image_scope = 8;
 }
 
 message CPUResources {
@@ -137,6 +150,7 @@ message WorkspaceContract {
   string training_subpath = 5;
   string reports_subpath = 6;
   string publication_subpath = 7;
+  string work_subpath = 8;
 }
 
 // Runtime binding is separate from the immutable admission snapshot.
@@ -151,13 +165,15 @@ message WorkspaceRef {
   string training_subpath = 7;
   string reports_subpath = 8;
   string publication_subpath = 9;
+  string work_subpath = 10;
 }
 
 message RequiredOutput {
   FileRole role = 1;
   string relative_path = 2;
-  int64 max_size_bytes = 3;
-  optional bool in_tar = 4;
+  reserved 3;
+  reserved "max_size_bytes";
+  bool in_tar = 4;
 }
 
 message OutputContract {
@@ -165,10 +181,11 @@ message OutputContract {
   OutputKind output_kind = 2;
   DeliveryMode delivery_mode = 3;
   repeated RequiredOutput required_files = 4;
-  uint32 max_file_count = 5;
-  int64 max_total_bytes = 6;
+  reserved 5, 6;
+  reserved "max_file_count", "max_total_bytes";
   bool create_tar_bundle = 7;
-  optional int64 max_tar_bytes = 8;
+  reserved 8;
+  reserved "max_tar_bytes";
 }
 
 // A hash always describes actual file bytes, not an object-store ETag.
@@ -179,6 +196,7 @@ message FileEntry {
   FileRole role = 2;
   int64 size_bytes = 3;
   string sha256 = 4;
+  bool in_tar = 5;
 }
 
 message ManifestRef {

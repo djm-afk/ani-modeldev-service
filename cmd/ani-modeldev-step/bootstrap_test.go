@@ -24,7 +24,7 @@ func TestDynamicKFPBootstrapUsesCurrentPodMetadata(t *testing.T) {
 	for _, step := range []string{"prepare", "train-wait", "collect", "publish", "close"} {
 		args := bootstrapArgs(configFile, step)
 		if step == "close" {
-			args = append(args, "--candidate-json", "")
+			args = append(args, "--publication-ref", "")
 		}
 		if step == "prepare" {
 			args = append(args, "--pvc-name", "allocated-workspace")
@@ -40,10 +40,10 @@ func TestDynamicKFPBootstrapUsesCurrentPodMetadata(t *testing.T) {
 		if a.GetPodName() != "current-step-pod" || a.GetPodUid() != "44444444-4444-4444-8444-444444444444" || a.GetNamespaceName() != "cpu-execution" || a.GetNamespaceUid() != "55555555-5555-4555-8555-555555555555" || a.GetWorkflowName() != "observed-workflow" || a.GetWorkflowUid() != "66666666-6666-4666-8666-666666666666" {
 			t.Fatalf("bootstrap did not use actual Pod/controller identity: %+v", a)
 		}
-		if got.config.TaskID != "actual-task-id" || got.claim.Step == modeldevv1.PipelineStep_PIPELINE_STEP_UNSPECIFIED {
+		if got.claim.Step == modeldevv1.PipelineStep_PIPELINE_STEP_UNSPECIFIED {
 			t.Fatalf("missing real KFP task/step: %+v", got)
 		}
-		if step == "close" && (got.candidateJSON == nil || *got.candidateJSON != "") {
+		if step == "close" && (got.publicationRef == nil || *got.publicationRef != "") {
 			t.Fatal("empty candidate must reach the close runner's failure path")
 		}
 		if step == "prepare" && got.config.PVCName != "allocated-workspace" {
@@ -60,7 +60,7 @@ func TestDynamicKFPBootstrapAcceptsCloseOnlyWithoutPublicationCandidate(t *testi
 	client := bootstrapKubernetes(t, &calls, false)
 	args := append(bootstrapArgs(bootstrapConfigFile(t), "close"), "--close-only")
 	got, err := bootstrapInvocation(context.Background(), args, client)
-	if err != nil || !got.closeOnly || got.candidateJSON != nil || got.claim.GetStep() != modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE || calls.Load() != 1 {
+	if err != nil || !got.closeOnly || got.publicationRef != nil || got.claim.GetStep() != modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE || calls.Load() != 1 {
 		t.Fatalf("failure finalizer must use current Pod identity without a missing publication output: %v", err)
 	}
 }
@@ -69,20 +69,19 @@ func TestDynamicKFPBootstrapLeavesTaskIdentityToVerifiedOwner(t *testing.T) {
 	var calls atomic.Int32
 	client := bootstrapKubernetes(t, &calls, false)
 	args := bootstrapArgs(bootstrapConfigFile(t), "publish")
-	args = args[:len(args)-2]
-	got, err := bootstrapInvocation(context.Background(), args, client)
-	if err != nil || got.config.TaskID != "" || calls.Load() != 1 {
+	_, err := bootstrapInvocation(context.Background(), args, client)
+	if err != nil || calls.Load() != 1 {
 		t.Fatalf("a real KFP task ID must be resolved by the authenticated owner, not a raw launcher placeholder: %v", err)
 	}
 }
 
 func TestDynamicKFPBootstrapRejectsExplicitInvalidTaskIdentity(t *testing.T) {
-	for _, value := range []string{"", "contains space", strings.Repeat("a", 257), "任务"} {
+	for _, value := range []string{"", "actual-task-id", "contains space", strings.Repeat("a", 257), "任务"} {
 		t.Run(value, func(t *testing.T) {
 			var calls atomic.Int32
 			client := bootstrapKubernetes(t, &calls, false)
 			args := bootstrapArgs(bootstrapConfigFile(t), "publish")
-			args[len(args)-1] = value
+			args = append(args, "--task-id", value)
 			if _, err := bootstrapInvocation(context.Background(), args, client); err == nil || calls.Load() != 0 {
 				t.Fatal("explicit task identity must remain strictly validated before current Pod lookup")
 			}
@@ -101,7 +100,7 @@ func TestDynamicKFPBootstrapRejectsCloseOnlyOutsideFinalizer(t *testing.T) {
 			}
 		})
 	}
-	for _, flag := range []string{"--candidate-json", "--candidate-file"} {
+	for _, flag := range []string{"--publication-ref", "--publication-ref-file"} {
 		t.Run(flag, func(t *testing.T) {
 			var calls atomic.Int32
 			client := bootstrapKubernetes(t, &calls, false)
@@ -161,7 +160,7 @@ func bootstrapConfigFile(t *testing.T) string {
 }
 
 func bootstrapArgs(config, step string) []string {
-	return []string{step, "--config", config, "--execution-id", "22222222-2222-4222-8222-222222222222", "--spec-hash", strings.Repeat("a", 64), "--run-id", "33333333-3333-4333-8333-333333333333", "--task-id", "actual-task-id"}
+	return []string{step, "--config", config, "--execution-id", "22222222-2222-4222-8222-222222222222", "--spec-hash", strings.Repeat("a", 64), "--run-id", "33333333-3333-4333-8333-333333333333"}
 }
 
 func bootstrapKubernetes(t *testing.T, calls *atomic.Int32, wrongUID bool) dynamic.Interface {
@@ -189,4 +188,50 @@ func bootstrapKubernetes(t *testing.T, calls *atomic.Int32, wrongUID bool) dynam
 		t.Fatal(err)
 	}
 	return client
+}
+
+func TestCurrentKFPBootstrapAcceptsOnlySmallPublicationReference(t *testing.T) {
+	var calls atomic.Int32
+	client := bootstrapKubernetes(t, &calls, false)
+	ref := `{"schema":"ani.modeldev.publication-ref.v3","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size_bytes":"123"}`
+	args := append(bootstrapArgs(bootstrapConfigFile(t), "register"), "--publication-ref", ref)
+	got, err := bootstrapInvocation(context.Background(), args, client)
+	if err != nil || got.config.PublicationRef != ref || calls.Load() != 1 {
+		t.Fatalf("current small ref did not reach the reader role: %v", err)
+	}
+	for _, flag := range []string{"--candidate-json", "--candidate-file"} {
+		args := append(bootstrapArgs(bootstrapConfigFile(t), "register"), flag, ref)
+		if _, err := bootstrapInvocation(context.Background(), args, client); err == nil {
+			t.Fatal("removed inline-candidate flag accepted")
+		}
+	}
+	args = append(bootstrapArgs(bootstrapConfigFile(t), "register"), "--publication-ref", strings.Repeat("x", 1025))
+	if _, err := bootstrapInvocation(context.Background(), args, client); err == nil {
+		t.Fatal("oversized reference silently accepted/cleared")
+	}
+}
+
+func TestDynamicKFPBootstrapRejectsRetiredOwnerTaskID(t *testing.T) {
+	var calls atomic.Int32
+	client := bootstrapKubernetes(t, &calls, false)
+	config := bootstrapConfigFile(t)
+	raw, err := os.ReadFile(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var values map[string]any
+	if json.Unmarshal(raw, &values) != nil {
+		t.Fatal("config")
+	}
+	values["task_id"] = "untrusted-old-task"
+	raw, err = json.Marshal(values)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(config, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := bootstrapInvocation(context.Background(), bootstrapArgs(config, "publish"), client); err == nil || calls.Load() != 0 {
+		t.Fatal("retired static TaskID reached workload authentication")
+	}
 }

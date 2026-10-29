@@ -3,11 +3,11 @@ package input
 import (
 	"context"
 	"errors"
-	"math"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	inputsql "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input/sqlc"
 )
@@ -19,20 +19,18 @@ func (r *Repository) RecordVerifiedCSV(ctx context.Context, expected biz.InputIm
 	if err := verified.ValidateFor(expected); err != nil {
 		return biz.InputVersion{}, err
 	}
-	return r.recordVerifiedInput(ctx, expected, verified.VerifiedAt, verified.SchemaVersion, verified.RowCount, verified.FeatureCount)
+	return r.recordVerifiedInput(ctx, expected, verified.VerifiedAt, verified.SchemaVersion, verified.RowCount, verified.FeatureCount, verified.PreparedDataset)
 }
 
 func (r *Repository) RecordVerifiedAlpaca(ctx context.Context, expected biz.InputImport, verified biz.VerifiedAlpaca) (biz.InputVersion, error) {
 	if err := verified.ValidateFor(expected); err != nil {
 		return biz.InputVersion{}, err
 	}
-	return r.recordVerifiedInput(ctx, expected, verified.VerifiedAt, verified.SchemaVersion, verified.RowCount, 0)
+	return r.recordVerifiedInput(ctx, expected, verified.VerifiedAt, verified.SchemaVersion, verified.RowCount, 0, verified.PreparedDataset)
 }
 
-func (r *Repository) recordVerifiedInput(ctx context.Context, expected biz.InputImport, at time.Time, schema string, rows, features uint32) (biz.InputVersion, error) {
-	// PostgreSQL stores these proof dimensions as int4. Validate before either
-	// a conversion or a READY replay so an overflow cannot wrap into a proof.
-	if rows > math.MaxInt32 || features > math.MaxInt32 {
+func (r *Repository) recordVerifiedInput(ctx context.Context, expected biz.InputImport, at time.Time, schema string, rows int64, features uint32, prepared cpup01.PreparedDatasetFacts) (biz.InputVersion, error) {
+	if rows <= 0 || prepared.ValidateForSource(expected.Format, expected.Object.SizeBytes, expected.Object.SHA256, rows) != nil {
 		return biz.InputVersion{}, biz.ErrInputVerification
 	}
 	command, err := importCommand(expected)
@@ -68,12 +66,12 @@ func (r *Repository) recordVerifiedInput(ctx context.Context, expected biz.Input
 	if version.State == biz.InputStateReady {
 		if expected.InputFormat() == "CSV" {
 			proof := version.Verification
-			if proof == nil || proof.SchemaVersion != schema || proof.RowCount != rows || proof.FeatureCount != features {
+			if proof == nil || proof.SchemaVersion != schema || proof.RowCount != rows || proof.FeatureCount != features || proof.PreparedDataset != prepared {
 				return biz.InputVersion{}, biz.ErrInputVerification
 			}
 		} else {
 			proof := version.AlpacaVerification
-			if proof == nil || proof.SchemaVersion != schema || proof.RowCount != rows || features != 0 {
+			if proof == nil || proof.SchemaVersion != schema || proof.RowCount != rows || features != 0 || proof.PreparedDataset != prepared {
 				return biz.InputVersion{}, biz.ErrInputVerification
 			}
 		}
@@ -83,8 +81,13 @@ func (r *Repository) recordVerifiedInput(ctx context.Context, expected biz.Input
 			TenantID: command.TenantID, InputVersionID: command.InputVersionID, RequestID: command.RequestID,
 			VerifiedAt:            pgtype.Timestamptz{Time: at.UTC().Truncate(time.Microsecond), Valid: true},
 			VerifiedSchemaVersion: pgtype.Text{String: schema, Valid: true},
-			VerifiedRowCount:      pgtype.Int4{Int32: int32(rows), Valid: true},
+			VerifiedRowCount:      pgtype.Int8{Int64: rows, Valid: true},
 			VerifiedFeatureCount:  pgtype.Int4{Int32: int32(features), Valid: true},
+			PreparedFormat:        pgtype.Text{String: prepared.Format, Valid: true},
+			PreparedTransformID:   pgtype.Text{String: prepared.TransformID, Valid: true},
+			PreparedSizeBytes:     pgtype.Int8{Int64: prepared.SizeBytes, Valid: true},
+			PreparedSha256:        pgtype.Text{String: prepared.SHA256, Valid: true},
+			PreparedRowCount:      pgtype.Int8{Int64: prepared.RowCount, Valid: true},
 		})
 		if err != nil {
 			return biz.InputVersion{}, biz.ErrPersistence

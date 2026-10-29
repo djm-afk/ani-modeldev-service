@@ -701,15 +701,16 @@ func (*FixedObjectRef_VersionId) isFixedObjectRef_Immutability() {}
 func (*FixedObjectRef_ImmutableCopy) isFixedObjectRef_Immutability() {}
 
 type InputRef struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	InputVersionId string                 `protobuf:"bytes,1,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
-	Object         *FixedObjectRef        `protobuf:"bytes,2,opt,name=object,proto3" json:"object,omitempty"`
-	Format         string                 `protobuf:"bytes,3,opt,name=format,proto3" json:"format,omitempty"`
-	SchemaVersion  string                 `protobuf:"bytes,4,opt,name=schema_version,json=schemaVersion,proto3" json:"schema_version,omitempty"`
-	RowCount       uint32                 `protobuf:"varint,5,opt,name=row_count,json=rowCount,proto3" json:"row_count,omitempty"`
-	FeatureCount   uint32                 `protobuf:"varint,6,opt,name=feature_count,json=featureCount,proto3" json:"feature_count,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	InputVersionId  string                 `protobuf:"bytes,1,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
+	Object          *FixedObjectRef        `protobuf:"bytes,2,opt,name=object,proto3" json:"object,omitempty"`
+	Format          string                 `protobuf:"bytes,3,opt,name=format,proto3" json:"format,omitempty"`
+	SchemaVersion   string                 `protobuf:"bytes,4,opt,name=schema_version,json=schemaVersion,proto3" json:"schema_version,omitempty"`
+	RowCount        int64                  `protobuf:"varint,5,opt,name=row_count,json=rowCount,proto3" json:"row_count,omitempty"`
+	FeatureCount    uint32                 `protobuf:"varint,6,opt,name=feature_count,json=featureCount,proto3" json:"feature_count,omitempty"`
+	PreparedDataset *PreparedDatasetFacts  `protobuf:"bytes,7,opt,name=prepared_dataset,json=preparedDataset,proto3" json:"prepared_dataset,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *InputRef) Reset() {
@@ -770,7 +771,7 @@ func (x *InputRef) GetSchemaVersion() string {
 	return ""
 }
 
-func (x *InputRef) GetRowCount() uint32 {
+func (x *InputRef) GetRowCount() int64 {
 	if x != nil {
 		return x.RowCount
 	}
@@ -780,6 +781,89 @@ func (x *InputRef) GetRowCount() uint32 {
 func (x *InputRef) GetFeatureCount() uint32 {
 	if x != nil {
 		return x.FeatureCount
+	}
+	return 0
+}
+
+func (x *InputRef) GetPreparedDataset() *PreparedDatasetFacts {
+	if x != nil {
+		return x.PreparedDataset
+	}
+	return nil
+}
+
+type PreparedDatasetFacts struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Format        string                 `protobuf:"bytes,1,opt,name=format,proto3" json:"format,omitempty"`
+	TransformId   string                 `protobuf:"bytes,2,opt,name=transform_id,json=transformId,proto3" json:"transform_id,omitempty"`
+	SizeBytes     int64                  `protobuf:"varint,3,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	Sha256        string                 `protobuf:"bytes,4,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	RowCount      int64                  `protobuf:"varint,5,opt,name=row_count,json=rowCount,proto3" json:"row_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PreparedDatasetFacts) Reset() {
+	*x = PreparedDatasetFacts{}
+	mi := &file_ani_training_v1_training_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PreparedDatasetFacts) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PreparedDatasetFacts) ProtoMessage() {}
+
+func (x *PreparedDatasetFacts) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_training_v1_training_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PreparedDatasetFacts.ProtoReflect.Descriptor instead.
+func (*PreparedDatasetFacts) Descriptor() ([]byte, []int) {
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *PreparedDatasetFacts) GetFormat() string {
+	if x != nil {
+		return x.Format
+	}
+	return ""
+}
+
+func (x *PreparedDatasetFacts) GetTransformId() string {
+	if x != nil {
+		return x.TransformId
+	}
+	return ""
+}
+
+func (x *PreparedDatasetFacts) GetSizeBytes() int64 {
+	if x != nil {
+		return x.SizeBytes
+	}
+	return 0
+}
+
+func (x *PreparedDatasetFacts) GetSha256() string {
+	if x != nil {
+		return x.Sha256
+	}
+	return ""
+}
+
+func (x *PreparedDatasetFacts) GetRowCount() int64 {
+	if x != nil {
+		return x.RowCount
 	}
 	return 0
 }
@@ -798,7 +882,7 @@ type RuntimeRef struct {
 
 func (x *RuntimeRef) Reset() {
 	*x = RuntimeRef{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[4]
+	mi := &file_ani_training_v1_training_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -810,7 +894,7 @@ func (x *RuntimeRef) String() string {
 func (*RuntimeRef) ProtoMessage() {}
 
 func (x *RuntimeRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[4]
+	mi := &file_ani_training_v1_training_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -823,7 +907,7 @@ func (x *RuntimeRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeRef.ProtoReflect.Descriptor instead.
 func (*RuntimeRef) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{4}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *RuntimeRef) GetName() string {
@@ -862,20 +946,22 @@ func (x *RuntimeRef) GetTargetJobs() []string {
 }
 
 type ProgramRef struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	ImageVersionId string                 `protobuf:"bytes,1,opt,name=image_version_id,json=imageVersionId,proto3" json:"image_version_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Full immutable registry reference, including @sha256:<digest>.
 	ImageDigest        string       `protobuf:"bytes,2,opt,name=image_digest,json=imageDigest,proto3" json:"image_digest,omitempty"`
 	Command            []string     `protobuf:"bytes,3,rep,name=command,proto3" json:"command,omitempty"`
 	ResolvedArgs       []string     `protobuf:"bytes,4,rep,name=resolved_args,json=resolvedArgs,proto3" json:"resolved_args,omitempty"`
 	ResolvedParameters []*Parameter `protobuf:"bytes,5,rep,name=resolved_parameters,json=resolvedParameters,proto3" json:"resolved_parameters,omitempty"`
+	ImageId            string       `protobuf:"bytes,6,opt,name=image_id,json=imageId,proto3" json:"image_id,omitempty"`
+	ImageVersion       int64        `protobuf:"varint,7,opt,name=image_version,json=imageVersion,proto3" json:"image_version,omitempty"`
+	ImageScope         string       `protobuf:"bytes,8,opt,name=image_scope,json=imageScope,proto3" json:"image_scope,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ProgramRef) Reset() {
 	*x = ProgramRef{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[5]
+	mi := &file_ani_training_v1_training_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -887,7 +973,7 @@ func (x *ProgramRef) String() string {
 func (*ProgramRef) ProtoMessage() {}
 
 func (x *ProgramRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[5]
+	mi := &file_ani_training_v1_training_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -900,14 +986,7 @@ func (x *ProgramRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProgramRef.ProtoReflect.Descriptor instead.
 func (*ProgramRef) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *ProgramRef) GetImageVersionId() string {
-	if x != nil {
-		return x.ImageVersionId
-	}
-	return ""
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ProgramRef) GetImageDigest() string {
@@ -938,6 +1017,27 @@ func (x *ProgramRef) GetResolvedParameters() []*Parameter {
 	return nil
 }
 
+func (x *ProgramRef) GetImageId() string {
+	if x != nil {
+		return x.ImageId
+	}
+	return ""
+}
+
+func (x *ProgramRef) GetImageVersion() int64 {
+	if x != nil {
+		return x.ImageVersion
+	}
+	return 0
+}
+
+func (x *ProgramRef) GetImageScope() string {
+	if x != nil {
+		return x.ImageScope
+	}
+	return ""
+}
+
 type CPUResources struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Nodes              uint32                 `protobuf:"varint,1,opt,name=nodes,proto3" json:"nodes,omitempty"`
@@ -952,7 +1052,7 @@ type CPUResources struct {
 
 func (x *CPUResources) Reset() {
 	*x = CPUResources{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[6]
+	mi := &file_ani_training_v1_training_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -964,7 +1064,7 @@ func (x *CPUResources) String() string {
 func (*CPUResources) ProtoMessage() {}
 
 func (x *CPUResources) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[6]
+	mi := &file_ani_training_v1_training_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -977,7 +1077,7 @@ func (x *CPUResources) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CPUResources.ProtoReflect.Descriptor instead.
 func (*CPUResources) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{6}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CPUResources) GetNodes() uint32 {
@@ -1033,13 +1133,14 @@ type WorkspaceContract struct {
 	TrainingSubpath    string                 `protobuf:"bytes,5,opt,name=training_subpath,json=trainingSubpath,proto3" json:"training_subpath,omitempty"`
 	ReportsSubpath     string                 `protobuf:"bytes,6,opt,name=reports_subpath,json=reportsSubpath,proto3" json:"reports_subpath,omitempty"`
 	PublicationSubpath string                 `protobuf:"bytes,7,opt,name=publication_subpath,json=publicationSubpath,proto3" json:"publication_subpath,omitempty"`
+	WorkSubpath        string                 `protobuf:"bytes,8,opt,name=work_subpath,json=workSubpath,proto3" json:"work_subpath,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *WorkspaceContract) Reset() {
 	*x = WorkspaceContract{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[7]
+	mi := &file_ani_training_v1_training_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1051,7 +1152,7 @@ func (x *WorkspaceContract) String() string {
 func (*WorkspaceContract) ProtoMessage() {}
 
 func (x *WorkspaceContract) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[7]
+	mi := &file_ani_training_v1_training_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1064,7 +1165,7 @@ func (x *WorkspaceContract) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceContract.ProtoReflect.Descriptor instead.
 func (*WorkspaceContract) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{7}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *WorkspaceContract) GetMode() WorkspaceMode {
@@ -1116,6 +1217,13 @@ func (x *WorkspaceContract) GetPublicationSubpath() string {
 	return ""
 }
 
+func (x *WorkspaceContract) GetWorkSubpath() string {
+	if x != nil {
+		return x.WorkSubpath
+	}
+	return ""
+}
+
 // Runtime binding is separate from the immutable admission snapshot.
 // Namespace and PVC UID must match actual objects, including on every reuse.
 type WorkspaceRef struct {
@@ -1129,13 +1237,14 @@ type WorkspaceRef struct {
 	TrainingSubpath    string                 `protobuf:"bytes,7,opt,name=training_subpath,json=trainingSubpath,proto3" json:"training_subpath,omitempty"`
 	ReportsSubpath     string                 `protobuf:"bytes,8,opt,name=reports_subpath,json=reportsSubpath,proto3" json:"reports_subpath,omitempty"`
 	PublicationSubpath string                 `protobuf:"bytes,9,opt,name=publication_subpath,json=publicationSubpath,proto3" json:"publication_subpath,omitempty"`
+	WorkSubpath        string                 `protobuf:"bytes,10,opt,name=work_subpath,json=workSubpath,proto3" json:"work_subpath,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *WorkspaceRef) Reset() {
 	*x = WorkspaceRef{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[8]
+	mi := &file_ani_training_v1_training_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1147,7 +1256,7 @@ func (x *WorkspaceRef) String() string {
 func (*WorkspaceRef) ProtoMessage() {}
 
 func (x *WorkspaceRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[8]
+	mi := &file_ani_training_v1_training_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1160,7 +1269,7 @@ func (x *WorkspaceRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceRef.ProtoReflect.Descriptor instead.
 func (*WorkspaceRef) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{8}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *WorkspaceRef) GetMode() WorkspaceMode {
@@ -1226,19 +1335,25 @@ func (x *WorkspaceRef) GetPublicationSubpath() string {
 	return ""
 }
 
+func (x *WorkspaceRef) GetWorkSubpath() string {
+	if x != nil {
+		return x.WorkSubpath
+	}
+	return ""
+}
+
 type RequiredOutput struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Role          FileRole               `protobuf:"varint,1,opt,name=role,proto3,enum=ani.training.v1.FileRole" json:"role,omitempty"`
 	RelativePath  string                 `protobuf:"bytes,2,opt,name=relative_path,json=relativePath,proto3" json:"relative_path,omitempty"`
-	MaxSizeBytes  int64                  `protobuf:"varint,3,opt,name=max_size_bytes,json=maxSizeBytes,proto3" json:"max_size_bytes,omitempty"`
-	InTar         *bool                  `protobuf:"varint,4,opt,name=in_tar,json=inTar,proto3,oneof" json:"in_tar,omitempty"`
+	InTar         bool                   `protobuf:"varint,4,opt,name=in_tar,json=inTar,proto3" json:"in_tar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RequiredOutput) Reset() {
 	*x = RequiredOutput{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[9]
+	mi := &file_ani_training_v1_training_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1250,7 +1365,7 @@ func (x *RequiredOutput) String() string {
 func (*RequiredOutput) ProtoMessage() {}
 
 func (x *RequiredOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[9]
+	mi := &file_ani_training_v1_training_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1263,7 +1378,7 @@ func (x *RequiredOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequiredOutput.ProtoReflect.Descriptor instead.
 func (*RequiredOutput) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{9}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *RequiredOutput) GetRole() FileRole {
@@ -1280,16 +1395,9 @@ func (x *RequiredOutput) GetRelativePath() string {
 	return ""
 }
 
-func (x *RequiredOutput) GetMaxSizeBytes() int64 {
-	if x != nil {
-		return x.MaxSizeBytes
-	}
-	return 0
-}
-
 func (x *RequiredOutput) GetInTar() bool {
-	if x != nil && x.InTar != nil {
-		return *x.InTar
+	if x != nil {
+		return x.InTar
 	}
 	return false
 }
@@ -1300,17 +1408,14 @@ type OutputContract struct {
 	OutputKind      OutputKind             `protobuf:"varint,2,opt,name=output_kind,json=outputKind,proto3,enum=ani.training.v1.OutputKind" json:"output_kind,omitempty"`
 	DeliveryMode    DeliveryMode           `protobuf:"varint,3,opt,name=delivery_mode,json=deliveryMode,proto3,enum=ani.training.v1.DeliveryMode" json:"delivery_mode,omitempty"`
 	RequiredFiles   []*RequiredOutput      `protobuf:"bytes,4,rep,name=required_files,json=requiredFiles,proto3" json:"required_files,omitempty"`
-	MaxFileCount    uint32                 `protobuf:"varint,5,opt,name=max_file_count,json=maxFileCount,proto3" json:"max_file_count,omitempty"`
-	MaxTotalBytes   int64                  `protobuf:"varint,6,opt,name=max_total_bytes,json=maxTotalBytes,proto3" json:"max_total_bytes,omitempty"`
 	CreateTarBundle bool                   `protobuf:"varint,7,opt,name=create_tar_bundle,json=createTarBundle,proto3" json:"create_tar_bundle,omitempty"`
-	MaxTarBytes     *int64                 `protobuf:"varint,8,opt,name=max_tar_bytes,json=maxTarBytes,proto3,oneof" json:"max_tar_bytes,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
 
 func (x *OutputContract) Reset() {
 	*x = OutputContract{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[10]
+	mi := &file_ani_training_v1_training_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1322,7 +1427,7 @@ func (x *OutputContract) String() string {
 func (*OutputContract) ProtoMessage() {}
 
 func (x *OutputContract) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[10]
+	mi := &file_ani_training_v1_training_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1335,7 +1440,7 @@ func (x *OutputContract) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OutputContract.ProtoReflect.Descriptor instead.
 func (*OutputContract) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{10}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *OutputContract) GetSchemaVersion() string {
@@ -1366,32 +1471,11 @@ func (x *OutputContract) GetRequiredFiles() []*RequiredOutput {
 	return nil
 }
 
-func (x *OutputContract) GetMaxFileCount() uint32 {
-	if x != nil {
-		return x.MaxFileCount
-	}
-	return 0
-}
-
-func (x *OutputContract) GetMaxTotalBytes() int64 {
-	if x != nil {
-		return x.MaxTotalBytes
-	}
-	return 0
-}
-
 func (x *OutputContract) GetCreateTarBundle() bool {
 	if x != nil {
 		return x.CreateTarBundle
 	}
 	return false
-}
-
-func (x *OutputContract) GetMaxTarBytes() int64 {
-	if x != nil && x.MaxTarBytes != nil {
-		return *x.MaxTarBytes
-	}
-	return 0
 }
 
 // A hash always describes actual file bytes, not an object-store ETag.
@@ -1403,13 +1487,14 @@ type FileEntry struct {
 	Role          FileRole               `protobuf:"varint,2,opt,name=role,proto3,enum=ani.training.v1.FileRole" json:"role,omitempty"`
 	SizeBytes     int64                  `protobuf:"varint,3,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
 	Sha256        string                 `protobuf:"bytes,4,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	InTar         bool                   `protobuf:"varint,5,opt,name=in_tar,json=inTar,proto3" json:"in_tar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *FileEntry) Reset() {
 	*x = FileEntry{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[11]
+	mi := &file_ani_training_v1_training_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1421,7 +1506,7 @@ func (x *FileEntry) String() string {
 func (*FileEntry) ProtoMessage() {}
 
 func (x *FileEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[11]
+	mi := &file_ani_training_v1_training_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1434,7 +1519,7 @@ func (x *FileEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileEntry.ProtoReflect.Descriptor instead.
 func (*FileEntry) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{11}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *FileEntry) GetRelativePath() string {
@@ -1465,6 +1550,13 @@ func (x *FileEntry) GetSha256() string {
 	return ""
 }
 
+func (x *FileEntry) GetInTar() bool {
+	if x != nil {
+		return x.InTar
+	}
+	return false
+}
+
 type ManifestRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RelativePath  string                 `protobuf:"bytes,1,opt,name=relative_path,json=relativePath,proto3" json:"relative_path,omitempty"`
@@ -1476,7 +1568,7 @@ type ManifestRef struct {
 
 func (x *ManifestRef) Reset() {
 	*x = ManifestRef{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[12]
+	mi := &file_ani_training_v1_training_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1488,7 +1580,7 @@ func (x *ManifestRef) String() string {
 func (*ManifestRef) ProtoMessage() {}
 
 func (x *ManifestRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[12]
+	mi := &file_ani_training_v1_training_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1501,7 +1593,7 @@ func (x *ManifestRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ManifestRef.ProtoReflect.Descriptor instead.
 func (*ManifestRef) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{12}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ManifestRef) GetRelativePath() string {
@@ -1536,7 +1628,7 @@ type Metric struct {
 
 func (x *Metric) Reset() {
 	*x = Metric{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[13]
+	mi := &file_ani_training_v1_training_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1548,7 +1640,7 @@ func (x *Metric) String() string {
 func (*Metric) ProtoMessage() {}
 
 func (x *Metric) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[13]
+	mi := &file_ani_training_v1_training_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1561,7 +1653,7 @@ func (x *Metric) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Metric.ProtoReflect.Descriptor instead.
 func (*Metric) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{13}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Metric) GetName() string {
@@ -1597,7 +1689,7 @@ type LogRef struct {
 
 func (x *LogRef) Reset() {
 	*x = LogRef{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[14]
+	mi := &file_ani_training_v1_training_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1609,7 +1701,7 @@ func (x *LogRef) String() string {
 func (*LogRef) ProtoMessage() {}
 
 func (x *LogRef) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[14]
+	mi := &file_ani_training_v1_training_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1622,7 +1714,7 @@ func (x *LogRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogRef.ProtoReflect.Descriptor instead.
 func (*LogRef) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{14}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *LogRef) GetLogId() string {
@@ -1664,7 +1756,7 @@ type TrainingInput struct {
 
 func (x *TrainingInput) Reset() {
 	*x = TrainingInput{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[15]
+	mi := &file_ani_training_v1_training_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1676,7 +1768,7 @@ func (x *TrainingInput) String() string {
 func (*TrainingInput) ProtoMessage() {}
 
 func (x *TrainingInput) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[15]
+	mi := &file_ani_training_v1_training_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1689,7 +1781,7 @@ func (x *TrainingInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrainingInput.ProtoReflect.Descriptor instead.
 func (*TrainingInput) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{15}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *TrainingInput) GetSchemaVersion() string {
@@ -1785,7 +1877,7 @@ type TrainingResult struct {
 
 func (x *TrainingResult) Reset() {
 	*x = TrainingResult{}
-	mi := &file_ani_training_v1_training_proto_msgTypes[16]
+	mi := &file_ani_training_v1_training_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1797,7 +1889,7 @@ func (x *TrainingResult) String() string {
 func (*TrainingResult) ProtoMessage() {}
 
 func (x *TrainingResult) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_training_v1_training_proto_msgTypes[16]
+	mi := &file_ani_training_v1_training_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1810,7 +1902,7 @@ func (x *TrainingResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrainingResult.ProtoReflect.Descriptor instead.
 func (*TrainingResult) Descriptor() ([]byte, []int) {
-	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{16}
+	return file_ani_training_v1_training_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *TrainingResult) GetSchemaVersion() string {
@@ -1930,14 +2022,22 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\n" +
 	"size_bytes\x18\x06 \x01(\x03R\tsizeBytes\x12\x16\n" +
 	"\x06sha256\x18\a \x01(\tR\x06sha256B\x0e\n" +
-	"\fimmutability\"\xee\x01\n" +
+	"\fimmutability\"\xc0\x02\n" +
 	"\bInputRef\x12(\n" +
 	"\x10input_version_id\x18\x01 \x01(\tR\x0einputVersionId\x127\n" +
 	"\x06object\x18\x02 \x01(\v2\x1f.ani.training.v1.FixedObjectRefR\x06object\x12\x16\n" +
 	"\x06format\x18\x03 \x01(\tR\x06format\x12%\n" +
 	"\x0eschema_version\x18\x04 \x01(\tR\rschemaVersion\x12\x1b\n" +
-	"\trow_count\x18\x05 \x01(\rR\browCount\x12#\n" +
-	"\rfeature_count\x18\x06 \x01(\rR\ffeatureCount\"\x99\x01\n" +
+	"\trow_count\x18\x05 \x01(\x03R\browCount\x12#\n" +
+	"\rfeature_count\x18\x06 \x01(\rR\ffeatureCount\x12P\n" +
+	"\x10prepared_dataset\x18\a \x01(\v2%.ani.training.v1.PreparedDatasetFactsR\x0fpreparedDataset\"\xa5\x01\n" +
+	"\x14PreparedDatasetFacts\x12\x16\n" +
+	"\x06format\x18\x01 \x01(\tR\x06format\x12!\n" +
+	"\ftransform_id\x18\x02 \x01(\tR\vtransformId\x12\x1d\n" +
+	"\n" +
+	"size_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x16\n" +
+	"\x06sha256\x18\x04 \x01(\tR\x06sha256\x12\x1b\n" +
+	"\trow_count\x18\x05 \x01(\x03R\browCount\"\x99\x01\n" +
 	"\n" +
 	"RuntimeRef\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
@@ -1945,21 +2045,24 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\tapi_group\x18\x03 \x01(\tR\bapiGroup\x12%\n" +
 	"\x0econtent_sha256\x18\x04 \x01(\tR\rcontentSha256\x12\x1f\n" +
 	"\vtarget_jobs\x18\x05 \x03(\tR\n" +
-	"targetJobs\"\xe5\x01\n" +
+	"targetJobs\"\xb4\x02\n" +
 	"\n" +
-	"ProgramRef\x12(\n" +
-	"\x10image_version_id\x18\x01 \x01(\tR\x0eimageVersionId\x12!\n" +
+	"ProgramRef\x12!\n" +
 	"\fimage_digest\x18\x02 \x01(\tR\vimageDigest\x12\x18\n" +
 	"\acommand\x18\x03 \x03(\tR\acommand\x12#\n" +
 	"\rresolved_args\x18\x04 \x03(\tR\fresolvedArgs\x12K\n" +
-	"\x13resolved_parameters\x18\x05 \x03(\v2\x1a.ani.training.v1.ParameterR\x12resolvedParameters\"\x84\x02\n" +
+	"\x13resolved_parameters\x18\x05 \x03(\v2\x1a.ani.training.v1.ParameterR\x12resolvedParameters\x12\x19\n" +
+	"\bimage_id\x18\x06 \x01(\tR\aimageId\x12#\n" +
+	"\rimage_version\x18\a \x01(\x03R\fimageVersion\x12\x1f\n" +
+	"\vimage_scope\x18\b \x01(\tR\n" +
+	"imageScopeJ\x04\b\x01\x10\x02R\x10image_version_id\"\x84\x02\n" +
 	"\fCPUResources\x12\x14\n" +
 	"\x05nodes\x18\x01 \x01(\rR\x05nodes\x12,\n" +
 	"\x12processes_per_node\x18\x02 \x01(\rR\x10processesPerNode\x12)\n" +
 	"\x10request_millicpu\x18\x03 \x01(\x03R\x0frequestMillicpu\x12%\n" +
 	"\x0elimit_millicpu\x18\x04 \x01(\x03R\rlimitMillicpu\x120\n" +
 	"\x14request_memory_bytes\x18\x05 \x01(\x03R\x12requestMemoryBytes\x12,\n" +
-	"\x12limit_memory_bytes\x18\x06 \x01(\x03R\x10limitMemoryBytes\"\xbd\x02\n" +
+	"\x12limit_memory_bytes\x18\x06 \x01(\x03R\x10limitMemoryBytes\"\xe0\x02\n" +
 	"\x11WorkspaceContract\x122\n" +
 	"\x04mode\x18\x01 \x01(\x0e2\x1e.ani.training.v1.WorkspaceModeR\x04mode\x12#\n" +
 	"\rstorage_class\x18\x02 \x01(\tR\fstorageClass\x12%\n" +
@@ -1967,7 +2070,8 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\rinput_subpath\x18\x04 \x01(\tR\finputSubpath\x12)\n" +
 	"\x10training_subpath\x18\x05 \x01(\tR\x0ftrainingSubpath\x12'\n" +
 	"\x0freports_subpath\x18\x06 \x01(\tR\x0ereportsSubpath\x12/\n" +
-	"\x13publication_subpath\x18\a \x01(\tR\x12publicationSubpath\"\xec\x02\n" +
+	"\x13publication_subpath\x18\a \x01(\tR\x12publicationSubpath\x12!\n" +
+	"\fwork_subpath\x18\b \x01(\tR\vworkSubpath\"\x8f\x03\n" +
 	"\fWorkspaceRef\x122\n" +
 	"\x04mode\x18\x01 \x01(\x0e2\x1e.ani.training.v1.WorkspaceModeR\x04mode\x12%\n" +
 	"\x0enamespace_name\x18\x02 \x01(\tR\rnamespaceName\x12#\n" +
@@ -1977,30 +2081,27 @@ const file_ani_training_v1_training_proto_rawDesc = "" +
 	"\rinput_subpath\x18\x06 \x01(\tR\finputSubpath\x12)\n" +
 	"\x10training_subpath\x18\a \x01(\tR\x0ftrainingSubpath\x12'\n" +
 	"\x0freports_subpath\x18\b \x01(\tR\x0ereportsSubpath\x12/\n" +
-	"\x13publication_subpath\x18\t \x01(\tR\x12publicationSubpath\"\xb1\x01\n" +
+	"\x13publication_subpath\x18\t \x01(\tR\x12publicationSubpath\x12!\n" +
+	"\fwork_subpath\x18\n" +
+	" \x01(\tR\vworkSubpath\"\x91\x01\n" +
 	"\x0eRequiredOutput\x12-\n" +
 	"\x04role\x18\x01 \x01(\x0e2\x19.ani.training.v1.FileRoleR\x04role\x12#\n" +
-	"\rrelative_path\x18\x02 \x01(\tR\frelativePath\x12$\n" +
-	"\x0emax_size_bytes\x18\x03 \x01(\x03R\fmaxSizeBytes\x12\x1a\n" +
-	"\x06in_tar\x18\x04 \x01(\bH\x00R\x05inTar\x88\x01\x01B\t\n" +
-	"\a_in_tar\"\xb6\x03\n" +
+	"\rrelative_path\x18\x02 \x01(\tR\frelativePath\x12\x15\n" +
+	"\x06in_tar\x18\x04 \x01(\bR\x05inTarJ\x04\b\x03\x10\x04R\x0emax_size_bytes\"\xef\x02\n" +
 	"\x0eOutputContract\x12%\n" +
 	"\x0eschema_version\x18\x01 \x01(\tR\rschemaVersion\x12<\n" +
 	"\voutput_kind\x18\x02 \x01(\x0e2\x1b.ani.training.v1.OutputKindR\n" +
 	"outputKind\x12B\n" +
 	"\rdelivery_mode\x18\x03 \x01(\x0e2\x1d.ani.training.v1.DeliveryModeR\fdeliveryMode\x12F\n" +
-	"\x0erequired_files\x18\x04 \x03(\v2\x1f.ani.training.v1.RequiredOutputR\rrequiredFiles\x12$\n" +
-	"\x0emax_file_count\x18\x05 \x01(\rR\fmaxFileCount\x12&\n" +
-	"\x0fmax_total_bytes\x18\x06 \x01(\x03R\rmaxTotalBytes\x12*\n" +
-	"\x11create_tar_bundle\x18\a \x01(\bR\x0fcreateTarBundle\x12'\n" +
-	"\rmax_tar_bytes\x18\b \x01(\x03H\x00R\vmaxTarBytes\x88\x01\x01B\x10\n" +
-	"\x0e_max_tar_bytes\"\x96\x01\n" +
+	"\x0erequired_files\x18\x04 \x03(\v2\x1f.ani.training.v1.RequiredOutputR\rrequiredFiles\x12*\n" +
+	"\x11create_tar_bundle\x18\a \x01(\bR\x0fcreateTarBundleJ\x04\b\x05\x10\x06J\x04\b\x06\x10\aJ\x04\b\b\x10\tR\x0emax_file_countR\x0fmax_total_bytesR\rmax_tar_bytes\"\xad\x01\n" +
 	"\tFileEntry\x12#\n" +
 	"\rrelative_path\x18\x01 \x01(\tR\frelativePath\x12-\n" +
 	"\x04role\x18\x02 \x01(\x0e2\x19.ani.training.v1.FileRoleR\x04role\x12\x1d\n" +
 	"\n" +
 	"size_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x16\n" +
-	"\x06sha256\x18\x04 \x01(\tR\x06sha256\"i\n" +
+	"\x06sha256\x18\x04 \x01(\tR\x06sha256\x12\x15\n" +
+	"\x06in_tar\x18\x05 \x01(\bR\x05inTar\"i\n" +
 	"\vManifestRef\x12#\n" +
 	"\rrelative_path\x18\x01 \x01(\tR\frelativePath\x12\x1d\n" +
 	"\n" +
@@ -2096,7 +2197,7 @@ func file_ani_training_v1_training_proto_rawDescGZIP() []byte {
 }
 
 var file_ani_training_v1_training_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_ani_training_v1_training_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_ani_training_v1_training_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_ani_training_v1_training_proto_goTypes = []any{
 	(ExecutionKind)(0),            // 0: ani.training.v1.ExecutionKind
 	(DeliveryMode)(0),             // 1: ani.training.v1.DeliveryMode
@@ -2109,55 +2210,57 @@ var file_ani_training_v1_training_proto_goTypes = []any{
 	(*ExecutionIdentity)(nil),     // 8: ani.training.v1.ExecutionIdentity
 	(*FixedObjectRef)(nil),        // 9: ani.training.v1.FixedObjectRef
 	(*InputRef)(nil),              // 10: ani.training.v1.InputRef
-	(*RuntimeRef)(nil),            // 11: ani.training.v1.RuntimeRef
-	(*ProgramRef)(nil),            // 12: ani.training.v1.ProgramRef
-	(*CPUResources)(nil),          // 13: ani.training.v1.CPUResources
-	(*WorkspaceContract)(nil),     // 14: ani.training.v1.WorkspaceContract
-	(*WorkspaceRef)(nil),          // 15: ani.training.v1.WorkspaceRef
-	(*RequiredOutput)(nil),        // 16: ani.training.v1.RequiredOutput
-	(*OutputContract)(nil),        // 17: ani.training.v1.OutputContract
-	(*FileEntry)(nil),             // 18: ani.training.v1.FileEntry
-	(*ManifestRef)(nil),           // 19: ani.training.v1.ManifestRef
-	(*Metric)(nil),                // 20: ani.training.v1.Metric
-	(*LogRef)(nil),                // 21: ani.training.v1.LogRef
-	(*TrainingInput)(nil),         // 22: ani.training.v1.TrainingInput
-	(*TrainingResult)(nil),        // 23: ani.training.v1.TrainingResult
-	(*timestamppb.Timestamp)(nil), // 24: google.protobuf.Timestamp
+	(*PreparedDatasetFacts)(nil),  // 11: ani.training.v1.PreparedDatasetFacts
+	(*RuntimeRef)(nil),            // 12: ani.training.v1.RuntimeRef
+	(*ProgramRef)(nil),            // 13: ani.training.v1.ProgramRef
+	(*CPUResources)(nil),          // 14: ani.training.v1.CPUResources
+	(*WorkspaceContract)(nil),     // 15: ani.training.v1.WorkspaceContract
+	(*WorkspaceRef)(nil),          // 16: ani.training.v1.WorkspaceRef
+	(*RequiredOutput)(nil),        // 17: ani.training.v1.RequiredOutput
+	(*OutputContract)(nil),        // 18: ani.training.v1.OutputContract
+	(*FileEntry)(nil),             // 19: ani.training.v1.FileEntry
+	(*ManifestRef)(nil),           // 20: ani.training.v1.ManifestRef
+	(*Metric)(nil),                // 21: ani.training.v1.Metric
+	(*LogRef)(nil),                // 22: ani.training.v1.LogRef
+	(*TrainingInput)(nil),         // 23: ani.training.v1.TrainingInput
+	(*TrainingResult)(nil),        // 24: ani.training.v1.TrainingResult
+	(*timestamppb.Timestamp)(nil), // 25: google.protobuf.Timestamp
 }
 var file_ani_training_v1_training_proto_depIdxs = []int32{
 	9,  // 0: ani.training.v1.InputRef.object:type_name -> ani.training.v1.FixedObjectRef
-	7,  // 1: ani.training.v1.ProgramRef.resolved_parameters:type_name -> ani.training.v1.Parameter
-	5,  // 2: ani.training.v1.WorkspaceContract.mode:type_name -> ani.training.v1.WorkspaceMode
-	5,  // 3: ani.training.v1.WorkspaceRef.mode:type_name -> ani.training.v1.WorkspaceMode
-	6,  // 4: ani.training.v1.RequiredOutput.role:type_name -> ani.training.v1.FileRole
-	2,  // 5: ani.training.v1.OutputContract.output_kind:type_name -> ani.training.v1.OutputKind
-	1,  // 6: ani.training.v1.OutputContract.delivery_mode:type_name -> ani.training.v1.DeliveryMode
-	16, // 7: ani.training.v1.OutputContract.required_files:type_name -> ani.training.v1.RequiredOutput
-	6,  // 8: ani.training.v1.FileEntry.role:type_name -> ani.training.v1.FileRole
-	8,  // 9: ani.training.v1.TrainingInput.identity:type_name -> ani.training.v1.ExecutionIdentity
-	10, // 10: ani.training.v1.TrainingInput.input:type_name -> ani.training.v1.InputRef
-	19, // 11: ani.training.v1.TrainingInput.prepared_manifest:type_name -> ani.training.v1.ManifestRef
-	12, // 12: ani.training.v1.TrainingInput.program:type_name -> ani.training.v1.ProgramRef
-	11, // 13: ani.training.v1.TrainingInput.runtime:type_name -> ani.training.v1.RuntimeRef
-	13, // 14: ani.training.v1.TrainingInput.resources:type_name -> ani.training.v1.CPUResources
-	15, // 15: ani.training.v1.TrainingInput.workspace:type_name -> ani.training.v1.WorkspaceRef
-	17, // 16: ani.training.v1.TrainingInput.output_contract:type_name -> ani.training.v1.OutputContract
-	24, // 17: ani.training.v1.TrainingInput.deadline_at:type_name -> google.protobuf.Timestamp
-	8,  // 18: ani.training.v1.TrainingResult.identity:type_name -> ani.training.v1.ExecutionIdentity
-	3,  // 19: ani.training.v1.TrainingResult.outcome:type_name -> ani.training.v1.TrainingOutcome
-	24, // 20: ani.training.v1.TrainingResult.completed_at:type_name -> google.protobuf.Timestamp
-	2,  // 21: ani.training.v1.TrainingResult.output_kind:type_name -> ani.training.v1.OutputKind
-	4,  // 22: ani.training.v1.TrainingResult.storage_state:type_name -> ani.training.v1.CandidateStorageState
-	15, // 23: ani.training.v1.TrainingResult.workspace:type_name -> ani.training.v1.WorkspaceRef
-	18, // 24: ani.training.v1.TrainingResult.files:type_name -> ani.training.v1.FileEntry
-	19, // 25: ani.training.v1.TrainingResult.manifest:type_name -> ani.training.v1.ManifestRef
-	20, // 26: ani.training.v1.TrainingResult.metrics:type_name -> ani.training.v1.Metric
-	21, // 27: ani.training.v1.TrainingResult.logs:type_name -> ani.training.v1.LogRef
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	11, // 1: ani.training.v1.InputRef.prepared_dataset:type_name -> ani.training.v1.PreparedDatasetFacts
+	7,  // 2: ani.training.v1.ProgramRef.resolved_parameters:type_name -> ani.training.v1.Parameter
+	5,  // 3: ani.training.v1.WorkspaceContract.mode:type_name -> ani.training.v1.WorkspaceMode
+	5,  // 4: ani.training.v1.WorkspaceRef.mode:type_name -> ani.training.v1.WorkspaceMode
+	6,  // 5: ani.training.v1.RequiredOutput.role:type_name -> ani.training.v1.FileRole
+	2,  // 6: ani.training.v1.OutputContract.output_kind:type_name -> ani.training.v1.OutputKind
+	1,  // 7: ani.training.v1.OutputContract.delivery_mode:type_name -> ani.training.v1.DeliveryMode
+	17, // 8: ani.training.v1.OutputContract.required_files:type_name -> ani.training.v1.RequiredOutput
+	6,  // 9: ani.training.v1.FileEntry.role:type_name -> ani.training.v1.FileRole
+	8,  // 10: ani.training.v1.TrainingInput.identity:type_name -> ani.training.v1.ExecutionIdentity
+	10, // 11: ani.training.v1.TrainingInput.input:type_name -> ani.training.v1.InputRef
+	20, // 12: ani.training.v1.TrainingInput.prepared_manifest:type_name -> ani.training.v1.ManifestRef
+	13, // 13: ani.training.v1.TrainingInput.program:type_name -> ani.training.v1.ProgramRef
+	12, // 14: ani.training.v1.TrainingInput.runtime:type_name -> ani.training.v1.RuntimeRef
+	14, // 15: ani.training.v1.TrainingInput.resources:type_name -> ani.training.v1.CPUResources
+	16, // 16: ani.training.v1.TrainingInput.workspace:type_name -> ani.training.v1.WorkspaceRef
+	18, // 17: ani.training.v1.TrainingInput.output_contract:type_name -> ani.training.v1.OutputContract
+	25, // 18: ani.training.v1.TrainingInput.deadline_at:type_name -> google.protobuf.Timestamp
+	8,  // 19: ani.training.v1.TrainingResult.identity:type_name -> ani.training.v1.ExecutionIdentity
+	3,  // 20: ani.training.v1.TrainingResult.outcome:type_name -> ani.training.v1.TrainingOutcome
+	25, // 21: ani.training.v1.TrainingResult.completed_at:type_name -> google.protobuf.Timestamp
+	2,  // 22: ani.training.v1.TrainingResult.output_kind:type_name -> ani.training.v1.OutputKind
+	4,  // 23: ani.training.v1.TrainingResult.storage_state:type_name -> ani.training.v1.CandidateStorageState
+	16, // 24: ani.training.v1.TrainingResult.workspace:type_name -> ani.training.v1.WorkspaceRef
+	19, // 25: ani.training.v1.TrainingResult.files:type_name -> ani.training.v1.FileEntry
+	20, // 26: ani.training.v1.TrainingResult.manifest:type_name -> ani.training.v1.ManifestRef
+	21, // 27: ani.training.v1.TrainingResult.metrics:type_name -> ani.training.v1.Metric
+	22, // 28: ani.training.v1.TrainingResult.logs:type_name -> ani.training.v1.LogRef
+	29, // [29:29] is the sub-list for method output_type
+	29, // [29:29] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_ani_training_v1_training_proto_init() }
@@ -2175,16 +2278,14 @@ func file_ani_training_v1_training_proto_init() {
 		(*FixedObjectRef_VersionId)(nil),
 		(*FixedObjectRef_ImmutableCopy)(nil),
 	}
-	file_ani_training_v1_training_proto_msgTypes[9].OneofWrappers = []any{}
-	file_ani_training_v1_training_proto_msgTypes[10].OneofWrappers = []any{}
-	file_ani_training_v1_training_proto_msgTypes[13].OneofWrappers = []any{}
+	file_ani_training_v1_training_proto_msgTypes[14].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ani_training_v1_training_proto_rawDesc), len(file_ani_training_v1_training_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   17,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

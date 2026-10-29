@@ -252,7 +252,8 @@ func runtimeAppFixture(t *testing.T) configuredRuntimeFixture {
 		Step: &conf.Server_GRPC{Network: "tcp", Addr: stepAddress, Timeout: durationpb.New(3 * time.Second)}, CertificateFile: config.Command.CertificateFile, PrivateKeyFile: config.Command.PrivateKeyFile,
 		Kubernetes:    &conf.HTTPSWorkloadConnection{Endpoint: peer.URL, CaFile: caFile, TokenFile: write("kube-token", []byte("synthetic-kube-owner"))},
 		Pipeline:      &conf.HTTPSWorkloadConnection{Endpoint: peer.URL, CaFile: caFile, TokenFile: write("pipeline-token", []byte("synthetic-kfp-owner"))},
-		ObjectStorage: &conf.ObjectStorageConnection{Endpoint: peer.URL, CaFile: caFile, Region: "us-east-1", CredentialsFile: write("storage-credentials", storageBytes), ConnectionId: snapshot.PublicationScope.StorageConnectionID, MaxObjectBytes: 64 << 20},
+		Limits:        &conf.RuntimeLimits{MaxContentBytes: 64 << 20},
+		ObjectStorage: &conf.ObjectStorageConnection{Endpoint: peer.URL, CaFile: caFile, Region: "us-east-1", CredentialsFile: write("storage-credentials", storageBytes), ConnectionId: snapshot.PublicationScope.StorageConnectionID},
 		BindingFile:   write("binding.json", bindingBytes), BindingSha256: hex.EncodeToString(bindingDigest[:]), TokenAudience: "ani-modeldev-managed-step", ApiTimeout: durationpb.New(3 * time.Second), DispatchInterval: durationpb.New(100 * time.Millisecond), DispatchBatchSize: 4,
 	}
 	return configuredRuntimeFixture{config: config, openPool: openPool, certificates: certificates, admission: admission, peer: peer, posts: posts, reviews: reviews}

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
@@ -46,7 +47,11 @@ func TestRunningTrainingTailPersistsThroughStopKubeletLossAndGC(t *testing.T) {
 	}
 	query := service.NewQuery(execution.New(pool), nil)
 	ctx := service.WithVerifiedGovernanceQuery(context.Background(), service.GovernanceDelivery{TenantID: f.step.f.execution.TenantID, RequestID: "running-original-tail-after-stop"}, modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName)
-	logs, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: f.step.f.execution.ExecutionID})
+	source, err := biz.TrainingLogSourceFor(biz.QueryRecord{Execution: f.step.f.execution, Runtime: state}, "")
+	if err != nil {
+		t.Fatal("original persisted worker identity", err)
+	}
+	logs, err := query.GetExecutionLogs(ctx, &modeldevv1.GetExecutionLogsRequest{ExecutionId: f.step.f.execution.ExecutionID, PodUid: &source.PodUID, LogId: &source.LogID})
 	if err != nil || len(logs.GetLines()) != 1 || logs.GetLines()[0].GetText() != "actual retained training output" || logs.GetSource().GetResourceUid() != "training-pod-original" || !logs.GetTruncated() {
 		t.Fatalf("original running tail missing after real PG/Stop/GC: %+v %v", logs, err)
 	}

@@ -2,6 +2,7 @@ package resolutiontest
 
 import (
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"reflect"
@@ -35,7 +36,7 @@ func TestPrepareScopesSameInputUUIDByAuthenticatedTenant(t *testing.T) {
 	if _, e := repository.FreezeImport(f.ctx, other); e != nil {
 		t.Fatal(e)
 	}
-	if _, e := repository.RecordVerifiedCSV(f.ctx, other, biz.VerifiedCSV{VerifiedObject: biz.VerifiedObject{Object: other.Object, VerifiedAt: other.RequestedAt.Add(time.Second)}, SchemaVersion: "ani.cpu.csv.v1", RowCount: 19, FeatureCount: 16}); e != nil {
+	if _, e := repository.RecordVerifiedCSV(f.ctx, other, biz.VerifiedCSV{VerifiedObject: biz.VerifiedObject{Object: other.Object, VerifiedAt: other.RequestedAt.Add(time.Second)}, SchemaVersion: "ani.cpu.csv.v1", RowCount: 19, FeatureCount: 16, PreparedDataset: cpup01.PreparedDatasetFacts{Format: "CPU_CSV", TransformID: "csv-identity-v3", SizeBytes: other.Object.SizeBytes, SHA256: other.Object.SHA256, RowCount: 19}}); e != nil {
 		t.Fatal(e)
 	}
 	candidate, e := f.resolver.Prepare(f.ctx, r)

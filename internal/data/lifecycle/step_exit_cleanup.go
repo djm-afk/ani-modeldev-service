@@ -17,7 +17,7 @@ func (repository *Repository) BeginStepExitCleanup(ctx context.Context, authorit
 		if current.state.ClosedAt == nil || generation == 0 || generation != current.state.CloseGeneration || current.state.CloseEvidence == nil || current.state.CloseEvidence.NoDispatch {
 			return false, biz.ErrRuntimeNotReady
 		}
-		if evidence.OwnerTermination == nil || !validDigest(evidence.OwnerTermination.WorkflowNodesSHA256) || !validExecutionCloseEvidence(current.execution, authority, current.state.CloseReason, evidence) || evidence.ObservedAt.After(current.now) {
+		if !biz.SameUnpreparedWorkspace(current.state.CloseEvidence.UnpreparedWorkspace, evidence.UnpreparedWorkspace) || evidence.OwnerTermination == nil || !validDigest(evidence.OwnerTermination.WorkflowNodesSHA256) || !validSandboxTerminationScope(current.state, evidence) || !validExecutionCloseEvidence(current.execution, authority, current.state.CloseReason, evidence) || evidence.ObservedAt.After(current.now) {
 			return false, biz.ErrRuntimeNotReady
 		}
 		for _, original := range current.state.CloseEvidence.Resources {
@@ -60,6 +60,11 @@ func (repository *Repository) CompleteStepExitCleanup(ctx context.Context, autho
 }
 
 func sameExitedStepPod(left, right biz.RuntimeResource) bool {
+	if left.SandboxTermination != nil && right.SandboxTermination != nil {
+		leftProof, rightProof := *left.SandboxTermination, *right.SandboxTermination
+		leftProof.PodResourceVersion, rightProof.PodResourceVersion = "", ""
+		left.SandboxTermination, right.SandboxTermination = &leftProof, &rightProof
+	}
 	if left.InitializationAbort != nil && right.InitializationAbort != nil {
 		leftAbort, rightAbort := *left.InitializationAbort, *right.InitializationAbort
 		// ResourceVersion protects each API mutation separately. Controller
@@ -97,7 +102,10 @@ func validStepExitCleanup(current *runtimeTransaction, authority biz.RunAuthorit
 	if receipt == nil {
 		return true
 	}
-	if current.state.ClosedAt == nil || receipt.CloseGeneration == 0 || receipt.CloseGeneration != current.state.CloseGeneration || receipt.StartedAt.IsZero() || receipt.StartedAt.Before(*current.state.ClosedAt) || receipt.StartedAt.After(current.now) || receipt.Evidence.ObservedAt.After(receipt.StartedAt) || receipt.Evidence.OwnerTermination == nil || !validDigest(receipt.Evidence.OwnerTermination.WorkflowNodesSHA256) || !validExecutionCloseEvidence(current.execution, authority, current.state.CloseReason, receipt.Evidence) {
+	if current.state.ClosedAt == nil || receipt.CloseGeneration == 0 || receipt.CloseGeneration != current.state.CloseGeneration || receipt.StartedAt.IsZero() || receipt.StartedAt.Before(*current.state.ClosedAt) || receipt.StartedAt.After(current.now) || receipt.Evidence.ObservedAt.After(receipt.StartedAt) || receipt.Evidence.OwnerTermination == nil || !validDigest(receipt.Evidence.OwnerTermination.WorkflowNodesSHA256) || !validSandboxTerminationScope(current.state, receipt.Evidence) || !validExecutionCloseEvidence(current.execution, authority, current.state.CloseReason, receipt.Evidence) {
+		return false
+	}
+	if !biz.SameUnpreparedWorkspace(current.state.CloseEvidence.UnpreparedWorkspace, receipt.Evidence.UnpreparedWorkspace) {
 		return false
 	}
 	for _, original := range current.state.CloseEvidence.Resources {

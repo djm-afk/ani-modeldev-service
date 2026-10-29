@@ -88,6 +88,34 @@ func TestOfficialSelectionUsesProviderCanonicalAndDigest(t *testing.T) {
 	}
 }
 
+func TestReadinessProjectionPreservesSelectedCurrentFacts(t *testing.T) {
+	s := conformance.FinetuningSnapshotV1()
+	encoded, err := codec.EncodeSnapshot(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := codec.DecodeComputeOrigin(encoded.ComputeOrigin)
+	if err != nil || got != s.ComputeOrigin {
+		t.Fatal("compute projection changed selected facts", err)
+	}
+	if _, err := codec.DecodeComputeOrigin(nil); err == nil {
+		t.Fatal("nil compute accepted")
+	}
+	encoded.ComputeOrigin.ProtoReflect().SetUnknown([]byte{0x78, 1})
+	if _, err := codec.DecodeComputeOrigin(encoded.ComputeOrigin); err == nil {
+		t.Fatal("unknown compute field accepted")
+	}
+	plan, err := codec.EncodeTemplatePlan(s.Finetuning.TemplatePlan)
+	if err != nil || plan.SourceSha256 != s.Finetuning.TemplatePlan.SourceSHA256 {
+		t.Fatal("template projection changed source", err)
+	}
+	invalid := s.Finetuning.TemplatePlan
+	invalid.SourceSHA256 = "invalid"
+	if _, err := codec.EncodeTemplatePlan(invalid); err == nil {
+		t.Fatal("invalid template encoded")
+	}
+}
+
 func TestWireRejectsOutOfRangeAndUnnormalizedTimingTimestamps(t *testing.T) {
 	for _, mutate := range []func(*modeldevv1.ExecutionSnapshot){
 		func(s *modeldevv1.ExecutionSnapshot) { s.Timing.AcceptedAt.Nanos = 1_000_000_000 },

@@ -10,8 +10,6 @@ import struct
 import sys
 
 implementation_source = Path(__file__).resolve().parents[1]
-if not (implementation_source / "implementation.py").is_file():
-    implementation_source = Path("/opt/implementation")
 sys.path.insert(0, str(implementation_source))
 from implementation import implementation
 
@@ -36,7 +34,6 @@ MANAGED = {
     "flash_attn": "disabled",
     "report_to": "none",
     "save_strategy": "no",
-    "template": "qwen",
     "train_dtype": "float32",
     "export_dtype": "float32",
     "verify_dtype": "float32",

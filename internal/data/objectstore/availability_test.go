@@ -51,8 +51,8 @@ func TestVerificationSourceUnavailableRemainsRetryableAndSanitized(t *testing.T)
 						_, _ = io.WriteString(w, fixture.body)
 					}))
 					defer server.Close()
-					verified, err := mode.verify(boundedVerificationContext(t), objectstore.NewVerifier(noRetryS3Client(server), scope.StorageConnectionID, 32*1024*1024), scope, object)
-					if !errors.Is(err, mode.unavailable) || !errors.Is(err, mode.verification) || err.Error() != mode.unavailable.Error() || verified || requests.Load() != 1 {
+					verified, err := mode.verify(boundedVerificationContext(t), objectstore.NewVerifier(noRetryS3Client(server), scope.StorageConnectionID), scope, object)
+					if !errors.Is(err, mode.unavailable) || errors.Is(err, mode.verification) || err.Error() != mode.unavailable.Error() || verified || requests.Load() != 1 {
 						t.Fatalf("incomplete source observation classified incorrectly: error=%v verified=%t requests=%d", err, verified, requests.Load())
 					}
 				})
@@ -79,7 +79,7 @@ func TestCompleteInvalidSourceRemainsContentRejected(t *testing.T) {
 						_, _ = io.WriteString(w, fixture.body)
 					}))
 					defer server.Close()
-					verified, err := mode.verify(boundedVerificationContext(t), objectstore.NewVerifier(noRetryS3Client(server), scope.StorageConnectionID, 32*1024*1024), scope, object)
+					verified, err := mode.verify(boundedVerificationContext(t), objectstore.NewVerifier(noRetryS3Client(server), scope.StorageConnectionID), scope, object)
 					if !errors.Is(err, mode.verification) || errors.Is(err, mode.unavailable) || verified {
 						t.Fatalf("complete bad object did not remain a content failure: error=%v verified=%t", err, verified)
 					}
@@ -96,7 +96,7 @@ func TestCompleteInvalidSourceRemainsContentRejected(t *testing.T) {
 		_, _ = io.WriteString(w, malformed)
 	}))
 	defer server.Close()
-	got, err := objectstore.NewVerifier(noRetryS3Client(server), scope.StorageConnectionID, 32*1024*1024).VerifyCSV(boundedVerificationContext(t), scope, object)
+	got, err := objectstore.NewVerifier(noRetryS3Client(server), scope.StorageConnectionID).VerifyCSV(boundedVerificationContext(t), scope, object)
 	if !errors.Is(err, biz.ErrInputVerification) || errors.Is(err, biz.ErrInputSourceUnavailable) || !got.VerifiedAt.IsZero() {
 		t.Fatalf("complete malformed CSV did not remain a content failure: %v", err)
 	}
@@ -118,8 +118,6 @@ func TestVerificationOwnerOrScopeMisconfigurationNeverRejectsContentOrFetches(t 
 				{"different scope bucket", func(scope *cpup01.StorageScope, _ *string, _ *int64) { scope.Bucket = "another-bucket" }},
 				{"different scope prefix", func(scope *cpup01.StorageScope, _ *string, _ *int64) { scope.ApprovedPrefix = "another-prefix" }},
 				{"invalid scope prefix", func(scope *cpup01.StorageScope, _ *string, _ *int64) { scope.ApprovedPrefix = "../input" }},
-				{"no read budget", func(_ *cpup01.StorageScope, _ *string, limit *int64) { *limit = 0 }},
-				{"insufficient owner budget", func(_ *cpup01.StorageScope, _ *string, limit *int64) { *limit = 1 }},
 			} {
 				t.Run(fixture.name, func(t *testing.T) {
 					scope, object := objectFixture(valid)
@@ -131,8 +129,8 @@ func TestVerificationOwnerOrScopeMisconfigurationNeverRejectsContentOrFetches(t 
 						w.WriteHeader(http.StatusForbidden)
 					}))
 					defer server.Close()
-					verified, err := mode.verify(boundedVerificationContext(t), objectstore.NewVerifier(noRetryS3Client(server), connection, limit), scope, object)
-					if !errors.Is(err, mode.unavailable) || !errors.Is(err, mode.verification) || verified || requests.Load() != 0 {
+					verified, err := mode.verify(boundedVerificationContext(t), objectstore.NewVerifier(noRetryS3Client(server), connection), scope, object)
+					if !errors.Is(err, mode.unavailable) || errors.Is(err, mode.verification) || verified || requests.Load() != 0 {
 						t.Fatalf("configuration failure fetched or rejected source content: error=%v verified=%t requests=%d", err, verified, requests.Load())
 					}
 				})
@@ -163,7 +161,7 @@ func TestVerificationCancellationPreservesContextCause(t *testing.T) {
 			}
 			finished := make(chan result, 1)
 			go func() {
-				verified, err := mode.verify(ctx, objectstore.NewVerifier(noRetryS3Client(server), scope.StorageConnectionID, 32*1024*1024), scope, object)
+				verified, err := mode.verify(ctx, objectstore.NewVerifier(noRetryS3Client(server), scope.StorageConnectionID), scope, object)
 				finished <- result{verified, err}
 			}()
 			select {

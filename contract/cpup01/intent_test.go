@@ -51,7 +51,7 @@ func TestIndependentPythonGoldenVectors(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	golden, e := os.ReadFile("conformance/intent-canonical-v21.json")
+	golden, e := os.ReadFile("conformance/intent-canonical-v3.json")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -63,7 +63,7 @@ func TestIndependentPythonGoldenVectors(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	golden, e = os.ReadFile("conformance/snapshot-v21.json")
+	golden, e = os.ReadFile("conformance/snapshot-v3.json")
 	if e != nil {
 		t.Fatal(e)
 	}

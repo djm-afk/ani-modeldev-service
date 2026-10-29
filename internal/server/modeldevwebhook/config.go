@@ -14,7 +14,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -76,17 +75,15 @@ type DriverBinding struct {
 // Profile is operator-owned frozen material. A Pod can select only an ID
 // already authorized by its namespace binding, and cannot supply policy fields.
 type Profile struct {
-	ID                      string   `json:"id"`
-	Kind                    string   `json:"kind"`
-	MaterialFile            string   `json:"material_file"`
-	MaterialSHA256          string   `json:"material_sha256"`
-	ComponentImage          string   `json:"component_image"`
-	AllowedSupportImages    []string `json:"allowed_support_images"`
-	RunAsUser               int64    `json:"run_as_user"`
-	RunAsGroup              int64    `json:"run_as_group"`
-	FSGroup                 int64    `json:"fs_group"`
-	EphemeralStorageRequest string   `json:"ephemeral_storage_request"`
-	EphemeralStorageLimit   string   `json:"ephemeral_storage_limit"`
+	ID                   string   `json:"id"`
+	Kind                 string   `json:"kind"`
+	MaterialFile         string   `json:"material_file"`
+	MaterialSHA256       string   `json:"material_sha256"`
+	ComponentImage       string   `json:"component_image"`
+	AllowedSupportImages []string `json:"allowed_support_images"`
+	RunAsUser            int64    `json:"run_as_user"`
+	RunAsGroup           int64    `json:"run_as_group"`
+	FSGroup              int64    `json:"fs_group"`
 	// Configure these only for metadata actually provided by the KFP backend.
 	// A configured key is mandatory and must equal the frozen PipelineVersion.
 	PipelineVersionLabel      string `json:"pipeline_version_label,omitempty"`
@@ -184,15 +181,6 @@ func (config Config) freeze() (map[string]frozenProfile, error) {
 				return nil, ErrConfiguration
 			}
 			seen[image] = true
-		}
-		request, err := resource.ParseQuantity(profile.EphemeralStorageRequest)
-		limit, limitErr := resource.ParseQuantity(profile.EphemeralStorageLimit)
-		minimum, maximum := resource.MustParse("1Gi"), resource.MustParse("12Gi")
-		if err != nil || limitErr != nil || request.Cmp(minimum) < 0 || limit.Cmp(request) < 0 || limit.Cmp(maximum) > 0 {
-			return nil, ErrConfiguration
-		}
-		if profile.Kind == "FINETUNING" && (request.Cmp(resource.MustParse("10Gi")) != 0 || limit.Cmp(resource.MustParse("12Gi")) != 0) {
-			return nil, ErrConfiguration
 		}
 		for _, key := range []string{profile.PipelineVersionLabel, profile.PipelineVersionAnnotation} {
 			if key != "" && len(validation.IsQualifiedName(key)) != 0 {

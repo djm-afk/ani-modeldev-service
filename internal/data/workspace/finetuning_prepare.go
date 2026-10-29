@@ -9,17 +9,17 @@ import (
 	"io"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
 	"golang.org/x/sys/unix"
 )
 
-const FinetuningDatasetInfo = `{"ani_cpu_smoke":{"file_name":"finetune_data.json","formatting":"alpaca","columns":{"prompt":"instruction","query":"input","response":"output"}}}`
+const FinetuningDatasetInfo = `{"ani_cpu_smoke":{"file_name":"finetune_data.jsonl","formatting":"alpaca","columns":{"prompt":"instruction","query":"input","response":"output"}}}`
 
 // PrepareFinetuningInput consumes separate temporary read clients for the
 // fixed dataset and fixed Model archive. It keeps source JSON bytes unchanged.
@@ -34,7 +34,7 @@ func PrepareFinetuningInput(ctx context.Context, dataClient, baseClient *s3.Clie
 		return biz.WorkspaceBinding{}, biz.ErrInvalidAdmission
 	}
 	want := e.Snapshot.Workspace
-	if binding.Mode != want.Mode || binding.NamespaceName != e.Snapshot.Environment.NamespaceName || binding.NamespaceUID != e.Snapshot.Environment.NamespaceUID || binding.PVCName == "" || binding.PVCUID == "" || binding.InputSubpath != want.InputSubpath || binding.TrainingSubpath != want.TrainingSubpath || binding.ReportsSubpath != want.ReportsSubpath || binding.PublicationSubpath != want.PublicationSubpath {
+	if binding.Mode != want.Mode || binding.NamespaceName != e.Snapshot.Environment.NamespaceName || binding.NamespaceUID != e.Snapshot.Environment.NamespaceUID || binding.PVCName == "" || binding.PVCUID == "" || binding.InputSubpath != want.InputSubpath || binding.TrainingSubpath != want.TrainingSubpath || binding.ReportsSubpath != want.ReportsSubpath || binding.PublicationSubpath != want.PublicationSubpath || binding.WorkSubpath != want.WorkSubpath {
 		return biz.WorkspaceBinding{}, biz.ErrRuntimeConflict
 	}
 	root, err := openPipelineRoot(directory)
@@ -48,32 +48,23 @@ func PrepareFinetuningInput(ctx context.Context, dataClient, baseClient *s3.Clie
 		binding.PreparedManifestSHA256, binding.PreparedManifestBytes = pipelineContentHash(manifest), int64(len(manifest))
 		return binding, nil
 	}
-	input, fine := e.Snapshot.Input, e.Snapshot.Finetuning
-	scope := cpup01.StorageScope{StorageConnectionID: input.Object.StorageConnectionID, Bucket: input.Object.Bucket, ApprovedPrefix: path.Dir(input.Object.Key)}
-	verified, err := objectstore.NewVerifier(dataClient, input.Object.StorageConnectionID, 32<<20).VerifyAlpaca(ctx, scope, input.Object)
-	if err != nil {
+	if err := prepareWorkDirectories(ctx, root, e.Snapshot.Workspace.WorkSubpath); err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
-	if verified.SchemaVersion != input.SchemaVersion || verified.RowCount != input.RowCount {
-		return biz.WorkspaceBinding{}, biz.ErrInputVerification
-	}
-	data, err := readFixedDataset(ctx, dataClient, input.Object)
-	if err != nil {
-		return biz.WorkspaceBinding{}, err
-	}
+	fine := e.Snapshot.Finetuning
 	inputs, err := openPipelineSubdirectory(root, e.Snapshot.Workspace.InputSubpath)
 	if err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
 	defer unix.Close(inputs)
+	if err := prepareFrozenDataset(ctx, dataClient, inputs, e.Snapshot.Input); err != nil {
+		return biz.WorkspaceBinding{}, err
+	}
 	dataDir, err := openPipelineSubdirectory(inputs, "data")
 	if err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
 	defer unix.Close(dataDir)
-	if err := writePipelineFile(ctx, dataDir, "finetune_data.json", data); err != nil {
-		return biz.WorkspaceBinding{}, err
-	}
 	if err := writePipelineFile(ctx, dataDir, "dataset_info.json", []byte(FinetuningDatasetInfo)); err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
@@ -84,11 +75,24 @@ func PrepareFinetuningInput(ctx context.Context, dataClient, baseClient *s3.Clie
 	if err := writePipelineFile(ctx, inputs, "finetune_configuration.json", configuration); err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
+	plan, err := fine.TemplatePlan.Canonical()
+	if err != nil {
+		return biz.WorkspaceBinding{}, err
+	}
+	capabilities, err := fine.RuntimeCapabilities.Canonical()
+	if err != nil {
+		return biz.WorkspaceBinding{}, err
+	}
+	for name, raw := range map[string][]byte{"template-plan.json": plan, "runtime-capabilities.json": capabilities} {
+		if err := writePipelineFile(ctx, inputs, name, raw); err != nil {
+			return biz.WorkspaceBinding{}, err
+		}
+	}
 	baseManifest, err := fine.BaseModel.BaseManifestBytes()
 	if err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
-	if err := prepareBaseArchive(ctx, baseClient, inputs, fine.BaseModel, fine.Budgets); err != nil {
+	if err := prepareBaseArchive(ctx, baseClient, inputs, fine.BaseModel, e.Snapshot.Limits); err != nil {
 		return biz.WorkspaceBinding{}, err
 	}
 	if err := writePipelineFile(ctx, inputs, "base_manifest.json", baseManifest); err != nil {
@@ -121,7 +125,16 @@ func PrepareFinetuningInput(ctx context.Context, dataClient, baseClient *s3.Clie
 // Reuse requires the actual frozen files and model inventory before returning
 // the original candidate; the caller still owns durable Prepared/Task gating.
 func reuseFinetuningPreparation(ctx context.Context, root int, e biz.Execution, binding biz.WorkspaceBinding) (bool, []byte, error) {
+	fine := e.Snapshot.Finetuning
 	reports, err := openPipelineSubdirectory(root, e.Snapshot.Workspace.ReportsSubpath)
+	if err != nil {
+		return false, nil, err
+	}
+	plan, err := fine.TemplatePlan.Canonical()
+	if err != nil {
+		return false, nil, err
+	}
+	capabilities, err := fine.RuntimeCapabilities.Canonical()
 	if err != nil {
 		return false, nil, err
 	}
@@ -132,7 +145,6 @@ func reuseFinetuningPreparation(ctx context.Context, root int, e biz.Execution, 
 	} else if err != nil || stat.Mode&unix.S_IFMT != unix.S_IFREG || stat.Nlink != 1 {
 		return false, nil, biz.ErrInputVerification
 	}
-	fine := e.Snapshot.Finetuning
 	configuration, err := (cpup01.FinetuningConfiguration{ParameterContractVersion: fine.ParameterContractVersion, Parameters: e.Snapshot.Program.ResolvedParameters, ManagedSettings: fine.ManagedSettings}).Canonical()
 	if err != nil {
 		return false, nil, err
@@ -146,13 +158,27 @@ func reuseFinetuningPreparation(ctx context.Context, root int, e biz.Execution, 
 		return false, nil, err
 	}
 	input := e.Snapshot.Workspace.InputSubpath
-	files := []cpup01.OutputFile{{RelativePath: input + "/data/finetune_data.json", SizeBytes: e.Snapshot.Input.Object.SizeBytes, SHA256: e.Snapshot.Input.Object.SHA256}}
+	if err := verifyPreparedDatasetFile(ctx, root, input+"/data/finetune_data.jsonl", e.Snapshot.Input.PreparedDataset); err != nil {
+		return false, nil, err
+	}
+	dataset, err := cpup01.BuildDatasetManifest(e.Snapshot.Input)
+	if err != nil {
+		return false, nil, err
+	}
+	datasetBytes, err := dataset.Canonical()
+	if err != nil {
+		return false, nil, err
+	}
+	files := []cpup01.OutputFile{}
 	for _, file := range []struct {
 		name string
 		data []byte
 	}{
 		{input + "/data/dataset_info.json", []byte(FinetuningDatasetInfo)},
+		{input + "/dataset-manifest.json", datasetBytes},
 		{input + "/finetune_configuration.json", configuration},
+		{input + "/template-plan.json", plan},
+		{input + "/runtime-capabilities.json", capabilities},
 		{input + "/base_manifest.json", baseManifest},
 		{e.Snapshot.Workspace.ReportsSubpath + "/prepared-manifest.json", manifest},
 	} {
@@ -176,23 +202,7 @@ func reuseFinetuningPreparation(ctx context.Context, root int, e biz.Execution, 
 	return true, manifest, nil
 }
 
-func readFixedDataset(ctx context.Context, client *s3.Client, o cpup01.FixedObjectRef) ([]byte, error) {
-	r, err := client.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(o.Bucket), Key: aws.String(o.Key), VersionId: o.VersionID})
-	if err != nil || r == nil || r.Body == nil {
-		return nil, pipelineIOError(ctx, biz.ErrInputSourceUnavailable)
-	}
-	defer r.Body.Close()
-	data, err := io.ReadAll(io.LimitReader(contextReader{ctx: ctx, reader: r.Body}, o.SizeBytes+1))
-	if err != nil {
-		return nil, pipelineIOError(ctx, biz.ErrInputSourceUnavailable)
-	}
-	if r.VersionId == nil || o.VersionID == nil || *r.VersionId != *o.VersionID || int64(len(data)) != o.SizeBytes || pipelineContentHash(data) != o.SHA256 {
-		return nil, biz.ErrInputVerification
-	}
-	return data, nil
-}
-
-func prepareBaseArchive(ctx context.Context, client *s3.Client, inputs int, base cpup01.BaseModelRef, budgets cpup01.ComponentBudgets) error {
+func prepareBaseArchive(ctx context.Context, client *s3.Client, inputs int, base cpup01.BaseModelRef, limits cpup01.ContentLimits) error {
 	if model, err := unix.Openat(inputs, "model", unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0); err == nil {
 		defer unix.Close(model)
 		if err := verifyBaseTree(ctx, model, base); err != nil {
@@ -206,6 +216,10 @@ func prepareBaseArchive(ctx context.Context, client *s3.Client, inputs int, base
 		return biz.ErrInputVerification
 	}
 	o := base.Object
+	bound, err := cpup01.TarReadBound(limits.MaxContentBytes)
+	if err != nil || o.SizeBytes <= 0 || o.SizeBytes > bound {
+		return biz.ErrInputVerification
+	}
 	response, err := client.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(o.Bucket), Key: aws.String(o.Key), VersionId: o.VersionID})
 	if err != nil || response == nil || response.Body == nil {
 		return pipelineIOError(ctx, biz.ErrInputSourceUnavailable)
@@ -229,11 +243,14 @@ func prepareBaseArchive(ctx context.Context, client *s3.Client, inputs int, base
 	}
 	defer archive.Close()
 	hash := sha256.New()
-	size, err := io.Copy(io.MultiWriter(archive, hash), io.LimitReader(contextReader{ctx: ctx, reader: response.Body}, o.SizeBytes+1))
+	reader := contextReader{ctx: ctx, reader: response.Body}
+	size, err := io.Copy(io.MultiWriter(archive, hash), io.LimitReader(reader, o.SizeBytes))
 	if err != nil {
 		return pipelineIOError(ctx, biz.ErrInputSourceUnavailable)
 	}
-	if size != o.SizeBytes || size > budgets.MaxBaseModelBytes || hex.EncodeToString(hash.Sum(nil)) != o.SHA256 {
+	var extra [1]byte
+	n, tailErr := reader.Read(extra[:])
+	if size != o.SizeBytes || n != 0 || tailErr != io.EOF || hex.EncodeToString(hash.Sum(nil)) != o.SHA256 {
 		return biz.ErrInputVerification
 	}
 	if _, err := archive.Seek(0, io.SeekStart); err != nil {
@@ -253,7 +270,7 @@ func prepareBaseArchive(ctx context.Context, client *s3.Client, inputs int, base
 		return biz.ErrInvalidWorkspaceOutput
 	}
 	defer unix.Close(model)
-	if err := extractBaseModel(ctx, archive, model, base, budgets.MaxBaseModelExpandedBytes); err != nil {
+	if err := extractBaseModel(ctx, archive, model, base, limits.MaxContentBytes); err != nil {
 		return err
 	}
 	if err := verifyBaseTree(ctx, model, base); err != nil {
@@ -335,11 +352,24 @@ func verifyBaseTree(ctx context.Context, root int, base cpup01.BaseModelRef) err
 
 func extractBaseModel(ctx context.Context, archive io.Reader, root int, base cpup01.BaseModelRef, limit int64) error {
 	expected := make(map[string]cpup01.BaseModelFile, len(base.Files))
+	directories := make(map[string]bool)
 	for _, file := range base.Files {
 		expected[file.Path] = file
+		for dir := path.Dir(file.Path); dir != "."; dir = path.Dir(dir) {
+			directories[dir] = true
+		}
 	}
 	seen := make(map[string]bool, len(expected))
-	reader := tar.NewReader(contextReader{ctx: ctx, reader: archive})
+	seenEntries := make(map[string]bool)
+	maximum, err := cpup01.TarReadBound(limit)
+	if err != nil {
+		return biz.ErrInputVerification
+	}
+	overhead := maximum - limit
+	measured := &baseArchiveCounter{source: contextReader{ctx: ctx, reader: archive}}
+	reader := tar.NewReader(measured)
+	var payload int64
+	entries := 0
 	for {
 		header, err := reader.Next()
 		if err == io.EOF {
@@ -348,11 +378,37 @@ func extractBaseModel(ctx context.Context, archive io.Reader, root int, base cpu
 		if err != nil {
 			return biz.ErrInputVerification
 		}
-		if header.Format != tar.FormatUSTAR || header.Typeflag != tar.TypeReg || !biz.ValidStorageKey(header.Name) || strings.Contains(header.Name, "\\") || seen[header.Name] || len(header.PAXRecords) != 0 || header.Linkname != "" {
+		entries++
+		name := header.Name
+		if header.Typeflag == tar.TypeDir {
+			name = strings.TrimSuffix(name, "/")
+		}
+		if measured.bytes-payload > overhead || entries > cpup01.MaxArchiveEntries || (header.Format != tar.FormatUSTAR && header.Format != tar.FormatPAX) || !biz.ValidStorageKey(name) || len(name) > cpup01.MaxRelativePathBytes || strings.Contains(name, "\\") || seenEntries[name] || header.Linkname != "" {
+			return biz.ErrInputVerification
+		}
+		seenEntries[name] = true
+		for key, value := range header.PAXRecords {
+			if key == "path" && value == header.Name || key == "size" && value == strconv.FormatInt(header.Size, 10) {
+				continue
+			}
+			return biz.ErrInputVerification
+		}
+		if header.Typeflag == tar.TypeDir {
+			if !directories[name] || header.Size != 0 {
+				return biz.ErrInputVerification
+			}
+			fd, err := openPipelineSubdirectory(root, name)
+			if err != nil {
+				return err
+			}
+			unix.Close(fd)
+			continue
+		}
+		if header.Typeflag != tar.TypeReg {
 			return biz.ErrInputVerification
 		}
 		want, ok := expected[header.Name]
-		if !ok || header.Size != want.SizeBytes || header.Size <= 0 || header.Size > limit {
+		if !ok || header.Size != want.SizeBytes || header.Size < 0 || header.Size > limit {
 			return biz.ErrInputVerification
 		}
 		seen[header.Name] = true
@@ -374,10 +430,11 @@ func extractBaseModel(ctx context.Context, archive io.Reader, root int, base cpu
 		file := os.NewFile(uintptr(fd), header.Name)
 		hash := sha256.New()
 		n, copyErr := io.Copy(io.MultiWriter(file, hash), reader)
+		payload, err = cpup01.CheckedAdd(payload, n)
 		syncErr := file.Sync()
 		modeErr := file.Chmod(0444)
 		closeErr := file.Close()
-		if copyErr != nil || syncErr != nil || modeErr != nil || closeErr != nil || n != want.SizeBytes || hex.EncodeToString(hash.Sum(nil)) != want.SHA256 {
+		if err != nil || measured.bytes-payload > overhead || copyErr != nil || syncErr != nil || modeErr != nil || closeErr != nil || n != want.SizeBytes || hex.EncodeToString(hash.Sum(nil)) != want.SHA256 {
 			return pipelineIOError(ctx, biz.ErrInputVerification)
 		}
 	}
@@ -388,13 +445,19 @@ func extractBaseModel(ctx context.Context, archive io.Reader, root int, base cpu
 	// outside the approved immutable archive even after the last member.
 	buffer := make([]byte, 32<<10)
 	for {
-		n, err := archive.Read(buffer)
+		n, err := measured.Read(buffer)
+		if measured.bytes-payload > overhead {
+			return biz.ErrInputVerification
+		}
 		for _, b := range buffer[:n] {
 			if b != 0 {
 				return biz.ErrInputVerification
 			}
 		}
 		if err == io.EOF {
+			if measured.bytes != base.Object.SizeBytes {
+				return biz.ErrInputVerification
+			}
 			break
 		}
 		if err != nil {
@@ -402,6 +465,24 @@ func extractBaseModel(ctx context.Context, archive io.Reader, root int, base cpu
 		}
 	}
 	return nil
+}
+
+// Count all bytes beneath the standard reader, including hidden PAX payload,
+// directory headers, alignment and zero tail. Ordinary content is accounted
+// separately when tar.Reader exposes and we actually consume each file.
+type baseArchiveCounter struct {
+	source io.Reader
+	bytes  int64
+}
+
+func (r *baseArchiveCounter) Read(buffer []byte) (int, error) {
+	n, err := r.source.Read(buffer)
+	next, countErr := cpup01.CheckedAdd(r.bytes, int64(n))
+	if countErr != nil {
+		return n, countErr
+	}
+	r.bytes = next
+	return n, err
 }
 
 func openFinetuningFile(root int, relative string, flags int, mode uint32) (int, error) {
@@ -443,7 +524,10 @@ func hashBaseMember(ctx context.Context, fd int, want cpup01.BaseModelFile) (boo
 	file := os.NewFile(uintptr(dup), want.Path)
 	defer file.Close()
 	h := sha256.New()
-	n, err := io.Copy(h, io.LimitReader(contextReader{ctx: ctx, reader: file}, want.SizeBytes+1))
+	reader := contextReader{ctx: ctx, reader: file}
+	n, err := io.Copy(h, io.LimitReader(reader, want.SizeBytes))
+	var extra [1]byte
+	tail, tailErr := reader.Read(extra[:])
 	var after unix.Stat_t
-	return err == nil && n == want.SizeBytes && hex.EncodeToString(h.Sum(nil)) == want.SHA256 && unix.Fstat(fd, &after) == nil && after.Nlink == 1 && before.Size == after.Size && before.Mtim == after.Mtim && before.Ctim == after.Ctim, err
+	return err == nil && tail == 0 && tailErr == io.EOF && n == want.SizeBytes && hex.EncodeToString(h.Sum(nil)) == want.SHA256 && unix.Fstat(fd, &after) == nil && after.Nlink == 1 && before.Size == after.Size && before.Mtim == after.Mtim && before.Ctim == after.Ctim, err
 }

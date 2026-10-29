@@ -6,7 +6,7 @@
 
 | 来源 | 文档 | 性质 |
 | --- | --- | --- |
-| **前一轮实现者交付** | [验收手册](finetuning-manual-test.md)、[后续工作交接](finetuning-next-handoff.md) | **权威上游**：M3-A 已完成部分的既有实现与交接说明，是本文的阶段前提 |
+| **前一轮实现者交付** | [验收手册](https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/2c946f65fcfd63ed010be26ed9aa595253ffb59d/docs/finetuning-manual-test.md)、[后续工作交接](finetuning-next-handoff.md) | **权威上游**：M3-A 已完成部分的既有实现与交接说明，是本文的阶段前提 |
 | **我方（接手方）agent 产出** | [实际调用表](finetuning-model-call-table.md)、[owner 问题函](finetuning-model-owner-questions.md)、[M3-A 集群复核](finetuning-m3a-cluster-review-20261016.md) | **待验证的内部初稿**：我方自己的分析与提问。**所有权在我方，不具外部权威性**，须经复核才可采信 |
 | **唯一规范** | `docs/design/ani-finetuning-v4.2.2/spec.md` | 冲突时以 spec 为准。**2026-10-16 已裁决**：以仓内本份为唯一 anchor（Fedora 侧 `.scratch/finetuning-cpu/spec.md` 为上轮实现者机器文件，本方不可达，不作 anchor） |
 

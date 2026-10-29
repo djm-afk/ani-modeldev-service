@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -32,17 +31,45 @@ type finetuningPrepareFixture struct {
 	members                map[string][]byte
 	dataClient, baseClient *s3.Client
 	baseGets               *atomic.Int64
+	dataStore              *pipelineS3Store
 }
 
-func TestFinetuningPreparePreservesOriginalJSONAndFrozenModelConfigBytes(t *testing.T) {
+func TestFinetuningPrepareDerivesFrozenJSONLInOneGETAndPreservesModelBytes(t *testing.T) {
 	f := prepareFinetuningInputs(t, "valid")
 	prepared, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory)
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := os.ReadFile(filepath.Join(f.directory, "inputs/data/finetune_data.json"))
-	if err != nil || !bytes.Equal(data, f.data) {
-		t.Fatal("prepare changed source JSON bytes or normalized dataset")
+	data, err := os.ReadFile(filepath.Join(f.directory, "inputs/data/finetune_data.jsonl"))
+	wantData := strings.Repeat(`{"input":"","instruction":"answer two plus two","output":"four"}`+"\n", 64)
+	if err != nil || string(data) != wantData || f.dataStore.gets != 1 {
+		t.Fatalf("prepare did not derive the frozen JSONL in one source read: gets=%d %v", f.dataStore.gets, err)
+	}
+	dataset, err := cpup01.BuildDatasetManifest(f.execution.Snapshot.Input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantDataset, err := dataset.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	actualDataset, err := os.ReadFile(filepath.Join(f.directory, "inputs/dataset-manifest.json"))
+	if err != nil || !bytes.Equal(actualDataset, wantDataset) {
+		t.Fatalf("prepare changed the independently frozen dataset manifest: %v", err)
+	}
+	template, err := f.execution.Snapshot.Finetuning.TemplatePlan.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	capabilities, err := f.execution.Snapshot.Finetuning.RuntimeCapabilities.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, expected := range map[string][]byte{"template-plan.json": template, "runtime-capabilities.json": capabilities} {
+		actual, err := os.ReadFile(filepath.Join(f.directory, "inputs", name))
+		if err != nil || !bytes.Equal(actual, expected) {
+			t.Fatalf("frozen %s changed at prepare: %v", name, err)
+		}
 	}
 	datasetInfo, err := os.ReadFile(filepath.Join(f.directory, "inputs/data/dataset_info.json"))
 	if err != nil || string(datasetInfo) != workspace.FinetuningDatasetInfo {
@@ -91,7 +118,7 @@ func TestFinetuningPreparePreservesOriginalJSONAndFrozenModelConfigBytes(t *test
 	if err != nil || !reflect.DeepEqual(again, prepared) {
 		t.Fatalf("prepare replay changed original materialization receipt: %v", err)
 	}
-	if f.baseGets.Load() != 1 {
+	if f.baseGets.Load() != 1 || f.dataStore.gets != 1 {
 		t.Fatal("prepare replay fetched/re-extracted the fixed model again")
 	}
 	entries, err := os.ReadDir(filepath.Join(f.directory, "inputs"))
@@ -106,7 +133,7 @@ func TestFinetuningPreparePreservesOriginalJSONAndFrozenModelConfigBytes(t *test
 }
 
 func TestFinetuningPrepareRejectsUnapprovedArchiveWithoutCompletionReceipt(t *testing.T) {
-	for _, mode := range []string{"traversal", "link", "PAX", "extra member", "wrong member SHA", "wrong archive SHA", "wrong version", "nonzero tail"} {
+	for _, mode := range []string{"traversal", "link", "PAX", "extra member", "wrong member SHA", "wrong archive SHA", "wrong version", "nonzero tail", "excessive zero tail"} {
 		t.Run(mode, func(t *testing.T) {
 			f := prepareFinetuningInputs(t, mode)
 			result, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory)
@@ -180,7 +207,7 @@ func TestFinetuningPrepareLeavesIncompleteInputUnreadyWithoutRepairingIt(t *test
 }
 
 func TestFinetuningPrepareDoesNotRepairInputsBehindExistingManifest(t *testing.T) {
-	for _, missing := range []string{"inputs/model", "inputs/data/finetune_data.json", "inputs/data/dataset_info.json", "inputs/finetune_configuration.json", "inputs/base_manifest.json", "reports/prepared-manifest.json"} {
+	for _, missing := range []string{"inputs/model", "inputs/data/finetune_data.jsonl", "inputs/data/dataset_info.json", "inputs/finetune_configuration.json", "inputs/base_manifest.json", "reports/prepared-manifest.json"} {
 		t.Run(missing, func(t *testing.T) {
 			f := prepareFinetuningInputs(t, "valid")
 			if _, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory); err != nil {
@@ -204,6 +231,19 @@ func TestFinetuningPrepareDoesNotRepairInputsBehindExistingManifest(t *testing.T
 	}
 }
 
+func TestFinetuningPrepareAcceptsFrozenPAXPathAndEmptyAccessory(t *testing.T) {
+	f := prepareFinetuningInputs(t, "valid PAX empty")
+	prepared, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory)
+	if err != nil || prepared.PreparedManifestSHA256 == "" {
+		t.Fatalf("current safe model archive rejected: %+v %v", prepared, err)
+	}
+	name := filepath.Join(f.directory, "inputs/model/assets", strings.Repeat("x", 120)+".txt")
+	info, err := os.Stat(name)
+	if err != nil || info.Size() != 0 {
+		t.Fatalf("frozen empty accessory missing: %+v %v", info, err)
+	}
+}
+
 func prepareFinetuningInputs(t *testing.T, mode string) finetuningPrepareFixture {
 	t.Helper()
 	snapshot := conformance.FinetuningSnapshotV1()
@@ -223,7 +263,18 @@ func prepareFinetuningInputs(t *testing.T, mode string) finetuningPrepareFixture
 	data = append(data, '\n')
 	snapshot.Input.Object.SizeBytes = int64(len(data))
 	snapshot.Input.Object.SHA256 = pipelineDigest(data)
-	members := map[string][]byte{"config.json": []byte(`{"architecture":"synthetic-fixture"}`), "model.safetensors": []byte("synthetic test bytes, not a real HF model"), "tokenizer_config.json": []byte(`{"fixture":true}`), "tokenizer.json": []byte(`{"fixture":true}`)}
+	derived := []byte(strings.Repeat(`{"input":"","instruction":"answer two plus two","output":"four"}`+"\n", 64))
+	snapshot.Input.RowCount = 64
+	snapshot.Input.PreparedDataset = cpup01.PreparedDatasetFacts{Format: "ALPACA_JSONL", TransformID: "alpaca-array-compact-jsonl-v3", SizeBytes: int64(len(derived)), SHA256: pipelineDigest(derived), RowCount: 64}
+	members := map[string][]byte{"config.json": []byte(`{"model_type":"qwen2","architectures":["Qwen2ForCausalLM"],"torch_dtype":"bfloat16","max_position_embeddings":32768}`), "model.safetensors": []byte("synthetic test bytes, not a real HF model"), "tokenizer_config.json": []byte(`{"model_max_length":32768}`), "tokenizer.json": []byte(`{"fixture":true}`)}
+	if mode == "valid PAX empty" {
+		members["assets/"+strings.Repeat("x", 120)+".txt"] = nil
+	}
+	snapshot.Finetuning.BaseModel.Facts.ConfigFile = cpup01.FileFact{Path: "config.json", SizeBytes: int64(len(members["config.json"])), SHA256: pipelineDigest(members["config.json"])}
+	snapshot.Finetuning.BaseModel.Facts.TokenizerConfigFile = cpup01.FileFact{Path: "tokenizer_config.json", SizeBytes: int64(len(members["tokenizer_config.json"])), SHA256: pipelineDigest(members["tokenizer_config.json"])}
+	for index := range snapshot.Finetuning.BaseModel.Facts.ContextSources {
+		snapshot.Finetuning.BaseModel.Facts.ContextSources[index].SourceSHA256 = pipelineDigest(members[snapshot.Finetuning.BaseModel.Facts.ContextSources[index].SourcePath])
+	}
 	snapshot.Finetuning.BaseModel.Files = nil
 	names := []string{}
 	for name := range members {
@@ -232,10 +283,18 @@ func prepareFinetuningInputs(t *testing.T, mode string) finetuningPrepareFixture
 	sort.Strings(names)
 	var archive bytes.Buffer
 	writer := tar.NewWriter(&archive)
+	if mode == "valid PAX empty" {
+		if err := writer.WriteHeader(&tar.Header{Name: "assets/", Mode: 0700, Typeflag: tar.TypeDir, Format: tar.FormatPAX}); err != nil {
+			t.Fatal(err)
+		}
+	}
 	for index, name := range names {
 		content := append([]byte{}, members[name]...)
 		snapshot.Finetuning.BaseModel.Files = append(snapshot.Finetuning.BaseModel.Files, cpup01.BaseModelFile{Path: name, SizeBytes: int64(len(content)), SHA256: pipelineDigest(content)})
 		header := &tar.Header{Name: name, Mode: 0600, Size: int64(len(content)), Typeflag: tar.TypeReg, Format: tar.FormatUSTAR}
+		if mode == "valid PAX empty" {
+			header.Format = tar.FormatPAX
+		}
 		if index == 0 {
 			switch mode {
 			case "traversal":
@@ -274,6 +333,13 @@ func prepareFinetuningInputs(t *testing.T, mode string) finetuningPrepareFixture
 	if mode == "nonzero tail" {
 		payload = append(payload, 1)
 	}
+	if mode == "excessive zero tail" {
+		maximum, err := cpup01.TarReadBound(snapshot.Limits.MaxContentBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		payload = append(payload, make([]byte, int(maximum-snapshot.Limits.MaxContentBytes)+512)...)
+	}
 	snapshot.Finetuning.BaseModel.Object.SizeBytes = int64(len(payload))
 	snapshot.Finetuning.BaseModel.Object.SHA256 = pipelineDigest(payload)
 	if mode == "wrong archive SHA" {
@@ -283,15 +349,27 @@ func prepareFinetuningInputs(t *testing.T, mode string) finetuningPrepareFixture
 	if err != nil {
 		t.Fatal(err)
 	}
+	templateHash, err := snapshot.Finetuning.TemplatePlan.Digest()
+	if err != nil {
+		t.Fatal(err)
+	}
 	arguments := func(role string) []string {
-		return []string{role, "--configuration", "/workspace/inputs/finetune_configuration.json", "--workspace", "/workspace", "--expected-input-sha256", snapshot.Input.Object.SHA256, "--expected-input-bytes", strconv.FormatInt(snapshot.Input.Object.SizeBytes, 10), "--expected-base-manifest-sha256", baseHash}
+		dataset, err := cpup01.BuildDatasetManifest(snapshot.Input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		digest, err := dataset.Digest()
+		if err != nil {
+			t.Fatal(err)
+		}
+		return []string{role, "--configuration", "/workspace/inputs/finetune_configuration.json", "--workspace", "/workspace", "--dataset-manifest", "/workspace/inputs/dataset-manifest.json", "--expected-dataset-manifest-sha256", digest, "--expected-base-manifest-sha256", baseHash, "--expected-template-plan-sha256", templateHash}
 	}
 	snapshot.Program.ResolvedArgs = arguments("train")
 	snapshot.Finetuning.ExportProgram.ResolvedArgs = arguments("export")
 	snapshot.Finetuning.VerifyProgram.ResolvedArgs = arguments("verify")
 	e := biz.Execution{Admission: biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:prepare-fixture", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, AcceptedAt: snapshot.Timing.AcceptedAt}}
 	refreshSpec(t, &e)
-	_, dataClient := newPipelineS3(t, e, data)
+	dataStore, dataClient := newPipelineS3(t, e, data)
 	baseObject := snapshot.Finetuning.BaseModel.Object
 	gets := &atomic.Int64{}
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -324,6 +402,31 @@ func prepareFinetuningInputs(t *testing.T, mode string) finetuningPrepareFixture
 	}
 	t.Cleanup(func() { _ = os.RemoveAll(directory) })
 	want := snapshot.Workspace
-	binding := biz.WorkspaceBinding{Mode: want.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "fixture-workspace", PVCUID: "77777777-7777-4777-8777-777777777777", InputSubpath: want.InputSubpath, TrainingSubpath: want.TrainingSubpath, ReportsSubpath: want.ReportsSubpath, PublicationSubpath: want.PublicationSubpath}
-	return finetuningPrepareFixture{directory: directory, execution: e, binding: binding, data: data, members: members, dataClient: dataClient, baseClient: baseClient, baseGets: gets}
+	binding := biz.WorkspaceBinding{Mode: want.Mode, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, PVCName: "fixture-workspace", PVCUID: "77777777-7777-4777-8777-777777777777", InputSubpath: want.InputSubpath, TrainingSubpath: want.TrainingSubpath, ReportsSubpath: want.ReportsSubpath, PublicationSubpath: want.PublicationSubpath, WorkSubpath: want.WorkSubpath}
+	return finetuningPrepareFixture{directory: directory, execution: e, binding: binding, data: data, members: members, dataClient: dataClient, baseClient: baseClient, baseGets: gets, dataStore: dataStore}
+}
+
+func TestFinetuningPrepareReuseRejectsChangedTemplateOrRuntimeCapabilities(t *testing.T) {
+	for _, name := range []string{"template-plan.json", "runtime-capabilities.json"} {
+		t.Run(name, func(t *testing.T) {
+			f := prepareFinetuningInputs(t, "valid")
+			_, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory)
+			if err != nil {
+				t.Fatal(err)
+			}
+			path := filepath.Join(f.directory, "inputs", name)
+			if err := os.Chmod(path, 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, []byte("{}"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := workspace.PrepareFinetuningInput(context.Background(), f.dataClient, f.baseClient, f.execution, f.binding, f.directory); err == nil {
+				t.Fatal("replayed a changed frozen template/capability")
+			}
+			if f.dataStore.gets != 1 || f.baseGets.Load() != 1 {
+				t.Fatal("replay read source after immutable input mismatch")
+			}
+		})
+	}
 }

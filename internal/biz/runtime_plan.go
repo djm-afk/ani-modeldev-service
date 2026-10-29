@@ -44,19 +44,19 @@ func CompileRuntimePlan(snapshot cpup01.Snapshot) (cpup01.RuntimePlan, error) {
 	mount := func(name, destination, subpath string, readOnly bool) any {
 		return map[string]any{"name": name, "mountPath": destination, "subPath": subpath, "readOnly": readOnly}
 	}
-	volumes := []any{volume("input"), volume("output"), map[string]any{"name": "tmp", "emptyDir": map[string]any{"sizeLimit": "4Gi"}}}
+	volumes := []any{volume("input"), volume("output"), volume("work")}
 	mounts := []any{
 		mount("input", "/inputs", snapshot.Workspace.InputSubpath, true),
 		mount("output", "/outputs", snapshot.Workspace.TrainingSubpath, false),
-		map[string]any{"name": "tmp", "mountPath": "/tmp", "readOnly": false},
+		mount("work", "/workspace/work/train", snapshot.Workspace.WorkSubpath+"/train", false),
 	}
 	if snapshot.Kind == "FINETUNING" {
-		volumes = []any{volume("ft-input"), volume("ft-adapter"), volume("ft-report"), map[string]any{"name": "ft-tmp", "emptyDir": map[string]any{"sizeLimit": "4Gi"}}}
+		volumes = []any{volume("ft-input"), volume("ft-adapter"), volume("ft-report"), volume("work")}
 		mounts = []any{
 			mount("ft-input", "/workspace/inputs", snapshot.Workspace.InputSubpath, true),
 			mount("ft-adapter", "/workspace/training/adapter", snapshot.Workspace.TrainingSubpath+"/adapter", false),
 			mount("ft-report", "/workspace/reports/train", snapshot.Workspace.ReportsSubpath+"/train", false),
-			map[string]any{"name": "ft-tmp", "mountPath": "/tmp", "readOnly": false},
+			mount("work", "/workspace/work/train", snapshot.Workspace.WorkSubpath+"/train", false),
 		}
 	} else if snapshot.Kind != "GENERAL_TRAINING" {
 		return cpup01.RuntimePlan{}, ErrInvalidAdmission
@@ -73,6 +73,12 @@ func CompileRuntimePlan(snapshot cpup01.Snapshot) (cpup01.RuntimePlan, error) {
 			"resources":       map[string]any{"requests": resources, "limits": resources},
 			"securityContext": map[string]any{"allowPrivilegeEscalation": false, "readOnlyRootFilesystem": true, "capabilities": map[string]any{"drop": []string{"ALL"}}},
 			"volumeMounts":    mounts,
+			"env": []any{
+				map[string]any{"name": "TMPDIR", "value": "/workspace/work/train/tmp"},
+				map[string]any{"name": "HF_HOME", "value": "/workspace/work/train/hf"},
+				map[string]any{"name": "HF_DATASETS_CACHE", "value": "/workspace/work/train/hf/datasets"},
+				map[string]any{"name": "MPLCONFIGDIR", "value": "/workspace/work/train/matplotlib"},
+			},
 		}},
 	}
 	queue := "default"
@@ -123,11 +129,8 @@ func CompileRuntimePlan(snapshot cpup01.Snapshot) (cpup01.RuntimePlan, error) {
 	return plan, nil
 }
 
-// RuntimePlanSchedulesPodGroup reports whether the frozen Runtime plan asks
-// Trainer to create a Volcano PodGroup. Read-only details follow the plan that
-// this execution actually froze: a plan compiled with podGroupPolicy.volcano
-// requires the group, an older deployment plan without it never has one. The
-// execution contract itself is unchanged by this query.
+// RuntimePlanSchedulesPodGroup validates the sole current Volcano policy.
+// Missing or different policy is an invalid plan, never a retired-plan default.
 func RuntimePlanSchedulesPodGroup(plan cpup01.RuntimePlan) (bool, error) {
 	var spec map[string]any
 	if len(plan.ExpectedSpec) == 0 || json.Unmarshal(plan.ExpectedSpec, &spec) != nil {
@@ -138,7 +141,7 @@ func RuntimePlanSchedulesPodGroup(plan cpup01.RuntimePlan) (bool, error) {
 		return false, ErrInvalidAdmission
 	}
 	if !found {
-		return false, nil
+		return false, ErrInvalidAdmission
 	}
 	if len(policy) != 1 {
 		return false, ErrInvalidAdmission

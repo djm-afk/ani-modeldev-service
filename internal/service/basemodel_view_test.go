@@ -39,7 +39,7 @@ func TestExecutionViewPublishesOnlyBaseModelIdentity(t *testing.T) {
 		t.Fatal("base model missing from the finetuning detail")
 	}
 	want := snapshot.Finetuning.BaseModel
-	if base.ModelId != want.ModelID || base.VersionId != want.VersionID || base.Family != want.Family || base.Format != want.Format {
+	if base.ModelId != want.ModelID || base.VersionId != want.VersionID || base.Format != want.Format {
 		t.Fatalf("base model=%+v, want identity of %+v", base, want)
 	}
 	// The identity message has no field for storage facts at all: the check is

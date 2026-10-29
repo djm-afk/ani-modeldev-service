@@ -27,7 +27,7 @@ import (
 
 func TestComponentPublishAsksOwnerForTaskIdentityBeforeRequiringIt(t *testing.T) {
 	config := taskConfiguration(t, modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH)
-	config.CandidateFile = filepath.Join(t.TempDir(), "candidate.json")
+	config.PublicationRefFile = filepath.Join(t.TempDir(), "candidate.json")
 	ownerFailure := errors.New("synthetic owner boundary unavailable")
 	client := &taskConfigurationRPC{err: ownerFailure}
 	runner, err := component.New(config, client, nil, s3.New(s3.Options{}))
@@ -41,19 +41,16 @@ func TestComponentPublishAsksOwnerForTaskIdentityBeforeRequiringIt(t *testing.T)
 
 func TestComponentConfigurationChecksOwnerResolvedTaskIdentity(t *testing.T) {
 	for _, test := range []struct {
-		name, configured, resolved string
-		denied                     bool
+		name, resolved string
+		denied         bool
 	}{
 		{name: "owner resolved", resolved: "real-backend-task"},
-		{name: "matching explicit", configured: "real-backend-task", resolved: "real-backend-task"},
-		{name: "legacy explicit", configured: "legacy-task"},
-		{name: "different explicit", configured: "claimed-task", resolved: "real-backend-task", denied: true},
+		{name: "missing owner task", denied: true},
 		{name: "malformed returned", resolved: "task with space", denied: true},
 		{name: "oversized returned", resolved: strings.Repeat("a", 257), denied: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			config := taskConfiguration(t, modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT)
-			config.TaskID = test.configured
 			response := taskConfigurationResponse(t, config)
 			response.KfpTaskId = test.resolved
 			client := &taskConfigurationRPC{response: response}
@@ -159,7 +156,7 @@ func timedConfigurationResponse(t *testing.T, config component.Config, timing cp
 	}
 	identity := &trainingv1.ExecutionIdentity{OperationId: operation, ExecutionId: config.Context.Identity.ExecutionId, ExecutionSpecHash: admission.SpecHash}
 	a := config.Context.Association
-	return &modeldevv1.GetExecutionConfigurationResponse{Identity: identity, Snapshot: snapshot, Authority: &modeldevv1.AuthorityBinding{KfpRunId: a.KfpRunId, NamespaceUid: a.NamespaceUid, WorkflowUid: a.WorkflowUid}, Admission: &modeldevv1.AcceptExecutionRequest{Identity: identity, ResourceTenantId: config.TenantID, AdmittedActorId: "governance:user:42", IntentHash: admission.IntentHash, Snapshot: snapshot, Intent: intent, AcceptedAt: timestamppb.New(admission.AcceptedAt)}}
+	return &modeldevv1.GetExecutionConfigurationResponse{KfpTaskId: "authenticated-fixture-task", Identity: identity, Snapshot: snapshot, Authority: &modeldevv1.AuthorityBinding{KfpRunId: a.KfpRunId, NamespaceUid: a.NamespaceUid, WorkflowUid: a.WorkflowUid}, Admission: &modeldevv1.AcceptExecutionRequest{Identity: identity, ResourceTenantId: config.TenantID, AdmittedActorId: "governance:user:42", IntentHash: admission.IntentHash, Snapshot: snapshot, Intent: intent, AcceptedAt: timestamppb.New(admission.AcceptedAt)}}
 }
 
 func TestComponentCloseMissingCandidatePreservesFailureAfterCloseAttempt(t *testing.T) {
@@ -169,7 +166,7 @@ func TestComponentCloseMissingCandidatePreservesFailureAfterCloseAttempt(t *test
 		t.Fatal(err)
 	}
 	client := &failedCloseRPC{t: t}
-	config := component.Config{TenantID: "11111111-1111-4111-8111-111111111111", TokenFile: tokenFile, CandidateFile: filepath.Join(directory, "missing-candidate.json"), Context: &modeldevv1.StepContext{
+	config := component.Config{TenantID: "11111111-1111-4111-8111-111111111111", TokenFile: tokenFile, PublicationRefFile: filepath.Join(directory, "missing-candidate.json"), Context: &modeldevv1.StepContext{
 		Identity:    &trainingv1.ExecutionIdentity{OperationId: "33333333-3333-4333-8333-333333333333", ExecutionId: "22222222-2222-4222-8222-222222222222", ExecutionSpecHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
 		Association: &modeldevv1.RunAssociation{KfpRunId: "44444444-4444-4444-8444-444444444444", NamespaceName: "cpu-execution", NamespaceUid: "55555555-5555-4555-8555-555555555555", WorkflowName: "main-flow", WorkflowUid: "66666666-6666-4666-8666-666666666666", PodName: "main-close", PodUid: "77777777-7777-4777-8777-777777777777"},
 		Step:        modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE,

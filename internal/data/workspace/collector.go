@@ -38,19 +38,17 @@ func Collect(ctx context.Context, directory string, execution biz.Execution) (bi
 	}
 	contract := execution.Snapshot.OutputContract
 	files := make([]biz.CollectedFile, 0, len(contract.RequiredFiles))
-	remaining := contract.MaxTotalBytes
+	remaining := execution.Snapshot.Limits.MaxContentBytes
 	for _, required := range contract.RequiredFiles {
 		if err := ctx.Err(); err != nil {
 			return biz.CollectedOutput{}, err
 		}
-		limit := required.MaxSizeBytes
-		if remaining < limit {
-			limit = remaining
-		}
+		limit := remaining
 		entry, err := collectFile(ctx, root, required.RelativePath, required.Role, limit)
 		if err != nil {
 			return biz.CollectedOutput{}, err
 		}
+		entry.InTar = required.InTar
 		files = append(files, entry)
 		remaining -= entry.SizeBytes
 	}
@@ -70,7 +68,7 @@ func Collect(ctx context.Context, directory string, execution biz.Execution) (bi
 }
 
 func collectFile(ctx context.Context, root int, name, role string, limit int64) (biz.CollectedFile, error) {
-	if limit <= 0 {
+	if limit < 0 {
 		return biz.CollectedFile{}, biz.ErrInvalidWorkspaceOutput
 	}
 	// NONBLOCK prevents an untrusted FIFO replacement from blocking before the
@@ -82,7 +80,7 @@ func collectFile(ctx context.Context, root int, name, role string, limit int64) 
 	file := os.NewFile(uintptr(fd), name)
 	defer file.Close()
 	var before syscall.Stat_t
-	if syscall.Fstat(fd, &before) != nil || before.Mode&syscall.S_IFMT != syscall.S_IFREG || before.Nlink != 1 || before.Size <= 0 || before.Size > limit {
+	if syscall.Fstat(fd, &before) != nil || before.Mode&syscall.S_IFMT != syscall.S_IFREG || before.Nlink != 1 || before.Size < 0 || before.Size > limit {
 		return biz.CollectedFile{}, biz.ErrInvalidWorkspaceOutput
 	}
 	digest := sha256.New()

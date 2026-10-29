@@ -18,6 +18,10 @@ command:
   private_key_file: "${COMMAND_PRIVATE_KEY_FILE}"
   governance_dns_name: "${GOVERNANCE_DNS_NAME}"
 runtime:
+  limits:
+    max_content_bytes: "${MODELDEV_MAX_CONTENT_BYTES}"
+  import_timeout_seconds: 1800
+  model_resolution_timeout_seconds: 300
   step:
     network: tcp
     addr: "${MANAGED_STEP_LISTEN_ADDRESS}"
@@ -42,7 +46,6 @@ runtime:
     # sessions through their current authenticated workload RPC.
     credentials_file: "${S3_CREDENTIALS_FILE}"
     connection_id: "${PUBLICATION_STORAGE_CONNECTION_ID}"
-    max_object_bytes: "${MAX_PUBLICATION_OBJECT_BYTES}"
   # JSON: tenant_id, complete environment snapshot, and owner configuration.
   binding_file: "${PIPELINE_DISPATCH_BINDING_FILE}"
   binding_sha256: "${PIPELINE_DISPATCH_BINDING_SHA256}"

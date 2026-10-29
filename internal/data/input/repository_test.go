@@ -36,6 +36,7 @@ func TestFreezeImportPersistsExactObjectBeforeValidationAcrossNewConnections(t *
 func importFixture() biz.InputImport {
 	version := "fixture-source-version-1"
 	return biz.InputImport{
+		Format:         "CSV",
 		TenantID:       "11111111-2222-4333-8444-555555555555",
 		RequestID:      "22222222-2222-4222-8222-222222222222",
 		InputVersionID: "33333333-3333-4333-8333-333333333333",

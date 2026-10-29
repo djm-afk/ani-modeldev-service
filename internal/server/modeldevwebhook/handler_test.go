@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/modeldevwebhook"
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
@@ -79,6 +80,9 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 			release = conformance.FinetuningMaterialV21()
 			id = "sft-v1"
 		}
+		for role := range release.ComponentResources {
+			release.ComponentResources[role] = cpup01.ComponentResources{CPURequest: "2", CPULimit: "4", MemoryRequest: "6Gi", MemoryLimit: "8Gi", EphemeralStorageRequest: "10Gi", EphemeralStorageLimit: "12Gi"}
+		}
 		raw, err := release.Canonical()
 		if err != nil {
 			t.Fatal(err)
@@ -89,7 +93,7 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 		}
 		digest := sha256.Sum256(raw)
 		profiles = append(profiles, modeldevwebhook.Profile{ID: id, Kind: kind, MaterialFile: path, MaterialSHA256: hex.EncodeToString(digest[:]), ComponentImage: release.Program.ImageDigest,
-			AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001, EphemeralStorageRequest: "10Gi", EphemeralStorageLimit: "12Gi"})
+			AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001})
 	}
 	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles,
 		Bindings: []modeldevwebhook.NamespaceBinding{{Namespace: "test-tenant", NamespaceUID: namespaceUID, OwnerLabel: modeldevwebhook.LabelBinding{Key: "ani.io/managed-by", Value: "modeldev-test"}, ArgoCreator: "system:serviceaccount:kubeflow:argo", StepServiceAccount: "modeldev-step", Profiles: []string{"cpu-v1", "sft-v1"}}}}
@@ -101,31 +105,67 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 func request(t *testing.T, config modeldevwebhook.Config, profile, role string) admissionv1.AdmissionReview {
 	t.Helper()
 	image := config.Profiles[0].ComponentImage
+	resourceDigest := ""
+	ephemeralLimit := ""
+	for _, candidate := range config.Profiles {
+		if candidate.ID != profile {
+			continue
+		}
+		raw, err := os.ReadFile(candidate.MaterialFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		material, _, err := cpup01.ParseMaterial(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if value, ok := material.ComponentResources[role]; ok {
+			ephemeralLimit = value.EphemeralStorageLimit
+			resourceDigest, err = value.Digest()
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
 	if profile == "sft-v1" {
 		image = config.Profiles[1].ComponentImage
 	}
 	mounts := map[string]string{}
 	switch role {
-	case "prepare", "collect", "publish":
+	case "prepare", "collect", "publish", "close", "register":
 		mounts["/workspace"] = ""
 	case "export":
 		mounts = map[string]string{"/workspace/inputs": "inputs", "/workspace/training": "training", "/workspace/reports/train": "reports/train", "/workspace/export": "export", "/workspace/reports/export": "reports/export"}
 	case "verify":
 		mounts = map[string]string{"/workspace/inputs": "inputs", "/workspace/training": "training", "/workspace/reports/train": "reports/train", "/workspace/export": "export", "/workspace/reports/export": "reports/export", "/workspace/reports/verify": "reports/verify"}
 	}
-	if profile == "sft-v1" && (role == "collect" || role == "publish") {
+	if role == "collect" || role == "publish" {
 		mounts["/workspace/publication"] = "publication"
+		mounts["/workspace/work/"+role] = "work/" + role
 	}
-	volumeMounts := []map[string]any{}
+	if role == "export" || role == "verify" {
+		mounts["/workspace/work/"+role] = "work/" + role
+	}
+	if role == "prepare" {
+		mounts["/workspace/work/prepare/tmp"] = "work/prepare/tmp"
+	}
+	volumeMounts := []map[string]any{{"name": "component-tmp", "mountPath": "/tmp"}}
 	for path, subpath := range mounts {
 		volumeMounts = append(volumeMounts, map[string]any{"name": "workspace", "mountPath": path, "subPath": subpath})
 	}
-	volumes := []map[string]any{}
+	volumes := []map[string]any{{"name": "component-tmp", "emptyDir": map[string]any{"sizeLimit": ephemeralLimit}}}
 	if len(mounts) != 0 {
 		volumes = append(volumes, map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": "ani-kfp-workspace-test"}})
 	}
-	pod := map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"namespace": "test-tenant", "name": "step-test", "labels": map[string]string{"pipelines.kubeflow.org/v2_component": "true", modeldevwebhook.ProfileLabel: profile, modeldevwebhook.RoleLabel: role, "workflows.argoproj.io/workflow": "main-flow", "pipeline/runid": runID}, "ownerReferences": []map[string]any{{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": "main-flow", "uid": workflowUID, "controller": true}}, "finalizers": []string{"other.example.test/retain"}, "annotations": map[string]string{"other.example.test/config": "unchanged"}},
+	pod := map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"namespace": "test-tenant", "name": "step-test", "labels": map[string]string{"pipelines.kubeflow.org/v2_component": "true", modeldevwebhook.ProfileLabel: profile, modeldevwebhook.RoleLabel: role, "workflows.argoproj.io/workflow": "main-flow", "pipeline/runid": runID}, "ownerReferences": []map[string]any{{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": "main-flow", "uid": workflowUID, "controller": true}}, "finalizers": []string{"other.example.test/retain"}, "annotations": map[string]string{"other.example.test/config": "unchanged", "ani.modeldev/component-resources-sha256": resourceDigest}},
 		"spec": map[string]any{"serviceAccountName": "modeldev-step", "containers": []map[string]any{{"name": "main", "image": image, "volumeMounts": volumeMounts, "resources": map[string]any{"requests": map[string]string{"cpu": "2", "memory": "6Gi"}, "limits": map[string]string{"cpu": "4", "memory": "8Gi"}}}, {"name": "wait", "image": supportImage}}, "initContainers": []map[string]any{{"name": "init", "image": supportImage}}, "volumes": volumes, "unknownFutureField": map[string]string{"marker": "preserved"}}}
+	if role == "prepare" || role == "export" || role == "verify" || role == "collect" || role == "publish" {
+		environment := []map[string]string{}
+		for name, suffix := range map[string]string{"TMPDIR": "/tmp", "HF_HOME": "/hf", "HF_DATASETS_CACHE": "/hf/datasets", "MPLCONFIGDIR": "/matplotlib"} {
+			environment = append(environment, map[string]string{"name": name, "value": "/workspace/work/" + role + suffix})
+		}
+		pod["spec"].(map[string]any)["containers"].([]map[string]any)[0]["env"] = environment
+	}
 	raw, err := json.Marshal(pod)
 	if err != nil {
 		t.Fatal(err)
@@ -233,7 +273,7 @@ func TestHTTPSProfilesMountsPrecisePatchAndIdempotence(t *testing.T) {
 					t.Fatal("independent CPU/memory lost or storage missing")
 				}
 				for _, mount := range main.VolumeMounts {
-					readOnly := profile == "sft-v1" && ((role == "collect" || role == "publish") && mount.MountPath == "/workspace" || role == "export" && (mount.SubPath == "inputs" || mount.SubPath == "training" || mount.SubPath == "reports/train") || role == "verify" && mount.SubPath != "reports/verify")
+					readOnly := mount.MountPath == "/workspace" && role != "prepare" || role == "export" && (mount.SubPath == "inputs" || mount.SubPath == "training" || mount.SubPath == "reports/train") || role == "verify" && strings.HasPrefix(mount.MountPath, "/workspace/") && mount.SubPath != "reports/verify" && !strings.HasPrefix(mount.SubPath, "work/")
 					if mount.ReadOnly != readOnly {
 						t.Fatalf("wrong role mount: %+v", mount)
 					}
@@ -274,17 +314,23 @@ func TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay(t *t
 		return updated
 	}
 	mutated := apply(body.Request.Object.Raw, result)
-	want := map[string]bool{"inputs": true, "training": true, "reports/train": true, "export": true, "reports/export": true, "reports/verify": false}
+	want := map[string]bool{"inputs": true, "training": true, "reports/train": true, "export": true, "reports/export": true, "reports/verify": false, "work/verify": false}
 	assertMounts := func(raw []byte) {
 		t.Helper()
 		var pod corev1.Pod
 		if err := json.Unmarshal(raw, &pod); err != nil {
 			t.Fatal(err)
 		}
-		if len(pod.Spec.Containers[0].VolumeMounts) != len(want) {
-			t.Fatal("verify did not retain exactly six workspace subpaths")
+		if len(pod.Spec.Containers[0].VolumeMounts) != len(want)+1 {
+			t.Fatal("verify lost its precise workspace and control I/O scopes")
 		}
 		for _, mount := range pod.Spec.Containers[0].VolumeMounts {
+			if mount.MountPath == "/tmp" {
+				if mount.ReadOnly {
+					t.Fatal("control I/O unwritable")
+				}
+				continue
+			}
 			readOnly, ok := want[mount.SubPath]
 			if !ok || mount.MountPath != "/workspace/"+mount.SubPath || mount.ReadOnly != readOnly {
 				t.Fatalf("verify could write original adapter/report or lost its report output: %+v", mount)
@@ -565,7 +611,7 @@ func TestConfigFreezesReleaseAndOptionalLivePipelineVersion(t *testing.T) {
 		func(c *modeldevwebhook.Config) { c.Profiles[0].ComponentImage = "mutable:tag" },
 		func(c *modeldevwebhook.Config) { c.Profiles[0].RunAsUser = 0 },
 		func(c *modeldevwebhook.Config) { c.Bindings[0].Profiles = []string{"unknown"} },
-		func(c *modeldevwebhook.Config) { c.Profiles[1].EphemeralStorageLimit = "13Gi" },
+		func(c *modeldevwebhook.Config) { c.Profiles[1].MaterialFile = "" },
 	} {
 		fresh, _ := fixtureConfig(t)
 		change(&fresh)

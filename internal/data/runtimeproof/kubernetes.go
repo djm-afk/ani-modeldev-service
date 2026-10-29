@@ -2,6 +2,7 @@ package runtimeproof
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -40,7 +41,7 @@ func (v *Verifier) ResolveManagedTaskID(ctx context.Context, plan biz.PipelineDi
 	if taskName == "export" || taskName == "verify" || taskName == "register" {
 		kind = "FINETUNING"
 	}
-	tasks, err := v.tasksForPlanKind(ctx, plan, association, kind)
+	tasks, err := v.tasksForPlanRole(ctx, plan, association, kind, taskName)
 	if err != nil {
 		return "", err
 	}
@@ -57,6 +58,13 @@ func (v *Verifier) ResolveManagedTaskID(ctx context.Context, plan biz.PipelineDi
 	if err != nil || !sameObject(pod, "v1", "Pod", association.NamespaceName, association.PodName, association.PodUID) || pod.GetDeletionTimestamp() != nil || !workflowOwner(pod, association) {
 		return "", biz.ErrRuntimeNotReady
 	}
+	phase, _ := textAt(pod, "status", "phase")
+	reason, _ := textAt(pod, "status", "reason")
+	if phase == "Failed" && reason == "Evicted" {
+		// The owner can retain post-termination absence evidence. An evicted
+		// Pod cannot use that evidence as a current managed caller identity.
+		return "", biz.ErrRuntimeNotReady
+	}
 	account, _ := textAt(pod, "spec", "serviceAccountName")
 	if account != plan.Environment.Identities.KFPStepServiceAccount {
 		return "", biz.ErrRuntimeConflict
@@ -69,6 +77,10 @@ func (v *Verifier) tasksForPlan(ctx context.Context, plan biz.PipelineDispatchPl
 }
 
 func (v *Verifier) tasksForPlanKind(ctx context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation, kind string) ([]kfp.ManagedTask, error) {
+	return v.tasksForPlanRole(ctx, plan, association, kind, "")
+}
+
+func (v *Verifier) tasksForPlanRole(ctx context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation, kind, role string) ([]kfp.ManagedTask, error) {
 	if v == nil || v.kube == nil || v.runs == nil || ctx == nil || ctx.Err() != nil {
 		return nil, biz.ErrRuntimeNotReady
 	}
@@ -92,7 +104,7 @@ func (v *Verifier) tasksForPlanKind(ctx context.Context, plan biz.PipelineDispat
 	if err != nil || pods == nil || pods.GetContinue() != "" {
 		return nil, biz.ErrRuntimeNotReady
 	}
-	return resolvedManagedTasksForKind(workflow, tasks, pods.Items, kind)
+	return resolvedManagedTasksForRole(workflow, tasks, pods.Items, kind, role)
 }
 
 func oneTask(tasks []kfp.ManagedTask, name string) (kfp.ManagedTask, error) {
@@ -174,26 +186,44 @@ func preparedMount(pod *unstructured.Unstructured, pvc string) bool {
 	if err != nil || volume == "" {
 		return false
 	}
+	mainCount := 0
 	for _, item := range containers {
 		container, ok := item.(map[string]any)
 		if !ok || container["name"] != "main" {
 			continue
 		}
+		mainCount++
 		mounts, _, err := unstructured.NestedSlice(container, "volumeMounts")
 		if err != nil {
 			return false
 		}
+		expected := map[string]string{"/workspace": "", "/workspace/work/prepare/tmp": "work/prepare/tmp"}
+		seen := map[string]bool{}
 		for _, item := range mounts {
 			mount, ok := item.(map[string]any)
 			if !ok {
 				return false
 			}
-			if mount["name"] == volume && mount["mountPath"] == "/workspace" && mount["readOnly"] != true && (mount["subPath"] == nil || mount["subPath"] == "") && (mount["subPathExpr"] == nil || mount["subPathExpr"] == "") {
-				return true
+			path, _ := mount["mountPath"].(string)
+			if mount["name"] != volume {
+				if path == "/workspace" || strings.HasPrefix(path, "/workspace/") {
+					return false
+				}
+				continue
 			}
+			subpath, allowed := expected[path]
+			if !allowed || seen[path] || mount["readOnly"] == true ||
+				mount["subPathExpr"] != nil && mount["subPathExpr"] != "" ||
+				mount["subPath"] != subpath && !(subpath == "" && mount["subPath"] == nil) {
+				return false
+			}
+			seen[path] = true
+		}
+		if len(seen) != len(expected) {
+			return false
 		}
 	}
-	return false
+	return mainCount == 1
 }
 
 func controlOnly(pod *unstructured.Unstructured) bool {

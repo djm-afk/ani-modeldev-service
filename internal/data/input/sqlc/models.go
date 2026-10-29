@@ -8,6 +8,72 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type ModeldevCloseIntent struct {
+	TenantID         pgtype.UUID
+	ExecutionID      pgtype.UUID
+	OperationID      pgtype.UUID
+	SpecHash         string
+	SourceKind       string
+	SourceGeneration pgtype.Numeric
+	OwnerGeneration  pgtype.Numeric
+	Reason           string
+	RequestedAt      pgtype.Timestamptz
+	RequestedActor   string
+	CloseState       string
+}
+
+type ModeldevExecution struct {
+	TenantID          pgtype.UUID
+	ExecutionID       pgtype.UUID
+	OperationID       pgtype.UUID
+	Actor             string
+	IntentCanonical   []byte
+	IntentHash        string
+	SnapshotCanonical []byte
+	SpecHash          string
+	AcceptedAt        pgtype.Timestamptz
+}
+
+type ModeldevExecutionCleanupAudit struct {
+	TenantID    pgtype.UUID
+	ExecutionID pgtype.UUID
+	PlanSha256  string
+	Actor       string
+	Phase       string
+	Plan        []byte
+	Receipt     []byte
+	StartedAt   pgtype.Timestamptz
+	CompletedAt pgtype.Timestamptz
+}
+
+type ModeldevExecutionIdentity struct {
+	TenantID        pgtype.UUID
+	ExecutionID     pgtype.UUID
+	OperationID     pgtype.UUID
+	SpecHash        string
+	CloseGeneration pgtype.Numeric
+	OwnerRevision   pgtype.Numeric
+}
+
+type ModeldevExecutionRuntime struct {
+	TenantID              pgtype.UUID
+	ExecutionID           pgtype.UUID
+	OperationID           pgtype.UUID
+	SpecHash              string
+	Facts                 []byte
+	TrainingName          pgtype.Text
+	TrainingRequestSha256 pgtype.Text
+	TrainingUid           pgtype.Text
+	PublicationID         pgtype.UUID
+	CloseGeneration       pgtype.Numeric
+	CloseReason           pgtype.Text
+	CloseRequestedAt      pgtype.Timestamptz
+	ClosedAt              pgtype.Timestamptz
+	AuthorityExecutionID  pgtype.UUID
+	GpuReleaseSealedAt    pgtype.Timestamptz
+	GpuReleaseScopeSha256 pgtype.Text
+}
+
 type ModeldevInputVersion struct {
 	TenantID              pgtype.UUID
 	InputVersionID        pgtype.UUID
@@ -25,9 +91,52 @@ type ModeldevInputVersion struct {
 	CredentialReference   string
 	VerifiedAt            pgtype.Timestamptz
 	VerifiedSchemaVersion pgtype.Text
-	VerifiedRowCount      pgtype.Int4
+	VerifiedRowCount      pgtype.Int8
+	PreparedFormat        pgtype.Text
+	PreparedTransformID   pgtype.Text
+	PreparedSizeBytes     pgtype.Int8
+	PreparedSha256        pgtype.Text
+	PreparedRowCount      pgtype.Int8
 	VerifiedFeatureCount  pgtype.Int4
 	FailureCode           pgtype.Text
 	FailureObservedAt     pgtype.Timestamptz
 	Format                string
+}
+
+type ModeldevPipelineConfirmedRun struct {
+	TenantID        pgtype.UUID
+	ExecutionID     pgtype.UUID
+	AttemptID       pgtype.UUID
+	PlanHash        string
+	RunID           pgtype.UUID
+	FirstObservedAt pgtype.Timestamptz
+}
+
+type ModeldevPipelineDispatch struct {
+	TenantID      pgtype.UUID
+	ExecutionID   pgtype.UUID
+	OperationID   pgtype.UUID
+	SpecHash      string
+	AttemptID     pgtype.UUID
+	PlanCanonical []byte
+	PlanHash      string
+	State         string
+	ReservedAt    pgtype.Timestamptz
+	UncertainAt   pgtype.Timestamptz
+	NotSentAt     pgtype.Timestamptz
+}
+
+type ModeldevRunAuthority struct {
+	TenantID      pgtype.UUID
+	ExecutionID   pgtype.UUID
+	OperationID   pgtype.UUID
+	SpecHash      string
+	AttemptID     pgtype.UUID
+	PlanHash      string
+	RunID         pgtype.UUID
+	NamespaceName string
+	NamespaceUid  pgtype.UUID
+	WorkflowName  string
+	WorkflowUid   string
+	BoundAt       pgtype.Timestamptz
 }

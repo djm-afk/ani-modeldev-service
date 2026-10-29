@@ -29,6 +29,25 @@ repository_root=$(cd "$script_dir/.." && pwd -P)
 generated_file=$repository_root/internal/conf/v1/conf.pb.go
 [[ -f $generated_file ]] || die "generated config is missing"
 
+# The application initializes an empty schema from one current baseline. Old
+# writer fixtures and upgrade entry points must not re-enter source verification.
+baseline=$repository_root/migrations/0001_current_baseline.up.sql
+[[ -f $baseline ]] || die "current database baseline is missing"
+while IFS= read -r -d '' migration; do
+  [[ $migration == "$baseline" ]] || die "historical database migration remains: ${migration#"$repository_root/"}"
+done < <(find "$repository_root/migrations" -maxdepth 1 -type f -name '*.sql' -print0)
+for obsolete in \
+  scripts/verify-revision-upgrade \
+  internal/testsupport/postgres/revision_upgrade.go \
+  internal/testsupport/postgres/revision_migration_test.go \
+  internal/testsupport/postgres/runtime_close_upgrade.go \
+  internal/data/submission/revision_upgrade_seed_test.go \
+  internal/data/submission/owner_revision_upgrade_test.go \
+  internal/data/lifecycle/authority_upgrade_test.go; do
+  [[ ! -e $repository_root/$obsolete ]] || die "historical upgrade entry point remains: $obsolete"
+done
+(cd "$repository_root" && python3 scripts/generate-structure-limits.py --check)
+
 temporary_root=$(mktemp -d "${TMPDIR:-/tmp}/ani-source.XXXXXX")
 cleanup() {
   if [[ -n ${temporary_root:-} && -d $temporary_root ]]; then

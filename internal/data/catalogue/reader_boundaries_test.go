@@ -21,6 +21,7 @@ func TestMaterialRejectsAmbiguousIncompleteAndUnsafeSoftware(t *testing.T) {
 	_, raw := materialFixture(t)
 	text := string(raw)
 	mutate := func(change func(*cpup01.ImplementationMaterial)) []byte {
+		t.Helper()
 		m := conformance.MaterialV21()
 		change(&m)
 		if _, err := m.Canonical(); err == nil {
@@ -38,7 +39,7 @@ func TestMaterialRejectsAmbiguousIncompleteAndUnsafeSoftware(t *testing.T) {
 		"duplicate":        []byte(strings.Replace(text, `"schema_version":`, `"schema_version":"duplicate","schema_version":`, 1)),
 		"duplicate nested": []byte(strings.Replace(text, `"version":"1"`, `"version":"1","version":"1"`, 1)),
 		"case folded":      []byte(strings.Replace(text, `"implementation":`, `"Implementation":`, 1)),
-		"null source":      []byte(strings.Replace(text, `{"literal":"--data"}`, `{"literal":"--data","source":null}`, 1)),
+		"null source":      []byte(strings.Replace(text, `{"literal":"--dataset-manifest"}`, `{"literal":"--dataset-manifest","source":null}`, 1)),
 		"omitted boolean":  []byte(strings.Replace(text, `"create_tar_bundle":true,`, "", 1)),
 		"newline":          append(append([]byte{}, raw...), '\n'), "trailing object": append(append([]byte{}, raw...), '{', '}'), "leading whitespace": append([]byte(" "), raw...), "BOM": append([]byte{0xef, 0xbb, 0xbf}, raw...),
 		"invalid UTF8":           []byte(strings.Replace(text, "registry.example.test", "registry.\xff.test", 1)),
@@ -56,7 +57,7 @@ func TestMaterialRejectsAmbiguousIncompleteAndUnsafeSoftware(t *testing.T) {
 		"floating image":    mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ImageDigest = "registry.example.test/mlp:latest" }),
 		"shell":             mutate(func(m *cpup01.ImplementationMaterial) { m.Program.Command = []string{"sh", "-c", "train"} }),
 		"arbitrary source":  mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ArgsTemplate[1].Source = "USER_SCRIPT" }),
-		"mixed argument":    mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ArgsTemplate[1].Literal = "/arbitrary" }),
+		"mixed argument":    mutate(func(m *cpup01.ImplementationMaterial) { m.Program.ArgsTemplate[3].Literal = "/arbitrary" }),
 		"empty command":     mutate(func(m *cpup01.ImplementationMaterial) { m.Program.Command = nil }),
 		"unbound storage":   mutate(func(m *cpup01.ImplementationMaterial) { m.Workspace.StorageClass = "NOT_READY" }),
 		"overlap workspace": mutate(func(m *cpup01.ImplementationMaterial) { m.Workspace.TrainingSubpath = "inputs/training" }),

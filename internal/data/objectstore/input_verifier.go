@@ -17,16 +17,25 @@ import (
 // VerifyCSV verifies the exact version's bytes and fixed CPU input structure.
 // Import authorization, version fixation and durable READY are separate steps.
 func (v *Verifier) VerifyCSV(ctx context.Context, scope cpup01.StorageScope, object cpup01.FixedObjectRef) (biz.VerifiedCSV, error) {
+	return v.WritePreparedCSV(ctx, scope, object, nil)
+}
+
+// WritePreparedCSV validates and copies the exact source bytes during one GET.
+// The caller owns atomic publication after matching the returned frozen facts.
+func (v *Verifier) WritePreparedCSV(ctx context.Context, scope cpup01.StorageScope, object cpup01.FixedObjectRef, destination io.Writer) (biz.VerifiedCSV, error) {
+	if object.SizeBytes <= 0 {
+		return biz.VerifiedCSV{}, biz.ErrInputVerification
+	}
 	if err := ctx.Err(); err != nil {
 		return biz.VerifiedCSV{}, err
 	}
-	if object.SizeBytes <= 0 || object.SizeBytes > 32*1024*1024 {
-		return biz.VerifiedCSV{}, biz.ErrInputVerification
+	if destination == nil {
+		destination = io.Discard
 	}
-	var rows uint32
+	var rows int64
 	verified, err := v.verify(ctx, scope, object, func(stream io.Reader) error {
 		var err error
-		rows, err = inspectCPUCSV(stream)
+		rows, err = inspectCPUCSV(io.TeeReader(stream, destination))
 		return err
 	})
 	if err != nil {
@@ -36,13 +45,18 @@ func (v *Verifier) VerifyCSV(ctx context.Context, scope cpup01.StorageScope, obj
 		if errors.Is(err, biz.ErrObjectSourceUnavailable) {
 			return biz.VerifiedCSV{}, biz.ErrInputSourceUnavailable
 		}
+		var limit *cpup01.LimitViolation
+		if errors.As(err, &limit) {
+			return biz.VerifiedCSV{}, err
+		}
 		return biz.VerifiedCSV{}, biz.ErrInputVerification
 	}
-	return biz.VerifiedCSV{VerifiedObject: verified, SchemaVersion: "ani.cpu.csv.v1", RowCount: rows, FeatureCount: 16}, nil
+	prepared := cpup01.PreparedDatasetFacts{Format: "CPU_CSV", TransformID: "csv-identity-v3", SizeBytes: verified.Object.SizeBytes, SHA256: verified.Object.SHA256, RowCount: rows}
+	return biz.VerifiedCSV{VerifiedObject: verified, SchemaVersion: "ani.cpu.csv.v1", RowCount: rows, FeatureCount: 16, PreparedDataset: prepared}, nil
 }
 
-func inspectCPUCSV(stream io.Reader) (uint32, error) {
-	reader := csv.NewReader(&csvPhysicalLines{reader: stream})
+func inspectCPUCSV(stream io.Reader) (int64, error) {
+	reader := csv.NewReader(&csvPhysicalLines{reader: &csvBoundedRecords{reader: stream, fieldStart: true}})
 	reader.FieldsPerRecord = 17
 	reader.ReuseRecord = true
 	header, err := reader.Read()
@@ -54,22 +68,23 @@ func inspectCPUCSV(stream io.Reader) (uint32, error) {
 			return 0, biz.ErrInputVerification
 		}
 	}
-	var rows uint32
+	var rows int64
 	for {
 		row, err := reader.Read()
 		if err == io.EOF {
 			break
 		}
-		if err != nil || rows == math.MaxUint32 || (row[16] != "0" && row[16] != "1") {
+		if err != nil {
+			var limit *cpup01.LimitViolation
+			if errors.As(err, &limit) {
+				return 0, limit
+			}
+			return 0, biz.ErrInputVerification
+		}
+		if rows == math.MaxInt64 || (row[16] != "0" && row[16] != "1") {
 			return 0, biz.ErrInputVerification
 		}
 		for _, raw := range row[:16] {
-			// The registered CPython CSV loader limits each decoded field to
-			// 128 Ki characters. A byte bound is conservative for UTF-8 and
-			// prevents a verified decimal from failing that loader's parsing.
-			if len(raw) > 128*1024 {
-				return 0, biz.ErrInputVerification
-			}
 			text := strings.TrimSpace(raw)
 			if strings.ContainsAny(raw, "\r\n") || !decimalFeaturePattern.MatchString(text) {
 				return 0, biz.ErrInputVerification
@@ -85,6 +100,49 @@ func inspectCPUCSV(stream io.Reader) (uint32, error) {
 		return 0, biz.ErrInputVerification
 	}
 	return rows, nil
+}
+
+// csvBoundedRecords recognizes quoted logical records before encoding/csv may
+// allocate their fields. Raw quoting and line terminators count toward the
+// single public guard; a physical newline inside quotes is not a new record.
+type csvBoundedRecords struct {
+	reader                           io.Reader
+	size                             int64
+	quoted, quotePending, fieldStart bool
+}
+
+func (r *csvBoundedRecords) Read(buffer []byte) (int, error) {
+	n, err := r.reader.Read(buffer)
+	for index, value := range buffer[:n] {
+		r.size++
+		if r.size > cpup01.MaxRecordBytes {
+			return index + 1, &cpup01.LimitViolation{Reason: "DATASET_RECORD_TOO_LARGE", Kind: "dataset", LimitName: "MaxRecordBytes", Actual: r.size, Limit: cpup01.MaxRecordBytes}
+		}
+		if r.quoted {
+			if !r.quotePending {
+				r.quotePending = value == '"'
+				continue
+			}
+			r.quotePending = false
+			if value == '"' {
+				continue
+			}
+			r.quoted = false
+		}
+		switch value {
+		case '\n':
+			r.size, r.fieldStart = 0, true
+		case ',':
+			r.fieldStart = true
+		case '"':
+			r.quoted = r.fieldStart
+			r.fieldStart = false
+		case '\r':
+		default:
+			r.fieldStart = false
+		}
+	}
+	return n, err
 }
 
 var decimalFeaturePattern = regexp.MustCompile(`^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$`)

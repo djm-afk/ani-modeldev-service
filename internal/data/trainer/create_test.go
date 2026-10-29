@@ -189,7 +189,13 @@ func TestTrainingUsesFrozenNodeJobTargetThroughCreateFindStopAndObserve(t *testi
 		t.Fatalf("suspend the same node-targeted TrainJob: %v", err)
 	}
 	f.setTerminal(t, 0)
-	observation, err := a.ObserveTraining(ctx, f.plan, handle, nil)
+	pending, err := a.ObserveTraining(ctx, f.plan, handle, nil)
+	if err != nil || pending.WritersAbsent {
+		t.Fatalf("original exit/logs must be offered before release: %+v %v", pending, err)
+	}
+	// The caller commits this returned observation before supplying history;
+	// restricted-PG regressions independently verify that persistence boundary.
+	observation, err := a.ObserveTraining(ctx, f.plan, handle, pending.Resources)
 	if err != nil || observation.Outcome != "SUCCEEDED" || !observation.WritersAbsent {
 		t.Fatalf("observe the real node Job Pod exit: %+v / %v", observation, err)
 	}
@@ -283,7 +289,13 @@ func TestTrainingObserveRequiresRealPodExitAndChecksHistoricalWriters(t *testing
 		t.Fatalf("create: %v", err)
 	}
 	f.setTerminal(t, 0)
-	observation, err := a.ObserveTraining(context.Background(), f.plan, handle, nil)
+	pending, err := a.ObserveTraining(context.Background(), f.plan, handle, nil)
+	if err != nil || pending.WritersAbsent {
+		t.Fatalf("original exit/logs must be offered before release: %+v %v", pending, err)
+	}
+	// The caller commits this returned observation before supplying history;
+	// restricted-PG regressions independently verify that persistence boundary.
+	observation, err := a.ObserveTraining(context.Background(), f.plan, handle, pending.Resources)
 	if err != nil || observation.Outcome != "SUCCEEDED" || !observation.WritersAbsent {
 		t.Fatalf("controller plus real zero exit: %+v / %v", observation, err)
 	}
@@ -291,9 +303,9 @@ func TestTrainingObserveRequiresRealPodExitAndChecksHistoricalWriters(t *testing
 		t.Fatalf("lost TrainJob/JobSet/Job/Pod history: %+v", observation.Resources)
 	}
 	f.mu.Lock()
-	f.oldPod = trainingObject(t, `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"cpu-execution","name":"prior-training-pod","uid":"11111111-1111-4111-8111-111111111111","ownerReferences":[{"apiVersion":"batch/v1","kind":"Job","name":"old-training-job","uid":"22222222-2222-4222-8222-222222222222","controller":true}]},"spec":{"serviceAccountName":"cpu-training","containers":[{"name":"node"}]},"status":{"phase":"Running","containerStatuses":[{"name":"node","state":{"running":{"startedAt":"2026-10-03T00:00:00Z"}}}]}}`)
+	f.oldPod = trainingObject(t, `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"cpu-execution","name":"prior-training-pod","uid":"11111111-1111-4111-8111-111111111111","resourceVersion":"1","finalizers":["modeldev.ani.io/training-exit-evidence"],"ownerReferences":[{"apiVersion":"batch/v1","kind":"Job","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","controller":true}]},"spec":{"serviceAccountName":"cpu-training","containers":[{"name":"node"}]},"status":{"phase":"Running","containerStatuses":[{"name":"node","state":{"running":{"startedAt":"2026-10-03T00:00:00Z"}}}]}}`)
 	f.mu.Unlock()
-	history := append(observation.Resources, biz.RuntimeResource{APIVersion: "v1", Kind: "Pod", Namespace: "cpu-execution", Name: "prior-training-pod", UID: "11111111-1111-4111-8111-111111111111", OwnerUID: "22222222-2222-4222-8222-222222222222"})
+	history := append(observation.Resources, biz.RuntimeResource{APIVersion: "v1", Kind: "Pod", Namespace: "cpu-execution", Name: "prior-training-pod", UID: "11111111-1111-4111-8111-111111111111", OwnerUID: childJobUID})
 	observation, err = a.ObserveTraining(context.Background(), f.plan, handle, history)
 	if err != nil || observation.WritersAbsent {
 		t.Fatalf("old active Pod must keep writers present: %+v / %v", observation, err)
@@ -322,6 +334,10 @@ func TestTrainingFailureAndSuspendDoNotMistakeControllerAckForWriterAbsence(t *t
 		t.Fatalf("suspend accepted while Pod still running: %+v / %v", observation, err)
 	}
 	f.setTerminal(t, 7)
+	observation, err = a.ObserveTraining(context.Background(), f.plan, handle, observation.Resources)
+	if err != nil || observation.WritersAbsent {
+		t.Fatalf("exit released before returned log/exit facts were committed: %+v %v", observation, err)
+	}
 	observation, err = a.ObserveTraining(context.Background(), f.plan, handle, observation.Resources)
 	if err != nil || observation.Outcome != "FAILED" || !observation.WritersAbsent {
 		t.Fatalf("real failed exit must propagate: %+v / %v", observation, err)
@@ -364,6 +380,10 @@ func TestBoundTrainingStopsAndObservesWithoutCurrentRuntimeOrPVC(t *testing.T) {
 				t.Fatalf("suspend alone must not prove writer exit: %+v, %v", observation, err)
 			}
 			f.setTerminal(t, 7)
+			observation, err = a.ObserveTraining(context.Background(), f.plan, handle, observation.Resources)
+			if err != nil || observation.WritersAbsent {
+				t.Fatalf("exit released before returned log/exit facts were committed: %+v %v", observation, err)
+			}
 			observation, err = a.ObserveTraining(context.Background(), f.plan, handle, observation.Resources)
 			if err != nil || !observation.WritersAbsent || observation.Outcome != "FAILED" {
 				t.Fatalf("original failed writers must be observable: %+v, %v", observation, err)
@@ -413,7 +433,13 @@ func TestTrainingObservationPreservesConfirmedPodExitAfterGarbageCollection(t *t
 		t.Fatalf("create: %v", err)
 	}
 	f.setTerminal(t, 0)
-	confirmed, err := a.ObserveTraining(context.Background(), f.plan, handle, nil)
+	pending, err := a.ObserveTraining(context.Background(), f.plan, handle, nil)
+	if err != nil || pending.WritersAbsent {
+		t.Fatalf("original exit/logs must be offered before release: %+v %v", pending, err)
+	}
+	// The caller commits this returned observation before supplying history;
+	// restricted-PG regressions independently verify that persistence boundary.
+	confirmed, err := a.ObserveTraining(context.Background(), f.plan, handle, pending.Resources)
 	if err != nil || !confirmed.WritersAbsent || confirmed.Outcome != "SUCCEEDED" {
 		t.Fatalf("precondition: current controller and actual Pod exit must be proven: %+v / %v", confirmed, err)
 	}
@@ -439,10 +465,10 @@ func TestTrainingObservationPreservesConfirmedPodExitAfterGarbageCollection(t *t
 	t.Run("missing Pod without prior exit remains unproven", func(t *testing.T) {
 		history := append(append([]biz.RuntimeResource{}, confirmed.Resources...), biz.RuntimeResource{
 			APIVersion: "v1", Kind: "Pod", Namespace: "cpu-execution", Name: "prior-training-pod",
-			UID: "11111111-1111-4111-8111-111111111111", OwnerUID: "22222222-2222-4222-8222-222222222222",
+			UID: "11111111-1111-4111-8111-111111111111", OwnerUID: childJobUID,
 		})
 		observation, err := a.ObserveTraining(context.Background(), f.plan, handle, history)
-		if err != nil || observation.WritersAbsent {
+		if !errors.Is(err, biz.ErrTrainingLogsUnavailable) || observation.WritersAbsent {
 			t.Fatalf("404 without a prior terminal exit cannot prove writers absent: %+v / %v", observation, err)
 		}
 		for _, fact := range observation.Resources {
@@ -486,7 +512,6 @@ func newTrainingFixture(t *testing.T) *trainingFixture {
 	f := &trainingFixture{}
 	f.namespace = trainingObject(t, `{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"cpu-execution","uid":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"}}`)
 	f.pvc = trainingObject(t, `{"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"namespace":"cpu-execution","name":"cpu-workspace","uid":"cccccccc-cccc-4ccc-8ccc-cccccccccccc"},"spec":{"storageClassName":"task-workspace","accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"2147483648"}}},"status":{"phase":"Bound"}}`)
-	f.runtime = trainingObject(t, `{"apiVersion":"trainer.kubeflow.org/v1alpha1","kind":"ClusterTrainingRuntime","metadata":{"name":"cpu-runtime","uid":"99999999-9999-4999-8999-999999999999"},"spec":{"mlPolicy":{"numNodes":1},"template":{"spec":{"failurePolicy":{"maxRestarts":0},"replicatedJobs":[{"name":"trainer","replicas":1,"template":{"metadata":{"labels":{"trainer.kubeflow.org/trainjob-ancestor-step":"trainer"}},"spec":{"parallelism":1,"completions":1,"backoffLimit":0,"template":{"spec":{"restartPolicy":"Never","automountServiceAccountToken":false,"securityContext":{"runAsNonRoot":true,"runAsUser":1000,"fsGroup":1000},"containers":[{"name":"node","image":"registry.test/cpu@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]}}}}}]}}}}`)
 	f.jobset = trainingObject(t, `{"apiVersion":"jobset.x-k8s.io/v1alpha2","kind":"JobSet","metadata":{"namespace":"cpu-execution","name":"md-22222222-2222-4222-8222-222222222222","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","generation":1,"ownerReferences":[{"apiVersion":"trainer.kubeflow.org/v1alpha1","kind":"TrainJob","name":"md-22222222-2222-4222-8222-222222222222","uid":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","controller":true}]},"spec":{"suspend":false},"status":{"conditions":[]}}`)
 	f.job = trainingObject(t, `{"apiVersion":"batch/v1","kind":"Job","metadata":{"namespace":"cpu-execution","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","ownerReferences":[{"apiVersion":"jobset.x-k8s.io/v1alpha2","kind":"JobSet","name":"md-22222222-2222-4222-8222-222222222222","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","controller":true}]},"spec":{"backoffLimit":0,"parallelism":1,"completions":1},"status":{"active":1,"conditions":[]}}`)
 	f.pod = trainingObject(t, `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"cpu-execution","name":"training-pod","uid":"ffffffff-ffff-4fff-8fff-ffffffffffff","ownerReferences":[{"apiVersion":"batch/v1","kind":"Job","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","controller":true}]},"spec":{"serviceAccountName":"cpu-training","restartPolicy":"Never","automountServiceAccountToken":false,"containers":[{"name":"node"}]},"status":{"phase":"Running","containerStatuses":[{"name":"node","state":{"running":{"startedAt":"2026-10-03T00:00:00Z"}}}]}}`)
@@ -497,7 +522,7 @@ func newTrainingFixture(t *testing.T) *trainingFixture {
 	accepted := time.Now().UTC().Truncate(time.Microsecond)
 	seed.DeadlineAt = accepted.Add(time.Hour)
 	admission := admissionfixture.Bind(t, biz.Admission{TenantID: "11111111-1111-4111-8111-111111111111", OperationID: "33333333-3333-4333-8333-333333333333", ExecutionID: "22222222-2222-4222-8222-222222222222", Actor: "governance:user:trainer-fixture", Intent: conformance.IntentV1(), Snapshot: seed, AcceptedAt: accepted})
-	workspace := biz.WorkspaceBinding{Mode: seed.Workspace.Mode, NamespaceName: "cpu-execution", NamespaceUID: trainingNamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: workspaceUID, InputSubpath: seed.Workspace.InputSubpath, TrainingSubpath: seed.Workspace.TrainingSubpath, ReportsSubpath: seed.Workspace.ReportsSubpath, PublicationSubpath: seed.Workspace.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: seed.Workspace.Mode, NamespaceName: "cpu-execution", NamespaceUID: trainingNamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: workspaceUID, InputSubpath: seed.Workspace.InputSubpath, TrainingSubpath: seed.Workspace.TrainingSubpath, ReportsSubpath: seed.Workspace.ReportsSubpath, PublicationSubpath: seed.Workspace.PublicationSubpath, WorkSubpath: seed.Workspace.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 	_ = unstructured.SetNestedField(f.pvc, workspace.PVCName, "metadata", "name")
 	plan, err := biz.FreezeTrainingPlan(biz.Execution{Admission: admission}, workspace, accepted)
 	if err != nil {
@@ -710,11 +735,7 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 	if err != nil {
 		t.Fatal(err)
 	}
-	adapter := trainer.New(client)
-	if method := reflect.ValueOf(adapter).MethodByName("WithTrainingLogs"); method.IsValid() {
-		method.Call([]reflect.Value{reflect.ValueOf(traininglogs.New(core))})
-	}
-	return adapter
+	return trainer.New(client).WithTrainingLogs(traininglogs.New(core))
 }
 
 func reflectNilMap(value any) bool { object, ok := value.(map[string]any); return ok && object == nil }
@@ -729,6 +750,12 @@ func installFixtureRuntime(t *testing.T, f *trainingFixture) {
 	jobs, _, _ := unstructured.NestedSlice(spec, "template", "spec", "replicatedJobs")
 	podSpec, _, _ := unstructured.NestedMap(jobs[0].(map[string]any), "template", "spec", "template", "spec")
 	f.pod["spec"] = podSpec
+	finalizers, found, err := unstructured.NestedSlice(jobs[0].(map[string]any), "template", "spec", "template", "metadata", "finalizers")
+	if err != nil || !found || len(finalizers) == 0 {
+		t.Fatal("current Runtime worker protection absent", err)
+	}
+	f.pod["metadata"].(map[string]any)["finalizers"] = finalizers
+	f.pod["metadata"].(map[string]any)["resourceVersion"] = "1"
 	vector, err := biz.TrainingResourceVector(f.plan.Snapshot)
 	if err != nil {
 		t.Fatal(err)

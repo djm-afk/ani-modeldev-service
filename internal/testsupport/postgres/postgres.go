@@ -7,8 +7,6 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
-	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -16,25 +14,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// This preflight and migration setup are deliberately distinct from the product
+// This preflight and current schema setup are deliberately distinct from the product
 // assertion. Any failure here is a missing/broken real dependency, not a valid
 // TDD RED. No connection URL or raw connection error is included in test output.
 func Prepare(t *testing.T) func() *pgxpool.Pool {
 	t.Helper()
 	fixture := prepareSchema(t)
-	migrations, err := filepath.Glob(filepath.Join(repositoryRoot(t), "migrations", "*.up.sql"))
-	if err != nil || len(migrations) == 0 {
-		t.Fatal("CPU04_DB_PREFLIGHT: versioned execution migrations missing; behavior NOT_RUN")
-	}
-	sort.Strings(migrations)
-	fixture.install(t, migrations, true)
-	t.Log("CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated versioned schema")
+	fixture.install(t)
+	t.Log("CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline")
 	return func() *pgxpool.Pool { return fixture.openRuntimePool(t) }
 }
 
 // schemaFixture owns one random schema and both restricted connection roles.
-// Only the ordinary full-schema fixture and the fixed revision-upgrade fixture
-// choose its migration files; callers cannot select tables or runtime grants.
+// The sole current baseline fixes all tables and runtime grants.
 type schemaFixture struct {
 	adminPool     *pgxpool.Pool
 	runtimeConfig *pgxpool.Config
@@ -119,56 +111,19 @@ func (fixture *schemaFixture) migrationTransaction(t *testing.T, ctx context.Con
 	return transaction
 }
 
-// migrationSQL drops a file's own outer transaction control. The fixture owns
-// the transaction so that every migration in the set shares one commit, but
-// 0019 wraps itself in BEGIN/COMMIT; letting that through would commit the
-// caller's transaction early and leave every later file running against a
-// closed one. Only the outer pair is removed, so the plpgsql BEGIN inside a
-// function body survives.
-func migrationSQL(t *testing.T, path string) string {
-	t.Helper()
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("CPU04_DB_PREFLIGHT: cannot read migration %s; behavior NOT_RUN", filepath.Base(path))
-	}
-	lines := strings.Split(string(raw), "\n")
-	first, last := -1, -1
-	for index, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" || strings.HasPrefix(trimmed, "--") {
-			continue
-		}
-		if first < 0 {
-			first = index
-		}
-		last = index
-	}
-	if first < 0 {
-		t.Fatalf("CPU04_DB_PREFLIGHT: migration %s is empty; behavior NOT_RUN", filepath.Base(path))
-	}
-	if strings.EqualFold(strings.TrimSpace(lines[first]), "BEGIN;") && strings.EqualFold(strings.TrimSpace(lines[last]), "COMMIT;") {
-		lines = append(lines[:last], lines[last+1:]...)
-		lines = append(lines[:first], lines[first+1:]...)
-	}
-	return strings.Join(lines, "\n")
-}
-
-func applyMigrationFiles(t *testing.T, ctx context.Context, transaction pgx.Tx, migrations []string) {
-	t.Helper()
-	for _, migrationPath := range migrations {
-		if _, err := transaction.Exec(ctx, migrationSQL(t, migrationPath)); err != nil {
-			t.Fatalf("CPU04_DB_PREFLIGHT: migration %s failed; behavior NOT_RUN", filepath.Base(migrationPath))
-		}
-	}
-}
-
-func (fixture *schemaFixture) install(t *testing.T, migrations []string, ownerRevision bool) {
+func (fixture *schemaFixture) install(t *testing.T) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	transaction := fixture.migrationTransaction(t, ctx)
 	defer rollbackMigration(transaction)
-	applyMigrationFiles(t, ctx, transaction, migrations)
+	raw, err := os.ReadFile(filepath.Join(repositoryRoot(t), "migrations", "0001_current_baseline.up.sql"))
+	if err != nil {
+		t.Fatal("CPU04_DB_PREFLIGHT: current baseline unavailable; behavior NOT_RUN")
+	}
+	if _, err := transaction.Exec(ctx, string(raw)); err != nil {
+		t.Fatal("CPU04_DB_PREFLIGHT: current baseline initialization failed; behavior NOT_RUN")
+	}
 	schemaSQL, roleSQL := fixture.schemaSQL, fixture.roleSQL
 	if _, err := transaction.Exec(ctx, "GRANT USAGE ON SCHEMA "+schemaSQL+" TO "+roleSQL); err != nil {
 		t.Fatal("CPU04_DB_PREFLIGHT: runtime schema grant failed; behavior NOT_RUN")
@@ -176,11 +131,7 @@ func (fixture *schemaFixture) install(t *testing.T, migrations []string, ownerRe
 	if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT ON "+schemaSQL+".modeldev_executions, "+schemaSQL+".modeldev_execution_identities, "+schemaSQL+".modeldev_close_intents, "+schemaSQL+".modeldev_input_versions TO "+roleSQL); err != nil {
 		t.Fatal("CPU04_DB_PREFLIGHT: runtime table grant failed; behavior NOT_RUN")
 	}
-	ownerColumns := "close_generation"
-	if ownerRevision {
-		ownerColumns += ", owner_revision"
-	}
-	if _, err := transaction.Exec(ctx, "GRANT UPDATE ("+ownerColumns+") ON "+schemaSQL+".modeldev_execution_identities TO "+roleSQL); err != nil {
+	if _, err := transaction.Exec(ctx, "GRANT UPDATE (close_generation, owner_revision) ON "+schemaSQL+".modeldev_execution_identities TO "+roleSQL); err != nil {
 		t.Fatal("CPU04_DB_PREFLIGHT: runtime owner-generation grant failed; behavior NOT_RUN")
 	}
 	if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT ON "+schemaSQL+".modeldev_pipeline_dispatches TO "+roleSQL); err != nil {
@@ -189,36 +140,16 @@ func (fixture *schemaFixture) install(t *testing.T, migrations []string, ownerRe
 	if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT ON "+schemaSQL+".modeldev_pipeline_confirmed_runs TO "+roleSQL); err != nil {
 		t.Fatal("CPU07_DB_PREFLIGHT: runtime confirmed-run observation grant failed; behavior NOT_RUN")
 	}
-	// Historical revision-upgrade fixtures install only their fixed migration
-	// set. Grant the new immutable table only when that migration was installed.
-	for _, migration := range migrations {
-		if filepath.Base(migration) == "0013_run_authority.up.sql" {
-			if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT ON "+schemaSQL+".modeldev_run_authorities TO "+roleSQL); err != nil {
-				t.Fatal("CPU07_DB_PREFLIGHT: runtime Run authority grant failed; behavior NOT_RUN")
-			}
-			break
-		}
+	if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT ON "+schemaSQL+".modeldev_run_authorities TO "+roleSQL); err != nil {
+		t.Fatal("CPU07_DB_PREFLIGHT: runtime Run authority grant failed; behavior NOT_RUN")
 	}
-	for _, migration := range migrations {
-		if filepath.Base(migration) == "0016_execution_cleanup_audit.up.sql" {
-			if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT, UPDATE ON "+schemaSQL+".modeldev_execution_cleanup_audits TO "+roleSQL); err != nil {
-				t.Fatal("CPU10_DB_PREFLIGHT: runtime cleanup audit grant failed; behavior NOT_RUN")
-			}
-			break
-		}
-	}
-	for _, migration := range migrations {
-		if filepath.Base(migration) == "0014_execution_runtime.up.sql" {
-			if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT, UPDATE ON "+schemaSQL+".modeldev_execution_runtimes TO "+roleSQL); err != nil {
-				t.Fatal("CPU04_DB_PREFLIGHT: runtime lifecycle grant failed; behavior NOT_RUN")
-			}
-			break
-		}
+	if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT, UPDATE ON "+schemaSQL+".modeldev_execution_cleanup_audits, "+schemaSQL+".modeldev_execution_runtimes TO "+roleSQL); err != nil {
+		t.Fatal("CPU04_DB_PREFLIGHT: runtime lifecycle grant failed; behavior NOT_RUN")
 	}
 	if _, err := transaction.Exec(ctx, "GRANT UPDATE (state, uncertain_at, not_sent_at) ON "+schemaSQL+".modeldev_pipeline_dispatches TO "+roleSQL); err != nil {
 		t.Fatal("CPU07_DB_PREFLIGHT: runtime submission-observation grant failed; behavior NOT_RUN")
 	}
-	if _, err := transaction.Exec(ctx, "GRANT UPDATE (state, verified_at, verified_schema_version, verified_row_count, verified_feature_count, failure_code, failure_observed_at) ON "+schemaSQL+".modeldev_input_versions TO "+roleSQL); err != nil {
+	if _, err := transaction.Exec(ctx, "GRANT UPDATE (state, verified_at, verified_schema_version, verified_row_count, verified_feature_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, failure_code, failure_observed_at) ON "+schemaSQL+".modeldev_input_versions TO "+roleSQL); err != nil {
 		t.Fatal("CPU04_DB_PREFLIGHT: runtime input-verification grant failed; behavior NOT_RUN")
 	}
 	if err := transaction.Commit(ctx); err != nil {

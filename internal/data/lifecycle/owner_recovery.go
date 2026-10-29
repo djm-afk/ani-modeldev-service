@@ -13,7 +13,7 @@ import (
 )
 
 func (repository *Repository) FenceOwnerClose(ctx context.Context, tenant, execution string) (biz.ExecutionRuntime, error) {
-	return repository.mutateOwnerClose(ctx, tenant, execution, nil)
+	return repository.mutateOwnerClose(ctx, tenant, execution, nil, false)
 }
 
 func (repository *Repository) MarkOwnerCloseReview(ctx context.Context, tenant, execution, reason string) (biz.ExecutionRuntime, error) {
@@ -26,7 +26,7 @@ func (repository *Repository) MarkOwnerCloseReview(ctx context.Context, tenant, 
 		}
 		current.state.CloseReviewReason = reason
 		return true, nil
-	})
+	}, false)
 }
 
 // RecordClosingRun keeps a verified original Run after the creation fence. It
@@ -35,7 +35,33 @@ func (repository *Repository) RecordClosingRun(ctx context.Context, candidate bi
 	if !validEarlyCloseCandidate(candidate) {
 		return biz.ExecutionRuntime{}, biz.ErrInvalidAdmission
 	}
-	return repository.mutateOwnerClose(ctx, candidate.TenantID, candidate.ExecutionID, func(current *runtimeTransaction, tx pgx.Tx) (bool, error) {
+	return repository.mutateOwnerClose(ctx, candidate.TenantID, candidate.ExecutionID, recordClosingRun(ctx, candidate), false)
+}
+
+// FenceManagedFailureClose is called only after current workload and original
+// KFP CLOSE identity have been verified. It revalidates the frozen candidate in
+// the same transaction as the fence, without inserting normal run authority.
+func (repository *Repository) FenceManagedFailureClose(ctx context.Context, candidate biz.RunAuthorityCandidate) (biz.ExecutionRuntime, bool, error) {
+	if !validEarlyCloseCandidate(candidate) {
+		return biz.ExecutionRuntime{}, false, biz.ErrInvalidAdmission
+	}
+	replayed := false
+	state, err := repository.mutateOwnerClose(ctx, candidate.TenantID, candidate.ExecutionID, func(current *runtimeTransaction, tx pgx.Tx) (bool, error) {
+		dispatch, err := submission.ReadInTransaction(ctx, tx, candidate.TenantID, candidate.ExecutionID)
+		if err != nil {
+			return false, err
+		}
+		if dispatch.State != biz.PipelineDispatchConfirmed || len(dispatch.ConfirmedRuns) != 1 || dispatch.ConfirmedRuns[0].RunID != candidate.RunID {
+			return false, biz.ErrRunAuthorityConflict
+		}
+		replayed = current.state.CloseAuthority != nil && *current.state.CloseAuthority == candidate
+		return recordClosingRun(ctx, candidate)(current, tx)
+	}, true)
+	return state, replayed, err
+}
+
+func recordClosingRun(ctx context.Context, candidate biz.RunAuthorityCandidate) func(*runtimeTransaction, pgx.Tx) (bool, error) {
+	return func(current *runtimeTransaction, tx pgx.Tx) (bool, error) {
 		if current.state.CloseReviewReason == "MULTIPLE_RUNS" {
 			return false, biz.ErrRunAuthorityConflict
 		}
@@ -80,7 +106,7 @@ func (repository *Repository) RecordClosingRun(ctx context.Context, candidate bi
 		// ConfirmRuntimeClosed clears review only with the durable close proof.
 		current.state.CloseAuthority = &candidate
 		return true, nil
-	})
+	}
 }
 
 // Keep every verified identity in the existing original-attempt history. The
@@ -121,12 +147,12 @@ func (repository *Repository) RecordClosingRunAmbiguity(ctx context.Context, obs
 		}
 		current.state.CloseReviewReason = "MULTIPLE_RUNS"
 		return changed, nil
-	})
+	}, false)
 }
 
 // The owner may persist a deadline fence without a normal Run binding. All
 // close recovery changes share the existing identity lock with every creator.
-func (repository *Repository) mutateOwnerClose(ctx context.Context, tenant, execution string, change func(*runtimeTransaction, pgx.Tx) (bool, error)) (biz.ExecutionRuntime, error) {
+func (repository *Repository) mutateOwnerClose(ctx context.Context, tenant, execution string, change func(*runtimeTransaction, pgx.Tx) (bool, error), authenticatedFailure bool) (biz.ExecutionRuntime, error) {
 	tenantID, tenantErr := databaseID(tenant)
 	executionID, executionErr := databaseID(execution)
 	if tenantErr != nil || executionErr != nil || ctx == nil {
@@ -153,7 +179,7 @@ func (repository *Repository) mutateOwnerClose(ctx context.Context, tenant, exec
 	}
 	changed := false
 	if current.state.CloseGeneration == 0 {
-		if current.now.Before(current.execution.Snapshot.DeadlineAt) {
+		if !authenticatedFailure && current.now.Before(current.execution.Snapshot.DeadlineAt) {
 			return biz.ExecutionRuntime{}, biz.ErrRuntimeNotReady
 		}
 		generation, err := queries.AdvanceRuntimeClose(ctx, lifecyclesql.AdvanceRuntimeCloseParams{TenantID: tenantID, ExecutionID: executionID})
@@ -165,6 +191,9 @@ func (repository *Repository) mutateOwnerClose(ctx context.Context, tenant, exec
 			return biz.ExecutionRuntime{}, biz.ErrPersistence
 		}
 		current.state.CloseGeneration, current.state.CloseReason, current.state.CloseRequestedAt = value, "DEADLINE", current.now
+		if authenticatedFailure {
+			current.state.CloseReason = "STEP_FAILED"
+		}
 		changed = true
 	}
 	if change != nil {

@@ -19,7 +19,7 @@ import (
 // The consumer sends a real user request through the existing BFF and starts
 // the production Governance delivery worker. This bridge only shares synthetic
 // environment references and observes the original committed command identity.
-func awaitBusinessAdmission(t *testing.T, ctx context.Context, f *completeFixture, query *mainFlowQuery, repository biz.ExecutionRepository, selection biz.AdmissionReleaseSelection, intent cpup01.Intent) {
+func awaitBusinessAdmission(t *testing.T, ctx context.Context, f *completeFixture, query *mainFlowQuery, repository biz.ExecutionRepository, selection cpup01.ComputeOrigin, intent cpup01.Intent) {
 	t.Helper()
 	path := os.Getenv("ANI_MODELDEV_MAINFLOW_STARTUP")
 	dir := filepath.Dir(path)
@@ -44,7 +44,7 @@ func awaitBusinessAdmission(t *testing.T, ctx context.Context, f *completeFixtur
 			t.Fatal("cannot write startup TLS material")
 		}
 	}
-	raw, err := json.Marshal(map[string]any{"schema": "ani.cpu-p01.governance-main-flow-fixture.v1", "address": query.address, "tls": map[string]string{"ca_file": materials.CAFile, "cert_file": clientCert, "key_file": clientKey}, "resource_tenant_id": f.request.Admission.TenantID, "intent": intent, "release": map[string]string{"release_id": selection.ReleaseID, "release_digest": selection.ReleaseDigest}})
+	raw, err := json.Marshal(map[string]any{"schema": "ani.modeldev.governance-main-flow-fixture.v3", "address": query.address, "tls": map[string]string{"ca_file": materials.CAFile, "cert_file": clientCert, "key_file": clientKey}, "resource_tenant_id": f.request.Admission.TenantID, "intent": intent, "compute_origin": selection})
 	if err != nil {
 		t.Fatal("business startup encoding failed")
 	}
@@ -77,8 +77,8 @@ func awaitBusinessAdmission(t *testing.T, ctx context.Context, f *completeFixtur
 			}
 			received, err := repository.Get(ctx, f.request.Admission.TenantID, created.ExecutionID)
 			if err == nil {
-				if received.OperationID != created.OperationID || received.Intent.Name != intent.Name || received.Snapshot.Release.ReleaseID != selection.ReleaseID || received.Snapshot.Release.ReleaseDigest != selection.ReleaseDigest {
-					t.Fatal("BFF delivery differed from its accepted intent/release")
+				if received.OperationID != created.OperationID || received.Intent.Name != intent.Name || received.Snapshot.ComputeOrigin != selection {
+					t.Fatal("BFF delivery differed from its accepted intent/selection")
 				}
 				f.request.Admission = received.Admission
 				t.Log("BFF_MAIN_FLOW_ACCEPTED: real HTTP request -> Governance durable acceptance/worker -> ModelDev committed inbox; original identities retained")

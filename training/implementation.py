@@ -5,11 +5,7 @@ from pathlib import Path
 
 
 def implementation(identifier):
-    source = (
-        Path(__file__).resolve().parents[1] / "contract/cpup01/implementations.json"
-    )
-    if not source.is_file():
-        source = Path("/opt/implementation/implementations.json")
+    source = Path(__file__).resolve().with_name("implementations.json")
     contract = json.loads(source.read_bytes())
     return contract["implementations"][identifier]
 

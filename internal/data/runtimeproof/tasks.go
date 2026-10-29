@@ -13,22 +13,12 @@ func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.Manag
 }
 
 func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured, kind string) ([]kfp.ManagedTask, error) {
-	// The original top-level Pod association is retained for older adapters.
-	// The live 2.16 response instead supplies controller node references.
-	legacy := len(tasks) > 0
-	for _, task := range tasks {
-		legacy = legacy && len(task.ChildTasks) == 0
-	}
-	if legacy {
-		for _, task := range tasks {
-			if task.PodName == "" && task.State != "SKIPPED" {
-				legacy = false
-			}
-		}
-		if legacy {
-			return tasks, nil
-		}
-	}
+	return resolvedManagedTasksForRole(workflow, tasks, pods, kind, "")
+}
+
+// A callback proves its own role, not the readiness of sibling task Pods.
+// Writer-absence proof continues to resolve all roles through the wrapper above.
+func resolvedManagedTasksForRole(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured, kind, role string) ([]kfp.ManagedTask, error) {
 	if workflow == nil || workflow.GetUID() == "" {
 		return nil, biz.ErrRuntimeNotReady
 	}
@@ -55,6 +45,9 @@ func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kf
 				continue
 			}
 		default:
+			continue
+		}
+		if role != "" && name != role && !(role == "close" && name == "close-finalizer") {
 			continue
 		}
 		id, node, err := taskControllerNode(task, nodes)
@@ -127,7 +120,7 @@ func managedExecutorTemplate(name any) bool {
 	// the two admission labels. Match the observed templates exactly; the
 	// independent Run node membership and current Workflow/Pod checks below
 	// still establish authority, never a template prefix or a Pod name.
-	return name == "retry-system-container-impl" || name == "metadata-0-2-retry-system-container-impl"
+	return name == "retry-system-container-impl" || name == "metadata-0-2-retry-system-container-impl" || name == "metadata-1-2-retry-system-container-impl"
 }
 
 // KFP 2.16 derives task details from Argo displayName and node children. Those

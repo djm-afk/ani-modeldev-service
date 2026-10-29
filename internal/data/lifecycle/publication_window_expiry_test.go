@@ -212,7 +212,7 @@ func uploadTimingBoundary(t *testing.T, ctx context.Context, exec biz.Execution,
 			t.Fatal(err)
 		}
 		digest := sha256.Sum256(content)
-		output.Files = append(output.Files, cpup01.OutputFile{RelativePath: required.RelativePath, Role: required.Role, SizeBytes: int64(len(content)), SHA256: hex.EncodeToString(digest[:])})
+		output.Files = append(output.Files, cpup01.OutputFile{RelativePath: required.RelativePath, Role: required.Role, InTar: required.InTar, SizeBytes: int64(len(content)), SHA256: hex.EncodeToString(digest[:])})
 	}
 	var err error
 	output.Manifest, output.ManifestSHA256, err = cpup01.OutputManifestBytes(cpup01.AdmissionEnvelope(exec.Admission), output.Files)
@@ -223,7 +223,7 @@ func uploadTimingBoundary(t *testing.T, ctx context.Context, exec biz.Execution,
 	if err != nil {
 		t.Fatal("real CPU publication uploader", err)
 	}
-	verifier := objectstore.NewVerifier(client, exec.Snapshot.PublicationScope.StorageConnectionID, 2<<20)
+	verifier := objectstore.NewVerifier(client, exec.Snapshot.PublicationScope.StorageConnectionID)
 	verify := func(ctx context.Context) {
 		t.Helper()
 		for _, file := range candidate.Files {

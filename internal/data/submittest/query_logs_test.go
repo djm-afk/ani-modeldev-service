@@ -31,7 +31,8 @@ func assertActualTrainingLogs(t *testing.T, ctx context.Context, client modeldev
 	t.Helper()
 	admission := f.request.Admission
 	method := modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName
-	request := &modeldevv1.GetExecutionLogsRequest{ExecutionId: admission.ExecutionID, TailLines: 1000, MaxBytes: 65536}
+	originalPodUID := completePodUID
+	request := &modeldevv1.GetExecutionLogsRequest{ExecutionId: admission.ExecutionID, PodUid: &originalPodUID, TailLines: 1000, MaxBytes: 65536}
 	logs, err := client.GetExecutionLogs(queryCall(ctx, admission, method), request)
 	if err != nil || logs.GetSource().GetResourceUid() != completePodUID || logs.GetSource().GetContainerName() != "node" || len(logs.GetLines()) == 0 {
 		t.Fatalf("ACTUAL_TRAINING_LOGS_NOT_IMPLEMENTED: completed actual MLP cannot be read through current query authorization: %v", err)
@@ -52,7 +53,7 @@ func assertActualTrainingLogs(t *testing.T, ctx context.Context, client modeldev
 	if strings.Join(text, "\n") != actual || !strings.Contains(actual, `"step": 48`) || logs.Truncated {
 		t.Fatal("query returned waiting-step logs or changed actual MLP stdout")
 	}
-	tail, err := client.GetExecutionLogs(queryCall(ctx, admission, method), &modeldevv1.GetExecutionLogsRequest{ExecutionId: admission.ExecutionID, TailLines: 2, MaxBytes: 65536})
+	tail, err := client.GetExecutionLogs(queryCall(ctx, admission, method), &modeldevv1.GetExecutionLogsRequest{ExecutionId: admission.ExecutionID, PodUid: &originalPodUID, TailLines: 2, MaxBytes: 65536})
 	if err != nil || len(tail.GetLines()) != 2 || !tail.Truncated || tail.Lines[1].Text != text[len(text)-1] {
 		t.Fatalf("actual training tail is unbounded or lost its final line: %v", err)
 	}

@@ -31,11 +31,7 @@ func retryOperations(t *testing.T, f *computeCleanupFixture) *biz.ExecutionOpera
 	if err != nil {
 		t.Fatal(err)
 	}
-	closer, err := biz.NewExecutionCloser(runtime, f.step.f.runs, f.step.proof, f.step.proof)
-	if err != nil {
-		t.Fatal(err)
-	}
-	closer, err = closer.WithComputeCleanup(f.step.proof)
+	closer, err := biz.NewExecutionCloser(runtime, f.step.f.runs, f.step.proof, f.step.proof, f.step.proof)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,17 +44,8 @@ func retryOperations(t *testing.T, f *computeCleanupFixture) *biz.ExecutionOpera
 
 func explicitRetry(t *testing.T, operations *biz.ExecutionOperations, f *computeCleanupFixture) error {
 	t.Helper()
-	// The old owner can only hit the exhausted cap: no behavior is mocked.
-	method := reflect.ValueOf(operations).MethodByName("ReconcileWithActor")
-	if !method.IsValid() {
-		_, err := operations.Reconcile(context.Background(), f.step.f.execution.TenantID, f.step.f.execution.ExecutionID)
-		return err
-	}
-	values := method.Call([]reflect.Value{reflect.ValueOf(context.Background()), reflect.ValueOf(f.step.f.execution.TenantID), reflect.ValueOf(f.step.f.execution.ExecutionID), reflect.ValueOf("governance:operator-3")})
-	if values[1].IsNil() {
-		return nil
-	}
-	return values[1].Interface().(error)
+	_, err := operations.ReconcileWithActor(context.Background(), f.step.f.execution.TenantID, f.step.f.execution.ExecutionID, "governance:operator-3")
+	return err
 }
 
 func exhaustedCleanup(t *testing.T) (*computeCleanupFixture, *configuredCleanupObserver, *biz.ExecutionOperations) {
@@ -95,16 +82,14 @@ func TestExplicitComputeCleanupRetryPreservesFailedAttemptsAndOriginalScope(t *t
 	if before.CloseOperationID != after.CloseOperationID || before.CloseGeneration != after.CloseGeneration || !reflect.DeepEqual(before.ComputeCleanup.Targets, after.ComputeCleanup.Targets) || !reflect.DeepEqual(before.Observation, after.Observation) {
 		t.Fatal("operator retry changed original close or process identities")
 	}
-	field := reflect.ValueOf(after.ComputeCleanup).Elem().FieldByName("OperatorRetry")
-	if !field.IsValid() || field.IsNil() {
+	admission := after.ComputeCleanup.OperatorRetry
+	if admission == nil {
 		t.Fatal("operator admission audit missing")
 	}
-	admission := field.Elem()
-	if admission.FieldByName("Actor").String() != "governance:operator-3" || admission.FieldByName("OriginalAttempts").Uint() != 3 || admission.FieldByName("OriginalError").String() != "ATTEMPTS_EXHAUSTED" {
+	if admission.Actor != "governance:operator-3" || admission.OriginalAttempts != 3 || admission.OriginalError != "ATTEMPTS_EXHAUSTED" {
 		t.Fatal("original failure/actor audit lost")
 	}
-	at := admission.FieldByName("AdmittedAt").Interface().(time.Time)
-	deadline := admission.FieldByName("DeadlineAt").Interface().(time.Time)
+	at, deadline := admission.AdmittedAt, admission.DeadlineAt
 	if deadline.Sub(at) != 2*time.Minute {
 		t.Fatal("unbounded recovery deadline")
 	}

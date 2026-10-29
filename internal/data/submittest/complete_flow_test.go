@@ -35,6 +35,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
+	workspaceio "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
@@ -55,30 +56,23 @@ func TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed(t *testing.T) {
 	runCompleteMainFlow(t, false)
 }
 
-func TestMainFlowUnifiedWebhookActualMLPToDurableExitCleanup(t *testing.T) {
-	t.Setenv("ANI_MODELDEV_WEBHOOK_MAINFLOW", "1")
-	runCompleteMainFlow(t, false)
-}
-
 func TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication(t *testing.T) {
 	runCompleteMainFlow(t, true)
 }
 
 func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
+	t.Setenv("ANI_MODELDEV_WEBHOOK_MAINFLOW", "1")
 	f := newCompleteFixture(t)
-	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
-		f.admitModelDevSteps(t)
-	}
+	f.admitModelDevSteps(t)
 	open := postgres.Prepare(t)
 	pool := open()
 	admissions := execution.New(pool)
 	dispatch := submission.New(pool)
 	facts := lifecycle.New(pool)
-	limit := 150 * time.Second
-	if os.Getenv("ANI_MODELDEV_QUERY_HANDSHAKE") != "" {
-		limit = 6 * time.Minute
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), limit)
+	f.facts = facts
+	// This harness includes all role RPCs, real container startup, publication,
+	// owner cleanup and independent reload. Frozen business windows stay intact.
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Minute)
 	defer cancel()
 	store := s3.New(s3.Options{Region: "us-east-1", Credentials: aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
 		return aws.Credentials{AccessKeyID: "synthetic-key", SecretAccessKey: "synthetic-secret"}, nil
@@ -128,34 +122,34 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(store, f.request.Admission.Snapshot.PublicationScope.StorageConnectionID, 64<<20), dispatch)
+	training := trainer.New(kube).WithTrainingLogs(newMainFlowTrainingLogReader(t, f))
+	proof := runtimeproof.New(kube, runs, objectstore.NewVerifier(store, f.request.Admission.Snapshot.PublicationScope.StorageConnectionID), dispatch).WithTrainingRuntime(training)
 	if !rejectedInput {
 		query := startMainFlowQuery(t, pool, store, f.request.Admission)
 		assertQueryAccess(t, ctx, query, f.request.Admission)
 	}
-	steps, err := biz.NewManagedSteps(dispatch, admissions, identity, runs)
+	steps, err := biz.NewManagedSteps(dispatch, admissions, identity, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	managed, err := biz.NewManagedRuntime(steps, facts, trainer.New(kube), proof, proof)
+	managed, err := biz.NewManagedRuntime(steps, facts, mainFlowTrainingRuntime{TrainingRuntime: training, fixture: f}, proof, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, stop := startMainFlowStepHandler(t, service.NewRuntimeStep(steps, managed))
-	inventoryPath := filepath.Join(f.root, f.workspace.ReportsSubpath, "collected-output.json")
-	candidatePath := filepath.Join(f.root, f.workspace.ReportsSubpath, "publication-candidate.json")
+	// Match configs/examples/managed-runtime.yaml's step timeout. The real
+	// client-go limiter remains enabled: the complete authenticated Ensure
+	// performs more reads than the narrow Begin-only fixture's five seconds.
+	client, stop := startMainFlowStepHandler(t, service.NewRuntimeStep(steps, managed), 30*time.Second)
+	inventoryPath := filepath.Join(f.root, f.workspace.PublicationSubpath, "collected-output.json")
+	refPath := filepath.Join(t.TempDir(), "publication-ref.json")
 	tryInvoke := func(step, candidate string) error {
 		tokenFile := filepath.Join(t.TempDir(), "projected-token")
 		if err := os.WriteFile(tokenFile, []byte("synthetic-bound-"+step), 0600); err != nil {
 			t.Fatal(err)
 		}
-		mount := f.root
-		if step == "close" {
-			mount = ""
-		}
 		claim := f.stepContext(step)
 		claim.Identity.OperationId = "" // KFP carries only execution_id/spec_hash.
-		runner, err := component.New(component.Config{TenantID: f.request.Admission.TenantID, Context: claim, TokenFile: tokenFile, WorkspaceDirectory: mount, PVCName: f.workspace.PVCName, InventoryFile: inventoryPath, CandidateFile: candidate, TaskID: step + "-task", PollInterval: time.Second}, client, kube, store)
+		runner, err := component.New(component.Config{TenantID: f.request.Admission.TenantID, Context: claim, TokenFile: tokenFile, WorkspaceDirectory: f.root, PVCName: f.workspace.PVCName, InventoryFile: inventoryPath, PublicationRefFile: refPath, PublicationRef: candidate, PollInterval: time.Second}, client, kube, store)
 		if err != nil {
 			return err
 		}
@@ -163,11 +157,31 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	}
 	invoke := func(step, candidate string) {
 		if err := tryInvoke(step, candidate); err != nil {
+			f.mu.Lock()
+			creates, started, trainingErr := f.creates, f.trainingStarted, f.trainingErr
+			trainingLog := string(f.trainingLog)
+			f.mu.Unlock()
+			read, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			state, readErr := facts.GetRuntime(read, f.request.Admission.TenantID, f.request.Admission.ExecutionID)
+			cancel()
+			t.Logf("MAIN_FLOW_FAILURE: trainjob_creates=%d actual_process_started=%t process_error=%v runtime=%+v training_reserved=%t handle_recorded=%t observation=%+v state_read_error=%v\n%s", creates, started, trainingErr, state.RuntimeTemplate, state.Training != nil, state.TrainingHandle != nil, state.Observation, readErr, trainingLog)
 			t.Fatalf("component %s failed: %v", step, err)
 		}
 	}
 	call := func(step string) context.Context {
 		return metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", "Bearer synthetic-bound-"+step, "x-ani-tenant-id", f.request.Admission.TenantID))
+	}
+	frozenDispatch, err := dispatch.Get(ctx, f.request.Admission.TenantID, f.request.Admission.ExecutionID)
+	if err != nil {
+		t.Fatal("native boundary preflight lost committed dispatch", err)
+	}
+	prepareClaim := f.stepContext("prepare").Association
+	prepareAssociation := biz.ManagedStepAssociation{RunID: prepareClaim.KfpRunId, NamespaceName: prepareClaim.NamespaceName, NamespaceUID: prepareClaim.NamespaceUid, WorkflowName: prepareClaim.WorkflowName, WorkflowUID: prepareClaim.WorkflowUid, PodName: prepareClaim.PodName, PodUID: prepareClaim.PodUid}
+	if err := identity.Verify(ctx, "synthetic-bound-prepare", frozenDispatch.Plan, prepareAssociation); err != nil {
+		t.Fatal("native boundary preflight: production TokenReview/current workload identity", err)
+	}
+	if taskID, err := proof.ResolveManagedTaskID(ctx, frozenDispatch.Plan, prepareAssociation, "prepare"); err != nil || taskID == "" {
+		t.Fatal("native boundary preflight: production Workflow/Run/original Pod resolver", err)
 	}
 	if _, err := client.BeginExecution(call("prepare"), &modeldevv1.BeginExecutionRequest{Context: f.stepContext("prepare")}); err != nil {
 		t.Fatal(err)
@@ -198,7 +212,7 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		f.mu.Lock()
 		f.blobs["/"+original.Snapshot.Input.Object.Bucket+"/"+original.Snapshot.Input.Object.Key] = []byte("corrupt-fixed-version")
 		f.mu.Unlock()
-		if err := tryInvoke("prepare", candidatePath); err == nil {
+		if err := tryInvoke("prepare", ""); err == nil {
 			t.Fatal("corrupt input reached successful prepare")
 		}
 		f.mu.Lock()
@@ -207,9 +221,23 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		for step := range f.skipped {
 			delete(f.objects, "/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-"+step)
 		}
+		if f.currentRunTasksLocked() == nil {
+			t.Fatal("external failed preparation lost its native task graph")
+		}
 		f.mu.Unlock()
-		if err := tryInvoke("close", filepath.Join(t.TempDir(), "no-publication-candidate.json")); err == nil {
+		if err := tryInvoke("close", ""); err == nil {
 			t.Fatal("failed pipeline was reported as successful")
+		}
+		fenced, err := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
+		if err != nil || fenced.CloseGeneration == 0 || fenced.CloseReason != "STEP_FAILED" || fenced.Training != nil || fenced.Publication != nil {
+			t.Fatalf("failed component did not durably fence creation: %+v %v", fenced, err)
+		}
+		// The real failed close component has returned. Its original external
+		// process exits with failure before the owner proves the full Workflow.
+		f.finishStepWithExit("close", 1)
+		closeWorker, _ := assembleRecoveryOwner(t, f, pool)
+		if batch, err := closeWorker.ReconcileOnce(ctx); err != nil || batch.Closed != 1 {
+			t.Fatalf("failed original Workflow did not close through its owner: %+v %v", batch, err)
 		}
 		failed, err := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
 		if err != nil || failed.ClosedAt == nil || failed.CloseReason != "STEP_FAILED" || failed.Training != nil || failed.Publication != nil {
@@ -224,7 +252,7 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		t.Log("MAIN_FLOW_FAILURE: actual bad CSV rejected; no training or publication; skipped tasks proven; STEP_FAILED CLOSED persisted")
 		return
 	}
-	invoke("prepare", candidatePath)
+	invoke("prepare", "")
 	preparedFacts, err := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
 	if err != nil || preparedFacts.Workspace == nil {
 		t.Fatalf("prepare component did not persist workspace: %v", err)
@@ -248,12 +276,16 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		t.Fatal("running prepare created training")
 	}
 	f.finishStep("prepare")
+	a := f.stepContext("train-wait").Association
+	if err := proof.VerifyPreparedCompletion(ctx, original, biz.ManagedStepAssociation{RunID: a.KfpRunId, NamespaceName: a.NamespaceName, NamespaceUID: a.NamespaceUid, WorkflowName: a.WorkflowName, WorkflowUID: a.WorkflowUid, PodName: a.PodName, PodUID: a.PodUid}, prepared); err != nil {
+		t.Fatalf("original prepare exit did not establish the independent completion proof: %v", err)
+	}
 	for _, subpath := range []string{f.workspace.TrainingSubpath, f.workspace.PublicationSubpath} {
 		if err := os.MkdirAll(filepath.Join(f.root, subpath), 0700); err != nil {
 			t.Fatal(err)
 		}
 	}
-	invoke("train-wait", candidatePath)
+	invoke("train-wait", "")
 	if again, err := client.EnsureTraining(call("train-wait"), &modeldevv1.EnsureTrainingRequest{Context: f.stepContext("train-wait")}); err != nil || again.GetStatus().GetTrainjob().GetUid() != completeTrainUID {
 		t.Fatalf("duplicate Ensure changed training: %v", err)
 	}
@@ -281,17 +313,28 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		t.Fatalf("MLP did not execute 48 optimizer steps: %s", summary)
 	}
 	t.Log("MAIN_FLOW: exactly one TrainJob -> real CPU MLP completed 48 optimizer steps -> Pod exit observed")
-	invoke("collect", candidatePath)
+	// The successor may start only after this original component returned and
+	// its external Argo main/wait processes independently acknowledged exit.
+	f.finishStep("train-wait")
+	invoke("collect", "")
+	f.finishStep("collect")
 	var output biz.CollectedOutput
 	inventoryBytes, err := os.ReadFile(inventoryPath)
 	if err != nil || json.Unmarshal(inventoryBytes, &output) != nil {
 		t.Fatal("collect component did not produce its inventory")
 	}
-	invoke("publish", candidatePath)
-	var publication biz.RuntimePublication
-	candidateBytes, err := os.ReadFile(candidatePath)
-	if err != nil || json.Unmarshal(candidateBytes, &publication) != nil {
-		t.Fatal("publish component did not produce its candidate")
+	invoke("publish", "")
+	refBytes, err := os.ReadFile(refPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ref, err := cpup01.ParsePublicationRef(refBytes)
+	if err != nil {
+		t.Fatal("publish did not emit a current small reference", err)
+	}
+	publication, err := workspaceio.ReadPublicationCandidate(ctx, f.root, cpup01.AdmissionEnvelope(original.Admission), ref)
+	if err != nil {
+		t.Fatal("fixed PVC candidate did not match its small reference", err)
 	}
 	publishReport := &modeldevv1.ReportStepResultRequest{Context: f.stepContext("close"), ReportId: "22222222-2222-4222-8222-222222222222", Result: &modeldevv1.ReportStepResultRequest_Publication{Publication: publicationProto(publication)}}
 	if _, err := client.ReportStepResult(call("close"), publishReport); err == nil {
@@ -306,16 +349,8 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		t.Fatalf("publication retry changed receipt: %v", err)
 	}
 	t.Log("MAIN_FLOW: actual files + manifest + tar uploaded; completed uploader and remote bytes verified before publication")
-	// Simulated KFP acknowledges completed tasks only after their real component
-	// work above returns. The close task does not mount/write training outputs.
-	for _, step := range []string{"prepare", "train-wait", "collect"} {
-		f.finishStep(step)
-	}
-	closeCandidate := filepath.Join(t.TempDir(), "publication-candidate.json")
-	if err := os.WriteFile(closeCandidate, candidateBytes, 0600); err != nil {
-		t.Fatal(err)
-	}
-	invoke("close", closeCandidate)
+	// Close reads the original PVC through a read-only mount.
+	invoke("close", string(refBytes))
 	closed, err := client.RequestExecutionClose(call("close"), &modeldevv1.RequestExecutionCloseRequest{Context: f.stepContext("close"), Reason: modeldevv1.CloseReason_CLOSE_REASON_NATURAL_TERMINAL})
 	if err != nil || closed.GetCloseState() != modeldevv1.CloseState_CLOSE_STATE_CLOSING || closed.GetCloseGeneration() == 0 || closed.GetAcceptedAt() == nil {
 		t.Fatalf("NATURAL_CLOSE_HANDOFF_NOT_IMPLEMENTED: normal close must deliver a durable fence and let its Workflow complete: %+v %v", closed, err)
@@ -332,6 +367,16 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	f.finishWorkflowNaturally()
 	finished, err := closeWorker.ReconcileOnce(ctx)
 	if err != nil || finished.Closed != 1 {
+		inspect, done := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		state, readErr := facts.GetRuntime(inspect, original.TenantID, original.ExecutionID)
+		done()
+		t.Logf("NATURAL_CLOSE_FACTS: closed=%v review=%s step_cleanup_present=%t read_error=%v", state.ClosedAt, state.CloseReviewReason, state.StepExitCleanup != nil, readErr)
+		if receipt := state.StepExitCleanup; receipt != nil {
+			t.Logf("NATURAL_CLOSE_STEP_GC: completed=%v original_exits=%d removed=%d", receipt.CompletedAt, len(receipt.Evidence.Resources), len(receipt.RemovedResources))
+		}
+		if receipt := state.ComputeCleanup; receipt != nil {
+			t.Logf("NATURAL_CLOSE_COMPUTE_GC: phase=%s attempts=%d logs_ready=%t targets=%d requested=%d confirmed_absent=%d last_error=%s", receipt.Phase, receipt.Attempts, receipt.LogsReady, len(receipt.Targets), len(receipt.Requested), len(receipt.ConfirmedAbsent), receipt.LastError)
+		}
 		t.Fatal("full naturally terminal writer proof did not close", finished, err)
 	}
 	f.mu.Lock()
@@ -346,6 +391,7 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	admissions = execution.New(pool)
 	dispatch = submission.New(pool)
 	facts = lifecycle.New(pool)
+	f.facts = facts
 	stored, err := facts.GetRuntime(ctx, original.TenantID, original.ExecutionID)
 	if err != nil || stored.ClosedAt == nil || stored.Publication == nil || stored.TrainingHandle == nil || stored.CloseReason != "NATURAL_TERMINAL" || stored.CloseEvidence == nil || stored.CloseEvidence.OwnerTermination == nil || stored.CloseEvidence.OwnerTermination.RunState != "SUCCEEDED" || stored.CloseEvidence.OwnerTermination.WorkflowPhase != "Succeeded" {
 		t.Fatalf("reconnected owner lost runtime: %v", err)
@@ -437,30 +483,67 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	}
 }
 
+// This observer calls the actual adapter unchanged. It records the first
+// creation frontier so a lost external response cannot appear as an opaque
+// eventual component timeout.
+type mainFlowTrainingRuntime struct {
+	biz.TrainingRuntime
+	fixture *completeFixture
+}
+
+func (r mainFlowTrainingRuntime) CreateTraining(ctx context.Context, plan biz.TrainingPlan) (biz.TrainingHandle, error) {
+	r.fixture.mu.Lock()
+	r.fixture.traceTrainingCreate = true
+	r.fixture.mu.Unlock()
+	handle, err := r.TrainingRuntime.CreateTraining(ctx, plan)
+	r.fixture.mu.Lock()
+	r.fixture.traceTrainingCreate = false
+	r.fixture.mu.Unlock()
+	r.fixture.t.Logf("MAIN_FLOW_TRAIN_CREATE_RESULT: error=%v timing=%+v binding=%+v", err, plan.Timing, plan.RuntimeBinding)
+	return handle, err
+}
+
 func (f *completeFixture) stepContext(step string) *modeldevv1.StepContext {
 	return &modeldevv1.StepContext{Identity: &trainingv1.ExecutionIdentity{OperationId: f.request.Admission.OperationID, ExecutionId: f.request.Admission.ExecutionID, ExecutionSpecHash: f.request.Admission.SpecHash}, Association: &modeldevv1.RunAssociation{KfpRunId: completeRunID, NamespaceName: f.workspace.NamespaceName, NamespaceUid: f.workspace.NamespaceUID, WorkflowName: "main-flow", WorkflowUid: completeWorkflowUID, PodName: "main-" + step, PodUid: completeStepUID(step)}, Step: map[string]modeldevv1.PipelineStep{"prepare": modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE, "train-wait": modeldevv1.PipelineStep_PIPELINE_STEP_TRAIN_WAIT, "collect": modeldevv1.PipelineStep_PIPELINE_STEP_COLLECT, "publish": modeldevv1.PipelineStep_PIPELINE_STEP_PUBLISH, "close": modeldevv1.PipelineStep_PIPELINE_STEP_CLOSE}[step]}
 }
 func (f *completeFixture) workspaceProto() *trainingv1.WorkspaceRef {
 	b := f.workspace
-	return &trainingv1.WorkspaceRef{Mode: trainingv1.WorkspaceMode_WORKSPACE_MODE_EXECUTION_PVC, NamespaceName: b.NamespaceName, NamespaceUid: b.NamespaceUID, PvcName: b.PVCName, PvcUid: b.PVCUID, InputSubpath: b.InputSubpath, TrainingSubpath: b.TrainingSubpath, ReportsSubpath: b.ReportsSubpath, PublicationSubpath: b.PublicationSubpath}
+	return &trainingv1.WorkspaceRef{Mode: trainingv1.WorkspaceMode_WORKSPACE_MODE_EXECUTION_PVC, NamespaceName: b.NamespaceName, NamespaceUid: b.NamespaceUID, PvcName: b.PVCName, PvcUid: b.PVCUID, InputSubpath: b.InputSubpath, TrainingSubpath: b.TrainingSubpath, ReportsSubpath: b.ReportsSubpath, PublicationSubpath: b.PublicationSubpath, WorkSubpath: b.WorkSubpath}
 }
 func fixedObjectProto(o cpup01.FixedObjectRef) *trainingv1.FixedObjectRef {
 	return &trainingv1.FixedObjectRef{StorageConnectionId: o.StorageConnectionID, Bucket: o.Bucket, Key: o.Key, Immutability: &trainingv1.FixedObjectRef_VersionId{VersionId: *o.VersionID}, SizeBytes: o.SizeBytes, Sha256: o.SHA256}
 }
-func publicationProto(p biz.RuntimePublication) *modeldevv1.PublicationCandidate {
-	r := &modeldevv1.PublicationCandidate{LogicalPublicationKey: p.LogicalKey, ManifestObject: fixedObjectProto(p.Manifest), UploadTaskId: "publish-task", UploadPodUid: completeStepUID("publish")}
-	if p.Bundle != nil {
-		r.BundleObject = fixedObjectProto(*p.Bundle)
+func publicationProto(p cpup01.PublicationCandidate) *modeldevv1.PublicationCandidate {
+	r := &modeldevv1.PublicationCandidate{Schema: p.Schema, TenantId: p.TenantID, OperationId: p.OperationID, ExecutionId: p.ExecutionID, ExecutionSpecHash: p.ExecutionSpecHash, LogicalPublicationKey: p.LogicalPublicationKey, ManifestObject: fixedObjectProto(p.ManifestObject), UploadTaskId: p.UploadTaskID, UploadPodUid: p.UploadPodUID}
+	if p.BundleObject != nil {
+		r.BundleObject = fixedObjectProto(*p.BundleObject)
 	}
 	for _, f := range p.Files {
-		r.Files = append(r.Files, &modeldevv1.PublishedFileCandidate{File: &trainingv1.FileEntry{RelativePath: f.File.RelativePath, Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+f.File.Role]), SizeBytes: f.File.SizeBytes, Sha256: f.File.SHA256}, Object: fixedObjectProto(f.Object)})
+		r.Files = append(r.Files, &modeldevv1.PublishedFileCandidate{File: &trainingv1.FileEntry{RelativePath: f.File.RelativePath, Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+f.File.Role]), SizeBytes: f.File.SizeBytes, Sha256: f.File.SHA256, InTar: f.File.InTar}, Object: fixedObjectProto(f.Object)})
 	}
 	return r
 }
 func (f *completeFixture) finishStep(step string) {
+	f.finishStepWithExit(step, 0)
+}
+
+func (f *completeFixture) finishStepWithExit(step string, code int) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-"+step]["status"] = map[string]any{"phase": "Succeeded", "containerStatuses": []any{map[string]any{"name": "main", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": 0, "finishedAt": time.Now().UTC().Format(time.RFC3339)}}}}}
+	finished := time.Now().UTC().Format(time.RFC3339Nano)
+	phase := "Succeeded"
+	if code != 0 {
+		phase = "Failed"
+	}
+	pod := f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-"+step]
+	pod["status"] = map[string]any{"phase": phase, "containerStatuses": []any{map[string]any{"name": "main", "restartCount": 0, "state": map[string]any{"terminated": map[string]any{"exitCode": code, "finishedAt": finished}}}}}
+	f.completeWaitExitLocked(pod)
+	// Argo records the completed executor and controller independently of a
+	// later KFP GetRun. The external substitute must publish those facts when
+	// the real component returns, rather than mutate them on its next read.
+	if f.currentRunTasksLocked() == nil {
+		f.t.Fatal("external component completion lost its native task graph", step)
+	}
 }
 
 func acceptThroughCommandRPC(t *testing.T, ctx context.Context, repository biz.ExecutionRepository, admission biz.Admission) {

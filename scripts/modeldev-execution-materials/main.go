@@ -21,9 +21,12 @@ import (
 )
 
 type image struct {
-	VersionID   string `json:"version_id"`
-	Digest      string `json:"digest"`
-	EntrySHA256 string `json:"entry_sha256"`
+	ImageID          string            `json:"image_id"`
+	ImageVersion     int64             `json:"image_version,string"`
+	ImageScope       cpup01.ImageScope `json:"image_scope"`
+	Digest           string            `json:"digest"`
+	EntrySHA256      string            `json:"entry_sha256"`
+	PythonExecutable string            `json:"python_executable"`
 }
 type pipelineReceipt struct {
 	Phase             string `json:"phase"`
@@ -32,21 +35,22 @@ type pipelineReceipt struct {
 	PipelineIRSHA256  string `json:"pipeline_ir_sha256"`
 }
 type finetuningFacts struct {
-	ExportImage       image                   `json:"export_image"`
-	VerifyImage       image                   `json:"verify_image"`
-	MappingSHA256     string                  `json:"mapping_sha256"`
-	MaxSequenceLength int64                   `json:"max_sequence_length"`
-	Budgets           cpup01.ComponentBudgets `json:"budgets"`
+	ExportImage               image                             `json:"export_image"`
+	VerifyImage               image                             `json:"verify_image"`
+	MappingSHA256             string                            `json:"mapping_sha256"`
+	RuntimeCapabilities       cpup01.RuntimeCapabilities        `json:"runtime_capabilities"`
+	ModelTemplateAssociations []cpup01.ModelTemplateAssociation `json:"model_template_associations"`
 }
 type facts struct {
-	SchemaVersion          string           `json:"schema_version"`
-	ImplementationID       string           `json:"implementation_id"`
-	DeviceMode             string           `json:"device_mode"`
-	TrainingImage          image            `json:"training_image"`
-	Pipeline               pipelineReceipt  `json:"pipeline"`
-	WorkspaceStorageClass  string           `json:"workspace_storage_class"`
-	WorkspaceCapacityBytes int64            `json:"workspace_capacity_bytes"`
-	Finetuning             *finetuningFacts `json:"finetuning,omitempty"`
+	SchemaVersion          string                               `json:"schema_version"`
+	ImplementationID       string                               `json:"implementation_id"`
+	DeviceMode             string                               `json:"device_mode"`
+	TrainingImage          image                                `json:"training_image"`
+	Pipeline               pipelineReceipt                      `json:"pipeline"`
+	WorkspaceStorageClass  string                               `json:"workspace_storage_class"`
+	WorkspaceCapacityBytes int64                                `json:"workspace_capacity_bytes"`
+	Finetuning             *finetuningFacts                     `json:"finetuning,omitempty"`
+	ComponentResources     map[string]cpup01.ComponentResources `json:"component_resources"`
 }
 
 func hash(raw []byte) string { sum := sha256.Sum256(raw); return hex.EncodeToString(sum[:]) }
@@ -58,11 +62,20 @@ func fileHash(path string) (string, error) {
 	return hash(raw), nil
 }
 func readFacts(path string) (facts, error) {
-	raw, err := os.ReadFile(path)
+	file, err := os.Open(path)
 	if err != nil {
 		return facts{}, err
 	}
-	if len(raw) > 65536 || !utf8.Valid(raw) {
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil || !info.Mode().IsRegular() || info.Size() <= 0 || info.Size() > cpup01.MaxMaterialBytes {
+		return facts{}, errors.New("invalid material input size or type")
+	}
+	raw, err := io.ReadAll(io.LimitReader(file, cpup01.MaxMaterialBytes+1))
+	if err != nil {
+		return facts{}, err
+	}
+	if len(raw) > cpup01.MaxMaterialBytes || !utf8.Valid(raw) {
 		return facts{}, errors.New("invalid material input size or encoding")
 	}
 	scan := json.NewDecoder(bytes.NewReader(raw))
@@ -81,7 +94,7 @@ func readFacts(path string) (facts, error) {
 	return f, nil
 }
 func strictValue(d *json.Decoder, depth int) error {
-	if depth > 16 {
+	if depth > cpup01.MaxJSONDepth {
 		return errors.New("depth")
 	}
 	token, err := d.Token()
@@ -130,27 +143,28 @@ func material(f facts, entrySHA, mappingSHA string) (cpup01.ImplementationMateri
 		return cpup01.ImplementationMaterial{}, errors.New("explicit confirmed PipelineVersion, immutable image/source evidence and workspace required")
 	}
 	definition, ok := cpup01.Implementations()[f.ImplementationID]
-	if !ok || f.SchemaVersion != "ani.modeldev.material-input.v2.1" || (f.DeviceMode != "cpu" && f.DeviceMode != "gpu") || f.Pipeline.Phase != "CONFIRMED" || f.TrainingImage.EntrySHA256 != entrySHA || f.WorkspaceCapacityBytes <= 0 {
+	if !ok || f.SchemaVersion != "ani.modeldev.material-input.v3" || (f.DeviceMode != "cpu" && f.DeviceMode != "gpu") || f.Pipeline.Phase != "CONFIRMED" || f.TrainingImage.EntrySHA256 != entrySHA || !filepath.IsAbs(f.TrainingImage.PythonExecutable) || filepath.Clean(f.TrainingImage.PythonExecutable) != f.TrainingImage.PythonExecutable || f.WorkspaceCapacityBytes <= 0 {
 		return bad()
 	}
-	m := cpup01.ImplementationMaterial{SchemaVersion: cpup01.MaterialSchemaVersion, Implementation: cpup01.ImplementationSnapshot{ImplementationID: f.ImplementationID, Version: definition.Version, ParameterContractVersion: definition.ParameterContractVersion, PipelineID: f.Pipeline.PipelineID, PipelineVersionID: f.Pipeline.PipelineVersionID, PipelineIRSHA256: f.Pipeline.PipelineIRSHA256}, Workspace: cpup01.WorkspaceContract{Mode: "EXECUTION_PVC", StorageClass: f.WorkspaceStorageClass, CapacityBytes: f.WorkspaceCapacityBytes, InputSubpath: "inputs", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication"}}
-	m.Program = cpup01.MaterialProgram{ImageVersionID: f.TrainingImage.VersionID, ImageDigest: f.TrainingImage.Digest}
+	m := cpup01.ImplementationMaterial{SchemaVersion: cpup01.MaterialSchemaVersion, Implementation: cpup01.ImplementationSnapshot{ImplementationID: f.ImplementationID, Version: definition.Version, ParameterContractVersion: definition.ParameterContractVersion, PipelineID: f.Pipeline.PipelineID, PipelineVersionID: f.Pipeline.PipelineVersionID, PipelineIRSHA256: f.Pipeline.PipelineIRSHA256}, Workspace: cpup01.WorkspaceContract{Mode: "EXECUTION_PVC", StorageClass: f.WorkspaceStorageClass, CapacityBytes: f.WorkspaceCapacityBytes, InputSubpath: "inputs", TrainingSubpath: "training", ReportsSubpath: "reports", PublicationSubpath: "publication", WorkSubpath: "work"}}
+	m.ComponentResources = f.ComponentResources
+	m.Program = cpup01.MaterialProgram{ImageID: f.TrainingImage.ImageID, ImageVersion: f.TrainingImage.ImageVersion, ImageScope: f.TrainingImage.ImageScope, ImageDigest: f.TrainingImage.Digest}
 	if f.ImplementationID == "builtin.mlp" {
 		if f.Finetuning != nil {
 			return bad()
 		}
-		m.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/cpu03/train_mlp.py"}
+		m.Program.Command = []string{f.TrainingImage.PythonExecutable, "-I", "/opt/ani-modeldev/training/train_mlp.py"}
 		device := "cpu"
 		if f.DeviceMode == "gpu" {
 			device = "cuda"
 		}
-		m.Program.ArgsTemplate = []cpup01.MaterialArgument{{Literal: "--data"}, {Source: "INPUT_PATH"}, {Literal: "--output"}, {Source: "OUTPUT_PATH"}, {Literal: "--expected-input-sha256"}, {Source: "INPUT_SHA256"}, {Literal: "--expected-input-bytes"}, {Source: "INPUT_BYTES"}, {Literal: "--learning-rate"}, {Source: "LEARNING_RATE"}, {Literal: "--epochs"}, {Source: "EPOCHS"}, {Literal: "--batch-size"}, {Source: "BATCH_SIZE"}, {Literal: "--seed"}, {Source: "SEED"}, {Literal: "--device"}, {Literal: device}}
-		m.OutputContract = cpup01.OutputContract{SchemaVersion: "ani.cpu.output.v1", OutputKind: "CHECKPOINT", DeliveryMode: "SAVE_ARTIFACTS", RequiredFiles: []cpup01.RequiredOutput{{Role: "METRICS", RelativePath: "metrics.jsonl", MaxSizeBytes: 16 << 20}, {Role: "CHECKPOINT", RelativePath: "model.pt", MaxSizeBytes: 32 << 20}, {Role: "MODEL_CONFIG", RelativePath: "model_config.json", MaxSizeBytes: 1 << 20}, {Role: "SUMMARY", RelativePath: "summary.json", MaxSizeBytes: 1 << 20}}, MaxFileCount: 16, MaxTotalBytes: 100 << 20, CreateTarBundle: false}
+		m.Program.ArgsTemplate = []cpup01.MaterialArgument{{Literal: "--dataset-manifest"}, {Literal: "/inputs/dataset-manifest.json"}, {Literal: "--expected-dataset-manifest-sha256"}, {Source: "DATASET_MANIFEST_SHA256"}, {Literal: "--work-root"}, {Literal: "/workspace/work/train"}, {Literal: "--output"}, {Source: "OUTPUT_PATH"}, {Literal: "--learning-rate"}, {Source: "LEARNING_RATE"}, {Literal: "--epochs"}, {Source: "EPOCHS"}, {Literal: "--batch-size"}, {Source: "BATCH_SIZE"}, {Literal: "--seed"}, {Source: "SEED"}, {Literal: "--device"}, {Literal: device}}
+		m.OutputContract = cpup01.OutputContract{SchemaVersion: cpup01.OutputContractSchemaVersion, OutputKind: "CHECKPOINT", DeliveryMode: "SAVE_ARTIFACTS", RequiredFiles: []cpup01.RequiredOutput{{Role: "METRICS", RelativePath: "metrics.jsonl", InTar: true}, {Role: "CHECKPOINT", RelativePath: "model.pt", InTar: true}, {Role: "MODEL_CONFIG", RelativePath: "model_config.json", InTar: true}, {Role: "SUMMARY", RelativePath: "summary.json", InTar: true}}, CreateTarBundle: false}
 	} else {
-		if f.Finetuning == nil || f.Finetuning.MappingSHA256 != mappingSHA || f.Finetuning.ExportImage.EntrySHA256 != entrySHA || f.Finetuning.VerifyImage.EntrySHA256 != entrySHA {
+		if f.Finetuning == nil || f.Finetuning.RuntimeCapabilities.EntrypointSHA256 != entrySHA || f.Finetuning.RuntimeCapabilities.ImageDigest != f.TrainingImage.Digest || f.Finetuning.ExportImage.Digest != f.TrainingImage.Digest || f.Finetuning.VerifyImage.Digest != f.TrainingImage.Digest || f.Finetuning.MappingSHA256 != mappingSHA || f.Finetuning.ExportImage.EntrySHA256 != entrySHA || f.Finetuning.VerifyImage.EntrySHA256 != entrySHA {
 			return bad()
 		}
-		m.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/finetuning/finetune_entry.py"}
+		m.Program.Command = []string{f.TrainingImage.PythonExecutable, "-I", "/opt/ani-modeldev/training/finetuning/finetune_entry.py"}
 		m.Program.ArgsTemplate = arguments("train")
 		settings, err := managedSettings(f.DeviceMode)
 		if err != nil {
@@ -161,9 +175,9 @@ func material(f facts, entrySHA, mappingSHA string) (cpup01.ImplementationMateri
 			return bad()
 		}
 		component := func(mode string, i image) cpup01.ComponentProgram {
-			return cpup01.ComponentProgram{ImageVersionID: i.VersionID, ImageDigest: i.Digest, Command: append([]string{}, m.Program.Command...), ArgsTemplate: arguments(mode), ImplementationSHA256: entrySHA}
+			return cpup01.ComponentProgram{ImageID: i.ImageID, ImageVersion: i.ImageVersion, ImageScope: i.ImageScope, ImageDigest: i.Digest, Command: append([]string{}, m.Program.Command...), ArgsTemplate: arguments(mode), ImplementationSHA256: entrySHA}
 		}
-		m.Finetuning = &cpup01.FinetuningMaterial{ManagedSettings: settings, ExportProgram: component("export", f.Finetuning.ExportImage), VerifyProgram: component("verify", f.Finetuning.VerifyImage), RecipeSHA256: hash(encoded), MappingSHA256: mappingSHA, Budgets: f.Finetuning.Budgets, MaxSequenceLength: f.Finetuning.MaxSequenceLength}
+		m.Finetuning = &cpup01.FinetuningMaterial{ManagedSettings: settings, ExportProgram: component("export", f.Finetuning.ExportImage), VerifyProgram: component("verify", f.Finetuning.VerifyImage), RecipeSHA256: hash(encoded), MappingSHA256: mappingSHA, RuntimeCapabilities: f.Finetuning.RuntimeCapabilities, ModelTemplateAssociations: f.Finetuning.ModelTemplateAssociations}
 		m.OutputContract = finetuningOutput()
 	}
 	if _, err := m.Canonical(); err != nil {
@@ -172,7 +186,7 @@ func material(f facts, entrySHA, mappingSHA string) (cpup01.ImplementationMateri
 	return m, nil
 }
 func arguments(mode string) []cpup01.MaterialArgument {
-	return []cpup01.MaterialArgument{{Literal: mode}, {Literal: "--configuration"}, {Literal: "/workspace/inputs/finetune_configuration.json"}, {Literal: "--workspace"}, {Literal: "/workspace"}, {Literal: "--expected-input-sha256"}, {Source: "INPUT_SHA256"}, {Literal: "--expected-input-bytes"}, {Source: "INPUT_BYTES"}, {Literal: "--expected-base-manifest-sha256"}, {Source: "BASE_MANIFEST_SHA256"}}
+	return []cpup01.MaterialArgument{{Literal: mode}, {Literal: "--configuration"}, {Literal: "/workspace/inputs/finetune_configuration.json"}, {Literal: "--workspace"}, {Literal: "/workspace"}, {Literal: "--dataset-manifest"}, {Literal: "/workspace/inputs/dataset-manifest.json"}, {Literal: "--expected-dataset-manifest-sha256"}, {Source: "DATASET_MANIFEST_SHA256"}, {Literal: "--expected-base-manifest-sha256"}, {Source: "BASE_MANIFEST_SHA256"}, {Literal: "--expected-template-plan-sha256"}, {Source: "TEMPLATE_PLAN_SHA256"}}
 }
 func canonical(value any) ([]byte, error) {
 	raw, err := json.Marshal(value)
@@ -208,32 +222,24 @@ func managedSettings(device string) (cpup01.FinetuningManagedSettings, error) {
 	if device == "gpu" {
 		mode = "cuda"
 	}
-	return cpup01.FinetuningManagedSettings{Stage: "sft", FinetuningType: "lora", LoraTarget: "all", LoraRank: integer("lora_rank"), LoraAlpha: integer("lora_alpha"), CutoffLen: integer("cutoff_len"), PerDeviceTrainBatchSize: integer("per_device_train_batch_size"), GradientAccumulationSteps: integer("gradient_accumulation_steps"), Seed: integer("seed"), DataSeed: integer("seed"), Device: mode, FlashAttn: "disabled", ReportTo: "none", SaveStrategy: "no", Template: "qwen", TrainDtype: "float32", ExportDtype: "float32", VerifyDtype: "float32", LRSchedulerType: "linear", WarmupRatio: "0", WeightDecay: "0", LoraDropout: values["lora_dropout"], NumTrainEpochs: 3, Optim: "adamw_torch", LoggingSteps: 1}, nil
+	return cpup01.FinetuningManagedSettings{Stage: "sft", FinetuningType: "lora", LoraTarget: "all", LoraRank: integer("lora_rank"), LoraAlpha: integer("lora_alpha"), CutoffLen: integer("cutoff_len"), PerDeviceTrainBatchSize: integer("per_device_train_batch_size"), GradientAccumulationSteps: integer("gradient_accumulation_steps"), Seed: integer("seed"), DataSeed: integer("seed"), Device: mode, FlashAttn: "disabled", ReportTo: "none", SaveStrategy: "no", TrainDtype: "float32", ExportDtype: "float32", VerifyDtype: "float32", LRSchedulerType: "linear", WarmupRatio: "0", WeightDecay: "0", LoraDropout: values["lora_dropout"], NumTrainEpochs: 3, Optim: "adamw_torch", LoggingSteps: 1}, nil
 }
 func finetuningOutput() cpup01.OutputContract {
 	files := []cpup01.RequiredOutput{}
-	add := func(role, path string, inTar bool, maximum int64) {
-		v := inTar
-		files = append(files, cpup01.RequiredOutput{Role: role, RelativePath: path, MaxSizeBytes: maximum, InTar: &v})
+	add := func(role, path string) {
+		files = append(files, cpup01.RequiredOutput{Role: role, RelativePath: path, InTar: false})
 	}
-	for _, name := range []string{"Modelfile", "added_tokens.json", "config.json", "generation_config.json", "merges.txt", "model.safetensors", "special_tokens_map.json", "tokenizer.json", "tokenizer_config.json", "vocab.json"} {
-		maximum := int64(16 << 20)
-		if name == "model.safetensors" {
-			maximum = 2 << 30
-		}
-		add("HF_MODEL", "export/merged/"+name, true, maximum)
-	}
-	add("LORA_ADAPTER", "training/adapter/adapter_config.json", false, 1<<20)
-	add("LORA_ADAPTER", "training/adapter/adapter_model.safetensors", false, 1<<28)
-	add("METRICS", "reports/train/metrics.jsonl", false, 1<<20)
-	add("SUMMARY", "reports/train/summary.json", false, 64<<10)
-	add("SOURCE_METADATA", "reports/train/adapter_manifest.json", false, 64<<10)
-	add("EXPORT_REPORT", "reports/export/merged_manifest.json", false, 64<<10)
-	add("EXPORT_REPORT", "reports/export/export.json", false, 64<<10)
-	add("VERIFY_REPORT", "reports/verify/verify.json", false, 64<<10)
-	maxTar := int64(3 << 30)
-	return cpup01.OutputContract{SchemaVersion: "ani.finetune.output.v1", OutputKind: "MERGED_HF_MODEL", DeliveryMode: "SAVE_ARTIFACTS", RequiredFiles: files, MaxFileCount: 64, MaxTotalBytes: 4 << 30, CreateTarBundle: true, MaxTarBytes: &maxTar}
+	add("METRICS", "reports/train/metrics.jsonl")
+	add("SUMMARY", "reports/train/summary.json")
+	add("SOURCE_METADATA", "reports/train/adapter_manifest.json")
+	add("SOURCE_METADATA", "reports/train/effective-template.json")
+	add("SOURCE_METADATA", "reports/train/effective-template.jinja")
+	add("EXPORT_REPORT", "reports/export/merged_manifest.json")
+	add("EXPORT_REPORT", "reports/export/export.json")
+	add("VERIFY_REPORT", "reports/verify/verify.json")
+	return cpup01.OutputContract{SchemaVersion: cpup01.OutputContractSchemaVersion, OutputKind: "MERGED_HF_MODEL", DeliveryMode: "SAVE_ARTIFACTS", RequiredFiles: files, CreateTarBundle: true}
 }
+
 func run() error {
 	factsPath := flag.String("facts", "", "explicit material input JSON")
 	output := flag.String("output", "", "new canonical material path")

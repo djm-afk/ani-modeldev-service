@@ -1,147 +1,91 @@
-# Built-in MLP workload
+# Managed training runtime
 
-`train_mlp.py` runs the single-process, single-device 16→32→2 MLP. It consumes
-one immutable CSV with header `x0` through `x15`, then `label`, at least one row,
-finite float32 features, and binary integer labels. It checks the selected byte
-length and SHA256 before importing Torch or creating output. Paths cannot be
-symlinks, and existing nonempty output paths are preserved.
+The current runtime implements `builtin.mlp` and `builtin.sft_lora` using the v3
+contracts in `contract/cpup01`. This entry supersedes the historical CPU03 and
+v2.1 image instructions; their qualification records describe their original
+images only.
 
-`--learning-rate`, `--epochs`, `--batch-size`, and `--seed` are resolved for each
-execution and frozen in its Snapshot. Their sole defaults and representation
-bounds come from `contract/cpup01/implementations.json`; Go embeds that same
-file and the workload images include its immutable bytes. Omitted values use
-those defaults. `--device` is the platform-frozen `cpu` or `cuda`; CUDA requires exactly
-one visible CUDA device. The GPU image leaves device visibility to the assigned
-runtime and device plugin.
+`finetuning.Dockerfile` adds platform programs to the immutable official
+LLaMA-Factory image selected from the prepared platform registry. Its `FROM`
+fixes the complete AMD64 digest. CPU and GPU images retain the same official
+Python packages; the execution mode determines the actual training device.
+Export and independent model verification run on CPU in float32.
 
-Every epoch shuffles using the selected seed and includes the final partial
-batch. Actual optimizer updates are emitted as `ani.metric.v1`; a completed run
-has `epochs × ceil(samples/batch_size)` steps. Finite loss and weights are
-required. Improvement is only an assertion for known regression data.
+The image contains one program tree at `/opt/ani-modeldev/training`, the static
+`/ani-modeldev-step` process, and the fixed `modeldev` UID/GID 10001. It installs
+nothing at startup. The only upstream source patch fixes the nonstreaming format
+conversion map to `writer_batch_size=1`; `finetuning/runtime-patches` pins and
+checks its exact before/after source hashes. Platform-owned composition uses
+native dataset, model and Trainer functions without modifying their workflow.
 
-Success emits `model.pt`, `model_config.json`, `metrics.jsonl`, `summary.json`,
-and the candidate `result.json`. Failure and SIGTERM retain actual metrics and
-a `FAILED` or `CANCELLED` partial summary, without a successful result manifest.
-A result candidate does not prove publication or business success.
+## Build and identify the actual image
 
-Internal acceptance recipes `fail` and `slow-stop` retain the controlled
-five-update failure and two-second step delay. Their fixed fault timing is
-restricted to acceptance, and ordinary training has no recipe alarm.
-
-Run behavior tests and the persistent workload/independent reload drivers on
-Fedora only. The drivers use private writable directories and a supplied,
-immutable runtime image. `run_mlp_acceptance.py --nondefault` covers 17 rows,
-batch 6, two epochs, seed 7, and a finite run whose loss increases. It copies
-the result and reloads the checkpoint in a separate container without the
-training workspace mount. These are workload facts; the service must still
-prove authenticated admission, KFP/Trainer, publication, close and cleanup.
-
-## Execution software materials
-
-The v2.1 CPU image is built with `cpu-execution.Dockerfile`, which copies the
-current MLP and LoRA programs plus the single machine contract into the immutable
-CPU runtime qualified by the actual workloads. `gpu.Dockerfile` uses the locked
-CUDA dependencies in `gpu-requirements.txt` and `gpu-runtime-lock.json`. Both
-retain a complete runtime inventory and the hashes of their baked sources.
-
-The finite generator in `scripts/modeldev-execution-materials` binds the
-implementation to an immutable training image and a confirmed PipelineVersion
-with its IR hash. These are software materials. Each accepted execution carries
-its own resolved algorithm values, input hash and platform-selected device;
-the image does not contain a selected input dataset or per-execution parameters.
-Image qualification and publication do not establish execution success or
-actual CUDA computation. Current task receipts live under the unique
-`.scratch/modeldev-execution-v2.1/records` index.
-
-The remaining sections describe the historical September CPU image and its
-original qualification commands. Their source, dependency and scan results
-apply only to that image. Changed sources require a new digest and verification.
-
-## Locked image materials
-
-`runtime-lock.json` pins the Chainguard Python image index
-`sha256:1961420e5f93bd056d4b0b40eca12cdf01b3ed09177aa4d6ec71fab38cbf158f`
-in both Dockerfile stages and records the selected linux/amd64 manifest
-`sha256:654e728e98400ab15c6a6b6a06a0392d5871e801697629202309acaba57bb87e`.
-Builds never resolve a discovery tag. The base contains
-Python 3.14.8 for linux/amd64 with the ordinary cp314 ABI; PyTorch remains 2.10.0+cpu. Of the ten
-locked wheels, only Torch and MarkupSafe changed from cp313 to cp314; dependency
-versions remained unchanged by that ABI migration.
-
-`requirements.lock` pins versions and SHA256, `wheelhouse.sha256` fixes filenames,
-and `runtime-packages.lock.json` records all 29 APK package names and versions,
-including the legacy OpenSSL provider. The package database is retained. Torch
-uses its wheel's bundled libgomp and the image's libstdc++; no host library is
-copied. Optional NumPy integration emits a warning because this workload uses
-tensors directly without NumPy.
-
-The base has no shell. Exec-form Python commands create `/opt/venv` and install
-the verified wheels offline during the build. The final image uses UID/GID
-10001:10001, read-only program files, and the workload itself as PID 1. It contains
-no selected dataset, checkpoint, or credentials and installs nothing at startup.
-
-## Historical Fedora execution
-
-All generation, builds, training, reloads and scanning run on Fedora against a
-fixed committed source. After selecting the task-owned Podman storage containing
-the qualified base digest, use a fresh output directory:
+Generation, builds, image operations and tests run on Fedora. Supply the
+existing task-owned Podman directories through `ANI_IMAGE_STORAGE_ROOT`,
+`ANI_IMAGE_RUNROOT`, and `ANI_IMAGE_TMPDIR`, then run:
 
 ```sh
-bash training/build-image.sh FULL_SOURCE_SHA \
-  /home/chabking/workspace/cpu-p01-20260930-01/cpu03/qualification-1259691-04/wheelhouse \
-  /home/chabking/workspace/cpu-p01-20260930-01/cpu03/build-NEW_ATTEMPT
-python3 training/tests/image_smoke.py "$(cat /home/chabking/workspace/cpu-p01-20260930-01/cpu03/build-NEW_ATTEMPT/image.id)" \
-  /home/chabking/workspace/cpu-p01-20260930-01/cpu03/smoke-NEW_ATTEMPT
+bash training/build-image.sh FULL_SOURCE_COMMIT cpu /absolute/new-cpu-build
+bash training/build-image.sh FULL_SOURCE_COMMIT gpu /absolute/new-gpu-build
 ```
 
-The build script rejects existing output directories, checks the source revision,
-archives that Git tree, and copies only hash-verified locked wheels. It uses no
-network, proxy forwarding or image pulls, is limited to two CPUs / 2 GiB, and
-records the source, command, exits and local image identity. It does not push images.
+The builder archives that exact Git commit, builds the step binary from it,
+checks that the official base is already present, and builds offline without
+pulling or installing packages. Each new output directory retains the source
+archive, source tree, binary hash, complete command, image identity and exit.
+A local build does not prove registry publication or workload qualification.
 
-The smoke tests actual nonroot PID 1 behavior without an init wrapper. Containers
-are offline and read-only except isolated output/tmpfs, limited to two CPUs /
-2 GiB and bounded to 90 seconds. A separate container generates the selected
-fixture. Success checks actual file bytes and digests and independently reloads
-the checkpoint with `weights_only=True`; fail and stop checks observe real
-optimization first. Stop cleanup targets only the returned container ID after
-retaining evidence. The image does not contain the test sources. To run the six
-unchanged module tests inside it, the verification runner mounts the fixed source
-read-only at `/source/training` and invokes `/opt/venv/bin/python -I -m unittest
-discover -s /source/training/tests -p test_training.py -v`, with a separate bounded
-writable temporary directory and the runner's resource limits.
+After the final immutable image reference is known, run the baked
+`finetuning/inspect_runtime.py --image-digest REGISTRY/PATH@sha256:DIGEST` using
+its actual `/opt/conda/bin/python`. The output records installed package versions,
+actual CausalLM mapping and template registry, imported converter hash,
+entrypoint hash, Python executable and CUDA build version. Generate software
+materials from those actual facts and the registered Resource ImageID,
+ImageVersion and scope. The capabilities and all three SFT roles must bind the
+same selected immutable image.
 
-## Historical fixed verification result
+## Input, work and output
 
-On Fedora, source `4d56b93b045233c1325a362fe89d506210223d47` produced local image
-`sha256:0972fac83ba343e4d24e22bc35198bddf5c3e9d5c8ab3337694395beead3bd04`.
-The run on 2026-09-30 at 15:17:51–15:21:59 UTC passed offline build, all six module
-tests (38.123 seconds), and complete image smoke. Smoke covered the complete APK
-lock, normal ABI and venv, dependency imports, success48, independent reload,
-failure after five steps, and SIGTERM exit 143 after three observed steps.
+MLP accepts only the frozen dataset manifest and its SHA256, the explicit work
+root, and the current resolved parameters. Prepare supplies `inputs/data.csv`;
+MLP verifies its complete bytes, SHA256 and row count before importing Torch.
+It writes little-endian feature, label and shuffle memory maps on the work
+volume and holds only the active tensor batch on the training device. The
+algorithm remains the single-process 16→32→2 binary classifier.
 
-Syft 1.52.0 recorded 69 artifacts: 31 APK, 14 binary and 24 Python records.
-Grype 0.119.0 with the validated v6.1.9 database built at
-`2026-09-30T06:32:47Z` passed the original `--fail-on high` gate: zero Critical,
-zero High, eight Medium and two Low findings. All findings remain in the raw
-report. There were no path excludes, VEX documents, only-fixed filtering or
-user-added ignore rules. The four built-in RPM/DEB kernel-header rules matched
-the previous scan configuration; this image has no RPM/DEB artifacts and no
-ignored matches. This result does not mean the image has no vulnerabilities.
+SFT consumes the current Prepare workspace described in
+[finetuning/README.md](finetuning/README.md). Structure guards come from the single
+generated `structure_limits.json`; content admission uses the execution's frozen
+limit L. There is no second image content limit or legacy input CLI.
 
-The OCI archive SHA256 is
-`be102bd1fe66aadee64e782decf08c97dc07c5d1337ee3563bc8f8eba40bca6b`.
-It identifies archive bytes, not a registry manifest digest. The run evidence is
-indexed in `.scratch/cpu-p01/runs/20260930-01/cpu03/remediation-4d56b93-01/result.md`;
-large OCI/checkpoint files remain in the corresponding Fedora task directory.
-Later documentation or Go commits do not change the source identity of this image.
+All roles run with a read-only root filesystem and writable volume paths under
+`/workspace/work/<role>/{tmp,hf,hf/datasets,matplotlib}`. Set TMPDIR, HF_HOME,
+HF_DATASETS_CACHE and MPLCONFIGDIR to those directories before library imports.
+Input facts and selected model bytes remain read-only.
 
-Earlier failed packaging, PID 1 and scan attempts remain separate in Git and the
-CPU03 run records. In particular, `472c080` produced a different image whose scan
-failed with 59 High findings; the new result does not relabel that old scan.
+MLP success writes `model.pt`, `model_config.json`, `metrics.jsonl`,
+`summary.json` and `result.json`. Real optimizer updates emit `ani.metric.v1`.
+Failure and SIGTERM retain actual metrics and a FAILED or CANCELLED summary
+without a successful candidate. SFT records real optimizer, token/template,
+adapter, export and independent verification facts. These workload candidates
+still require ModelDev collection, publication, optional registration and close.
 
-Signature trust-chain verification and registry publication remain unverified.
-The consumed ENV handoff supplies no authorized registry destination. Target
-cluster Trainer/KFP/BFF/S3 execution, L1–L4 and business acceptance are not proven
-by this Fedora image run. Repository-wide gates and independent code review are
-tracked separately from these workload results.
+## Qualification boundaries
+
+`tests/image_smoke.py IMAGE_ID IMMUTABLE_REFERENCE NEW_RUN_DIRECTORY` checks the
+actual packaged programs and runtime, fixed user, read-only filesystem, 48 real
+MLP updates, failure, stop and detached checkpoint reload.
+`tests/run_mlp_acceptance.py` also covers nondefault parameters and partial
+batches. `tests/run_lora_acceptance.py` accepts a current workspace produced by
+the real Prepare chain; it runs the image's baked stages and reloads detached
+merged bytes. It does not synthesize a second model/template contract.
+
+Both final images must separately pass the real native Arrow conversion/cache
+mechanism check. `tests/run_arrow_mechanism.py --baseline-image OFFICIAL_IMAGE_ID
+--cpu-image CPU_IMAGE_ID --gpu-image GPU_IMAGE_ID --output NEW_RUN_DIRECTORY`
+first records the unmodified official writer's actual two-record buffer, then
+requires both final images to keep the conversion buffer at one record and all
+three native cache stages on the role work volume. Its hooks are test-only; it
+stops before model loading and optimizer execution. Long-record training, real platform submission, publication,
+registration, logs and resource release remain distinct acceptance gates. A
+build, source check or offline workload result cannot establish those gates.

@@ -104,7 +104,7 @@ func newConfiguredStepRetentionFixture(t *testing.T, abort bool, fine []bool, co
 		capturedInitializationAbort(t, &f.pods[0])
 	}
 	w, e := f.execution.Snapshot.Workspace, f.execution.Snapshot.Environment
-	fixture := &stepRetentionFixture{f: f, open: open, pods: map[string]*unstructured.Unstructured{}, workspace: biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: e.NamespaceName, NamespaceUID: e.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(f.execution.ExecutionID), PVCUID: "retention-workspace-uid", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}}
+	fixture := &stepRetentionFixture{f: f, open: open, pods: map[string]*unstructured.Unstructured{}, workspace: biz.WorkspaceBinding{Mode: w.Mode, NamespaceName: e.NamespaceName, NamespaceUID: e.NamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(f.execution.ExecutionID), PVCUID: "retention-workspace-uid", InputSubpath: w.InputSubpath, TrainingSubpath: w.TrainingSubpath, ReportsSubpath: w.ReportsSubpath, PublicationSubpath: w.PublicationSubpath, WorkSubpath: w.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}}
 	for i := range f.pods {
 		fixture.pods[f.pods[i].GetName()] = f.pods[i].DeepCopy()
 	}

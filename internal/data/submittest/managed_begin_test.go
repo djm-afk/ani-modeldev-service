@@ -94,9 +94,9 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 			w.WriteHeader(400)
 			return
 		}
-		podName := association.PodName
+		executorNodeID := "main-flow-prepare-node"
 		if wrongTask.Load() {
-			podName = "unrelated-pod"
+			executorNodeID = "unrelated-node"
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -105,7 +105,7 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 			"pipeline_version_reference": map[string]string{"pipeline_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "pipeline_version_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd"},
 			"runtime_config":             map[string]any{"parameters": map[string]string{"execution_id": request.Admission.ExecutionID, "spec_hash": request.Admission.SpecHash}, "pipeline_root": "s3://fixture-kfp-artifacts/frozen-submit-root"},
 			"service_account":            "cpu-managed-step", "state": "RUNNING",
-			"run_details": map[string]any{"task_details": []any{map[string]string{"run_id": association.RunID, "task_id": "synthetic-task-id", "display_name": "prepare", "pod_name": podName, "state": "RUNNING"}}},
+			"run_details": map[string]any{"task_details": []any{map[string]any{"run_id": association.RunID, "task_id": "synthetic-task-id", "display_name": "prepare", "child_tasks": []any{map[string]string{"pod_name": executorNodeID}}, "state": "RUNNING"}}},
 		})
 	}))
 	t.Cleanup(peer.Close)
@@ -230,13 +230,17 @@ func mainFlowWorkloadVerifier(t *testing.T, env cpup01.EnvironmentBindingSnapsho
 			object = map[string]any{"apiVersion": "v1", "kind": "ServiceAccount", "metadata": metadata(env.Identities.KFPStepServiceAccount, saUID, true)}
 		case "/api/v1/namespaces/" + env.NamespaceName + "/pods/" + association.PodName, "/api/v1/namespaces/" + env.NamespaceName + "/pods":
 			m := metadata(association.PodName, association.PodUID, true)
+			m["annotations"] = map[string]any{"workflows.argoproj.io/node-id": "main-flow-prepare-node", "workflows.argoproj.io/node-name": association.WorkflowName + ".prepare.executor"}
 			m["ownerReferences"] = []any{map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": association.WorkflowName, "uid": association.WorkflowUID, "controller": true}}
 			object = map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": m, "spec": map[string]string{"serviceAccountName": env.Identities.KFPStepServiceAccount}}
 			if strings.HasSuffix(r.URL.Path, "/pods") {
 				object = map[string]any{"apiVersion": "v1", "kind": "PodList", "metadata": map[string]any{}, "items": []any{object}}
 			}
 		case "/apis/argoproj.io/v1alpha1/namespaces/" + env.NamespaceName + "/workflows/" + association.WorkflowName:
-			object = map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "metadata": metadata(association.WorkflowName, association.WorkflowUID, true)}
+			object = map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "metadata": metadata(association.WorkflowName, association.WorkflowUID, true), "status": map[string]any{"nodes": map[string]any{
+				"main-flow-prepare-controller": map[string]any{"id": "main-flow-prepare-controller", "name": association.WorkflowName + ".prepare", "displayName": "prepare", "phase": "Running", "children": []any{"main-flow-prepare-node"}},
+				"main-flow-prepare-node":       map[string]any{"id": "main-flow-prepare-node", "name": association.WorkflowName + ".prepare.executor", "displayName": "executor", "type": "Pod", "phase": "Running", "boundaryID": "main-flow-prepare-controller", "templateName": "metadata-0-2-retry-system-container-impl"},
+			}}}
 		default:
 			t.Error("unexpected Kubernetes operation")
 			w.WriteHeader(404)
@@ -273,10 +277,17 @@ func startMainFlowStepServer(t *testing.T, steps *biz.ManagedSteps, repository *
 	return startMainFlowStepHandler(t, service.NewRuntimeStep(steps, runtime))
 }
 
-func startMainFlowStepHandler(t *testing.T, handler modeldevv1.ModelDevStepServiceServer) (modeldevv1.ModelDevStepServiceClient, func()) {
+func startMainFlowStepHandler(t *testing.T, handler modeldevv1.ModelDevStepServiceServer, timeouts ...time.Duration) (modeldevv1.ModelDevStepServiceClient, func()) {
 	t.Helper()
+	timeout := 5 * time.Second
+	if len(timeouts) > 1 {
+		t.Fatal("at most one managed-step fixture timeout is allowed")
+	}
+	if len(timeouts) == 1 {
+		timeout = timeouts[0]
+	}
 	certificates := commandtls.New(t)
-	listener, err := server.NewManagedStepServer(&conf.Server_GRPC{Network: "tcp", Addr: "127.0.0.1:0", Timeout: durationpb.New(5 * time.Second)}, certificates.Server, handler)
+	listener, err := server.NewManagedStepServer(&conf.Server_GRPC{Network: "tcp", Addr: "127.0.0.1:0", Timeout: durationpb.New(timeout)}, certificates.Server, handler)
 	if err != nil {
 		t.Fatal(err)
 	}

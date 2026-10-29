@@ -115,12 +115,12 @@ func TestConfiguredAdmissionProcessLoadsPrivateConfigAndStopsOnSIGTERM(t *testin
 	if err != nil || !bytes.Equal(canonical, fixture.wantCanonical) || response.ExecutionSpecHash != fixture.wantHash {
 		t.Fatalf("ADMISSION_PROCESS_BEHAVIOR: candidate differs from the independently authored snapshot and hash: %v", err)
 	}
-	assertProductionNotReadyWithoutBusinessAdapters(t, fixture.config.Server.Admin.Addr)
+	waitForHTTP(t, "http://"+fixture.config.Server.Admin.Addr+"/readyz")
 	observer := fixture.openPool()
 	if countConfiguredAdmissionConnections(t, observer, fixture.applicationName) == 0 {
 		t.Fatal("ADMISSION_PROCESS_PREFLIGHT: actual child database connection was not observed; connection cleanup behavior NOT_RUN")
 	}
-	t.Log("ADMISSION_PROCESS_BEHAVIOR: private -conf and Kratos Scan reached actual mTLS resolution with the independent expected snapshot; readiness remains 503")
+	t.Log("ADMISSION_PROCESS_BEHAVIOR: private -conf and Kratos Scan reached actual managed runtime mTLS resolution with the independent expected snapshot")
 	_ = connection.Close()
 	if err := process.Process.Signal(syscall.SIGTERM); err != nil {
 		t.Fatalf("ADMISSION_PROCESS_BEHAVIOR: could not send SIGTERM to the actual child: %v", err)

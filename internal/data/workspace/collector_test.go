@@ -1,6 +1,7 @@
 package workspace_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -36,7 +37,7 @@ func TestCollectHashesActualRegisteredBytesWithoutTrustingCandidate(t *testing.T
 	for _, required := range execution.Snapshot.OutputContract.RequiredFiles {
 		data := contents[required.RelativePath]
 		digest := sha256.Sum256(data)
-		want = append(want, biz.CollectedFile{RelativePath: required.RelativePath, Role: required.Role, SizeBytes: int64(len(data)), SHA256: hex.EncodeToString(digest[:])})
+		want = append(want, biz.CollectedFile{RelativePath: required.RelativePath, Role: required.Role, InTar: required.InTar, SizeBytes: int64(len(data)), SHA256: hex.EncodeToString(digest[:])})
 	}
 	sort.Slice(want, func(i, j int) bool { return want[i].RelativePath < want[j].RelativePath })
 	if !reflect.DeepEqual(got.Files, want) {
@@ -92,18 +93,9 @@ func TestCollectRejectsMissingUnsafeOrUnboundedOutput(t *testing.T) {
 				t.Fatal(err)
 			}
 		}},
-		{"per file limit", func(t *testing.T, _ string, execution *biz.Execution) {
-			for i := range execution.Snapshot.OutputContract.RequiredFiles {
-				execution.Snapshot.OutputContract.RequiredFiles[i].MaxSizeBytes = 1
-			}
-			refreshSpec(t, execution)
-		}},
-		{"total byte limit", func(t *testing.T, directory string, execution *biz.Execution) {
-			execution.Snapshot.OutputContract.MaxTotalBytes = 32
-			for i := range execution.Snapshot.OutputContract.RequiredFiles {
-				execution.Snapshot.OutputContract.RequiredFiles[i].MaxSizeBytes = 32
-				writeFile(t, filepath.Join(directory, execution.Snapshot.OutputContract.RequiredFiles[i].RelativePath), []byte(strings.Repeat("x", 16)))
-			}
+		{"frozen content limit", func(t *testing.T, d string, execution *biz.Execution) {
+			execution.Snapshot.Limits.MaxContentBytes = execution.Snapshot.Input.Object.SizeBytes
+			writeFile(t, filepath.Join(d, "model.pt"), bytes.Repeat([]byte("w"), int(execution.Snapshot.Limits.MaxContentBytes)))
 			refreshSpec(t, execution)
 		}},
 		{"tampered frozen hash", func(_ *testing.T, _ string, execution *biz.Execution) { execution.SpecHash = strings.Repeat("0", 64) }},
@@ -144,6 +136,7 @@ func preparedWorkspace(t *testing.T) (string, biz.Execution, map[string][]byte) 
 	snapshot.Input.RowCount = 1024
 	snapshot.Input.Object.SizeBytes = int64(len(pipelineCSVFixture()))
 	snapshot.Input.Object.SHA256 = pipelineDigest(pipelineCSVFixture())
+	snapshot.Input.PreparedDataset = cpup01.PreparedDatasetFacts{Format: "CPU_CSV", TransformID: "csv-identity-v3", SizeBytes: snapshot.Input.Object.SizeBytes, SHA256: snapshot.Input.Object.SHA256, RowCount: snapshot.Input.RowCount}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)
@@ -240,6 +233,7 @@ func TestCollectMLPUsesFrozenParametersAndIncludesPartialBatch(t *testing.T) {
 	input := []byte(strings.Join(rows[:18], "\n") + "\n")
 	execution.Snapshot.Input.Object.SizeBytes = int64(len(input))
 	execution.Snapshot.Input.Object.SHA256 = pipelineDigest(input)
+	execution.Snapshot.Input.PreparedDataset = cpup01.PreparedDatasetFacts{Format: "CPU_CSV", TransformID: "csv-identity-v3", SizeBytes: int64(len(input)), SHA256: pipelineDigest(input), RowCount: 17}
 	refreshSpec(t, &execution)
 	contents := mlpOutputFixture(t, execution)
 	for name, data := range contents {

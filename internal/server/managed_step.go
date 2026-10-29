@@ -12,6 +12,7 @@ import (
 	"github.com/go-kratos/kratos/v3/middleware"
 	kratosgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,11 +27,20 @@ func NewManagedStepServer(c *conf.Server_GRPC, certificate tls.Certificate, step
 		return nil, errors.New("valid managed Step TLS certificate and handler required")
 	}
 	s := kratosgrpc.NewServer(
+		kratosgrpc.Options(grpc.MaxRecvMsgSize(cpup01.MaxControlRPCBytes), grpc.MaxSendMsgSize(cpup01.MaxControlRPCBytes)),
 		kratosgrpc.Network(c.Network), kratosgrpc.Address(c.Addr),
-		kratosgrpc.Timeout(c.Timeout.AsDuration()),
+		// RegisterModel carries the caller's finite original REGISTER window.
+		// Apply the short transport budget per other method below, so Kratos'
+		// outer envelope cannot truncate a permitted large-object operation.
+		kratosgrpc.Timeout(0),
 		kratosgrpc.TLSConfig(&tls.Config{MinVersion: tls.VersionTLS13, Certificates: []tls.Certificate{certificate}}),
 		kratosgrpc.UnaryInterceptor(func(ctx context.Context, request any, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (any, error) {
 			switch info.FullMethod {
+			case modeldevv1.ModelDevStepService_RegisterModel_FullMethodName:
+				if _, finite := ctx.Deadline(); !finite {
+					return nil, status.Error(codes.InvalidArgument, "managed registration requires a caller deadline")
+				}
+				return next(ctx, request)
 			case modeldevv1.ModelDevStepService_BeginExecution_FullMethodName,
 				modeldevv1.ModelDevStepService_BeginManagedStep_FullMethodName,
 				modeldevv1.ModelDevStepService_GetExecutionConfiguration_FullMethodName,
@@ -40,8 +50,12 @@ func NewManagedStepServer(c *conf.Server_GRPC, certificate tls.Certificate, step
 				modeldevv1.ModelDevStepService_ReportStepResult_FullMethodName,
 				modeldevv1.ModelDevStepService_RequestExecutionClose_FullMethodName,
 				modeldevv1.ModelDevStepService_BeginFinetuningStep_FullMethodName,
-				modeldevv1.ModelDevStepService_ReportFinetuningStepResult_FullMethodName,
-				modeldevv1.ModelDevStepService_RegisterModel_FullMethodName:
+				modeldevv1.ModelDevStepService_ReportFinetuningStepResult_FullMethodName:
+				if timeout := c.Timeout.AsDuration(); timeout > 0 {
+					bounded, cancel := context.WithTimeout(ctx, timeout)
+					defer cancel()
+					ctx = bounded
+				}
 				return next(ctx, request)
 			default:
 				return nil, status.Error(codes.PermissionDenied, "managed Step listener does not permit this method")

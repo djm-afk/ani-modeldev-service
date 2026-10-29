@@ -188,3 +188,10 @@ func (b *artifactsOnlyModelBoundary) CopyTrainedArtifact(context.Context, biz.Ex
 	b.calls = append(b.calls, "copy")
 	return errors.New("unexpected Model copy")
 }
+
+func (b *artifactsOnlyExternalBoundary) ResolveManagedTaskID(_ context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation, role string) (string, error) {
+	if plan.OperationID != b.authority.OperationID || plan.Environment.NamespaceUID != b.authority.NamespaceUID || association != b.association || role != b.role {
+		return "", biz.ErrManagedStepUnauthorized
+	}
+	return role + "-authenticated-fixture", nil
+}

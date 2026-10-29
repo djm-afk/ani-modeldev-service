@@ -38,7 +38,7 @@ func (a *Adapter) retainPodLogs(ctx context.Context, plan biz.TrainingPlan, hand
 		pod := objects[uid]
 		protected := pod != nil && slices.Contains(pod.GetFinalizers(), trainingExitEvidenceFinalizer)
 		if retained == nil && !protected {
-			continue // Legacy objects still require capture before compute cleanup.
+			return biz.ErrTrainingLogsUnavailable
 		}
 		logID := uuid.NewSHA1(uuid.NameSpaceOID, []byte(plan.ExecutionID+":"+uid+":node")).String()
 		source, err := biz.TrainingLogSourceFor(record, logID)

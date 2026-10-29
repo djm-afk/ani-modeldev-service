@@ -29,6 +29,17 @@ func DecodeComputeSelection(canonical []byte, digest string) (cpup01.ComputeOrig
 	}
 	return origin, nil
 }
+
+func DecodeComputeOrigin(value *modeldevv1.ComputeOrigin) (cpup01.ComputeOrigin, error) {
+	if value == nil || len(value.ProtoReflect().GetUnknown()) != 0 {
+		return cpup01.ComputeOrigin{}, invalid("compute origin")
+	}
+	origin := decodeComputeOrigin(value)
+	if origin.Validate() != nil {
+		return cpup01.ComputeOrigin{}, invalid("compute origin")
+	}
+	return origin, nil
+}
 func encodeIdentity(v cpup01.IdentityRef) *modeldevv1.IdentityRef {
 	return &modeldevv1.IdentityRef{TenantId: v.TenantID, Actor: v.Actor, ExecutionId: v.ExecutionID, OperationId: v.OperationID, IntentHash: v.IntentHash}
 }

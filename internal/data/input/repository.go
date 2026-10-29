@@ -18,6 +18,33 @@ type Repository struct{ pool *pgxpool.Pool }
 
 func New(pool *pgxpool.Pool) *Repository { return &Repository{pool: pool} }
 
+// FindImport reads both immutable business keys before applying policy to a
+// genuinely new import. A reused request cannot be hidden by a later L change.
+func (r *Repository) FindImport(ctx context.Context, request biz.InputImport) (biz.InputVersion, error) {
+	command, err := importCommand(request)
+	if err != nil {
+		return biz.InputVersion{}, err
+	}
+	if r == nil || r.pool == nil {
+		return biz.InputVersion{}, biz.ErrPersistence
+	}
+	queries := inputsql.New(r.pool)
+	row, err := queries.GetInputVersion(ctx, inputsql.GetInputVersionParams{TenantID: command.TenantID, InputVersionID: command.InputVersionID})
+	if errors.Is(err, pgx.ErrNoRows) {
+		row, err = queries.GetInputVersionByRequestID(ctx, inputsql.GetInputVersionByRequestIDParams{TenantID: command.TenantID, RequestID: command.RequestID})
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.InputVersion{}, biz.ErrInputNotFound
+	}
+	if err != nil {
+		return biz.InputVersion{}, biz.ErrPersistence
+	}
+	if !sameImport(row, command) {
+		return biz.InputVersion{}, biz.ErrInputConflict
+	}
+	return versionFromRow(row)
+}
+
 func (r *Repository) FreezeImport(ctx context.Context, request biz.InputImport) (biz.InputVersion, error) {
 	command, err := importCommand(request)
 	if err != nil {
@@ -126,9 +153,6 @@ func versionFromRow(row inputsql.ModeldevInputVersion) (biz.InputVersion, error)
 		Scope:  cpup01.StorageScope{StorageConnectionID: row.StorageConnectionID, Bucket: row.Bucket, ApprovedPrefix: row.ApprovedPrefix, CredentialReference: row.CredentialReference},
 		Object: cpup01.FixedObjectRef{StorageConnectionID: row.StorageConnectionID, Bucket: row.Bucket, Key: row.ObjectKey, VersionID: &row.ObjectVersionID, SizeBytes: row.SizeBytes, SHA256: row.Sha256},
 	}
-	if request.Format == "CSV" {
-		request.Format = ""
-	}
 	if request.Validate() != nil {
 		return biz.InputVersion{}, biz.ErrPersistence
 	}
@@ -145,7 +169,7 @@ func versionFromRow(row inputsql.ModeldevInputVersion) (biz.InputVersion, error)
 	}
 	switch version.State {
 	case biz.InputStateValidating, biz.InputStateRejected:
-		if row.VerifiedAt.Valid || row.VerifiedSchemaVersion.Valid || row.VerifiedRowCount.Valid || row.VerifiedFeatureCount.Valid {
+		if row.VerifiedAt.Valid || row.VerifiedSchemaVersion.Valid || row.VerifiedRowCount.Valid || row.VerifiedFeatureCount.Valid || row.PreparedFormat.Valid || row.PreparedTransformID.Valid || row.PreparedSizeBytes.Valid || row.PreparedSha256.Valid || row.PreparedRowCount.Valid {
 			return biz.InputVersion{}, biz.ErrPersistence
 		}
 		if version.State == biz.InputStateRejected && (version.Failure == nil || version.Failure.Code != biz.InputFailureContentRejected) {
@@ -155,15 +179,16 @@ func versionFromRow(row inputsql.ModeldevInputVersion) (biz.InputVersion, error)
 			return biz.InputVersion{}, biz.ErrPersistence
 		}
 	case biz.InputStateReady:
-		if version.Failure != nil || !row.VerifiedAt.Valid || row.VerifiedAt.InfinityModifier != pgtype.Finite || !row.VerifiedSchemaVersion.Valid || !row.VerifiedRowCount.Valid || !row.VerifiedFeatureCount.Valid {
+		if version.Failure != nil || !row.VerifiedAt.Valid || row.VerifiedAt.InfinityModifier != pgtype.Finite || !row.VerifiedSchemaVersion.Valid || !row.VerifiedRowCount.Valid || !row.VerifiedFeatureCount.Valid || !row.PreparedFormat.Valid || !row.PreparedTransformID.Valid || !row.PreparedSizeBytes.Valid || !row.PreparedSha256.Valid || !row.PreparedRowCount.Valid {
 			return biz.InputVersion{}, biz.ErrPersistence
 		}
+		prepared := cpup01.PreparedDatasetFacts{Format: row.PreparedFormat.String, TransformID: row.PreparedTransformID.String, SizeBytes: row.PreparedSizeBytes.Int64, SHA256: row.PreparedSha256.String, RowCount: row.PreparedRowCount.Int64}
 		if request.InputFormat() == "JSON" {
 			proof := biz.VerifiedAlpaca{
 				VerifiedObject: biz.VerifiedObject{Object: request.Object, VerifiedAt: row.VerifiedAt.Time.UTC()},
-				SchemaVersion:  row.VerifiedSchemaVersion.String, RowCount: uint32(row.VerifiedRowCount.Int32),
+				SchemaVersion:  row.VerifiedSchemaVersion.String, RowCount: row.VerifiedRowCount.Int64, PreparedDataset: prepared,
 			}
-			if row.VerifiedFeatureCount.Int32 != 0 || row.VerifiedRowCount.Int32 <= 0 || proof.ValidateFor(request) != nil {
+			if row.VerifiedFeatureCount.Int32 != 0 || row.VerifiedRowCount.Int64 <= 0 || proof.ValidateFor(request) != nil {
 				return biz.InputVersion{}, biz.ErrPersistence
 			}
 			version.AlpacaVerification = &proof
@@ -171,7 +196,7 @@ func versionFromRow(row inputsql.ModeldevInputVersion) (biz.InputVersion, error)
 		}
 		proof := biz.VerifiedCSV{
 			VerifiedObject: biz.VerifiedObject{Object: request.Object, VerifiedAt: row.VerifiedAt.Time.UTC()},
-			SchemaVersion:  row.VerifiedSchemaVersion.String, RowCount: uint32(row.VerifiedRowCount.Int32), FeatureCount: uint32(row.VerifiedFeatureCount.Int32),
+			SchemaVersion:  row.VerifiedSchemaVersion.String, RowCount: row.VerifiedRowCount.Int64, FeatureCount: uint32(row.VerifiedFeatureCount.Int32), PreparedDataset: prepared,
 		}
 		if proof.ValidateFor(request) != nil {
 			return biz.InputVersion{}, biz.ErrPersistence

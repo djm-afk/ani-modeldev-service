@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component"
 	"google.golang.org/protobuf/encoding/protojson"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,12 +24,12 @@ import (
 )
 
 type invocation struct {
-	step          string
-	config        ownerConfig
-	claim         *modeldevv1.StepContext
-	candidateJSON *string
-	closeOnly     bool
-	kube          dynamic.Interface
+	step           string
+	config         ownerConfig
+	claim          *modeldevv1.StepContext
+	publicationRef *string
+	closeOnly      bool
+	kube           dynamic.Interface
 }
 
 // bootstrapInvocation is the CLI input boundary used before any business RPC.
@@ -59,17 +60,16 @@ func bootstrapInvocation(ctx context.Context, args []string, kube dynamic.Interf
 	executionID := flags.String("execution-id", "", "frozen execution identity")
 	specHash := flags.String("spec-hash", "", "frozen execution spec hash")
 	runID := flags.String("run-id", "", "actual KFP run identity")
-	taskID := flags.String("task-id", "", "actual KFP task identity")
 	pvcName := flags.String("pvc-name", "", "allocated workspace PVC candidate")
-	candidateFile := flags.String("candidate-file", "", "KFP candidate output file")
-	candidateJSON := flags.String("candidate-json", "", "KFP candidate input parameter")
+	referenceFile := flags.String("publication-ref-file", "", "KFP small publication reference output file")
+	reference := flags.String("publication-ref", "", "KFP small publication reference input parameter")
 	closeOnly := flags.Bool("close-only", false, "fence and observe close without publication proof")
 	if flags.Parse(args[1:]) != nil || flags.NArg() != 0 || *configFile == "" {
 		return invocation{}, invalid
 	}
 	provided := map[string]bool{}
 	flags.Visit(func(f *flag.Flag) { provided[f.Name] = true })
-	if provided["close-only"] && (step != "close" || (*closeOnly && (provided["candidate-file"] || provided["candidate-json"]))) {
+	if provided["close-only"] && (step != "close" || (*closeOnly && (provided["publication-ref-file"] || provided["publication-ref"]))) {
 		return invocation{}, invalid
 	}
 	var config ownerConfig
@@ -85,27 +85,27 @@ func bootstrapInvocation(ctx context.Context, args []string, kube dynamic.Interf
 	if config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 86400 || config.PollIntervalSeconds < 1 || config.PollIntervalSeconds > 30 {
 		return invocation{}, invalid
 	}
-	if provided["candidate-file"] && provided["candidate-json"] {
+	if provided["publication-ref-file"] && provided["publication-ref"] {
 		return invocation{}, invalid
 	}
-	if provided["candidate-file"] {
-		if step != "publish" && step != "close" && step != "register" {
+	if provided["publication-ref-file"] {
+		if step != "publish" {
 			return invocation{}, invalid
 		}
-		config.CandidateFile = *candidateFile
+		config.PublicationRefFile = *referenceFile
 	}
 	var candidate *string
-	if provided["candidate-json"] {
+	if provided["publication-ref"] {
 		if step != "close" && step != "register" {
 			return invocation{}, invalid
 		}
-		// Oversized and empty candidates are both missing publication proof. Let
-		// the close Runner report failure and request close, including upstream
-		// failure cases, instead of leaving the execution open at the CLI layer.
-		if len(*candidateJSON) > 1<<20 {
-			*candidateJSON = ""
+		if *reference != "" || step != "close" {
+			if _, err := cpup01.ParsePublicationRef([]byte(*reference)); err != nil {
+				return invocation{}, invalid
+			}
 		}
-		candidate = candidateJSON
+		config.PublicationRef = *reference
+		candidate = reference
 	}
 	if provided["pvc-name"] {
 		if step != "prepare" || *pvcName == "" || len(validation.IsDNS1123Subdomain(*pvcName)) != 0 {
@@ -113,7 +113,7 @@ func bootstrapInvocation(ctx context.Context, args []string, kube dynamic.Interf
 		}
 		config.PVCName = *pvcName
 	}
-	dynamicIdentity := provided["execution-id"] || provided["spec-hash"] || provided["run-id"] || provided["task-id"]
+	dynamicIdentity := provided["execution-id"] || provided["spec-hash"] || provided["run-id"]
 	if dynamicIdentity && config.ContextFile != "" {
 		return invocation{}, invalid
 	}
@@ -129,22 +129,13 @@ func bootstrapInvocation(ctx context.Context, args []string, kube dynamic.Interf
 		if claim.Step != stepValue {
 			return invocation{}, invalid
 		}
-		return invocation{step: step, config: config, claim: claim, candidateJSON: candidate, closeOnly: *closeOnly, kube: kube}, nil
+		return invocation{step: step, config: config, claim: claim, publicationRef: candidate, closeOnly: *closeOnly, kube: kube}, nil
 	}
 	if !canonicalUUID(config.TenantID) || !canonicalUUID(config.NamespaceUID) || !canonicalUUID(*executionID) || !canonicalUUID(*runID) || len(*specHash) != 64 || strings.ToLower(*specHash) != *specHash {
 		return invocation{}, invalid
 	}
 	if _, err := hex.DecodeString(*specHash); err != nil {
 		return invocation{}, invalid
-	}
-	if provided["task-id"] {
-		if *taskID == "" || len(*taskID) > 256 || strings.IndexFunc(*taskID, func(r rune) bool { return r <= ' ' || r > '~' }) >= 0 {
-			return invocation{}, invalid
-		}
-		if config.TaskID != "" && config.TaskID != *taskID {
-			return invocation{}, invalid
-		}
-		config.TaskID = *taskID
 	}
 	podName, podUID, namespace := os.Getenv("ANI_POD_NAME"), os.Getenv("ANI_POD_UID"), os.Getenv("ANI_POD_NAMESPACE")
 	if podName == "" || namespace == "" || len(validation.IsDNS1123Subdomain(podName)) != 0 || len(validation.IsDNS1123Label(namespace)) != 0 || !canonicalUUID(podUID) {
@@ -180,7 +171,7 @@ func bootstrapInvocation(ctx context.Context, args []string, kube dynamic.Interf
 		Association: &modeldevv1.RunAssociation{KfpRunId: *runID, NamespaceName: namespace, NamespaceUid: config.NamespaceUID, WorkflowName: controller.Name, WorkflowUid: string(controller.UID), PodName: podName, PodUid: podUID},
 		Step:        stepValue,
 	}
-	return invocation{step: step, config: config, claim: claim, candidateJSON: candidate, closeOnly: *closeOnly, kube: kube}, nil
+	return invocation{step: step, config: config, claim: claim, publicationRef: candidate, closeOnly: *closeOnly, kube: kube}, nil
 }
 
 func canonicalUUID(value string) bool {

@@ -24,10 +24,10 @@ import (
 )
 
 const (
-	schemaVersion = "ani.modeldev.managed-admission-facts.v2.1"
+	schemaVersion = "ani.modeldev.managed-admission-facts.v3"
 	maxFiles      = 64
-	maxFileBytes  = 64 * 1024
-	maxJSONDepth  = 16
+	maxFileBytes  = cpup01.MaxMaterialBytes
+	maxJSONDepth  = cpup01.MaxJSONDepth
 )
 
 var (

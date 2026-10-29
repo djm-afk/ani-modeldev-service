@@ -84,6 +84,7 @@ sql: check-sqlc
 
 vectors:
 	python3 scripts/generate-contract-vectors.py
+	python3 scripts/generate-structure-limits.py
 
 generate: config api sql vectors
 	$(GO) generate ./...
@@ -102,7 +103,6 @@ verify: check-buf check-sqlc
 	./scripts/verify-source $(BUF) $(SQLC)
 	$(GO) mod tidy -diff
 	$(GO) test -count=1 ./...
-	GO="$(GO)" bash ./scripts/verify-revision-upgrade
 	$(GO) vet ./...
 	$(GO) build -trimpath ./...
 	$(GO) mod verify

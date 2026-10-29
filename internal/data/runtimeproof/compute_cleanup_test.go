@@ -178,11 +178,8 @@ func newComputeCleanupClosingFixture(t *testing.T, fine bool, closeReason string
 				t.Fatal(err)
 			}
 		}
-		if method := reflect.ValueOf(repository).MethodByName("BeginComputeCleanup"); method.IsValid() {
-			values := method.Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(step.f.authority()), reflect.ValueOf(uint64(0))})
-			if values[1].IsNil() {
-				t.Fatal("terminal training without CLOSED/fence authorized compute cleanup")
-			}
+		if _, err := repository.BeginComputeCleanup(ctx, step.f.authority(), 0); err == nil {
+			t.Fatal("terminal training without CLOSED/fence authorized compute cleanup")
 		}
 	}, deadline...)
 	return f
@@ -470,25 +467,9 @@ func (f *computeCleanupFixture) worker(t *testing.T) *biz.CloseWorker {
 	if err != nil {
 		t.Fatal(err)
 	}
-	closer, err := biz.NewExecutionCloser(runtime, f.step.f.runs, f.step.proof, f.step.proof)
+	closer, err := biz.NewExecutionCloser(runtime, f.step.f.runs, f.step.proof, f.step.proof, f.step.proof)
 	if err != nil {
 		t.Fatal(err)
-	}
-	// The regression runs unchanged against the frozen pre-feature source and
-	// produces a behavioral RED when the automatic capability is absent.
-	core, err := coreclient.NewForConfig(f.step.clientConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if method := reflect.ValueOf(f.step.proof).MethodByName("WithTrainingLogs"); method.IsValid() {
-		method.Call([]reflect.Value{reflect.ValueOf(traininglogs.New(core))})
-	}
-	if method := reflect.ValueOf(closer).MethodByName("WithComputeCleanup"); method.IsValid() {
-		values := method.Call([]reflect.Value{reflect.ValueOf(f.step.proof)})
-		if !values[1].IsNil() {
-			t.Fatal(values[1].Interface())
-		}
-		closer = values[0].Interface().(*biz.ExecutionCloser)
 	}
 	worker, err := biz.NewCloseWorker(facts, closer, biz.PipelineDispatchBinding{TenantID: f.step.f.execution.TenantID, Environment: f.step.f.execution.Snapshot.Environment, Owner: f.step.f.dispatch.Plan.Owner}, 10, 100*time.Millisecond)
 	if err != nil {
@@ -533,7 +514,11 @@ func TestAutomaticComputeCleanupOriginalGraphAndRestart(t *testing.T) {
 			}
 			query := service.NewQuery(execution.New(f.step.open()), nil)
 			queryContext := service.WithVerifiedGovernanceQuery(context.Background(), service.GovernanceDelivery{TenantID: f.step.f.execution.TenantID, RequestID: "post-cleanup-log-read"}, modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName)
-			logResult, err := query.GetExecutionLogs(queryContext, &modeldevv1.GetExecutionLogsRequest{ExecutionId: f.step.f.execution.ExecutionID})
+			source, err := biz.TrainingLogSourceFor(biz.QueryRecord{Execution: f.step.f.execution, Runtime: state}, "")
+			if err != nil {
+				t.Fatal("original persisted worker identity", err)
+			}
+			logResult, err := query.GetExecutionLogs(queryContext, &modeldevv1.GetExecutionLogsRequest{ExecutionId: f.step.f.execution.ExecutionID, PodUid: &source.PodUID, LogId: &source.LogID})
 			if err != nil || len(logResult.GetLines()) != 1 || logResult.Source.ResourceUid != "training-pod-original" || logResult.Lines[0].Text != "actual retained training output" {
 				t.Fatal("original durable logs unavailable after all API objects were removed", err)
 			}

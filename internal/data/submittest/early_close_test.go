@@ -13,7 +13,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component"
 )
 
-func TestMainFlowEarlyCloseBeforeBeginPersistsClosedWithoutTrainingPermit(t *testing.T) {
+func TestMainFlowEarlyCloseBeforeBeginPersistsClosingWithoutTrainingPermit(t *testing.T) {
 	f, client, facts, _, _ := bootstrapFixture(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -43,7 +43,7 @@ func TestMainFlowEarlyCloseBeforeBeginPersistsClosedWithoutTrainingPermit(t *tes
 	if err := os.WriteFile(tokenFile, []byte("synthetic-bound-close"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	runner, err := component.New(component.Config{TenantID: f.request.Admission.TenantID, Context: claim, TokenFile: tokenFile, CandidateFile: filepath.Join(t.TempDir(), "missing-candidate.json")}, client, nil, nil)
+	runner, err := component.New(component.Config{TenantID: f.request.Admission.TenantID, Context: claim, TokenFile: tokenFile}, client, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,8 +51,12 @@ func TestMainFlowEarlyCloseBeforeBeginPersistsClosedWithoutTrainingPermit(t *tes
 		t.Fatal("early pipeline failure must not become a successful component result")
 	}
 	closed, err := facts.GetRuntime(ctx, f.request.Admission.TenantID, f.request.Admission.ExecutionID)
-	if err != nil || closed.CloseGeneration == 0 || closed.ClosedAt == nil || closed.CloseReason != "STEP_FAILED" || closed.Workspace != nil || closed.Training != nil || closed.Publication != nil || closed.CloseEvidence == nil || len(closed.CloseEvidence.SkippedTasks) != 4 || len(closed.CloseEvidence.Resources) != 0 {
-		t.Fatalf("EARLY_CLOSE_NOT_IMPLEMENTED: verified skipped workflow must atomically close its unbound execution: %+v %v", closed, err)
+	if err != nil || closed.CloseGeneration == 0 || closed.ClosedAt != nil || closed.CloseReason != "STEP_FAILED" || closed.Workspace != nil || closed.Training != nil || closed.Publication != nil || closed.CloseEvidence != nil || closed.CloseAuthority == nil {
+		t.Fatalf("EARLY_CLOSE_HANDOFF_NOT_IMPLEMENTED: authenticated finalizer must fence its original owner without inventing CLOSED: %+v %v", closed, err)
+	}
+	receipt, err := client.RequestExecutionClose(bootstrapCall(ctx, f, "synthetic-bound-close"), &modeldevv1.RequestExecutionCloseRequest{Context: claim, Reason: modeldevv1.CloseReason_CLOSE_REASON_STEP_FAILED})
+	if err != nil || !receipt.Replayed || receipt.CloseGeneration != closed.CloseGeneration || receipt.CloseState != modeldevv1.CloseState_CLOSE_STATE_CLOSING {
+		t.Fatalf("early close replay replaced its original fence: %+v %v", receipt, err)
 	}
 	waitClaim := f.stepContext("train-wait")
 	waitClaim.Identity.OperationId = ""

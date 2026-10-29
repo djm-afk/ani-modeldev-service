@@ -67,7 +67,7 @@ func TestTrainedArtifactCopyReadsOriginalVersionAndSendsOneControlledPUT(t *test
 				return aws.Credentials{AccessKeyID: "synthetic-publication-key", SecretAccessKey: "synthetic-publication-secret"}, nil
 			})
 			store := s3.New(s3.Options{Region: "test-region", BaseEndpoint: aws.String(peer.URL), UsePathStyle: true, HTTPClient: transport, Credentials: credentials, RetryMaxAttempts: 1})
-			source := NewVerifier(store, "fixed-store", 1024)
+			source := NewVerifier(store, "fixed-store")
 			copier, err := NewTrainedArtifactCopier(source, transport, peer.URL, "models")
 			if err != nil {
 				t.Fatal(err)

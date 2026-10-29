@@ -45,11 +45,7 @@ func (c *Bootstrap) Validate() error {
 				return err
 			}
 		}
-		if c.Command.ControlledModelFacts != nil {
-			if err := validateControlledModelFacts(c.Command.ControlledModelFacts); err != nil {
-				return err
-			}
-		}
+
 	}
 	commandMaximum := maximumTimeout
 	if c.Command != nil && c.Command.Model != nil {
@@ -80,6 +76,9 @@ func (c *Bootstrap) Validate() error {
 }
 
 func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) error {
+	if _, err := config.ContentLimits(); err != nil {
+		return err
+	}
 	if config.Step == nil || config.Kubernetes == nil || config.Pipeline == nil || config.ObjectStorage == nil {
 		return fmt.Errorf("managed runtime requires step, Kubernetes, pipeline and storage configuration")
 	}
@@ -105,8 +104,8 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 	if len(config.BindingSha256) != 64 || strings.Trim(config.BindingSha256, "0123456789abcdef") != "" || config.TokenAudience == "" || len(config.TokenAudience) > 2048 || strings.ContainsAny(config.TokenAudience, " \t\r\n") {
 		return fmt.Errorf("managed runtime requires a pinned binding and token audience")
 	}
-	if config.ObjectStorage.ConnectionId == "" || config.ObjectStorage.Region == "" || config.ObjectStorage.MaxObjectBytes <= 0 {
-		return fmt.Errorf("managed storage requires connection, region and a positive read limit")
+	if config.ObjectStorage.ConnectionId == "" || config.ObjectStorage.Region == "" {
+		return fmt.Errorf("managed storage requires connection and region")
 	}
 	if err := validateDuration("managed API", config.ApiTimeout, maximumTimeout); err != nil {
 		return err
@@ -123,6 +122,31 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 		return fmt.Errorf("dispatch requires interval at least 100ms and batch size 1..100")
 	}
 	return nil
+}
+
+func (config *ManagedRuntime) ContentLimits() (cpup01.ContentLimits, error) {
+	if config == nil || config.Limits == nil {
+		return cpup01.ContentLimits{}, fmt.Errorf("runtime.limits.max_content_bytes is required")
+	}
+	limits := cpup01.ContentLimits{MaxContentBytes: config.Limits.MaxContentBytes}
+	if err := limits.Validate(); err != nil {
+		return cpup01.ContentLimits{}, fmt.Errorf("runtime.limits.max_content_bytes: %w", err)
+	}
+	return limits, nil
+}
+
+func (config *ManagedRuntime) ImportTimeout() time.Duration {
+	if config.GetImportTimeoutSeconds() == 0 {
+		return 1800 * time.Second
+	}
+	return time.Duration(config.GetImportTimeoutSeconds()) * time.Second
+}
+
+func (config *ManagedRuntime) ModelResolutionTimeout() time.Duration {
+	if config.GetModelResolutionTimeoutSeconds() == 0 {
+		return 300 * time.Second
+	}
+	return time.Duration(config.GetModelResolutionTimeoutSeconds()) * time.Second
 }
 
 var commandDNSName = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$`)
@@ -169,22 +193,6 @@ func validateModelConnection(config *ModelConnection) error {
 		return fmt.Errorf("model connection requires valid base-model storage authority")
 	}
 	return validateDuration("model connection", config.Timeout, maximumModelOperationTimeout)
-}
-
-// validateControlledModelFacts accepts only explicitly pinned, shape-checked
-// references. Its presence enables an isolated boundary substitute, not a
-// production Model dependency or a public capability.
-func validateControlledModelFacts(config *ControlledModelFacts) error {
-	if len(config.Files) == 0 || len(config.Files) > 64 {
-		return fmt.Errorf("controlled model facts require 1..64 explicitly pinned files")
-	}
-	for _, file := range config.Files {
-		if file == nil || !filepath.IsAbs(file.Path) || filepath.Clean(file.Path) != file.Path || strings.ContainsRune(file.Path, 0) ||
-			len(file.Sha256) != 64 || strings.Trim(file.Sha256, "0123456789abcdef") != "" {
-			return fmt.Errorf("controlled model facts require absolute file references and lowercase SHA256 pins")
-		}
-	}
-	return nil
 }
 
 func validateAdmissionResolution(config *AdmissionResolution) error {

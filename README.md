@@ -5,8 +5,9 @@ Module: `github.com/zhangzhe-ctrl/ani-modeldev-service`
 This repository was generated from ANI's pinned Kratos layout. It is an
 independent source snapshot: builds and runtime do not require the layout.
 
-CPU-P01 的已实现功能、架构与扩展方式、环境部署和用户操作见
-[CPU-P01 功能、实现、扩展、部署与使用指南](docs/cpu-p01-guide.md)。
+当前训练与微调材料只通过 [execution material generator](scripts/modeldev-execution-materials/README.md)
+生成，并使用 [managed runtime 配置](configs/examples/managed-runtime.yaml)。旧手工 Release
+部署、投影和验收脚本已退役；历史操作记录保留在 Git 的发布快照中。
 
 CPU 受管微调的执行主链、隔离验收装配和保留的上游依赖边界见
 [CPU managed fine tuning execution slice](docs/finetuning-core-flow.md)。
@@ -44,18 +45,6 @@ Python 3. To use an already prepared task-owned test database, provide protected
 `CPU_P01_TEST_DATABASE_URL` and `CPU_P01_TEST_DATABASE_ADMIN_URL` environment
 references and run `make verify` directly. Missing database conditions fail the
 persistence tests; they are never silently skipped. These are module checks.
-
-`make verify` also runs the explicit `revisionupgrade` lane. It builds a private
-old-writer test binary from retained commit
-`a827457f999646394518c640d7c21915e1321496`, seeds an isolated pre-0012 schema through
-the real old repositories, and verifies migration retention with the current
-schema. The sole current decoder rejects those historical snapshot bytes;
-retaining their data does not enable an old runtime codec.
-Keep full Git history available, as CI does; missing historical source, build,
-binary or database conditions fail this lane rather than skip it. The script
-records the source and binary SHA256 and removes only its temporary export.
-No developer scratch files or prebuilt binary are required. Plain `go test ./...`
-excludes this tagged lane and does not establish upgrade verification.
 
 After the initial source commit, run `make supply-chain-tools` and `make audit`;
 review and commit `docs/scaffold/bom.cdx.json`. CI deliberately fails when that

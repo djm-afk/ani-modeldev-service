@@ -139,10 +139,7 @@ const (
 	EventScopeWarning ExecutionEventScope = "warning"
 )
 
-func ParseEventScope(value string, warningOnly bool) (ExecutionEventScope, bool) {
-	if warningOnly {
-		return EventScopeWarning, true
-	}
+func ParseEventScope(value string) (ExecutionEventScope, bool) {
 	switch ExecutionEventScope(value) {
 	case "", EventScopeKey:
 		return EventScopeKey, true

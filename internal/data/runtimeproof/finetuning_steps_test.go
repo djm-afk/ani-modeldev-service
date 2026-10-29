@@ -46,7 +46,7 @@ func finetuningPredecessorFixture(t *testing.T) (*ownerCloseFixture, biz.Managed
 	completed := time.Now().UTC().Add(-time.Second)
 	f.pods = nil
 	tasks := []any{}
-	for i, role := range []string{"train-wait", "export", "verify"} {
+	for _, role := range []string{"train-wait", "export", "verify"} {
 		name, uid := role+"-original-pod", "77777777-aaaa-4bbb-8ccc-dddddddddddd"
 		if role == "export" {
 			uid = "99999999-aaaa-4bbb-8ccc-dddddddddddd"
@@ -59,7 +59,7 @@ func finetuningPredecessorFixture(t *testing.T) (*ownerCloseFixture, biz.Managed
 		if role == "verify" {
 			state = "RUNNING"
 		}
-		tasks = append(tasks, map[string]any{"run_id": f.runID, "task_id": role + "-task-id", "display_name": role, "pod_name": name, "state": state, "index": i})
+		tasks = append(tasks, nativeTaskFixture(t, f.workflow, pod, f.runID, role+"-task-id", role, state))
 		f.pods = append(f.pods, *pod)
 	}
 	f.run["run_details"] = map[string]any{"task_details": tasks}

@@ -6,19 +6,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"os"
 	"sort"
 	"strings"
 	"testing"
 
-	modelv1 "github.com/zhangzhe-ctrl/ani-model-service/api/model/v1"
+	modelv1 "github.com/liangzai006/ani-model-service/api/model/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"google.golang.org/protobuf/proto"
 )
 
-// This substitutes only the external Model owner response. It cannot write a
-// model, approve a parameter or bypass the admission's real domain behavior.
 type liveModelBoundary struct {
 	response *modelv1.ResolveFinetuningFactsResponse
 	calls    int
@@ -31,182 +30,219 @@ func (b *liveModelBoundary) ResolveFinetuningFacts(_ context.Context, tenant str
 	return proto.Clone(b.response).(*modelv1.ResolveFinetuningFactsResponse), nil
 }
 
+var modelTestLimits = cpup01.ContentLimits{MaxContentBytes: 1 << 20}
+
 func liveModelFixture(t *testing.T) (*liveModelBoundary, cpup01.StorageScope, cpup01.Intent, cpup01.ImplementationMaterial) {
 	t.Helper()
 	intent := conformance.FinetuningIntentV1()
 	tenant := conformance.SnapshotV1().IdentityRef.TenantID
-	config := []byte(`{"model_type":"qwen2","architectures":["Qwen2ForCausalLM"],"hidden_size":896,"num_hidden_layers":24,"num_attention_heads":14,"num_key_value_heads":2,"intermediate_size":4864,"vocab_size":151936,"torch_dtype":"bfloat16","max_position_embeddings":32768}`)
-	tokenizer := []byte(`{"tokenizer_class":"Qwen2Tokenizer","model_max_length":32768}`)
+	config := []byte(`{"model_type":"llama","architectures":["LlamaForCausalLM"],"hidden_size":128,"torch_dtype":"float32","max_position_embeddings":8192}`)
+	tokenizer := []byte(`{"tokenizer_class":"LlamaTokenizer","model_max_length":8192,"chat_template":"{{ messages }}"}`)
 	out := &modelv1.ResolveFinetuningFactsResponse{TenantId: tenant, ModelId: "66666666-6666-4666-8666-666666666666", ModelVersionId: *intent.BaseModelVersionID, Format: "safetensors", Bucket: "ani-models", ObjectKey: tenant + "/models/original/model.tar", ObjectVersionId: "original-s3-version", SizeBytes: 16384, Sha256: strings.Repeat("a", 64), ConfigJson: config, TokenizerConfigJson: tokenizer, Target: &modelv1.ResolveFinetuningFactsResponse_NewModelName{NewModelName: *intent.NewModelName}, VerificationSource: modelv1.FinetuningVerificationSource}
-	for name, raw := range map[string][]byte{"config.json": config, "model.safetensors": []byte("original-weight-boundary-bytes"), "tokenizer.json": []byte("{}"), "tokenizer_config.json": tokenizer} {
-		digest := sha256.Sum256(raw)
-		out.Files = append(out.Files, &modelv1.FinetuningArtifactFile{Path: name, SizeBytes: int64(len(raw)), Sha256: hex.EncodeToString(digest[:])})
+	for name, raw := range map[string][]byte{"config.json": config, "model.safetensors": []byte("original-weight-boundary-bytes"), "tokenizer.model": []byte("native-sentencepiece-boundary"), "tokenizer_config.json": tokenizer} {
+		setLiveFile(out, name, raw)
 	}
-	sort.Slice(out.Files, func(i, j int) bool { return out.Files[i].Path < out.Files[j].Path })
 	return &liveModelBoundary{response: out}, cpup01.StorageScope{StorageConnectionID: "model-store-v1", Bucket: "ani-models", ApprovedPrefix: tenant + "/models", CredentialReference: "model-base-read"}, intent, conformance.FinetuningMaterialV21()
 }
-
-func changeLiveConfig(t *testing.T, out *modelv1.ResolveFinetuningFactsResponse, key string, value any) {
+func setLiveFile(out *modelv1.ResolveFinetuningFactsResponse, name string, raw []byte) {
+	hash := sha256.Sum256(raw)
+	next := &modelv1.FinetuningArtifactFile{Path: name, SizeBytes: int64(len(raw)), Sha256: hex.EncodeToString(hash[:])}
+	for i, f := range out.Files {
+		if f.Path == name {
+			out.Files[i] = next
+			return
+		}
+	}
+	out.Files = append(out.Files, next)
+	sort.Slice(out.Files, func(i, j int) bool { return out.Files[i].Path < out.Files[j].Path })
+}
+func changeLiveJSON(t *testing.T, out *modelv1.ResolveFinetuningFactsResponse, name, key string, value any) {
 	t.Helper()
-	var config map[string]any
-	if json.Unmarshal(out.ConfigJson, &config) != nil {
-		t.Fatal("fixture config")
+	raw := out.ConfigJson
+	if name == "tokenizer_config.json" {
+		raw = out.TokenizerConfigJson
 	}
-	config[key] = value
-	raw, err := json.Marshal(config)
+	var values map[string]any
+	d := json.NewDecoder(strings.NewReader(string(raw)))
+	d.UseNumber()
+	if d.Decode(&values) != nil {
+		t.Fatal("fixture JSON")
+	}
+	if value == nil {
+		delete(values, key)
+	} else {
+		values[key] = value
+	}
+	next, err := json.Marshal(values)
 	if err != nil {
 		t.Fatal(err)
 	}
-	out.ConfigJson = raw
-	digest := sha256.Sum256(raw)
-	for _, file := range out.Files {
-		if file.Path == "config.json" {
-			file.SizeBytes = int64(len(raw))
-			file.Sha256 = hex.EncodeToString(digest[:])
-		}
+	if name == "config.json" {
+		out.ConfigJson = next
+	} else {
+		out.TokenizerConfigJson = next
 	}
+	setLiveFile(out, name, next)
 }
-
-func TestLiveModelReaderRejectsCutoffAboveOriginalTokenizerBoundary(t *testing.T) {
-	boundary, scope, intent, material := liveModelFixture(t)
-	cutoff := int64(96)
-	intent.Finetuning.CutoffLen = &cutoff
-	boundary.response.TokenizerConfigJson = []byte(`{"tokenizer_class":"Qwen2Tokenizer","model_max_length":64}`)
-	digest := sha256.Sum256(boundary.response.TokenizerConfigJson)
-	for _, file := range boundary.response.Files {
-		if file.Path == "tokenizer_config.json" {
-			file.SizeBytes = int64(len(boundary.response.TokenizerConfigJson))
-			file.Sha256 = hex.EncodeToString(digest[:])
-		}
-	}
-	reader, err := NewLive(boundary, scope)
+func TestLiveModelReaderFreezesGenericOriginalFactsWithoutInventedFiles(t *testing.T) {
+	b, scope, intent, material := liveModelFixture(t)
+	reader, err := NewLive(b, scope, modelTestLimits)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), boundary.response.TenantId, intent, material); !errors.Is(err, biz.ErrInvalidAdmission) {
-		t.Fatal("cutoff above the verified original tokenizer boundary was admitted", err)
-	}
-}
-
-func TestLiveModelReaderUsesFiniteOriginalContextAndMaterialLimits(t *testing.T) {
-	for _, test := range []struct {
-		name      string
-		model     any
-		tokenizer any
-		cutoff    int64
-		material  int64
-		want      error
-	}{
-		{"model is smaller", 64, 256, 96, 32768, biz.ErrInvalidAdmission},
-		{"tokenizer boundary is inclusive", 256, 64, 64, 32768, nil},
-		{"one above tokenizer boundary", 256, 64, 65, 32768, biz.ErrInvalidAdmission},
-		{"model boundary is inclusive", 64, 256, 64, 32768, nil},
-		{"material is smaller", 256, 256, 96, 64, biz.ErrInvalidAdmission},
-		{"omitted cutoff uses implementation default", 64, 64, 0, 32768, biz.ErrInvalidAdmission},
-		{"tokenizer sentinel uses model boundary", 32768, json.Number("1000000000000000019884624838656"), 32768, 65536, nil},
-		{"sentinel does not enlarge model boundary", 32768, json.Number("1000000000000000019884624838656"), 32769, 65536, biz.ErrInvalidAdmission},
-		{"int64 maximum is not a finite limit", nil, json.Number("9223372036854775807"), 96, 32768, biz.ErrModelDependencyUnavailable},
-		{"missing model boundary uses finite tokenizer", nil, 128, 96, 32768, nil},
-		{"no finite boundary", nil, nil, 96, 32768, biz.ErrModelDependencyUnavailable},
-		{"invalid boundaries are unavailable", -1, "128", 96, 32768, biz.ErrModelDependencyUnavailable},
-		{"fractional boundaries are not integers", json.Number("128.5"), 0, 96, 32768, biz.ErrModelDependencyUnavailable},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			boundary, scope, intent, material := liveModelFixture(t)
-			changeLiveConfig(t, boundary.response, "max_position_embeddings", test.model)
-			tokenizer, err := json.Marshal(map[string]any{"tokenizer_class": "Qwen2Tokenizer", "model_max_length": test.tokenizer})
-			if err != nil {
-				t.Fatal(err)
-			}
-			boundary.response.TokenizerConfigJson = tokenizer
-			digest := sha256.Sum256(tokenizer)
-			for _, file := range boundary.response.Files {
-				if file.Path == "tokenizer_config.json" {
-					file.SizeBytes = int64(len(tokenizer))
-					file.Sha256 = hex.EncodeToString(digest[:])
-				}
-			}
-			if test.cutoff != 0 {
-				cutoff := test.cutoff
-				intent.Finetuning.CutoffLen = &cutoff
-			}
-			material.Finetuning.MaxSequenceLength = test.material
-			reader, err := NewLive(boundary, scope)
-			if err != nil {
-				t.Fatal(err)
-			}
-			base, err := reader.ResolveFinetuningModelFacts(context.Background(), boundary.response.TenantId, intent, material)
-			if !errors.Is(err, test.want) || test.want == nil && base.VersionID != *intent.BaseModelVersionID {
-				t.Fatal("original context boundary did not govern admission", err)
-			}
-		})
-	}
-}
-
-func TestLiveModelReaderFreezesOriginalVersionBytesAndInventory(t *testing.T) {
-	boundary, scope, intent, material := liveModelFixture(t)
-	reader, err := NewLive(boundary, scope)
-	if err != nil {
-		t.Fatal(err)
-	}
-	base, err := reader.ResolveFinetuningModelFacts(context.Background(), boundary.response.TenantId, intent, material)
-	if err != nil || boundary.calls != 1 || boundary.tenant != boundary.response.TenantId || base.ModelID != boundary.response.ModelId || base.VersionID != *intent.BaseModelVersionID || base.Family != "Qwen2.5-0.5B-Instruct" || base.Object.VersionID == nil || *base.Object.VersionID != "original-s3-version" || base.Object.SHA256 != boundary.response.Sha256 || base.Scope != scope || len(base.Files) != 4 {
-		t.Fatal("original Model facts were replaced", err)
+	base, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material)
+	if err != nil || b.calls != 1 || base.Facts.ModelType != "llama" || base.Facts.OriginalDtype != "float32" || base.Facts.ContextLimit != 8192 || base.Facts.WeightLayout.Kind != "SINGLE" || len(base.Facts.TemplateSources) != 1 || base.Facts.TemplateSources[0].Kind != "EMBEDDED" || len(base.Files) != 4 || base.Object.VersionID == nil || *base.Object.VersionID != "original-s3-version" || base.Object.SHA256 != b.response.Sha256 || base.Scope != scope {
+		t.Fatalf("generic fixed original model missing: %+v %v", base, err)
 	}
 	if _, err := base.BaseManifestSHA256(); err != nil {
 		t.Fatal(err)
 	}
-	// Another valid original digest is accepted by the same program structure;
-	// there is no second editable weight hash allowlist.
-	boundary.response.Sha256 = strings.Repeat("b", 64)
-	boundary.response.ObjectVersionId = "another-original-s3-version"
-	version := "88888888-8888-4888-8888-888888888888"
-	intent.BaseModelVersionID = &version
-	boundary.response.ModelVersionId = version
-	if next, err := reader.ResolveFinetuningModelFacts(context.Background(), boundary.response.TenantId, intent, material); err != nil || next.Object.SHA256 != boundary.response.Sha256 {
-		t.Fatal("program capability became a weight approval", err)
+	changeLiveJSON(t, b.response, "config.json", "model_type", "qwen3")
+	material.Finetuning.RuntimeCapabilities.CausalLMModelTypes = append(material.Finetuning.RuntimeCapabilities.CausalLMModelTypes, "qwen3")
+	changeLiveJSON(t, b.response, "config.json", "hidden_size", 999)
+	if next, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material); err != nil || next.Facts.ModelType != "qwen3" {
+		t.Fatal("dimensions/family remained an approval gate", err)
 	}
 }
-
-func TestLiveModelReaderRejectsUnfixedForeignOrUnsupportedOriginalFacts(t *testing.T) {
-	for _, test := range []struct {
+func TestLiveModelReaderNormalizesRealShardedInventory(t *testing.T) {
+	b, scope, intent, material := liveModelFixture(t)
+	for i, f := range b.response.Files {
+		if f.Path == "model.safetensors" {
+			b.response.Files = append(b.response.Files[:i], b.response.Files[i+1:]...)
+			break
+		}
+	}
+	index := []byte(`{"weight_map":{"a":"part-1.safetensors","b":"part-1.safetensors","c":"part-2.safetensors"}}`)
+	b.response.WeightIndexJson = index
+	for name, raw := range map[string][]byte{"model.safetensors.index.json": index, "part-1.safetensors": []byte("first"), "part-2.safetensors": []byte("second")} {
+		setLiveFile(b.response, name, raw)
+	}
+	reader, _ := NewLive(b, scope, modelTestLimits)
+	base, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material)
+	if err != nil || base.Facts.WeightLayout.Kind != "SHARDED" || len(base.Facts.WeightLayout.ShardPaths) != 2 {
+		t.Fatalf("shards not normalized: %+v %v", base.Facts.WeightLayout, err)
+	}
+}
+func TestLiveModelReaderIncludesProvenNativeContextField(t *testing.T) {
+	b, scope, intent, material := liveModelFixture(t)
+	changeLiveJSON(t, b.response, "config.json", "seq_length", 32)
+	material.Finetuning.RuntimeCapabilities.ContextLimitFields = append(material.Finetuning.RuntimeCapabilities.ContextLimitFields, cpup01.ContextLimitField{Source: "config.json", Field: "seq_length"})
+	reader, _ := NewLive(b, scope, modelTestLimits)
+	base, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material)
+	if err != nil || base.Facts.ContextLimit != 32 {
+		t.Fatal("proven native context field ignored", err)
+	}
+}
+func TestLiveModelReaderRejectsUnfixedForeignOrChangedProviderFacts(t *testing.T) {
+	for _, tc := range []struct {
 		name   string
 		change func(*modelv1.ResolveFinetuningFactsResponse)
 	}{
 		{"null version", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ObjectVersionId = "null" }},
-		{"wrong tenant", func(r *modelv1.ResolveFinetuningFactsResponse) { r.TenantId = "99999999-9999-4999-8999-999999999999" }},
-		{"wrong target", func(r *modelv1.ResolveFinetuningFactsResponse) {
-			r.Target = &modelv1.ResolveFinetuningFactsResponse_NewModelName{NewModelName: "another-target"}
+		{"wrong tenant", func(r *modelv1.ResolveFinetuningFactsResponse) { r.TenantId = r.ModelId }},
+		{"foreign bucket", func(r *modelv1.ResolveFinetuningFactsResponse) { r.Bucket = "other" }},
+		{"foreign prefix", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ObjectKey = r.TenantId + "/other/model.tar" }},
+		{"config mismatch", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ConfigJson = append(r.ConfigJson, ' ') }},
+		{"injected target", func(r *modelv1.ResolveFinetuningFactsResponse) {
+			r.Target = &modelv1.ResolveFinetuningFactsResponse_NewModelName{NewModelName: "different"}
 		}},
-		{"foreign bucket", func(r *modelv1.ResolveFinetuningFactsResponse) { r.Bucket = "other-models" }},
-		{"unapproved prefix", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ObjectKey = r.TenantId + "/another/model.tar" }},
-		{"unverified source", func(r *modelv1.ResolveFinetuningFactsResponse) { r.VerificationSource = "caller-assertion" }},
-		{"changed config bytes", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ConfigJson = append(r.ConfigJson, ' ') }},
-		{"changed tokenizer bytes", func(r *modelv1.ResolveFinetuningFactsResponse) {
-			r.TokenizerConfigJson = append(r.TokenizerConfigJson, ' ')
-		}},
-		{"qwen3 family", func(r *modelv1.ResolveFinetuningFactsResponse) { changeLiveConfig(t, r, "model_type", "qwen3") }},
-		{"unsupported dimensions", func(r *modelv1.ResolveFinetuningFactsResponse) { changeLiveConfig(t, r, "hidden_size", 1024) }},
 	} {
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			b, scope, intent, material := liveModelFixture(t)
-			test.change(b.response)
-			reader, err := NewLive(b, scope)
-			if err != nil {
-				t.Fatal(err)
+			tc.change(b.response)
+			reader, _ := NewLive(b, scope, modelTestLimits)
+			if _, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material); !errors.Is(err, biz.ErrModelDependencyUnavailable) {
+				t.Fatal("unsafe provider observation admitted", err)
 			}
-			if _, err := reader.ResolveFinetuningModelFacts(context.Background(), conformance.SnapshotV1().IdentityRef.TenantID, intent, material); !errors.Is(err, biz.ErrModelDependencyUnavailable) || b.calls != 1 {
-				t.Fatal("unsafe original Model response became a base snapshot", err)
+		})
+	}
+}
+func TestLiveModelReaderUsesOneExplicitLogicalContentLimit(t *testing.T) {
+	b, scope, intent, material := liveModelFixture(t)
+	var logical int64
+	for _, f := range b.response.Files {
+		logical += f.SizeBytes
+	}
+	for _, limit := range []int64{logical, logical - 1} {
+		reader, err := NewLive(b, scope, cpup01.ContentLimits{MaxContentBytes: limit})
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material)
+		var failure *cpup01.LimitViolation
+		if limit == logical && err != nil || limit < logical && (!errors.As(err, &failure) || failure.Actual != logical || failure.Limit != limit || failure.Kind != "base_model") {
+			t.Fatalf("logical content boundary: %v", err)
+		}
+	}
+	if _, err := NewLive(b, scope, cpup01.ContentLimits{}); err == nil {
+		t.Fatal("omitted deployment L defaulted")
+	}
+}
+
+func TestModelContextUsesSharedGoPythonVectors(t *testing.T) {
+	raw, err := os.ReadFile("testdata/context-limit-vectors.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var vectors []struct {
+		Name              string `json:"name"`
+		Config, Tokenizer json.RawMessage
+		Want              int64  `json:"want"`
+		Error             string `json:"error"`
+	}
+	if json.Unmarshal(raw, &vectors) != nil {
+		t.Fatal("context vectors")
+	}
+	for _, v := range vectors {
+		t.Run(v.Name, func(t *testing.T) {
+			b, scope, intent, material := liveModelFixture(t)
+			for name, value := range map[string]json.RawMessage{"config.json": v.Config, "tokenizer_config.json": v.Tokenizer} {
+				key := "max_position_embeddings"
+				body := b.response.ConfigJson
+				if name == "tokenizer_config.json" {
+					key = "model_max_length"
+					body = b.response.TokenizerConfigJson
+				}
+				var object map[string]json.RawMessage
+				if json.Unmarshal(body, &object) != nil {
+					t.Fatal("fixture")
+				}
+				if len(value) == 0 {
+					delete(object, key)
+				} else {
+					object[key] = value
+				}
+				next, err := json.Marshal(object)
+				if err != nil {
+					t.Fatal(err)
+				}
+				setLiveFile(b.response, name, next)
+				if name == "config.json" {
+					b.response.ConfigJson = next
+				} else {
+					b.response.TokenizerConfigJson = next
+				}
+			}
+			reader, _ := NewLive(b, scope, modelTestLimits)
+			base, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material)
+			if v.Error != "" {
+				if err == nil || err.Error() != v.Error {
+					t.Fatalf("want %s got %v", v.Error, err)
+				}
+			} else if err != nil || base.Facts.ContextLimit != v.Want {
+				t.Fatalf("want %d got %d/%v", v.Want, base.Facts.ContextLimit, err)
 			}
 		})
 	}
 }
 
-func TestLiveModelReaderChecksInstalledByteBounds(t *testing.T) {
+func TestModelArchitectureAndOriginalDtypeRemainDescriptions(t *testing.T) {
 	b, scope, intent, material := liveModelFixture(t)
-	material.Finetuning.Budgets.MaxBaseModelBytes = b.response.SizeBytes - 1
-	reader, _ := NewLive(b, scope)
-	if _, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material); !errors.Is(err, biz.ErrModelDependencyUnavailable) {
-		t.Fatal("installed base byte bound omitted", err)
+	changeLiveJSON(t, b.response, "config.json", "architectures", nil)
+	changeLiveJSON(t, b.response, "config.json", "torch_dtype", map[string]any{"decoder": "float16"})
+	reader, _ := NewLive(b, scope, modelTestLimits)
+	base, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material)
+	if err != nil || len(base.Facts.Architectures) != 0 || base.Facts.OriginalDtype != `{"decoder":"float16"}` {
+		t.Fatalf("ARCHITECTURE_DTYPE_DESCRIPTION_REQUIRED: %+v %v", base.Facts, err)
 	}
 }

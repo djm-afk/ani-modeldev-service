@@ -159,6 +159,20 @@ func finetuningStartsTerminated(state biz.ExecutionRuntime, authority biz.RunAut
 }
 
 func validExecutionCloseEvidence(execution biz.Execution, authority biz.RunAuthorityCandidate, reason string, evidence biz.ManagedCloseEvidence) bool {
+	if fact := evidence.UnpreparedWorkspace; fact != nil {
+		if evidence.NoDispatch || evidence.OwnerTermination == nil || reason == "NATURAL_TERMINAL" || !biz.ValidUnpreparedWorkspace(execution, authority, fact) || fact.CreatedAt.After(evidence.ObservedAt) {
+			return false
+		}
+		matched := 0
+		for _, pod := range evidence.Resources {
+			if pod.UID == fact.CreatePodUID && pod.ExitCode != nil && *pod.ExitCode == 0 {
+				matched++
+			}
+		}
+		if matched != 1 {
+			return false
+		}
+	}
 	if execution.Snapshot.Kind != "FINETUNING" {
 		return validCloseEvidence(authority, reason, evidence)
 	}

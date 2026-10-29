@@ -199,8 +199,11 @@ func recycledWorkerPods(record biz.OperationRecord, executionID string) []biz.Ex
 			Name: resource.Name, UID: resource.UID, Layer: biz.PodLayerTrainer,
 			Availability: biz.PodAvailabilityRecycled, APIPresent: resource.APIObjectPresent,
 			ExitCode: resource.ExitCode, LogID: biz.TrainerLogID(executionID, resource.UID),
-			LogAvailable: record.Runtime.ComputeCleanup != nil && record.Runtime.ComputeCleanup.LogsReady,
-			Containers:   []biz.PodContainer{{Name: "node", Type: biz.ContainerTypeContainer, State: biz.ContainerStateTerminated}},
+			Containers: []biz.PodContainer{{Name: "node", Type: biz.ContainerTypeContainer, State: biz.ContainerStateTerminated}},
+		}
+		if resource.TrainingLog != nil {
+			source, err := biz.TrainingLogSourceFor(record.QueryRecord, pod.LogID)
+			pod.LogAvailable = err == nil && source == resource.TrainingLog.Source && biz.ValidateRecordedTrainingLogs(record.QueryRecord, []biz.RecordedTrainingLog{*resource.TrainingLog}) == nil
 		}
 		result = append(result, pod)
 	}
@@ -222,7 +225,7 @@ func (query *Query) ListExecutionEvents(ctx context.Context, request *modeldevv1
 	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 {
 		return nil, status.Error(codes.InvalidArgument, "invalid event query")
 	}
-	eventScope, valid := biz.ParseEventScope(request.Scope, request.WarningOnly)
+	eventScope, valid := biz.ParseEventScope(request.Scope)
 	if !valid {
 		return nil, status.Error(codes.InvalidArgument, "invalid event scope")
 	}

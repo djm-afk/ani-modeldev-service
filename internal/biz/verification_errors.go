@@ -1,17 +1,10 @@
 package biz
 
-// Source-unavailable errors describe an inability to obtain a complete source
-// observation. They retain the existing verification error contract without
-// retaining storage response text, endpoint URLs or credential-bearing errors.
+import "errors"
+
+// Complete-source outages and invalid source content are independent classes.
+// No storage response text, endpoint URL or credentials enter either error.
 var (
-	ErrObjectSourceUnavailable error = &verificationSourceError{"OBJECT_SOURCE_UNAVAILABLE", ErrObjectVerification}
-	ErrInputSourceUnavailable  error = &verificationSourceError{"INPUT_SOURCE_UNAVAILABLE", ErrInputVerification}
+	ErrObjectSourceUnavailable = errors.New("OBJECT_SOURCE_UNAVAILABLE")
+	ErrInputSourceUnavailable  = errors.New("INPUT_SOURCE_UNAVAILABLE")
 )
-
-type verificationSourceError struct {
-	code   string
-	parent error
-}
-
-func (err *verificationSourceError) Error() string { return err.code }
-func (err *verificationSourceError) Unwrap() error { return err.parent }

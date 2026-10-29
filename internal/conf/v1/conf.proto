@@ -32,6 +32,15 @@ message ManagedRuntime {
   uint32 dispatch_batch_size = 12;
   // Optional GPU-owner dependencies. CPU execution does not require them.
   ManagedGPUOwner gpu_owner = 13;
+  // The sole content policy. Presence and a positive representable value are
+  // required; storage connections carry no independent content limit.
+  RuntimeLimits limits = 14;
+  uint32 import_timeout_seconds = 15;
+  uint32 model_resolution_timeout_seconds = 16;
+}
+
+message RuntimeLimits {
+  int64 max_content_bytes = 1;
 }
 
 // Independent ModelDev owner identity for the finite GPU close RPC.
@@ -67,7 +76,8 @@ message ObjectStorageConnection {
   string region = 3;
   string credentials_file = 4;
   string connection_id = 5;
-  int64 max_object_bytes = 6;
+  reserved 6;
+  reserved "max_object_bytes";
   // Optional explicit streaming I/O budget. Absence preserves api_timeout.
   // Every request still consumes its original caller/stage deadline.
   google.protobuf.Duration streaming_timeout = 7;
@@ -86,19 +96,10 @@ message GovernanceCommand {
   AdmissionResolution admission_resolution = 6;
   // Absence keeps FINETUNING disabled and Model reads/writes unavailable.
   ModelConnection model = 7;
-  // Presence enables an explicitly pinned read-only Model boundary substitute
-  // for isolated FINETUNING candidacy. It never proves a Model permission,
-  // approval or protected status, and is not a public capability enablement.
-  ControlledModelFacts controlled_model_facts = 8;
+  reserved 8;
+  reserved "controlled_model_facts";
 }
 
-// ControlledModelFacts pins a read-only base-model boundary substitute used
-// only for isolated candidacy. It cannot manufacture tenant rights, approval,
-// protected status or fixed bytes beyond the explicitly reviewed documents.
-message ControlledModelFacts {
-  // Explicitly pinned 1..64 controlled documents; no directory scanning.
-  repeated AdmissionFactsFile files = 1;
-}
 
 // ModelConnection is the explicit ModelDev -> Model business mTLS dependency.
 // Every material is required when presence is declared; there is no plaintext,

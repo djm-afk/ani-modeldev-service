@@ -107,3 +107,10 @@ func TestRecordedKFPMappingRejectsOtherWorkflowAndContradictoryState(t *testing.
 		})
 	}
 }
+
+func TestCurrentTaskResolutionRejectsDirectPodNameWithoutNativeGraph(t *testing.T) {
+	tasks := []kfp.ManagedTask{{RunID: "original-run", ID: "old-task", Name: "prepare", PodName: "unproven-pod", State: "SUCCEEDED"}}
+	if _, err := resolvedManagedTasks(nil, tasks, nil); err == nil {
+		t.Fatal("accepted direct Pod name without native Workflow node and actual Pod UID")
+	}
+}

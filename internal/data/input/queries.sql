@@ -23,6 +23,11 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND input_version_id = sqlc.arg(input_version_id)::uuid
 FOR UPDATE;
 
+-- name: GetInputVersionByRequestID :one
+SELECT * FROM modeldev_input_versions
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND request_id = sqlc.arg(request_id)::uuid;
+
 -- name: ListInputVersions :many
 SELECT * FROM modeldev_input_versions
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
@@ -45,6 +50,11 @@ SET state = 'READY',
     verified_schema_version = sqlc.arg(verified_schema_version),
     verified_row_count = sqlc.arg(verified_row_count),
     verified_feature_count = sqlc.arg(verified_feature_count),
+    prepared_format = sqlc.arg(prepared_format),
+    prepared_transform_id = sqlc.arg(prepared_transform_id),
+    prepared_size_bytes = sqlc.arg(prepared_size_bytes),
+    prepared_sha256 = sqlc.arg(prepared_sha256),
+    prepared_row_count = sqlc.arg(prepared_row_count),
     failure_code = NULL,
     failure_observed_at = NULL
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid

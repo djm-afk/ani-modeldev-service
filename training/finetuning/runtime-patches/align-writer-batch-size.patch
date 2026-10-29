@@ -1,0 +1,10 @@
+--- a/src/llamafactory/data/converter.py
++++ b/src/llamafactory/data/converter.py
+@@ -412,6 +412,7 @@
+     if not data_args.streaming:
+         kwargs = dict(
+             num_proc=data_args.preprocessing_num_workers,
++            writer_batch_size=1,
+             load_from_cache_file=(not data_args.overwrite_cache) or (training_args.local_process_index != 0),
+             desc="Converting format of dataset",
+         )

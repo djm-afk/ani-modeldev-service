@@ -5,13 +5,14 @@ and does not mark an Execution successful or publish files to object storage.
 """
 
 import argparse
+from contextlib import contextmanager, ExitStack
 import csv
 from datetime import datetime, timezone
 from decimal import Decimal
 import hashlib
-import io
 import json
 import math
+import mmap
 import os
 from pathlib import Path
 import re
@@ -26,6 +27,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from implementation import defaults, implementation
 
 RULE = implementation("builtin.mlp")
+from dataset_manifest import (
+    load_dataset_manifest as load_frozen_dataset_manifest,
+    MAX_RECORD_BYTES, MAX_MANIFEST_BYTES,
+)
+DECIMAL_FEATURE = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
 
 
 def checked_path(value):
@@ -72,47 +78,115 @@ def check_output(path):
         )
 
 
-def load_selected_input(path, expected_sha256, expected_bytes):
-    if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
-        raise ValueError(
-            "expected input SHA256 must be 64 lowercase hexadecimal characters"
-        )
-    if not 0 < expected_bytes <= 32 * 1024 * 1024:
-        raise ValueError("expected input size must be between 1 byte and 32 MiB")
-    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-    with os.fdopen(descriptor, "rb") as stream:
-        identity = os.fstat(stream.fileno())
-        if not stat.S_ISREG(identity.st_mode):
-            raise ValueError("selected input must be a regular file")
-        if identity.st_size != expected_bytes:
-            raise ValueError("selected input size does not match the frozen input")
-        contents = stream.read(expected_bytes + 1)
-    digest = hashlib.sha256(contents).hexdigest()
-    if len(contents) != expected_bytes or digest != expected_sha256:
-        raise ValueError("selected input bytes do not match the frozen input")
+def unique_fields(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError(f"duplicate manifest field: {key}")
+        value[key] = item
+    return value
 
-    rows = list(
-        csv.reader(io.StringIO(contents.decode("utf-8"), newline=""), strict=True)
-    )
-    if len(rows) < 2:
-        raise ValueError("MLP input requires a header and at least one sample")
-    if rows[0] != [f"x{i}" for i in range(16)] + ["label"]:
-        raise ValueError("fixed CPU input requires exactly x0 through x15 and label")
-    features, labels = [], []
-    for row in rows[1:]:
-        if len(row) != 17 or row[-1] not in ("0", "1"):
-            raise ValueError(
-                "each sample requires 16 features and a binary integer label"
-            )
-        values = [float(value) for value in row[:-1]]
-        if any(
-            not math.isfinite(value) or abs(value) > 3.4028234663852886e38
-            for value in values
-        ):
-            raise ValueError("features must be finite float32 values")
-        features.append(values)
-        labels.append(int(row[-1]))
-    return contents, digest, features, labels
+
+def regular_file(path):
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    stream = os.fdopen(descriptor, "rb")
+    if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+        stream.close()
+        raise ValueError("workload inputs must be regular files")
+    return stream
+
+
+def load_dataset_manifest(path, expected_sha256):
+    return load_frozen_dataset_manifest(path, expected_sha256, "CSV")
+
+
+class CSVRecords:
+    """Bound physical reads while csv.reader recognizes a logical record."""
+
+    def __init__(self, stream):
+        self.stream = stream
+        self.digest = hashlib.sha256()
+        self.size = 0
+        self.record_bytes = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        raw = self.stream.readline(MAX_RECORD_BYTES - self.record_bytes + 1)
+        if not raw:
+            raise StopIteration
+        self.record_bytes += len(raw)
+        if self.record_bytes > MAX_RECORD_BYTES:
+            raise ValueError(f"MaxRecordBytes exceeded: actual={self.record_bytes} limit={MAX_RECORD_BYTES}")
+        self.size += len(raw)
+        self.digest.update(raw)
+        return raw.decode("utf-8")
+
+
+def checked_payload(rows, width):
+    if rows > int(RULE["integer_max"]) // width:
+        raise ValueError("training mmap byte count overflows int64")
+    return rows * width
+
+
+@contextmanager
+def selected_input_maps(path, manifest, work):
+    rows = int(manifest["row_count"])
+    sizes = {"features.f32": checked_payload(rows, 64),
+             "labels.i64": checked_payload(rows, 8),
+             "order.i64": checked_payload(rows, 8)}
+    if sys.byteorder != "little":
+        raise ValueError("the current MLP runtime requires little-endian storage")
+    work.mkdir(mode=0o700, parents=True, exist_ok=True)
+    checked_path(work)
+    paths = []
+    try:
+        with ExitStack() as stack:
+            maps = {}
+            for name, size in sizes.items():
+                target = work / name
+                descriptor = os.open(target, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                paths.append(target)
+                stream = stack.enter_context(os.fdopen(descriptor, "r+b"))
+                stream.truncate(size)
+                maps[name] = stack.enter_context(mmap.mmap(stream.fileno(), size))
+            with regular_file(path) as stream:
+                if os.fstat(stream.fileno()).st_size != int(manifest["prepared_size_bytes"]):
+                    raise ValueError("selected input size does not match the frozen input")
+                lines = CSVRecords(stream)
+                csv.field_size_limit(MAX_RECORD_BYTES)
+                records = csv.reader(lines, strict=True)
+                header = next(records, None)
+                if header != [f"x{i}" for i in range(16)] + ["label"]:
+                    raise ValueError("fixed CPU input requires exactly x0 through x15 and label")
+                count = 0
+                while True:
+                    lines.record_bytes = 0
+                    row = next(records, None)
+                    if row is None:
+                        break
+                    if len(row) != 17 or row[-1] not in ("0", "1"):
+                        raise ValueError("each sample requires 16 features and a binary integer label")
+                    if any("\r" in value or "\n" in value for value in row):
+                        raise ValueError("CSV numeric fields cannot contain CR or LF")
+                    if any(not DECIMAL_FEATURE.fullmatch(value.strip()) for value in row[:-1]):
+                        raise ValueError("CSV features must use the current decimal numeric grammar")
+                    values = [float(value) for value in row[:-1]]
+                    if any(not math.isfinite(value) or abs(value) > 3.4028234663852886e38 for value in values):
+                        raise ValueError("features must be finite float32 values")
+                    if count >= rows:
+                        raise ValueError("selected input row count exceeds the frozen input")
+                    struct.pack_into("<16f", maps["features.f32"], count * 64, *values)
+                    struct.pack_into("<q", maps["labels.i64"], count * 8, int(row[-1]))
+                    count += 1
+                if (count != rows or lines.size != int(manifest["prepared_size_bytes"])
+                    or lines.digest.hexdigest() != manifest["prepared_sha256"]):
+                    raise ValueError("selected input facts do not match the frozen input")
+            yield maps
+    finally:
+        for target in paths:
+            target.unlink()
 
 
 def write_json(path, value):
@@ -131,13 +205,23 @@ def terminate(signum, _frame):
     raise SystemExit(128 + signum)
 
 
+def evaluate(model, features, labels, batch_size, device, torch, criterion):
+    total = 0.0
+    with torch.no_grad():
+        for start in range(0, len(labels), batch_size):
+            batch_features = features[start:start + batch_size].to(device)
+            batch_labels = labels[start:start + batch_size].to(device)
+            total += float(criterion(model(batch_features), batch_labels))
+    return total / len(labels)
+
+
 def main():
     signal.signal(signal.SIGTERM, terminate)
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--expected-input-sha256", required=True)
-    parser.add_argument("--expected-input-bytes", required=True, type=int)
+    parser.add_argument("--dataset-manifest", required=True)
+    parser.add_argument("--work-root", required=True)
+    parser.add_argument("--expected-dataset-manifest-sha256", required=True)
     implementation_defaults = defaults("builtin.mlp")
     parser.add_argument(
         "--learning-rate", default=implementation_defaults["learning_rate"]
@@ -161,14 +245,19 @@ def main():
     seed = integer(args.seed, minimum=0, maximum=int(RULE["seed_max"]))
     if os.environ.get("WORLD_SIZE", "1") != "1":
         raise ValueError("the built-in MLP requires WORLD_SIZE=1")
-    data = checked_path(args.data)
     output = checked_path(args.output)
     check_output(output)
-    input_bytes, input_sha256, feature_values, label_values = load_selected_input(
-        data,
-        args.expected_input_sha256,
-        args.expected_input_bytes,
-    )
+    manifest_path = checked_path(args.dataset_manifest)
+    manifest = load_dataset_manifest(manifest_path, args.expected_dataset_manifest_sha256)
+    data = checked_path(manifest_path.parent / "data.csv")
+    work = checked_path(args.work_root)
+    with selected_input_maps(data, manifest, work) as maps:
+        return train(args, output, manifest, maps, canonical_rate, optimizer_rate,
+                     epochs, batch_size, seed)
+
+
+def train(args, output, manifest, maps, canonical_rate, optimizer_rate,
+          epochs, batch_size, seed):
     if args.recipe == "slow-stop":
         signal.signal(signal.SIGALRM, recipe_deadline)
         signal.alarm(180)
@@ -182,8 +271,10 @@ def main():
         not torch.cuda.is_available() or torch.cuda.device_count() != 1
     ):
         raise ValueError("CUDA execution requires exactly one available CUDA device")
-    features = torch.tensor(feature_values, dtype=torch.float32, device=args.device)
-    labels = torch.tensor(label_values, dtype=torch.long, device=args.device)
+    rows = int(manifest["row_count"])
+    features = torch.frombuffer(maps["features.f32"], dtype=torch.float32).reshape(rows, 16)
+    labels = torch.frombuffer(maps["labels.i64"], dtype=torch.int64)
+    order = torch.frombuffer(maps["order.i64"], dtype=torch.int64)
     output.mkdir(parents=True, exist_ok=True)
     checked_path(output)
     check_output(output)
@@ -197,8 +288,13 @@ def main():
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=optimizer_rate)
     criterion = nn.CrossEntropyLoss()
-    with torch.no_grad():
-        initial_loss = float(criterion(model(features), labels))
+    evaluation_criterion = nn.CrossEntropyLoss(reduction="sum")
+    initial_loss = evaluate(model, features, labels, batch_size, args.device,
+                            torch, evaluation_criterion)
+    generator = torch.Generator(device="cpu")
+    generator.manual_seed(seed)
+    metrics_digest = hashlib.sha256()
+    metrics_bytes = 0
 
     if args.recipe == "slow-stop":
         print(
@@ -220,15 +316,15 @@ def main():
     try:
         if not math.isfinite(initial_loss):
             raise ValueError("non-finite initial loss")
-        with (output / "metrics.jsonl").open(
-            "x", encoding="utf-8", buffering=1
-        ) as metrics:
+        with (output / "metrics.jsonl").open("xb") as metrics:
             for _ in range(epochs):
-                for indices in torch.randperm(len(features), device=args.device).split(
-                    batch_size
-                ):
+                torch.randperm(rows, generator=generator, out=order)
+                for start in range(0, rows, batch_size):
+                    indices = order[start:start + batch_size]
+                    batch_features = features[indices].to(args.device)
+                    batch_labels = labels[indices].to(args.device)
                     optimizer.zero_grad(set_to_none=True)
-                    loss = criterion(model(features[indices]), labels[indices])
+                    loss = criterion(model(batch_features), batch_labels)
                     if not torch.isfinite(loss):
                         raise ValueError("non-finite training loss")
                     loss.backward()
@@ -243,7 +339,11 @@ def main():
                         "timestamp": datetime.now(timezone.utc).isoformat(),
                     }
                     line = json.dumps(entry)
-                    metrics.write(line + "\n")
+                    raw = (line + "\n").encode("utf-8")
+                    metrics.write(raw)
+                    metrics.flush()
+                    metrics_digest.update(raw)
+                    metrics_bytes += len(raw)
                     print(line, flush=True)
                     if args.recipe == "fail" and step == 5:
                         raise RuntimeError(
@@ -252,8 +352,8 @@ def main():
                     if args.recipe == "slow-stop":
                         time.sleep(2)
         model.eval()
-        with torch.no_grad():
-            final_loss = float(criterion(model(features), labels))
+        final_loss = evaluate(model, features, labels, batch_size, args.device,
+                              torch, evaluation_criterion)
         if not math.isfinite(final_loss) or any(
             not torch.isfinite(p).all() for p in model.parameters()
         ):
@@ -283,7 +383,8 @@ def main():
             {
                 "status": status,
                 "error": error,
-                "samples": len(feature_values),
+                "samples": rows,
+                "source_samples": rows,
                 "epochs": epochs,
                 "batch_size": batch_size,
                 "learning_rate": canonical_rate,
@@ -292,8 +393,12 @@ def main():
                 "world_size": 1,
                 "device": next(model.parameters()).device.type,
                 "torch_version": torch.__version__,
-                "input_sha256": input_sha256,
-                "input_bytes": str(len(input_bytes)),
+                "input_version_id": manifest["input_version_id"],
+                "input_sha256": manifest["source_sha256"],
+                "input_bytes": manifest["source_size_bytes"],
+                "prepared_input_sha256": manifest["prepared_sha256"],
+                "prepared_input_bytes": manifest["prepared_size_bytes"],
+                "dataset_manifest_sha256": args.expected_dataset_manifest_sha256,
                 "initial_loss": initial_loss if math.isfinite(initial_loss) else None,
                 "final_loss": final_loss
                 if final_loss is None or math.isfinite(final_loss)
@@ -302,19 +407,23 @@ def main():
         )
     files = []
     for name in ("model.pt", "model_config.json", "metrics.jsonl", "summary.json"):
-        contents = (output / name).read_bytes()
+        if name == "metrics.jsonl":
+            size, digest = metrics_bytes, metrics_digest.hexdigest()
+        else:
+            contents = (output / name).read_bytes()
+            size, digest = len(contents), hashlib.sha256(contents).hexdigest()
         files.append(
             {
                 "path": name,
-                "bytes": str(len(contents)),
-                "sha256": hashlib.sha256(contents).hexdigest(),
+                "bytes": str(size),
+                "sha256": digest,
             }
         )
     write_json(
         output / "result.json",
         {
             "schema": "ani.output-candidate.v1",
-            "input_sha256": input_sha256,
+            "input_sha256": manifest["source_sha256"],
             "deployable": False,
             "files": files,
         },

@@ -9,6 +9,9 @@ import re
 import subprocess
 import sys
 
+from dataset_fixture import manifest_arguments
+from image_runtime import PYTHON, TRAINING, podman_command, work_arguments
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -21,31 +24,33 @@ def main():
     if not re.fullmatch(r"(?:sha256:)?[a-f0-9]{64}", args.image):
         parser.error("--image must be an already verified immutable image ID")
     image = args.image
-    common = [
-        "podman",
+    podman = podman_command()
+    common = podman + [
         "run",
         "--rm",
         "--network=none",
         "--read-only",
+        "--read-only-tmpfs=false",
         "--cpus",
         "1" if args.nondefault else "2",
         "--memory=3g",
         "--security-opt",
         "label=disable",
-        "--userns=keep-id",
+        "--userns=keep-id:uid=10001,gid=10001",
         "--user",
-        "1000:1000",
-        "--tmpfs",
-        "/tmp:rw,size=256m",
+        "10001:10001",
+        "--passwd=false",
         "-v",
         f"{args.source}:/source:ro",
         "-v",
         f"{args.output}:/work:rw",
         "--entrypoint",
-        "/opt/venv/bin/python",
+        PYTHON,
         image,
         "-I",
     ]
+    index = common.index("--entrypoint")
+    common = common[:index] + work_arguments(args.output / "work/train", "train") + common[index:]
     if args.nondefault:
         with (args.output / "input.csv").open("w", newline="") as stream:
             writer = csv.writer(stream)
@@ -56,17 +61,18 @@ def main():
             common + ["/source/training/make_data.py", "--output", "/work/input.csv"],
             check=True,
         )
-    contents = (args.output / "input.csv").read_bytes()
-    command = common + [
-        "/source/training/train_mlp.py",
-        "--data",
-        "/work/input.csv",
-        "--output",
-        "/work/result",
-        "--expected-input-sha256",
-        hashlib.sha256(contents).hexdigest(),
-        "--expected-input-bytes",
-        str(len(contents)),
+    inputs = args.output / "inputs"
+    inputs.mkdir()
+    data = inputs / "data.csv"
+    (args.output / "input.csv").replace(data)
+    manifest_args = manifest_arguments(data)
+    manifest_sha = manifest_args[-1]
+    index = common.index("--entrypoint")
+    training_common = common[:index] + ["-v", f"{inputs}:/work/inputs:ro,Z"] + common[index:]
+    command = training_common + [
+        TRAINING + "/train_mlp.py", "--dataset-manifest", "/work/inputs/dataset-manifest.json",
+        "--expected-dataset-manifest-sha256", manifest_sha, "--work-root", "/workspace/work/train",
+        "--output", "/work/result",
     ]
     if args.nondefault:
         command += [
@@ -110,32 +116,33 @@ def main():
             ],
             check=True,
         )
-        detached_command = [
-            "podman",
+        detached_command = podman + [
             "run",
             "--rm",
             "--network=none",
             "--read-only",
+            "--read-only-tmpfs=false",
             "--cpus=1",
             "--memory=2g",
             "--security-opt",
             "label=disable",
-            "--userns=keep-id",
+            "--userns=keep-id:uid=10001,gid=10001",
             "--user",
-            "1000:1000",
-            "--tmpfs",
-            "/tmp:rw,size=128m",
+            "10001:10001",
+            "--passwd=false",
             "-v",
             f"{args.source}:/source:ro",
             "-v",
             f"{args.output / 'detached'}:/detached:ro",
             "--entrypoint",
-            "/opt/venv/bin/python",
+            PYTHON,
             image,
             "-I",
             "/source/training/tests/reload_checkpoint.py",
             "/detached",
         ]
+        index = detached_command.index("--entrypoint")
+        detached_command = detached_command[:index] + work_arguments(args.output / "detached-work", "verify") + detached_command[index:]
         reload = subprocess.run(
             detached_command, capture_output=True, text=True, timeout=180
         )

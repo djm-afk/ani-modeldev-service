@@ -9,6 +9,7 @@ import unittest
 from google.protobuf import json_format
 from kfp.pipeline_spec import pipeline_spec_pb2
 import yaml
+from resource_fixture import component_resources
 
 
 class FinetuningAssembly(unittest.TestCase):
@@ -23,6 +24,7 @@ class FinetuningAssembly(unittest.TestCase):
                 "kind": "FINETUNING",
                 "admission_profile": "finetuning-v1",
                 "execution_timeout_max_seconds": 14400,
+                "component_resources": component_resources("FINETUNING"),
             }
             config, output = root / "config.json", root / "pipeline.yaml"
             config.write_text(json.dumps(configuration), encoding="utf-8")
@@ -62,11 +64,11 @@ class FinetuningAssembly(unittest.TestCase):
                 self.assertEqual(container["image"], configuration["component_image"])
                 self.assertEqual(int(k8s["activeDeadlineSeconds"]), configuration["execution_timeout_max_seconds"])
                 if role in ("prepare", "export", "verify"):
-                    self.assertEqual(container["resources"]["resourceCpuRequest"], "2")
-                    self.assertEqual(container["resources"]["resourceMemoryRequest"], "6Gi")
+                    self.assertEqual(container["resources"]["resourceCpuRequest"], "1250m")
+                    self.assertEqual(container["resources"]["resourceMemoryRequest"], "3Gi")
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/step-role"], role)
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/admission-profile"], "finetuning-v1")
-                self.assertEqual(k8s["emptyDirMounts"][0]["sizeLimit"], "12Gi")
+                self.assertEqual(k8s["emptyDirMounts"][0]["sizeLimit"], "21Gi")
                 self.assertFalse(k8s["emptyDirMounts"][0].get("medium"))
                 if role in ("export", "verify"):
                     mounts = k8s["pvcMount"]

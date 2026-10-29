@@ -7,7 +7,7 @@
 
 | 来源 | 文档 | 性质 |
 | --- | --- | --- |
-| 前一轮实现者（权威前提） | [验收手册](finetuning-manual-test.md)、[后续工作交接](finetuning-next-handoff.md) | M3-A 已完成的实现与交接说明 |
+| 前一轮实现者（权威前提） | [验收手册](https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/2c946f65fcfd63ed010be26ed9aa595253ffb59d/docs/finetuning-manual-test.md)、[后续工作交接](finetuning-next-handoff.md) | M3-A 已完成的实现与交接说明 |
 | 我方（接手方）初稿 | [实际调用表](finetuning-model-call-table.md)、[owner 问题函](finetuning-model-owner-questions.md)、[M3-A 集群复核](finetuning-m3a-cluster-review-20261016.md)、[P0 实施计划](finetuning-p0-plan.md) | 内部初稿，所有权在我方 |
 | **本文** | — | 对上述全部做**现场只读复核**后的开工计划；含对初稿的 3 处修正 + 1 处新发现的现场故障 |
 | 唯一规范 | `docs/design/ani-finetuning-v4.2.2/spec.md` | 冲突时以 spec 为准 |

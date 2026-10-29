@@ -31,7 +31,6 @@ type Verifier struct {
 	runs     *kfp.Client
 	objects  *objectstore.Verifier
 	plans    PlanReader
-	logs     biz.TrainingLogReader
 	training biz.TrainingRuntime
 }
 
@@ -82,7 +81,7 @@ func (verifier *Verifier) VerifyPrepared(ctx context.Context, execution biz.Exec
 	}
 	return nil
 }
-func (verifier *Verifier) VerifyPublication(ctx context.Context, execution biz.Execution, association biz.ManagedStepAssociation, candidate biz.RuntimePublication) (biz.RuntimePublication, error) {
+func (verifier *Verifier) VerifyPublication(ctx context.Context, execution biz.Execution, association biz.ManagedStepAssociation, workspace biz.WorkspaceBinding, candidate biz.RuntimePublication) (biz.RuntimePublication, error) {
 	tasks, err := verifier.currentTasks(ctx, execution, association)
 	if err != nil {
 		return biz.RuntimePublication{}, err
@@ -94,6 +93,13 @@ func (verifier *Verifier) VerifyPublication(ctx context.Context, execution biz.E
 	confirmationTask, err := oneTask(tasks, confirmationRole)
 	if err != nil || confirmationTask.PodName != association.PodName {
 		return biz.RuntimePublication{}, biz.ErrRuntimeConflict
+	}
+	confirmer, err := verifier.currentTaskPod(ctx, execution, association, confirmationTask, association.PodUID)
+	if err != nil {
+		return biz.RuntimePublication{}, err
+	}
+	if err := verifier.verifyPublicationWorkspace(ctx, execution, confirmer, workspace); err != nil {
+		return biz.RuntimePublication{}, err
 	}
 	uploader, err := oneTask(tasks, "publish")
 	if err != nil || uploader.ID != candidate.Upload.TaskID || uploader.State != "SUCCEEDED" || candidate.Upload.PodUID == "" {
@@ -160,7 +166,7 @@ func (verifier *Verifier) VerifyPublication(ctx context.Context, execution biz.E
 		}
 		var verified biz.VerifiedObject
 		if execution.Snapshot.Kind == "FINETUNING" {
-			verified, err = verifier.objects.VerifyFinetuningOutputBundle(ctx, scope, *candidate.Bundle, files, execution.Snapshot.OutputContract)
+			verified, err = verifier.objects.VerifyFinetuningOutputBundle(ctx, scope, *candidate.Bundle, files, execution.Snapshot.OutputContract, execution.Snapshot.Limits)
 		} else {
 			verified, err = verifier.objects.VerifyOutputBundle(ctx, scope, *candidate.Bundle, files, manifest)
 		}
@@ -174,7 +180,7 @@ func (verifier *Verifier) VerifyPublication(ctx context.Context, execution biz.E
 	return publication, nil
 }
 
-func (verifier *Verifier) VerifyWritersAbsent(ctx context.Context, execution biz.Execution, association biz.ManagedStepAssociation) (biz.ManagedCloseEvidence, error) {
+func (verifier *Verifier) VerifyWritersAbsent(ctx context.Context, execution biz.Execution, association biz.ManagedStepAssociation, workspace *biz.WorkspaceBinding) (biz.ManagedCloseEvidence, error) {
 	tasks, err := verifier.currentTasks(ctx, execution, association)
 	if err != nil {
 		return biz.ManagedCloseEvidence{}, err
@@ -184,7 +190,11 @@ func (verifier *Verifier) VerifyWritersAbsent(ctx context.Context, execution biz
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeConflict
 	}
 	closePod, err := verifier.currentTaskPod(ctx, execution, association, closeTask, association.PodUID)
-	if err != nil || !controlOnly(closePod) {
+	if err != nil {
+		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
+	}
+	finalizer := closeTask.Name == "close-finalizer" || closeTask.Name == "finalize-close"
+	if finalizer && !controlOnly(closePod) || !finalizer && (workspace == nil || verifier.verifyPublicationWorkspace(ctx, execution, closePod, *workspace) != nil) {
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 	}
 	evidence := biz.ManagedCloseEvidence{RunID: association.RunID, WorkflowUID: association.WorkflowUID}
@@ -232,7 +242,7 @@ func (verifier *Verifier) VerifyWritersAbsent(ctx context.Context, execution biz
 			continue
 		}
 		if pod.GetName() == association.PodName && string(pod.GetUID()) == association.PodUID {
-			if !controlOnly(pod) {
+			if finalizer && !controlOnly(pod) || !finalizer && (workspace == nil || !publicationReadOnlyMount(pod, workspace.PVCName)) {
 				return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 			}
 			continue

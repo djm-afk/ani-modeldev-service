@@ -12,10 +12,12 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
-	modelv1 "github.com/zhangzhe-ctrl/ani-model-service/api/model/v1"
+	modelv1 "github.com/liangzai006/ani-model-service/api/model/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ biz.TrainedArtifactRegistry = (*Client)(nil)
@@ -55,7 +57,7 @@ func (c *Client) ReadArtifact(ctx context.Context, original biz.TrainedArtifactR
 		return biz.TrainedArtifactObservation{}, err
 	}
 	in := &modelv1.GetTrainedArtifactRegistrationRequest{TenantId: original.TenantID, IdempotencyKey: expected.IdempotencyKey, ExpectedExecutionId: original.ExecutionID, VerifyUploadedObject: true}
-	out, err := invoke(c, ctx, original.TenantID, in, c.client.GetTrainedArtifactRegistration)
+	out, err := invokeRegistration(c, ctx, original.TenantID, in, c.client.GetTrainedArtifactRegistration)
 	if err != nil {
 		return biz.TrainedArtifactObservation{}, artifactRPCError(err)
 	}
@@ -122,7 +124,7 @@ func (c *Client) CompleteArtifact(ctx context.Context, original biz.TrainedArtif
 		return biz.FinetuningModelReceipt{}, biz.ErrModelDependencyUnavailable
 	}
 	in := &modelv1.CompleteTrainedArtifactRequest{TenantId: original.TenantID, RegistrationId: session.RegistrationID, IdempotencyKey: expected.IdempotencyKey}
-	out, err := invoke(c, ctx, original.TenantID, in, c.client.CompleteTrainedArtifact)
+	out, err := invokeRegistration(c, ctx, original.TenantID, in, c.client.CompleteTrainedArtifact)
 	if err != nil {
 		return biz.FinetuningModelReceipt{}, artifactRPCError(err)
 	}
@@ -136,6 +138,37 @@ func (c *Client) CompleteArtifact(ctx context.Context, original biz.TrainedArtif
 	// Returning a typed response grants no READY transition. The owner must
 	// next read the original key and verify the provider's durable result.
 	return receipt, nil
+}
+
+// Verification and completion may read the whole frozen bundle. The caller
+// already owns a finite registration window; this adapter neither renews it
+// nor replaces it with the short control-RPC or model-facts budget.
+func invokeRegistration[Req requestMessage, Res responseMessage](c *Client, ctx context.Context, tenant string, request Req, call func(context.Context, Req, ...grpc.CallOption) (Res, error)) (Res, error) {
+	var zero Res
+	if ctx == nil {
+		return zero, status.Error(codes.InvalidArgument, "MODEL_REGISTRATION_DEADLINE_REQUIRED")
+	}
+	if err := ctx.Err(); err != nil {
+		return zero, err
+	}
+	deadline, finite := ctx.Deadline()
+	if !finite {
+		return zero, status.Error(codes.InvalidArgument, "MODEL_REGISTRATION_DEADLINE_REQUIRED")
+	}
+	remaining := time.Until(deadline)
+	if remaining <= 0 {
+		return zero, context.DeadlineExceeded
+	}
+	if any(request) == nil || !request.ProtoReflect().IsValid() {
+		return zero, status.Error(codes.InvalidArgument, "MODEL_REQUEST_REQUIRED")
+	}
+	cloned := proto.Clone(request).(Req)
+	callCtx, cancel, err := c.callContextBudget(ctx, tenant, remaining)
+	if err != nil {
+		return zero, err
+	}
+	defer cancel()
+	return call(callCtx, cloned)
 }
 
 // AbortArtifact is a single write against the original registration. It does

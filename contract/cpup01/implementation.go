@@ -11,8 +11,8 @@ import (
 //go:embed implementations.json
 var implementationDefinitions []byte
 
-const MLPParameterContractVersion = "ani.mlp.parameters.v2.1"
-const FinetuningParameterContractVersion = "ani.sft-lora.parameters.v2.1"
+const MLPParameterContractVersion = "ani.mlp.parameters.v3"
+const FinetuningParameterContractVersion = "ani.sft-lora.parameters.v3"
 const FinetuningIntentSchemaVersion = IntentSchemaVersion
 
 type FinetuningParameters struct {

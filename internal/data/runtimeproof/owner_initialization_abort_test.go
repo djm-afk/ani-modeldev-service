@@ -46,7 +46,7 @@ func TestOwnerCloseProvesCapturedPodInitializationAbortWithoutInventingMainExit(
 	if _, err := f.verifier().ResolveManagedTaskID(context.Background(), f.dispatch.Plan, association, "workspace-name"); err == nil {
 		t.Fatal("initialization abort authorized a current managed caller")
 	}
-	if _, err := f.verifier().VerifyWritersAbsent(context.Background(), f.execution, association); err == nil {
+	if _, err := f.verifier().VerifyWritersAbsent(context.Background(), f.execution, association, nil); err == nil {
 		t.Fatal("owner-only abort leaked into ordinary managed close proof")
 	}
 }

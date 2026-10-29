@@ -1,15 +1,17 @@
 """The single CPU-P01 KFP assembly entry; compile on Fedora only."""
 import argparse
+import hashlib
 import json
 import re
 
 from kfp import compiler, dsl, kubernetes
+from kubernetes.utils.quantity import parse_quantity
 
 
 def compile_pipeline(configuration, output):
     required = {"component_image", "owner_config_map",
                 "storage_class", "workspace_size", "workspace_access_mode", "admission_profile",
-                "execution_timeout_max_seconds"}
+                "execution_timeout_max_seconds", "component_resources"}
     if set(configuration) not in (required, required | {"kind"}):
         raise ValueError("all frozen deployment bindings are required")
     kind = configuration.get("kind", "GENERAL_TRAINING")
@@ -19,6 +21,31 @@ def compile_pipeline(configuration, output):
     if type(maximum_timeout) is not int or maximum_timeout <= 0 or maximum_timeout > 9223372036:
         raise ValueError("explicit finite execution maximum is required")
     finetuning = kind == "FINETUNING"
+    roles = {"workspace-name", "prepare", "train-wait", "collect", "publish", "close", "finalize-close"}
+    if finetuning:
+        roles |= {"export", "verify", "register"}
+    fields = {"cpu_request", "cpu_limit", "memory_request", "memory_limit",
+              "ephemeral_storage_request", "ephemeral_storage_limit"}
+    resources = configuration["component_resources"]
+    if not isinstance(resources, dict) or set(resources) != roles:
+        raise ValueError("the exact managed role resource set is required")
+    for role, values in resources.items():
+        if not isinstance(values, dict) or set(values) != fields:
+            raise ValueError("all six explicit component resources are required")
+        quantities = {}
+        for name, value in values.items():
+            if not isinstance(value, str) or not value or value.strip() != value:
+                raise ValueError("component resources must be positive quantities")
+            try:
+                quantity = parse_quantity(value)
+            except (ValueError, TypeError, ArithmeticError) as error:
+                raise ValueError("component resources must be positive quantities") from error
+            if not quantity.is_finite() or quantity <= 0:
+                raise ValueError("component resources must be positive quantities")
+            quantities[name] = quantity
+        for resource in ("cpu", "memory", "ephemeral_storage"):
+            if quantities[resource + "_request"] > quantities[resource + "_limit"]:
+                raise ValueError("component requests must not exceed limits")
     profile = configuration["admission_profile"]
     if not isinstance(profile, str) or not re.fullmatch(r"[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?", profile):
         raise ValueError("a frozen ModelDev admission profile DNS label is required")
@@ -69,15 +96,15 @@ def compile_pipeline(configuration, output):
 
     @dsl.container_component
     def publish(execution_id: str, spec_hash: str, run_id: str, candidate: dsl.OutputPath(str)):
-        return container("publish", execution_id, spec_hash, run_id, ["--candidate-file", candidate])
+        return container("publish", execution_id, spec_hash, run_id, ["--publication-ref-file", candidate])
 
     @dsl.container_component
     def close(execution_id: str, spec_hash: str, run_id: str, candidate: str = ""):
-        return container("close", execution_id, spec_hash, run_id, ["--candidate-json", candidate])
+        return container("close", execution_id, spec_hash, run_id, ["--publication-ref", candidate])
 
     @dsl.container_component
     def register(execution_id: str, spec_hash: str, run_id: str, candidate: str):
-        return container("register", execution_id, spec_hash, run_id, ["--candidate-json", candidate])
+        return container("register", execution_id, spec_hash, run_id, ["--publication-ref", candidate])
 
     @dsl.container_component
     def finalize_close(execution_id: str, spec_hash: str, run_id: str):
@@ -85,25 +112,25 @@ def compile_pipeline(configuration, output):
 
     def configure(task):
         task.set_caching_options(False).set_retry(0)
-        cpu_request, cpu_limit, memory_request, memory_limit = "100m", "500m", "128Mi", "512Mi"
+        values = resources[task.name]
         kubernetes.add_pod_label(task, "ani.modeldev/admission-profile", profile)
         kubernetes.add_pod_label(task, "ani.modeldev/step-role", task.name)
-        if finetuning:
-            if task.name in ("prepare", "export", "verify"):
-                cpu_request, cpu_limit, memory_request, memory_limit = "2", "4", "6Gi", "8Gi"
-            elif task.name in ("collect", "publish"):
-                cpu_request, cpu_limit, memory_request, memory_limit = "1", "2", "1Gi", "2Gi"
-            else:
-                cpu_request, cpu_limit, memory_request, memory_limit = "500m", "1", "512Mi", "1Gi"
-        task.set_cpu_request(cpu_request).set_cpu_limit(cpu_limit)
-        task.set_memory_request(memory_request).set_memory_limit(memory_limit)
+        digest = hashlib.sha256(json.dumps(values, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        kubernetes.add_pod_annotation(task, "ani.modeldev/component-resources-sha256", digest)
+        task.set_cpu_request(values["cpu_request"]).set_cpu_limit(values["cpu_limit"])
+        task.set_memory_request(values["memory_request"]).set_memory_limit(values["memory_limit"])
+        if task.name in ("prepare", "export", "verify", "collect", "publish"):
+            work = "/workspace/work/" + task.name
+            for name, suffix in (("TMPDIR", "/tmp"), ("HF_HOME", "/hf"),
+                                 ("HF_DATASETS_CACHE", "/hf/datasets"), ("MPLCONFIGDIR", "/matplotlib")):
+                task.set_env_variable(name, work + suffix)
         kubernetes.set_timeout(task, maximum_timeout)
         kubernetes.set_security_context(task, run_as_user=10001, run_as_group=10001, run_as_non_root=True)
         kubernetes.use_config_map_as_volume(task, configuration["owner_config_map"], "/etc/modeldev-step")
         for name, path in (("ANI_POD_NAME", "metadata.name"), ("ANI_POD_UID", "metadata.uid"),
                            ("ANI_POD_NAMESPACE", "metadata.namespace")):
             kubernetes.use_field_path_as_env(task, name, path)
-        kubernetes.empty_dir_mount(task, "component-tmp", "/tmp", size_limit="12Gi" if finetuning else "16Mi")
+        kubernetes.empty_dir_mount(task, "component-tmp", "/tmp", size_limit=values["ephemeral_storage_limit"])
         return task
 
     # KFP/Argo includes this name in component Pod names; KCN also uses each
@@ -127,8 +154,8 @@ def compile_pipeline(configuration, output):
             if finetuning:
                 exported = configure(export(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(trained))
                 verified = configure(verify(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(exported))
-                for task, paths in ((exported, ("inputs", "training", "reports/train", "export", "reports/export")),
-                                    (verified, ("inputs", "training", "reports/train", "export", "reports/export", "reports/verify"))):
+                for task, paths in ((exported, ("inputs", "training", "reports/train", "export", "reports/export", "work/export")),
+                                    (verified, ("inputs", "training", "reports/train", "export", "reports/export", "reports/verify", "work/verify"))):
                     for path in paths:
                         kubernetes.mount_pvc(task, workspace.output, "/workspace/" + path, sub_path=path)
                 predecessor = verified
@@ -136,15 +163,20 @@ def compile_pipeline(configuration, output):
             published = configure(publish(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(collected))
             for task in (prepared, collected, published):
                 kubernetes.mount_pvc(task, workspace.output, "/workspace")
-            if finetuning:
-                # ENV marks the whole workspace mount read-only for these two
-                # readers; only the separate publication subtree is writable.
-                for task in (collected, published):
-                    kubernetes.mount_pvc(task, workspace.output, "/workspace/publication", sub_path="publication")
+            # KFP writes its CA bundle before invoking prepare. A native PVC
+            # subPath mount lets kubelet create TMPDIR before that launcher.
+            kubernetes.mount_pvc(prepared, workspace.output, "/workspace/work/prepare/tmp", sub_path="work/prepare/tmp")
+            # Admission projects the root mount to read-only, keeping only
+            # publication and the role's work directory writable.
+            for task in (collected, published):
+                kubernetes.mount_pvc(task, workspace.output, "/workspace/publication", sub_path="publication")
+                kubernetes.mount_pvc(task, workspace.output, "/workspace/work/" + task.name, sub_path="work/" + task.name)
             completed = published
             if finetuning:
                 completed = configure(register(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id, candidate=published.output).after(published))
-            configure(close(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id, candidate=published.output).after(completed))
+                kubernetes.mount_pvc(completed, workspace.output, "/workspace")
+            closed = configure(close(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id, candidate=published.output).after(completed))
+            kubernetes.mount_pvc(closed, workspace.output, "/workspace")
         # No DeletePVC: publication failure must retain the unique outputs.
 
     compiler.Compiler().compile(pipeline_func=pipeline, package_path=output)

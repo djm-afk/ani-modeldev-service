@@ -31,6 +31,8 @@ type Query struct {
 	steps                StepWorkloadReader
 	materials            *biz.ManagedMaterials
 	models               biz.FinetuningModelFactsReader
+	sourceFacts          biz.FinetuningSourceFactsReader
+	contentLimits        cpup01.ContentLimits
 	metrics              biz.MetricsObjectReader
 }
 
@@ -116,6 +118,9 @@ func queryError(err error, requestID string) error {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return status.FromContextError(err).Err()
 	}
+	if mapped, ok := finetuningModelError(err, requestID); ok {
+		return mapped
+	}
 	if errors.Is(err, biz.ErrExecutionNotFound) || errors.Is(err, biz.ErrArtifactNotFound) || errors.Is(err, biz.ErrTrainingLogNotFound) {
 		return commandError(codes.NotFound, modeldevv1.ErrorReason_ERROR_REASON_RESOURCE_NOT_FOUND, "resource unavailable", requestID)
 	}
@@ -127,7 +132,7 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	if err != nil {
 		return nil, err
 	}
-	if request == nil || !queryID(request.ExecutionId) || len(request.ProtoReflect().GetUnknown()) != 0 ||
+	if request == nil || !queryID(request.ExecutionId) || request.GetPodUid() == "" || len(request.ProtoReflect().GetUnknown()) != 0 ||
 		(request.LogId != nil && !queryID(*request.LogId)) || request.TailLines > 1000 || request.MaxBytes > 65536 {
 		return nil, status.Error(codes.InvalidArgument, "invalid training log query")
 	}
@@ -147,6 +152,9 @@ func (query *Query) GetExecutionLogs(ctx context.Context, request *modeldevv1.Ge
 	}
 	selection, err := query.selectLogTarget(ctx, record, request)
 	if err != nil {
+		if errors.Is(err, biz.ErrTrainingLogsUnavailable) {
+			return nil, queryError(err, scope.RequestID)
+		}
 		return nil, workloadError(err, scope.RequestID)
 	}
 	var result biz.TrainingLogResult
@@ -210,29 +218,36 @@ func queryLogError(err error, requestID string) error {
 	return queryError(err, requestID)
 }
 
-// selectLogTarget resolves exactly one container instance for a read. The
-// worker path stays compatible: no pod_uid and no container keeps the original
-// single-worker `node` behaviour, including its archived-tail fallback.
+// selectLogTarget binds the explicitly requested Pod UID to either its durable
+// original worker chain or the current authenticated workload scope.
 func (query *Query) selectLogTarget(ctx context.Context, record biz.QueryRecord, request *modeldevv1.GetExecutionLogsRequest) (biz.LogSelection, error) {
 	container := request.GetContainer()
 	podUID := request.GetPodUid()
 	previous := request.GetPrevious()
-	if podUID == "" && container == "" {
-		source, err := biz.TrainingLogSourceFor(record, request.GetLogId())
-		if err != nil {
-			return biz.LogSelection{}, err
+	if podUID == "" {
+		return biz.LogSelection{}, biz.ErrInvalidAdmission
+	}
+	if record.Runtime.Observation != nil && (container == "" || container == "node") {
+		for _, resource := range record.Runtime.Observation.Resources {
+			if resource.Kind != "Pod" || resource.UID != podUID {
+				continue
+			}
+			source, err := biz.TrainingLogSourceFor(record, biz.TrainerLogID(record.Execution.ExecutionID, podUID))
+			if err != nil {
+				return biz.LogSelection{}, err
+			}
+			if request.GetLogId() != "" && request.GetLogId() != source.LogID {
+				return biz.LogSelection{}, biz.ErrTrainingLogNotFound
+			}
+			return biz.LogSelection{Kind: biz.LogSourceKindTrainer, LogID: source.LogID, Target: biz.ContainerLogTarget{
+				Namespace: source.Namespace, NamespaceUID: source.NamespaceUID, PodName: source.PodName,
+				PodUID: source.PodUID, ContainerName: source.ContainerName, Previous: previous,
+			}}, nil
 		}
-		return biz.LogSelection{Kind: biz.LogSourceKindTrainer, LogID: source.LogID, Target: biz.ContainerLogTarget{
-			Namespace: source.Namespace, NamespaceUID: source.NamespaceUID, PodName: source.PodName,
-			PodUID: source.PodUID, ContainerName: source.ContainerName, Previous: previous,
-		}}, nil
 	}
 	workload, err := query.logWorkloadScope(ctx, record)
 	if err != nil {
 		return biz.LogSelection{}, err
-	}
-	if podUID == "" {
-		return biz.LogSelection{}, biz.ErrWorkloadViewUnavailable
 	}
 	if workload.PipelineReadable() && query.steps != nil {
 		if pod, err := query.steps.StepPod(ctx, workload, podUID); err == nil {
@@ -339,7 +354,7 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if !valid {
 		return nil, biz.ErrPersistence
 	}
-	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageVersionId: value.Snapshot.Program.ImageVersionID, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageId: value.Snapshot.Program.ImageID, ImageVersion: value.Snapshot.Program.ImageVersion, ImageScope: string(value.Snapshot.Program.ImageScope), States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
 	view.ParameterContractVersion = value.Snapshot.Implementation.ParameterContractVersion
 	encoded, err := contractpb.EncodeSnapshot(value.Snapshot)
 	if err != nil {
@@ -385,7 +400,7 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 		// the file list stay owner-internal.
 		view.BaseModel = &modeldevv1.BaseModelIdentity{
 			ModelId: fine.BaseModel.ModelID, VersionId: fine.BaseModel.VersionID,
-			Family: fine.BaseModel.Family, Format: fine.BaseModel.Format,
+			Format: fine.BaseModel.Format,
 		}
 	}
 	if value.Close != nil {

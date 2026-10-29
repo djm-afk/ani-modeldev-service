@@ -55,13 +55,16 @@ An uploaded registry copy must retain the digest before an actual Run uses it.
   "workspace_size": "${FROZEN_WORKSPACE_CAPACITY}",
   "workspace_access_mode": "${ENV_WORKSPACE_ACCESS_MODE}",
   "admission_profile": "${FROZEN_MODELDEV_ADMISSION_PROFILE_ID}",
-  "execution_timeout_max_seconds": "${FINITE_DEPLOYMENT_MAXIMUM_M}"
+  "execution_timeout_max_seconds": "${FINITE_DEPLOYMENT_MAXIMUM_M}",
+  "component_resources": "${FROZEN_COMPONENT_ROLE_RESOURCES_OBJECT}"
 }
 ```
 
+Replace `component_resources` with the immutable material’s complete role map: every role has explicit CPU, memory and ephemeral-storage request/limit quantities. This same canonical role value is hashed into the compiled Pod annotation and checked by admission. KFP uses its role’s ephemeral-storage limit for control I/O under `/tmp`; application temporary files and HF/Arrow caches use the execution PVC at `/workspace/work/<role>`. Training uses only PVC work storage.
+
 The owner ConfigMap mounts at `/etc/modeldev-step`. It contains `config.json`
 and the trusted `modeldev-ca.pem`/`s3-ca.pem` files. `config.json` has this shape;
-the path under `reports` must match the frozen workspace contract:
+the path under `publication` must match the frozen workspace contract:
 
 ```json
 {
@@ -72,7 +75,7 @@ the path under `reports` must match the frozen workspace contract:
   "grpc_server_name": "${MODELDEV_STEP_CERTIFICATE_NAME}",
   "grpc_ca_file": "/etc/modeldev-step/modeldev-ca.pem",
   "workspace_directory": "/workspace",
-  "inventory_file": "/workspace/reports/collected-output.json",
+  "inventory_file": "/workspace/publication/collected-output.json",
   "poll_interval_seconds": 2,
   "timeout_seconds": "${FINITE_OUTER_BUDGET_COVERING_FROZEN_EXECUTION}",
   "s3": {

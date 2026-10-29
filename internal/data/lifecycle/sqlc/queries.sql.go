@@ -244,19 +244,6 @@ func (q *Queries) LockRuntimeIdentity(ctx context.Context, arg LockRuntimeIdenti
 	return i, err
 }
 
-const runtimeSchemaAvailable = `-- name: RuntimeSchemaAvailable :one
-SELECT to_regclass('modeldev_execution_runtimes') IS NOT NULL AS available
-`
-
-// The fixed 0012 migration reader predates the runtime schema. Check before
-// querying it; an undefined-table error would abort the aggregate transaction.
-func (q *Queries) RuntimeSchemaAvailable(ctx context.Context) (interface{}, error) {
-	row := q.db.QueryRow(ctx, runtimeSchemaAvailable)
-	var available interface{}
-	err := row.Scan(&available)
-	return available, err
-}
-
 const saveRuntimeFacts = `-- name: SaveRuntimeFacts :execrows
 INSERT INTO modeldev_execution_runtimes (
     tenant_id, execution_id, operation_id, spec_hash, facts,

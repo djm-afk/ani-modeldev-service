@@ -1,0 +1,3553 @@
+{
+  "pods": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "workflows.argoproj.io/node-id": "md-9tbrj-1827742978",
+          "workflows.argoproj.io/node-name": "md-9tbrj.root.exit-handler-1.workspace-name.executor(0)"
+        },
+        "finalizers": [
+          "modeldev.ani.io/step-exit-evidence"
+        ],
+        "generation": 1,
+        "labels": {
+          "ani.io/instance-id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+          "ani.io/workload-kind": "trainer",
+          "ani.modeldev/admission-profile": "md-open-r2-mlp-cpu-20261029",
+          "ani.modeldev/step-role": "workspace-name",
+          "pipeline/runid": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "pipelines.kubeflow.org/v2_component": "true",
+          "workflows.argoproj.io/completed": "true",
+          "workflows.argoproj.io/workflow": "md-9tbrj"
+        },
+        "name": "md-9tbrj-1827742978",
+        "namespace": "ani-modeldev-tenant-a-v21",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "md-9tbrj",
+            "uid": "43843405-9f52-4865-8843-957f375d1373"
+          }
+        ],
+        "resourceVersion": "12123791",
+        "uid": "759d2e06-4622-40ed-a8bb-0bd3a1923b90"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "wait"
+          },
+          {
+            "name": "main"
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "init"
+          },
+          {
+            "name": "kfp-launcher"
+          }
+        ],
+        "nodeName": "node2",
+        "restartPolicy": "Never",
+        "serviceAccountName": "modeldev-step",
+        "volumes": []
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:26Z",
+            "observedGeneration": 1,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:58Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:54Z",
+            "observedGeneration": 1,
+            "reason": "PodFailed",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:54Z",
+            "observedGeneration": 1,
+            "reason": "PodFailed",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:54Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa",
+            "imageID": "",
+            "lastState": {},
+            "name": "main",
+            "ready": false,
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "exitCode": 137,
+                "finishedAt": null,
+                "message": "The container could not be located when the pod was terminated",
+                "reason": "ContainerStatusUnknown",
+                "startedAt": null
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/modeldev-step",
+                "name": "modeldev-open-r2-step-20261029",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "component-tmp"
+              },
+              {
+                "mountPath": "/kfp-launcher",
+                "name": "kfp-launcher"
+              },
+              {
+                "mountPath": "/gcs",
+                "name": "gcs-scratch"
+              },
+              {
+                "mountPath": "/s3",
+                "name": "s3-scratch"
+              },
+              {
+                "mountPath": "/minio",
+                "name": "minio-scratch"
+              },
+              {
+                "mountPath": "/.local",
+                "name": "dot-local-scratch"
+              },
+              {
+                "mountPath": "/.cache",
+                "name": "dot-cache-scratch"
+              },
+              {
+                "mountPath": "/.config",
+                "name": "dot-config-scratch"
+              },
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-cjdc4",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "image": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "imageID": "",
+            "lastState": {
+              "terminated": {
+                "exitCode": 137,
+                "finishedAt": null,
+                "message": "The container could not be located when the pod was deleted.  The container used to be Running",
+                "reason": "ContainerStatusUnknown",
+                "startedAt": null
+              }
+            },
+            "name": "wait",
+            "ready": false,
+            "restartCount": 1,
+            "started": false,
+            "state": {
+              "terminated": {
+                "exitCode": 137,
+                "finishedAt": null,
+                "message": "The container could not be located when the pod was terminated",
+                "reason": "ContainerStatusUnknown",
+                "startedAt": null
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/mainctrfs/kfp-launcher",
+                "name": "kfp-launcher"
+              },
+              {
+                "mountPath": "/mainctrfs/gcs",
+                "name": "gcs-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/s3",
+                "name": "s3-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/minio",
+                "name": "minio-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/.local",
+                "name": "dot-local-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/.cache",
+                "name": "dot-cache-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/.config",
+                "name": "dot-config-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/kfp/certs",
+                "name": "custom-ca",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "tmp-dir-argo"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-cjdc4",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "10.10.1.67",
+        "hostIPs": [
+          {
+            "ip": "10.10.1.67"
+          }
+        ],
+        "initContainerStatuses": [
+          {
+            "containerID": "containerd://51f1d986b0fd79aafd4131dadd4f8fb61d31a88b44ca988e09cbe60434d744ab",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "init",
+            "ready": true,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://51f1d986b0fd79aafd4131dadd4f8fb61d31a88b44ca988e09cbe60434d744ab",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:55Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:55Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 10001,
+                "supplementalGroups": [
+                  10001
+                ],
+                "uid": 10001
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-cjdc4",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "allocatedResources": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            },
+            "containerID": "containerd://fe71102d9eac550cc37730430fccf51e5cd473b196b5baf237a2b7650c30145c",
+            "image": "sha256:8f77239af16be252f8e2fd317f181c371079122cb48e6655cabc78ceddf9f178",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29",
+            "lastState": {},
+            "name": "kfp-launcher",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "128Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "128Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://fe71102d9eac550cc37730430fccf51e5cd473b196b5baf237a2b7650c30145c",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:57Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:57Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 10001,
+                "supplementalGroups": [
+                  10001
+                ],
+                "uid": 10001
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp-launcher",
+                "name": "kfp-launcher"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-cjdc4",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "message": "Pod ephemeral local storage usage exceeds the total limit of containers 256Mi. ",
+        "observedGeneration": 1,
+        "phase": "Failed",
+        "podIP": "10.16.9.166",
+        "podIPs": [
+          {
+            "ip": "10.16.9.166"
+          }
+        ],
+        "qosClass": "Burstable",
+        "reason": "Evicted",
+        "startTime": "2026-10-28T23:14:54Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "workflows.argoproj.io/node-id": "md-9tbrj-2181032092",
+          "workflows.argoproj.io/node-name": "md-9tbrj.root.exit-handler-1.onExit.finalize-close-driver"
+        },
+        "finalizers": [
+          "modeldev.ani.io/step-exit-evidence"
+        ],
+        "generation": 1,
+        "labels": {
+          "ani.modeldev/step-role": "driver",
+          "pipeline/runid": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "pipelines.kubeflow.org/v2_component": "true",
+          "workflows.argoproj.io/completed": "true",
+          "workflows.argoproj.io/on-exit": "true",
+          "workflows.argoproj.io/workflow": "md-9tbrj"
+        },
+        "name": "md-9tbrj-2181032092",
+        "namespace": "ani-modeldev-tenant-a-v21",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "md-9tbrj",
+            "uid": "43843405-9f52-4865-8843-957f375d1373"
+          }
+        ],
+        "resourceVersion": "12124359",
+        "uid": "0694b3fe-cbee-4a40-a90a-447c8ef58e79"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "wait"
+          },
+          {
+            "name": "main"
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "init"
+          }
+        ],
+        "nodeName": "node2",
+        "restartPolicy": "Never",
+        "serviceAccountName": "modeldev-step",
+        "volumes": []
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:42Z",
+            "observedGeneration": 1,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:37Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:39Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:39Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:36Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "100m",
+              "memory": "64Mi"
+            },
+            "containerID": "containerd://d63e00dd3701294b8f747cc0ef618c268ef3139785b420aaaf93c96bdd43ffa8",
+            "image": "sha256:592feb0d13c1c9918bf60c3603d015e2a31a0ac28930d047982d55e617049c7b",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+            "lastState": {},
+            "name": "main",
+            "ready": false,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://d63e00dd3701294b8f747cc0ef618c268ef3139785b420aaaf93c96bdd43ffa8",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:15:39Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:15:38Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 65533,
+                "supplementalGroups": [
+                  1000,
+                  65533
+                ],
+                "uid": 65532
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-xq4s4",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "containerID": "containerd://e090796e8e949fc77f677d898854d97aa37f9c186ad9b89a9ae1d626e49fabd1",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "wait",
+            "ready": false,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://e090796e8e949fc77f677d898854d97aa37f9c186ad9b89a9ae1d626e49fabd1",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:15:40Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:15:37Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/mainctrfs/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "tmp-dir-argo"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-xq4s4",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "10.10.1.67",
+        "hostIPs": [
+          {
+            "ip": "10.10.1.67"
+          }
+        ],
+        "initContainerStatuses": [
+          {
+            "containerID": "containerd://6ce7991de82112b13181e0b1767831394f81bd4203b2e33f18d4491313c33d7b",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "init",
+            "ready": true,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://6ce7991de82112b13181e0b1767831394f81bd4203b2e33f18d4491313c33d7b",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:15:37Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:15:37Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-xq4s4",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Succeeded",
+        "podIP": "10.16.9.167",
+        "podIPs": [
+          {
+            "ip": "10.16.9.167"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-10-28T23:15:36Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "workflows.argoproj.io/node-id": "md-9tbrj-2902350379",
+          "workflows.argoproj.io/node-name": "md-9tbrj.root-driver"
+        },
+        "finalizers": [
+          "modeldev.ani.io/step-exit-evidence"
+        ],
+        "generation": 1,
+        "labels": {
+          "ani.modeldev/step-role": "driver",
+          "pipeline/runid": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "pipelines.kubeflow.org/v2_component": "true",
+          "workflows.argoproj.io/completed": "true",
+          "workflows.argoproj.io/workflow": "md-9tbrj"
+        },
+        "name": "md-9tbrj-2902350379",
+        "namespace": "ani-modeldev-tenant-a-v21",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "md-9tbrj",
+            "uid": "43843405-9f52-4865-8843-957f375d1373"
+          }
+        ],
+        "resourceVersion": "12120437",
+        "uid": "eee043e5-28c7-43f3-9531-c164c7a33279"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "wait"
+          },
+          {
+            "name": "main"
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "init"
+          }
+        ],
+        "nodeName": "node2",
+        "restartPolicy": "Never",
+        "serviceAccountName": "modeldev-step",
+        "volumes": []
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:30Z",
+            "observedGeneration": 1,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:26Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:28Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:28Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:24Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "100m",
+              "memory": "64Mi"
+            },
+            "containerID": "containerd://2c90e422a3bd7aa023d62d99ea1934bfc72503cf36a4179291b9c1d08cffe978",
+            "image": "sha256:592feb0d13c1c9918bf60c3603d015e2a31a0ac28930d047982d55e617049c7b",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+            "lastState": {},
+            "name": "main",
+            "ready": false,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://2c90e422a3bd7aa023d62d99ea1934bfc72503cf36a4179291b9c1d08cffe978",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:27Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:26Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 65533,
+                "supplementalGroups": [
+                  1000,
+                  65533
+                ],
+                "uid": 65532
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-fkw8k",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "containerID": "containerd://40c4b58ba4537fa248460834cd14f5e90e637884db938dadc316483c297f8518",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "wait",
+            "ready": false,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://40c4b58ba4537fa248460834cd14f5e90e637884db938dadc316483c297f8518",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:28Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:26Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/mainctrfs/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "tmp-dir-argo"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-fkw8k",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "10.10.1.67",
+        "hostIPs": [
+          {
+            "ip": "10.10.1.67"
+          }
+        ],
+        "initContainerStatuses": [
+          {
+            "containerID": "containerd://01e444619d60df025ed83e691044d76ae28c5d930abff48b1336e055a8ef051e",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "init",
+            "ready": true,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://01e444619d60df025ed83e691044d76ae28c5d930abff48b1336e055a8ef051e",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:25Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:25Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-fkw8k",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Succeeded",
+        "podIP": "10.16.9.163",
+        "podIPs": [
+          {
+            "ip": "10.16.9.163"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-10-28T23:14:24Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "workflows.argoproj.io/node-id": "md-9tbrj-3587874737",
+          "workflows.argoproj.io/node-name": "md-9tbrj.root.exit-handler-1.workspace-name-driver"
+        },
+        "finalizers": [
+          "modeldev.ani.io/step-exit-evidence"
+        ],
+        "generation": 1,
+        "labels": {
+          "ani.modeldev/step-role": "driver",
+          "pipeline/runid": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "pipelines.kubeflow.org/v2_component": "true",
+          "workflows.argoproj.io/completed": "true",
+          "workflows.argoproj.io/workflow": "md-9tbrj"
+        },
+        "name": "md-9tbrj-3587874737",
+        "namespace": "ani-modeldev-tenant-a-v21",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "md-9tbrj",
+            "uid": "43843405-9f52-4865-8843-957f375d1373"
+          }
+        ],
+        "resourceVersion": "12121569",
+        "uid": "1d47f5e9-cb2f-47d1-a153-d7d38373f560"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "wait"
+          },
+          {
+            "name": "main"
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "init"
+          }
+        ],
+        "nodeName": "node2",
+        "restartPolicy": "Never",
+        "serviceAccountName": "modeldev-step",
+        "volumes": []
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:50Z",
+            "observedGeneration": 1,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:46Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:48Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:48Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:44Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "100m",
+              "memory": "64Mi"
+            },
+            "containerID": "containerd://982f6334f38825f5e77c1d792a994051590a5f7a1b0705893e698e31dcd849af",
+            "image": "sha256:592feb0d13c1c9918bf60c3603d015e2a31a0ac28930d047982d55e617049c7b",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+            "lastState": {},
+            "name": "main",
+            "ready": false,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://982f6334f38825f5e77c1d792a994051590a5f7a1b0705893e698e31dcd849af",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:47Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:46Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 65533,
+                "supplementalGroups": [
+                  1000,
+                  65533
+                ],
+                "uid": 65532
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-zc48g",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "containerID": "containerd://63e826ecffa1a7222d3985efad6301f83804027b54d72234e94920a791ffc366",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "wait",
+            "ready": false,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://63e826ecffa1a7222d3985efad6301f83804027b54d72234e94920a791ffc366",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:48Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:46Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/mainctrfs/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "tmp-dir-argo"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-zc48g",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "10.10.1.67",
+        "hostIPs": [
+          {
+            "ip": "10.10.1.67"
+          }
+        ],
+        "initContainerStatuses": [
+          {
+            "containerID": "containerd://726bf2a59347ee79c5aa56a498c36bab1f1d1b8cd85f2d0387e53b02dfb8213a",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "init",
+            "ready": true,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://726bf2a59347ee79c5aa56a498c36bab1f1d1b8cd85f2d0387e53b02dfb8213a",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:45Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:45Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-zc48g",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Succeeded",
+        "podIP": "10.16.9.165",
+        "podIPs": [
+          {
+            "ip": "10.16.9.165"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-10-28T23:14:44Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "workflows.argoproj.io/node-id": "md-9tbrj-4153363017",
+          "workflows.argoproj.io/node-name": "md-9tbrj.root.exit-handler-1.onExit.finalize-close.executor(0)"
+        },
+        "finalizers": [
+          "modeldev.ani.io/step-exit-evidence"
+        ],
+        "generation": 1,
+        "labels": {
+          "ani.io/instance-id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+          "ani.io/workload-kind": "trainer",
+          "ani.modeldev/admission-profile": "md-open-r2-mlp-cpu-20261029",
+          "ani.modeldev/step-role": "finalize-close",
+          "pipeline/runid": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "pipelines.kubeflow.org/v2_component": "true",
+          "workflows.argoproj.io/completed": "true",
+          "workflows.argoproj.io/on-exit": "true",
+          "workflows.argoproj.io/workflow": "md-9tbrj"
+        },
+        "name": "md-9tbrj-4153363017",
+        "namespace": "ani-modeldev-tenant-a-v21",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "md-9tbrj",
+            "uid": "43843405-9f52-4865-8843-957f375d1373"
+          }
+        ],
+        "resourceVersion": "12126606",
+        "uid": "b64f6994-1dcf-4853-b2a4-abbd89b6ec64"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "wait"
+          },
+          {
+            "name": "main"
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "init"
+          },
+          {
+            "name": "kfp-launcher"
+          }
+        ],
+        "nodeName": "node2",
+        "restartPolicy": "Never",
+        "serviceAccountName": "modeldev-step",
+        "volumes": []
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:16:20Z",
+            "observedGeneration": 1,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:48Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:46Z",
+            "observedGeneration": 1,
+            "reason": "PodFailed",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:46Z",
+            "observedGeneration": 1,
+            "reason": "PodFailed",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:15:46Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa",
+            "imageID": "",
+            "lastState": {},
+            "name": "main",
+            "ready": false,
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "exitCode": 137,
+                "finishedAt": null,
+                "message": "The container could not be located when the pod was terminated",
+                "reason": "ContainerStatusUnknown",
+                "startedAt": null
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/modeldev-step",
+                "name": "modeldev-open-r2-step-20261029",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "component-tmp"
+              },
+              {
+                "mountPath": "/kfp-launcher",
+                "name": "kfp-launcher"
+              },
+              {
+                "mountPath": "/gcs",
+                "name": "gcs-scratch"
+              },
+              {
+                "mountPath": "/s3",
+                "name": "s3-scratch"
+              },
+              {
+                "mountPath": "/minio",
+                "name": "minio-scratch"
+              },
+              {
+                "mountPath": "/.local",
+                "name": "dot-local-scratch"
+              },
+              {
+                "mountPath": "/.cache",
+                "name": "dot-cache-scratch"
+              },
+              {
+                "mountPath": "/.config",
+                "name": "dot-config-scratch"
+              },
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-trh2t",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "image": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "imageID": "",
+            "lastState": {
+              "terminated": {
+                "exitCode": 137,
+                "finishedAt": null,
+                "message": "The container could not be located when the pod was deleted.  The container used to be Running",
+                "reason": "ContainerStatusUnknown",
+                "startedAt": null
+              }
+            },
+            "name": "wait",
+            "ready": false,
+            "restartCount": 1,
+            "started": false,
+            "state": {
+              "terminated": {
+                "exitCode": 137,
+                "finishedAt": null,
+                "message": "The container could not be located when the pod was terminated",
+                "reason": "ContainerStatusUnknown",
+                "startedAt": null
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/mainctrfs/kfp-launcher",
+                "name": "kfp-launcher"
+              },
+              {
+                "mountPath": "/mainctrfs/gcs",
+                "name": "gcs-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/s3",
+                "name": "s3-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/minio",
+                "name": "minio-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/.local",
+                "name": "dot-local-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/.cache",
+                "name": "dot-cache-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/.config",
+                "name": "dot-config-scratch"
+              },
+              {
+                "mountPath": "/mainctrfs/kfp/certs",
+                "name": "custom-ca",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "tmp-dir-argo"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-trh2t",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "10.10.1.67",
+        "hostIPs": [
+          {
+            "ip": "10.10.1.67"
+          }
+        ],
+        "initContainerStatuses": [
+          {
+            "containerID": "containerd://29eb91b7225fae743ca08718d03c1219d535aabfd4f9e16e5aa4b48bf997ba2e",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "init",
+            "ready": true,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://29eb91b7225fae743ca08718d03c1219d535aabfd4f9e16e5aa4b48bf997ba2e",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:15:47Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:15:47Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 10001,
+                "supplementalGroups": [
+                  10001
+                ],
+                "uid": 10001
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-trh2t",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "allocatedResources": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            },
+            "containerID": "containerd://674c5034ac7a6175222725fe49c4ecf64391ad68a75ba8bc6e081f7f684c7097",
+            "image": "sha256:8f77239af16be252f8e2fd317f181c371079122cb48e6655cabc78ceddf9f178",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29",
+            "lastState": {},
+            "name": "kfp-launcher",
+            "ready": true,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "128Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "128Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://674c5034ac7a6175222725fe49c4ecf64391ad68a75ba8bc6e081f7f684c7097",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:15:48Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:15:48Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 10001,
+                "supplementalGroups": [
+                  10001
+                ],
+                "uid": 10001
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp-launcher",
+                "name": "kfp-launcher"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-trh2t",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "message": "Pod ephemeral local storage usage exceeds the total limit of containers 256Mi. ",
+        "observedGeneration": 1,
+        "phase": "Failed",
+        "podIP": "10.16.9.168",
+        "podIPs": [
+          {
+            "ip": "10.16.9.168"
+          }
+        ],
+        "qosClass": "Burstable",
+        "reason": "Evicted",
+        "startTime": "2026-10-28T23:15:46Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "workflows.argoproj.io/node-id": "md-9tbrj-553314056",
+          "workflows.argoproj.io/node-name": "md-9tbrj.root.exit-handler-1-driver"
+        },
+        "finalizers": [
+          "modeldev.ani.io/step-exit-evidence"
+        ],
+        "generation": 1,
+        "labels": {
+          "ani.modeldev/step-role": "driver",
+          "pipeline/runid": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "pipelines.kubeflow.org/v2_component": "true",
+          "workflows.argoproj.io/completed": "true",
+          "workflows.argoproj.io/workflow": "md-9tbrj"
+        },
+        "name": "md-9tbrj-553314056",
+        "namespace": "ani-modeldev-tenant-a-v21",
+        "ownerReferences": [
+          {
+            "apiVersion": "argoproj.io/v1alpha1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Workflow",
+            "name": "md-9tbrj",
+            "uid": "43843405-9f52-4865-8843-957f375d1373"
+          }
+        ],
+        "resourceVersion": "12121005",
+        "uid": "e40ba49b-e9c5-4347-823b-0782cebf1d82"
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "wait"
+          },
+          {
+            "name": "main"
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "init"
+          }
+        ],
+        "nodeName": "node2",
+        "restartPolicy": "Never",
+        "serviceAccountName": "modeldev-step",
+        "volumes": []
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:40Z",
+            "observedGeneration": 1,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:36Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:38Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:38Z",
+            "observedGeneration": 1,
+            "reason": "PodCompleted",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-10-28T23:14:34Z",
+            "observedGeneration": 1,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "allocatedResources": {
+              "cpu": "100m",
+              "memory": "64Mi"
+            },
+            "containerID": "containerd://3ec593366b651556831da7aeac288aac3adcb92d6cfab73826d3fdb0ca7b873d",
+            "image": "sha256:592feb0d13c1c9918bf60c3603d015e2a31a0ac28930d047982d55e617049c7b",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+            "lastState": {},
+            "name": "main",
+            "ready": false,
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi"
+              }
+            },
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://3ec593366b651556831da7aeac288aac3adcb92d6cfab73826d3fdb0ca7b873d",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:37Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:36Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 65533,
+                "supplementalGroups": [
+                  1000,
+                  65533
+                ],
+                "uid": 65532
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-9wjb2",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "containerID": "containerd://c6008f43322b8a3605b57df35bdacb9b8b2d9ca8e9f19c2fb854d6a637ff01ca",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "wait",
+            "ready": false,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://c6008f43322b8a3605b57df35bdacb9b8b2d9ca8e9f19c2fb854d6a637ff01ca",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:38Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:36Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/mainctrfs/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "tmp-dir-argo"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-9wjb2",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "10.10.1.67",
+        "hostIPs": [
+          {
+            "ip": "10.10.1.67"
+          }
+        ],
+        "initContainerStatuses": [
+          {
+            "containerID": "containerd://79540bc51052a67a9905304d742e170743fd2ab704d2e3af4cb89936e825ff09",
+            "image": "sha256:bd992efa52defd12e0b0abf4d372ea8052f909451c3cfa7b7d8d5676e28ffc3a",
+            "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "lastState": {},
+            "name": "init",
+            "ready": true,
+            "resources": {},
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "containerID": "containerd://79540bc51052a67a9905304d742e170743fd2ab704d2e3af4cb89936e825ff09",
+                "exitCode": 0,
+                "finishedAt": "2026-10-28T23:14:35Z",
+                "reason": "Completed",
+                "startedAt": "2026-10-28T23:14:35Z"
+              }
+            },
+            "user": {
+              "linux": {
+                "gid": 0,
+                "supplementalGroups": [
+                  0,
+                  1000
+                ],
+                "uid": 1000
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-9wjb2",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "observedGeneration": 1,
+        "phase": "Succeeded",
+        "podIP": "10.16.9.164",
+        "podIPs": [
+          {
+            "ip": "10.16.9.164"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-10-28T23:14:34Z"
+      }
+    }
+  ],
+  "run": {
+    "created_at": "2026-10-28T23:14:24Z",
+    "display_name": "md-5953c2e1-107e-4d46-af6d-4c718c7fb10c",
+    "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+    "finished_at": "2026-10-28T23:16:28Z",
+    "pipeline_version_reference": {
+      "pipeline_id": "1ddd30df-c356-4ce4-96aa-1be0b1d80554",
+      "pipeline_version_id": "bc0dbb9e-df9e-4524-8979-e5795ae199f8"
+    },
+    "run_details": {
+      "task_details": [
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-2326859234"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "publish-driver",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "0557bcd5-a45e-4dbb-aefd-f98849ac6317"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-2902350379"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "md-9tbrj",
+          "end_time": "2026-10-28T23:16:28Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:24Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "RUNNING",
+              "update_time": "2026-10-28T23:14:25Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:16:29Z"
+            }
+          ],
+          "task_id": "0c7479ba-f98d-491b-b3a9-e5db5c78b65f"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-4153363017"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "executor",
+          "end_time": "2026-10-28T23:16:28Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:46Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "RUNNING",
+              "update_time": "2026-10-28T23:15:47Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:16:29Z"
+            }
+          ],
+          "task_id": "2b945732-05c7-4ab2-97de-36f10c137163"
+        },
+        {
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "close",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "2d9ae4c3-eacd-4a01-ab68-859c90454a01"
+        },
+        {
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "executor(0)",
+          "end_time": "2026-10-28T23:15:48Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:46Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "PENDING",
+              "update_time": "2026-10-28T23:15:47Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:16:29Z"
+            }
+          ],
+          "task_id": "2f135363-3d42-4c66-8e94-1b730eb2dcef"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-3805893247"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "workspace-name",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:54Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "RUNNING",
+              "update_time": "2026-10-28T23:14:55Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "4a8ddb3d-2a96-4aa2-a5aa-a85eb4eec75d"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-680637118"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "root-driver",
+          "end_time": "2026-10-28T23:14:28Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:24Z",
+          "state": "SUCCEEDED",
+          "state_history": [
+            {
+              "state": "PENDING",
+              "update_time": "2026-10-28T23:14:25Z"
+            },
+            {
+              "state": "SUCCEEDED",
+              "update_time": "2026-10-28T23:14:35Z"
+            }
+          ],
+          "task_id": "4d00aec9-6671-48c3-9789-4b24faec934c"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-1667578394"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "executor(0)",
+          "end_time": "2026-10-28T23:14:57Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:54Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "PENDING",
+              "update_time": "2026-10-28T23:14:55Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "4d981d46-e1d2-4555-ace7-a0eaa96f1ec5"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-135891640"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "prepare",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "5c2fa9e9-af26-497f-b97b-56b306bd98c9"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-553314056"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "root",
+          "end_time": "2026-10-28T23:16:28Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:34Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "RUNNING",
+              "update_time": "2026-10-28T23:14:35Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:16:29Z"
+            }
+          ],
+          "task_id": "5def9a81-2d93-4fb5-84ff-248f7da54e84"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-3863681979"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "finalize-close-driver",
+          "end_time": "2026-10-28T23:15:40Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state": "SUCCEEDED",
+          "state_history": [
+            {
+              "state": "PENDING",
+              "update_time": "2026-10-28T23:15:37Z"
+            },
+            {
+              "state": "SUCCEEDED",
+              "update_time": "2026-10-28T23:15:47Z"
+            }
+          ],
+          "task_id": "776ce083-de76-4b73-bd05-726776fd9dfd"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-4197167559"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "collect",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "7f9643bb-aead-4438-aa13-59aea3ff6f87"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-3587874737"
+            },
+            {
+              "pod_name": "md-9tbrj-2709849958"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "exit-handler-1",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:44Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "RUNNING",
+              "update_time": "2026-10-28T23:14:45Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "883ea602-926a-4a76-8dfa-b97c419ebc62"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-1827742978"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "executor",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:54Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "RUNNING",
+              "update_time": "2026-10-28T23:14:55Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "94f0613f-6677-4299-972b-9e434bb6e937"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-138062652"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "workspace-name-driver",
+          "end_time": "2026-10-28T23:14:48Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:44Z",
+          "state": "SUCCEEDED",
+          "state_history": [
+            {
+              "state": "PENDING",
+              "update_time": "2026-10-28T23:14:45Z"
+            },
+            {
+              "state": "SUCCEEDED",
+              "update_time": "2026-10-28T23:14:55Z"
+            }
+          ],
+          "task_id": "9cd40da0-6538-49e9-a02b-2ecc96eecbba"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-4011870418"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "finalize-close",
+          "end_time": "2026-10-28T23:16:28Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:46Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "RUNNING",
+              "update_time": "2026-10-28T23:15:47Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:16:29Z"
+            }
+          ],
+          "task_id": "a036754f-d57a-4528-b7fd-b233e44e2c39"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-647942178"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "publish",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "a798e3b3-5b6d-4606-ae26-d441c3bce609"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-2675896712"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "train-wait",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "bcfcc1d5-b07f-45fe-9ad7-5359eaf2435d"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-934073247"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "collect-driver",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "cab2c7cf-aaab-46ae-bb34-7d5194fd910b"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-757840927"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "exit-handler-1-driver",
+          "end_time": "2026-10-28T23:14:38Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:14:34Z",
+          "state": "SUCCEEDED",
+          "state_history": [
+            {
+              "state": "PENDING",
+              "update_time": "2026-10-28T23:14:35Z"
+            },
+            {
+              "state": "SUCCEEDED",
+              "update_time": "2026-10-28T23:14:45Z"
+            }
+          ],
+          "task_id": "d4c3b792-8022-4e55-a2b7-2ddae83ab281"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-2181032092"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "exit-handler-1.onExit",
+          "end_time": "2026-10-28T23:16:28Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "RUNNING",
+              "update_time": "2026-10-28T23:15:37Z"
+            },
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T23:16:29Z"
+            }
+          ],
+          "task_id": "dcf1799a-86a6-4bab-bd8d-032e3ea94485"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-3381966819"
+            },
+            {
+              "pod_name": "md-9tbrj-2675896712"
+            },
+            {
+              "pod_name": "md-9tbrj-4197167559"
+            },
+            {
+              "pod_name": "md-9tbrj-647942178"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "createpvc",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "e8aa7fc4-aee3-46b1-a90a-6b6e9b2c86ac"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-2574532582"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "prepare-driver",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "e9ab193d-5407-4574-a9b7-447773a8cc07"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-2525137209"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "close-driver",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "f57ae952-9b22-413b-9e93-5e5a3ce90cdc"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-9tbrj-367580303"
+            }
+          ],
+          "create_time": "2026-10-28T23:14:24Z",
+          "display_name": "train-wait-driver",
+          "end_time": "2026-10-28T23:15:36Z",
+          "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+          "start_time": "2026-10-28T23:15:36Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T23:15:37Z"
+            }
+          ],
+          "task_id": "f7575d0e-ee25-471e-9ee9-48c495a8da04"
+        }
+      ]
+    },
+    "run_id": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+    "runtime_config": {
+      "parameters": {
+        "execution_id": "5953c2e1-107e-4d46-af6d-4c718c7fb10c",
+        "spec_hash": "0208188cf2da722447cf84fbaa1459142a1fc4300f57360700971ec4c1d31208"
+      },
+      "pipeline_root": "s3://ani-md-v21-kfp-01a15f47/artifacts"
+    },
+    "scheduled_at": "2026-10-28T23:14:24Z",
+    "service_account": "modeldev-step",
+    "state": "FAILED"
+  },
+  "source_capture_sha256": "57ff70e37900d95b2a9d5891e2f5131dd4d9dd1d2d5cc3cc4d3fba2c1ca47025",
+  "workflow": {
+    "apiVersion": "argoproj.io/v1alpha1",
+    "kind": "Workflow",
+    "metadata": {
+      "annotations": {
+        "pipelines.kubeflow.org/run_name": "md-5953c2e1-107e-4d46-af6d-4c718c7fb10c",
+        "workflows.argoproj.io/pod-name-format": "v1"
+      },
+      "generation": 11,
+      "labels": {
+        "pipeline/persistedFinalState": "true",
+        "pipeline/runid": "53a74b3d-87c4-4ae2-8020-5f92ace81287",
+        "workflows.argoproj.io/completed": "true",
+        "workflows.argoproj.io/phase": "Failed"
+      },
+      "name": "md-9tbrj",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "resourceVersion": "12126657",
+      "uid": "43843405-9f52-4865-8843-957f375d1373"
+    },
+    "spec": {},
+    "status": {
+      "artifactGCStatus": {
+        "notSpecified": true
+      },
+      "artifactRepositoryRef": {
+        "artifactRepository": {},
+        "default": true
+      },
+      "conditions": [
+        {
+          "status": "False",
+          "type": "PodRunning"
+        },
+        {
+          "status": "True",
+          "type": "Completed"
+        }
+      ],
+      "finishedAt": "2026-10-28T23:16:28Z",
+      "nodes": {
+        "md-9tbrj": {
+          "children": [
+            "md-9tbrj-2902350379"
+          ],
+          "displayName": "md-9tbrj",
+          "finishedAt": "2026-10-28T23:16:28Z",
+          "id": "md-9tbrj",
+          "name": "md-9tbrj",
+          "outboundNodes": [
+            "md-9tbrj-2525137209"
+          ],
+          "phase": "Failed",
+          "progress": "4/6",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 9
+          },
+          "startedAt": "2026-10-28T23:14:24Z",
+          "templateName": "entrypoint",
+          "templateScope": "local/md-9tbrj",
+          "type": "DAG"
+        },
+        "md-9tbrj-135891640": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-367580303"
+          ],
+          "displayName": "train-wait-driver",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-135891640",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.train-wait-driver",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "system-container-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-138062652": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-3805893247"
+          ],
+          "displayName": "workspace-name",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-138062652",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "value": "{\"volumes\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"configMap\":{\"name\":\"modeldev-open-r2-step-20261029\",\"optional\":false}},{\"name\":\"component-tmp\",\"emptyDir\":{\"sizeLimit\":\"256Mi\"}}],\"containers\":[{\"name\":\"main\",\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"command\":[\"/kfp-launcher/launch\",\"--pipeline_name\",\"md\",\"--run_id\",\"53a74b3d-87c4-4ae2-8020-5f92ace81287\",\"--execution_id\",\"289\",\"--executor_input\",\"{\\\"inputs\\\":{\\\"parameterValues\\\":{\\\"execution_id\\\":\\\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\\\"}}, \\\"outputs\\\":{\\\"parameters\\\":{\\\"name\\\":{\\\"outputFile\\\":\\\"/tmp/kfp/outputs/name\\\"}}, \\\"artifacts\\\":{\\\"executor-logs\\\":{\\\"artifacts\\\":[{\\\"name\\\":\\\"executor-logs\\\", \\\"type\\\":{\\\"schemaTitle\\\":\\\"system.Artifact\\\"}, \\\"uri\\\":\\\"s3://ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/workspace-name/002c02ac-13b2-443c-817a-a8f6f6890c9d/executor-logs\\\"}]}}, \\\"outputFile\\\":\\\"/s3/ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/workspace-name/002c02ac-13b2-443c-817a-a8f6f6890c9d/output_metadata.json\\\"}}\",\"--component_spec\",\"{\\\"inputDefinitions\\\":{\\\"parameters\\\":{\\\"execution_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"outputDefinitions\\\":{\\\"parameters\\\":{\\\"name\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"executorLabel\\\":\\\"exec-workspace-name\\\"}\",\"--pod_name\",\"$(KFP_POD_NAME)\",\"--pod_uid\",\"$(KFP_POD_UID)\",\"--ml_pipeline_server_address\",\"ml-pipeline.kubeflow.svc.cluster.local\",\"--ml_pipeline_server_port\",\"8887\",\"--mlmd_server_address\",\"metadata-grpc-service.kubeflow.svc.cluster.local\",\"--mlmd_server_port\",\"8080\",\"--publish_logs\",\"true\",\"--ca_cert_path\",\"/kfp/certs/ca.crt\",\"--publish_logs\",\"true\",\"--\"],\"args\":[\"/ani-modeldev-step\",\"workspace-name\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--output\",\"{{$.outputs.parameters['name'].output_file}}\"],\"env\":[{\"name\":\"ANI_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"name\":\"ANI_POD_UID\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.uid\"}}},{\"name\":\"ANI_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}}],\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"64Mi\"}},\"volumeMounts\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"mountPath\":\"/etc/modeldev-step\"},{\"name\":\"component-tmp\",\"mountPath\":\"/tmp\"}],\"securityContext\":{\"capabilities\":{\"drop\":[\"ALL\"]},\"runAsUser\":1000,\"runAsGroup\":1000,\"runAsNonRoot\":true}}],\"activeDeadlineSeconds\":14400}"
+              },
+              {
+                "default": "false",
+                "name": "cached-decision",
+                "value": "false"
+              },
+              {
+                "name": "pod-metadata-annotation-key",
+                "value": "ani.modeldev/component-resources-sha256"
+              },
+              {
+                "name": "pod-metadata-annotation-val",
+                "value": "21f3c12b065cb549f24fb5aff15954eb95dc98eb1f9096df11f02885655a1a47"
+              },
+              {
+                "name": "pod-metadata-label-key-1",
+                "value": "ani.modeldev/admission-profile"
+              },
+              {
+                "name": "pod-metadata-label-val-1",
+                "value": "md-open-r2-mlp-cpu-20261029"
+              },
+              {
+                "name": "pod-metadata-label-key-2",
+                "value": "ani.modeldev/step-role"
+              },
+              {
+                "name": "pod-metadata-label-val-2",
+                "value": "workspace-name"
+              },
+              {
+                "default": "0",
+                "name": "retry-max-count",
+                "value": "0"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-duration",
+                "value": "0"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-factor",
+                "value": "2"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-max-duration",
+                "value": "3600"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root.exit-handler-1.workspace-name",
+          "outboundNodes": [
+            "md-9tbrj-1827742978"
+          ],
+          "phase": "Failed",
+          "progress": "0/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 0
+          },
+          "startedAt": "2026-10-28T23:14:54Z",
+          "templateName": "metadata-1-2-retry-system-container-executor",
+          "templateScope": "local/md-9tbrj",
+          "type": "DAG"
+        },
+        "md-9tbrj-1667578394": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-3381966819",
+            "md-9tbrj-2675896712",
+            "md-9tbrj-4197167559",
+            "md-9tbrj-647942178"
+          ],
+          "displayName": "createpvc",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-1667578394",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.createpvc",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "system-container-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-1827742978": {
+          "boundaryID": "md-9tbrj-138062652",
+          "children": [
+            "md-9tbrj-1667578394"
+          ],
+          "displayName": "executor(0)",
+          "finishedAt": "2026-10-28T23:14:57Z",
+          "hostNodeName": "node2",
+          "id": "md-9tbrj-1827742978",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "value": "{\"volumes\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"configMap\":{\"name\":\"modeldev-open-r2-step-20261029\",\"optional\":false}},{\"name\":\"component-tmp\",\"emptyDir\":{\"sizeLimit\":\"256Mi\"}}],\"containers\":[{\"name\":\"main\",\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"command\":[\"/kfp-launcher/launch\",\"--pipeline_name\",\"md\",\"--run_id\",\"53a74b3d-87c4-4ae2-8020-5f92ace81287\",\"--execution_id\",\"289\",\"--executor_input\",\"{\\\"inputs\\\":{\\\"parameterValues\\\":{\\\"execution_id\\\":\\\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\\\"}}, \\\"outputs\\\":{\\\"parameters\\\":{\\\"name\\\":{\\\"outputFile\\\":\\\"/tmp/kfp/outputs/name\\\"}}, \\\"artifacts\\\":{\\\"executor-logs\\\":{\\\"artifacts\\\":[{\\\"name\\\":\\\"executor-logs\\\", \\\"type\\\":{\\\"schemaTitle\\\":\\\"system.Artifact\\\"}, \\\"uri\\\":\\\"s3://ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/workspace-name/002c02ac-13b2-443c-817a-a8f6f6890c9d/executor-logs\\\"}]}}, \\\"outputFile\\\":\\\"/s3/ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/workspace-name/002c02ac-13b2-443c-817a-a8f6f6890c9d/output_metadata.json\\\"}}\",\"--component_spec\",\"{\\\"inputDefinitions\\\":{\\\"parameters\\\":{\\\"execution_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"outputDefinitions\\\":{\\\"parameters\\\":{\\\"name\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"executorLabel\\\":\\\"exec-workspace-name\\\"}\",\"--pod_name\",\"$(KFP_POD_NAME)\",\"--pod_uid\",\"$(KFP_POD_UID)\",\"--ml_pipeline_server_address\",\"ml-pipeline.kubeflow.svc.cluster.local\",\"--ml_pipeline_server_port\",\"8887\",\"--mlmd_server_address\",\"metadata-grpc-service.kubeflow.svc.cluster.local\",\"--mlmd_server_port\",\"8080\",\"--publish_logs\",\"true\",\"--ca_cert_path\",\"/kfp/certs/ca.crt\",\"--publish_logs\",\"true\",\"--\"],\"args\":[\"/ani-modeldev-step\",\"workspace-name\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--output\",\"{{$.outputs.parameters['name'].output_file}}\"],\"env\":[{\"name\":\"ANI_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"name\":\"ANI_POD_UID\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.uid\"}}},{\"name\":\"ANI_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}}],\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"64Mi\"}},\"volumeMounts\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"mountPath\":\"/etc/modeldev-step\"},{\"name\":\"component-tmp\",\"mountPath\":\"/tmp\"}],\"securityContext\":{\"capabilities\":{\"drop\":[\"ALL\"]},\"runAsUser\":1000,\"runAsGroup\":1000,\"runAsNonRoot\":true}}],\"activeDeadlineSeconds\":14400}"
+              },
+              {
+                "name": "pod-metadata-annotation-key",
+                "value": "ani.modeldev/component-resources-sha256"
+              },
+              {
+                "name": "pod-metadata-annotation-val",
+                "value": "21f3c12b065cb549f24fb5aff15954eb95dc98eb1f9096df11f02885655a1a47"
+              },
+              {
+                "name": "pod-metadata-label-key-1",
+                "value": "ani.modeldev/admission-profile"
+              },
+              {
+                "name": "pod-metadata-label-val-1",
+                "value": "md-open-r2-mlp-cpu-20261029"
+              },
+              {
+                "name": "pod-metadata-label-key-2",
+                "value": "ani.modeldev/step-role"
+              },
+              {
+                "name": "pod-metadata-label-val-2",
+                "value": "workspace-name"
+              },
+              {
+                "name": "retry-max-count",
+                "value": "0"
+              },
+              {
+                "name": "retry-backoff-duration",
+                "value": "0"
+              },
+              {
+                "name": "retry-backoff-factor",
+                "value": "2"
+              },
+              {
+                "name": "retry-backoff-max-duration",
+                "value": "3600"
+              }
+            ]
+          },
+          "message": "Pod ephemeral local storage usage exceeds the total limit of containers 256Mi. ",
+          "name": "md-9tbrj.root.exit-handler-1.workspace-name.executor(0)",
+          "nodeFlag": {
+            "retried": true
+          },
+          "outputs": {
+            "exitCode": "137"
+          },
+          "phase": "Failed",
+          "progress": "0/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 0
+          },
+          "startedAt": "2026-10-28T23:14:54Z",
+          "taskResultSynced": true,
+          "templateName": "metadata-1-2-retry-system-container-impl",
+          "templateScope": "local/md-9tbrj",
+          "type": "Pod"
+        },
+        "md-9tbrj-2181032092": {
+          "boundaryID": "md-9tbrj-2709849958",
+          "children": [
+            "md-9tbrj-3863681979"
+          ],
+          "displayName": "finalize-close-driver",
+          "finishedAt": "2026-10-28T23:15:40Z",
+          "hostNodeName": "node2",
+          "id": "md-9tbrj-2181032092",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "component",
+                "value": "{\"executorLabel\":\"exec-finalize-close\",\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"run_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+              },
+              {
+                "name": "task",
+                "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-finalize-close\"},\"dependentTasks\":[\"exit-handler-1\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"close-finalizer\"},\"triggerPolicy\":{\"strategy\":\"ALL_UPSTREAM_TASKS_COMPLETED\"}}"
+              },
+              {
+                "name": "container",
+                "value": "{\"args\":[\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--close-only\"],\"command\":[\"/ani-modeldev-step\",\"close\"],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":1,\"cpuRequest\":0.1,\"memoryLimit\":0.536870912,\"memoryRequest\":0.134217728,\"resourceCpuLimit\":\"1\",\"resourceCpuRequest\":\"100m\",\"resourceMemoryLimit\":\"512Mi\",\"resourceMemoryRequest\":\"128Mi\"}}"
+              },
+              {
+                "name": "task-name",
+                "value": "finalize-close"
+              },
+              {
+                "name": "parent-dag-id",
+                "value": "287"
+              },
+              {
+                "default": "-1",
+                "name": "iteration-index",
+                "value": "-1"
+              },
+              {
+                "default": "",
+                "name": "kubernetes-config",
+                "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"256Mi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"finalize-close\"}},\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root.exit-handler-1.onExit.finalize-close-driver",
+          "outputs": {
+            "exitCode": "0",
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "value": "{\"volumes\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"configMap\":{\"name\":\"modeldev-open-r2-step-20261029\",\"optional\":false}},{\"name\":\"component-tmp\",\"emptyDir\":{\"sizeLimit\":\"256Mi\"}}],\"containers\":[{\"name\":\"main\",\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"command\":[\"/kfp-launcher/launch\",\"--pipeline_name\",\"md\",\"--run_id\",\"53a74b3d-87c4-4ae2-8020-5f92ace81287\",\"--execution_id\",\"290\",\"--executor_input\",\"{\\\"inputs\\\":{\\\"parameterValues\\\":{\\\"execution_id\\\":\\\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\\\", \\\"run_id\\\":\\\"53a74b3d-87c4-4ae2-8020-5f92ace81287\\\", \\\"spec_hash\\\":\\\"0208188cf2da722447cf84fbaa1459142a1fc4300f57360700971ec4c1d31208\\\"}}, \\\"outputs\\\":{\\\"artifacts\\\":{\\\"executor-logs\\\":{\\\"artifacts\\\":[{\\\"name\\\":\\\"executor-logs\\\", \\\"type\\\":{\\\"schemaTitle\\\":\\\"system.Artifact\\\"}, \\\"uri\\\":\\\"s3://ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/finalize-close/64af0767-5dfc-4ba9-af71-0aa820756468/executor-logs\\\"}]}}, \\\"outputFile\\\":\\\"/s3/ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/finalize-close/64af0767-5dfc-4ba9-af71-0aa820756468/output_metadata.json\\\"}}\",\"--component_spec\",\"{\\\"inputDefinitions\\\":{\\\"parameters\\\":{\\\"execution_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}, \\\"run_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}, \\\"spec_hash\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"executorLabel\\\":\\\"exec-finalize-close\\\"}\",\"--pod_name\",\"$(KFP_POD_NAME)\",\"--pod_uid\",\"$(KFP_POD_UID)\",\"--ml_pipeline_server_address\",\"ml-pipeline.kubeflow.svc.cluster.local\",\"--ml_pipeline_server_port\",\"8887\",\"--mlmd_server_address\",\"metadata-grpc-service.kubeflow.svc.cluster.local\",\"--mlmd_server_port\",\"8080\",\"--publish_logs\",\"true\",\"--ca_cert_path\",\"/kfp/certs/ca.crt\",\"--publish_logs\",\"true\",\"--\"],\"args\":[\"/ani-modeldev-step\",\"close\",\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--close-only\"],\"env\":[{\"name\":\"ANI_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"name\":\"ANI_POD_UID\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.uid\"}}},{\"name\":\"ANI_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}}],\"resources\":{\"limits\":{\"cpu\":\"1\",\"memory\":\"512Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}},\"volumeMounts\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"mountPath\":\"/etc/modeldev-step\"},{\"name\":\"component-tmp\",\"mountPath\":\"/tmp\"}],\"securityContext\":{\"capabilities\":{\"drop\":[\"ALL\"]},\"runAsUser\":1000,\"runAsGroup\":1000,\"runAsNonRoot\":true}}],\"activeDeadlineSeconds\":14400}",
+                "valueFrom": {
+                  "default": "",
+                  "path": "/tmp/outputs/pod-spec-patch"
+                }
+              },
+              {
+                "default": "false",
+                "name": "cached-decision",
+                "value": "false",
+                "valueFrom": {
+                  "default": "false",
+                  "path": "/tmp/outputs/cached-decision"
+                }
+              },
+              {
+                "name": "condition",
+                "value": "nil",
+                "valueFrom": {
+                  "default": "true",
+                  "path": "/tmp/outputs/condition"
+                }
+              }
+            ]
+          },
+          "phase": "Succeeded",
+          "progress": "1/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "memory": 3
+          },
+          "startedAt": "2026-10-28T23:15:36Z",
+          "taskResultSynced": true,
+          "templateName": "system-container-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Pod"
+        },
+        "md-9tbrj-2326859234": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-647942178"
+          ],
+          "displayName": "publish",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-2326859234",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.publish",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "metadata-1-2-retry-system-container-executor",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-2525137209": {
+          "boundaryID": "md-9tbrj-757840927",
+          "displayName": "close",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-2525137209",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.close",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "metadata-1-2-retry-system-container-executor",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-2574532582": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-135891640"
+          ],
+          "displayName": "prepare",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-2574532582",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.prepare",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "metadata-1-2-retry-system-container-executor",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-2675896712": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-934073247"
+          ],
+          "displayName": "collect-driver",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-2675896712",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.collect-driver",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "system-container-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-2709849958": {
+          "boundaryID": "md-9tbrj-680637118",
+          "children": [
+            "md-9tbrj-2181032092"
+          ],
+          "displayName": "exit-handler-1.onExit",
+          "finishedAt": "2026-10-28T23:16:28Z",
+          "id": "md-9tbrj-2709849958",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "parent-dag-id",
+                "value": "287"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root.exit-handler-1.onExit",
+          "nodeFlag": {
+            "hooked": true
+          },
+          "outboundNodes": [
+            "md-9tbrj-4153363017"
+          ],
+          "phase": "Failed",
+          "progress": "1/2",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 3
+          },
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "exit-hook-root-finalize-close",
+          "templateScope": "local/md-9tbrj",
+          "type": "DAG"
+        },
+        "md-9tbrj-2902350379": {
+          "boundaryID": "md-9tbrj",
+          "children": [
+            "md-9tbrj-680637118"
+          ],
+          "displayName": "root-driver",
+          "finishedAt": "2026-10-28T23:14:28Z",
+          "hostNodeName": "node2",
+          "id": "md-9tbrj-2902350379",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "component",
+                "value": "{\"dag\":{\"tasks\":{\"exit-handler-1\":{\"componentRef\":{\"name\":\"comp-exit-handler-1\"},\"inputs\":{\"parameters\":{\"pipelinechannel--execution_id\":{\"componentInputParameter\":\"execution_id\"},\"pipelinechannel--spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"taskInfo\":{\"name\":\"managed-execution\"}},\"finalize-close\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-finalize-close\"},\"dependentTasks\":[\"exit-handler-1\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"close-finalizer\"},\"triggerPolicy\":{\"strategy\":\"ALL_UPSTREAM_TASKS_COMPLETED\"}}}},\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+              },
+              {
+                "default": "",
+                "name": "runtime-config",
+                "value": "{\"gcsOutputDirectory\":\"s3://ani-md-v21-kfp-01a15f47/artifacts\",\"parameterValues\":{\"execution_id\":\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\",\"spec_hash\":\"0208188cf2da722447cf84fbaa1459142a1fc4300f57360700971ec4c1d31208\"}}"
+              },
+              {
+                "default": "",
+                "name": "task",
+                "value": ""
+              },
+              {
+                "default": "",
+                "name": "task-name",
+                "value": ""
+              },
+              {
+                "default": "0",
+                "name": "parent-dag-id",
+                "value": "0"
+              },
+              {
+                "default": "-1",
+                "name": "iteration-index",
+                "value": "-1"
+              },
+              {
+                "default": "DAG",
+                "name": "driver-type",
+                "value": "ROOT_DAG"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root-driver",
+          "outputs": {
+            "exitCode": "0",
+            "parameters": [
+              {
+                "name": "execution-id",
+                "value": "287",
+                "valueFrom": {
+                  "path": "/tmp/outputs/execution-id"
+                }
+              },
+              {
+                "name": "iteration-count",
+                "value": "0",
+                "valueFrom": {
+                  "default": "0",
+                  "path": "/tmp/outputs/iteration-count"
+                }
+              },
+              {
+                "name": "condition",
+                "value": "nil",
+                "valueFrom": {
+                  "default": "true",
+                  "path": "/tmp/outputs/condition"
+                }
+              }
+            ]
+          },
+          "phase": "Succeeded",
+          "progress": "1/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "memory": 2
+          },
+          "startedAt": "2026-10-28T23:14:24Z",
+          "taskResultSynced": true,
+          "templateName": "system-dag-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Pod"
+        },
+        "md-9tbrj-3381966819": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-2574532582"
+          ],
+          "displayName": "prepare-driver",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-3381966819",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.prepare-driver",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "system-container-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-3587874737": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-138062652"
+          ],
+          "displayName": "workspace-name-driver",
+          "finishedAt": "2026-10-28T23:14:48Z",
+          "hostNodeName": "node2",
+          "id": "md-9tbrj-3587874737",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "component",
+                "value": "{\"executorLabel\":\"exec-workspace-name\",\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"}}},\"outputDefinitions\":{\"parameters\":{\"name\":{\"parameterType\":\"STRING\"}}}}"
+              },
+              {
+                "name": "task",
+                "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-workspace-name\"},\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"workspace-name\"}}"
+              },
+              {
+                "name": "container",
+                "value": "{\"args\":[\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--output\",\"{{$.outputs.parameters['name'].output_file}}\"],\"command\":[\"/ani-modeldev-step\",\"workspace-name\"],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":0.5,\"cpuRequest\":0.1,\"memoryLimit\":0.268435456,\"memoryRequest\":0.067108864,\"resourceCpuLimit\":\"500m\",\"resourceCpuRequest\":\"100m\",\"resourceMemoryLimit\":\"256Mi\",\"resourceMemoryRequest\":\"64Mi\"}}"
+              },
+              {
+                "name": "task-name",
+                "value": "workspace-name"
+              },
+              {
+                "name": "parent-dag-id",
+                "value": "288"
+              },
+              {
+                "default": "-1",
+                "name": "iteration-index",
+                "value": "-1"
+              },
+              {
+                "default": "",
+                "name": "kubernetes-config",
+                "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"256Mi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"21f3c12b065cb549f24fb5aff15954eb95dc98eb1f9096df11f02885655a1a47\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"workspace-name\"}},\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root.exit-handler-1.workspace-name-driver",
+          "outputs": {
+            "exitCode": "0",
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "value": "{\"volumes\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"configMap\":{\"name\":\"modeldev-open-r2-step-20261029\",\"optional\":false}},{\"name\":\"component-tmp\",\"emptyDir\":{\"sizeLimit\":\"256Mi\"}}],\"containers\":[{\"name\":\"main\",\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"command\":[\"/kfp-launcher/launch\",\"--pipeline_name\",\"md\",\"--run_id\",\"53a74b3d-87c4-4ae2-8020-5f92ace81287\",\"--execution_id\",\"289\",\"--executor_input\",\"{\\\"inputs\\\":{\\\"parameterValues\\\":{\\\"execution_id\\\":\\\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\\\"}}, \\\"outputs\\\":{\\\"parameters\\\":{\\\"name\\\":{\\\"outputFile\\\":\\\"/tmp/kfp/outputs/name\\\"}}, \\\"artifacts\\\":{\\\"executor-logs\\\":{\\\"artifacts\\\":[{\\\"name\\\":\\\"executor-logs\\\", \\\"type\\\":{\\\"schemaTitle\\\":\\\"system.Artifact\\\"}, \\\"uri\\\":\\\"s3://ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/workspace-name/002c02ac-13b2-443c-817a-a8f6f6890c9d/executor-logs\\\"}]}}, \\\"outputFile\\\":\\\"/s3/ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/workspace-name/002c02ac-13b2-443c-817a-a8f6f6890c9d/output_metadata.json\\\"}}\",\"--component_spec\",\"{\\\"inputDefinitions\\\":{\\\"parameters\\\":{\\\"execution_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"outputDefinitions\\\":{\\\"parameters\\\":{\\\"name\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"executorLabel\\\":\\\"exec-workspace-name\\\"}\",\"--pod_name\",\"$(KFP_POD_NAME)\",\"--pod_uid\",\"$(KFP_POD_UID)\",\"--ml_pipeline_server_address\",\"ml-pipeline.kubeflow.svc.cluster.local\",\"--ml_pipeline_server_port\",\"8887\",\"--mlmd_server_address\",\"metadata-grpc-service.kubeflow.svc.cluster.local\",\"--mlmd_server_port\",\"8080\",\"--publish_logs\",\"true\",\"--ca_cert_path\",\"/kfp/certs/ca.crt\",\"--publish_logs\",\"true\",\"--\"],\"args\":[\"/ani-modeldev-step\",\"workspace-name\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--output\",\"{{$.outputs.parameters['name'].output_file}}\"],\"env\":[{\"name\":\"ANI_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"name\":\"ANI_POD_UID\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.uid\"}}},{\"name\":\"ANI_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}}],\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"64Mi\"}},\"volumeMounts\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"mountPath\":\"/etc/modeldev-step\"},{\"name\":\"component-tmp\",\"mountPath\":\"/tmp\"}],\"securityContext\":{\"capabilities\":{\"drop\":[\"ALL\"]},\"runAsUser\":1000,\"runAsGroup\":1000,\"runAsNonRoot\":true}}],\"activeDeadlineSeconds\":14400}",
+                "valueFrom": {
+                  "default": "",
+                  "path": "/tmp/outputs/pod-spec-patch"
+                }
+              },
+              {
+                "default": "false",
+                "name": "cached-decision",
+                "value": "false",
+                "valueFrom": {
+                  "default": "false",
+                  "path": "/tmp/outputs/cached-decision"
+                }
+              },
+              {
+                "name": "condition",
+                "value": "nil",
+                "valueFrom": {
+                  "default": "true",
+                  "path": "/tmp/outputs/condition"
+                }
+              }
+            ]
+          },
+          "phase": "Succeeded",
+          "progress": "1/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "memory": 2
+          },
+          "startedAt": "2026-10-28T23:14:44Z",
+          "taskResultSynced": true,
+          "templateName": "system-container-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Pod"
+        },
+        "md-9tbrj-367580303": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-2675896712"
+          ],
+          "displayName": "train-wait",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-367580303",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.train-wait",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "metadata-1-2-retry-system-container-executor",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-3805893247": {
+          "boundaryID": "md-9tbrj-138062652",
+          "children": [
+            "md-9tbrj-1827742978"
+          ],
+          "displayName": "executor",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-3805893247",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "value": "{\"volumes\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"configMap\":{\"name\":\"modeldev-open-r2-step-20261029\",\"optional\":false}},{\"name\":\"component-tmp\",\"emptyDir\":{\"sizeLimit\":\"256Mi\"}}],\"containers\":[{\"name\":\"main\",\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"command\":[\"/kfp-launcher/launch\",\"--pipeline_name\",\"md\",\"--run_id\",\"53a74b3d-87c4-4ae2-8020-5f92ace81287\",\"--execution_id\",\"289\",\"--executor_input\",\"{\\\"inputs\\\":{\\\"parameterValues\\\":{\\\"execution_id\\\":\\\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\\\"}}, \\\"outputs\\\":{\\\"parameters\\\":{\\\"name\\\":{\\\"outputFile\\\":\\\"/tmp/kfp/outputs/name\\\"}}, \\\"artifacts\\\":{\\\"executor-logs\\\":{\\\"artifacts\\\":[{\\\"name\\\":\\\"executor-logs\\\", \\\"type\\\":{\\\"schemaTitle\\\":\\\"system.Artifact\\\"}, \\\"uri\\\":\\\"s3://ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/workspace-name/002c02ac-13b2-443c-817a-a8f6f6890c9d/executor-logs\\\"}]}}, \\\"outputFile\\\":\\\"/s3/ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/workspace-name/002c02ac-13b2-443c-817a-a8f6f6890c9d/output_metadata.json\\\"}}\",\"--component_spec\",\"{\\\"inputDefinitions\\\":{\\\"parameters\\\":{\\\"execution_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"outputDefinitions\\\":{\\\"parameters\\\":{\\\"name\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"executorLabel\\\":\\\"exec-workspace-name\\\"}\",\"--pod_name\",\"$(KFP_POD_NAME)\",\"--pod_uid\",\"$(KFP_POD_UID)\",\"--ml_pipeline_server_address\",\"ml-pipeline.kubeflow.svc.cluster.local\",\"--ml_pipeline_server_port\",\"8887\",\"--mlmd_server_address\",\"metadata-grpc-service.kubeflow.svc.cluster.local\",\"--mlmd_server_port\",\"8080\",\"--publish_logs\",\"true\",\"--ca_cert_path\",\"/kfp/certs/ca.crt\",\"--publish_logs\",\"true\",\"--\"],\"args\":[\"/ani-modeldev-step\",\"workspace-name\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--output\",\"{{$.outputs.parameters['name'].output_file}}\"],\"env\":[{\"name\":\"ANI_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"name\":\"ANI_POD_UID\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.uid\"}}},{\"name\":\"ANI_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}}],\"resources\":{\"limits\":{\"cpu\":\"500m\",\"memory\":\"256Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"64Mi\"}},\"volumeMounts\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"mountPath\":\"/etc/modeldev-step\"},{\"name\":\"component-tmp\",\"mountPath\":\"/tmp\"}],\"securityContext\":{\"capabilities\":{\"drop\":[\"ALL\"]},\"runAsUser\":1000,\"runAsGroup\":1000,\"runAsNonRoot\":true}}],\"activeDeadlineSeconds\":14400}"
+              },
+              {
+                "name": "pod-metadata-annotation-key",
+                "value": "ani.modeldev/component-resources-sha256"
+              },
+              {
+                "name": "pod-metadata-annotation-val",
+                "value": "21f3c12b065cb549f24fb5aff15954eb95dc98eb1f9096df11f02885655a1a47"
+              },
+              {
+                "name": "pod-metadata-label-key-1",
+                "value": "ani.modeldev/admission-profile"
+              },
+              {
+                "name": "pod-metadata-label-val-1",
+                "value": "md-open-r2-mlp-cpu-20261029"
+              },
+              {
+                "name": "pod-metadata-label-key-2",
+                "value": "ani.modeldev/step-role"
+              },
+              {
+                "name": "pod-metadata-label-val-2",
+                "value": "workspace-name"
+              },
+              {
+                "name": "retry-max-count",
+                "value": "0"
+              },
+              {
+                "name": "retry-backoff-duration",
+                "value": "0"
+              },
+              {
+                "name": "retry-backoff-factor",
+                "value": "2"
+              },
+              {
+                "name": "retry-backoff-max-duration",
+                "value": "3600"
+              }
+            ]
+          },
+          "message": "No more retries left",
+          "name": "md-9tbrj.root.exit-handler-1.workspace-name.executor",
+          "outputs": {
+            "exitCode": "137"
+          },
+          "phase": "Failed",
+          "progress": "0/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 0
+          },
+          "startedAt": "2026-10-28T23:14:54Z",
+          "templateName": "metadata-1-2-retry-system-container-impl",
+          "templateScope": "local/md-9tbrj",
+          "type": "Retry"
+        },
+        "md-9tbrj-3863681979": {
+          "boundaryID": "md-9tbrj-2709849958",
+          "children": [
+            "md-9tbrj-4011870418"
+          ],
+          "displayName": "finalize-close",
+          "finishedAt": "2026-10-28T23:16:28Z",
+          "id": "md-9tbrj-3863681979",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "value": "{\"volumes\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"configMap\":{\"name\":\"modeldev-open-r2-step-20261029\",\"optional\":false}},{\"name\":\"component-tmp\",\"emptyDir\":{\"sizeLimit\":\"256Mi\"}}],\"containers\":[{\"name\":\"main\",\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"command\":[\"/kfp-launcher/launch\",\"--pipeline_name\",\"md\",\"--run_id\",\"53a74b3d-87c4-4ae2-8020-5f92ace81287\",\"--execution_id\",\"290\",\"--executor_input\",\"{\\\"inputs\\\":{\\\"parameterValues\\\":{\\\"execution_id\\\":\\\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\\\", \\\"run_id\\\":\\\"53a74b3d-87c4-4ae2-8020-5f92ace81287\\\", \\\"spec_hash\\\":\\\"0208188cf2da722447cf84fbaa1459142a1fc4300f57360700971ec4c1d31208\\\"}}, \\\"outputs\\\":{\\\"artifacts\\\":{\\\"executor-logs\\\":{\\\"artifacts\\\":[{\\\"name\\\":\\\"executor-logs\\\", \\\"type\\\":{\\\"schemaTitle\\\":\\\"system.Artifact\\\"}, \\\"uri\\\":\\\"s3://ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/finalize-close/64af0767-5dfc-4ba9-af71-0aa820756468/executor-logs\\\"}]}}, \\\"outputFile\\\":\\\"/s3/ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/finalize-close/64af0767-5dfc-4ba9-af71-0aa820756468/output_metadata.json\\\"}}\",\"--component_spec\",\"{\\\"inputDefinitions\\\":{\\\"parameters\\\":{\\\"execution_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}, \\\"run_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}, \\\"spec_hash\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"executorLabel\\\":\\\"exec-finalize-close\\\"}\",\"--pod_name\",\"$(KFP_POD_NAME)\",\"--pod_uid\",\"$(KFP_POD_UID)\",\"--ml_pipeline_server_address\",\"ml-pipeline.kubeflow.svc.cluster.local\",\"--ml_pipeline_server_port\",\"8887\",\"--mlmd_server_address\",\"metadata-grpc-service.kubeflow.svc.cluster.local\",\"--mlmd_server_port\",\"8080\",\"--publish_logs\",\"true\",\"--ca_cert_path\",\"/kfp/certs/ca.crt\",\"--publish_logs\",\"true\",\"--\"],\"args\":[\"/ani-modeldev-step\",\"close\",\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--close-only\"],\"env\":[{\"name\":\"ANI_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"name\":\"ANI_POD_UID\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.uid\"}}},{\"name\":\"ANI_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}}],\"resources\":{\"limits\":{\"cpu\":\"1\",\"memory\":\"512Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}},\"volumeMounts\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"mountPath\":\"/etc/modeldev-step\"},{\"name\":\"component-tmp\",\"mountPath\":\"/tmp\"}],\"securityContext\":{\"capabilities\":{\"drop\":[\"ALL\"]},\"runAsUser\":1000,\"runAsGroup\":1000,\"runAsNonRoot\":true}}],\"activeDeadlineSeconds\":14400}"
+              },
+              {
+                "default": "false",
+                "name": "cached-decision",
+                "value": "false"
+              },
+              {
+                "name": "pod-metadata-annotation-key",
+                "value": "ani.modeldev/component-resources-sha256"
+              },
+              {
+                "name": "pod-metadata-annotation-val",
+                "value": "21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac"
+              },
+              {
+                "name": "pod-metadata-label-key-1",
+                "value": "ani.modeldev/admission-profile"
+              },
+              {
+                "name": "pod-metadata-label-val-1",
+                "value": "md-open-r2-mlp-cpu-20261029"
+              },
+              {
+                "name": "pod-metadata-label-key-2",
+                "value": "ani.modeldev/step-role"
+              },
+              {
+                "name": "pod-metadata-label-val-2",
+                "value": "finalize-close"
+              },
+              {
+                "default": "0",
+                "name": "retry-max-count",
+                "value": "0"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-duration",
+                "value": "0"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-factor",
+                "value": "2"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-max-duration",
+                "value": "3600"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root.exit-handler-1.onExit.finalize-close",
+          "outboundNodes": [
+            "md-9tbrj-4153363017"
+          ],
+          "phase": "Failed",
+          "progress": "0/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 0
+          },
+          "startedAt": "2026-10-28T23:15:46Z",
+          "templateName": "metadata-1-2-retry-system-container-executor",
+          "templateScope": "local/md-9tbrj",
+          "type": "DAG"
+        },
+        "md-9tbrj-4011870418": {
+          "boundaryID": "md-9tbrj-3863681979",
+          "children": [
+            "md-9tbrj-4153363017"
+          ],
+          "displayName": "executor",
+          "finishedAt": "2026-10-28T23:16:28Z",
+          "id": "md-9tbrj-4011870418",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "value": "{\"volumes\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"configMap\":{\"name\":\"modeldev-open-r2-step-20261029\",\"optional\":false}},{\"name\":\"component-tmp\",\"emptyDir\":{\"sizeLimit\":\"256Mi\"}}],\"containers\":[{\"name\":\"main\",\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"command\":[\"/kfp-launcher/launch\",\"--pipeline_name\",\"md\",\"--run_id\",\"53a74b3d-87c4-4ae2-8020-5f92ace81287\",\"--execution_id\",\"290\",\"--executor_input\",\"{\\\"inputs\\\":{\\\"parameterValues\\\":{\\\"execution_id\\\":\\\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\\\", \\\"run_id\\\":\\\"53a74b3d-87c4-4ae2-8020-5f92ace81287\\\", \\\"spec_hash\\\":\\\"0208188cf2da722447cf84fbaa1459142a1fc4300f57360700971ec4c1d31208\\\"}}, \\\"outputs\\\":{\\\"artifacts\\\":{\\\"executor-logs\\\":{\\\"artifacts\\\":[{\\\"name\\\":\\\"executor-logs\\\", \\\"type\\\":{\\\"schemaTitle\\\":\\\"system.Artifact\\\"}, \\\"uri\\\":\\\"s3://ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/finalize-close/64af0767-5dfc-4ba9-af71-0aa820756468/executor-logs\\\"}]}}, \\\"outputFile\\\":\\\"/s3/ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/finalize-close/64af0767-5dfc-4ba9-af71-0aa820756468/output_metadata.json\\\"}}\",\"--component_spec\",\"{\\\"inputDefinitions\\\":{\\\"parameters\\\":{\\\"execution_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}, \\\"run_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}, \\\"spec_hash\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"executorLabel\\\":\\\"exec-finalize-close\\\"}\",\"--pod_name\",\"$(KFP_POD_NAME)\",\"--pod_uid\",\"$(KFP_POD_UID)\",\"--ml_pipeline_server_address\",\"ml-pipeline.kubeflow.svc.cluster.local\",\"--ml_pipeline_server_port\",\"8887\",\"--mlmd_server_address\",\"metadata-grpc-service.kubeflow.svc.cluster.local\",\"--mlmd_server_port\",\"8080\",\"--publish_logs\",\"true\",\"--ca_cert_path\",\"/kfp/certs/ca.crt\",\"--publish_logs\",\"true\",\"--\"],\"args\":[\"/ani-modeldev-step\",\"close\",\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--close-only\"],\"env\":[{\"name\":\"ANI_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"name\":\"ANI_POD_UID\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.uid\"}}},{\"name\":\"ANI_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}}],\"resources\":{\"limits\":{\"cpu\":\"1\",\"memory\":\"512Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}},\"volumeMounts\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"mountPath\":\"/etc/modeldev-step\"},{\"name\":\"component-tmp\",\"mountPath\":\"/tmp\"}],\"securityContext\":{\"capabilities\":{\"drop\":[\"ALL\"]},\"runAsUser\":1000,\"runAsGroup\":1000,\"runAsNonRoot\":true}}],\"activeDeadlineSeconds\":14400}"
+              },
+              {
+                "name": "pod-metadata-annotation-key",
+                "value": "ani.modeldev/component-resources-sha256"
+              },
+              {
+                "name": "pod-metadata-annotation-val",
+                "value": "21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac"
+              },
+              {
+                "name": "pod-metadata-label-key-1",
+                "value": "ani.modeldev/admission-profile"
+              },
+              {
+                "name": "pod-metadata-label-val-1",
+                "value": "md-open-r2-mlp-cpu-20261029"
+              },
+              {
+                "name": "pod-metadata-label-key-2",
+                "value": "ani.modeldev/step-role"
+              },
+              {
+                "name": "pod-metadata-label-val-2",
+                "value": "finalize-close"
+              },
+              {
+                "name": "retry-max-count",
+                "value": "0"
+              },
+              {
+                "name": "retry-backoff-duration",
+                "value": "0"
+              },
+              {
+                "name": "retry-backoff-factor",
+                "value": "2"
+              },
+              {
+                "name": "retry-backoff-max-duration",
+                "value": "3600"
+              }
+            ]
+          },
+          "message": "No more retries left",
+          "name": "md-9tbrj.root.exit-handler-1.onExit.finalize-close.executor",
+          "outputs": {
+            "exitCode": "137"
+          },
+          "phase": "Failed",
+          "progress": "0/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 0
+          },
+          "startedAt": "2026-10-28T23:15:46Z",
+          "templateName": "metadata-1-2-retry-system-container-impl",
+          "templateScope": "local/md-9tbrj",
+          "type": "Retry"
+        },
+        "md-9tbrj-4153363017": {
+          "boundaryID": "md-9tbrj-3863681979",
+          "displayName": "executor(0)",
+          "finishedAt": "2026-10-28T23:15:48Z",
+          "hostNodeName": "node2",
+          "id": "md-9tbrj-4153363017",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "value": "{\"volumes\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"configMap\":{\"name\":\"modeldev-open-r2-step-20261029\",\"optional\":false}},{\"name\":\"component-tmp\",\"emptyDir\":{\"sizeLimit\":\"256Mi\"}}],\"containers\":[{\"name\":\"main\",\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"command\":[\"/kfp-launcher/launch\",\"--pipeline_name\",\"md\",\"--run_id\",\"53a74b3d-87c4-4ae2-8020-5f92ace81287\",\"--execution_id\",\"290\",\"--executor_input\",\"{\\\"inputs\\\":{\\\"parameterValues\\\":{\\\"execution_id\\\":\\\"5953c2e1-107e-4d46-af6d-4c718c7fb10c\\\", \\\"run_id\\\":\\\"53a74b3d-87c4-4ae2-8020-5f92ace81287\\\", \\\"spec_hash\\\":\\\"0208188cf2da722447cf84fbaa1459142a1fc4300f57360700971ec4c1d31208\\\"}}, \\\"outputs\\\":{\\\"artifacts\\\":{\\\"executor-logs\\\":{\\\"artifacts\\\":[{\\\"name\\\":\\\"executor-logs\\\", \\\"type\\\":{\\\"schemaTitle\\\":\\\"system.Artifact\\\"}, \\\"uri\\\":\\\"s3://ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/finalize-close/64af0767-5dfc-4ba9-af71-0aa820756468/executor-logs\\\"}]}}, \\\"outputFile\\\":\\\"/s3/ani-md-v21-kfp-01a15f47/artifacts/md/53a74b3d-87c4-4ae2-8020-5f92ace81287/finalize-close/64af0767-5dfc-4ba9-af71-0aa820756468/output_metadata.json\\\"}}\",\"--component_spec\",\"{\\\"inputDefinitions\\\":{\\\"parameters\\\":{\\\"execution_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}, \\\"run_id\\\":{\\\"parameterType\\\":\\\"STRING\\\"}, \\\"spec_hash\\\":{\\\"parameterType\\\":\\\"STRING\\\"}}}, \\\"executorLabel\\\":\\\"exec-finalize-close\\\"}\",\"--pod_name\",\"$(KFP_POD_NAME)\",\"--pod_uid\",\"$(KFP_POD_UID)\",\"--ml_pipeline_server_address\",\"ml-pipeline.kubeflow.svc.cluster.local\",\"--ml_pipeline_server_port\",\"8887\",\"--mlmd_server_address\",\"metadata-grpc-service.kubeflow.svc.cluster.local\",\"--mlmd_server_port\",\"8080\",\"--publish_logs\",\"true\",\"--ca_cert_path\",\"/kfp/certs/ca.crt\",\"--publish_logs\",\"true\",\"--\"],\"args\":[\"/ani-modeldev-step\",\"close\",\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--close-only\"],\"env\":[{\"name\":\"ANI_POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}},{\"name\":\"ANI_POD_UID\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.uid\"}}},{\"name\":\"ANI_POD_NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}}],\"resources\":{\"limits\":{\"cpu\":\"1\",\"memory\":\"512Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"}},\"volumeMounts\":[{\"name\":\"modeldev-open-r2-step-20261029\",\"mountPath\":\"/etc/modeldev-step\"},{\"name\":\"component-tmp\",\"mountPath\":\"/tmp\"}],\"securityContext\":{\"capabilities\":{\"drop\":[\"ALL\"]},\"runAsUser\":1000,\"runAsGroup\":1000,\"runAsNonRoot\":true}}],\"activeDeadlineSeconds\":14400}"
+              },
+              {
+                "name": "pod-metadata-annotation-key",
+                "value": "ani.modeldev/component-resources-sha256"
+              },
+              {
+                "name": "pod-metadata-annotation-val",
+                "value": "21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac"
+              },
+              {
+                "name": "pod-metadata-label-key-1",
+                "value": "ani.modeldev/admission-profile"
+              },
+              {
+                "name": "pod-metadata-label-val-1",
+                "value": "md-open-r2-mlp-cpu-20261029"
+              },
+              {
+                "name": "pod-metadata-label-key-2",
+                "value": "ani.modeldev/step-role"
+              },
+              {
+                "name": "pod-metadata-label-val-2",
+                "value": "finalize-close"
+              },
+              {
+                "name": "retry-max-count",
+                "value": "0"
+              },
+              {
+                "name": "retry-backoff-duration",
+                "value": "0"
+              },
+              {
+                "name": "retry-backoff-factor",
+                "value": "2"
+              },
+              {
+                "name": "retry-backoff-max-duration",
+                "value": "3600"
+              }
+            ]
+          },
+          "message": "Pod ephemeral local storage usage exceeds the total limit of containers 256Mi. ",
+          "name": "md-9tbrj.root.exit-handler-1.onExit.finalize-close.executor(0)",
+          "nodeFlag": {
+            "retried": true
+          },
+          "outputs": {
+            "exitCode": "137"
+          },
+          "phase": "Failed",
+          "progress": "0/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 0
+          },
+          "startedAt": "2026-10-28T23:15:46Z",
+          "taskResultSynced": true,
+          "templateName": "metadata-1-2-retry-system-container-impl",
+          "templateScope": "local/md-9tbrj",
+          "type": "Pod"
+        },
+        "md-9tbrj-4197167559": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-2326859234"
+          ],
+          "displayName": "publish-driver",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-4197167559",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.publish-driver",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "system-container-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-553314056": {
+          "boundaryID": "md-9tbrj-680637118",
+          "children": [
+            "md-9tbrj-757840927"
+          ],
+          "displayName": "exit-handler-1-driver",
+          "finishedAt": "2026-10-28T23:14:38Z",
+          "hostNodeName": "node2",
+          "id": "md-9tbrj-553314056",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "component",
+                "value": "{\"dag\":{\"tasks\":{\"close\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-close\"},\"dependentTasks\":[\"createpvc\",\"publish\"],\"inputs\":{\"parameters\":{\"candidate\":{\"taskOutputParameter\":{\"outputParameterKey\":\"candidate\",\"producerTask\":\"publish\"}},\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"close\"}},\"collect\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-collect\"},\"dependentTasks\":[\"createpvc\",\"train-wait\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"collect\"}},\"createpvc\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-createpvc\"},\"dependentTasks\":[\"workspace-name\"],\"inputs\":{\"parameters\":{\"access_modes\":{\"runtimeValue\":{\"constant\":[\"ReadWriteMany\"]}},\"pvc_name\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"workspace-name\"}},\"size\":{\"runtimeValue\":{\"constant\":\"4Gi\"}},\"storage_class_name\":{\"runtimeValue\":{\"constant\":\"ani-cephfs\"}}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"createpvc\"}},\"prepare\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-prepare\"},\"dependentTasks\":[\"createpvc\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"pvc_name\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"prepare\"}},\"publish\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-publish\"},\"dependentTasks\":[\"collect\",\"createpvc\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"publish\"}},\"train-wait\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-train-wait\"},\"dependentTasks\":[\"prepare\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"train-wait\"}},\"workspace-name\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-workspace-name\"},\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"workspace-name\"}}}},\"inputDefinitions\":{\"parameters\":{\"pipelinechannel--execution_id\":{\"parameterType\":\"STRING\"},\"pipelinechannel--spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+              },
+              {
+                "default": "",
+                "name": "runtime-config",
+                "value": ""
+              },
+              {
+                "default": "",
+                "name": "task",
+                "value": "{\"componentRef\":{\"name\":\"comp-exit-handler-1\"},\"inputs\":{\"parameters\":{\"pipelinechannel--execution_id\":{\"componentInputParameter\":\"execution_id\"},\"pipelinechannel--spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"taskInfo\":{\"name\":\"managed-execution\"}}"
+              },
+              {
+                "default": "",
+                "name": "task-name",
+                "value": "exit-handler-1"
+              },
+              {
+                "default": "0",
+                "name": "parent-dag-id",
+                "value": "287"
+              },
+              {
+                "default": "-1",
+                "name": "iteration-index",
+                "value": "-1"
+              },
+              {
+                "default": "DAG",
+                "name": "driver-type",
+                "value": "DAG"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root.exit-handler-1-driver",
+          "outputs": {
+            "exitCode": "0",
+            "parameters": [
+              {
+                "name": "execution-id",
+                "value": "288",
+                "valueFrom": {
+                  "path": "/tmp/outputs/execution-id"
+                }
+              },
+              {
+                "name": "iteration-count",
+                "value": "0",
+                "valueFrom": {
+                  "default": "0",
+                  "path": "/tmp/outputs/iteration-count"
+                }
+              },
+              {
+                "name": "condition",
+                "value": "true",
+                "valueFrom": {
+                  "default": "true",
+                  "path": "/tmp/outputs/condition"
+                }
+              }
+            ]
+          },
+          "phase": "Succeeded",
+          "progress": "1/1",
+          "resourcesDuration": {
+            "cpu": 0,
+            "memory": 2
+          },
+          "startedAt": "2026-10-28T23:14:34Z",
+          "taskResultSynced": true,
+          "templateName": "system-dag-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Pod"
+        },
+        "md-9tbrj-647942178": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-2525137209"
+          ],
+          "displayName": "close-driver",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-647942178",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.close-driver",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "system-container-driver",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        },
+        "md-9tbrj-680637118": {
+          "boundaryID": "md-9tbrj",
+          "children": [
+            "md-9tbrj-553314056"
+          ],
+          "displayName": "root",
+          "finishedAt": "2026-10-28T23:16:28Z",
+          "id": "md-9tbrj-680637118",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "parent-dag-id",
+                "value": "287"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root",
+          "outboundNodes": [
+            "md-9tbrj-2525137209"
+          ],
+          "phase": "Failed",
+          "progress": "3/5",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 7
+          },
+          "startedAt": "2026-10-28T23:14:34Z",
+          "templateName": "root",
+          "templateScope": "local/md-9tbrj",
+          "type": "DAG"
+        },
+        "md-9tbrj-757840927": {
+          "boundaryID": "md-9tbrj-680637118",
+          "children": [
+            "md-9tbrj-3587874737",
+            "md-9tbrj-2709849958"
+          ],
+          "displayName": "exit-handler-1",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-757840927",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "parent-dag-id",
+                "value": "288"
+              }
+            ]
+          },
+          "name": "md-9tbrj.root.exit-handler-1",
+          "outboundNodes": [
+            "md-9tbrj-2525137209"
+          ],
+          "phase": "Failed",
+          "progress": "2/4",
+          "resourcesDuration": {
+            "cpu": 0,
+            "ephemeral-storage": 0,
+            "memory": 5
+          },
+          "startedAt": "2026-10-28T23:14:44Z",
+          "templateName": "comp-exit-handler-1",
+          "templateScope": "local/md-9tbrj",
+          "type": "DAG"
+        },
+        "md-9tbrj-934073247": {
+          "boundaryID": "md-9tbrj-757840927",
+          "children": [
+            "md-9tbrj-4197167559"
+          ],
+          "displayName": "collect",
+          "finishedAt": "2026-10-28T23:15:36Z",
+          "id": "md-9tbrj-934073247",
+          "message": "omitted: depends condition not met",
+          "name": "md-9tbrj.root.exit-handler-1.collect",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T23:15:36Z",
+          "templateName": "metadata-1-2-retry-system-container-executor",
+          "templateScope": "local/md-9tbrj",
+          "type": "Skipped"
+        }
+      },
+      "phase": "Failed",
+      "progress": "4/6",
+      "resourcesDuration": {
+        "cpu": 0,
+        "ephemeral-storage": 0,
+        "memory": 9
+      },
+      "startedAt": "2026-10-28T23:14:24Z"
+    }
+  }
+}

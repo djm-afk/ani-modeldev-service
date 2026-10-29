@@ -50,15 +50,6 @@ func TestManagedConfigurationResolvesTaskOnlyAfterAuthentication(t *testing.T) {
 	}
 }
 
-func TestManagedConfigurationKeepsLegacyVerifierTaskIdentityEmpty(t *testing.T) {
-	calls := []string{}
-	runtime, request := taskIdentityRuntime(t, &calls, nil, &taskIdentityLegacyRuns{calls: &calls})
-	result, err := runtime.Configuration(context.Background(), "synthetic-current-bound-token", request, "publish")
-	if err != nil || result.TaskID != "" || !reflect.DeepEqual(calls, []string{"workload", "run"}) {
-		t.Fatalf("legacy boundary must not synthesize a KFP task ID: task=%q calls=%v err=%v", result.TaskID, calls, err)
-	}
-}
-
 // Only outbound ports are substituted; Configuration's authentication and
 // identity behavior remain the real use case under test.
 func taskIdentityRuntime(t *testing.T, calls *[]string, workloadErr error, runs biz.ManagedRunVerifier) (*biz.ManagedRuntime, biz.BeginManagedExecutionRequest) {

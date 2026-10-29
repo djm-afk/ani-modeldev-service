@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	ModelDevQueryService_ListImplementations_FullMethodName       = "/ani.modeldev.v1.ModelDevQueryService/ListImplementations"
+	ModelDevQueryService_CheckFinetuningReadiness_FullMethodName  = "/ani.modeldev.v1.ModelDevQueryService/CheckFinetuningReadiness"
 	ModelDevQueryService_GetInputVersion_FullMethodName           = "/ani.modeldev.v1.ModelDevQueryService/GetInputVersion"
 	ModelDevQueryService_ListInputVersions_FullMethodName         = "/ani.modeldev.v1.ModelDevQueryService/ListInputVersions"
 	ModelDevQueryService_GetExecution_FullMethodName              = "/ani.modeldev.v1.ModelDevQueryService/GetExecution"
@@ -40,6 +41,7 @@ const (
 // the actor saved at admission is audit data, not permanent access permission.
 type ModelDevQueryServiceClient interface {
 	ListImplementations(ctx context.Context, in *ListImplementationsRequest, opts ...grpc.CallOption) (*ListImplementationsResponse, error)
+	CheckFinetuningReadiness(ctx context.Context, in *CheckFinetuningReadinessRequest, opts ...grpc.CallOption) (*CheckFinetuningReadinessResponse, error)
 	GetInputVersion(ctx context.Context, in *GetInputVersionRequest, opts ...grpc.CallOption) (*GetInputVersionResponse, error)
 	ListInputVersions(ctx context.Context, in *ListInputVersionsRequest, opts ...grpc.CallOption) (*ListInputVersionsResponse, error)
 	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE The registration recovery operation returns this same original execution projection.
@@ -68,6 +70,16 @@ func (c *modelDevQueryServiceClient) ListImplementations(ctx context.Context, in
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListImplementationsResponse)
 	err := c.cc.Invoke(ctx, ModelDevQueryService_ListImplementations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modelDevQueryServiceClient) CheckFinetuningReadiness(ctx context.Context, in *CheckFinetuningReadinessRequest, opts ...grpc.CallOption) (*CheckFinetuningReadinessResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckFinetuningReadinessResponse)
+	err := c.cc.Invoke(ctx, ModelDevQueryService_CheckFinetuningReadiness_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -191,6 +203,7 @@ func (c *modelDevQueryServiceClient) ListExecutionEvents(ctx context.Context, in
 // the actor saved at admission is audit data, not permanent access permission.
 type ModelDevQueryServiceServer interface {
 	ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
+	CheckFinetuningReadiness(context.Context, *CheckFinetuningReadinessRequest) (*CheckFinetuningReadinessResponse, error)
 	GetInputVersion(context.Context, *GetInputVersionRequest) (*GetInputVersionResponse, error)
 	ListInputVersions(context.Context, *ListInputVersionsRequest) (*ListInputVersionsResponse, error)
 	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE The registration recovery operation returns this same original execution projection.
@@ -217,6 +230,9 @@ type UnimplementedModelDevQueryServiceServer struct{}
 
 func (UnimplementedModelDevQueryServiceServer) ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListImplementations not implemented")
+}
+func (UnimplementedModelDevQueryServiceServer) CheckFinetuningReadiness(context.Context, *CheckFinetuningReadinessRequest) (*CheckFinetuningReadinessResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckFinetuningReadiness not implemented")
 }
 func (UnimplementedModelDevQueryServiceServer) GetInputVersion(context.Context, *GetInputVersionRequest) (*GetInputVersionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetInputVersion not implemented")
@@ -283,6 +299,24 @@ func _ModelDevQueryService_ListImplementations_Handler(srv interface{}, ctx cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ModelDevQueryServiceServer).ListImplementations(ctx, req.(*ListImplementationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModelDevQueryService_CheckFinetuningReadiness_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckFinetuningReadinessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModelDevQueryServiceServer).CheckFinetuningReadiness(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ModelDevQueryService_CheckFinetuningReadiness_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModelDevQueryServiceServer).CheckFinetuningReadiness(ctx, req.(*CheckFinetuningReadinessRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -470,6 +504,10 @@ var ModelDevQueryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListImplementations",
 			Handler:    _ModelDevQueryService_ListImplementations_Handler,
+		},
+		{
+			MethodName: "CheckFinetuningReadiness",
+			Handler:    _ModelDevQueryService_CheckFinetuningReadiness_Handler,
 		},
 		{
 			MethodName: "GetInputVersion",

@@ -3,6 +3,7 @@ package input_test
 import (
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"reflect"
 	"strings"
 	"testing"
@@ -248,6 +249,7 @@ func verificationObservation(request biz.InputImport) biz.VerifiedCSV {
 	return biz.VerifiedCSV{
 		VerifiedObject: biz.VerifiedObject{Object: request.Object, VerifiedAt: request.RequestedAt.Add(time.Minute)},
 		SchemaVersion:  "ani.cpu.csv.v1", RowCount: 1024, FeatureCount: 16,
+		PreparedDataset: cpup01.PreparedDatasetFacts{Format: "CPU_CSV", TransformID: "csv-identity-v3", SizeBytes: request.Object.SizeBytes, SHA256: request.Object.SHA256, RowCount: 1024},
 	}
 }
 

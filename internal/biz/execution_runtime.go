@@ -24,11 +24,11 @@ var (
 // WorkspaceBinding is an observed runtime fact, separate from the immutable
 // execution snapshot. Its subpaths come exclusively from that snapshot.
 type WorkspaceBinding struct {
-	Mode                                                              string
-	NamespaceName, NamespaceUID, PVCName, PVCUID                      string
-	InputSubpath, TrainingSubpath, ReportsSubpath, PublicationSubpath string
-	PreparedManifestSHA256                                            string
-	PreparedManifestBytes                                             int64
+	Mode                                                                           string
+	NamespaceName, NamespaceUID, PVCName, PVCUID                                   string
+	InputSubpath, TrainingSubpath, ReportsSubpath, PublicationSubpath, WorkSubpath string
+	PreparedManifestSHA256                                                         string
+	PreparedManifestBytes                                                          int64
 }
 
 type TrainingPlan struct {
@@ -77,6 +77,9 @@ type RuntimeResource struct {
 	// InitializationAbort is owner-only Pod evidence, never a main-container
 	// exit or permission for a managed step, training writer, or publication.
 	InitializationAbort *PodInitializationAbort `json:",omitempty"`
+	// SandboxTermination is an owner-only kubelet post-termination marker.
+	// It preserves missing process status without inventing an actual exit.
+	SandboxTermination *PodSandboxTermination `json:",omitempty"`
 }
 
 // TrainingControllerSuspension is a controller acknowledgement, distinct from
@@ -297,8 +300,8 @@ type PreparedWorkspaceVerifier interface {
 }
 
 type PublicationVerifier interface {
-	VerifyPublication(context.Context, Execution, ManagedStepAssociation, RuntimePublication) (RuntimePublication, error)
-	VerifyWritersAbsent(context.Context, Execution, ManagedStepAssociation) (ManagedCloseEvidence, error)
+	VerifyPublication(context.Context, Execution, ManagedStepAssociation, WorkspaceBinding, RuntimePublication) (RuntimePublication, error)
+	VerifyWritersAbsent(context.Context, Execution, ManagedStepAssociation, *WorkspaceBinding) (ManagedCloseEvidence, error)
 }
 
 type ManagedCloseEvidence struct {
@@ -310,6 +313,40 @@ type ManagedCloseEvidence struct {
 	SkippedTasks     []ManagedSkippedTask
 	ObservedAt       time.Time
 	OwnerTermination *ManagedOwnerTermination
+	// UnpreparedWorkspace records only a PVC observed after the original KFP
+	// CreatePVC succeeded and prepare was refused. It grants no prepared data or
+	// training authority; owner cleanup must dispose this exact UID after close.
+	UnpreparedWorkspace *UnpreparedWorkspace `json:",omitempty"`
+}
+
+type UnpreparedWorkspace struct {
+	NamespaceName, NamespaceUID, PVCName, PVCUID string
+	PVCResourceVersion, SpecSHA256               string
+	CreateTaskID, CreatePodUID, RequestSHA256    string
+	CreatedAt                                    time.Time
+}
+
+// ValidUnpreparedWorkspace checks the persisted identity envelope only. The
+// infrastructure verifier must independently prove the original CreatePVC
+// request, complete owner graph, exact current UID and writer absence.
+func ValidUnpreparedWorkspace(execution Execution, owner RunAuthorityCandidate, fact *UnpreparedWorkspace) bool {
+	return fact != nil && fact.NamespaceName == owner.NamespaceName && fact.NamespaceUID == owner.NamespaceUID && owner.NamespaceName == execution.Snapshot.Environment.NamespaceName && owner.NamespaceUID == execution.Snapshot.Environment.NamespaceUID && fact.PVCName == ExpectedWorkspacePVCName(execution.ExecutionID) && validAdmissionID(fact.PVCUID) && fact.PVCResourceVersion != "" && closeSpecHashPattern.MatchString(fact.SpecSHA256) && closeSpecHashPattern.MatchString(fact.RequestSHA256) && validAdmissionID(fact.CreateTaskID) && validAdmissionID(fact.CreatePodUID) && !fact.CreatedAt.IsZero()
+}
+
+// ResourceVersion is an observation fence, not a new volume identity.
+func SameUnpreparedWorkspace(a, b *UnpreparedWorkspace) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	left, right := *a, *b
+	left.PVCResourceVersion, right.PVCResourceVersion = "", ""
+	// Native Kubernetes timestamps and JSON facts can retain different local
+	// zone representations of the same instant across persistence.
+	if !left.CreatedAt.Equal(right.CreatedAt) {
+		return false
+	}
+	left.CreatedAt, right.CreatedAt = time.Time{}, time.Time{}
+	return left == right
 }
 
 // OwnerTermination is independent controller evidence for background close.
@@ -348,7 +385,7 @@ func ValidateWorkspaceBinding(execution Execution, workspace WorkspaceBinding) e
 	want := execution.Snapshot.Workspace
 	if workspace.Mode != want.Mode || workspace.NamespaceName != execution.Snapshot.Environment.NamespaceName || workspace.NamespaceUID != execution.Snapshot.Environment.NamespaceUID ||
 		workspace.PVCName == "" || workspace.PVCUID == "" || workspace.InputSubpath != want.InputSubpath || workspace.TrainingSubpath != want.TrainingSubpath ||
-		workspace.ReportsSubpath != want.ReportsSubpath || workspace.PublicationSubpath != want.PublicationSubpath || workspace.PreparedManifestBytes <= 0 || !closeSpecHashPattern.MatchString(workspace.PreparedManifestSHA256) {
+		workspace.ReportsSubpath != want.ReportsSubpath || workspace.PublicationSubpath != want.PublicationSubpath || workspace.WorkSubpath != want.WorkSubpath || workspace.PreparedManifestBytes <= 0 || !closeSpecHashPattern.MatchString(workspace.PreparedManifestSHA256) {
 		return ErrRuntimeConflict
 	}
 	return nil

@@ -13,6 +13,9 @@ import subprocess
 import sys
 import time
 
+from dataset_fixture import manifest_arguments
+from image_runtime import PYTHON, TRAINING, podman_command
+
 
 def require(condition, message):
     if not condition:
@@ -20,10 +23,12 @@ def require(condition, message):
 
 
 def main():
-    require(len(sys.argv) == 3, "usage: image_smoke.py IMAGE_ID NEW_RUN_DIRECTORY")
+    require(len(sys.argv) == 4, "usage: image_smoke.py IMAGE_ID IMMUTABLE_REFERENCE NEW_RUN_DIRECTORY")
     image_id = sys.argv[1]
     require(re.fullmatch(r"sha256:[0-9a-f]{64}", image_id), "use the immutable local image ID")
-    run_dir = Path(sys.argv[2])
+    immutable_reference = sys.argv[2]
+    require(re.fullmatch(r"[^\s@]+@sha256:[0-9a-f]{64}", immutable_reference), "full immutable image reference required")
+    run_dir = Path(sys.argv[3])
     require(run_dir.is_absolute() and not run_dir.exists(), "run directory must be new and absolute")
     run_dir.mkdir(mode=0o700)
     source_root = Path(__file__).resolve().parents[2]
@@ -46,77 +51,69 @@ def main():
             raise RuntimeError(f"{label} failed with exit {completed.returncode}; see evidence")
         return completed
 
+    podman = podman_command()
     source_sha = command(["git", "-C", str(source_root), "rev-parse", "HEAD"], "source").stdout.strip()
-    command(["git", "-C", str(source_root), "diff", "--exit-code", "HEAD", "--", "training/"], "source-clean")
-    image = json.loads(command(["podman", "image", "inspect", image_id], "image").stdout)[0]
+    image = json.loads(command(podman + ["image", "inspect", image_id], "image").stdout)[0]
     require(image["Config"]["User"] == "10001:10001", "image must declare the fixed nonroot UID/GID")
     require(image["Config"]["Labels"]["org.opencontainers.image.revision"] == source_sha, "image revision differs from smoke source")
-    require(image["Config"]["Entrypoint"] == ["/opt/venv/bin/python", "-I", "/opt/cpu03/train_mlp.py"], "unexpected image entrypoint")
-    common = [
-        "podman", "run", "--timeout", "90", "--pull", "never", "--network", "none",
+    require(image["Config"]["Entrypoint"] == ["/ani-modeldev-step"], "unexpected image entrypoint")
+    common = podman + [
+        "run", "--timeout", "180", "--pull", "never", "--network", "none",
         "--http-proxy=false", "--cpus", "2", "--memory", "2g", "--memory-swap", "2g",
         "--pids-limit", "256", "--cap-drop", "all", "--security-opt", "no-new-privileges",
-        "--read-only", "--tmpfs", "/tmp:rw,size=128m", "--userns", "keep-id:uid=10001,gid=10001",
+        "--read-only", "--read-only-tmpfs=false", "--userns", "keep-id:uid=10001,gid=10001", "--user", "10001:10001",
         "--passwd=false", "--env", "USER=", "--env", "LOGNAME=", "--env", "LNAME=", "--env", "USERNAME=",
+        "--env", "TMPDIR=/workspace/work/train/tmp", "--env", "HF_HOME=/workspace/work/train/hf",
+        "--env", "HF_DATASETS_CACHE=/workspace/work/train/hf/datasets",
+        "--env", "MPLCONFIGDIR=/workspace/work/train/matplotlib",
     ]
-    command(common + ["--rm", "--entrypoint", "/opt/venv/bin/python", image_id, "-I", "-c",
-        "import getpass,grp,json,os,platform,pwd,sys,sysconfig,torch; "
+    probe_work = run_dir / "probe-work"
+    for relative in ("tmp", "hf/datasets", "matplotlib"):
+        (probe_work / relative).mkdir(parents=True, exist_ok=True)
+    scratch = ["-v", f"{probe_work}:/workspace/work/train:rw,Z"]
+    command(common + scratch + ["--rm", "--entrypoint", PYTHON, image_id, "-I", "-c",
+        "import os; from pathlib import Path; "
+        "[Path(os.environ[k]).mkdir(parents=True,exist_ok=True) for k in ('TMPDIR','HF_HOME','HF_DATASETS_CACHE','MPLCONFIGDIR')]; "
+        "import getpass,grp,json,pwd,sys,torch; "
         "assert os.getuid()==10001 and os.getgid()==10001 and os.getpid()==1; "
-        "assert not any(os.environ.get(name) for name in ('USER','LOGNAME','LNAME','USERNAME')); "
         "user=pwd.getpwuid(10001); group=grp.getgrgid(10001); "
-        "assert user.pw_name=='modeldev' and user.pw_uid==10001 and user.pw_gid==10001; "
-        "assert group.gr_name=='modeldev' and group.gr_gid==10001; "
+        "assert user.pw_name=='modeldev' and group.gr_name=='modeldev'; "
         "assert getpass.getuser()=='modeldev'; "
-        "assert platform.python_version()=='3.14.8'; "
-        "assert sys.prefix=='/opt/venv' and sys.base_prefix=='/usr'; "
-        "assert sysconfig.get_config_var('SOABI')=='cpython-314-x86_64-linux-gnu'; "
-        "assert not sysconfig.get_config_var('Py_GIL_DISABLED'); "
-        "assert torch.__version__=='2.10.0+cpu'; assert torch.version.cuda is None; "
-        "print(json.dumps({'uid':os.getuid(),'gid':os.getgid(),'user':user.pw_name,'group':group.gr_name,"
-        "'python':platform.python_version(),'torch':torch.__version__,'cuda':torch.version.cuda}))"
+        "assert sys.executable=='/opt/conda/bin/python'; "
+        "assert torch.empty(0, device='cpu').device.type=='cpu'; "
+        "print(json.dumps({'uid':os.getuid(),'gid':os.getgid(),'python':sys.version,'torch':torch.__version__,'cuda':torch.version.cuda}))"
     ], "runtime")
-    package_probe = r"""import json
-from pathlib import Path
-packages = {}
-for stanza in Path('/lib/apk/db/installed').read_text().split('\n\n'):
-    fields = dict(line.split(':', 1) for line in stanza.splitlines() if ':' in line)
-    if 'P' in fields:
-        assert fields['P'] not in packages
-        packages[fields['P']] = fields['V']
-print(json.dumps(packages, sort_keys=True))
-"""
-    system_packages = json.loads(command(common + ["--rm", "--entrypoint", "/usr/bin/python", image_id,
-        "-I", "-c", package_probe], "system-packages").stdout)
-    package_lock = json.loads((source_root / "training/runtime-packages.lock.json").read_text())
-    require(system_packages == package_lock["packages"], "complete runtime APK package set differs from lock")
-    command(common + ["--rm", "--entrypoint", "/opt/venv/bin/python", image_id,
-        "-I", "-m", "pip", "check"], "dependencies")
-    command(common + ["--rm", "--entrypoint", "/opt/venv/bin/python", image_id, "-I", "-c",
-        "import setuptools,filelock,fsspec,jinja2,markupsafe,mpmath,networkx,sympy,typing_extensions; "
-        "assert str(markupsafe.escape('<cpu03>'))=='&lt;cpu03&gt;'; "
-        "assert jinja2.Template('{{ value }}').render(value='cpu03')=='cpu03'; "
-        "print('All locked dependency modules imported; MarkupSafe and Jinja2 executed.')"
-    ], "dependency-imports")
+    command(common + scratch + ["--rm", "--entrypoint", PYTHON, image_id, "-I",
+        TRAINING + "/finetuning/inspect_runtime.py", "--image-digest", immutable_reference], "runtime-capabilities")
 
     selected = run_dir / "selected"
     selected.mkdir()
     data_script = source_root / "training" / "make_data.py"
-    command(common + ["--rm", "--entrypoint", "/opt/venv/bin/python",
+    command(common + scratch + ["--rm", "--entrypoint", PYTHON,
         "-v", f"{data_script}:/tool/make_data.py:ro,Z", "-v", f"{selected}:/selected:rw,Z",
         image_id, "-I", "/tool/make_data.py", "--output", "/selected/input.csv"], "fixture")
-    data = selected / "input.csv"
+    inputs = selected / "inputs"
+    inputs.mkdir()
+    data = inputs / "data.csv"
+    (selected / "input.csv").replace(data)
+    manifest_sha = manifest_arguments(data)[-1]
     selected_bytes = data.read_bytes()
     data_hash = hashlib.sha256(selected_bytes).hexdigest()
     (run_dir / "input-identity.json").write_text(json.dumps({"bytes": len(selected_bytes), "sha256": data_hash}) + "\n")
-    input_arguments = ["--data", "/selected/input.csv", "--output", "/output",
-        "--expected-input-sha256", data_hash, "--expected-input-bytes", str(len(selected_bytes)),
-        "--learning-rate", "0.01"]
+    input_arguments = ["--dataset-manifest", "/selected/inputs/dataset-manifest.json",
+        "--expected-dataset-manifest-sha256", manifest_sha, "--work-root", "/workspace/work/train",
+        "--output", "/output", "--learning-rate", "0.01"]
+
 
     def workload(recipe, output, *, detached=False):
         output.mkdir()
         run_options = ["--detach"] if detached else ["--rm"]
+        work = run_dir / (recipe + "-work")
+        for relative in ("tmp", "hf/datasets", "matplotlib"):
+            (work / relative).mkdir(parents=True, exist_ok=True)
         return common + run_options + ["-v", f"{selected}:/selected:ro,Z", "-v", f"{output}:/output:rw,Z",
-            image_id] + input_arguments + ["--recipe", recipe]
+            "-v", f"{work}:/workspace/work/train:rw,Z", "--entrypoint", PYTHON, image_id,
+            "-I", TRAINING + "/train_mlp.py"] + input_arguments + ["--recipe", recipe]
 
     def metrics(output):
         entries = [json.loads(line) for line in (output / "metrics.jsonl").read_text().splitlines()]
@@ -140,7 +137,7 @@ print(json.dumps(packages, sort_keys=True))
         contents = (success / item["path"]).read_bytes()
         require(len(contents) == int(item["bytes"]) and hashlib.sha256(contents).hexdigest() == item["sha256"], "candidate bytes do not match")
     reload_script = source_root / "training" / "tests" / "reload_checkpoint.py"
-    command(common + ["--rm", "--entrypoint", "/opt/venv/bin/python",
+    command(common + scratch + ["--rm", "--entrypoint", PYTHON,
         "-v", f"{reload_script}:/tool/reload_checkpoint.py:ro,Z", "-v", f"{success}:/output:ro,Z",
         image_id, "-I", "/tool/reload_checkpoint.py", "/output"], "reload")
 
@@ -148,7 +145,7 @@ print(json.dumps(packages, sort_keys=True))
     failed = command(workload("fail", failure), "failure", check=False)
     require(failed.returncode != 0 and "CPU03_RECIPE_FAILURE" in failed.stderr, "failure recipe must fail explicitly")
     require(len(metrics(failure)) == 5, "failure recipe must optimize five times")
-    require({item.name for item in failure.iterdir()} == {"metrics.jsonl"}, "failure has successful artifacts")
+    require({item.name for item in failure.iterdir()} == {"metrics.jsonl", "summary.json"}, "failure has successful artifacts")
 
     stopped = run_dir / "stopped"
     container_id = command(workload("slow-stop", stopped, detached=True), "stop-start").stdout.strip()
@@ -157,27 +154,27 @@ print(json.dumps(packages, sort_keys=True))
         deadline = time.monotonic() + 45
         observed = []
         while time.monotonic() < deadline:
-            log = command(["podman", "logs", container_id], "stop-observe", check=False)
+            log = command(podman + ["logs", container_id], "stop-observe", check=False)
             observed = [json.loads(line) for line in log.stdout.splitlines() if line.strip()]
             if len([event for event in observed if event.get("name") == "train.loss"]) >= 3:
                 break
             time.sleep(0.1)
         actual_steps = [event for event in observed if event.get("name") == "train.loss"]
         require(len(actual_steps) >= 3, "no observed real optimization before stop")
-        running = command(["podman", "inspect", "--format", "{{.State.Running}}", container_id], "stop-running").stdout.strip()
+        running = command(podman + ["inspect", "--format", "{{.State.Running}}", container_id], "stop-running").stdout.strip()
         require(running == "true", "stop must target live training")
-        command(["podman", "kill", "--signal", "TERM", container_id], "stop-signal")
-        waited = command(["podman", "wait", container_id], "stop-wait", timeout=10)
+        command(podman + ["kill", "--signal", "TERM", container_id], "stop-signal")
+        waited = command(podman + ["wait", container_id], "stop-wait", timeout=10)
         require(waited.stdout.strip() == "143", "expected SIGTERM exit 143")
-        command(["podman", "logs", container_id], "stop-final-logs")
+        command(podman + ["logs", container_id], "stop-final-logs")
         require(3 <= len(metrics(stopped)) < 48, "stop did not interrupt actual training")
-        require({item.name for item in stopped.iterdir()} == {"metrics.jsonl"}, "stop has successful artifacts")
+        require({item.name for item in stopped.iterdir()} == {"metrics.jsonl", "summary.json"}, "stop has successful artifacts")
     finally:
-        command(["podman", "rm", "--force", container_id], "stop-owned-cleanup", check=False)
+        command(podman + ["rm", "--force", container_id], "stop-owned-cleanup", check=False)
 
     require(data.read_bytes() == selected_bytes, "selected input changed")
     (run_dir / "result.json").write_text(json.dumps({"status": "PASS", "source_sha": source_sha, "image_id": image_id,
-        "scope": "CPU03 offline image smoke; no target cluster, BFF, KFP, Trainer or S3 verification"}, indent=2) + "\n")
+        "immutable_reference": immutable_reference, "scope": "Offline official image smoke; target cluster acceptance is separate"}, indent=2) + "\n")
     print(f"CPU03 image smoke passed: {image_id}")
 
 

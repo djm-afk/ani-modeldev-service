@@ -132,7 +132,7 @@ func (step *Step) ReportStepResult(ctx context.Context, request *modeldevv1.Repo
 		if report == nil {
 			return nil, runtimeError(biz.ErrInvalidAdmission)
 		}
-		candidate, decodeErr := decodeRuntimePublication(report.Publication, claim.Association)
+		candidate, decodeErr := decodeRuntimePublication(report.Publication, claim)
 		if decodeErr != nil {
 			return nil, runtimeError(decodeErr)
 		}
@@ -179,7 +179,7 @@ func (step *Step) RequestExecutionClose(ctx context.Context, request *modeldevv1
 	if err != nil {
 		return nil, runtimeError(err)
 	}
-	states, _, err := runtimeReply(result, claim)
+	states, err := closeRuntimeReply(result, claim)
 	if err != nil {
 		return nil, err
 	}
@@ -266,11 +266,8 @@ func validRuntimeMessage(message protoreflect.Message, depth int) bool {
 }
 
 func runtimeReply(result biz.ManagedRuntimeResult, claim biz.BeginManagedExecutionRequest) (*modeldevv1.ExecutionStates, *modeldevv1.AuthorityBinding, error) {
-	authority, execution := result.Authority, result.Execution
-	if execution.TenantID != claim.TenantID || !runtimeUUID(execution.OperationID) || (claim.OperationID != "" && execution.OperationID != claim.OperationID) || execution.ExecutionID != claim.ExecutionID || execution.SpecHash != claim.SpecHash ||
-		authority.TenantID != claim.TenantID || authority.OperationID != execution.OperationID || authority.ExecutionID != claim.ExecutionID || authority.SpecHash != claim.SpecHash ||
-		authority.RunID != claim.Association.RunID || authority.NamespaceName != claim.Association.NamespaceName || authority.NamespaceUID != claim.Association.NamespaceUID ||
-		authority.WorkflowName != claim.Association.WorkflowName || authority.WorkflowUID != claim.Association.WorkflowUID || authority.OwnerRevision == 0 || result.Runtime.OwnerRevision == 0 {
+	authority := result.Authority
+	if !runtimeReplyIdentity(result, claim) {
 		return nil, nil, runtimeError(biz.ErrManagedStepUnavailable)
 	}
 	boundAt, ok := runtimeTimestamp(authority.BoundAt)
@@ -282,6 +279,34 @@ func runtimeReply(result biz.ManagedRuntimeResult, claim biz.BeginManagedExecuti
 		return nil, nil, runtimeError(biz.ErrManagedStepUnavailable)
 	}
 	return states, &modeldevv1.AuthorityBinding{KfpRunId: authority.RunID, NamespaceUid: authority.NamespaceUID, WorkflowUid: authority.WorkflowUID, BoundAt: boundAt}, nil
+}
+
+func runtimeReplyIdentity(result biz.ManagedRuntimeResult, claim biz.BeginManagedExecutionRequest) bool {
+	authority, execution := result.Authority, result.Execution
+	if execution.TenantID != claim.TenantID || !runtimeUUID(execution.OperationID) || (claim.OperationID != "" && execution.OperationID != claim.OperationID) || execution.ExecutionID != claim.ExecutionID || execution.SpecHash != claim.SpecHash ||
+		authority.TenantID != claim.TenantID || authority.OperationID != execution.OperationID || authority.ExecutionID != claim.ExecutionID || authority.SpecHash != claim.SpecHash ||
+		authority.RunID != claim.Association.RunID || authority.NamespaceName != claim.Association.NamespaceName || authority.NamespaceUID != claim.Association.NamespaceUID ||
+		authority.WorkflowName != claim.Association.WorkflowName || authority.WorkflowUID != claim.Association.WorkflowUID || authority.OwnerRevision == 0 || result.Runtime.OwnerRevision == 0 {
+		return false
+	}
+	return true
+}
+
+// CLOSE may acknowledge a durable owner-only recovery fence before prepare ever
+// bound normal step authority. Other replies still require the original BoundAt.
+func closeRuntimeReply(result biz.ManagedRuntimeResult, claim biz.BeginManagedExecutionRequest) (*modeldevv1.ExecutionStates, error) {
+	if !result.Authority.BoundAt.IsZero() {
+		states, _, err := runtimeReply(result, claim)
+		return states, err
+	}
+	if !runtimeReplyIdentity(result, claim) || result.Runtime.CloseAuthority == nil || *result.Runtime.CloseAuthority != result.Authority.RunAuthorityCandidate || result.Runtime.CloseGeneration == 0 || result.Runtime.CloseRequestedAt.IsZero() {
+		return nil, runtimeError(biz.ErrManagedStepUnavailable)
+	}
+	states, ok := encodeRuntimeStates(result.States)
+	if !ok {
+		return nil, runtimeError(biz.ErrManagedStepUnavailable)
+	}
+	return states, nil
 }
 
 func encodeRuntimeStates(states biz.ExecutionStates) (*modeldevv1.ExecutionStates, bool) {
@@ -337,7 +362,7 @@ func runtimeTrainingStatus(result biz.ManagedRuntimeResult, claim biz.BeginManag
 }
 
 func decodeRuntimePrepared(candidate *modeldevv1.PreparedInputCandidate) (biz.WorkspaceBinding, cpup01.InputRef, error) {
-	if candidate == nil || candidate.Workspace == nil || candidate.Input == nil || candidate.PreparedManifest == nil ||
+	if candidate == nil || candidate.Workspace == nil || candidate.Input == nil || candidate.Input.PreparedDataset == nil || candidate.PreparedManifest == nil ||
 		candidate.PreparedManifest.RelativePath != "prepared-manifest.json" || candidate.PreparedManifest.SizeBytes <= 0 || !runtimeSHA256(candidate.PreparedManifest.Sha256) {
 		return biz.WorkspaceBinding{}, cpup01.InputRef{}, biz.ErrInvalidAdmission
 	}
@@ -351,17 +376,19 @@ func decodeRuntimePrepared(candidate *modeldevv1.PreparedInputCandidate) (biz.Wo
 	}
 	// The complete InputRef is compared with the immutable snapshot in biz;
 	// sharing an input_version_id alone never validates prepared bytes.
-	input := cpup01.InputRef{InputVersionID: candidate.Input.InputVersionId, Object: object, Format: candidate.Input.Format, SchemaVersion: candidate.Input.SchemaVersion, RowCount: candidate.Input.RowCount, FeatureCount: candidate.Input.FeatureCount}
+	derived := candidate.Input.PreparedDataset
+	input := cpup01.InputRef{InputVersionID: candidate.Input.InputVersionId, Object: object, Format: candidate.Input.Format, SchemaVersion: candidate.Input.SchemaVersion, RowCount: candidate.Input.RowCount, FeatureCount: candidate.Input.FeatureCount,
+		PreparedDataset: cpup01.PreparedDatasetFacts{Format: derived.Format, TransformID: derived.TransformId, SizeBytes: derived.SizeBytes, SHA256: derived.Sha256, RowCount: derived.RowCount}}
 	return biz.WorkspaceBinding{
 		Mode: strings.TrimPrefix(workspace.Mode.String(), "WORKSPACE_MODE_"), NamespaceName: workspace.NamespaceName, NamespaceUID: workspace.NamespaceUid,
 		PVCName: workspace.PvcName, PVCUID: workspace.PvcUid, InputSubpath: workspace.InputSubpath, TrainingSubpath: workspace.TrainingSubpath,
-		ReportsSubpath: workspace.ReportsSubpath, PublicationSubpath: workspace.PublicationSubpath,
+		ReportsSubpath: workspace.ReportsSubpath, PublicationSubpath: workspace.PublicationSubpath, WorkSubpath: workspace.WorkSubpath,
 		PreparedManifestSHA256: candidate.PreparedManifest.Sha256, PreparedManifestBytes: candidate.PreparedManifest.SizeBytes,
 	}, input, nil
 }
 
-func decodeRuntimePublication(candidate *modeldevv1.PublicationCandidate, association biz.ManagedStepAssociation) (biz.RuntimePublication, error) {
-	if candidate == nil || candidate.LogicalPublicationKey == "" || candidate.UploadTaskId == "" || !runtimeUUID(candidate.UploadPodUid) || len(candidate.Files) == 0 {
+func decodeRuntimePublication(candidate *modeldevv1.PublicationCandidate, claim biz.BeginManagedExecutionRequest) (biz.RuntimePublication, error) {
+	if candidate == nil || candidate.Schema != cpup01.PublicationCandidateSchemaVersion || candidate.TenantId != claim.TenantID || candidate.ExecutionId != claim.ExecutionID || candidate.ExecutionSpecHash != claim.SpecHash || candidate.OperationId != claim.OperationID || candidate.LogicalPublicationKey == "" || candidate.UploadTaskId == "" || !runtimeUUID(candidate.UploadPodUid) || len(candidate.Files) == 0 {
 		return biz.RuntimePublication{}, biz.ErrInvalidAdmission
 	}
 	manifest, err := decodeRuntimeObject(candidate.ManifestObject)
@@ -370,7 +397,7 @@ func decodeRuntimePublication(candidate *modeldevv1.PublicationCandidate, associ
 	}
 	publication := biz.RuntimePublication{
 		LogicalKey: candidate.LogicalPublicationKey, Manifest: manifest,
-		Upload: biz.UploadCompletion{RunID: association.RunID, WorkflowUID: association.WorkflowUID, TaskID: candidate.UploadTaskId, PodUID: candidate.UploadPodUid},
+		Upload: biz.UploadCompletion{RunID: claim.Association.RunID, WorkflowUID: claim.Association.WorkflowUID, TaskID: candidate.UploadTaskId, PodUID: candidate.UploadPodUid},
 	}
 	if candidate.BundleObject != nil {
 		bundle, err := decodeRuntimeObject(candidate.BundleObject)
@@ -388,14 +415,14 @@ func decodeRuntimePublication(candidate *modeldevv1.PublicationCandidate, associ
 			return biz.RuntimePublication{}, err
 		}
 		publication.Files = append(publication.Files, biz.PublishedRuntimeFile{
-			File: cpup01.OutputFile{RelativePath: file.File.RelativePath, Role: strings.TrimPrefix(file.File.Role.String(), "FILE_ROLE_"), SizeBytes: file.File.SizeBytes, SHA256: file.File.Sha256}, Object: object,
+			File: cpup01.OutputFile{RelativePath: file.File.RelativePath, Role: strings.TrimPrefix(file.File.Role.String(), "FILE_ROLE_"), InTar: file.File.InTar, SizeBytes: file.File.SizeBytes, SHA256: file.File.Sha256}, Object: object,
 		})
 	}
 	return publication, nil
 }
 
 func decodeRuntimeObject(wire *trainingv1.FixedObjectRef) (cpup01.FixedObjectRef, error) {
-	if wire == nil || wire.StorageConnectionId == "" || wire.Bucket == "" || wire.Key == "" || wire.SizeBytes <= 0 || !runtimeSHA256(wire.Sha256) {
+	if wire == nil || wire.StorageConnectionId == "" || wire.Bucket == "" || wire.Key == "" || wire.SizeBytes < 0 || !runtimeSHA256(wire.Sha256) {
 		return cpup01.FixedObjectRef{}, biz.ErrInvalidAdmission
 	}
 	object := cpup01.FixedObjectRef{StorageConnectionID: wire.StorageConnectionId, Bucket: wire.Bucket, Key: wire.Key, SizeBytes: wire.SizeBytes, SHA256: wire.Sha256}
@@ -440,7 +467,7 @@ func encodeRuntimePublication(result biz.ManagedRuntimeResult) (*modeldevv1.Veri
 	for _, file := range publication.Files {
 		wire.Files = append(wire.Files, &modeldevv1.VerifiedPublishedFile{
 			ArtifactId: file.ArtifactID,
-			File:       &trainingv1.FileEntry{RelativePath: file.File.RelativePath, Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+file.File.Role]), SizeBytes: file.File.SizeBytes, Sha256: file.File.SHA256},
+			File:       &trainingv1.FileEntry{RelativePath: file.File.RelativePath, Role: trainingv1.FileRole(trainingv1.FileRole_value["FILE_ROLE_"+file.File.Role]), SizeBytes: file.File.SizeBytes, Sha256: file.File.SHA256, InTar: file.File.InTar},
 			Object:     encodeRuntimeObject(file.Object), RemoteVerifiedAt: verifiedAt,
 		})
 	}
@@ -453,7 +480,7 @@ func encodeRuntimeWorkspace(workspace *biz.WorkspaceBinding) *trainingv1.Workspa
 	}
 	return &trainingv1.WorkspaceRef{
 		Mode: trainingv1.WorkspaceMode(trainingv1.WorkspaceMode_value["WORKSPACE_MODE_"+workspace.Mode]), NamespaceName: workspace.NamespaceName, NamespaceUid: workspace.NamespaceUID,
-		PvcName: workspace.PVCName, PvcUid: workspace.PVCUID, InputSubpath: workspace.InputSubpath, TrainingSubpath: workspace.TrainingSubpath, ReportsSubpath: workspace.ReportsSubpath, PublicationSubpath: workspace.PublicationSubpath,
+		PvcName: workspace.PVCName, PvcUid: workspace.PVCUID, InputSubpath: workspace.InputSubpath, TrainingSubpath: workspace.TrainingSubpath, ReportsSubpath: workspace.ReportsSubpath, PublicationSubpath: workspace.PublicationSubpath, WorkSubpath: workspace.WorkSubpath,
 	}
 }
 

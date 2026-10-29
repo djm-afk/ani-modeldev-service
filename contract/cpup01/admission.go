@@ -74,7 +74,7 @@ func (a AdmissionEnvelope) CanonicalPayloads() ([]byte, []byte, error) {
 	}
 	if a.Intent.Kind == "FINETUNING" {
 		fine := a.Snapshot.Finetuning
-		if fine == nil || a.Intent.Finetuning == nil || a.Intent.BaseModelVersionID == nil || !strings.EqualFold(*a.Intent.BaseModelVersionID, fine.BaseModel.VersionID) || !sameOptionalUUID(a.Intent.TargetModelID, fine.TargetModelID) || !sameOptionalString(a.Intent.NewModelName, fine.NewModelName) {
+		if fine == nil || a.Intent.Finetuning == nil || a.Intent.BaseModelVersionID == nil || !strings.EqualFold(*a.Intent.BaseModelVersionID, fine.BaseModel.VersionID) || !sameOptionalUUID(a.Intent.TargetModelID, fine.TargetModelID) || !sameOptionalString(a.Intent.NewModelName, fine.NewModelName) || !templateMatchesIntent(a.Intent, fine.TemplatePlan) {
 			return nil, nil, ErrInvalidArgument
 		}
 	}

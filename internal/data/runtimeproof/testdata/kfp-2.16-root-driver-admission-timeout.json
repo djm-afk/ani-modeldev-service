@@ -1,0 +1,1900 @@
+{
+  "source": {
+    "workflow_sha256": "a604cce1ba1f56b20e560103d5a52799630b4ca97e5296a4e0f3dbb59fff6b96",
+    "run_sha256": "5c4ee81302947cff26a2694683b6aee689d469aa58271e8cbc23362478a01b95",
+    "description": "KFP 2.16 / Argo actual root-driver admission timeout before the first Pod, 2026-10-28. No Pod or process record exists."
+  },
+  "workflow": {
+    "apiVersion": "argoproj.io/v1alpha1",
+    "kind": "Workflow",
+    "metadata": {
+      "annotations": {
+        "pipelines.kubeflow.org/run_name": "md-4534a7de-480c-4a8f-ae76-e647cf7c158c",
+        "workflows.argoproj.io/pod-name-format": "v1"
+      },
+      "creationTimestamp": "2026-10-28T22:22:06Z",
+      "generateName": "md-",
+      "generation": 2,
+      "labels": {
+        "pipeline/persistedFinalState": "true",
+        "pipeline/runid": "beed531c-d16d-47fb-99e3-030e93d089ac",
+        "workflows.argoproj.io/completed": "true",
+        "workflows.argoproj.io/phase": "Error"
+      },
+      "name": "md-7r47j",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "resourceVersion": "11957475",
+      "uid": "dcac8e3a-7eb9-4417-8a9d-f32722947c07"
+    },
+    "spec": {
+      "arguments": {
+        "parameters": [
+          {
+            "name": "kubernetes-comp-close",
+            "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"256Mi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"close\"}},\"pvcMount\":[{\"mountPath\":\"/workspace\",\"pvcNameParameter\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}}],\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+          },
+          {
+            "name": "components-1d84602c94ff86eab25c6981a5b8f510953af4616732feecf14a37f9d607d118",
+            "value": "{\"executorLabel\":\"exec-close\",\"inputDefinitions\":{\"parameters\":{\"candidate\":{\"defaultValue\":\"\",\"isOptional\":true,\"parameterType\":\"STRING\"},\"execution_id\":{\"parameterType\":\"STRING\"},\"run_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "implementations-1d84602c94ff86eab25c6981a5b8f510953af4616732feecf14a37f9d607d118",
+            "value": "{\"args\":[\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--publication-ref\",\"{{$.inputs.parameters['candidate']}}\"],\"command\":[\"/ani-modeldev-step\",\"close\"],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":1,\"cpuRequest\":0.1,\"memoryLimit\":0.536870912,\"memoryRequest\":0.134217728,\"resourceCpuLimit\":\"1\",\"resourceCpuRequest\":\"100m\",\"resourceMemoryLimit\":\"512Mi\",\"resourceMemoryRequest\":\"128Mi\"}}"
+          },
+          {
+            "name": "kubernetes-comp-collect",
+            "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"2Gi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"collect\"}},\"pvcMount\":[{\"mountPath\":\"/workspace\",\"pvcNameParameter\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},{\"mountPath\":\"/workspace/publication\",\"pvcNameParameter\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"subPath\":\"publication\",\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},{\"mountPath\":\"/workspace/work/collect\",\"pvcNameParameter\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"subPath\":\"work/collect\",\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}}],\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+          },
+          {
+            "name": "components-867e19472362fb887e689ae5ca94eb8b9929487a61ff350b18a3929be7fb277f",
+            "value": "{\"executorLabel\":\"exec-collect\",\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"run_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "implementations-867e19472362fb887e689ae5ca94eb8b9929487a61ff350b18a3929be7fb277f",
+            "value": "{\"args\":[\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\"],\"command\":[\"/ani-modeldev-step\",\"collect\"],\"env\":[{\"name\":\"TMPDIR\",\"value\":\"/workspace/work/collect/tmp\"},{\"name\":\"HF_HOME\",\"value\":\"/workspace/work/collect/hf\"},{\"name\":\"HF_DATASETS_CACHE\",\"value\":\"/workspace/work/collect/hf/datasets\"},{\"name\":\"MPLCONFIGDIR\",\"value\":\"/workspace/work/collect/matplotlib\"}],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":4,\"cpuRequest\":0.5,\"memoryLimit\":4.294967296,\"memoryRequest\":0.536870912,\"resourceCpuLimit\":\"4\",\"resourceCpuRequest\":\"500m\",\"resourceMemoryLimit\":\"4Gi\",\"resourceMemoryRequest\":\"512Mi\"}}"
+          },
+          {
+            "name": "components-98f254581598234b59377784d6cbf209de79e0bcda8013fe4c4397b5d3a26767",
+            "value": "{\"executorLabel\":\"exec-createpvc\",\"inputDefinitions\":{\"parameters\":{\"access_modes\":{\"description\":\"AccessModes to request for the provisioned PVC. May\\nbe one or more of ``'ReadWriteOnce'``, ``'ReadOnlyMany'``, ``'ReadWriteMany'``, or\\n``'ReadWriteOncePod'``. Corresponds to `PersistentVolumeClaim.spec.accessModes \\u003chttps://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes\\u003e`_.\",\"parameterType\":\"LIST\"},\"annotations\":{\"description\":\"Annotations for the PVC's metadata. Corresponds to `PersistentVolumeClaim.metadata.annotations \\u003chttps://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaim\\u003e`_.\",\"isOptional\":true,\"parameterType\":\"STRUCT\"},\"pvc_name\":{\"description\":\"Name of the PVC. Corresponds to `PersistentVolumeClaim.metadata.name \\u003chttps://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaim\\u003e`_. Only one of ``pvc_name`` and ``pvc_name_suffix`` can\\nbe provided.\",\"isOptional\":true,\"parameterType\":\"STRING\"},\"pvc_name_suffix\":{\"description\":\"Prefix to use for a dynamically generated name, which\\nwill take the form ``\\u003cargo-workflow-name\\u003e-\\u003cpvc_name_suffix\\u003e``. Only one\\nof ``pvc_name`` and ``pvc_name_suffix`` can be provided.\",\"isOptional\":true,\"parameterType\":\"STRING\"},\"size\":{\"description\":\"The size of storage requested by the PVC that will be provisioned. For example, ``'5Gi'``. Corresponds to `PersistentVolumeClaim.spec.resources.requests.storage \\u003chttps://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimSpec\\u003e`_.\",\"parameterType\":\"STRING\"},\"storage_class_name\":{\"defaultValue\":\"\",\"description\":\"Name of StorageClass from which to provision the PV\\nto back the PVC. ``None`` indicates to use the cluster's default\\nstorage_class_name. Set to ``''`` for a statically specified PVC.\",\"isOptional\":true,\"parameterType\":\"STRING\"},\"volume_name\":{\"description\":\"Pre-existing PersistentVolume that should back the\\nprovisioned PersistentVolumeClaim. Used for statically\\nspecified PV only. Corresponds to `PersistentVolumeClaim.spec.volumeName \\u003chttps://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimSpec\\u003e`_.\",\"isOptional\":true,\"parameterType\":\"STRING\"}}},\"outputDefinitions\":{\"parameters\":{\"name\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "implementations-98f254581598234b59377784d6cbf209de79e0bcda8013fe4c4397b5d3a26767",
+            "value": "{\"image\":\"argostub/createpvc\"}"
+          },
+          {
+            "name": "kubernetes-comp-prepare",
+            "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"2Gi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"prepare\"}},\"pvcMount\":[{\"mountPath\":\"/workspace\",\"pvcNameParameter\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}}],\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+          },
+          {
+            "name": "components-c3f824716ad69fe77c4725ec209d7a591e93f2ac2da006eadc7e9230c6b703a9",
+            "value": "{\"executorLabel\":\"exec-prepare\",\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"pvc_name\":{\"parameterType\":\"STRING\"},\"run_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "implementations-c3f824716ad69fe77c4725ec209d7a591e93f2ac2da006eadc7e9230c6b703a9",
+            "value": "{\"args\":[\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--pvc-name\",\"{{$.inputs.parameters['pvc_name']}}\"],\"command\":[\"/ani-modeldev-step\",\"prepare\"],\"env\":[{\"name\":\"TMPDIR\",\"value\":\"/workspace/work/prepare/tmp\"},{\"name\":\"HF_HOME\",\"value\":\"/workspace/work/prepare/hf\"},{\"name\":\"HF_DATASETS_CACHE\",\"value\":\"/workspace/work/prepare/hf/datasets\"},{\"name\":\"MPLCONFIGDIR\",\"value\":\"/workspace/work/prepare/matplotlib\"}],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":4,\"cpuRequest\":0.5,\"memoryLimit\":4.294967296,\"memoryRequest\":0.536870912,\"resourceCpuLimit\":\"4\",\"resourceCpuRequest\":\"500m\",\"resourceMemoryLimit\":\"4Gi\",\"resourceMemoryRequest\":\"512Mi\"}}"
+          },
+          {
+            "name": "kubernetes-comp-publish",
+            "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"2Gi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"publish\"}},\"pvcMount\":[{\"mountPath\":\"/workspace\",\"pvcNameParameter\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},{\"mountPath\":\"/workspace/publication\",\"pvcNameParameter\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"subPath\":\"publication\",\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},{\"mountPath\":\"/workspace/work/publish\",\"pvcNameParameter\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"subPath\":\"work/publish\",\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}}],\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+          },
+          {
+            "name": "components-a8a25515a922ec48b64fc8f4340d085732079d557b8052fa208910a836d93082",
+            "value": "{\"executorLabel\":\"exec-publish\",\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"run_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}},\"outputDefinitions\":{\"parameters\":{\"candidate\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "implementations-a8a25515a922ec48b64fc8f4340d085732079d557b8052fa208910a836d93082",
+            "value": "{\"args\":[\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--publication-ref-file\",\"{{$.outputs.parameters['candidate'].output_file}}\"],\"command\":[\"/ani-modeldev-step\",\"publish\"],\"env\":[{\"name\":\"TMPDIR\",\"value\":\"/workspace/work/publish/tmp\"},{\"name\":\"HF_HOME\",\"value\":\"/workspace/work/publish/hf\"},{\"name\":\"HF_DATASETS_CACHE\",\"value\":\"/workspace/work/publish/hf/datasets\"},{\"name\":\"MPLCONFIGDIR\",\"value\":\"/workspace/work/publish/matplotlib\"}],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":4,\"cpuRequest\":0.5,\"memoryLimit\":4.294967296,\"memoryRequest\":0.536870912,\"resourceCpuLimit\":\"4\",\"resourceCpuRequest\":\"500m\",\"resourceMemoryLimit\":\"4Gi\",\"resourceMemoryRequest\":\"512Mi\"}}"
+          },
+          {
+            "name": "kubernetes-comp-train-wait",
+            "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"256Mi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"train-wait\"}},\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+          },
+          {
+            "name": "components-277bed3383dcbbf8e0f630155bfcdc98aa6df3d3cde353c2bfc62cc33800a6a2",
+            "value": "{\"executorLabel\":\"exec-train-wait\",\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"run_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "implementations-277bed3383dcbbf8e0f630155bfcdc98aa6df3d3cde353c2bfc62cc33800a6a2",
+            "value": "{\"args\":[\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\"],\"command\":[\"/ani-modeldev-step\",\"train-wait\"],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":1,\"cpuRequest\":0.1,\"memoryLimit\":0.536870912,\"memoryRequest\":0.134217728,\"resourceCpuLimit\":\"1\",\"resourceCpuRequest\":\"100m\",\"resourceMemoryLimit\":\"512Mi\",\"resourceMemoryRequest\":\"128Mi\"}}"
+          },
+          {
+            "name": "kubernetes-comp-workspace-name",
+            "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"256Mi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"21f3c12b065cb549f24fb5aff15954eb95dc98eb1f9096df11f02885655a1a47\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"workspace-name\"}},\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+          },
+          {
+            "name": "components-d4c8e4e80c8702f88b554b519d5e0aeea50c92422d29b41e3f5a687ca5ad132d",
+            "value": "{\"executorLabel\":\"exec-workspace-name\",\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"}}},\"outputDefinitions\":{\"parameters\":{\"name\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "implementations-d4c8e4e80c8702f88b554b519d5e0aeea50c92422d29b41e3f5a687ca5ad132d",
+            "value": "{\"args\":[\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--output\",\"{{$.outputs.parameters['name'].output_file}}\"],\"command\":[\"/ani-modeldev-step\",\"workspace-name\"],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":0.5,\"cpuRequest\":0.1,\"memoryLimit\":0.268435456,\"memoryRequest\":0.067108864,\"resourceCpuLimit\":\"500m\",\"resourceCpuRequest\":\"100m\",\"resourceMemoryLimit\":\"256Mi\",\"resourceMemoryRequest\":\"64Mi\"}}"
+          },
+          {
+            "name": "components-comp-exit-handler-1",
+            "value": "{\"dag\":{\"tasks\":{\"close\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-close\"},\"dependentTasks\":[\"createpvc\",\"publish\"],\"inputs\":{\"parameters\":{\"candidate\":{\"taskOutputParameter\":{\"outputParameterKey\":\"candidate\",\"producerTask\":\"publish\"}},\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"close\"}},\"collect\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-collect\"},\"dependentTasks\":[\"createpvc\",\"train-wait\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"collect\"}},\"createpvc\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-createpvc\"},\"dependentTasks\":[\"workspace-name\"],\"inputs\":{\"parameters\":{\"access_modes\":{\"runtimeValue\":{\"constant\":[\"ReadWriteMany\"]}},\"pvc_name\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"workspace-name\"}},\"size\":{\"runtimeValue\":{\"constant\":\"4Gi\"}},\"storage_class_name\":{\"runtimeValue\":{\"constant\":\"ani-cephfs\"}}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"createpvc\"}},\"prepare\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-prepare\"},\"dependentTasks\":[\"createpvc\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"pvc_name\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"prepare\"}},\"publish\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-publish\"},\"dependentTasks\":[\"collect\",\"createpvc\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"publish\"}},\"train-wait\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-train-wait\"},\"dependentTasks\":[\"prepare\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"train-wait\"}},\"workspace-name\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-workspace-name\"},\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"workspace-name\"}}}},\"inputDefinitions\":{\"parameters\":{\"pipelinechannel--execution_id\":{\"parameterType\":\"STRING\"},\"pipelinechannel--spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "kubernetes-comp-finalize-close",
+            "value": "{\"activeDeadlineSeconds\":\"14400\",\"configMapAsVolume\":[{\"configMapName\":\"modeldev-open-r2-step-20261029\",\"configMapNameParameter\":{\"runtimeValue\":{\"constant\":\"modeldev-open-r2-step-20261029\"}},\"mountPath\":\"/etc/modeldev-step\",\"optional\":false}],\"emptyDirMounts\":[{\"mountPath\":\"/tmp\",\"sizeLimit\":\"256Mi\",\"volumeName\":\"component-tmp\"}],\"fieldPathAsEnv\":[{\"fieldPath\":\"metadata.name\",\"name\":\"ANI_POD_NAME\"},{\"fieldPath\":\"metadata.uid\",\"name\":\"ANI_POD_UID\"},{\"fieldPath\":\"metadata.namespace\",\"name\":\"ANI_POD_NAMESPACE\"}],\"podMetadata\":{\"annotations\":{\"ani.modeldev/component-resources-sha256\":\"21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac\"},\"labels\":{\"ani.modeldev/admission-profile\":\"md-open-r2-mlp-cpu-20261029\",\"ani.modeldev/step-role\":\"finalize-close\"}},\"securityContext\":{\"runAsGroup\":\"10001\",\"runAsNonRoot\":true,\"runAsUser\":\"10001\"}}"
+          },
+          {
+            "name": "components-bb9dba400bd177e6fad1dd51ad7693a6068b272a33d8130e38632f61ac6ff46f",
+            "value": "{\"executorLabel\":\"exec-finalize-close\",\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"run_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+          },
+          {
+            "name": "implementations-bb9dba400bd177e6fad1dd51ad7693a6068b272a33d8130e38632f61ac6ff46f",
+            "value": "{\"args\":[\"--config\",\"/etc/modeldev-step/config.json\",\"--execution-id\",\"{{$.inputs.parameters['execution_id']}}\",\"--spec-hash\",\"{{$.inputs.parameters['spec_hash']}}\",\"--run-id\",\"{{$.inputs.parameters['run_id']}}\",\"--close-only\"],\"command\":[\"/ani-modeldev-step\",\"close\"],\"image\":\"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa\",\"resources\":{\"cpuLimit\":1,\"cpuRequest\":0.1,\"memoryLimit\":0.536870912,\"memoryRequest\":0.134217728,\"resourceCpuLimit\":\"1\",\"resourceCpuRequest\":\"100m\",\"resourceMemoryLimit\":\"512Mi\",\"resourceMemoryRequest\":\"128Mi\"}}"
+          },
+          {
+            "name": "components-root",
+            "value": "{\"dag\":{\"tasks\":{\"exit-handler-1\":{\"componentRef\":{\"name\":\"comp-exit-handler-1\"},\"inputs\":{\"parameters\":{\"pipelinechannel--execution_id\":{\"componentInputParameter\":\"execution_id\"},\"pipelinechannel--spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"taskInfo\":{\"name\":\"managed-execution\"}},\"finalize-close\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-finalize-close\"},\"dependentTasks\":[\"exit-handler-1\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"close-finalizer\"},\"triggerPolicy\":{\"strategy\":\"ALL_UPSTREAM_TASKS_COMPLETED\"}}}},\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+          }
+        ]
+      },
+      "entrypoint": "entrypoint",
+      "podMetadata": {
+        "annotations": {
+          "pipelines.kubeflow.org/v2_component": "true"
+        },
+        "labels": {
+          "pipeline/runid": "beed531c-d16d-47fb-99e3-030e93d089ac",
+          "pipelines.kubeflow.org/v2_component": "true"
+        }
+      },
+      "podSpecPatch": "{\"securityContext\": {\"fsGroup\": 1000, \"fsGroupChangePolicy\": \"OnRootMismatch\"}}",
+      "securityContext": {
+        "runAsNonRoot": true,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "serviceAccountName": "modeldev-step",
+      "templates": [
+        {
+          "container": {
+            "args": [
+              "--type",
+              "CONTAINER",
+              "--pipeline_name",
+              "md",
+              "--run_id",
+              "beed531c-d16d-47fb-99e3-030e93d089ac",
+              "--run_name",
+              "{{workflow.name}}",
+              "--run_display_name",
+              "md-4534a7de-480c-4a8f-ae76-e647cf7c158c",
+              "--dag_execution_id",
+              "{{inputs.parameters.parent-dag-id}}",
+              "--component",
+              "{{inputs.parameters.component}}",
+              "--task",
+              "{{inputs.parameters.task}}",
+              "--task_name",
+              "{{inputs.parameters.task-name}}",
+              "--container",
+              "{{inputs.parameters.container}}",
+              "--iteration_index",
+              "{{inputs.parameters.iteration-index}}",
+              "--cached_decision_path",
+              "{{outputs.parameters.cached-decision.path}}",
+              "--pod_spec_patch_path",
+              "{{outputs.parameters.pod-spec-patch.path}}",
+              "--condition_path",
+              "{{outputs.parameters.condition.path}}",
+              "--kubernetes_config",
+              "{{inputs.parameters.kubernetes-config}}",
+              "--http_proxy",
+              "",
+              "--https_proxy",
+              "",
+              "--no_proxy",
+              "",
+              "--ml_pipeline_server_address",
+              "ml-pipeline.kubeflow.svc.cluster.local",
+              "--ml_pipeline_server_port",
+              "8887",
+              "--mlmd_server_address",
+              "metadata-grpc-service.kubeflow.svc.cluster.local",
+              "--mlmd_server_port",
+              "8080",
+              "--ca_cert_path",
+              "/kfp/certs/ca.crt",
+              "--log_level",
+              "1",
+              "--publish_logs",
+              "true",
+              "--default_run_as_user",
+              "1000",
+              "--default_run_as_group",
+              "1000",
+              "--default_run_as_non_root",
+              "true"
+            ],
+            "command": [
+              "driver"
+            ],
+            "env": [
+              {
+                "name": "KFP_POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "KFP_POD_UID",
+                "valueFrom": {
+                  "fieldRef": {
+                    "fieldPath": "metadata.uid"
+                  }
+                }
+              }
+            ],
+            "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+            "name": "",
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "runAsNonRoot": true,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca"
+              }
+            ]
+          },
+          "inputs": {
+            "parameters": [
+              {
+                "name": "component"
+              },
+              {
+                "name": "task"
+              },
+              {
+                "name": "container"
+              },
+              {
+                "name": "task-name"
+              },
+              {
+                "name": "parent-dag-id"
+              },
+              {
+                "default": "-1",
+                "name": "iteration-index"
+              },
+              {
+                "default": "",
+                "name": "kubernetes-config"
+              }
+            ]
+          },
+          "metadata": {
+            "annotations": {
+              "pipelines.kubeflow.org/v2_component": "true",
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "name": "system-container-driver",
+          "outputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch",
+                "valueFrom": {
+                  "default": "",
+                  "path": "/tmp/outputs/pod-spec-patch"
+                }
+              },
+              {
+                "default": "false",
+                "name": "cached-decision",
+                "valueFrom": {
+                  "default": "false",
+                  "path": "/tmp/outputs/cached-decision"
+                }
+              },
+              {
+                "name": "condition",
+                "valueFrom": {
+                  "default": "true",
+                  "path": "/tmp/outputs/condition"
+                }
+              }
+            ]
+          },
+          "securityContext": {
+            "runAsNonRoot": true,
+            "seccompProfile": {
+              "type": "RuntimeDefault"
+            }
+          },
+          "volumes": [
+            {
+              "configMap": {
+                "items": [
+                  {
+                    "key": "ca.crt",
+                    "path": "ca.crt"
+                  }
+                ],
+                "name": "ani-kfp-ca"
+              },
+              "name": "custom-ca"
+            }
+          ]
+        },
+        {
+          "dag": {
+            "tasks": [
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "pod-spec-patch",
+                      "value": "{{inputs.parameters.pod-spec-patch}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-key",
+                      "value": "{{inputs.parameters.pod-metadata-annotation-key}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-val",
+                      "value": "{{inputs.parameters.pod-metadata-annotation-val}}"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-1",
+                      "value": "{{inputs.parameters.pod-metadata-label-key-1}}"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-1",
+                      "value": "{{inputs.parameters.pod-metadata-label-val-1}}"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-2",
+                      "value": "{{inputs.parameters.pod-metadata-label-key-2}}"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-2",
+                      "value": "{{inputs.parameters.pod-metadata-label-val-2}}"
+                    },
+                    {
+                      "name": "retry-max-count",
+                      "value": "{{inputs.parameters.retry-max-count}}"
+                    },
+                    {
+                      "name": "retry-backoff-duration",
+                      "value": "{{inputs.parameters.retry-backoff-duration}}"
+                    },
+                    {
+                      "name": "retry-backoff-factor",
+                      "value": "{{inputs.parameters.retry-backoff-factor}}"
+                    },
+                    {
+                      "name": "retry-backoff-max-duration",
+                      "value": "{{inputs.parameters.retry-backoff-max-duration}}"
+                    }
+                  ]
+                },
+                "name": "executor",
+                "template": "metadata-1-2-retry-system-container-impl",
+                "when": "{{inputs.parameters.cached-decision}} != true"
+              }
+            ]
+          },
+          "inputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch"
+              },
+              {
+                "default": "false",
+                "name": "cached-decision"
+              },
+              {
+                "name": "pod-metadata-annotation-key"
+              },
+              {
+                "name": "pod-metadata-annotation-val"
+              },
+              {
+                "name": "pod-metadata-label-key-1"
+              },
+              {
+                "name": "pod-metadata-label-val-1"
+              },
+              {
+                "name": "pod-metadata-label-key-2"
+              },
+              {
+                "name": "pod-metadata-label-val-2"
+              },
+              {
+                "default": "0",
+                "name": "retry-max-count"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-duration"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-factor"
+              },
+              {
+                "default": "0",
+                "name": "retry-backoff-max-duration"
+              }
+            ]
+          },
+          "metadata": {
+            "annotations": {
+              "pipelines.kubeflow.org/v2_component": "true",
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "name": "metadata-1-2-retry-system-container-executor",
+          "outputs": {}
+        },
+        {
+          "container": {
+            "command": [
+              "should-be-overridden-during-runtime"
+            ],
+            "env": [
+              {
+                "name": "KFP_POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "KFP_POD_UID",
+                "valueFrom": {
+                  "fieldRef": {
+                    "fieldPath": "metadata.uid"
+                  }
+                }
+              }
+            ],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "metadata-grpc-configmap",
+                  "optional": true
+                }
+              }
+            ],
+            "image": "gcr.io/ml-pipeline/should-be-overridden-during-runtime",
+            "name": "",
+            "resources": {},
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "runAsGroup": 1000,
+              "runAsNonRoot": true,
+              "runAsUser": 1000,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp-launcher",
+                "name": "kfp-launcher"
+              },
+              {
+                "mountPath": "/gcs",
+                "name": "gcs-scratch"
+              },
+              {
+                "mountPath": "/s3",
+                "name": "s3-scratch"
+              },
+              {
+                "mountPath": "/minio",
+                "name": "minio-scratch"
+              },
+              {
+                "mountPath": "/.local",
+                "name": "dot-local-scratch"
+              },
+              {
+                "mountPath": "/.cache",
+                "name": "dot-cache-scratch"
+              },
+              {
+                "mountPath": "/.config",
+                "name": "dot-config-scratch"
+              },
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca"
+              }
+            ]
+          },
+          "initContainers": [
+            {
+              "args": [
+                "--copy",
+                "/kfp-launcher/launch",
+                "--log_level",
+                "1",
+                "--publish_logs",
+                "true"
+              ],
+              "command": [
+                "launcher-v2"
+              ],
+              "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29",
+              "name": "kfp-launcher",
+              "resources": {
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "128Mi"
+                },
+                "requests": {
+                  "cpu": "100m"
+                }
+              },
+              "securityContext": {
+                "allowPrivilegeEscalation": false,
+                "capabilities": {
+                  "drop": [
+                    "ALL"
+                  ]
+                },
+                "runAsNonRoot": true,
+                "seccompProfile": {
+                  "type": "RuntimeDefault"
+                }
+              },
+              "volumeMounts": [
+                {
+                  "mountPath": "/kfp-launcher",
+                  "name": "kfp-launcher"
+                }
+              ]
+            }
+          ],
+          "inputs": {
+            "parameters": [
+              {
+                "name": "pod-spec-patch"
+              },
+              {
+                "name": "pod-metadata-annotation-key"
+              },
+              {
+                "name": "pod-metadata-annotation-val"
+              },
+              {
+                "name": "pod-metadata-label-key-1"
+              },
+              {
+                "name": "pod-metadata-label-val-1"
+              },
+              {
+                "name": "pod-metadata-label-key-2"
+              },
+              {
+                "name": "pod-metadata-label-val-2"
+              },
+              {
+                "name": "retry-max-count"
+              },
+              {
+                "name": "retry-backoff-duration"
+              },
+              {
+                "name": "retry-backoff-factor"
+              },
+              {
+                "name": "retry-backoff-max-duration"
+              }
+            ]
+          },
+          "metadata": {
+            "annotations": {
+              "pipelines.kubeflow.org/v2_component": "true",
+              "sidecar.istio.io/inject": "false",
+              "{{inputs.parameters.pod-metadata-annotation-key}}": "{{inputs.parameters.pod-metadata-annotation-val}}"
+            },
+            "labels": {
+              "pipeline/runid": "beed531c-d16d-47fb-99e3-030e93d089ac",
+              "pipelines.kubeflow.org/v2_component": "true",
+              "{{inputs.parameters.pod-metadata-label-key-1}}": "{{inputs.parameters.pod-metadata-label-val-1}}",
+              "{{inputs.parameters.pod-metadata-label-key-2}}": "{{inputs.parameters.pod-metadata-label-val-2}}"
+            }
+          },
+          "name": "metadata-1-2-retry-system-container-impl",
+          "outputs": {},
+          "podSpecPatch": "{{inputs.parameters.pod-spec-patch}}",
+          "retryStrategy": {
+            "backoff": {
+              "duration": "{{inputs.parameters.retry-backoff-duration}}",
+              "factor": "{{inputs.parameters.retry-backoff-factor}}",
+              "maxDuration": "{{inputs.parameters.retry-backoff-max-duration}}"
+            },
+            "limit": "{{inputs.parameters.retry-max-count}}"
+          },
+          "securityContext": {
+            "seccompProfile": {
+              "type": "RuntimeDefault"
+            }
+          },
+          "volumes": [
+            {
+              "emptyDir": {},
+              "name": "kfp-launcher"
+            },
+            {
+              "emptyDir": {},
+              "name": "gcs-scratch"
+            },
+            {
+              "emptyDir": {},
+              "name": "s3-scratch"
+            },
+            {
+              "emptyDir": {},
+              "name": "minio-scratch"
+            },
+            {
+              "emptyDir": {},
+              "name": "dot-local-scratch"
+            },
+            {
+              "emptyDir": {},
+              "name": "dot-cache-scratch"
+            },
+            {
+              "emptyDir": {},
+              "name": "dot-config-scratch"
+            },
+            {
+              "configMap": {
+                "items": [
+                  {
+                    "key": "ca.crt",
+                    "path": "ca.crt"
+                  }
+                ],
+                "name": "ani-kfp-ca"
+              },
+              "name": "custom-ca"
+            }
+          ]
+        },
+        {
+          "dag": {
+            "tasks": [
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-1d84602c94ff86eab25c6981a5b8f510953af4616732feecf14a37f9d607d118}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-close\"},\"dependentTasks\":[\"createpvc\",\"publish\"],\"inputs\":{\"parameters\":{\"candidate\":{\"taskOutputParameter\":{\"outputParameterKey\":\"candidate\",\"producerTask\":\"publish\"}},\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"close\"}}"
+                    },
+                    {
+                      "name": "container",
+                      "value": "{{workflow.parameters.implementations-1d84602c94ff86eab25c6981a5b8f510953af4616732feecf14a37f9d607d118}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "close"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    },
+                    {
+                      "name": "kubernetes-config",
+                      "value": "{{workflow.parameters.kubernetes-comp-close}}"
+                    }
+                  ]
+                },
+                "depends": "createpvc.Succeeded && publish.Succeeded",
+                "name": "close-driver",
+                "template": "system-container-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "pod-spec-patch",
+                      "value": "{{tasks.close-driver.outputs.parameters.pod-spec-patch}}"
+                    },
+                    {
+                      "default": "false",
+                      "name": "cached-decision",
+                      "value": "{{tasks.close-driver.outputs.parameters.cached-decision}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-key",
+                      "value": "ani.modeldev/component-resources-sha256"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-val",
+                      "value": "21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-1",
+                      "value": "ani.modeldev/admission-profile"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-1",
+                      "value": "md-open-r2-mlp-cpu-20261029"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-2",
+                      "value": "ani.modeldev/step-role"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-2",
+                      "value": "close"
+                    },
+                    {
+                      "name": "retry-max-count",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-duration",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-factor",
+                      "value": "2"
+                    },
+                    {
+                      "name": "retry-backoff-max-duration",
+                      "value": "3600"
+                    }
+                  ]
+                },
+                "depends": "close-driver.Succeeded",
+                "name": "close",
+                "template": "metadata-1-2-retry-system-container-executor"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-867e19472362fb887e689ae5ca94eb8b9929487a61ff350b18a3929be7fb277f}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-collect\"},\"dependentTasks\":[\"createpvc\",\"train-wait\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"collect\"}}"
+                    },
+                    {
+                      "name": "container",
+                      "value": "{{workflow.parameters.implementations-867e19472362fb887e689ae5ca94eb8b9929487a61ff350b18a3929be7fb277f}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "collect"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    },
+                    {
+                      "name": "kubernetes-config",
+                      "value": "{{workflow.parameters.kubernetes-comp-collect}}"
+                    }
+                  ]
+                },
+                "depends": "createpvc.Succeeded && train-wait.Succeeded",
+                "name": "collect-driver",
+                "template": "system-container-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "pod-spec-patch",
+                      "value": "{{tasks.collect-driver.outputs.parameters.pod-spec-patch}}"
+                    },
+                    {
+                      "default": "false",
+                      "name": "cached-decision",
+                      "value": "{{tasks.collect-driver.outputs.parameters.cached-decision}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-key",
+                      "value": "ani.modeldev/component-resources-sha256"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-val",
+                      "value": "6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-1",
+                      "value": "ani.modeldev/admission-profile"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-1",
+                      "value": "md-open-r2-mlp-cpu-20261029"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-2",
+                      "value": "ani.modeldev/step-role"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-2",
+                      "value": "collect"
+                    },
+                    {
+                      "name": "retry-max-count",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-duration",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-factor",
+                      "value": "2"
+                    },
+                    {
+                      "name": "retry-backoff-max-duration",
+                      "value": "3600"
+                    }
+                  ]
+                },
+                "depends": "collect-driver.Succeeded",
+                "name": "collect",
+                "template": "metadata-1-2-retry-system-container-executor"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-98f254581598234b59377784d6cbf209de79e0bcda8013fe4c4397b5d3a26767}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-createpvc\"},\"dependentTasks\":[\"workspace-name\"],\"inputs\":{\"parameters\":{\"access_modes\":{\"runtimeValue\":{\"constant\":[\"ReadWriteMany\"]}},\"pvc_name\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"workspace-name\"}},\"size\":{\"runtimeValue\":{\"constant\":\"4Gi\"}},\"storage_class_name\":{\"runtimeValue\":{\"constant\":\"ani-cephfs\"}}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"createpvc\"}}"
+                    },
+                    {
+                      "name": "container",
+                      "value": "{{workflow.parameters.implementations-98f254581598234b59377784d6cbf209de79e0bcda8013fe4c4397b5d3a26767}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "createpvc"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    }
+                  ]
+                },
+                "depends": "workspace-name.Succeeded",
+                "name": "createpvc",
+                "template": "system-container-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-c3f824716ad69fe77c4725ec209d7a591e93f2ac2da006eadc7e9230c6b703a9}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-prepare\"},\"dependentTasks\":[\"createpvc\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"pvc_name\":{\"taskOutputParameter\":{\"outputParameterKey\":\"name\",\"producerTask\":\"createpvc\"}},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"prepare\"}}"
+                    },
+                    {
+                      "name": "container",
+                      "value": "{{workflow.parameters.implementations-c3f824716ad69fe77c4725ec209d7a591e93f2ac2da006eadc7e9230c6b703a9}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "prepare"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    },
+                    {
+                      "name": "kubernetes-config",
+                      "value": "{{workflow.parameters.kubernetes-comp-prepare}}"
+                    }
+                  ]
+                },
+                "depends": "createpvc.Succeeded",
+                "name": "prepare-driver",
+                "template": "system-container-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "pod-spec-patch",
+                      "value": "{{tasks.prepare-driver.outputs.parameters.pod-spec-patch}}"
+                    },
+                    {
+                      "default": "false",
+                      "name": "cached-decision",
+                      "value": "{{tasks.prepare-driver.outputs.parameters.cached-decision}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-key",
+                      "value": "ani.modeldev/component-resources-sha256"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-val",
+                      "value": "6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-1",
+                      "value": "ani.modeldev/admission-profile"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-1",
+                      "value": "md-open-r2-mlp-cpu-20261029"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-2",
+                      "value": "ani.modeldev/step-role"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-2",
+                      "value": "prepare"
+                    },
+                    {
+                      "name": "retry-max-count",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-duration",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-factor",
+                      "value": "2"
+                    },
+                    {
+                      "name": "retry-backoff-max-duration",
+                      "value": "3600"
+                    }
+                  ]
+                },
+                "depends": "prepare-driver.Succeeded",
+                "name": "prepare",
+                "template": "metadata-1-2-retry-system-container-executor"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-a8a25515a922ec48b64fc8f4340d085732079d557b8052fa208910a836d93082}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-publish\"},\"dependentTasks\":[\"collect\",\"createpvc\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"publish\"}}"
+                    },
+                    {
+                      "name": "container",
+                      "value": "{{workflow.parameters.implementations-a8a25515a922ec48b64fc8f4340d085732079d557b8052fa208910a836d93082}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "publish"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    },
+                    {
+                      "name": "kubernetes-config",
+                      "value": "{{workflow.parameters.kubernetes-comp-publish}}"
+                    }
+                  ]
+                },
+                "depends": "collect.Succeeded && createpvc.Succeeded",
+                "name": "publish-driver",
+                "template": "system-container-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "pod-spec-patch",
+                      "value": "{{tasks.publish-driver.outputs.parameters.pod-spec-patch}}"
+                    },
+                    {
+                      "default": "false",
+                      "name": "cached-decision",
+                      "value": "{{tasks.publish-driver.outputs.parameters.cached-decision}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-key",
+                      "value": "ani.modeldev/component-resources-sha256"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-val",
+                      "value": "6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-1",
+                      "value": "ani.modeldev/admission-profile"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-1",
+                      "value": "md-open-r2-mlp-cpu-20261029"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-2",
+                      "value": "ani.modeldev/step-role"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-2",
+                      "value": "publish"
+                    },
+                    {
+                      "name": "retry-max-count",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-duration",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-factor",
+                      "value": "2"
+                    },
+                    {
+                      "name": "retry-backoff-max-duration",
+                      "value": "3600"
+                    }
+                  ]
+                },
+                "depends": "publish-driver.Succeeded",
+                "name": "publish",
+                "template": "metadata-1-2-retry-system-container-executor"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-277bed3383dcbbf8e0f630155bfcdc98aa6df3d3cde353c2bfc62cc33800a6a2}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-train-wait\"},\"dependentTasks\":[\"prepare\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"pipelinechannel--spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"train-wait\"}}"
+                    },
+                    {
+                      "name": "container",
+                      "value": "{{workflow.parameters.implementations-277bed3383dcbbf8e0f630155bfcdc98aa6df3d3cde353c2bfc62cc33800a6a2}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "train-wait"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    },
+                    {
+                      "name": "kubernetes-config",
+                      "value": "{{workflow.parameters.kubernetes-comp-train-wait}}"
+                    }
+                  ]
+                },
+                "depends": "prepare.Succeeded",
+                "name": "train-wait-driver",
+                "template": "system-container-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "pod-spec-patch",
+                      "value": "{{tasks.train-wait-driver.outputs.parameters.pod-spec-patch}}"
+                    },
+                    {
+                      "default": "false",
+                      "name": "cached-decision",
+                      "value": "{{tasks.train-wait-driver.outputs.parameters.cached-decision}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-key",
+                      "value": "ani.modeldev/component-resources-sha256"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-val",
+                      "value": "21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-1",
+                      "value": "ani.modeldev/admission-profile"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-1",
+                      "value": "md-open-r2-mlp-cpu-20261029"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-2",
+                      "value": "ani.modeldev/step-role"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-2",
+                      "value": "train-wait"
+                    },
+                    {
+                      "name": "retry-max-count",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-duration",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-factor",
+                      "value": "2"
+                    },
+                    {
+                      "name": "retry-backoff-max-duration",
+                      "value": "3600"
+                    }
+                  ]
+                },
+                "depends": "train-wait-driver.Succeeded",
+                "name": "train-wait",
+                "template": "metadata-1-2-retry-system-container-executor"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-d4c8e4e80c8702f88b554b519d5e0aeea50c92422d29b41e3f5a687ca5ad132d}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-workspace-name\"},\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"pipelinechannel--execution_id\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"workspace-name\"}}"
+                    },
+                    {
+                      "name": "container",
+                      "value": "{{workflow.parameters.implementations-d4c8e4e80c8702f88b554b519d5e0aeea50c92422d29b41e3f5a687ca5ad132d}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "workspace-name"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    },
+                    {
+                      "name": "kubernetes-config",
+                      "value": "{{workflow.parameters.kubernetes-comp-workspace-name}}"
+                    }
+                  ]
+                },
+                "name": "workspace-name-driver",
+                "template": "system-container-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "pod-spec-patch",
+                      "value": "{{tasks.workspace-name-driver.outputs.parameters.pod-spec-patch}}"
+                    },
+                    {
+                      "default": "false",
+                      "name": "cached-decision",
+                      "value": "{{tasks.workspace-name-driver.outputs.parameters.cached-decision}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-key",
+                      "value": "ani.modeldev/component-resources-sha256"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-val",
+                      "value": "21f3c12b065cb549f24fb5aff15954eb95dc98eb1f9096df11f02885655a1a47"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-1",
+                      "value": "ani.modeldev/admission-profile"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-1",
+                      "value": "md-open-r2-mlp-cpu-20261029"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-2",
+                      "value": "ani.modeldev/step-role"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-2",
+                      "value": "workspace-name"
+                    },
+                    {
+                      "name": "retry-max-count",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-duration",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-factor",
+                      "value": "2"
+                    },
+                    {
+                      "name": "retry-backoff-max-duration",
+                      "value": "3600"
+                    }
+                  ]
+                },
+                "depends": "workspace-name-driver.Succeeded",
+                "name": "workspace-name",
+                "template": "metadata-1-2-retry-system-container-executor"
+              }
+            ]
+          },
+          "inputs": {
+            "parameters": [
+              {
+                "name": "parent-dag-id"
+              }
+            ]
+          },
+          "metadata": {
+            "annotations": {
+              "pipelines.kubeflow.org/v2_component": "true",
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "name": "comp-exit-handler-1",
+          "outputs": {}
+        },
+        {
+          "dag": {
+            "tasks": [
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-bb9dba400bd177e6fad1dd51ad7693a6068b272a33d8130e38632f61ac6ff46f}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-finalize-close\"},\"dependentTasks\":[\"exit-handler-1\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"close-finalizer\"},\"triggerPolicy\":{\"strategy\":\"ALL_UPSTREAM_TASKS_COMPLETED\"}}"
+                    },
+                    {
+                      "name": "container",
+                      "value": "{{workflow.parameters.implementations-bb9dba400bd177e6fad1dd51ad7693a6068b272a33d8130e38632f61ac6ff46f}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "finalize-close"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    },
+                    {
+                      "name": "kubernetes-config",
+                      "value": "{{workflow.parameters.kubernetes-comp-finalize-close}}"
+                    }
+                  ]
+                },
+                "name": "finalize-close-driver",
+                "template": "system-container-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "pod-spec-patch",
+                      "value": "{{tasks.finalize-close-driver.outputs.parameters.pod-spec-patch}}"
+                    },
+                    {
+                      "default": "false",
+                      "name": "cached-decision",
+                      "value": "{{tasks.finalize-close-driver.outputs.parameters.cached-decision}}"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-key",
+                      "value": "ani.modeldev/component-resources-sha256"
+                    },
+                    {
+                      "name": "pod-metadata-annotation-val",
+                      "value": "21a928a83186a525695d6a0d424029497c1d5ec13a7fa27a75a887593719d0ac"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-1",
+                      "value": "ani.modeldev/admission-profile"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-1",
+                      "value": "md-open-r2-mlp-cpu-20261029"
+                    },
+                    {
+                      "name": "pod-metadata-label-key-2",
+                      "value": "ani.modeldev/step-role"
+                    },
+                    {
+                      "name": "pod-metadata-label-val-2",
+                      "value": "finalize-close"
+                    },
+                    {
+                      "name": "retry-max-count",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-duration",
+                      "value": "0"
+                    },
+                    {
+                      "name": "retry-backoff-factor",
+                      "value": "2"
+                    },
+                    {
+                      "name": "retry-backoff-max-duration",
+                      "value": "3600"
+                    }
+                  ]
+                },
+                "depends": "finalize-close-driver.Succeeded",
+                "name": "finalize-close",
+                "template": "metadata-1-2-retry-system-container-executor"
+              }
+            ]
+          },
+          "inputs": {
+            "parameters": [
+              {
+                "name": "parent-dag-id"
+              }
+            ]
+          },
+          "metadata": {
+            "annotations": {
+              "pipelines.kubeflow.org/v2_component": "true",
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "name": "exit-hook-root-finalize-close",
+          "outputs": {}
+        },
+        {
+          "container": {
+            "args": [
+              "--type",
+              "{{inputs.parameters.driver-type}}",
+              "--pipeline_name",
+              "md",
+              "--run_id",
+              "beed531c-d16d-47fb-99e3-030e93d089ac",
+              "--run_name",
+              "{{workflow.name}}",
+              "--run_display_name",
+              "md-4534a7de-480c-4a8f-ae76-e647cf7c158c",
+              "--dag_execution_id",
+              "{{inputs.parameters.parent-dag-id}}",
+              "--component",
+              "{{inputs.parameters.component}}",
+              "--task",
+              "{{inputs.parameters.task}}",
+              "--task_name",
+              "{{inputs.parameters.task-name}}",
+              "--runtime_config",
+              "{{inputs.parameters.runtime-config}}",
+              "--iteration_index",
+              "{{inputs.parameters.iteration-index}}",
+              "--execution_id_path",
+              "{{outputs.parameters.execution-id.path}}",
+              "--iteration_count_path",
+              "{{outputs.parameters.iteration-count.path}}",
+              "--condition_path",
+              "{{outputs.parameters.condition.path}}",
+              "--http_proxy",
+              "",
+              "--https_proxy",
+              "",
+              "--no_proxy",
+              "",
+              "--ml_pipeline_server_address",
+              "ml-pipeline.kubeflow.svc.cluster.local",
+              "--ml_pipeline_server_port",
+              "8887",
+              "--mlmd_server_address",
+              "metadata-grpc-service.kubeflow.svc.cluster.local",
+              "--mlmd_server_port",
+              "8080",
+              "--ca_cert_path",
+              "/kfp/certs/ca.crt",
+              "--log_level",
+              "1",
+              "--publish_logs",
+              "true"
+            ],
+            "command": [
+              "driver"
+            ],
+            "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+            "name": "",
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "runAsNonRoot": true,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca"
+              }
+            ]
+          },
+          "inputs": {
+            "parameters": [
+              {
+                "name": "component"
+              },
+              {
+                "default": "",
+                "name": "runtime-config"
+              },
+              {
+                "default": "",
+                "name": "task"
+              },
+              {
+                "default": "",
+                "name": "task-name"
+              },
+              {
+                "default": "0",
+                "name": "parent-dag-id"
+              },
+              {
+                "default": "-1",
+                "name": "iteration-index"
+              },
+              {
+                "default": "DAG",
+                "name": "driver-type"
+              }
+            ]
+          },
+          "metadata": {
+            "annotations": {
+              "pipelines.kubeflow.org/v2_component": "true",
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "name": "system-dag-driver",
+          "outputs": {
+            "parameters": [
+              {
+                "name": "execution-id",
+                "valueFrom": {
+                  "path": "/tmp/outputs/execution-id"
+                }
+              },
+              {
+                "name": "iteration-count",
+                "valueFrom": {
+                  "default": "0",
+                  "path": "/tmp/outputs/iteration-count"
+                }
+              },
+              {
+                "name": "condition",
+                "valueFrom": {
+                  "default": "true",
+                  "path": "/tmp/outputs/condition"
+                }
+              }
+            ]
+          },
+          "securityContext": {
+            "runAsNonRoot": true,
+            "seccompProfile": {
+              "type": "RuntimeDefault"
+            }
+          },
+          "volumes": [
+            {
+              "configMap": {
+                "items": [
+                  {
+                    "key": "ca.crt",
+                    "path": "ca.crt"
+                  }
+                ],
+                "name": "ani-kfp-ca"
+              },
+              "name": "custom-ca"
+            }
+          ]
+        },
+        {
+          "dag": {
+            "tasks": [
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-comp-exit-handler-1}}"
+                    },
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{inputs.parameters.parent-dag-id}}"
+                    },
+                    {
+                      "name": "task",
+                      "value": "{\"componentRef\":{\"name\":\"comp-exit-handler-1\"},\"inputs\":{\"parameters\":{\"pipelinechannel--execution_id\":{\"componentInputParameter\":\"execution_id\"},\"pipelinechannel--spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"taskInfo\":{\"name\":\"managed-execution\"}}"
+                    },
+                    {
+                      "name": "task-name",
+                      "value": "exit-handler-1"
+                    }
+                  ]
+                },
+                "name": "exit-handler-1-driver",
+                "template": "system-dag-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{tasks.exit-handler-1-driver.outputs.parameters.execution-id}}"
+                    },
+                    {
+                      "name": "condition",
+                      "value": "{{tasks.exit-handler-1-driver.outputs.parameters.condition}}"
+                    }
+                  ]
+                },
+                "depends": "exit-handler-1-driver.Succeeded",
+                "hooks": {
+                  "exit": {
+                    "arguments": {
+                      "parameters": [
+                        {
+                          "name": "parent-dag-id",
+                          "value": "{{inputs.parameters.parent-dag-id}}"
+                        }
+                      ]
+                    },
+                    "template": "exit-hook-root-finalize-close"
+                  }
+                },
+                "name": "exit-handler-1",
+                "template": "comp-exit-handler-1"
+              }
+            ]
+          },
+          "inputs": {
+            "parameters": [
+              {
+                "name": "parent-dag-id"
+              }
+            ]
+          },
+          "metadata": {
+            "annotations": {
+              "pipelines.kubeflow.org/v2_component": "true",
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "name": "root",
+          "outputs": {}
+        },
+        {
+          "dag": {
+            "tasks": [
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "component",
+                      "value": "{{workflow.parameters.components-root}}"
+                    },
+                    {
+                      "name": "runtime-config",
+                      "value": "{\"gcsOutputDirectory\":\"s3://ani-md-v21-kfp-01a15f47/artifacts\",\"parameterValues\":{\"execution_id\":\"4534a7de-480c-4a8f-ae76-e647cf7c158c\",\"spec_hash\":\"637373fc4213532e0724392564d9c2fb437575b5593eb88760f60b303ba93624\"}}"
+                    },
+                    {
+                      "name": "driver-type",
+                      "value": "ROOT_DAG"
+                    }
+                  ]
+                },
+                "name": "root-driver",
+                "template": "system-dag-driver"
+              },
+              {
+                "arguments": {
+                  "parameters": [
+                    {
+                      "name": "parent-dag-id",
+                      "value": "{{tasks.root-driver.outputs.parameters.execution-id}}"
+                    },
+                    {
+                      "name": "condition",
+                      "value": ""
+                    }
+                  ]
+                },
+                "depends": "root-driver.Succeeded",
+                "name": "root",
+                "template": "root"
+              }
+            ]
+          },
+          "inputs": {},
+          "metadata": {
+            "annotations": {
+              "pipelines.kubeflow.org/v2_component": "true",
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "name": "entrypoint",
+          "outputs": {}
+        }
+      ]
+    },
+    "status": {
+      "artifactGCStatus": {
+        "notSpecified": true
+      },
+      "artifactRepositoryRef": {
+        "artifactRepository": {},
+        "default": true
+      },
+      "conditions": [
+        {
+          "status": "True",
+          "type": "Completed"
+        }
+      ],
+      "finishedAt": "2026-10-28T22:22:14Z",
+      "nodes": {
+        "md-7r47j": {
+          "children": [
+            "md-7r47j-1051363752"
+          ],
+          "displayName": "md-7r47j",
+          "finishedAt": "2026-10-28T22:22:14Z",
+          "id": "md-7r47j",
+          "name": "md-7r47j",
+          "outboundNodes": [
+            "md-7r47j-1114177087"
+          ],
+          "phase": "Error",
+          "progress": "0/1",
+          "startedAt": "2026-10-28T22:22:06Z",
+          "templateName": "entrypoint",
+          "templateScope": "local/md-7r47j",
+          "type": "DAG"
+        },
+        "md-7r47j-1051363752": {
+          "boundaryID": "md-7r47j",
+          "children": [
+            "md-7r47j-1114177087"
+          ],
+          "displayName": "root-driver",
+          "finishedAt": "2026-10-28T22:22:14Z",
+          "id": "md-7r47j-1051363752",
+          "inputs": {
+            "parameters": [
+              {
+                "name": "component",
+                "value": "{\"dag\":{\"tasks\":{\"exit-handler-1\":{\"componentRef\":{\"name\":\"comp-exit-handler-1\"},\"inputs\":{\"parameters\":{\"pipelinechannel--execution_id\":{\"componentInputParameter\":\"execution_id\"},\"pipelinechannel--spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"taskInfo\":{\"name\":\"managed-execution\"}},\"finalize-close\":{\"cachingOptions\":{},\"componentRef\":{\"name\":\"comp-finalize-close\"},\"dependentTasks\":[\"exit-handler-1\"],\"inputs\":{\"parameters\":{\"execution_id\":{\"componentInputParameter\":\"execution_id\"},\"run_id\":{\"runtimeValue\":{\"constant\":\"{{$.pipeline_job_uuid}}\"}},\"spec_hash\":{\"componentInputParameter\":\"spec_hash\"}}},\"retryPolicy\":{\"backoffDuration\":\"0s\",\"backoffFactor\":2,\"backoffMaxDuration\":\"3600s\"},\"taskInfo\":{\"name\":\"close-finalizer\"},\"triggerPolicy\":{\"strategy\":\"ALL_UPSTREAM_TASKS_COMPLETED\"}}}},\"inputDefinitions\":{\"parameters\":{\"execution_id\":{\"parameterType\":\"STRING\"},\"spec_hash\":{\"parameterType\":\"STRING\"}}}}"
+              },
+              {
+                "default": "",
+                "name": "runtime-config",
+                "value": "{\"gcsOutputDirectory\":\"s3://ani-md-v21-kfp-01a15f47/artifacts\",\"parameterValues\":{\"execution_id\":\"4534a7de-480c-4a8f-ae76-e647cf7c158c\",\"spec_hash\":\"637373fc4213532e0724392564d9c2fb437575b5593eb88760f60b303ba93624\"}}"
+              },
+              {
+                "default": "",
+                "name": "task",
+                "value": ""
+              },
+              {
+                "default": "",
+                "name": "task-name",
+                "value": ""
+              },
+              {
+                "default": "0",
+                "name": "parent-dag-id",
+                "value": "0"
+              },
+              {
+                "default": "-1",
+                "name": "iteration-index",
+                "value": "-1"
+              },
+              {
+                "default": "DAG",
+                "name": "driver-type",
+                "value": "ROOT_DAG"
+              }
+            ]
+          },
+          "message": "task 'md-7r47j.root-driver' errored: Internal error occurred: failed calling webhook \"ani-modeldev-tenant-a-v21.modeldev.ani.io\": failed to call webhook: Post \"https://ani-modeldev-webhook.ani-system.svc:443/mutate?timeout=8s\": context deadline exceeded",
+          "name": "md-7r47j.root-driver",
+          "phase": "Error",
+          "progress": "0/1",
+          "startedAt": "2026-10-28T22:22:06Z",
+          "taskResultSynced": true,
+          "templateName": "system-dag-driver",
+          "templateScope": "local/md-7r47j",
+          "type": "Pod"
+        },
+        "md-7r47j-1114177087": {
+          "boundaryID": "md-7r47j",
+          "displayName": "root",
+          "finishedAt": "2026-10-28T22:22:14Z",
+          "id": "md-7r47j-1114177087",
+          "message": "omitted: depends condition not met",
+          "name": "md-7r47j.root",
+          "nodeFlag": {},
+          "phase": "Omitted",
+          "startedAt": "2026-10-28T22:22:14Z",
+          "templateName": "root",
+          "templateScope": "local/md-7r47j",
+          "type": "Skipped"
+        }
+      },
+      "phase": "Error",
+      "progress": "0/1",
+      "startedAt": "2026-10-28T22:22:06Z"
+    }
+  },
+  "run": {
+    "created_at": "2026-10-28T22:22:06Z",
+    "display_name": "md-4534a7de-480c-4a8f-ae76-e647cf7c158c",
+    "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+    "finished_at": "2026-10-28T22:22:14Z",
+    "pipeline_version_reference": {
+      "pipeline_id": "1ddd30df-c356-4ce4-96aa-1be0b1d80554",
+      "pipeline_version_id": "bc0dbb9e-df9e-4524-8979-e5795ae199f8"
+    },
+    "run_details": {
+      "task_details": [
+        {
+          "create_time": "2026-10-28T22:22:06Z",
+          "display_name": "root",
+          "end_time": "2026-10-28T22:22:14Z",
+          "run_id": "beed531c-d16d-47fb-99e3-030e93d089ac",
+          "start_time": "2026-10-28T22:22:14Z",
+          "state_history": [
+            {
+              "update_time": "2026-10-28T22:22:15Z"
+            }
+          ],
+          "task_id": "8b963c18-eeaa-443c-b1c7-783d84d2f5b0"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-7r47j-1114177087"
+            }
+          ],
+          "create_time": "2026-10-28T22:22:06Z",
+          "display_name": "root-driver",
+          "end_time": "2026-10-28T22:22:14Z",
+          "run_id": "beed531c-d16d-47fb-99e3-030e93d089ac",
+          "start_time": "2026-10-28T22:22:06Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T22:22:15Z"
+            }
+          ],
+          "task_id": "7d3a4600-5474-47a7-a2b7-bcfd849ae8c2"
+        },
+        {
+          "child_tasks": [
+            {
+              "pod_name": "md-7r47j-1051363752"
+            }
+          ],
+          "create_time": "2026-10-28T22:22:06Z",
+          "display_name": "md-7r47j",
+          "end_time": "2026-10-28T22:22:14Z",
+          "run_id": "beed531c-d16d-47fb-99e3-030e93d089ac",
+          "start_time": "2026-10-28T22:22:06Z",
+          "state": "FAILED",
+          "state_history": [
+            {
+              "state": "FAILED",
+              "update_time": "2026-10-28T22:22:15Z"
+            }
+          ],
+          "task_id": "7385bc6c-c187-4edf-b9f4-d2cca8df393b"
+        }
+      ]
+    },
+    "run_id": "beed531c-d16d-47fb-99e3-030e93d089ac",
+    "runtime_config": {
+      "parameters": {
+        "execution_id": "4534a7de-480c-4a8f-ae76-e647cf7c158c",
+        "spec_hash": "637373fc4213532e0724392564d9c2fb437575b5593eb88760f60b303ba93624"
+      },
+      "pipeline_root": "s3://ani-md-v21-kfp-01a15f47/artifacts"
+    },
+    "scheduled_at": "2026-10-28T22:22:06Z",
+    "service_account": "modeldev-step",
+    "state": "FAILED",
+    "state_history": [
+      {
+        "state": "PENDING",
+        "update_time": "2026-10-28T22:22:06Z"
+      },
+      {
+        "update_time": "2026-10-28T22:22:07Z"
+      },
+      {
+        "state": "FAILED",
+        "update_time": "2026-10-28T22:22:15Z"
+      }
+    ],
+    "storage_state": "AVAILABLE"
+  }
+}

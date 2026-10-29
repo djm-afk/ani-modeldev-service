@@ -26,6 +26,7 @@ func TestSnapshotFreezesCompletePlanAndRejectsDrift(t *testing.T) {
 		}
 	}
 	s.Input.RowCount = 11
+	s.Input.PreparedDataset.RowCount = 11
 	if s.Validate() != nil {
 		t.Fatal("finite nonbaseline dataset rejected")
 	}

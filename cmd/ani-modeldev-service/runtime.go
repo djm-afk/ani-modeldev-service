@@ -28,7 +28,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return nil, err
 	}
-	modelClient, modelFacts, closeModel, err := loadModelResources(config.Command)
+	modelClient, modelFacts, closeModel, err := loadModelResources(config.Command, config.Runtime)
 	if err != nil {
 		clients.close()
 		return nil, err
@@ -78,7 +78,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 		return failed("managed workload verifier configuration invalid")
 	}
 	training := trainer.New(clients.kube).WithOwnerSigner(ownerSigner).WithTrainingLogs(clients.logs)
-	proof := runtimeproof.New(clients.kube, clients.runs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), dispatch).WithTrainingRuntime(training)
+	proof := runtimeproof.New(clients.kube, clients.runs, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), dispatch).WithTrainingRuntime(training)
 	steps, err := biz.NewManagedSteps(dispatch, admissions, identity, proof)
 	if err != nil {
 		return failed("managed step configuration invalid")
@@ -92,7 +92,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 		if !ok {
 			return failed("Model controlled-copy transport unavailable")
 		}
-		copier, copyErr := objectstore.NewTrainedArtifactCopier(objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), storageHTTP, config.Runtime.ObjectStorage.Endpoint, config.Command.Model.BaseModelStorageScope.Bucket)
+		copier, copyErr := objectstore.NewTrainedArtifactCopier(objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), storageHTTP, config.Runtime.ObjectStorage.Endpoint, config.Command.Model.BaseModelStorageScope.Bucket)
 		if copyErr != nil {
 			return failed("Model controlled-copy scope invalid")
 		}
@@ -113,13 +113,9 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed dispatch configuration invalid")
 	}
-	closer, err := biz.NewExecutionCloser(runtime, clients.runs, proof, proof)
+	closer, err := biz.NewExecutionCloser(runtime, clients.runs, proof, proof, proof)
 	if err != nil {
 		return failed("managed execution close configuration invalid")
-	}
-	closer, err = closer.WithComputeCleanup(proof.WithTrainingLogs(clients.logs))
-	if err != nil {
-		return failed("automatic compute cleanup configuration invalid")
 	}
 	operations, err := buildExecutionOperations(pool, clients, closer, proof, training)
 	if err != nil {
@@ -128,7 +124,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if modelClient != nil {
 		operations.WithRegistrationRecovery(runtime, admissions)
 	}
-	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId, config.Runtime.ObjectStorage.MaxObjectBytes), operations, modelFacts, middlewares...)
+	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, config.Runtime, middlewares...)
 	if err != nil {
 		return failed("managed command listener configuration invalid")
 	}

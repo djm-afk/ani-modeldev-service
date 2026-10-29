@@ -9,6 +9,7 @@ import unittest
 from google.protobuf import json_format
 from kfp.pipeline_spec import pipeline_spec_pb2
 import yaml
+from resource_fixture import component_resources
 
 
 class PipelineAssembly(unittest.TestCase):
@@ -24,6 +25,7 @@ class PipelineAssembly(unittest.TestCase):
                 "workspace_access_mode": "ReadWriteOnce",
                 "admission_profile": "fine-v21-fixture",
                 "execution_timeout_max_seconds": 14400,
+                "component_resources": component_resources("FINETUNING"),
             }
             config, output = root / "compile.json", root / "pipeline.yaml"
             config.write_text(json.dumps(configuration), encoding="utf-8")
@@ -40,8 +42,8 @@ class PipelineAssembly(unittest.TestCase):
             tasks = ir["components"][body_task["componentRef"]["name"]]["dag"]["tasks"]
             self.assertIn("export", tasks["verify"]["dependentTasks"])
             for role, paths in {
-                "export": {"inputs", "training", "reports/train", "export", "reports/export"},
-                "verify": {"inputs", "training", "reports/train", "export", "reports/export", "reports/verify"},
+                "export": {"inputs", "training", "reports/train", "export", "reports/export", "work/export"},
+                "verify": {"inputs", "training", "reports/train", "export", "reports/export", "reports/verify", "work/verify"},
             }.items():
                 with self.subTest(role=role):
                     executor = ir["components"][tasks[role]["componentRef"]["name"]]["executorLabel"]
@@ -64,6 +66,7 @@ class PipelineAssembly(unittest.TestCase):
                 "workspace_access_mode": "ReadWriteOnce",
                 "admission_profile": "cpu-v1",
                 "execution_timeout_max_seconds": 7200,
+                "component_resources": component_resources("GENERAL_TRAINING"),
             }
             config = root / "compile.json"
             config.write_text(json.dumps(configuration), encoding="utf-8")
@@ -115,7 +118,14 @@ class PipelineAssembly(unittest.TestCase):
                 self.assertEqual(container["command"], ["/ani-modeldev-step", "close" if name == "finalize-close" else name])
                 if name == "finalize-close":
                     self.assertIn("--close-only", container["args"])
-                    self.assertNotIn("--candidate-json", container["args"])
+                    self.assertNotIn("--publication-ref", container["args"])
+                    self.assertNotIn("--publication-ref-file", container["args"])
+                if name == "publish":
+                    self.assertIn("--publication-ref-file",container["args"])
+                if name == "close":
+                    self.assertIn("--publication-ref",container["args"])
+                self.assertNotIn("--candidate-json",container["args"])
+                self.assertNotIn("--candidate-file",container["args"])
                 if name != "workspace-name":
                     self.assertEqual(task["inputs"]["parameters"]["run_id"],
                                      {"runtimeValue": {"constant": "{{$.pipeline_job_uuid}}"}})
@@ -129,7 +139,7 @@ class PipelineAssembly(unittest.TestCase):
                 self.assertEqual(int(k8s["activeDeadlineSeconds"]), configuration["execution_timeout_max_seconds"])
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/admission-profile"], "cpu-v1")
                 self.assertEqual(k8s["podMetadata"]["labels"]["ani.modeldev/step-role"], name)
-                self.assertEqual(bool(k8s.get("pvcMount")), name in {"prepare", "collect", "publish"})
+                self.assertEqual(bool(k8s.get("pvcMount")), name in {"prepare", "collect", "publish", "close"})
                 self.assertFalse(k8s.get("secretAsVolume"))
                 self.assertEqual({item["name"] for item in k8s["fieldPathAsEnv"]}, {"ANI_POD_NAME", "ANI_POD_UID", "ANI_POD_NAMESPACE"})
             self.assertNotIn("deletepvc", output.read_text(encoding="utf-8"))
@@ -142,6 +152,7 @@ class PipelineAssembly(unittest.TestCase):
                 "owner_config_map": "cpu-step-owner-fixture", "storage_class": "cpu-workspace-fixture",
                 "workspace_size": "2Gi", "workspace_access_mode": "ReadWriteOnce",
                 "execution_timeout_max_seconds": 7200,
+                "component_resources": component_resources("GENERAL_TRAINING"),
             }
             for index, profile in enumerate((None, "", "UPPER", "../another", "a" * 64)):
                 with self.subTest(profile=profile):

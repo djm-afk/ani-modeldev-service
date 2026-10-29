@@ -19,8 +19,8 @@ type FinetuningModelFactsReader interface {
 	ResolveFinetuningModelFacts(context.Context, string, cpup01.Intent, cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error)
 }
 
-func NewFinetuningAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader, models FinetuningModelFactsReader) *AdmissionResolver {
-	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts, models: models}
+func NewFinetuningAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader, models FinetuningModelFactsReader, limits cpup01.ContentLimits) *AdmissionResolver {
+	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts, models: models, limits: limits}
 }
 
 func verifiedAdmissionInput(v InputVersion, kind string) (cpup01.InputRef, error) {
@@ -34,18 +34,20 @@ func verifiedAdmissionInput(v InputVersion, kind string) (cpup01.InputRef, error
 			return cpup01.InputRef{}, ErrAdmissionInputNotReady
 		}
 		ref.SchemaVersion, ref.RowCount, ref.FeatureCount = v.Verification.SchemaVersion, v.Verification.RowCount, v.Verification.FeatureCount
+		ref.PreparedDataset = v.Verification.PreparedDataset
 	case "FINETUNING":
 		if v.AlpacaVerification == nil || v.Verification != nil || v.AlpacaVerification.ValidateFor(v.Import) != nil {
 			return cpup01.InputRef{}, ErrAdmissionInputNotReady
 		}
 		ref.SchemaVersion, ref.RowCount = v.AlpacaVerification.SchemaVersion, v.AlpacaVerification.RowCount
+		ref.PreparedDataset = v.AlpacaVerification.PreparedDataset
 	default:
 		return cpup01.InputRef{}, ErrImplementationUnavailable
 	}
 	return ref, nil
 }
 
-func (r *AdmissionResolver) resolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, material cpup01.ImplementationMaterial, parameters []cpup01.Parameter, input cpup01.FixedObjectRef, device string) (*cpup01.FinetuningSnapshot, error) {
+func (r *AdmissionResolver) resolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, material cpup01.ImplementationMaterial, parameters []cpup01.Parameter, input cpup01.InputRef, device string) (*cpup01.FinetuningSnapshot, error) {
 	if r.models == nil || material.Finetuning == nil || intent.BaseModelVersionID == nil {
 		return nil, ErrFinetuningNotEnabled
 	}
@@ -55,6 +57,10 @@ func (r *AdmissionResolver) resolveFinetuningModelFacts(ctx context.Context, ten
 	}
 	if base.VersionID != *intent.BaseModelVersionID {
 		return nil, ErrImplementationUnavailable
+	}
+	plan, err := ResolveFinetuningTemplate(intent, base, material)
+	if err != nil {
+		return nil, err
 	}
 	fine := material.Finetuning
 	settings := fine.ManagedSettings
@@ -66,8 +72,8 @@ func (r *AdmissionResolver) resolveFinetuningModelFacts(ctx context.Context, ten
 		case "lora_alpha":
 			settings.LoraAlpha = v
 		case "cutoff_len":
-			if v > fine.MaxSequenceLength {
-				return nil, ErrInvalidAdmission
+			if v > base.Facts.ContextLimit {
+				return nil, ErrContextLimitExceeded
 			}
 			settings.CutoffLen = v
 		case "per_device_train_batch_size":
@@ -90,26 +96,38 @@ func (r *AdmissionResolver) resolveFinetuningModelFacts(ctx context.Context, ten
 	if err != nil {
 		return nil, ErrImplementationUnavailable
 	}
-	exportArgs, err := resolveFinetuningArguments(fine.ExportProgram.ArgsTemplate, input, base)
+	exportArgs, err := resolveFinetuningArguments(fine.ExportProgram.ArgsTemplate, input, base, plan)
 	if err != nil {
 		return nil, err
 	}
-	verifyArgs, err := resolveFinetuningArguments(fine.VerifyProgram.ArgsTemplate, input, base)
+	verifyArgs, err := resolveFinetuningArguments(fine.VerifyProgram.ArgsTemplate, input, base, plan)
 	if err != nil {
 		return nil, err
 	}
 	return &cpup01.FinetuningSnapshot{ParameterContractVersion: material.Implementation.ParameterContractVersion, BaseModel: base, TargetModelID: intent.TargetModelID, NewModelName: intent.NewModelName, ManagedSettings: settings, ResolvedConfigurationSHA256: digest,
-		ExportProgram: cpup01.ProgramRef{ImageVersionID: fine.ExportProgram.ImageVersionID, ImageDigest: fine.ExportProgram.ImageDigest, Command: fine.ExportProgram.Command, ResolvedArgs: exportArgs},
-		VerifyProgram: cpup01.ProgramRef{ImageVersionID: fine.VerifyProgram.ImageVersionID, ImageDigest: fine.VerifyProgram.ImageDigest, Command: fine.VerifyProgram.Command, ResolvedArgs: verifyArgs},
-		RecipeSHA256:  fine.RecipeSHA256, MappingSHA256: fine.MappingSHA256, Budgets: fine.Budgets}, nil
+		ExportProgram: cpup01.ProgramRef{ImageID: fine.ExportProgram.ImageID, ImageVersion: fine.ExportProgram.ImageVersion, ImageScope: fine.ExportProgram.ImageScope, ImageDigest: fine.ExportProgram.ImageDigest, Command: fine.ExportProgram.Command, ResolvedArgs: exportArgs},
+		VerifyProgram: cpup01.ProgramRef{ImageID: fine.VerifyProgram.ImageID, ImageVersion: fine.VerifyProgram.ImageVersion, ImageScope: fine.VerifyProgram.ImageScope, ImageDigest: fine.VerifyProgram.ImageDigest, Command: fine.VerifyProgram.Command, ResolvedArgs: verifyArgs},
+		RecipeSHA256:  fine.RecipeSHA256, MappingSHA256: fine.MappingSHA256, RuntimeCapabilities: fine.RuntimeCapabilities, TemplatePlan: plan}, nil
 }
 
-func resolveFinetuningArguments(template []cpup01.MaterialArgument, input cpup01.FixedObjectRef, base cpup01.BaseModelRef) ([]string, error) {
+func resolveFinetuningArguments(template []cpup01.MaterialArgument, input cpup01.InputRef, base cpup01.BaseModelRef, plan cpup01.TemplatePlan) ([]string, error) {
 	baseDigest, err := base.BaseManifestSHA256()
 	if err != nil {
 		return nil, ErrImplementationUnavailable
 	}
-	values := map[string]string{"INPUT_SHA256": input.SHA256, "INPUT_BYTES": strconv.FormatInt(input.SizeBytes, 10), "BASE_MANIFEST_SHA256": baseDigest}
+	manifest, err := cpup01.BuildDatasetManifest(input)
+	if err != nil {
+		return nil, ErrImplementationUnavailable
+	}
+	digest, err := manifest.Digest()
+	if err != nil {
+		return nil, ErrImplementationUnavailable
+	}
+	planDigest, err := plan.Digest()
+	if err != nil {
+		return nil, ErrImplementationUnavailable
+	}
+	values := map[string]string{"DATASET_MANIFEST_SHA256": digest, "BASE_MANIFEST_SHA256": baseDigest, "TEMPLATE_PLAN_SHA256": planDigest}
 	args := make([]string, 0, len(template))
 	for _, a := range template {
 		if (a.Literal == "") == (a.Source == "") {

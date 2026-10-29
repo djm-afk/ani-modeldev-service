@@ -196,6 +196,18 @@ func (p RuntimePlan) Validate() error {
 	if json.Unmarshal(p.ExpectedSpec, &decoded) != nil {
 		return ErrInvalidArgument
 	}
+	object, ok := decoded.(map[string]any)
+	if !ok {
+		return fmt.Errorf("%w: runtime policy", ErrInvalidArgument)
+	}
+	policy, ok := object["podGroupPolicy"].(map[string]any)
+	if !ok || len(policy) != 1 {
+		return fmt.Errorf("%w: runtime policy", ErrInvalidArgument)
+	}
+	volcano, ok := policy["volcano"].(map[string]any)
+	if !ok || len(volcano) != 0 {
+		return fmt.Errorf("%w: runtime policy", ErrInvalidArgument)
+	}
 	canonical, err := encodeCanonicalJSON(decoded)
 	if err != nil || string(canonical) != string(p.ExpectedSpec) {
 		return fmt.Errorf("%w: runtime canonical spec", ErrInvalidArgument)

@@ -67,16 +67,16 @@ func (r *Runner) finetuningCompute(ctx context.Context, role string) error {
 		}
 		report.ResultManifest = ref
 	}
-	if reportErr := r.reportFinetuningResult(ctx, fine.Budgets, report); reportErr != nil {
+	if reportErr := r.reportFinetuningResult(ctx, e.Snapshot.Timing, report); reportErr != nil {
 		return reportErr
 	}
 	return err
 }
 
-func (r *Runner) reportFinetuningResult(ctx context.Context, budgets cpup01.ComponentBudgets, report *modeldevv1.ReportFinetuningStepResultRequest) error {
+func (r *Runner) reportFinetuningResult(ctx context.Context, timing cpup01.Timing, report *modeldevv1.ReportFinetuningStepResultRequest) error {
 	// A finished original process can report its late result within the frozen
 	// RPC budget. This grants no new compute or continuation budget.
-	record, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Duration(budgets.RPCTimeoutSeconds)*time.Second)
+	record, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Duration(timing.StepTimeoutSeconds)*time.Second)
 	defer cancel()
 	call, callErr := r.callContext(record)
 	if callErr != nil {
@@ -155,11 +155,11 @@ func computeManifest(root, relative string) (*trainingv1.ManifestRef, error) {
 	file := os.NewFile(uintptr(leaf), relative)
 	defer file.Close()
 	var before, after syscall.Stat_t
-	if syscall.Fstat(leaf, &before) != nil || before.Mode&syscall.S_IFMT != syscall.S_IFREG || before.Nlink != 1 || before.Size <= 0 || before.Size > 65536 {
+	if syscall.Fstat(leaf, &before) != nil || before.Mode&syscall.S_IFMT != syscall.S_IFREG || before.Nlink != 1 || before.Size <= 0 || before.Size > cpup01.MaxManifestBytes {
 		return nil, ErrConfiguration
 	}
 	h := sha256.New()
-	n, err := io.Copy(h, io.LimitReader(file, 65537))
+	n, err := io.Copy(h, io.LimitReader(file, cpup01.MaxManifestBytes))
 	if err != nil || n != before.Size || syscall.Fstat(leaf, &after) != nil || before.Size != after.Size || before.Mtim != after.Mtim || before.Ctim != after.Ctim || after.Nlink != 1 {
 		return nil, ErrConfiguration
 	}

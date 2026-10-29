@@ -67,7 +67,7 @@ func TestExecutionLogStreamFramesReadyDataThenClosed(t *testing.T) {
 	fixture := &streamFixture{data: []byte("line one\nline two\n")}
 	query, record, ctx := streamQuery(t, fixture)
 	server := &fakeStreamServer{ctx: streamContextFor(ctx)}
-	err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID}, server)
+	err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &record.Runtime.Observation.Resources[3].UID}, server)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func TestExecutionLogStreamForwardsResumeOffset(t *testing.T) {
 	query, record, ctx := streamQuery(t, fixture)
 	server := &fakeStreamServer{ctx: streamContextFor(ctx)}
 	since := int64(120)
-	err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID, SinceBytes: &since}, server)
+	err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &record.Runtime.Observation.Resources[3].UID, SinceBytes: &since}, server)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestExecutionLogStreamRejectsWithDistinctReasons(t *testing.T) {
 			fixture := &streamFixture{err: test.err}
 			query, record, ctx := streamQuery(t, fixture)
 			server := &fakeStreamServer{ctx: streamContextFor(ctx)}
-			if err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID}, server); err != nil {
+			if err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &record.Runtime.Observation.Resources[3].UID}, server); err != nil {
 				t.Fatal(err)
 			}
 			if len(server.frames) != 1 || server.frames[0].Kind != modeldevv1.FrameKind_FRAME_KIND_REJECTED || server.frames[0].Reason != test.reason {
@@ -144,11 +144,11 @@ func TestExecutionLogStreamRequiresItsOwnAuthorization(t *testing.T) {
 	query, record, ctx := streamQuery(t, fixture)
 	server := &fakeStreamServer{ctx: WithVerifiedGovernanceQuery(ctx, GovernanceDelivery{TenantID: workloadTenantForTest},
 		modeldevv1.ModelDevQueryService_GetExecutionLogs_FullMethodName)}
-	err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID}, server)
+	err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &record.Runtime.Observation.Resources[3].UID}, server)
 	if status.Code(err) != codes.Unauthenticated || len(server.frames) != 0 {
 		t.Fatalf("cross-method stream authorization: %v frames=%d", err, len(server.frames))
 	}
-	if err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID}, &fakeStreamServer{ctx: context.Background()}); status.Code(err) != codes.Unauthenticated {
+	if err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &record.Runtime.Observation.Resources[3].UID}, &fakeStreamServer{ctx: context.Background()}); status.Code(err) != codes.Unauthenticated {
 		t.Fatalf("unauthenticated stream accepted: %v", err)
 	}
 }
@@ -159,7 +159,7 @@ func TestExecutionLogStreamFollowerFailureCloses(t *testing.T) {
 	query, record, ctx := streamQuery(t, &streamFixture{})
 	query.streams = &failingStreamer{}
 	server := &fakeStreamServer{ctx: streamContextFor(ctx)}
-	if err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID}, server); err != nil {
+	if err := query.GetExecutionLogStream(&modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID, PodUid: &record.Runtime.Observation.Resources[3].UID}, server); err != nil {
 		t.Fatal(err)
 	}
 	last := server.frames[len(server.frames)-1]
@@ -183,4 +183,14 @@ func (r *failingReader) Read(buffer []byte) (int, error) {
 		return copy(buffer, "partial line\n"), nil
 	}
 	return 0, io.ErrUnexpectedEOF
+}
+
+func TestExecutionLogStreamRequiresExplicitPodUID(t *testing.T) {
+	fixture := &streamFixture{data: []byte("original output")}
+	query, record, ctx := streamQuery(t, fixture)
+	server := &fakeStreamServer{ctx: streamContextFor(ctx)}
+	request := &modeldevv1.GetExecutionLogStreamRequest{ExecutionId: record.Execution.ExecutionID}
+	if err := query.GetExecutionLogStream(request, server); status.Code(err) != codes.InvalidArgument || len(server.frames) != 0 || fixture.read {
+		t.Fatalf("missing original Pod UID opened a stream: %v", err)
+	}
 }
