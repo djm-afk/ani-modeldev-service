@@ -40,7 +40,7 @@ func (v *Verifier) ResolveManagedTaskID(ctx context.Context, plan biz.PipelineDi
 	if taskName == "export" || taskName == "verify" || taskName == "register" {
 		kind = "FINETUNING"
 	}
-	tasks, err := v.tasksForPlanKind(ctx, plan, association, kind)
+	tasks, err := v.tasksForPlanRole(ctx, plan, association, kind, taskName)
 	if err != nil {
 		return "", err
 	}
@@ -76,6 +76,10 @@ func (v *Verifier) tasksForPlan(ctx context.Context, plan biz.PipelineDispatchPl
 }
 
 func (v *Verifier) tasksForPlanKind(ctx context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation, kind string) ([]kfp.ManagedTask, error) {
+	return v.tasksForPlanRole(ctx, plan, association, kind, "")
+}
+
+func (v *Verifier) tasksForPlanRole(ctx context.Context, plan biz.PipelineDispatchPlan, association biz.ManagedStepAssociation, kind, role string) ([]kfp.ManagedTask, error) {
 	if v == nil || v.kube == nil || v.runs == nil || ctx == nil || ctx.Err() != nil {
 		return nil, biz.ErrRuntimeNotReady
 	}
@@ -99,7 +103,7 @@ func (v *Verifier) tasksForPlanKind(ctx context.Context, plan biz.PipelineDispat
 	if err != nil || pods == nil || pods.GetContinue() != "" {
 		return nil, biz.ErrRuntimeNotReady
 	}
-	return resolvedManagedTasksForKind(workflow, tasks, pods.Items, kind)
+	return resolvedManagedTasksForRole(workflow, tasks, pods.Items, kind, role)
 }
 
 func oneTask(tasks []kfp.ManagedTask, name string) (kfp.ManagedTask, error) {

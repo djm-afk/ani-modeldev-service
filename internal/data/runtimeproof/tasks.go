@@ -13,6 +13,12 @@ func resolvedManagedTasks(workflow *unstructured.Unstructured, tasks []kfp.Manag
 }
 
 func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured, kind string) ([]kfp.ManagedTask, error) {
+	return resolvedManagedTasksForRole(workflow, tasks, pods, kind, "")
+}
+
+// A callback proves its own role, not the readiness of sibling task Pods.
+// Writer-absence proof continues to resolve all roles through the wrapper above.
+func resolvedManagedTasksForRole(workflow *unstructured.Unstructured, tasks []kfp.ManagedTask, pods []unstructured.Unstructured, kind, role string) ([]kfp.ManagedTask, error) {
 	if workflow == nil || workflow.GetUID() == "" {
 		return nil, biz.ErrRuntimeNotReady
 	}
@@ -39,6 +45,9 @@ func resolvedManagedTasksForKind(workflow *unstructured.Unstructured, tasks []kf
 				continue
 			}
 		default:
+			continue
+		}
+		if role != "" && name != role && !(role == "close" && name == "close-finalizer") {
 			continue
 		}
 		id, node, err := taskControllerNode(task, nodes)

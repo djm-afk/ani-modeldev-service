@@ -102,3 +102,44 @@ func TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial(t *testing.T
 		})
 	}
 }
+
+func TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom(t *testing.T) {
+	config, reader := fixtureConfig(t)
+	handler, err := modeldevwebhook.New(config, reader, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewTLSServer(handler)
+	defer server.Close()
+	optional := true
+	native := corev1.EnvFromSource{ConfigMapRef: &corev1.ConfigMapEnvSource{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "metadata-grpc-configmap"}, Optional: &optional,
+	}}
+	for _, tc := range []struct {
+		name    string
+		sources []corev1.EnvFromSource
+		remove  bool
+		allowed bool
+	}{
+		{name: "native metadata with explicit work paths", sources: []corev1.EnvFromSource{native}, allowed: true},
+		{name: "other configmap", sources: []corev1.EnvFromSource{{ConfigMapRef: &corev1.ConfigMapEnvSource{LocalObjectReference: corev1.LocalObjectReference{Name: "other"}, Optional: &optional}}}},
+		{name: "secret", sources: []corev1.EnvFromSource{{SecretRef: &corev1.SecretEnvSource{LocalObjectReference: corev1.LocalObjectReference{Name: "metadata-grpc-configmap"}, Optional: &optional}}}},
+		{name: "prefixed metadata", sources: []corev1.EnvFromSource{{Prefix: "OTHER_", ConfigMapRef: native.ConfigMapRef}}},
+		{name: "required metadata", sources: []corev1.EnvFromSource{{ConfigMapRef: &corev1.ConfigMapEnvSource{LocalObjectReference: corev1.LocalObjectReference{Name: "metadata-grpc-configmap"}}}}},
+		{name: "duplicate metadata", sources: []corev1.EnvFromSource{native, native}},
+		{name: "metadata cannot supply missing work paths", sources: []corev1.EnvFromSource{native}, remove: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body := request(t, config, "cpu-v1", "prepare")
+			changePod(t, &body, func(pod *corev1.Pod) {
+				pod.Spec.Containers[0].EnvFrom = tc.sources
+				if tc.remove {
+					pod.Spec.Containers[0].Env = nil
+				}
+			})
+			if result := call(t, server, body); result.Allowed != tc.allowed {
+				t.Fatalf("native metadata source/work path decision: allowed=%v want=%v result=%+v", result.Allowed, tc.allowed, result.Result)
+			}
+		})
+	}
+}

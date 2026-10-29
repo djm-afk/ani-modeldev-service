@@ -89,8 +89,17 @@ func componentWorkEnvironment(container corev1.Container, role string) bool {
 	work := "/workspace/work/" + role
 	expected := map[string]string{"TMPDIR": work + "/tmp", "HF_HOME": work + "/hf", "HF_DATASETS_CACHE": work + "/hf/datasets", "MPLCONFIGDIR": work + "/matplotlib"}
 	seen := map[string]bool{}
-	if len(container.EnvFrom) != 0 {
+	if len(container.EnvFrom) > 1 {
 		return false
+	}
+	for _, source := range container.EnvFrom {
+		// The current KFP executor imports its optional metadata connection.
+		// All work paths must still be explicit env entries, which take
+		// precedence over envFrom; this source cannot supply a missing path.
+		ref := source.ConfigMapRef
+		if source.Prefix != "" || source.SecretRef != nil || ref == nil || ref.Name != "metadata-grpc-configmap" || ref.Optional == nil || !*ref.Optional {
+			return false
+		}
 	}
 	for _, entry := range container.Env {
 		wanted, managed := expected[entry.Name]
