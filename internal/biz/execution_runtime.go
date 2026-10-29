@@ -313,6 +313,34 @@ type ManagedCloseEvidence struct {
 	SkippedTasks     []ManagedSkippedTask
 	ObservedAt       time.Time
 	OwnerTermination *ManagedOwnerTermination
+	// UnpreparedWorkspace records only a PVC observed after the original KFP
+	// CreatePVC succeeded and prepare was refused. It grants no prepared data or
+	// training authority; owner cleanup must dispose this exact UID after close.
+	UnpreparedWorkspace *UnpreparedWorkspace `json:",omitempty"`
+}
+
+type UnpreparedWorkspace struct {
+	NamespaceName, NamespaceUID, PVCName, PVCUID string
+	PVCResourceVersion, SpecSHA256               string
+	CreateTaskID, CreatePodUID, RequestSHA256    string
+	CreatedAt                                    time.Time
+}
+
+// ValidUnpreparedWorkspace checks the persisted identity envelope only. The
+// infrastructure verifier must independently prove the original CreatePVC
+// request, complete owner graph, exact current UID and writer absence.
+func ValidUnpreparedWorkspace(execution Execution, owner RunAuthorityCandidate, fact *UnpreparedWorkspace) bool {
+	return fact != nil && fact.NamespaceName == owner.NamespaceName && fact.NamespaceUID == owner.NamespaceUID && owner.NamespaceName == execution.Snapshot.Environment.NamespaceName && owner.NamespaceUID == execution.Snapshot.Environment.NamespaceUID && fact.PVCName == ExpectedWorkspacePVCName(execution.ExecutionID) && validAdmissionID(fact.PVCUID) && fact.PVCResourceVersion != "" && closeSpecHashPattern.MatchString(fact.SpecSHA256) && closeSpecHashPattern.MatchString(fact.RequestSHA256) && validAdmissionID(fact.CreateTaskID) && validAdmissionID(fact.CreatePodUID) && !fact.CreatedAt.IsZero()
+}
+
+// ResourceVersion is an observation fence, not a new volume identity.
+func SameUnpreparedWorkspace(a, b *UnpreparedWorkspace) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	left, right := *a, *b
+	left.PVCResourceVersion, right.PVCResourceVersion = "", ""
+	return left == right
 }
 
 // OwnerTermination is independent controller evidence for background close.

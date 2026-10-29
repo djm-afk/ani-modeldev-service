@@ -120,13 +120,21 @@ func ComputeCleanupTargets(execution Execution, owner RunAuthorityCandidate, sta
 			}
 		}
 	}
+	if fact := state.CloseEvidence.UnpreparedWorkspace; fact != nil {
+		if state.Workspace != nil || state.Training != nil || !ValidUnpreparedWorkspace(execution, owner, fact) || !SameUnpreparedWorkspace(fact, state.StepExitCleanup.Evidence.UnpreparedWorkspace) {
+			return nil, "", ErrCleanupBlocked
+		}
+		targets = append(targets, RuntimeResource{APIVersion: "v1", Kind: "PersistentVolumeClaim", Namespace: fact.NamespaceName, Name: fact.PVCName, UID: fact.PVCUID, APIObjectPresent: true, CreationDisabled: true, Terminal: true})
+	} else if state.StepExitCleanup.Evidence.UnpreparedWorkspace != nil {
+		return nil, "", ErrCleanupBlocked
+	}
 	targets = append(targets, RuntimeResource{APIVersion: "argoproj.io/v1alpha1", Kind: "Workflow", Namespace: owner.NamespaceName, Name: owner.WorkflowName, UID: owner.WorkflowUID, APIObjectPresent: true, CreationDisabled: true, Terminal: true})
 	if fact := state.RuntimeTemplate; fact != nil && fact.Binding != nil {
 		targets = append(targets, RuntimeResource{APIVersion: "trainer.kubeflow.org/v1alpha1", Kind: "TrainingRuntime", Namespace: owner.NamespaceName, Name: fact.Binding.Name, UID: fact.Binding.UID, APIObjectPresent: true, CreationDisabled: true, Terminal: true})
 	}
 	// Keep Workflow until the other removals finish: its complete original node
 	// graph remains available for independent verification throughout cleanup.
-	rank := map[string]int{"TrainJob": 0, "JobSet": 1, "Job": 2, "Pod": 3, "PodGroup": 4, "Workflow": 5, "TrainingRuntime": 6}
+	rank := map[string]int{"TrainJob": 0, "JobSet": 1, "Job": 2, "Pod": 3, "PodGroup": 4, "PersistentVolumeClaim": 5, "Workflow": 6, "TrainingRuntime": 7}
 	sort.Slice(targets, func(i, j int) bool {
 		if rank[targets[i].Kind] != rank[targets[j].Kind] {
 			return rank[targets[i].Kind] < rank[targets[j].Kind]

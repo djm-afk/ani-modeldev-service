@@ -80,7 +80,16 @@ func newClosedRecoveryCleanupFixture(t *testing.T, captured ...bool) (*computeCl
 		step.pods[f.pods[i].GetName()] = f.pods[i].DeepCopy()
 	}
 	fixture := &computeCleanupFixture{step: step, runtime: runtimeObject, objects: map[string]*unstructured.Unstructured{}, pendingReads: map[string]int{}}
-	step.serveExtra = fixture.serve
+	step.serveExtra = func(t *testing.T, w http.ResponseWriter, r *http.Request) bool {
+		// This pre-CreatePVC fixture has no volume. Answer the actual absence
+		// read explicitly; nil prepared state alone is never absence evidence.
+		if r.Method == http.MethodGet && r.URL.Path == "/api/v1/namespaces/"+f.authority().NamespaceName+"/persistentvolumeclaims/"+biz.ExpectedWorkspacePVCName(f.execution.ExecutionID) {
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(map[string]any{"apiVersion": "v1", "kind": "Status", "status": "Failure", "reason": "NotFound", "code": 404})
+			return true
+		}
+		return fixture.serve(t, w, r)
+	}
 	peer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { step.serve(t, w, r) }))
 	t.Cleanup(peer.Close)
 	step.clientConfig = &rest.Config{Host: peer.URL, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: peer.Certificate().Raw})}, Timeout: 3 * time.Second, QPS: 100, Burst: 200}

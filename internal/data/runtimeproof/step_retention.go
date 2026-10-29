@@ -83,12 +83,21 @@ func (verifier *Verifier) verifyRecordedOwnerWritersAbsent(ctx context.Context, 
 			return biz.ErrRuntimeNotReady
 		}
 	}
+	if evidence.UnpreparedWorkspace != nil {
+		if workspace != nil {
+			return biz.ErrRuntimeConflict
+		}
+		if err := verifier.verifyUnpreparedWorkspace(ctx, execution, authority, evidence.UnpreparedWorkspace, workflowRemovalRecorded); err != nil {
+			return err
+		}
+	}
+	writerWorkspace := ownerWorkspaceForEvidence(workspace, evidence.UnpreparedWorkspace)
 	byName, byUID := map[string]biz.RuntimeResource{}, map[string]bool{}
 	for _, resource := range evidence.Resources {
 		if resource.APIVersion != "v1" || resource.Kind != "Pod" || resource.Namespace != environment.NamespaceName || resource.Name == "" || resource.UID == "" || resource.OwnerUID != authority.WorkflowUID || !resource.Terminal || !resource.APIObjectPresent || byName[resource.Name].UID != "" || byUID[resource.UID] || resource.ExitCode == nil && resource.InitializationAbort == nil && resource.SandboxTermination == nil {
 			return biz.ErrRuntimeConflict
 		}
-		if resource.SandboxTermination != nil && (workspace != nil || resource.ExitCode != nil || resource.InitializationAbort != nil || !resource.CreationDisabled || !resource.SandboxTermination.ValidAt(evidence.ObservedAt)) {
+		if resource.SandboxTermination != nil && (writerWorkspace != nil || resource.ExitCode != nil || resource.InitializationAbort != nil || !resource.CreationDisabled || !resource.SandboxTermination.ValidAt(evidence.ObservedAt)) {
 			return biz.ErrRuntimeConflict
 		}
 		byName[resource.Name], byUID[resource.UID] = resource, true
@@ -113,7 +122,7 @@ func (verifier *Verifier) verifyRecordedOwnerWritersAbsent(ctx context.Context, 
 			}
 			continue
 		}
-		uses, valid := ownerWorkspaceReference(pod, workspace)
+		uses, valid := ownerWorkspaceReference(pod, writerWorkspace)
 		if !valid || workflowOwner(pod, association) {
 			return biz.ErrRuntimeConflict
 		}

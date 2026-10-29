@@ -305,6 +305,10 @@ func validCloseEvidence(authority biz.RunAuthorityCandidate, reason string, evid
 // Keep this pre-workspace proof restriction at persistence boundaries too;
 // a caller's prior external verification cannot replace committed state.
 func validSandboxTerminationScope(state biz.ExecutionRuntime, evidence biz.ManagedCloseEvidence) bool {
+	if evidence.UnpreparedWorkspace != nil && (state.Workspace != nil || state.Training != nil || state.TrainingHandle != nil || state.Observation != nil || state.Publication != nil) {
+		return false
+	}
+
 	if state.Workspace == nil {
 		return true
 	}

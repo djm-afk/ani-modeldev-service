@@ -179,7 +179,7 @@ func (step *Step) RequestExecutionClose(ctx context.Context, request *modeldevv1
 	if err != nil {
 		return nil, runtimeError(err)
 	}
-	states, _, err := runtimeReply(result, claim)
+	states, err := closeRuntimeReply(result, claim)
 	if err != nil {
 		return nil, err
 	}
@@ -266,11 +266,8 @@ func validRuntimeMessage(message protoreflect.Message, depth int) bool {
 }
 
 func runtimeReply(result biz.ManagedRuntimeResult, claim biz.BeginManagedExecutionRequest) (*modeldevv1.ExecutionStates, *modeldevv1.AuthorityBinding, error) {
-	authority, execution := result.Authority, result.Execution
-	if execution.TenantID != claim.TenantID || !runtimeUUID(execution.OperationID) || (claim.OperationID != "" && execution.OperationID != claim.OperationID) || execution.ExecutionID != claim.ExecutionID || execution.SpecHash != claim.SpecHash ||
-		authority.TenantID != claim.TenantID || authority.OperationID != execution.OperationID || authority.ExecutionID != claim.ExecutionID || authority.SpecHash != claim.SpecHash ||
-		authority.RunID != claim.Association.RunID || authority.NamespaceName != claim.Association.NamespaceName || authority.NamespaceUID != claim.Association.NamespaceUID ||
-		authority.WorkflowName != claim.Association.WorkflowName || authority.WorkflowUID != claim.Association.WorkflowUID || authority.OwnerRevision == 0 || result.Runtime.OwnerRevision == 0 {
+	authority := result.Authority
+	if !runtimeReplyIdentity(result, claim) {
 		return nil, nil, runtimeError(biz.ErrManagedStepUnavailable)
 	}
 	boundAt, ok := runtimeTimestamp(authority.BoundAt)
@@ -282,6 +279,34 @@ func runtimeReply(result biz.ManagedRuntimeResult, claim biz.BeginManagedExecuti
 		return nil, nil, runtimeError(biz.ErrManagedStepUnavailable)
 	}
 	return states, &modeldevv1.AuthorityBinding{KfpRunId: authority.RunID, NamespaceUid: authority.NamespaceUID, WorkflowUid: authority.WorkflowUID, BoundAt: boundAt}, nil
+}
+
+func runtimeReplyIdentity(result biz.ManagedRuntimeResult, claim biz.BeginManagedExecutionRequest) bool {
+	authority, execution := result.Authority, result.Execution
+	if execution.TenantID != claim.TenantID || !runtimeUUID(execution.OperationID) || (claim.OperationID != "" && execution.OperationID != claim.OperationID) || execution.ExecutionID != claim.ExecutionID || execution.SpecHash != claim.SpecHash ||
+		authority.TenantID != claim.TenantID || authority.OperationID != execution.OperationID || authority.ExecutionID != claim.ExecutionID || authority.SpecHash != claim.SpecHash ||
+		authority.RunID != claim.Association.RunID || authority.NamespaceName != claim.Association.NamespaceName || authority.NamespaceUID != claim.Association.NamespaceUID ||
+		authority.WorkflowName != claim.Association.WorkflowName || authority.WorkflowUID != claim.Association.WorkflowUID || authority.OwnerRevision == 0 || result.Runtime.OwnerRevision == 0 {
+		return false
+	}
+	return true
+}
+
+// CLOSE may acknowledge a durable owner-only recovery fence before prepare ever
+// bound normal step authority. Other replies still require the original BoundAt.
+func closeRuntimeReply(result biz.ManagedRuntimeResult, claim biz.BeginManagedExecutionRequest) (*modeldevv1.ExecutionStates, error) {
+	if !result.Authority.BoundAt.IsZero() {
+		states, _, err := runtimeReply(result, claim)
+		return states, err
+	}
+	if !runtimeReplyIdentity(result, claim) || result.Runtime.CloseAuthority == nil || *result.Runtime.CloseAuthority != result.Authority.RunAuthorityCandidate || result.Runtime.CloseGeneration == 0 || result.Runtime.CloseRequestedAt.IsZero() {
+		return nil, runtimeError(biz.ErrManagedStepUnavailable)
+	}
+	states, ok := encodeRuntimeStates(result.States)
+	if !ok {
+		return nil, runtimeError(biz.ErrManagedStepUnavailable)
+	}
+	return states, nil
 }
 
 func encodeRuntimeStates(states biz.ExecutionStates) (*modeldevv1.ExecutionStates, bool) {

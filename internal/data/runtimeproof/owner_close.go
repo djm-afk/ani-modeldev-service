@@ -3,6 +3,7 @@ package runtimeproof
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"sort"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -64,7 +66,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	}
 	proof, nodes, err := ownerWorkflowCompletion(workflow, observedAt)
 	if err != nil {
-		return biz.ManagedCloseEvidence{}, err
+		return biz.ManagedCloseEvidence{}, fmt.Errorf("owner workflow completion: %w", err)
 	}
 	proof.RunState, proof.RunFinishedAt = run.State, run.FinishedAt
 	if workspace != nil {
@@ -83,6 +85,9 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 	}
 	if workspace == nil && rootAdmissionRejected(workflow, dispatch.Plan, authority.RunID, run, pods.Items) {
+		if _, absent := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "persistentvolumeclaims"}).Namespace(environment.NamespaceName).Get(ctx, biz.ExpectedWorkspacePVCName(execution.ExecutionID), metav1.GetOptions{}); !apierrors.IsNotFound(absent) {
+			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
+		}
 		unique, err := verifier.rootAdmissionWorkflow(ctx, environment.NamespaceName, authority.RunID)
 		if err != nil {
 			return biz.ManagedCloseEvidence{}, err
@@ -98,6 +103,13 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	}
 	association := biz.ManagedStepAssociation{RunID: authority.RunID, NamespaceName: authority.NamespaceName, NamespaceUID: authority.NamespaceUID, WorkflowName: authority.WorkflowName, WorkflowUID: authority.WorkflowUID}
 	evidence := biz.ManagedCloseEvidence{RunID: authority.RunID, WorkflowUID: authority.WorkflowUID, OwnerTermination: &proof}
+	if workspace == nil {
+		evidence.UnpreparedWorkspace, err = verifier.observeUnpreparedWorkspace(ctx, execution, authority, workflow, run, pods.Items)
+		if err != nil {
+			return biz.ManagedCloseEvidence{}, fmt.Errorf("unprepared workspace request: %w", err)
+		}
+	}
+	writerWorkspace := ownerWorkspaceForEvidence(workspace, evidence.UnpreparedWorkspace)
 	seenNames, seenUIDs, seenNodes := make(map[string]bool), make(map[string]bool), make(map[string]bool)
 	abortedPods := make(map[string]string)
 	for i := range pods.Items {
@@ -114,7 +126,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 				return biz.ManagedCloseEvidence{}, biz.ErrRuntimeConflict
 			}
 		}
-		usesPVC, valid := ownerWorkspaceReference(pod, workspace)
+		usesPVC, valid := ownerWorkspaceReference(pod, writerWorkspace)
 		if !valid {
 			return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 		}
@@ -130,7 +142,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 				terminal, completed = true, abort.DeletedAt
 			}
 		}
-		if !terminal && owned && workspace == nil {
+		if !terminal && owned && writerWorkspace == nil {
 			sandbox = observeSandboxTermination(pod, observedAt, true)
 			if sandbox != nil {
 				// The marker proves absence at observation. Sandbox readiness's
@@ -166,7 +178,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	}
 	if len(seenNodes) != len(nodes) {
 		// A disappeared historical Pod is missing evidence, not a stopped writer.
-		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
+		return biz.ManagedCloseEvidence{}, fmt.Errorf("owner pod exits %d/%d: %w", len(seenNodes), len(nodes), biz.ErrRuntimeNotReady)
 	}
 	seenTasks := make(map[string]bool)
 	terminatedStructuralTasks := make(map[string]bool)
@@ -195,7 +207,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 	}
 	tasks, err := resolvedManagedTasksForKind(workflow, ownerTasks, pods.Items, execution.Snapshot.Kind)
 	if err != nil {
-		return biz.ManagedCloseEvidence{}, err
+		return biz.ManagedCloseEvidence{}, fmt.Errorf("owner remaining managed tasks: %w", err)
 	}
 	for _, task := range tasks {
 		if !terminalTask(task.State) && task.State != "SKIPPED" && !(task.State == "RUNNING" && terminatedStructuralTasks[task.ID]) {
@@ -230,6 +242,11 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 	}
 
+	if evidence.UnpreparedWorkspace != nil {
+		if err := verifier.verifyUnpreparedWorkspace(ctx, execution, authority, evidence.UnpreparedWorkspace, false); err != nil {
+			return biz.ManagedCloseEvidence{}, err
+		}
+	}
 	sort.Slice(evidence.Resources, func(i, j int) bool { return evidence.Resources[i].UID < evidence.Resources[j].UID })
 	evidence.ObservedAt = time.Now().UTC()
 	return evidence, nil
@@ -373,7 +390,9 @@ func serverDeniedAdmissionNode(workflow *unstructured.Unstructured, node map[str
 		}
 		return serverWebhookAdmissionTimeout(workflow.GetNamespace(), strings.TrimPrefix(message, prefix))
 	}
-	return node["templateName"] == "metadata-0-2-retry-system-container-impl" && serverWebhookAdmissionTimeout(workflow.GetNamespace(), message) && rejectedExecutorHasZeroRetries(workflow, node)
+	executor := node["templateName"] == "metadata-0-2-retry-system-container-impl" || node["templateName"] == "metadata-1-2-retry-system-container-impl"
+	policyDenied := message == "admission webhook \""+workflow.GetNamespace()+".modeldev.ani.io\" denied the request: ModelDev Pod admission refused: work_environment"
+	return executor && (serverWebhookAdmissionTimeout(workflow.GetNamespace(), message) || policyDenied) && rejectedExecutorHasZeroRetries(workflow, node)
 }
 
 func admissionRejectionWithoutProcess(node map[string]any) bool {
@@ -446,7 +465,8 @@ func rejectedAdmissionTemplate(workflow *unstructured.Unstructured, name string,
 func rejectedExecutorHasZeroRetries(workflow *unstructured.Unstructured, node map[string]any) bool {
 	name, _ := node["name"].(string)
 	flags, ok := node["nodeFlag"].(map[string]any)
-	if !strings.HasSuffix(name, ".executor(0)") || node["displayName"] != "executor(0)" || !ok || len(flags) != 1 || flags["retried"] != true || !zeroRetryInput(node) || !rejectedAdmissionTemplate(workflow, "metadata-0-2-retry-system-container-impl", true) {
+	template, _ := node["templateName"].(string)
+	if !strings.HasSuffix(name, ".executor(0)") || node["displayName"] != "executor(0)" || !ok || len(flags) != 1 || flags["retried"] != true || !zeroRetryInput(node) || !rejectedAdmissionTemplate(workflow, template, true) {
 		return false
 	}
 	nodes, found, err := unstructured.NestedMap(workflow.Object, "status", "nodes")
@@ -499,7 +519,8 @@ func serverRejectedManagedTask(workflow *unstructured.Unstructured, task kfp.Man
 		return false
 	}
 	id, controller, err := taskControllerNode(task, nodes)
-	if err != nil || controller["type"] != "DAG" || controller["phase"] != "Error" || controller["templateName"] != "metadata-0-2-retry-system-container-executor" || controller["templateScope"] != "local/"+workflow.GetName() || controller["progress"] != "0/1" || !admissionRejectionWithoutProcess(controller) {
+	controllerTemplate, _ := controller["templateName"].(string)
+	if err != nil || controller["type"] != "DAG" || controller["phase"] != "Error" || (controllerTemplate != "metadata-0-2-retry-system-container-executor" && controllerTemplate != "metadata-1-2-retry-system-container-executor") || controller["templateScope"] != "local/"+workflow.GetName() || controller["progress"] != "0/1" || !admissionRejectionWithoutProcess(controller) {
 		return false
 	}
 	children, ok := controller["children"].([]any)
@@ -514,7 +535,7 @@ func serverRejectedManagedTask(workflow *unstructured.Unstructured, task kfp.Man
 			continue
 		}
 		matches++
-		if !serverDeniedAdmissionNode(workflow, node) || node["templateName"] != "metadata-0-2-retry-system-container-impl" || node["name"] != controller["name"].(string)+".executor(0)" || outbound[0] != executorID {
+		if !serverDeniedAdmissionNode(workflow, node) || node["templateName"] != strings.TrimSuffix(controllerTemplate, "executor")+"impl" || node["name"] != controller["name"].(string)+".executor(0)" || outbound[0] != executorID {
 			return false
 		}
 		members := 0

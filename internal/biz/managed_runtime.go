@@ -51,6 +51,12 @@ type ManagedRuntimeResult struct {
 	TaskID    string
 }
 
+// ManagedFailureCloser persists only the creation fence and verified original
+// owner after current CLOSE authentication. It never grants normal authority.
+type ManagedFailureCloser interface {
+	FenceManagedFailureClose(context.Context, RunAuthorityCandidate) (ExecutionRuntime, bool, error)
+}
+
 // Every callback rechecks current workload identity and the KFP-owned task
 // association. A previously issued receipt is never a bearer credential.
 func (runtime *ManagedRuntime) authenticate(ctx context.Context, token string, request BeginManagedExecutionRequest, task string) (ManagedRuntimeResult, error) {
@@ -102,25 +108,25 @@ func (runtime *ManagedRuntime) authenticateOrCloseUnbound(ctx context.Context, t
 		if !closeUnbound || task != "close" || !errors.Is(err, ErrExecutionNotFound) {
 			return ManagedRuntimeResult{}, ErrManagedStepUnauthorized
 		}
-		// A failed workspace creation may skip prepare before Begin. Current
-		// workload and KFP proof above are still mandatory; only a proven absence
-		// of writers permits fixing this association in an atomic CLOSED record.
+		// Prepare may fail before Begin. Current CLOSE identity may persist only
+		// the creation fence and original owner; the background owner must still
+		// prove every process exit and exact workspace before confirming CLOSED.
 		execution, err := runtime.steps.executions.Get(ctx, plan.TenantID, plan.ExecutionID)
 		if err != nil {
 			return ManagedRuntimeResult{}, err
 		}
-		evidence, err := runtime.publications.VerifyWritersAbsent(ctx, execution, a, nil)
+		recovery, ok := runtime.repository.(ManagedFailureCloser)
+		if !ok {
+			return ManagedRuntimeResult{}, ErrRuntimeNotReady
+		}
+		state, replayed, err := recovery.FenceManagedFailureClose(ctx, expected)
 		if err != nil {
 			return ManagedRuntimeResult{}, err
 		}
-		authority, state, err := runtime.repository.CloseUnboundRuntime(ctx, expected, evidence)
-		if err != nil {
-			return ManagedRuntimeResult{}, err
-		}
-		if authority.RunAuthorityCandidate != expected || state.CloseGeneration == 0 || state.ClosedAt == nil || state.CloseReason != "STEP_FAILED" {
+		if state.CloseGeneration == 0 || state.CloseRequestedAt.IsZero() || state.CloseAuthority == nil || *state.CloseAuthority != expected {
 			return ManagedRuntimeResult{}, ErrRuntimeConflict
 		}
-		return runtimeResult(ManagedRuntimeResult{Execution: execution, Authority: authority}, state, false)
+		return runtimeResult(ManagedRuntimeResult{Execution: execution, Authority: RunAuthority{RunAuthorityCandidate: expected}}, state, replayed)
 	}
 	if authority.RunAuthorityCandidate != expected {
 		return ManagedRuntimeResult{}, ErrManagedStepUnauthorized
@@ -411,6 +417,11 @@ func (runtime *ManagedRuntime) Close(ctx context.Context, token string, request 
 	result, err := runtime.authenticateOrCloseUnbound(ctx, token, request, "close", reason == "STEP_FAILED")
 	if err != nil {
 		return result, err
+	}
+	if reason == "STEP_FAILED" && result.Runtime.CloseAuthority != nil && *result.Runtime.CloseAuthority == result.Authority.RunAuthorityCandidate {
+		// A pre-Begin failure has only a close-only owner. Let the finalizer
+		// exit so independent full Workflow/Pod proof can finish in the owner.
+		return result, nil
 	}
 	if reason == "NATURAL_TERMINAL" && result.Execution.Snapshot.Kind == "FINETUNING" && result.Execution.Snapshot.Finetuning.RequiresModelRegistration() && (result.Runtime.FinetuningRegistration == nil || result.Runtime.FinetuningRegistration.State != "READY") {
 		return ManagedRuntimeResult{}, ErrModelDependencyUnavailable

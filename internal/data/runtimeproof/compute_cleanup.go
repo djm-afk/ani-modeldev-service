@@ -183,7 +183,7 @@ func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution
 		if err != nil || !sameObject(current, target.APIVersion, target.Kind, target.Namespace, target.Name, target.UID) {
 			return removed, biz.ErrCleanupConflict
 		}
-		if target.Kind != "Workflow" && target.Kind != "Pod" && target.Kind != "PodGroup" && target.Kind != "TrainingRuntime" {
+		if target.Kind != "Workflow" && target.Kind != "Pod" && target.Kind != "PodGroup" && target.Kind != "TrainingRuntime" && target.Kind != "PersistentVolumeClaim" {
 			if err := controllers.DeleteRecordedComputeController(ctx, record, target); err != nil {
 				return removed, err
 			}
@@ -201,7 +201,7 @@ func (verifier *Verifier) ReconcileComputeCleanup(ctx context.Context, execution
 					}
 				}
 			}
-			if len(current.GetFinalizers()) != 0 || current.GetResourceVersion() == "" {
+			if !disposableComputeFinalizers(current, target.Kind) || current.GetResourceVersion() == "" {
 				return removed, biz.ErrCleanupBlocked
 			}
 			if target.Kind == "Pod" || target.Kind == "PodGroup" {
@@ -276,7 +276,7 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 			if !removalIntent {
 				return biz.ErrCleanupBlocked
 			}
-			if len(object.GetFinalizers()) != 0 {
+			if !disposableComputeFinalizers(object, target.Kind) {
 				return biz.ErrCleanupBlocked
 			}
 			if err := verifier.waitComputeRemoval(ctx, target); err != nil {
@@ -286,6 +286,12 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 		}
 		if target.Kind == "Workflow" {
 			continue // Complete node hash/state/UID checked independently above.
+		}
+		if target.Kind == "PersistentVolumeClaim" {
+			if state.CloseEvidence == nil || state.CloseEvidence.UnpreparedWorkspace == nil || target.UID != state.CloseEvidence.UnpreparedWorkspace.PVCUID || len(object.GetOwnerReferences()) != 0 || !disposableComputeFinalizers(object, target.Kind) {
+				return biz.ErrCleanupConflict
+			}
+			continue // Original UID/spec/request and all writers checked above.
 		}
 		if target.Kind == "TrainingRuntime" {
 			if len(object.GetOwnerReferences()) != 0 || object.GetAnnotations()["modeldev.ani.io/execution-id"] != execution.ExecutionID || object.GetAnnotations()["modeldev.ani.io/tenant-id"] != execution.TenantID || object.GetAnnotations()["modeldev.ani.io/execution-spec-sha256"] != execution.SpecHash {
@@ -336,7 +342,7 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 				}
 			}
 			if resource.Resource == "pods" {
-				uses, valid := ownerWorkspaceReference(object, state.Workspace)
+				uses, valid := ownerWorkspaceReference(object, ownerWorkspaceForEvidence(state.Workspace, state.StepExitCleanup.Evidence.UnpreparedWorkspace))
 				if !valid || uses {
 					return biz.ErrCleanupBlocked
 				}
@@ -367,7 +373,7 @@ func (verifier *Verifier) waitComputeRemoval(ctx context.Context, target biz.Run
 		if !sameObject(current, target.APIVersion, target.Kind, target.Namespace, target.Name, target.UID) {
 			return biz.ErrCleanupConflict
 		}
-		if len(current.GetFinalizers()) != 0 {
+		if !disposableComputeFinalizers(current, target.Kind) {
 			return biz.ErrCleanupBlocked
 		}
 		timer := time.NewTimer(200 * time.Millisecond)
@@ -476,8 +482,21 @@ func computeResource(target biz.RuntimeResource) (schema.GroupVersionResource, b
 		return schema.GroupVersionResource{Group: "scheduling.volcano.sh", Version: "v1beta1", Resource: "podgroups"}, target.APIVersion == "scheduling.volcano.sh/v1beta1"
 	case "Job":
 		return schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}, target.APIVersion == "batch/v1"
+	case "PersistentVolumeClaim":
+		return schema.GroupVersionResource{Version: "v1", Resource: "persistentvolumeclaims"}, target.APIVersion == "v1"
 	case "Pod":
 		return schema.GroupVersionResource{Version: "v1", Resource: "pods"}, target.APIVersion == "v1"
 	}
 	return schema.GroupVersionResource{}, false
+}
+
+// PVC protection is removed by Kubernetes only after real writer absence; no
+// application finalizer is stripped to force deletion.
+func disposableComputeFinalizers(object *unstructured.Unstructured, kind string) bool {
+	for _, f := range object.GetFinalizers() {
+		if kind != "PersistentVolumeClaim" || f != "kubernetes.io/pvc-protection" {
+			return false
+		}
+	}
+	return true
 }
