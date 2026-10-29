@@ -340,6 +340,12 @@ func SameUnpreparedWorkspace(a, b *UnpreparedWorkspace) bool {
 	}
 	left, right := *a, *b
 	left.PVCResourceVersion, right.PVCResourceVersion = "", ""
+	// Native Kubernetes timestamps and JSON facts can retain different local
+	// zone representations of the same instant across persistence.
+	if !left.CreatedAt.Equal(right.CreatedAt) {
+		return false
+	}
+	left.CreatedAt, right.CreatedAt = time.Time{}, time.Time{}
 	return left == right
 }
 
