@@ -160,21 +160,36 @@ def encoding_probes(tokenizer, template):
     return results
 
 
-def token_facts(tokenizer, template):
+def special_token_facts(tokenizer):
     tokens = []
-    for name, value in tokenizer.special_tokens_map.items():
+    vocabulary = tokenizer.get_vocab()
+    declarations = dict(tokenizer.special_tokens_map)
+    # Transformers 5 stores added named-template stop tokens separately from
+    # special_tokens_map. Persist the current API's declarations as well.
+    declarations['extra_special_tokens'] = tokenizer.extra_special_tokens
+    for name, value in declarations.items():
         entries = value if isinstance(value, list) else [value]
         for index, token in enumerate(entries):
             text = str(token)
             identifier = tokenizer.convert_tokens_to_ids(text)
-            if type(identifier) is not int or not 0 <= identifier < len(tokenizer):
+            if (type(identifier) is not int or not 0 <= identifier < len(tokenizer)
+                    or vocabulary.get(text) != identifier
+                    or tokenizer.convert_ids_to_tokens(identifier) != text
+                    or not getattr(tokenizer.added_tokens_decoder.get(identifier), 'special', False)):
                 raise RuntimeFailure('TEMPLATE_PARSE_FAILED', 'special token outside vocabulary')
             tokens.append({'name': name + ('.' + str(index) if isinstance(value, list) else ''), 'token': text, 'id': str(identifier)})
-    eos = sorted(set(template.get_stop_token_ids(tokenizer)))
+    return sorted(tokens, key=lambda v: v['name'])
+
+
+def token_facts(tokenizer, template):
+    tokens = special_token_facts(tokenizer)
+    eos = template.get_stop_token_ids(tokenizer)
     declared = {int(v['id']) for v in tokens}
-    if not eos or any(type(v) is not int or v not in declared or not 0 <= v < len(tokenizer) for v in eos):
+    declared_tokens = {v['token'] for v in tokens}
+    if (not eos or any(type(v) is not int or v not in declared or not 0 <= v < len(tokenizer) for v in eos)
+            or any(word not in declared_tokens for word in template.stop_words)):
         raise RuntimeFailure('TEMPLATE_PARSE_FAILED', 'EOS facts are outside special-token vocabulary')
-    return sorted(tokens, key=lambda v: v['name']), eos
+    return tokens, sorted(set(eos))
 
 
 def resolve_effective_template(workspace, plan, tokenizer, data_args, read_regular):
@@ -217,12 +232,7 @@ def resolve_effective_template(workspace, plan, tokenizer, data_args, read_regul
 def assert_effective_tokenizer(tokenizer, report, body):
     if (tokenizer.chat_template != body.decode('utf-8') or len(tokenizer) != int(report['vocab_size'])):
         raise RuntimeFailure('TEMPLATE_ENCODING_MISMATCH', 'reloaded tokenizer template/vocabulary differs')
-    declared = {}
-    for name, value in tokenizer.special_tokens_map.items():
-        entries = value if isinstance(value, list) else [value]
-        for index, token in enumerate(entries):
-            key = name + ('.' + str(index) if isinstance(value, list) else '')
-            declared[key] = (str(token), str(tokenizer.convert_tokens_to_ids(str(token))))
+    declared = {v['name']: (v['token'], v['id']) for v in special_token_facts(tokenizer)}
     expected = {v['name']: (v['token'], v['id']) for v in report['special_tokens']}
     if declared != expected:
         raise RuntimeFailure('TEMPLATE_ENCODING_MISMATCH', 'reloaded special tokens differ')
