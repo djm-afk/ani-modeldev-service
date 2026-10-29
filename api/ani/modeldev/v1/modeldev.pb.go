@@ -3497,7 +3497,11 @@ type ListExecutionsRequest struct {
 	CloseState    *CloseState            `protobuf:"varint,4,opt,name=close_state,json=closeState,proto3,enum=ani.modeldev.v1.CloseState,oneof" json:"close_state,omitempty"`
 	// Case-insensitive substring of the admitted execution name. Filtering
 	// happens before the page window, so total reports the matching count.
-	Name          *string `protobuf:"bytes,5,opt,name=name,proto3,oneof" json:"name,omitempty"`
+	Name *string `protobuf:"bytes,5,opt,name=name,proto3,oneof" json:"name,omitempty"`
+	// An absent kind returns every execution. A specified kind is applied before
+	// Total and the page window, and UNSPECIFIED is rejected rather than treated
+	// as "no filter".
+	Kind          *v1.ExecutionKind `protobuf:"varint,6,opt,name=kind,proto3,enum=ani.training.v1.ExecutionKind,oneof" json:"kind,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3565,6 +3569,13 @@ func (x *ListExecutionsRequest) GetName() string {
 		return *x.Name
 	}
 	return ""
+}
+
+func (x *ListExecutionsRequest) GetKind() v1.ExecutionKind {
+	if x != nil && x.Kind != nil {
+		return *x.Kind
+	}
+	return v1.ExecutionKind(0)
 }
 
 type ListExecutionsResponse struct {
@@ -11098,18 +11109,20 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x13GetExecutionRequest\x12!\n" +
 	"\fexecution_id\x18\x01 \x01(\tR\vexecutionId\"T\n" +
 	"\x14GetExecutionResponse\x12<\n" +
-	"\texecution\x18\x01 \x01(\v2\x1e.ani.modeldev.v1.ExecutionViewR\texecution\"\xf8\x02\n" +
+	"\texecution\x18\x01 \x01(\v2\x1e.ani.modeldev.v1.ExecutionViewR\texecution\"\xba\x03\n" +
 	"\x15ListExecutionsRequest\x120\n" +
 	"\x04page\x18\x01 \x01(\v2\x1c.ani.modeldev.v1.PageRequestR\x04page\x12G\n" +
 	"\rcompute_state\x18\x02 \x01(\x0e2\x1d.ani.modeldev.v1.ComputeStateH\x00R\fcomputeState\x88\x01\x01\x12J\n" +
 	"\x0edelivery_state\x18\x03 \x01(\x0e2\x1e.ani.modeldev.v1.DeliveryStateH\x01R\rdeliveryState\x88\x01\x01\x12A\n" +
 	"\vclose_state\x18\x04 \x01(\x0e2\x1b.ani.modeldev.v1.CloseStateH\x02R\n" +
 	"closeState\x88\x01\x01\x12\x17\n" +
-	"\x04name\x18\x05 \x01(\tH\x03R\x04name\x88\x01\x01B\x10\n" +
+	"\x04name\x18\x05 \x01(\tH\x03R\x04name\x88\x01\x01\x127\n" +
+	"\x04kind\x18\x06 \x01(\x0e2\x1e.ani.training.v1.ExecutionKindH\x04R\x04kind\x88\x01\x01B\x10\n" +
 	"\x0e_compute_stateB\x11\n" +
 	"\x0f_delivery_stateB\x0e\n" +
 	"\f_close_stateB\a\n" +
-	"\x05_name\"\x81\x01\n" +
+	"\x05_nameB\a\n" +
+	"\x05_kind\"\x81\x01\n" +
 	"\x16ListExecutionsResponse\x12>\n" +
 	"\n" +
 	"executions\x18\x01 \x03(\v2\x1e.ani.modeldev.v1.ExecutionViewR\n" +
@@ -12225,240 +12238,241 @@ var file_ani_modeldev_v1_modeldev_proto_depIdxs = []int32{
 	0,   // 69: ani.modeldev.v1.ListExecutionsRequest.compute_state:type_name -> ani.modeldev.v1.ComputeState
 	1,   // 70: ani.modeldev.v1.ListExecutionsRequest.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
 	3,   // 71: ani.modeldev.v1.ListExecutionsRequest.close_state:type_name -> ani.modeldev.v1.CloseState
-	40,  // 72: ani.modeldev.v1.ListExecutionsResponse.executions:type_name -> ani.modeldev.v1.ExecutionView
-	138, // 73: ani.modeldev.v1.LogLine.timestamp:type_name -> google.protobuf.Timestamp
-	145, // 74: ani.modeldev.v1.GetExecutionLogsResponse.source:type_name -> ani.training.v1.LogRef
-	50,  // 75: ani.modeldev.v1.GetExecutionLogsResponse.lines:type_name -> ani.modeldev.v1.LogLine
-	138, // 76: ani.modeldev.v1.GetExecutionLogsResponse.observed_at:type_name -> google.protobuf.Timestamp
-	12,  // 77: ani.modeldev.v1.GetExecutionLogsResponse.source_kind:type_name -> ani.modeldev.v1.LogSourceKind
-	13,  // 78: ani.modeldev.v1.GetExecutionLogStreamResponse.kind:type_name -> ani.modeldev.v1.FrameKind
-	146, // 79: ani.modeldev.v1.ArtifactView.role:type_name -> ani.training.v1.FileRole
-	1,   // 80: ani.modeldev.v1.ArtifactView.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
-	138, // 81: ani.modeldev.v1.ArtifactView.verified_at:type_name -> google.protobuf.Timestamp
-	30,  // 82: ani.modeldev.v1.ListExecutionArtifactsRequest.page:type_name -> ani.modeldev.v1.PageRequest
-	54,  // 83: ani.modeldev.v1.ListExecutionArtifactsResponse.artifacts:type_name -> ani.modeldev.v1.ArtifactView
-	54,  // 84: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.artifact:type_name -> ani.modeldev.v1.ArtifactView
-	138, // 85: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.expires_at:type_name -> google.protobuf.Timestamp
-	138, // 86: ani.modeldev.v1.ContainerView.started_at:type_name -> google.protobuf.Timestamp
-	138, // 87: ani.modeldev.v1.ContainerView.finished_at:type_name -> google.protobuf.Timestamp
-	59,  // 88: ani.modeldev.v1.ContainerView.last_state:type_name -> ani.modeldev.v1.ContainerView
-	138, // 89: ani.modeldev.v1.PodView.created_at:type_name -> google.protobuf.Timestamp
-	138, // 90: ani.modeldev.v1.PodView.start_time:type_name -> google.protobuf.Timestamp
-	138, // 91: ani.modeldev.v1.PodView.deletion_timestamp:type_name -> google.protobuf.Timestamp
-	14,  // 92: ani.modeldev.v1.PodView.layer:type_name -> ani.modeldev.v1.PodLayer
-	15,  // 93: ani.modeldev.v1.PodView.availability:type_name -> ani.modeldev.v1.PodAvailability
-	59,  // 94: ani.modeldev.v1.PodView.containers:type_name -> ani.modeldev.v1.ContainerView
-	59,  // 95: ani.modeldev.v1.PodView.init_containers:type_name -> ani.modeldev.v1.ContainerView
-	59,  // 96: ani.modeldev.v1.PodView.ephemeral_containers:type_name -> ani.modeldev.v1.ContainerView
-	138, // 97: ani.modeldev.v1.EventView.first_timestamp:type_name -> google.protobuf.Timestamp
-	138, // 98: ani.modeldev.v1.EventView.last_timestamp:type_name -> google.protobuf.Timestamp
-	14,  // 99: ani.modeldev.v1.ListExecutionPodsRequest.layer:type_name -> ani.modeldev.v1.PodLayer
-	60,  // 100: ani.modeldev.v1.ListExecutionPodsResponse.pods:type_name -> ani.modeldev.v1.PodView
-	138, // 101: ani.modeldev.v1.ListExecutionPodsResponse.observed_at:type_name -> google.protobuf.Timestamp
-	15,  // 102: ani.modeldev.v1.ListExecutionPodsResponse.availability:type_name -> ani.modeldev.v1.PodAvailability
-	61,  // 103: ani.modeldev.v1.ListExecutionEventsResponse.events:type_name -> ani.modeldev.v1.EventView
-	138, // 104: ani.modeldev.v1.ListExecutionEventsResponse.observed_at:type_name -> google.protobuf.Timestamp
-	66,  // 105: ani.modeldev.v1.EnvironmentBindingSnapshot.identities:type_name -> ani.modeldev.v1.RuntimeIdentityRefs
-	140, // 106: ani.modeldev.v1.ExecutionSnapshot.kind:type_name -> ani.training.v1.ExecutionKind
-	147, // 107: ani.modeldev.v1.ExecutionSnapshot.delivery_mode:type_name -> ani.training.v1.DeliveryMode
-	148, // 108: ani.modeldev.v1.ExecutionSnapshot.input:type_name -> ani.training.v1.InputRef
-	149, // 109: ani.modeldev.v1.ExecutionSnapshot.program:type_name -> ani.training.v1.ProgramRef
-	150, // 110: ani.modeldev.v1.ExecutionSnapshot.resources:type_name -> ani.training.v1.CPUResources
-	67,  // 111: ani.modeldev.v1.ExecutionSnapshot.environment:type_name -> ani.modeldev.v1.EnvironmentBindingSnapshot
-	151, // 112: ani.modeldev.v1.ExecutionSnapshot.workspace:type_name -> ani.training.v1.WorkspaceContract
-	68,  // 113: ani.modeldev.v1.ExecutionSnapshot.publication_scope:type_name -> ani.modeldev.v1.StorageScope
-	152, // 114: ani.modeldev.v1.ExecutionSnapshot.output_contract:type_name -> ani.training.v1.OutputContract
-	138, // 115: ani.modeldev.v1.ExecutionSnapshot.deadline_at:type_name -> google.protobuf.Timestamp
-	78,  // 116: ani.modeldev.v1.ExecutionSnapshot.finetuning:type_name -> ani.modeldev.v1.FinetuningSnapshot
-	80,  // 117: ani.modeldev.v1.ExecutionSnapshot.implementation:type_name -> ani.modeldev.v1.ImplementationSnapshot
-	79,  // 118: ani.modeldev.v1.ExecutionSnapshot.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
-	81,  // 119: ani.modeldev.v1.ExecutionSnapshot.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
-	82,  // 120: ani.modeldev.v1.ExecutionSnapshot.timing:type_name -> ani.modeldev.v1.ExecutionTiming
-	83,  // 121: ani.modeldev.v1.ExecutionSnapshot.runtime_plan:type_name -> ani.modeldev.v1.RuntimePlan
-	74,  // 122: ani.modeldev.v1.ExecutionSnapshot.gpu:type_name -> ani.modeldev.v1.GPUPlan
-	70,  // 123: ani.modeldev.v1.ExecutionSnapshot.limits:type_name -> ani.modeldev.v1.ContentLimits
-	71,  // 124: ani.modeldev.v1.GPUExecutionSnapshot.node_selector:type_name -> ani.modeldev.v1.StringPair
-	71,  // 125: ani.modeldev.v1.GPUExecutionSnapshot.pod_annotations:type_name -> ani.modeldev.v1.StringPair
-	71,  // 126: ani.modeldev.v1.GPUExecutionSnapshot.resources:type_name -> ani.modeldev.v1.StringPair
-	72,  // 127: ani.modeldev.v1.GPUPlan.execution:type_name -> ani.modeldev.v1.GPUExecutionSnapshot
-	73,  // 128: ani.modeldev.v1.GPUPlan.display:type_name -> ani.modeldev.v1.GPUDisplaySnapshot
-	153, // 129: ani.modeldev.v1.BaseModelRef.object:type_name -> ani.training.v1.FixedObjectRef
-	68,  // 130: ani.modeldev.v1.BaseModelRef.scope:type_name -> ani.modeldev.v1.StorageScope
-	76,  // 131: ani.modeldev.v1.BaseModelRef.files:type_name -> ani.modeldev.v1.BaseModelFile
-	132, // 132: ani.modeldev.v1.BaseModelRef.facts:type_name -> ani.modeldev.v1.NormalizedModelFacts
-	77,  // 133: ani.modeldev.v1.FinetuningSnapshot.base_model:type_name -> ani.modeldev.v1.BaseModelRef
-	75,  // 134: ani.modeldev.v1.FinetuningSnapshot.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
-	149, // 135: ani.modeldev.v1.FinetuningSnapshot.export_program:type_name -> ani.training.v1.ProgramRef
-	149, // 136: ani.modeldev.v1.FinetuningSnapshot.verify_program:type_name -> ani.training.v1.ProgramRef
-	127, // 137: ani.modeldev.v1.FinetuningSnapshot.runtime_capabilities:type_name -> ani.modeldev.v1.RuntimeCapabilities
-	133, // 138: ani.modeldev.v1.FinetuningSnapshot.template_plan:type_name -> ani.modeldev.v1.TemplatePlan
-	138, // 139: ani.modeldev.v1.ExecutionTiming.accepted_at:type_name -> google.protobuf.Timestamp
-	138, // 140: ani.modeldev.v1.ExecutionTiming.execution_deadline_at:type_name -> google.protobuf.Timestamp
-	25,  // 141: ani.modeldev.v1.PrepareAdmissionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
-	79,  // 142: ani.modeldev.v1.PrepareAdmissionRequest.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
-	138, // 143: ani.modeldev.v1.PrepareAdmissionRequest.accepted_at:type_name -> google.protobuf.Timestamp
-	69,  // 144: ani.modeldev.v1.FinalizeAdmissionResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	143, // 145: ani.modeldev.v1.AcceptExecutionRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
-	69,  // 146: ani.modeldev.v1.AcceptExecutionRequest.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	138, // 147: ani.modeldev.v1.AcceptExecutionRequest.accepted_at:type_name -> google.protobuf.Timestamp
-	25,  // 148: ani.modeldev.v1.AcceptExecutionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
-	143, // 149: ani.modeldev.v1.AcceptExecutionResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	29,  // 150: ani.modeldev.v1.AcceptExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	143, // 151: ani.modeldev.v1.ApplyCloseIntentRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
-	4,   // 152: ani.modeldev.v1.ApplyCloseIntentRequest.reason:type_name -> ani.modeldev.v1.CloseReason
-	138, // 153: ani.modeldev.v1.ApplyCloseIntentRequest.requested_at:type_name -> google.protobuf.Timestamp
-	143, // 154: ani.modeldev.v1.ApplyCloseIntentResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	3,   // 155: ani.modeldev.v1.ApplyCloseIntentResponse.close_state:type_name -> ani.modeldev.v1.CloseState
-	143, // 156: ani.modeldev.v1.StepContext.identity:type_name -> ani.training.v1.ExecutionIdentity
-	92,  // 157: ani.modeldev.v1.StepContext.association:type_name -> ani.modeldev.v1.RunAssociation
-	6,   // 158: ani.modeldev.v1.StepContext.step:type_name -> ani.modeldev.v1.PipelineStep
-	138, // 159: ani.modeldev.v1.AuthorityBinding.bound_at:type_name -> google.protobuf.Timestamp
-	93,  // 160: ani.modeldev.v1.BeginExecutionRequest.context:type_name -> ani.modeldev.v1.StepContext
-	94,  // 161: ani.modeldev.v1.BeginExecutionResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
-	29,  // 162: ani.modeldev.v1.BeginExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	97,  // 163: ani.modeldev.v1.BeginExecutionResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	6,   // 164: ani.modeldev.v1.StepTiming.role:type_name -> ani.modeldev.v1.PipelineStep
-	138, // 165: ani.modeldev.v1.StepTiming.admitted_at:type_name -> google.protobuf.Timestamp
-	138, // 166: ani.modeldev.v1.StepTiming.deadline_at:type_name -> google.protobuf.Timestamp
-	93,  // 167: ani.modeldev.v1.BeginManagedStepRequest.context:type_name -> ani.modeldev.v1.StepContext
-	97,  // 168: ani.modeldev.v1.BeginManagedStepResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	93,  // 169: ani.modeldev.v1.GetExecutionConfigurationRequest.context:type_name -> ani.modeldev.v1.StepContext
-	143, // 170: ani.modeldev.v1.GetExecutionConfigurationResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	69,  // 171: ani.modeldev.v1.GetExecutionConfigurationResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
-	94,  // 172: ani.modeldev.v1.GetExecutionConfigurationResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
-	154, // 173: ani.modeldev.v1.GetExecutionConfigurationResponse.workspace:type_name -> ani.training.v1.WorkspaceRef
-	29,  // 174: ani.modeldev.v1.GetExecutionConfigurationResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	88,  // 175: ani.modeldev.v1.GetExecutionConfigurationResponse.admission:type_name -> ani.modeldev.v1.AcceptExecutionRequest
-	97,  // 176: ani.modeldev.v1.GetExecutionConfigurationResponse.timing:type_name -> ani.modeldev.v1.StepTiming
-	93,  // 177: ani.modeldev.v1.GetStorageCredentialsRequest.context:type_name -> ani.modeldev.v1.StepContext
-	138, // 178: ani.modeldev.v1.TemporaryStorageCredentials.expires_at:type_name -> google.protobuf.Timestamp
-	143, // 179: ani.modeldev.v1.GetStorageCredentialsResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
-	6,   // 180: ani.modeldev.v1.GetStorageCredentialsResponse.step:type_name -> ani.modeldev.v1.PipelineStep
-	103, // 181: ani.modeldev.v1.GetStorageCredentialsResponse.credentials:type_name -> ani.modeldev.v1.TemporaryStorageCredentials
-	93,  // 182: ani.modeldev.v1.EnsureTrainingRequest.context:type_name -> ani.modeldev.v1.StepContext
-	138, // 183: ani.modeldev.v1.ObservedCondition.observed_at:type_name -> google.protobuf.Timestamp
-	106, // 184: ani.modeldev.v1.ResourceObservation.resource:type_name -> ani.modeldev.v1.ResourceRef
-	107, // 185: ani.modeldev.v1.ResourceObservation.conditions:type_name -> ani.modeldev.v1.ObservedCondition
-	138, // 186: ani.modeldev.v1.ResourceObservation.observed_at:type_name -> google.protobuf.Timestamp
-	143, // 187: ani.modeldev.v1.TrainingStatus.identity:type_name -> ani.training.v1.ExecutionIdentity
-	7,   // 188: ani.modeldev.v1.TrainingStatus.create_state:type_name -> ani.modeldev.v1.ExternalCreateState
-	106, // 189: ani.modeldev.v1.TrainingStatus.trainjob:type_name -> ani.modeldev.v1.ResourceRef
-	108, // 190: ani.modeldev.v1.TrainingStatus.resource_history:type_name -> ani.modeldev.v1.ResourceObservation
-	29,  // 191: ani.modeldev.v1.TrainingStatus.states:type_name -> ani.modeldev.v1.ExecutionStates
-	138, // 192: ani.modeldev.v1.TrainingStatus.observed_at:type_name -> google.protobuf.Timestamp
-	138, // 193: ani.modeldev.v1.TrainingStatus.training_admitted_at:type_name -> google.protobuf.Timestamp
-	138, // 194: ani.modeldev.v1.TrainingStatus.training_deadline_at:type_name -> google.protobuf.Timestamp
-	109, // 195: ani.modeldev.v1.EnsureTrainingResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
-	93,  // 196: ani.modeldev.v1.GetTrainingStatusRequest.context:type_name -> ani.modeldev.v1.StepContext
-	109, // 197: ani.modeldev.v1.GetTrainingStatusResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
-	154, // 198: ani.modeldev.v1.PreparedInputCandidate.workspace:type_name -> ani.training.v1.WorkspaceRef
-	139, // 199: ani.modeldev.v1.PreparedInputCandidate.prepared_manifest:type_name -> ani.training.v1.ManifestRef
-	148, // 200: ani.modeldev.v1.PreparedInputCandidate.input:type_name -> ani.training.v1.InputRef
-	155, // 201: ani.modeldev.v1.PublishedFileCandidate.file:type_name -> ani.training.v1.FileEntry
-	153, // 202: ani.modeldev.v1.PublishedFileCandidate.object:type_name -> ani.training.v1.FixedObjectRef
-	114, // 203: ani.modeldev.v1.PublicationCandidate.files:type_name -> ani.modeldev.v1.PublishedFileCandidate
-	153, // 204: ani.modeldev.v1.PublicationCandidate.manifest_object:type_name -> ani.training.v1.FixedObjectRef
-	153, // 205: ani.modeldev.v1.PublicationCandidate.bundle_object:type_name -> ani.training.v1.FixedObjectRef
-	24,  // 206: ani.modeldev.v1.StepFailure.failure:type_name -> ani.modeldev.v1.ErrorDetail
-	145, // 207: ani.modeldev.v1.StepFailure.logs:type_name -> ani.training.v1.LogRef
-	93,  // 208: ani.modeldev.v1.ReportStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
-	113, // 209: ani.modeldev.v1.ReportStepResultRequest.prepared:type_name -> ani.modeldev.v1.PreparedInputCandidate
-	156, // 210: ani.modeldev.v1.ReportStepResultRequest.training_result:type_name -> ani.training.v1.TrainingResult
-	115, // 211: ani.modeldev.v1.ReportStepResultRequest.publication:type_name -> ani.modeldev.v1.PublicationCandidate
-	116, // 212: ani.modeldev.v1.ReportStepResultRequest.failure:type_name -> ani.modeldev.v1.StepFailure
-	143, // 213: ani.modeldev.v1.VerifiedPublication.identity:type_name -> ani.training.v1.ExecutionIdentity
-	120, // 214: ani.modeldev.v1.VerifiedPublication.files:type_name -> ani.modeldev.v1.VerifiedPublishedFile
-	153, // 215: ani.modeldev.v1.VerifiedPublication.manifest_object:type_name -> ani.training.v1.FixedObjectRef
-	153, // 216: ani.modeldev.v1.VerifiedPublication.bundle_object:type_name -> ani.training.v1.FixedObjectRef
-	138, // 217: ani.modeldev.v1.VerifiedPublication.remote_verified_at:type_name -> google.protobuf.Timestamp
-	119, // 218: ani.modeldev.v1.VerifiedPublication.upload_completion:type_name -> ani.modeldev.v1.UploadCompletionEvidence
-	138, // 219: ani.modeldev.v1.UploadCompletionEvidence.completed_at:type_name -> google.protobuf.Timestamp
-	138, // 220: ani.modeldev.v1.UploadCompletionEvidence.observed_at:type_name -> google.protobuf.Timestamp
-	155, // 221: ani.modeldev.v1.VerifiedPublishedFile.file:type_name -> ani.training.v1.FileEntry
-	153, // 222: ani.modeldev.v1.VerifiedPublishedFile.object:type_name -> ani.training.v1.FixedObjectRef
-	138, // 223: ani.modeldev.v1.VerifiedPublishedFile.remote_verified_at:type_name -> google.protobuf.Timestamp
-	29,  // 224: ani.modeldev.v1.ReportStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
-	118, // 225: ani.modeldev.v1.ReportStepResultResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
-	93,  // 226: ani.modeldev.v1.RequestExecutionCloseRequest.context:type_name -> ani.modeldev.v1.StepContext
-	4,   // 227: ani.modeldev.v1.RequestExecutionCloseRequest.reason:type_name -> ani.modeldev.v1.CloseReason
-	3,   // 228: ani.modeldev.v1.RequestExecutionCloseResponse.close_state:type_name -> ani.modeldev.v1.CloseState
-	138, // 229: ani.modeldev.v1.RequestExecutionCloseResponse.accepted_at:type_name -> google.protobuf.Timestamp
-	124, // 230: ani.modeldev.v1.RuntimeCapabilities.packages:type_name -> ani.modeldev.v1.RuntimePackage
-	125, // 231: ani.modeldev.v1.RuntimeCapabilities.registered_templates:type_name -> ani.modeldev.v1.RegisteredTemplate
-	126, // 232: ani.modeldev.v1.RuntimeCapabilities.context_limit_fields:type_name -> ani.modeldev.v1.ContextLimitField
-	129, // 233: ani.modeldev.v1.NormalizedModelFacts.context_sources:type_name -> ani.modeldev.v1.ContextLimitFact
-	128, // 234: ani.modeldev.v1.NormalizedModelFacts.config_file:type_name -> ani.modeldev.v1.FileFact
-	128, // 235: ani.modeldev.v1.NormalizedModelFacts.tokenizer_config_file:type_name -> ani.modeldev.v1.FileFact
-	130, // 236: ani.modeldev.v1.NormalizedModelFacts.weight_layout:type_name -> ani.modeldev.v1.WeightLayout
-	131, // 237: ani.modeldev.v1.NormalizedModelFacts.template_sources:type_name -> ani.modeldev.v1.TemplateSource
-	131, // 238: ani.modeldev.v1.TemplatePlan.source:type_name -> ani.modeldev.v1.TemplateSource
-	81,  // 239: ani.modeldev.v1.CheckFinetuningReadinessRequest.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
-	16,  // 240: ani.modeldev.v1.CheckFinetuningReadinessResponse.assessment:type_name -> ani.modeldev.v1.FinetuningAssessment
-	9,   // 241: ani.modeldev.v1.CheckFinetuningReadinessResponse.reason:type_name -> ani.modeldev.v1.ErrorReason
-	125, // 242: ani.modeldev.v1.CheckFinetuningReadinessResponse.template_candidates:type_name -> ani.modeldev.v1.RegisteredTemplate
-	127, // 243: ani.modeldev.v1.CheckFinetuningReadinessResponse.runtime_capabilities:type_name -> ani.modeldev.v1.RuntimeCapabilities
-	70,  // 244: ani.modeldev.v1.CheckFinetuningReadinessResponse.limits:type_name -> ani.modeldev.v1.ContentLimits
-	134, // 245: ani.modeldev.v1.CheckFinetuningReadinessResponse.structure_limits:type_name -> ani.modeldev.v1.StructureLimits
-	133, // 246: ani.modeldev.v1.CheckFinetuningReadinessResponse.template_plan:type_name -> ani.modeldev.v1.TemplatePlan
-	33,  // 247: ani.modeldev.v1.ModelDevQueryService.ListImplementations:input_type -> ani.modeldev.v1.ListImplementationsRequest
-	135, // 248: ani.modeldev.v1.ModelDevQueryService.CheckFinetuningReadiness:input_type -> ani.modeldev.v1.CheckFinetuningReadinessRequest
-	36,  // 249: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:input_type -> ani.modeldev.v1.GetInputVersionRequest
-	38,  // 250: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:input_type -> ani.modeldev.v1.ListInputVersionsRequest
-	45,  // 251: ani.modeldev.v1.ModelDevQueryService.GetExecution:input_type -> ani.modeldev.v1.GetExecutionRequest
-	47,  // 252: ani.modeldev.v1.ModelDevQueryService.ListExecutions:input_type -> ani.modeldev.v1.ListExecutionsRequest
-	49,  // 253: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:input_type -> ani.modeldev.v1.GetExecutionLogsRequest
-	52,  // 254: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogStream:input_type -> ani.modeldev.v1.GetExecutionLogStreamRequest
-	55,  // 255: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:input_type -> ani.modeldev.v1.ListExecutionArtifactsRequest
-	57,  // 256: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:input_type -> ani.modeldev.v1.AuthorizeArtifactDownloadRequest
-	62,  // 257: ani.modeldev.v1.ModelDevQueryService.ListExecutionPods:input_type -> ani.modeldev.v1.ListExecutionPodsRequest
-	64,  // 258: ani.modeldev.v1.ModelDevQueryService.ListExecutionEvents:input_type -> ani.modeldev.v1.ListExecutionEventsRequest
-	84,  // 259: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:input_type -> ani.modeldev.v1.PrepareAdmissionRequest
-	86,  // 260: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:input_type -> ani.modeldev.v1.FinalizeAdmissionRequest
-	88,  // 261: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:input_type -> ani.modeldev.v1.AcceptExecutionRequest
-	90,  // 262: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:input_type -> ani.modeldev.v1.ApplyCloseIntentRequest
-	95,  // 263: ani.modeldev.v1.ModelDevStepService.BeginExecution:input_type -> ani.modeldev.v1.BeginExecutionRequest
-	98,  // 264: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:input_type -> ani.modeldev.v1.BeginManagedStepRequest
-	100, // 265: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:input_type -> ani.modeldev.v1.GetExecutionConfigurationRequest
-	102, // 266: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:input_type -> ani.modeldev.v1.GetStorageCredentialsRequest
-	105, // 267: ani.modeldev.v1.ModelDevStepService.EnsureTraining:input_type -> ani.modeldev.v1.EnsureTrainingRequest
-	111, // 268: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:input_type -> ani.modeldev.v1.GetTrainingStatusRequest
-	117, // 269: ani.modeldev.v1.ModelDevStepService.ReportStepResult:input_type -> ani.modeldev.v1.ReportStepResultRequest
-	122, // 270: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:input_type -> ani.modeldev.v1.RequestExecutionCloseRequest
-	17,  // 271: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:input_type -> ani.modeldev.v1.BeginFinetuningStepRequest
-	19,  // 272: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:input_type -> ani.modeldev.v1.ReportFinetuningStepResultRequest
-	21,  // 273: ani.modeldev.v1.ModelDevStepService.RegisterModel:input_type -> ani.modeldev.v1.RegisterModelRequest
-	34,  // 274: ani.modeldev.v1.ModelDevQueryService.ListImplementations:output_type -> ani.modeldev.v1.ListImplementationsResponse
-	136, // 275: ani.modeldev.v1.ModelDevQueryService.CheckFinetuningReadiness:output_type -> ani.modeldev.v1.CheckFinetuningReadinessResponse
-	37,  // 276: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:output_type -> ani.modeldev.v1.GetInputVersionResponse
-	39,  // 277: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:output_type -> ani.modeldev.v1.ListInputVersionsResponse
-	46,  // 278: ani.modeldev.v1.ModelDevQueryService.GetExecution:output_type -> ani.modeldev.v1.GetExecutionResponse
-	48,  // 279: ani.modeldev.v1.ModelDevQueryService.ListExecutions:output_type -> ani.modeldev.v1.ListExecutionsResponse
-	51,  // 280: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:output_type -> ani.modeldev.v1.GetExecutionLogsResponse
-	53,  // 281: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogStream:output_type -> ani.modeldev.v1.GetExecutionLogStreamResponse
-	56,  // 282: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:output_type -> ani.modeldev.v1.ListExecutionArtifactsResponse
-	58,  // 283: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:output_type -> ani.modeldev.v1.AuthorizeArtifactDownloadResponse
-	63,  // 284: ani.modeldev.v1.ModelDevQueryService.ListExecutionPods:output_type -> ani.modeldev.v1.ListExecutionPodsResponse
-	65,  // 285: ani.modeldev.v1.ModelDevQueryService.ListExecutionEvents:output_type -> ani.modeldev.v1.ListExecutionEventsResponse
-	85,  // 286: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:output_type -> ani.modeldev.v1.PrepareAdmissionResponse
-	87,  // 287: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:output_type -> ani.modeldev.v1.FinalizeAdmissionResponse
-	89,  // 288: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:output_type -> ani.modeldev.v1.AcceptExecutionResponse
-	91,  // 289: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:output_type -> ani.modeldev.v1.ApplyCloseIntentResponse
-	96,  // 290: ani.modeldev.v1.ModelDevStepService.BeginExecution:output_type -> ani.modeldev.v1.BeginExecutionResponse
-	99,  // 291: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:output_type -> ani.modeldev.v1.BeginManagedStepResponse
-	101, // 292: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:output_type -> ani.modeldev.v1.GetExecutionConfigurationResponse
-	104, // 293: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:output_type -> ani.modeldev.v1.GetStorageCredentialsResponse
-	110, // 294: ani.modeldev.v1.ModelDevStepService.EnsureTraining:output_type -> ani.modeldev.v1.EnsureTrainingResponse
-	112, // 295: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:output_type -> ani.modeldev.v1.GetTrainingStatusResponse
-	121, // 296: ani.modeldev.v1.ModelDevStepService.ReportStepResult:output_type -> ani.modeldev.v1.ReportStepResultResponse
-	123, // 297: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:output_type -> ani.modeldev.v1.RequestExecutionCloseResponse
-	18,  // 298: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:output_type -> ani.modeldev.v1.BeginFinetuningStepResponse
-	20,  // 299: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:output_type -> ani.modeldev.v1.ReportFinetuningStepResultResponse
-	22,  // 300: ani.modeldev.v1.ModelDevStepService.RegisterModel:output_type -> ani.modeldev.v1.RegisterModelResponse
-	274, // [274:301] is the sub-list for method output_type
-	247, // [247:274] is the sub-list for method input_type
-	247, // [247:247] is the sub-list for extension type_name
-	247, // [247:247] is the sub-list for extension extendee
-	0,   // [0:247] is the sub-list for field type_name
+	140, // 72: ani.modeldev.v1.ListExecutionsRequest.kind:type_name -> ani.training.v1.ExecutionKind
+	40,  // 73: ani.modeldev.v1.ListExecutionsResponse.executions:type_name -> ani.modeldev.v1.ExecutionView
+	138, // 74: ani.modeldev.v1.LogLine.timestamp:type_name -> google.protobuf.Timestamp
+	145, // 75: ani.modeldev.v1.GetExecutionLogsResponse.source:type_name -> ani.training.v1.LogRef
+	50,  // 76: ani.modeldev.v1.GetExecutionLogsResponse.lines:type_name -> ani.modeldev.v1.LogLine
+	138, // 77: ani.modeldev.v1.GetExecutionLogsResponse.observed_at:type_name -> google.protobuf.Timestamp
+	12,  // 78: ani.modeldev.v1.GetExecutionLogsResponse.source_kind:type_name -> ani.modeldev.v1.LogSourceKind
+	13,  // 79: ani.modeldev.v1.GetExecutionLogStreamResponse.kind:type_name -> ani.modeldev.v1.FrameKind
+	146, // 80: ani.modeldev.v1.ArtifactView.role:type_name -> ani.training.v1.FileRole
+	1,   // 81: ani.modeldev.v1.ArtifactView.delivery_state:type_name -> ani.modeldev.v1.DeliveryState
+	138, // 82: ani.modeldev.v1.ArtifactView.verified_at:type_name -> google.protobuf.Timestamp
+	30,  // 83: ani.modeldev.v1.ListExecutionArtifactsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	54,  // 84: ani.modeldev.v1.ListExecutionArtifactsResponse.artifacts:type_name -> ani.modeldev.v1.ArtifactView
+	54,  // 85: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.artifact:type_name -> ani.modeldev.v1.ArtifactView
+	138, // 86: ani.modeldev.v1.AuthorizeArtifactDownloadResponse.expires_at:type_name -> google.protobuf.Timestamp
+	138, // 87: ani.modeldev.v1.ContainerView.started_at:type_name -> google.protobuf.Timestamp
+	138, // 88: ani.modeldev.v1.ContainerView.finished_at:type_name -> google.protobuf.Timestamp
+	59,  // 89: ani.modeldev.v1.ContainerView.last_state:type_name -> ani.modeldev.v1.ContainerView
+	138, // 90: ani.modeldev.v1.PodView.created_at:type_name -> google.protobuf.Timestamp
+	138, // 91: ani.modeldev.v1.PodView.start_time:type_name -> google.protobuf.Timestamp
+	138, // 92: ani.modeldev.v1.PodView.deletion_timestamp:type_name -> google.protobuf.Timestamp
+	14,  // 93: ani.modeldev.v1.PodView.layer:type_name -> ani.modeldev.v1.PodLayer
+	15,  // 94: ani.modeldev.v1.PodView.availability:type_name -> ani.modeldev.v1.PodAvailability
+	59,  // 95: ani.modeldev.v1.PodView.containers:type_name -> ani.modeldev.v1.ContainerView
+	59,  // 96: ani.modeldev.v1.PodView.init_containers:type_name -> ani.modeldev.v1.ContainerView
+	59,  // 97: ani.modeldev.v1.PodView.ephemeral_containers:type_name -> ani.modeldev.v1.ContainerView
+	138, // 98: ani.modeldev.v1.EventView.first_timestamp:type_name -> google.protobuf.Timestamp
+	138, // 99: ani.modeldev.v1.EventView.last_timestamp:type_name -> google.protobuf.Timestamp
+	14,  // 100: ani.modeldev.v1.ListExecutionPodsRequest.layer:type_name -> ani.modeldev.v1.PodLayer
+	60,  // 101: ani.modeldev.v1.ListExecutionPodsResponse.pods:type_name -> ani.modeldev.v1.PodView
+	138, // 102: ani.modeldev.v1.ListExecutionPodsResponse.observed_at:type_name -> google.protobuf.Timestamp
+	15,  // 103: ani.modeldev.v1.ListExecutionPodsResponse.availability:type_name -> ani.modeldev.v1.PodAvailability
+	61,  // 104: ani.modeldev.v1.ListExecutionEventsResponse.events:type_name -> ani.modeldev.v1.EventView
+	138, // 105: ani.modeldev.v1.ListExecutionEventsResponse.observed_at:type_name -> google.protobuf.Timestamp
+	66,  // 106: ani.modeldev.v1.EnvironmentBindingSnapshot.identities:type_name -> ani.modeldev.v1.RuntimeIdentityRefs
+	140, // 107: ani.modeldev.v1.ExecutionSnapshot.kind:type_name -> ani.training.v1.ExecutionKind
+	147, // 108: ani.modeldev.v1.ExecutionSnapshot.delivery_mode:type_name -> ani.training.v1.DeliveryMode
+	148, // 109: ani.modeldev.v1.ExecutionSnapshot.input:type_name -> ani.training.v1.InputRef
+	149, // 110: ani.modeldev.v1.ExecutionSnapshot.program:type_name -> ani.training.v1.ProgramRef
+	150, // 111: ani.modeldev.v1.ExecutionSnapshot.resources:type_name -> ani.training.v1.CPUResources
+	67,  // 112: ani.modeldev.v1.ExecutionSnapshot.environment:type_name -> ani.modeldev.v1.EnvironmentBindingSnapshot
+	151, // 113: ani.modeldev.v1.ExecutionSnapshot.workspace:type_name -> ani.training.v1.WorkspaceContract
+	68,  // 114: ani.modeldev.v1.ExecutionSnapshot.publication_scope:type_name -> ani.modeldev.v1.StorageScope
+	152, // 115: ani.modeldev.v1.ExecutionSnapshot.output_contract:type_name -> ani.training.v1.OutputContract
+	138, // 116: ani.modeldev.v1.ExecutionSnapshot.deadline_at:type_name -> google.protobuf.Timestamp
+	78,  // 117: ani.modeldev.v1.ExecutionSnapshot.finetuning:type_name -> ani.modeldev.v1.FinetuningSnapshot
+	80,  // 118: ani.modeldev.v1.ExecutionSnapshot.implementation:type_name -> ani.modeldev.v1.ImplementationSnapshot
+	79,  // 119: ani.modeldev.v1.ExecutionSnapshot.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
+	81,  // 120: ani.modeldev.v1.ExecutionSnapshot.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
+	82,  // 121: ani.modeldev.v1.ExecutionSnapshot.timing:type_name -> ani.modeldev.v1.ExecutionTiming
+	83,  // 122: ani.modeldev.v1.ExecutionSnapshot.runtime_plan:type_name -> ani.modeldev.v1.RuntimePlan
+	74,  // 123: ani.modeldev.v1.ExecutionSnapshot.gpu:type_name -> ani.modeldev.v1.GPUPlan
+	70,  // 124: ani.modeldev.v1.ExecutionSnapshot.limits:type_name -> ani.modeldev.v1.ContentLimits
+	71,  // 125: ani.modeldev.v1.GPUExecutionSnapshot.node_selector:type_name -> ani.modeldev.v1.StringPair
+	71,  // 126: ani.modeldev.v1.GPUExecutionSnapshot.pod_annotations:type_name -> ani.modeldev.v1.StringPair
+	71,  // 127: ani.modeldev.v1.GPUExecutionSnapshot.resources:type_name -> ani.modeldev.v1.StringPair
+	72,  // 128: ani.modeldev.v1.GPUPlan.execution:type_name -> ani.modeldev.v1.GPUExecutionSnapshot
+	73,  // 129: ani.modeldev.v1.GPUPlan.display:type_name -> ani.modeldev.v1.GPUDisplaySnapshot
+	153, // 130: ani.modeldev.v1.BaseModelRef.object:type_name -> ani.training.v1.FixedObjectRef
+	68,  // 131: ani.modeldev.v1.BaseModelRef.scope:type_name -> ani.modeldev.v1.StorageScope
+	76,  // 132: ani.modeldev.v1.BaseModelRef.files:type_name -> ani.modeldev.v1.BaseModelFile
+	132, // 133: ani.modeldev.v1.BaseModelRef.facts:type_name -> ani.modeldev.v1.NormalizedModelFacts
+	77,  // 134: ani.modeldev.v1.FinetuningSnapshot.base_model:type_name -> ani.modeldev.v1.BaseModelRef
+	75,  // 135: ani.modeldev.v1.FinetuningSnapshot.managed_settings:type_name -> ani.modeldev.v1.FinetuningManagedSettings
+	149, // 136: ani.modeldev.v1.FinetuningSnapshot.export_program:type_name -> ani.training.v1.ProgramRef
+	149, // 137: ani.modeldev.v1.FinetuningSnapshot.verify_program:type_name -> ani.training.v1.ProgramRef
+	127, // 138: ani.modeldev.v1.FinetuningSnapshot.runtime_capabilities:type_name -> ani.modeldev.v1.RuntimeCapabilities
+	133, // 139: ani.modeldev.v1.FinetuningSnapshot.template_plan:type_name -> ani.modeldev.v1.TemplatePlan
+	138, // 140: ani.modeldev.v1.ExecutionTiming.accepted_at:type_name -> google.protobuf.Timestamp
+	138, // 141: ani.modeldev.v1.ExecutionTiming.execution_deadline_at:type_name -> google.protobuf.Timestamp
+	25,  // 142: ani.modeldev.v1.PrepareAdmissionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
+	79,  // 143: ani.modeldev.v1.PrepareAdmissionRequest.identity_ref:type_name -> ani.modeldev.v1.IdentityRef
+	138, // 144: ani.modeldev.v1.PrepareAdmissionRequest.accepted_at:type_name -> google.protobuf.Timestamp
+	69,  // 145: ani.modeldev.v1.FinalizeAdmissionResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	143, // 146: ani.modeldev.v1.AcceptExecutionRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
+	69,  // 147: ani.modeldev.v1.AcceptExecutionRequest.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	138, // 148: ani.modeldev.v1.AcceptExecutionRequest.accepted_at:type_name -> google.protobuf.Timestamp
+	25,  // 149: ani.modeldev.v1.AcceptExecutionRequest.intent:type_name -> ani.modeldev.v1.UserIntent
+	143, // 150: ani.modeldev.v1.AcceptExecutionResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	29,  // 151: ani.modeldev.v1.AcceptExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	143, // 152: ani.modeldev.v1.ApplyCloseIntentRequest.identity:type_name -> ani.training.v1.ExecutionIdentity
+	4,   // 153: ani.modeldev.v1.ApplyCloseIntentRequest.reason:type_name -> ani.modeldev.v1.CloseReason
+	138, // 154: ani.modeldev.v1.ApplyCloseIntentRequest.requested_at:type_name -> google.protobuf.Timestamp
+	143, // 155: ani.modeldev.v1.ApplyCloseIntentResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	3,   // 156: ani.modeldev.v1.ApplyCloseIntentResponse.close_state:type_name -> ani.modeldev.v1.CloseState
+	143, // 157: ani.modeldev.v1.StepContext.identity:type_name -> ani.training.v1.ExecutionIdentity
+	92,  // 158: ani.modeldev.v1.StepContext.association:type_name -> ani.modeldev.v1.RunAssociation
+	6,   // 159: ani.modeldev.v1.StepContext.step:type_name -> ani.modeldev.v1.PipelineStep
+	138, // 160: ani.modeldev.v1.AuthorityBinding.bound_at:type_name -> google.protobuf.Timestamp
+	93,  // 161: ani.modeldev.v1.BeginExecutionRequest.context:type_name -> ani.modeldev.v1.StepContext
+	94,  // 162: ani.modeldev.v1.BeginExecutionResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
+	29,  // 163: ani.modeldev.v1.BeginExecutionResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	97,  // 164: ani.modeldev.v1.BeginExecutionResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	6,   // 165: ani.modeldev.v1.StepTiming.role:type_name -> ani.modeldev.v1.PipelineStep
+	138, // 166: ani.modeldev.v1.StepTiming.admitted_at:type_name -> google.protobuf.Timestamp
+	138, // 167: ani.modeldev.v1.StepTiming.deadline_at:type_name -> google.protobuf.Timestamp
+	93,  // 168: ani.modeldev.v1.BeginManagedStepRequest.context:type_name -> ani.modeldev.v1.StepContext
+	97,  // 169: ani.modeldev.v1.BeginManagedStepResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	93,  // 170: ani.modeldev.v1.GetExecutionConfigurationRequest.context:type_name -> ani.modeldev.v1.StepContext
+	143, // 171: ani.modeldev.v1.GetExecutionConfigurationResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	69,  // 172: ani.modeldev.v1.GetExecutionConfigurationResponse.snapshot:type_name -> ani.modeldev.v1.ExecutionSnapshot
+	94,  // 173: ani.modeldev.v1.GetExecutionConfigurationResponse.authority:type_name -> ani.modeldev.v1.AuthorityBinding
+	154, // 174: ani.modeldev.v1.GetExecutionConfigurationResponse.workspace:type_name -> ani.training.v1.WorkspaceRef
+	29,  // 175: ani.modeldev.v1.GetExecutionConfigurationResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	88,  // 176: ani.modeldev.v1.GetExecutionConfigurationResponse.admission:type_name -> ani.modeldev.v1.AcceptExecutionRequest
+	97,  // 177: ani.modeldev.v1.GetExecutionConfigurationResponse.timing:type_name -> ani.modeldev.v1.StepTiming
+	93,  // 178: ani.modeldev.v1.GetStorageCredentialsRequest.context:type_name -> ani.modeldev.v1.StepContext
+	138, // 179: ani.modeldev.v1.TemporaryStorageCredentials.expires_at:type_name -> google.protobuf.Timestamp
+	143, // 180: ani.modeldev.v1.GetStorageCredentialsResponse.identity:type_name -> ani.training.v1.ExecutionIdentity
+	6,   // 181: ani.modeldev.v1.GetStorageCredentialsResponse.step:type_name -> ani.modeldev.v1.PipelineStep
+	103, // 182: ani.modeldev.v1.GetStorageCredentialsResponse.credentials:type_name -> ani.modeldev.v1.TemporaryStorageCredentials
+	93,  // 183: ani.modeldev.v1.EnsureTrainingRequest.context:type_name -> ani.modeldev.v1.StepContext
+	138, // 184: ani.modeldev.v1.ObservedCondition.observed_at:type_name -> google.protobuf.Timestamp
+	106, // 185: ani.modeldev.v1.ResourceObservation.resource:type_name -> ani.modeldev.v1.ResourceRef
+	107, // 186: ani.modeldev.v1.ResourceObservation.conditions:type_name -> ani.modeldev.v1.ObservedCondition
+	138, // 187: ani.modeldev.v1.ResourceObservation.observed_at:type_name -> google.protobuf.Timestamp
+	143, // 188: ani.modeldev.v1.TrainingStatus.identity:type_name -> ani.training.v1.ExecutionIdentity
+	7,   // 189: ani.modeldev.v1.TrainingStatus.create_state:type_name -> ani.modeldev.v1.ExternalCreateState
+	106, // 190: ani.modeldev.v1.TrainingStatus.trainjob:type_name -> ani.modeldev.v1.ResourceRef
+	108, // 191: ani.modeldev.v1.TrainingStatus.resource_history:type_name -> ani.modeldev.v1.ResourceObservation
+	29,  // 192: ani.modeldev.v1.TrainingStatus.states:type_name -> ani.modeldev.v1.ExecutionStates
+	138, // 193: ani.modeldev.v1.TrainingStatus.observed_at:type_name -> google.protobuf.Timestamp
+	138, // 194: ani.modeldev.v1.TrainingStatus.training_admitted_at:type_name -> google.protobuf.Timestamp
+	138, // 195: ani.modeldev.v1.TrainingStatus.training_deadline_at:type_name -> google.protobuf.Timestamp
+	109, // 196: ani.modeldev.v1.EnsureTrainingResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
+	93,  // 197: ani.modeldev.v1.GetTrainingStatusRequest.context:type_name -> ani.modeldev.v1.StepContext
+	109, // 198: ani.modeldev.v1.GetTrainingStatusResponse.status:type_name -> ani.modeldev.v1.TrainingStatus
+	154, // 199: ani.modeldev.v1.PreparedInputCandidate.workspace:type_name -> ani.training.v1.WorkspaceRef
+	139, // 200: ani.modeldev.v1.PreparedInputCandidate.prepared_manifest:type_name -> ani.training.v1.ManifestRef
+	148, // 201: ani.modeldev.v1.PreparedInputCandidate.input:type_name -> ani.training.v1.InputRef
+	155, // 202: ani.modeldev.v1.PublishedFileCandidate.file:type_name -> ani.training.v1.FileEntry
+	153, // 203: ani.modeldev.v1.PublishedFileCandidate.object:type_name -> ani.training.v1.FixedObjectRef
+	114, // 204: ani.modeldev.v1.PublicationCandidate.files:type_name -> ani.modeldev.v1.PublishedFileCandidate
+	153, // 205: ani.modeldev.v1.PublicationCandidate.manifest_object:type_name -> ani.training.v1.FixedObjectRef
+	153, // 206: ani.modeldev.v1.PublicationCandidate.bundle_object:type_name -> ani.training.v1.FixedObjectRef
+	24,  // 207: ani.modeldev.v1.StepFailure.failure:type_name -> ani.modeldev.v1.ErrorDetail
+	145, // 208: ani.modeldev.v1.StepFailure.logs:type_name -> ani.training.v1.LogRef
+	93,  // 209: ani.modeldev.v1.ReportStepResultRequest.context:type_name -> ani.modeldev.v1.StepContext
+	113, // 210: ani.modeldev.v1.ReportStepResultRequest.prepared:type_name -> ani.modeldev.v1.PreparedInputCandidate
+	156, // 211: ani.modeldev.v1.ReportStepResultRequest.training_result:type_name -> ani.training.v1.TrainingResult
+	115, // 212: ani.modeldev.v1.ReportStepResultRequest.publication:type_name -> ani.modeldev.v1.PublicationCandidate
+	116, // 213: ani.modeldev.v1.ReportStepResultRequest.failure:type_name -> ani.modeldev.v1.StepFailure
+	143, // 214: ani.modeldev.v1.VerifiedPublication.identity:type_name -> ani.training.v1.ExecutionIdentity
+	120, // 215: ani.modeldev.v1.VerifiedPublication.files:type_name -> ani.modeldev.v1.VerifiedPublishedFile
+	153, // 216: ani.modeldev.v1.VerifiedPublication.manifest_object:type_name -> ani.training.v1.FixedObjectRef
+	153, // 217: ani.modeldev.v1.VerifiedPublication.bundle_object:type_name -> ani.training.v1.FixedObjectRef
+	138, // 218: ani.modeldev.v1.VerifiedPublication.remote_verified_at:type_name -> google.protobuf.Timestamp
+	119, // 219: ani.modeldev.v1.VerifiedPublication.upload_completion:type_name -> ani.modeldev.v1.UploadCompletionEvidence
+	138, // 220: ani.modeldev.v1.UploadCompletionEvidence.completed_at:type_name -> google.protobuf.Timestamp
+	138, // 221: ani.modeldev.v1.UploadCompletionEvidence.observed_at:type_name -> google.protobuf.Timestamp
+	155, // 222: ani.modeldev.v1.VerifiedPublishedFile.file:type_name -> ani.training.v1.FileEntry
+	153, // 223: ani.modeldev.v1.VerifiedPublishedFile.object:type_name -> ani.training.v1.FixedObjectRef
+	138, // 224: ani.modeldev.v1.VerifiedPublishedFile.remote_verified_at:type_name -> google.protobuf.Timestamp
+	29,  // 225: ani.modeldev.v1.ReportStepResultResponse.states:type_name -> ani.modeldev.v1.ExecutionStates
+	118, // 226: ani.modeldev.v1.ReportStepResultResponse.publication:type_name -> ani.modeldev.v1.VerifiedPublication
+	93,  // 227: ani.modeldev.v1.RequestExecutionCloseRequest.context:type_name -> ani.modeldev.v1.StepContext
+	4,   // 228: ani.modeldev.v1.RequestExecutionCloseRequest.reason:type_name -> ani.modeldev.v1.CloseReason
+	3,   // 229: ani.modeldev.v1.RequestExecutionCloseResponse.close_state:type_name -> ani.modeldev.v1.CloseState
+	138, // 230: ani.modeldev.v1.RequestExecutionCloseResponse.accepted_at:type_name -> google.protobuf.Timestamp
+	124, // 231: ani.modeldev.v1.RuntimeCapabilities.packages:type_name -> ani.modeldev.v1.RuntimePackage
+	125, // 232: ani.modeldev.v1.RuntimeCapabilities.registered_templates:type_name -> ani.modeldev.v1.RegisteredTemplate
+	126, // 233: ani.modeldev.v1.RuntimeCapabilities.context_limit_fields:type_name -> ani.modeldev.v1.ContextLimitField
+	129, // 234: ani.modeldev.v1.NormalizedModelFacts.context_sources:type_name -> ani.modeldev.v1.ContextLimitFact
+	128, // 235: ani.modeldev.v1.NormalizedModelFacts.config_file:type_name -> ani.modeldev.v1.FileFact
+	128, // 236: ani.modeldev.v1.NormalizedModelFacts.tokenizer_config_file:type_name -> ani.modeldev.v1.FileFact
+	130, // 237: ani.modeldev.v1.NormalizedModelFacts.weight_layout:type_name -> ani.modeldev.v1.WeightLayout
+	131, // 238: ani.modeldev.v1.NormalizedModelFacts.template_sources:type_name -> ani.modeldev.v1.TemplateSource
+	131, // 239: ani.modeldev.v1.TemplatePlan.source:type_name -> ani.modeldev.v1.TemplateSource
+	81,  // 240: ani.modeldev.v1.CheckFinetuningReadinessRequest.compute_origin:type_name -> ani.modeldev.v1.ComputeOrigin
+	16,  // 241: ani.modeldev.v1.CheckFinetuningReadinessResponse.assessment:type_name -> ani.modeldev.v1.FinetuningAssessment
+	9,   // 242: ani.modeldev.v1.CheckFinetuningReadinessResponse.reason:type_name -> ani.modeldev.v1.ErrorReason
+	125, // 243: ani.modeldev.v1.CheckFinetuningReadinessResponse.template_candidates:type_name -> ani.modeldev.v1.RegisteredTemplate
+	127, // 244: ani.modeldev.v1.CheckFinetuningReadinessResponse.runtime_capabilities:type_name -> ani.modeldev.v1.RuntimeCapabilities
+	70,  // 245: ani.modeldev.v1.CheckFinetuningReadinessResponse.limits:type_name -> ani.modeldev.v1.ContentLimits
+	134, // 246: ani.modeldev.v1.CheckFinetuningReadinessResponse.structure_limits:type_name -> ani.modeldev.v1.StructureLimits
+	133, // 247: ani.modeldev.v1.CheckFinetuningReadinessResponse.template_plan:type_name -> ani.modeldev.v1.TemplatePlan
+	33,  // 248: ani.modeldev.v1.ModelDevQueryService.ListImplementations:input_type -> ani.modeldev.v1.ListImplementationsRequest
+	135, // 249: ani.modeldev.v1.ModelDevQueryService.CheckFinetuningReadiness:input_type -> ani.modeldev.v1.CheckFinetuningReadinessRequest
+	36,  // 250: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:input_type -> ani.modeldev.v1.GetInputVersionRequest
+	38,  // 251: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:input_type -> ani.modeldev.v1.ListInputVersionsRequest
+	45,  // 252: ani.modeldev.v1.ModelDevQueryService.GetExecution:input_type -> ani.modeldev.v1.GetExecutionRequest
+	47,  // 253: ani.modeldev.v1.ModelDevQueryService.ListExecutions:input_type -> ani.modeldev.v1.ListExecutionsRequest
+	49,  // 254: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:input_type -> ani.modeldev.v1.GetExecutionLogsRequest
+	52,  // 255: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogStream:input_type -> ani.modeldev.v1.GetExecutionLogStreamRequest
+	55,  // 256: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:input_type -> ani.modeldev.v1.ListExecutionArtifactsRequest
+	57,  // 257: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:input_type -> ani.modeldev.v1.AuthorizeArtifactDownloadRequest
+	62,  // 258: ani.modeldev.v1.ModelDevQueryService.ListExecutionPods:input_type -> ani.modeldev.v1.ListExecutionPodsRequest
+	64,  // 259: ani.modeldev.v1.ModelDevQueryService.ListExecutionEvents:input_type -> ani.modeldev.v1.ListExecutionEventsRequest
+	84,  // 260: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:input_type -> ani.modeldev.v1.PrepareAdmissionRequest
+	86,  // 261: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:input_type -> ani.modeldev.v1.FinalizeAdmissionRequest
+	88,  // 262: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:input_type -> ani.modeldev.v1.AcceptExecutionRequest
+	90,  // 263: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:input_type -> ani.modeldev.v1.ApplyCloseIntentRequest
+	95,  // 264: ani.modeldev.v1.ModelDevStepService.BeginExecution:input_type -> ani.modeldev.v1.BeginExecutionRequest
+	98,  // 265: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:input_type -> ani.modeldev.v1.BeginManagedStepRequest
+	100, // 266: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:input_type -> ani.modeldev.v1.GetExecutionConfigurationRequest
+	102, // 267: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:input_type -> ani.modeldev.v1.GetStorageCredentialsRequest
+	105, // 268: ani.modeldev.v1.ModelDevStepService.EnsureTraining:input_type -> ani.modeldev.v1.EnsureTrainingRequest
+	111, // 269: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:input_type -> ani.modeldev.v1.GetTrainingStatusRequest
+	117, // 270: ani.modeldev.v1.ModelDevStepService.ReportStepResult:input_type -> ani.modeldev.v1.ReportStepResultRequest
+	122, // 271: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:input_type -> ani.modeldev.v1.RequestExecutionCloseRequest
+	17,  // 272: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:input_type -> ani.modeldev.v1.BeginFinetuningStepRequest
+	19,  // 273: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:input_type -> ani.modeldev.v1.ReportFinetuningStepResultRequest
+	21,  // 274: ani.modeldev.v1.ModelDevStepService.RegisterModel:input_type -> ani.modeldev.v1.RegisterModelRequest
+	34,  // 275: ani.modeldev.v1.ModelDevQueryService.ListImplementations:output_type -> ani.modeldev.v1.ListImplementationsResponse
+	136, // 276: ani.modeldev.v1.ModelDevQueryService.CheckFinetuningReadiness:output_type -> ani.modeldev.v1.CheckFinetuningReadinessResponse
+	37,  // 277: ani.modeldev.v1.ModelDevQueryService.GetInputVersion:output_type -> ani.modeldev.v1.GetInputVersionResponse
+	39,  // 278: ani.modeldev.v1.ModelDevQueryService.ListInputVersions:output_type -> ani.modeldev.v1.ListInputVersionsResponse
+	46,  // 279: ani.modeldev.v1.ModelDevQueryService.GetExecution:output_type -> ani.modeldev.v1.GetExecutionResponse
+	48,  // 280: ani.modeldev.v1.ModelDevQueryService.ListExecutions:output_type -> ani.modeldev.v1.ListExecutionsResponse
+	51,  // 281: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogs:output_type -> ani.modeldev.v1.GetExecutionLogsResponse
+	53,  // 282: ani.modeldev.v1.ModelDevQueryService.GetExecutionLogStream:output_type -> ani.modeldev.v1.GetExecutionLogStreamResponse
+	56,  // 283: ani.modeldev.v1.ModelDevQueryService.ListExecutionArtifacts:output_type -> ani.modeldev.v1.ListExecutionArtifactsResponse
+	58,  // 284: ani.modeldev.v1.ModelDevQueryService.AuthorizeArtifactDownload:output_type -> ani.modeldev.v1.AuthorizeArtifactDownloadResponse
+	63,  // 285: ani.modeldev.v1.ModelDevQueryService.ListExecutionPods:output_type -> ani.modeldev.v1.ListExecutionPodsResponse
+	65,  // 286: ani.modeldev.v1.ModelDevQueryService.ListExecutionEvents:output_type -> ani.modeldev.v1.ListExecutionEventsResponse
+	85,  // 287: ani.modeldev.v1.ModelDevAdmissionService.PrepareAdmission:output_type -> ani.modeldev.v1.PrepareAdmissionResponse
+	87,  // 288: ani.modeldev.v1.ModelDevAdmissionService.FinalizeAdmission:output_type -> ani.modeldev.v1.FinalizeAdmissionResponse
+	89,  // 289: ani.modeldev.v1.ModelDevCommandService.AcceptExecution:output_type -> ani.modeldev.v1.AcceptExecutionResponse
+	91,  // 290: ani.modeldev.v1.ModelDevCommandService.ApplyCloseIntent:output_type -> ani.modeldev.v1.ApplyCloseIntentResponse
+	96,  // 291: ani.modeldev.v1.ModelDevStepService.BeginExecution:output_type -> ani.modeldev.v1.BeginExecutionResponse
+	99,  // 292: ani.modeldev.v1.ModelDevStepService.BeginManagedStep:output_type -> ani.modeldev.v1.BeginManagedStepResponse
+	101, // 293: ani.modeldev.v1.ModelDevStepService.GetExecutionConfiguration:output_type -> ani.modeldev.v1.GetExecutionConfigurationResponse
+	104, // 294: ani.modeldev.v1.ModelDevStepService.GetStorageCredentials:output_type -> ani.modeldev.v1.GetStorageCredentialsResponse
+	110, // 295: ani.modeldev.v1.ModelDevStepService.EnsureTraining:output_type -> ani.modeldev.v1.EnsureTrainingResponse
+	112, // 296: ani.modeldev.v1.ModelDevStepService.GetTrainingStatus:output_type -> ani.modeldev.v1.GetTrainingStatusResponse
+	121, // 297: ani.modeldev.v1.ModelDevStepService.ReportStepResult:output_type -> ani.modeldev.v1.ReportStepResultResponse
+	123, // 298: ani.modeldev.v1.ModelDevStepService.RequestExecutionClose:output_type -> ani.modeldev.v1.RequestExecutionCloseResponse
+	18,  // 299: ani.modeldev.v1.ModelDevStepService.BeginFinetuningStep:output_type -> ani.modeldev.v1.BeginFinetuningStepResponse
+	20,  // 300: ani.modeldev.v1.ModelDevStepService.ReportFinetuningStepResult:output_type -> ani.modeldev.v1.ReportFinetuningStepResultResponse
+	22,  // 301: ani.modeldev.v1.ModelDevStepService.RegisterModel:output_type -> ani.modeldev.v1.RegisterModelResponse
+	275, // [275:302] is the sub-list for method output_type
+	248, // [248:275] is the sub-list for method input_type
+	248, // [248:248] is the sub-list for extension type_name
+	248, // [248:248] is the sub-list for extension extendee
+	0,   // [0:248] is the sub-list for field type_name
 }
 
 func init() { file_ani_modeldev_v1_modeldev_proto_init() }

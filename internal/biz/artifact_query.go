@@ -36,12 +36,17 @@ type ExecutionQuery struct {
 	// immutable intent, so matching here reads the same value the list reports
 	// instead of a duplicated column that could drift from it.
 	Name string
+	// Kind is the frozen snapshot kind ("GENERAL_TRAINING" / "FINETUNING").
+	// An empty value means "no filter", which the caller distinguishes from a
+	// requested kind before reaching here.
+	Kind string
 }
 
 func (query ExecutionQuery) Matches(execution Execution) bool {
 	return (query.Compute == "" || query.Compute == execution.States.Compute) &&
 		(query.Delivery == "" || query.Delivery == execution.States.Delivery) &&
 		(query.Close == "" || query.Close == execution.States.Close) &&
+		(query.Kind == "" || query.Kind == execution.Snapshot.Kind) &&
 		(query.Name == "" || strings.Contains(strings.ToLower(execution.Intent.Name), query.Name))
 }
 
