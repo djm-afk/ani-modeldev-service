@@ -26,13 +26,13 @@ def configure_work_directory(workspace, role):
     if role not in ('train', 'export', 'verify'):
         raise RuntimeFailure('RUNTIME_UNSUPPORTED', 'unknown stage')
     root = Path(os.path.abspath(workspace)) / 'work' / role
-    for suffix in ('tmp', 'hf', 'hf/datasets', 'matplotlib'):
+    for suffix in ('tmp', 'hf', 'hf/datasets', 'matplotlib', 'triton'):
         target = root / suffix
         for part in (*reversed(target.parents), target):
             if part.is_symlink():
                 raise RuntimeFailure('RUNTIME_UNSUPPORTED', 'linked work directory')
         target.mkdir(parents=True, exist_ok=True)
-    for name, suffix in (('TMPDIR', 'tmp'), ('HF_HOME', 'hf'), ('HF_DATASETS_CACHE', 'hf/datasets'), ('MPLCONFIGDIR', 'matplotlib')):
+    for name, suffix in (('TMPDIR', 'tmp'), ('HF_HOME', 'hf'), ('HF_DATASETS_CACHE', 'hf/datasets'), ('MPLCONFIGDIR', 'matplotlib'), ('TRITON_CACHE_DIR', 'triton')):
         os.environ[name] = str(root / suffix)
     os.environ['HF_HUB_OFFLINE'] = '1'
     os.environ['TRANSFORMERS_OFFLINE'] = '1'

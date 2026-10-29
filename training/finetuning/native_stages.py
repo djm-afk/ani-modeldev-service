@@ -100,6 +100,9 @@ def run_managed_sft(parsed, *, tokenizer_module, template, callbacks, observe_da
                      'aligned_cache_files': aligned_cache, 'tokenized_cache_files': tokenized_cache})
     with measurements.phase('model_load'):
         model = load_model(tokenizer, model_args, finetuning_args, training_args.do_train)
+        # The native loader selects checkpoint precision with dtype="auto";
+        # enforce the frozen training precision before Trainer sees parameters.
+        model = model.to(dtype=model_args.compute_dtype)
         collator = SFTDataCollatorWith4DAttentionMask(
             template=template, model=model, pad_to_multiple_of=8,
             label_pad_token_id=IGNORE_INDEX if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id,
