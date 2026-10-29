@@ -121,6 +121,11 @@ func newCompleteFixture(t *testing.T) *completeFixture {
 		m["annotations"] = map[string]any{"workflows.argoproj.io/node-id": "main-" + step, "workflows.argoproj.io/node-name": "main-flow." + step}
 		m["ownerReferences"] = []any{map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": "main-flow", "uid": completeWorkflowUID, "controller": true}}
 		f.objects["/api/v1/namespaces/"+ns+"/pods/main-"+step] = map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": m, "spec": map[string]any{"serviceAccountName": snapshot.Environment.Identities.KFPStepServiceAccount, "volumes": []any{map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": f.workspace.PVCName}}}, "containers": []any{map[string]any{"name": "main", "volumeMounts": []any{map[string]any{"name": "workspace", "mountPath": "/workspace"}}}}}, "status": map[string]any{"phase": "Running"}}
+		if step == "prepare" {
+			spec := f.objects["/api/v1/namespaces/"+ns+"/pods/main-"+step]["spec"].(map[string]any)
+			main := spec["containers"].([]any)[0].(map[string]any)
+			main["volumeMounts"] = append(main["volumeMounts"].([]any), map[string]any{"name": "workspace", "mountPath": "/workspace/work/prepare/tmp", "subPath": "work/prepare/tmp"})
+		}
 		if step == "close" {
 			f.objects["/api/v1/namespaces/"+ns+"/pods/main-"+step]["spec"] = map[string]any{"serviceAccountName": snapshot.Environment.Identities.KFPStepServiceAccount, "volumes": []any{map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": f.workspace.PVCName}}}, "containers": []any{map[string]any{"name": "main", "volumeMounts": []any{map[string]any{"name": "workspace", "mountPath": "/workspace", "readOnly": true}}}}}
 		}

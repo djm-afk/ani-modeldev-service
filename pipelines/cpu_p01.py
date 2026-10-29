@@ -163,6 +163,9 @@ def compile_pipeline(configuration, output):
             published = configure(publish(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id).after(collected))
             for task in (prepared, collected, published):
                 kubernetes.mount_pvc(task, workspace.output, "/workspace")
+            # KFP writes its CA bundle before invoking prepare. A native PVC
+            # subPath mount lets kubelet create TMPDIR before that launcher.
+            kubernetes.mount_pvc(prepared, workspace.output, "/workspace/work/prepare/tmp", sub_path="work/prepare/tmp")
             # Admission projects the root mount to read-only, keeping only
             # publication and the role's work directory writable.
             for task in (collected, published):

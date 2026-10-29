@@ -3,6 +3,7 @@ package runtimeproof_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -31,6 +32,12 @@ func capturedUnpreparedPVC(t *testing.T) (*ownerCloseFixture, *unstructured.Unst
 	pvc := &unstructured.Unstructured{Object: object["pvc"].(map[string]any)}
 	oldID := "5f0b866e-31d1-4b44-8a7c-5cc900767e00"
 	oldSHA := "bd1fe7a7524ca89f61702eeb28a4ed3b74a8e39b0da30512dfeb3b80013eb12c"
+	adaptUnpreparedCapture(t, f, pvc, oldID, oldSHA)
+	return f, pvc
+}
+
+func adaptUnpreparedCapture(t *testing.T, f *ownerCloseFixture, pvc *unstructured.Unstructured, oldID, oldSHA string) {
+	t.Helper()
 	adapt := func(object *unstructured.Unstructured) {
 		raw, _ := json.Marshal(object.Object)
 		s := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(string(raw), oldID, f.execution.ExecutionID), oldSHA, f.execution.SpecHash), "ani-cephfs", f.execution.Snapshot.Workspace.StorageClass), "4Gi", "2Gi")
@@ -45,7 +52,49 @@ func capturedUnpreparedPVC(t *testing.T) (*ownerCloseFixture, *unstructured.Unst
 	}
 	adapt(pvc)
 	pvc.SetNamespace(f.execution.Snapshot.Environment.NamespaceName)
-	return f, pvc
+}
+
+func capturedLauncherFailedPVC(t *testing.T) (*ownerCloseFixture, *unstructured.Unstructured, biz.ManagedStepAssociation) {
+	t.Helper()
+	f := newOwnerCloseFixture(t)
+	raw, err := os.ReadFile("testdata/kfp-2.16-prepare-launcher-failed-before-begin.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var record struct {
+		Workflow map[string]any
+		Pods     []map[string]any
+		PVC      map[string]any
+		Run      map[string]any
+	}
+	if err := json.Unmarshal(raw, &record); err != nil {
+		t.Fatal(err)
+	}
+	f.workflow = &unstructured.Unstructured{Object: record.Workflow}
+	f.run, f.runID = record.Run, record.Run["run_id"].(string)
+	f.dispatch.ConfirmedRuns[0].RunID = f.runID
+	f.pods = nil
+	for _, pod := range record.Pods {
+		value := unstructured.Unstructured{Object: pod}
+		_ = unstructured.SetNestedField(value.Object, f.dispatch.Plan.Environment.Identities.KFPStepServiceAccount, "spec", "serviceAccountName")
+		f.pods = append(f.pods, value)
+	}
+	pvc := &unstructured.Unstructured{Object: record.PVC}
+	adaptUnpreparedCapture(t, f, pvc, "ec57bafc-56bd-4f7e-8f65-45527aa4d0e3", "2472153d80484cd6ee777afa9aebdc5f1b5275d861ef294b6e1fca3bb822938d")
+	plan := f.dispatch.Plan
+	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = plan.Environment.ExperimentID, plan.DisplayName, plan.Environment.Identities.KFPStepServiceAccount
+	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": plan.PipelineID, "pipeline_version_id": plan.PipelineVersionID}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}, "pipeline_root": plan.Owner.PipelineRoot}
+	owner := f.authority()
+	return f, pvc, biz.ManagedStepAssociation{RunID: f.runID, NamespaceName: owner.NamespaceName, NamespaceUID: owner.NamespaceUID, WorkflowName: owner.WorkflowName, WorkflowUID: owner.WorkflowUID, PodName: "md-glh4c-2627411080", PodUID: "59c354aa-a46a-438e-bfea-7f6619a2c368"}
+}
+
+func TestPrepareLauncherFailureBeforeBeginClosesAndReclaimsExactPVC(t *testing.T) {
+	f, pvc, a := capturedLauncherFailedPVC(t)
+	if len(f.pods) != 9 {
+		t.Fatal("original ec57 nine-Pod graph changed")
+	}
+	assertUnpreparedOwnerCloseVertical(t, f, pvc, a)
 }
 
 func unpreparedBoundary(f *ownerCloseFixture, pvc *unstructured.Unstructured, extra ...runtime.Object) (*runtimeproof.Verifier, *dynamicfake.FakeDynamicClient) {
@@ -129,6 +178,72 @@ func TestOwnerUnpreparedPVCPreservesOriginalRequestAndObservedUIDFences(t *testi
 			}
 			if err = proof.VerifyRecordedOwnerWritersAbsent(context.Background(), f.execution, f.authority(), nil, evidence); err == nil {
 				t.Fatal("same-name replacement accepted by durable owner proof")
+			}
+		})
+	}
+}
+
+func TestPrepareLauncherFailureRetainsRealExitAndWriterFences(t *testing.T) {
+	for _, attack := range []string{"running-main", "missing-prepare-pod", "foreign-native-node", "zero-main", "unrelated-live-writer", "different-error-message"} {
+		t.Run(attack, func(t *testing.T) {
+			f, pvc, _ := capturedLauncherFailedPVC(t)
+			var extra []runtime.Object
+			switch attack {
+			case "running-main", "missing-prepare-pod", "foreign-native-node", "zero-main":
+				for i := range f.pods {
+					pod := &f.pods[i]
+					if pod.GetName() != "md-glh4c-489730569" {
+						continue
+					}
+					if attack == "missing-prepare-pod" {
+						f.pods = append(f.pods[:i], f.pods[i+1:]...)
+						break
+					}
+					if attack == "foreign-native-node" {
+						a := pod.GetAnnotations()
+						a["workflows.argoproj.io/node-id"] = "unrelated-executor"
+						pod.SetAnnotations(a)
+						break
+					}
+					statuses, _, _ := unstructured.NestedSlice(pod.Object, "status", "containerStatuses")
+					for j, raw := range statuses {
+						status := raw.(map[string]any)
+						if status["name"] != "main" {
+							continue
+						}
+						if attack == "running-main" {
+							status["state"] = map[string]any{"running": map[string]any{"startedAt": "2026-10-29T01:09:00Z"}}
+						} else {
+							_ = unstructured.SetNestedField(status, int64(0), "state", "terminated", "exitCode")
+						}
+						statuses[j] = status
+					}
+					_ = unstructured.SetNestedSlice(pod.Object, statuses, "status", "containerStatuses")
+					break
+				}
+			case "unrelated-live-writer":
+				extra = append(extra, &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"namespace": pvc.GetNamespace(), "name": "foreign-live-writer", "uid": "foreign-live-writer-uid"}, "spec": map[string]any{"volumes": []any{map[string]any{"name": "data", "persistentVolumeClaim": map[string]any{"claimName": pvc.GetName()}}}}, "status": map[string]any{"phase": "Running"}}})
+			case "different-error-message":
+				nodes, _, _ := unstructured.NestedMap(f.workflow.Object, "status", "nodes")
+				for id, raw := range nodes {
+					node := raw.(map[string]any)
+					if node["displayName"] == "prepare" || node["id"] == "md-glh4c-489730569" {
+						node["message"] = "arbitrary controller description"
+						nodes[id] = node
+					}
+				}
+				_ = unstructured.SetNestedMap(f.workflow.Object, nodes, "status", "nodes")
+			}
+			proof, _ := unpreparedBoundary(f, pvc, extra...)
+			evidence, err := proof.VerifyOwnerWritersAbsent(context.Background(), f.execution, f.authority(), nil)
+			if attack == "different-error-message" {
+				if err != nil || evidence.UnpreparedWorkspace == nil || len(evidence.Resources) != 9 {
+					t.Fatalf("real exits must not depend on log wording: %+v %v", evidence, err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("%s lost actual process/owner/PVC writer fence", attack)
 			}
 		})
 	}

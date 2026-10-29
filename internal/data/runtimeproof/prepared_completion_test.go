@@ -19,7 +19,7 @@ import (
 )
 
 func TestPreparedCompletionChecksOriginalTaskPodAndFrozenWorkspace(t *testing.T) {
-	for _, mode := range []string{"CPU success", "FINETUNING success", "running prepare", "failed main", "running sidecar", "future main", "future sidecar", "wrong PVC UID", "wrong mount", "wrong manifest", "foreign workflow"} {
+	for _, mode := range []string{"CPU success", "FINETUNING success", "running prepare", "failed main", "running sidecar", "future main", "future sidecar", "wrong PVC UID", "wrong mount", "wrong manifest", "foreign workflow", "missing bootstrap", "wrong bootstrap", "read only bootstrap", "expression bootstrap", "shadow bootstrap", "extra workspace mount"} {
 		t.Run(mode, func(t *testing.T) {
 			f := newOwnerCloseFixture(t)
 			if mode != "CPU success" {
@@ -45,6 +45,10 @@ func TestPreparedCompletionChecksOriginalTaskPodAndFrozenWorkspace(t *testing.T)
 					t.Fatal(err)
 				}
 			}
+			containers, _, _ := unstructured.NestedSlice(prepare.Object, "spec", "containers")
+			main := containers[0].(map[string]any)
+			main["volumeMounts"] = append(main["volumeMounts"].([]any), map[string]any{"name": "workspace", "mountPath": "/workspace/work/prepare/tmp", "subPath": "work/prepare/tmp"})
+			set(containers, "spec", "containers")
 			switch mode {
 			case "running prepare":
 				task = nativeTaskFixture(t, f.workflow, prepare, f.runID, "original-prepare-task", "prepare", "RUNNING")
@@ -70,6 +74,27 @@ func TestPreparedCompletionChecksOriginalTaskPodAndFrozenWorkspace(t *testing.T)
 				workspace.PreparedManifestSHA256 = strings.Repeat("0", 64)
 			case "foreign workflow":
 				set([]any{map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": association.WorkflowName, "uid": "other-workflow-uid", "controller": true}}, "metadata", "ownerReferences")
+			case "missing bootstrap", "wrong bootstrap", "read only bootstrap", "expression bootstrap", "shadow bootstrap", "extra workspace mount":
+				mounts := main["volumeMounts"].([]any)
+				bootstrap := mounts[1].(map[string]any)
+				switch mode {
+				case "missing bootstrap":
+					mounts = mounts[:1]
+				case "wrong bootstrap":
+					bootstrap["subPath"] = "work/publish/tmp"
+				case "read only bootstrap":
+					bootstrap["readOnly"] = true
+				case "expression bootstrap":
+					bootstrap["subPathExpr"] = "$(UNTRUSTED)"
+				case "shadow bootstrap":
+					bootstrap["name"] = "shadow"
+					volumes, _, _ := unstructured.NestedSlice(prepare.Object, "spec", "volumes")
+					set(append(volumes, map[string]any{"name": "shadow", "emptyDir": map[string]any{}}), "spec", "volumes")
+				case "extra workspace mount":
+					mounts = append(mounts, map[string]any{"name": "workspace", "mountPath": "/other"})
+				}
+				main["volumeMounts"] = mounts
+				set(containers, "spec", "containers")
 			}
 			f.run["state"] = "RUNNING"
 			f.run["run_details"] = map[string]any{"task_details": []any{task}}

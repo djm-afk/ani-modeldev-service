@@ -2,6 +2,7 @@ package runtimeproof
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -185,26 +186,44 @@ func preparedMount(pod *unstructured.Unstructured, pvc string) bool {
 	if err != nil || volume == "" {
 		return false
 	}
+	mainCount := 0
 	for _, item := range containers {
 		container, ok := item.(map[string]any)
 		if !ok || container["name"] != "main" {
 			continue
 		}
+		mainCount++
 		mounts, _, err := unstructured.NestedSlice(container, "volumeMounts")
 		if err != nil {
 			return false
 		}
+		expected := map[string]string{"/workspace": "", "/workspace/work/prepare/tmp": "work/prepare/tmp"}
+		seen := map[string]bool{}
 		for _, item := range mounts {
 			mount, ok := item.(map[string]any)
 			if !ok {
 				return false
 			}
-			if mount["name"] == volume && mount["mountPath"] == "/workspace" && mount["readOnly"] != true && (mount["subPath"] == nil || mount["subPath"] == "") && (mount["subPathExpr"] == nil || mount["subPathExpr"] == "") {
-				return true
+			path, _ := mount["mountPath"].(string)
+			if mount["name"] != volume {
+				if path == "/workspace" || strings.HasPrefix(path, "/workspace/") {
+					return false
+				}
+				continue
 			}
+			subpath, allowed := expected[path]
+			if !allowed || seen[path] || mount["readOnly"] == true ||
+				mount["subPathExpr"] != nil && mount["subPathExpr"] != "" ||
+				mount["subPath"] != subpath && !(subpath == "" && mount["subPath"] == nil) {
+				return false
+			}
+			seen[path] = true
+		}
+		if len(seen) != len(expected) {
+			return false
 		}
 	}
-	return false
+	return mainCount == 1
 }
 
 func controlOnly(pod *unstructured.Unstructured) bool {

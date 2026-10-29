@@ -38,7 +38,7 @@ func (v *Verifier) observeUnpreparedWorkspace(ctx context.Context, execution biz
 	if apierrors.IsNotFound(err) && creates <= 1 && create.State != "SUCCEEDED" {
 		return nil, nil
 	}
-	if err != nil || pvc == nil || creates != 1 || prepares != 1 || create.State != "SUCCEEDED" || prepare.State != "FAILED" || !serverRejectedManagedTask(workflow, prepare, run.Tasks) {
+	if err != nil || pvc == nil || creates != 1 || prepares != 1 || create.State != "SUCCEEDED" || prepare.State != "FAILED" || (!serverRejectedManagedTask(workflow, prepare, run.Tasks) && !failedPrepareExited(workflow, prepare, run.Tasks, pods, execution.Snapshot.Kind)) {
 		return nil, biz.ErrRuntimeNotReady
 	}
 	nodes, _, _ := unstructured.NestedMap(workflow.Object, "status", "nodes")
@@ -194,6 +194,27 @@ func (v *Verifier) observeUnpreparedWorkspace(ctx context.Context, execution biz
 		return nil, err
 	}
 	return fact, nil
+}
+
+// A launcher may exit before Begin records a prepared workspace. The failed
+// native task must resolve to its independently referenced real Pod, whose
+// main and every sidecar/init process have actually terminated. Error text is
+// not evidence. The caller still proves the complete owner graph and writers.
+func failedPrepareExited(workflow *unstructured.Unstructured, prepare kfp.ManagedTask, tasks []kfp.ManagedTask, pods []unstructured.Unstructured, kind string) bool {
+	resolved, err := resolvedManagedTasksForRole(workflow, tasks, pods, kind, "prepare")
+	if err != nil || len(resolved) != 1 || resolved[0].ID != prepare.ID || resolved[0].RunID != prepare.RunID || resolved[0].State != "FAILED" {
+		return false
+	}
+	for i := range pods {
+		pod := &pods[i]
+		if pod.GetName() != resolved[0].PodName {
+			continue
+		}
+		phase, _ := textAt(pod, "status", "phase")
+		terminal, _, _, code := terminatedPod(pod)
+		return phase == "Failed" && terminal && code != nil && *code != 0
+	}
+	return false
 }
 
 func unpreparedDigest(value any) string {

@@ -143,3 +143,67 @@ func TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom(t *testing.
 		})
 	}
 }
+
+func TestPrepareBootstrapRequiresExactSamePVCSubPath(t *testing.T) {
+	config, reader := fixtureConfig(t)
+	handler, err := modeldevwebhook.New(config, reader, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewTLSServer(handler)
+	defer server.Close()
+	for _, profile := range []string{"cpu-v1", "sft-v1"} {
+		for _, mode := range []string{"native bootstrap", "missing", "other subpath", "expression", "duplicate", "other PVC"} {
+			t.Run(profile+"/"+mode, func(t *testing.T) {
+				body := request(t, config, profile, "prepare")
+				changePod(t, &body, func(pod *corev1.Pod) {
+					mounts := pod.Spec.Containers[0].VolumeMounts
+					for i := range mounts {
+						if mounts[i].MountPath != "/workspace/work/prepare/tmp" {
+							continue
+						}
+						switch mode {
+						case "missing":
+							mounts = append(mounts[:i], mounts[i+1:]...)
+						case "other subpath":
+							mounts[i].SubPath = "work/collect/tmp"
+						case "expression":
+							mounts[i].SubPathExpr = "$(UNTRUSTED)"
+						case "duplicate":
+							mounts = append(mounts, mounts[i])
+						case "other PVC":
+							mounts[i].Name = "another-workspace"
+							pod.Spec.Volumes = append(pod.Spec.Volumes, corev1.Volume{Name: "another-workspace", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "ani-kfp-workspace-other"}}})
+						}
+						break
+					}
+					pod.Spec.Containers[0].VolumeMounts = mounts
+				})
+				result := call(t, server, body)
+				if result.Allowed != (mode == "native bootstrap") {
+					t.Fatalf("bootstrap admission allowed=%v result=%+v", result.Allowed, result.Result)
+				}
+				if !result.Allowed {
+					return
+				}
+				patch, err := jsonpatch.DecodePatch(result.Patch)
+				if err != nil {
+					t.Fatal(err)
+				}
+				raw, err := patch.Apply(body.Request.Object.Raw)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var pod corev1.Pod
+				if err := json.Unmarshal(raw, &pod); err != nil {
+					t.Fatal(err)
+				}
+				for _, mount := range pod.Spec.Containers[0].VolumeMounts {
+					if mount.MountPath == "/workspace/work/prepare/tmp" && mount.ReadOnly {
+						t.Fatal("launcher bootstrap directory became read-only")
+					}
+				}
+			})
+		}
+	}
+}

@@ -41,6 +41,11 @@ import (
 func TestAuthenticatedFailureFinalizerDurablyHandsOffCloseWithoutNormalAuthority(t *testing.T) {
 	f, pvc := capturedUnpreparedPVC(t)
 	_, a := capturedFinalizerAuth(t)
+	assertUnpreparedOwnerCloseVertical(t, f, pvc, a)
+}
+
+func assertUnpreparedOwnerCloseVertical(t *testing.T, f *ownerCloseFixture, pvc *unstructured.Unstructured, a biz.ManagedStepAssociation) {
+	t.Helper()
 	f.execution.AcceptedAt = time.Now().UTC().Truncate(time.Microsecond)
 	f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(time.Hour)
 	oldHash := f.execution.SpecHash

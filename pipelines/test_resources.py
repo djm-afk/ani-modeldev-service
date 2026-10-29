@@ -48,7 +48,9 @@ class ResourceProjection(unittest.TestCase):
                     self.assertEqual(k8s["podMetadata"]["annotations"]["ani.modeldev/component-resources-sha256"], digest)
                     self.assertEqual(k8s["emptyDirMounts"][0]["sizeLimit"], expected["ephemeral_storage_limit"])
                     mounts = {m["mountPath"]: m.get("subPath", "") for m in k8s.get("pvcMount", [])}
-                    if role in ("close", "register"):
+                    if role == "prepare":
+                        self.assertEqual(mounts, {"/workspace": "", "/workspace/work/prepare/tmp": "work/prepare/tmp"})
+                    elif role in ("close", "register"):
                         self.assertEqual(mounts, {"/workspace": ""})
                     elif role == "finalize-close":
                         self.assertEqual(mounts, {})

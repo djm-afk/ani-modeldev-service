@@ -146,6 +146,9 @@ func request(t *testing.T, config modeldevwebhook.Config, profile, role string) 
 	if role == "export" || role == "verify" {
 		mounts["/workspace/work/"+role] = "work/" + role
 	}
+	if role == "prepare" {
+		mounts["/workspace/work/prepare/tmp"] = "work/prepare/tmp"
+	}
 	volumeMounts := []map[string]any{{"name": "component-tmp", "mountPath": "/tmp"}}
 	for path, subpath := range mounts {
 		volumeMounts = append(volumeMounts, map[string]any{"name": "workspace", "mountPath": path, "subPath": subpath})

@@ -34,7 +34,7 @@ type mountRule struct {
 func roleMounts(kind string) map[string]map[string]mountRule {
 	roles := map[string]map[string]mountRule{
 		"workspace-name": {}, "train-wait": {}, "finalize-close": {},
-		"prepare": {"/workspace": {"", false}},
+		"prepare": {"/workspace": {"", false}, "/workspace/work/prepare/tmp": {"work/prepare/tmp", false}},
 		"close":   {"/workspace": {"", true}},
 	}
 	for _, role := range []string{"collect", "publish"} {
