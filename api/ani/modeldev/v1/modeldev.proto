@@ -467,6 +467,10 @@ message ListExecutionsRequest {
   // Case-insensitive substring of the admitted execution name. Filtering
   // happens before the page window, so total reports the matching count.
   optional string name = 5;
+  // An absent kind returns every execution. A specified kind is applied before
+  // Total and the page window, and UNSPECIFIED is rejected rather than treated
+  // as "no filter".
+  optional ani.training.v1.ExecutionKind kind = 6;
 }
 
 message ListExecutionsResponse {

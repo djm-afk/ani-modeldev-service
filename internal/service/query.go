@@ -567,6 +567,18 @@ func (query *Query) ListExecutions(ctx context.Context, request *modeldevv1.List
 		// folded once here rather than per scanned row.
 		filter.Name = strings.ToLower(*request.Name)
 	}
+	if request.Kind != nil {
+		// UNSPECIFIED is the enum placeholder, not a task type; treating it as
+		// "no filter" would silently widen the page.
+		if *request.Kind == trainingv1.ExecutionKind_EXECUTION_KIND_UNSPECIFIED {
+			return nil, status.Error(codes.InvalidArgument, "invalid kind filter")
+		}
+		kind, known := trainingv1.ExecutionKind_name[int32(*request.Kind)]
+		if !known {
+			return nil, status.Error(codes.InvalidArgument, "invalid kind filter")
+		}
+		filter.Kind = strings.TrimPrefix(kind, "EXECUTION_KIND_")
+	}
 	if query == nil || query.repository == nil {
 		return nil, queryError(biz.ErrPersistence, scope.RequestID)
 	}
