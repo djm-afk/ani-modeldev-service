@@ -23,12 +23,25 @@ func gpuReleaseID(value string) bool {
 	return err == nil && id != uuid.Nil && id.String() == value
 }
 
+// runtimeNeverMaterialized reports a dispatched execution that failed before any
+// runtime fact existed. The workspace is bound by Prepare, so its absence proves
+// no trainer object was ever created: nothing to clean up and nothing to wait
+// for. Without this branch such an execution (a failure in the first pipeline
+// steps) keeps its GPU quota charge forever, because the cleanup receipts below
+// can never be produced.
+func runtimeNeverMaterialized(state biz.ExecutionRuntime) bool {
+	return state.Workspace == nil && state.Training == nil && state.TrainingHandle == nil && state.Observation == nil && state.ComputeCleanup == nil && state.StepExitCleanup == nil
+}
+
 func gpuReleaseReady(execution biz.Execution, state biz.ExecutionRuntime) bool {
 	if execution.Snapshot.ComputeOrigin.DeviceMode != "gpu" || execution.Snapshot.GPU == nil || execution.Snapshot.GPU.ValidateFor(execution.Snapshot.ComputeOrigin) != nil || state.ClosedAt == nil || state.CloseGeneration == 0 || !gpuReleaseID(state.CloseOperationID) || state.CloseOperationID == execution.OperationID || state.CloseEvidence == nil || state.CloseReviewReason != "" || !runtimeCreationSettled(state) {
 		return false
 	}
 	if state.CloseEvidence.NoDispatch {
 		return state.Workspace == nil && state.Training == nil && state.TrainingHandle == nil && state.Observation == nil && state.ComputeCleanup == nil
+	}
+	if runtimeNeverMaterialized(state) {
+		return true
 	}
 	// readRuntime independently validates the complete committed close and the
 	// original cleanup target/exit graph before this post-close extension runs.
