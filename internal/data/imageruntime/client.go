@@ -20,7 +20,9 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	imagev1 "github.com/zhangzhe-ctrl/ani-resource-service/api/image/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -161,7 +163,7 @@ func (c *Client) ResolveTrainingImage(ctx context.Context, tenantID, imageID, sc
 		TargetPlatform: &imagev1.ImagePlatform{Os: target.OS, Architecture: target.Architecture, Variant: target.Variant},
 	})
 	if err != nil {
-		return biz.TrainingImageResolution{}, err
+		return biz.TrainingImageResolution{}, resolveFailure(err)
 	}
 	platform := resolved.GetSelectedPlatform()
 	reference, digest := resolved.GetResolvedReference(), resolved.GetDigest()
@@ -185,6 +187,19 @@ func (c *Client) ResolveTrainingImage(ctx context.Context, tenantID, imageID, sc
 		RegistryAuthority: registry,
 		Platform:          target,
 	}, nil
+}
+
+// resolveFailure separates a definitive catalogue answer from a transport
+// failure. An image the tenant cannot see, an unusable selection or an
+// unsupported platform will not improve by retrying, so it becomes a plan
+// rejection; only availability-class failures stay retryable.
+func resolveFailure(err error) error {
+	switch status.Code(err) {
+	case codes.NotFound, codes.InvalidArgument, codes.FailedPrecondition:
+		return biz.ErrImplementationUnavailable
+	default:
+		return err
+	}
 }
 
 // EnsurePullSecret asks Resource to write the shared tenant pull Secret and
