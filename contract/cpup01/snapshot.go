@@ -20,16 +20,19 @@ const SnapshotSchemaVersion = "ani.modeldev.execution-spec.v3"
 // Snapshot freezes trusted candidate identity and the entire executable plan.
 // Every resource UID created after admission belongs to runtime facts only.
 type Snapshot struct {
-	SchemaVersion    string                     `json:"schema_version"`
-	Kind             string                     `json:"kind"`
-	DeliveryMode     string                     `json:"delivery_mode"`
-	IdentityRef      IdentityRef                `json:"identity_ref"`
-	Implementation   ImplementationSnapshot     `json:"implementation"`
-	ComputeOrigin    ComputeOrigin              `json:"compute_origin"`
-	Timing           Timing                     `json:"timing"`
-	RuntimePlan      RuntimePlan                `json:"runtime_plan"`
-	Input            InputRef                   `json:"input"`
-	Program          ProgramRef                 `json:"program"`
+	SchemaVersion  string                 `json:"schema_version"`
+	Kind           string                 `json:"kind"`
+	DeliveryMode   string                 `json:"delivery_mode"`
+	IdentityRef    IdentityRef            `json:"identity_ref"`
+	Implementation ImplementationSnapshot `json:"implementation"`
+	ComputeOrigin  ComputeOrigin          `json:"compute_origin"`
+	Timing         Timing                 `json:"timing"`
+	RuntimePlan    RuntimePlan            `json:"runtime_plan"`
+	Input          InputRef               `json:"input"`
+	Program        ProgramRef             `json:"program"`
+	// TrainingImage carries the catalogue resolution facts of a general-training
+	// image. It is absent for finetuning, whose trusted image is material-fixed.
+	TrainingImage    *TrainingImageFacts        `json:"training_image,omitempty"`
 	Resources        CPUResources               `json:"resources"`
 	Environment      EnvironmentBindingSnapshot `json:"environment"`
 	Workspace        WorkspaceContract          `json:"workspace"`
@@ -172,6 +175,10 @@ func (snapshot Snapshot) canonical(requireRuntime bool) ([]byte, error) {
 	sort.Strings(snapshot.RuntimePlan.TargetJobs)
 	snapshot.Program.ResolvedArgs = append([]string{}, snapshot.Program.ResolvedArgs...)
 	snapshot.Program.ResolvedParameters = canonicalParameters(snapshot.Program.ResolvedParameters)
+	if snapshot.TrainingImage != nil {
+		facts := snapshot.TrainingImage.canonical()
+		snapshot.TrainingImage = &facts
+	}
 	snapshot.OutputContract.RequiredFiles = append([]RequiredOutput{}, snapshot.OutputContract.RequiredFiles...)
 	sort.Slice(snapshot.OutputContract.RequiredFiles, func(i, j int) bool {
 		return snapshot.OutputContract.RequiredFiles[i].RelativePath < snapshot.OutputContract.RequiredFiles[j].RelativePath
@@ -323,9 +330,18 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 		return invalid("resolved parameters")
 	}
 	if snapshot.Kind == "FINETUNING" {
+		// The finetuning image is frozen by its material; catalogue facts belong
+		// to general training only.
+		if snapshot.TrainingImage != nil {
+			return invalid("training image")
+		}
 		if field := invalidFinetuningSnapshot(snapshot); field != "" {
 			return invalid(field)
 		}
+	} else if snapshot.TrainingImage == nil || snapshot.TrainingImage.validate(snapshot.Program) != nil {
+		// General training always runs a catalogue image resolved by Resource:
+		// the material default is not a frozen digest and cannot stand alone.
+		return invalid("training image")
 	}
 	if field := invalidCPUResources(snapshot.Resources); field != "" {
 		return invalid(field)

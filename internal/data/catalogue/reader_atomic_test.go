@@ -18,7 +18,7 @@ import (
 func atomicMaterial(t *testing.T, generation int) (cpup01.ImplementationMaterial, []byte) {
 	t.Helper()
 	document := conformance.MaterialV21()
-	document.Program.ImageID = fmt.Sprintf("img_%032x", generation+1)
+	document.Training.DefaultImage.ImageID = fmt.Sprintf("img_%032x", generation+1)
 	document.Workspace.StorageClass = fmt.Sprintf("material-generation-%d", generation)
 	raw, err := document.Canonical()
 	if err != nil {

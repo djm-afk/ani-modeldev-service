@@ -47,7 +47,7 @@ func TestInstalledFiniteImplementationMaterialHasExactBytesAndFreshCopies(t *tes
 	if err != nil || !reflect.DeepEqual(first, want) {
 		t.Fatal(err)
 	}
-	first.Program.Command[0] = "caller-mutation"
+	first.Training.Command[0] = "caller-mutation"
 	first.OutputContract.RequiredFiles[0].RelativePath = "caller-mutation"
 	again, err := catalogue.ReadImplementationMaterial(context.Background(), directory, "builtin.mlp", "cpu")
 	if err != nil || !reflect.DeepEqual(again, want) {
@@ -55,7 +55,7 @@ func TestInstalledFiniteImplementationMaterialHasExactBytesAndFreshCopies(t *tes
 	}
 	// Installing another finite device file cannot replace the CPU selection.
 	other := conformance.MaterialV21()
-	other.Program.ImageID = "img_66666666666666666666666666666666"
+	other.Training.DefaultImage.ImageID = "img_66666666666666666666666666666666"
 	otherRaw, err := other.Canonical()
 	if err != nil {
 		t.Fatal(err)

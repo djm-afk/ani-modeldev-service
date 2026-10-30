@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"errors"
 	"context"
 
 	"github.com/jackc/pgx/v5"
@@ -61,6 +62,10 @@ func (r *Repository) ListQueryRecords(ctx context.Context, tenant string, filter
 			}
 			cursor = next
 			record, err := queryRecord(ctx, transaction, tenantID, row.ExecutionID)
+			if errors.Is(err, ErrUndecodableExecution) {
+				// Legacy history stays visible to nobody but remains untouched.
+				continue
+			}
 			if err != nil {
 				return nil, err
 			}
@@ -122,6 +127,9 @@ func (r *Repository) CountQueryRecords(ctx context.Context, tenant string, filte
 			}
 			cursor = next
 			record, err := queryRecord(ctx, transaction, tenantID, row.ExecutionID)
+			if errors.Is(err, ErrUndecodableExecution) {
+				continue
+			}
 			if err != nil {
 				return 0, err
 			}

@@ -18,13 +18,26 @@ const MaterialSchemaVersion = "ani.modeldev.implementation-material.v3"
 // no catalogue binding, approval state, training preset or parameter whitelist.
 // Resources and timing are compiled for each execution from their real owners.
 type ImplementationMaterial struct {
-	SchemaVersion      string                        `json:"schema_version"`
-	Implementation     ImplementationSnapshot        `json:"implementation"`
-	Program            MaterialProgram               `json:"program"`
+	SchemaVersion  string                 `json:"schema_version"`
+	Implementation ImplementationSnapshot `json:"implementation"`
+	// Program is the finetuning chain's frozen image identity. General training
+	// selects from the catalogue instead, so exactly one of Program/Training is
+	// present and the two chains never share a material shape.
+	Program            *MaterialProgram              `json:"program,omitempty"`
+	Training           *TrainingMaterial             `json:"training,omitempty"`
 	Workspace          WorkspaceContract             `json:"workspace"`
 	ComponentResources map[string]ComponentResources `json:"component_resources"`
 	OutputContract     OutputContract                `json:"output_contract"`
 	Finetuning         *FinetuningMaterial           `json:"finetuning,omitempty"`
+}
+
+// TrainingMaterial is the trusted general-training contract. The image is a
+// catalogue default resolved by Resource, so a stale material cannot pin an old
+// digest; the command, argument template and output contract stay fixed.
+type TrainingMaterial struct {
+	DefaultImage DefaultTrainingImage `json:"default_image"`
+	Command      []string             `json:"command"`
+	ArgsTemplate []MaterialArgument   `json:"args_template"`
 }
 
 type MaterialProgram struct {
@@ -91,11 +104,23 @@ func ParseMaterial(raw []byte) (ImplementationMaterial, string, error) {
 
 func (m ImplementationMaterial) Canonical() ([]byte, error) {
 	definition, ok := Implementations()[m.Implementation.ImplementationID]
-	if !ok || m.SchemaVersion != MaterialSchemaVersion || m.Implementation.Version != definition.Version || m.Implementation.ParameterContractVersion != definition.ParameterContractVersion || !canonicalMaterialID(m.Implementation.PipelineID) || !canonicalMaterialID(m.Implementation.PipelineVersionID) || !snapshotSHA256Pattern.MatchString(m.Implementation.PipelineIRSHA256) || !validRegisteredImage(m.Program.ImageID, m.Program.ImageVersion, m.Program.ImageScope) || !validSnapshotImage(m.Program.ImageDigest) || !validMaterialProgram(m.Program.Command, m.Program.ArgsTemplate, definition.Kind == "FINETUNING") || invalidWorkspaceContract(m.Workspace) != "" || invalidOutputContractForKind(definition.Kind, m.OutputContract) != "" {
+	if !ok || m.SchemaVersion != MaterialSchemaVersion || m.Implementation.Version != definition.Version || m.Implementation.ParameterContractVersion != definition.ParameterContractVersion || !canonicalMaterialID(m.Implementation.PipelineID) || !canonicalMaterialID(m.Implementation.PipelineVersionID) || !snapshotSHA256Pattern.MatchString(m.Implementation.PipelineIRSHA256) || invalidWorkspaceContract(m.Workspace) != "" || invalidOutputContractForKind(definition.Kind, m.OutputContract) != "" {
 		return nil, ErrInvalidArgument
 	}
-	if (definition.Kind == "FINETUNING") != (m.Finetuning != nil) {
-		return nil, ErrInvalidArgument
+	if definition.Kind == "GENERAL_TRAINING" {
+		if m.Training == nil || m.Program != nil || m.Finetuning != nil {
+			return nil, ErrInvalidArgument
+		}
+		if m.Training.DefaultImage.validate() != nil || !validMaterialProgram(m.Training.Command, m.Training.ArgsTemplate, false) {
+			return nil, ErrInvalidArgument
+		}
+	} else {
+		if m.Program == nil || m.Training != nil || m.Finetuning == nil {
+			return nil, ErrInvalidArgument
+		}
+		if !validRegisteredImage(m.Program.ImageID, m.Program.ImageVersion, m.Program.ImageScope) || !validSnapshotImage(m.Program.ImageDigest) || !validMaterialProgram(m.Program.Command, m.Program.ArgsTemplate, true) {
+			return nil, ErrInvalidArgument
+		}
 	}
 	if ValidateComponentResources(definition.Kind, m.ComponentResources) != nil {
 		return nil, ErrInvalidArgument

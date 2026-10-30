@@ -2,4 +2,4 @@
 package conformance
 
 const IntentSHA256V1 = "b337b5e1f8025d381086bd4e157b32740746752b54ee457fde2d6f342715f2f0"
-const SnapshotSHA256V1 = "87fdd13aaa6cc07572cc8393ee7b8ac9161de7e05146c210247003f7bcbcd770"
+const SnapshotSHA256V1 = "2f9c688ca06e67e69a8c4481865dbc4dae6d2e2b6fe673caf69d84490c036a35"

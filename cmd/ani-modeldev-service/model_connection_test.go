@@ -80,7 +80,7 @@ func TestIntermediateCommandBuilderCannotOpenUnownedModelConnection(t *testing.T
 	if _, err := buildCommandServerWithCapabilities(nil, c, nil, nil, nil, nil, nil); err == nil {
 		t.Fatal("intermediate builder silently created a client without cleanup")
 	}
-	if _, err := buildCommandServerWithCapabilitiesAndModelFacts(nil, c, nil, nil, nil, nil, nil, nil); err == nil {
+	if _, err := buildCommandServerWithCapabilitiesAndModelFacts(nil, c, nil, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatal("live configuration accepted without shared read dependency")
 	}
 }

@@ -354,7 +354,17 @@ func executionView(record biz.QueryRecord) (*modeldevv1.ExecutionView, error) {
 	if !valid {
 		return nil, biz.ErrPersistence
 	}
-	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageId: value.Snapshot.Program.ImageID, ImageVersion: value.Snapshot.Program.ImageVersion, ImageScope: string(value.Snapshot.Program.ImageScope), States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
+	// The executable reference carries the frozen digest. The catalogue
+	// authority is published alongside it so the detail view never re-derives
+	// the host from the reference. Finetuning publishes neither.
+	trainingDigest, trainingAuthority := "", ""
+	if facts := value.Snapshot.TrainingImage; facts != nil {
+		trainingAuthority = facts.RegistryAuthority
+		if at := strings.LastIndex(value.Snapshot.Program.ImageDigest, "@"); at >= 0 {
+			trainingDigest = value.Snapshot.Program.ImageDigest[at+1:]
+		}
+	}
+	view := &modeldevv1.ExecutionView{Identity: &trainingv1.ExecutionIdentity{OperationId: value.OperationID, ExecutionId: value.ExecutionID, ExecutionSpecHash: value.SpecHash}, Name: value.Intent.Name, Kind: trainingv1.ExecutionKind_EXECUTION_KIND_GENERAL_TRAINING, ImplementationId: value.Snapshot.Implementation.ImplementationID, ComputePresetId: value.Snapshot.ComputeOrigin.ComputePresetID, InputVersionId: value.Snapshot.Input.InputVersionID, ImageId: value.Snapshot.Program.ImageID, ImageVersion: value.Snapshot.Program.ImageVersion, ImageScope: string(value.Snapshot.Program.ImageScope), TrainingImageDigest: trainingDigest, TrainingImageRegistryAuthority: trainingAuthority, States: states, CloseGeneration: record.Runtime.CloseGeneration, AcceptedAt: timestamppb.New(value.AcceptedAt), DeadlineAt: timestamppb.New(value.Snapshot.DeadlineAt), ObservedAt: timestamppb.New(value.AcceptedAt)}
 	view.ParameterContractVersion = value.Snapshot.Implementation.ParameterContractVersion
 	encoded, err := contractpb.EncodeSnapshot(value.Snapshot)
 	if err != nil {

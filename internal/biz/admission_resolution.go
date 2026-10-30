@@ -34,6 +34,9 @@ type TenantAdmissionFacts struct {
 	InputFilePath       string
 	OutputDirectoryPath string
 	Timing              cpup01.TimingConfiguration
+	// TargetPlatform is the pinned OCI platform of this environment. It is
+	// required for general training, whose image is resolved per execution.
+	TargetPlatform cpup01.TrainingPlatform
 }
 
 type AdmissionResolution struct {
@@ -49,16 +52,44 @@ type AdmissionInputReader interface {
 type AdmissionFactsReader interface {
 	ReadAdmissionFacts(context.Context, string, string) (TenantAdmissionFacts, error)
 }
+
+// TrainingImageResolution is Resource's answer for one catalogue selection. It
+// carries the authoritative registry authority, so no consumer re-derives the
+// host from the reference.
+type TrainingImageResolution struct {
+	ImageID           string
+	Scope             string
+	ImageVersion      int64
+	Reference         string
+	Digest            string
+	RegistryAuthority string
+	Platform          cpup01.TrainingPlatform
+}
+
+// TrainingImageResolver is the narrow read-only catalogue port. Prepare uses it
+// and nothing else: it never writes a Secret and never touches Kubernetes.
+type TrainingImageResolver interface {
+	ResolveTrainingImage(ctx context.Context, tenantID, imageID, scope string, target cpup01.TrainingPlatform) (TrainingImageResolution, error)
+}
+
+// TrainingImageEnsurer is the narrow write port used only after durable
+// acceptance, at the runtime creation boundary. Resource remains the single
+// Secret writer; ModelDev receives only the non-sensitive reference.
+type TrainingImageEnsurer interface {
+	EnsurePullSecret(ctx context.Context, tenantID, clusterID, namespace, namespaceUID, registry string) (string, error)
+}
+
 type AdmissionResolver struct {
 	materials AdmissionMaterialReader
 	inputs    AdmissionInputReader
 	facts     AdmissionFactsReader
 	models    FinetuningModelFactsReader
+	images    TrainingImageResolver
 	limits    cpup01.ContentLimits
 }
 
-func NewAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader, limits cpup01.ContentLimits) *AdmissionResolver {
-	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts, limits: limits}
+func NewAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader, images TrainingImageResolver, limits cpup01.ContentLimits) *AdmissionResolver {
+	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts, images: images, limits: limits}
 }
 
 func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissionInput) (cpup01.PreparedCandidate, error) {
@@ -145,16 +176,22 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 		}
 	}
 	var args []string
+	var program cpup01.ProgramRef
+	var trainingImage *cpup01.TrainingImageFacts
 	if fine != nil {
 		args, err = resolveFinetuningArguments(material.Program.ArgsTemplate, input, fine.BaseModel, fine.TemplatePlan)
+		if err != nil {
+			return cpup01.PreparedCandidate{}, err
+		}
+		program = cpup01.ProgramRef{ImageID: material.Program.ImageID, ImageVersion: material.Program.ImageVersion, ImageScope: material.Program.ImageScope, ImageDigest: material.Program.ImageDigest, Command: append([]string{}, material.Program.Command...), ResolvedArgs: args, ResolvedParameters: parameters}
 	} else {
-		args, err = resolveAdmissionArguments(material.Program.ArgsTemplate, parameters, facts, input)
-	}
-	if err != nil {
-		return cpup01.PreparedCandidate{}, err
+		program, trainingImage, err = r.resolveTrainingProgram(ctx, identity.TenantID, intent, material, parameters, facts, input)
+		if err != nil {
+			return cpup01.PreparedCandidate{}, err
+		}
 	}
 	memory := request.ComputeOrigin.MemoryMiB * 1024 * 1024
-	snapshot := cpup01.Snapshot{SchemaVersion: cpup01.SnapshotSchemaVersion, Limits: limits, Kind: intent.Kind, DeliveryMode: "SAVE_ARTIFACTS", IdentityRef: identity, Implementation: material.Implementation, ComputeOrigin: request.ComputeOrigin, Timing: timing, Input: input, Program: cpup01.ProgramRef{ImageID: material.Program.ImageID, ImageVersion: material.Program.ImageVersion, ImageScope: material.Program.ImageScope, ImageDigest: material.Program.ImageDigest, Command: append([]string{}, material.Program.Command...), ResolvedArgs: args, ResolvedParameters: parameters}, Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: request.ComputeOrigin.CPUMillis, LimitMillicpu: request.ComputeOrigin.CPUMillis, RequestMemoryBytes: memory, LimitMemoryBytes: memory}, Environment: facts.Environment, Workspace: facts.Workspace, PublicationScope: facts.PublicationScope, OutputContract: material.OutputContract, DeadlineAt: timing.ExecutionDeadlineAt, Finetuning: fine}
+	snapshot := cpup01.Snapshot{SchemaVersion: cpup01.SnapshotSchemaVersion, Limits: limits, Kind: intent.Kind, DeliveryMode: "SAVE_ARTIFACTS", IdentityRef: identity, Implementation: material.Implementation, ComputeOrigin: request.ComputeOrigin, Timing: timing, Input: input, Program: program, TrainingImage: trainingImage, Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: request.ComputeOrigin.CPUMillis, LimitMillicpu: request.ComputeOrigin.CPUMillis, RequestMemoryBytes: memory, LimitMemoryBytes: memory}, Environment: facts.Environment, Workspace: facts.Workspace, PublicationScope: facts.PublicationScope, OutputContract: material.OutputContract, DeadlineAt: timing.ExecutionDeadlineAt, Finetuning: fine}
 	gpuRequest, err := cpup01.GPURequestFor(request.ComputeOrigin)
 	if err != nil {
 		return cpup01.PreparedCandidate{}, ErrUnsupportedDevice
@@ -230,6 +267,38 @@ func (r *AdmissionResolver) Finalize(ctx context.Context, candidate cpup01.Prepa
 		return AdmissionResolution{}, err
 	}
 	return AdmissionResolution{Snapshot: normalized, SpecHash: hash}, nil
+}
+
+func (r *AdmissionResolver) resolveTrainingProgram(ctx context.Context, tenantID string, intent cpup01.Intent, material cpup01.ImplementationMaterial, parameters []cpup01.Parameter, facts TenantAdmissionFacts, input cpup01.InputRef) (cpup01.ProgramRef, *cpup01.TrainingImageFacts, error) {
+	training := material.Training
+	if training == nil || r.images == nil || facts.TargetPlatform.Validate() != nil {
+		return cpup01.ProgramRef{}, nil, ErrAdmissionEnvironmentNotReady
+	}
+	imageID, scope := training.DefaultImage.ImageID, string(training.DefaultImage.Scope)
+	if intent.TrainingImageID != nil {
+		imageID, scope = *intent.TrainingImageID, *intent.TrainingImageScope
+	}
+	resolved, err := r.images.ResolveTrainingImage(ctx, tenantID, imageID, scope, facts.TargetPlatform)
+	if err != nil {
+		return cpup01.ProgramRef{}, nil, err
+	}
+	// Re-check the answer: a mismatched identity, platform or reference must
+	// never be frozen into an execution that later pulls something else.
+	if resolved.ImageID != imageID || resolved.Scope != scope || resolved.Platform != facts.TargetPlatform || resolved.ImageVersion <= 0 ||
+		resolved.RegistryAuthority == "" || cpup01.NormalizeRegistryAuthority(resolved.RegistryAuthority) != resolved.RegistryAuthority ||
+		!strings.HasPrefix(resolved.Reference, resolved.RegistryAuthority+"/") || !strings.HasSuffix(resolved.Reference, "@"+resolved.Digest) {
+		return cpup01.ProgramRef{}, nil, ErrImplementationUnavailable
+	}
+	secretRef, err := cpup01.PullSecretName(tenantID, facts.Environment.ClusterID, facts.Environment.NamespaceName, resolved.RegistryAuthority)
+	if err != nil {
+		return cpup01.ProgramRef{}, nil, ErrAdmissionEnvironmentNotReady
+	}
+	args, err := resolveAdmissionArguments(training.ArgsTemplate, parameters, facts, input)
+	if err != nil {
+		return cpup01.ProgramRef{}, nil, err
+	}
+	return cpup01.ProgramRef{ImageID: resolved.ImageID, ImageVersion: resolved.ImageVersion, ImageScope: cpup01.ImageScope(resolved.Scope), ImageDigest: resolved.Reference, Command: append([]string{}, training.Command...), ResolvedArgs: args, ResolvedParameters: parameters},
+		&cpup01.TrainingImageFacts{RegistryAuthority: resolved.RegistryAuthority, Platform: resolved.Platform, ProtocolVersion: cpup01.TrainingImageProtocolVersion, PullSecretRef: secretRef}, nil
 }
 
 func canonicalResolutionIntent(original cpup01.Intent) (cpup01.Intent, error) {

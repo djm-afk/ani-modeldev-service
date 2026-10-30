@@ -209,6 +209,13 @@ func databaseID(value string) (pgtype.UUID, error) {
 	return id, nil
 }
 
+// ErrUndecodableExecution marks a stored row whose frozen payload predates the
+// active contract (for example, a training snapshot accepted before the
+// catalogue image selection existed). The hard switch rejects it as an
+// executable plan, but it must not make every list or lookup fail: legacy rows
+// are inert history, not corruption of the current tenant.
+var ErrUndecodableExecution = errors.New("stored execution predates the active contract")
+
 func executionFromRow(row executionsql.ModeldevExecution) (biz.Execution, error) {
 	if !row.TenantID.Valid || !row.ExecutionID.Valid || !row.OperationID.Valid || !row.AcceptedAt.Valid || row.AcceptedAt.InfinityModifier != pgtype.Finite {
 		return biz.Execution{}, biz.ErrPersistence
@@ -225,11 +232,14 @@ func executionFromRow(row executionsql.ModeldevExecution) (biz.Execution, error)
 	execution.Intent, intentErr = cpup01.DecodeCanonicalIntent(row.IntentCanonical)
 	execution.Snapshot, snapshotErr = cpup01.DecodeCanonicalSnapshot(row.SnapshotCanonical)
 	if intentErr != nil || snapshotErr != nil {
+		if errors.Is(intentErr, cpup01.ErrInvalidArgument) || errors.Is(snapshotErr, cpup01.ErrInvalidArgument) {
+			return biz.Execution{}, ErrUndecodableExecution
+		}
 		return biz.Execution{}, biz.ErrPersistence
 	}
 	intent, snapshot, err := execution.Admission.CanonicalPayloads()
 	if err != nil || !bytes.Equal(intent, row.IntentCanonical) || !bytes.Equal(snapshot, row.SnapshotCanonical) {
-		return biz.Execution{}, biz.ErrPersistence
+		return biz.Execution{}, ErrUndecodableExecution
 	}
 	return execution, nil
 }

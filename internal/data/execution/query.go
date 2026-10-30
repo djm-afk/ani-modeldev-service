@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"errors"
 	"context"
 
 	"github.com/jackc/pgx/v5"
@@ -30,6 +31,11 @@ func (r *Repository) GetQueryRecord(ctx context.Context, tenant, execution strin
 	}
 	defer rollbackExecutionTransaction(transaction)
 	result, err := queryRecord(ctx, transaction, tenantID, executionID)
+	if errors.Is(err, ErrUndecodableExecution) {
+		// A retired payload is not a readable execution; it is also not a
+		// server failure the caller can retry.
+		return biz.QueryRecord{}, biz.ErrExecutionNotFound
+	}
 	if err != nil {
 		return biz.QueryRecord{}, err
 	}

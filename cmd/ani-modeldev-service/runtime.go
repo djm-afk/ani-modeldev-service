@@ -12,6 +12,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/imageruntime"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
@@ -28,6 +29,13 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return nil, err
 	}
+	images, ensurer, closeImages, err := loadImageRuntime(config.ImageRuntime)
+	if err != nil {
+		clients.close()
+		return nil, errors.New("Resource image runtime connection invalid")
+	}
+	closeWithImages := clients.close
+	clients.close = sync.OnceFunc(func() { closeImages(); closeWithImages() })
 	modelClient, modelFacts, closeModel, err := loadModelResources(config.Command, config.Runtime)
 	if err != nil {
 		clients.close()
@@ -87,6 +95,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed runtime configuration invalid")
 	}
+	runtime = runtime.WithPullSecrets(ensurer)
 	if modelClient != nil {
 		storageHTTP, ok := clients.store.Options().HTTPClient.(*http.Client)
 		if !ok {
@@ -124,9 +133,9 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if modelClient != nil {
 		operations.WithRegistrationRecovery(runtime, admissions)
 	}
-	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, config.Runtime, middlewares...)
+	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, images, config.Runtime, middlewares...)
 	if err != nil {
-		return failed("managed command listener configuration invalid")
+		return failed("managed command listener configuration invalid: " + err.Error())
 	}
 	var releaseReconcilers []*biz.GPUReleaseReconciler
 	if gpuRelease != nil {
@@ -227,4 +236,25 @@ func (worker *runtimeWorker) unavailable() {
 	defer worker.mu.Unlock()
 	worker.stopped = true
 	worker.ready.Set(false)
+}
+
+// loadImageRuntime assembles the narrow Resource caller. It is optional only
+// for deployments that never accept general training; training without it
+// fails closed at admission instead of running against a local image identity.
+func loadImageRuntime(config *conf.ImageRuntimeConnection) (biz.TrainingImageResolver, biz.TrainingImageEnsurer, func(), error) {
+	if config == nil {
+		return nil, nil, func() {}, nil
+	}
+	client, closeClient, err := imageruntime.New(imageruntime.Config{
+		Endpoint:        config.Endpoint,
+		CAFile:          config.CaFile,
+		CertificateFile: config.CertificateFile,
+		PrivateKeyFile:  config.PrivateKeyFile,
+		ServerName:      config.ServerName,
+		Timeout:         config.Timeout.AsDuration(),
+	})
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return client, client, closeClient, nil
 }

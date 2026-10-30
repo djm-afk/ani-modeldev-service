@@ -83,6 +83,13 @@ func CompileRuntimePlan(snapshot cpup01.Snapshot) (cpup01.RuntimePlan, error) {
 	}
 	queue := "default"
 	podMetadata := map[string]any{"finalizers": []string{"modeldev.ani.io/training-exit-evidence"}}
+	if snapshot.TrainingImage != nil {
+		// The general-training Pod must reference the shared tenant pull Secret
+		// by name. The name is derived offline from the same rule Resource uses;
+		// the Secret material itself never enters this plan. The finetuning
+		// chain keeps its own unchanged template.
+		pod["imagePullSecrets"] = []any{map[string]any{"name": snapshot.TrainingImage.PullSecretRef}}
+	}
 	if snapshot.GPU != nil {
 		gpu := snapshot.GPU.Execution
 		queue = gpu.QueueName

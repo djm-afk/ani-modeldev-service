@@ -269,6 +269,10 @@ message UserIntent {
   oneof parameters { MLPParameters mlp = 14; FinetuningParameters sft_lora = 15; }
   optional uint64 timeout_seconds = 16;
   optional string finetuning_template = 17;
+  // Catalogue training image selection. General training accepts the pair or
+  // neither (trusted material default); finetuning rejects both.
+  optional string training_image_id = 18;
+  optional string training_image_scope = 19;
 }
 
 message MLPParameters {
@@ -416,6 +420,11 @@ message ExecutionView {
   string image_id = 33;
   int64 image_version = 34;
   string image_scope = 35;
+  // Catalogue image resolution facts of a general-training execution. The
+  // digest is the frozen content digest; the authority is Resource's answer.
+  // Both stay empty for finetuning, whose image identity is material-fixed.
+  string training_image_digest = 36;
+  string training_image_registry_authority = 37;
 }
 
 // BaseModelIdentity is the publishable half of BaseModelRef. It names the base
@@ -783,6 +792,25 @@ message ExecutionSnapshot {
   RuntimePlan runtime_plan = 18;
   GPUPlan gpu = 19;
   ContentLimits limits = 20;
+  // Catalogue resolution facts of a general-training image. Absent for
+  // finetuning, whose image identity is frozen by its material.
+  TrainingImageFacts training_image = 21;
+}
+
+// TrainingPlatform is the resolved target platform of the selected image.
+message TrainingPlatform {
+  string os = 1;
+  string architecture = 2;
+  string variant = 3;
+}
+
+message TrainingImageFacts {
+  // Resource's authoritative registry host. Consumers never re-derive it.
+  string registry_authority = 1;
+  TrainingPlatform platform = 2;
+  string protocol_version = 3;
+  // Non-sensitive shared pull Secret name; it grants nothing by itself.
+  string pull_secret_ref = 4;
 }
 
 message ContentLimits { int64 max_content_bytes = 1; }

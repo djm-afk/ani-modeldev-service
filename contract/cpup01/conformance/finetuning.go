@@ -20,10 +20,12 @@ func FinetuningManagedSettingsV1() cpup01.FinetuningManagedSettings {
 
 func FinetuningMaterialV21() cpup01.ImplementationMaterial {
 	material := MaterialV21()
+	material.Training = nil
+	image := SnapshotV1().Program
+	material.Program = &cpup01.MaterialProgram{ImageID: image.ImageID, ImageVersion: image.ImageVersion, ImageScope: image.ImageScope, ImageDigest: image.ImageDigest, Command: []string{"/actual/image/python", "-I", "/opt/ani-modeldev/training/finetuning/finetune_entry.py"}}
 	material.ComponentResources = ComponentResourceFixtures("FINETUNING")
 	material.Implementation.ImplementationID = "builtin.sft_lora"
 	material.Implementation.ParameterContractVersion = cpup01.FinetuningParameterContractVersion
-	material.Program.Command = []string{"/actual/image/python", "-I", "/opt/ani-modeldev/training/finetuning/finetune_entry.py"}
 
 	arguments := func(mode string) []cpup01.MaterialArgument {
 		return []cpup01.MaterialArgument{{Literal: mode}, {Literal: "--configuration"}, {Literal: "/workspace/inputs/finetune_configuration.json"}, {Literal: "--workspace"}, {Literal: "/workspace"}, {Literal: "--dataset-manifest"}, {Literal: "/workspace/inputs/dataset-manifest.json"}, {Literal: "--expected-dataset-manifest-sha256"}, {Source: "DATASET_MANIFEST_SHA256"}, {Literal: "--expected-base-manifest-sha256"}, {Source: "BASE_MANIFEST_SHA256"}, {Literal: "--expected-template-plan-sha256"}, {Source: "TEMPLATE_PLAN_SHA256"}}
@@ -55,6 +57,9 @@ func FinetuningSnapshotV1() cpup01.Snapshot {
 	material := FinetuningMaterialV21()
 	intent := FinetuningIntentV1()
 	snapshot.Kind = "FINETUNING"
+	// Finetuning keeps the material-fixed image; the catalogue selection facts
+	// belong to general training only.
+	snapshot.TrainingImage = nil
 	snapshot.Implementation = material.Implementation
 	_, snapshot.IdentityRef.IntentHash, _ = cpup01.CanonicalIntent(intent)
 	snapshot.Input.Format = "JSON"
