@@ -1,6 +1,8 @@
 package trainer
 
 import (
+	"strings"
+
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -26,7 +28,7 @@ func ValidatePodTemplate(expected corev1.PodSpec, actual corev1.PodSpec) error {
 		!reflect.DeepEqual(worker.ReadinessProbe, wanted.ReadinessProbe) || !reflect.DeepEqual(worker.StartupProbe, wanted.StartupProbe) ||
 		worker.Stdin != wanted.Stdin || worker.StdinOnce != wanted.StdinOnce || worker.TTY != wanted.TTY ||
 		!reflect.DeepEqual(actual.Volumes, expected.Volumes) || !reflect.DeepEqual(actual.SecurityContext, expected.SecurityContext) ||
-		!reflect.DeepEqual(actual.ImagePullSecrets, expected.ImagePullSecrets) ||
+		!trainingPullSecretsCovered(expected.ImagePullSecrets, actual.ImagePullSecrets) ||
 		actual.ServiceAccountName != expected.ServiceAccountName || actual.SchedulerName != expected.SchedulerName ||
 		!reflect.DeepEqual(actual.RuntimeClassName, expected.RuntimeClassName) || !reflect.DeepEqual(actual.NodeSelector, expected.NodeSelector) ||
 		actual.RestartPolicy != corev1.RestartPolicyNever || actual.AutomountServiceAccountToken == nil || *actual.AutomountServiceAccountToken ||
@@ -34,6 +36,49 @@ func ValidatePodTemplate(expected corev1.PodSpec, actual corev1.PodSpec) error {
 		return biz.ErrRuntimeConflict
 	}
 	return nil
+}
+
+// trainingPullSecretsCovered accepts the frozen references plus whatever the API
+// server copied from the Pod's ServiceAccount. A Pod that declares no
+// imagePullSecrets of its own inherits the ServiceAccount's registry credential
+// at admission, so an empty expectation must still accept that single
+// credential; the finetuning template deliberately carries none. Any reference
+// outside the expected set that is not a ServiceAccount inheritance is still a
+// real substitution and stays rejected. The adapter holds no ServiceAccount read
+// permission, so inheritance is recognised by its platform-prefixed name rather
+// than by reading the account.
+func trainingPullSecretsCovered(expected, actual []corev1.LocalObjectReference) bool {
+	if len(expected) == 0 {
+		for _, reference := range actual {
+			if !serviceAccountPullSecret(reference.Name) {
+				return false
+			}
+		}
+		return true
+	}
+	if len(actual) < len(expected) {
+		return false
+	}
+	for _, want := range expected {
+		matched := false
+		for _, got := range actual {
+			if got.Name == want.Name {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return false
+		}
+	}
+	return true
+}
+
+// serviceAccountPullSecret recognises the tenant registry credential a namespace
+// ServiceAccount carries for every managed workload. The shared tenant Secret the
+// plan freezes uses the ani-pull- prefix and is never mistaken for it.
+func serviceAccountPullSecret(name string) bool {
+	return name != "" && strings.HasPrefix(name, "ani-registry-pull")
 }
 
 func validateEffectiveTrainingPod(plan biz.TrainingPlan, pod *unstructured.Unstructured) error {
