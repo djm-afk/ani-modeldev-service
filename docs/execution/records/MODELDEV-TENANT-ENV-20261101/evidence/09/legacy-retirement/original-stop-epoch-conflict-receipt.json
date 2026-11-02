@@ -1,0 +1,61 @@
+{
+  "observed_at": "2026-11-01T01:07:13.934401+00:00",
+  "plan_observed_at": "2026-11-01T01:01:56.710642003Z",
+  "plan_ready": false,
+  "current_command_state": [
+    {
+      "ExecutionID": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "OwnerRevision": 16,
+      "CloseGeneration": 2,
+      "CommandFence": 2,
+      "TrainingOutcome": "UNKNOWN",
+      "TrainingWritersAbsent": true,
+      "Ready": false,
+      "Blocker": "CURRENT_ORIGINAL_TRAINING_EXIT:EXECUTION_RUNTIME_NOT_READY"
+    },
+    {
+      "ExecutionID": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "OwnerRevision": 16,
+      "CloseGeneration": 2,
+      "CommandFence": 2,
+      "TrainingOutcome": "UNKNOWN",
+      "TrainingWritersAbsent": true,
+      "Ready": false,
+      "Blocker": "CURRENT_ORIGINAL_TRAINING_EXIT:EXECUTION_RUNTIME_NOT_READY"
+    },
+    {
+      "ExecutionID": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+      "OwnerRevision": 6,
+      "CloseGeneration": 1,
+      "CommandFence": 1,
+      "TrainingOutcome": null,
+      "TrainingWritersAbsent": null,
+      "Ready": true,
+      "Blocker": ""
+    }
+  ],
+  "persisted_original_runtime_fences": [
+    {
+      "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "close_generation": 1,
+      "close_reason": "STEP_FAILED",
+      "close_requested_at": "2026-10-30T00:57:45.356467+00:00",
+      "closed_at": null
+    },
+    {
+      "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "close_generation": 1,
+      "close_reason": "STEP_FAILED",
+      "close_requested_at": "2026-10-29T16:00:01.066939+00:00",
+      "closed_at": null
+    }
+  ],
+  "actual_original_suspended_ack_times": {
+    "1cce950b-d6e9-453e-aa11-fffd8846224b": "2026-10-30T00:57:48Z",
+    "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc": "2026-10-29T16:00:04Z"
+  },
+  "source_overlay": "internal/data/lifecycle/repository.go:291-303 replaces in-memory close generation/reason/time with later Gov intent for still-open runtime; raw original row is generation1 STEP_FAILED with prior durable stopping time",
+  "precise_difference": "Actual original ACK is after the persisted original runtime stopping fence, but before the later merged Gov command timestamp. Both current writer flags are actually true and outcomes UNKNOWN.",
+  "minimum_correction_candidate": "Freeze the real persisted original runtime stop epoch in a typed one-time journal and compare it again under the same original repository lock. Use that real epoch for original suspension ACK qualification; preserve latest identity generation2/owner revision16/commandFence2 CAS and its timestamps. Do not rewrite runtime time to simulate ACK or change default runtime. Pending root determination.",
+  "apply": "NOT_RUN"
+}

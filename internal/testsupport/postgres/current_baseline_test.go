@@ -62,8 +62,8 @@ func TestCurrentBaselineRestrictsRuntimeAndPreservesExactOwnerRevision(t *testin
 	defer cancel()
 	var tableCount int
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM information_schema.tables
-		WHERE table_schema=current_schema() AND table_type='BASE TABLE'`).Scan(&tableCount); err != nil || tableCount != 9 {
-		t.Fatalf("empty current baseline must initialize exactly nine application tables: count=%d err=%v", tableCount, err)
+		WHERE table_schema=current_schema() AND table_type='BASE TABLE'`).Scan(&tableCount); err != nil || tableCount != 10 {
+		t.Fatalf("empty current baseline must initialize the nine original application tables plus the environment registry: count=%d err=%v", tableCount, err)
 	}
 	tenant, execution, _ := insertCurrentIdentity(t, ctx, pool)
 	_, err := pool.Exec(ctx, `UPDATE modeldev_execution_identities SET owner_revision=18446744073709551615

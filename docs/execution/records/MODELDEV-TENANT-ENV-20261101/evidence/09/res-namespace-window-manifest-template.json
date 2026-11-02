@@ -1,0 +1,35 @@
+{
+  "Schema": "ani.resource.namespace-uid-window.v1",
+  "Window": {
+    "WindowID": "132176f6-764a-4a47-ad36-f40884f72d0d",
+    "Stage": "freeze",
+    "ClusterID": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "Database": "ani_resource",
+    "RuntimeRole": "",
+    "Rows": [
+      {
+        "TenantID": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "UID": "8698b0b5-f4c8-4770-85e5-10f25ad7b347"
+      },
+      {
+        "TenantID": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "Namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "UID": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0"
+      }
+    ],
+    "WriterAddresses": [],
+    "OldBackends": [],
+    "WriterProofSHA256": ""
+  },
+  "Deployment": {
+    "Namespace": "ani-system",
+    "Name": "",
+    "UID": "",
+    "Container": ""
+  },
+  "OldPods": [],
+  "NewImage": "",
+  "NewImageDigest": "",
+  "NewSourceCommit": ""
+}

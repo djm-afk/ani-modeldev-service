@@ -1,0 +1,1 @@
+{"Phase":"deliver","ID":55,"Receipt":{"OperationID":"13bd316b-0b85-4c8e-a005-698eb9ffdd5e","ExecutionID":"27cf73a3-4107-4c07-86f7-862ce9fb413d","ExecutionSpecHash":"cb9831ca80e7df95cf1ca3746db4ff53b623b51671efcf34230275235e0c1690","ComputeState":"ACCEPTED","DeliveryState":"PENDING","ResourceState":"NOT_APPLICABLE","CloseState":"CLOSING","Revision":2,"Replayed":false}}

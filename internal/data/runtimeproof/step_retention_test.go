@@ -66,17 +66,18 @@ func newConfiguredStepRetentionFixture(t *testing.T, abort bool, fine []bool, co
 		f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(deadline[0])
 	}
 	f.execution.Admission = admissionfixture.Bind(t, f.execution.Admission)
+	open := postgres.Prepare(t)
+	pool := open()
+	ensureOwnerCloseEnvironment(t, pool, f)
 	if configure != nil {
 		configure(f)
 	}
-	open := postgres.Prepare(t)
-	pool := open()
 	ctx := context.Background()
 	if _, err := execution.New(pool).Accept(ctx, f.execution.Admission); err != nil {
 		t.Fatal(err)
 	}
 	dispatches := submission.New(pool)
-	reserved, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.execution.Admission, Owner: f.dispatch.Plan.Owner})
+	reserved, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.execution.Admission, Owner: f.execution.Snapshot.DispatchOwner})
 	if err != nil || reserved.SendPermit == nil {
 		t.Fatal("real dispatch permit", err)
 	}
@@ -91,7 +92,7 @@ func newConfiguredStepRetentionFixture(t *testing.T, abort bool, fine []bool, co
 	f.dispatch = confirmed.Dispatch
 	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = f.dispatch.Plan.Environment.ExperimentID, f.dispatch.Plan.DisplayName, f.dispatch.Plan.Environment.Identities.KFPStepServiceAccount
 	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": f.dispatch.Plan.PipelineID, "pipeline_version_id": f.dispatch.Plan.PipelineVersionID}
-	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": f.dispatch.Plan.ExecutionID, "spec_hash": f.dispatch.Plan.SpecHash}, "pipeline_root": f.dispatch.Plan.Owner.PipelineRoot}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": f.dispatch.Plan.ExecutionID, "spec_hash": f.dispatch.Plan.SpecHash, "environment_binding_id": f.dispatch.Plan.Environment.BindingID, "namespace_uid": f.dispatch.Plan.Environment.NamespaceUID}, "pipeline_root": f.dispatch.Plan.Owner.PipelineRoot}
 	if _, err := dispatches.BindRunAuthority(ctx, f.authority()); err != nil {
 		t.Fatal(err)
 	}
@@ -184,7 +185,7 @@ func (f *stepRetentionFixture) serve(t *testing.T, w http.ResponseWriter, r *htt
 	if r.Method == http.MethodGet {
 		switch r.URL.Path {
 		case prefix:
-			write(&unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": ns, "uid": f.f.authority().NamespaceUID}}})
+			write(&unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": ns, "uid": f.f.authority().NamespaceUID, "labels": map[string]any{"network.ani.io/tenant-id": f.f.execution.TenantID, "network.ani.io/managed-by": "ani-network-service"}}}})
 			return
 		case "/apis/argoproj.io/v1alpha1/namespaces/" + ns + "/workflows/" + f.f.workflow.GetName():
 			write(f.f.workflow)

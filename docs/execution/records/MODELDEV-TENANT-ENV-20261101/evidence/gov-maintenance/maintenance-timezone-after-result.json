@@ -1,0 +1,52 @@
+{
+  "source_base": "45ed49fe91608960cab89797c06dab2705a65740",
+  "started_at": "2026-10-31T23:31:08.332501+00:00",
+  "test_file_sha256": "0fd2aae55d0288a97d260118eb2d1d486864ce894fbe96995d72d17506971a9f",
+  "production_diff_go_sha256": "5d646f6f948e5f41f4b7507c6fa27ae9d9e761875390e0eec9cbe3af278e3b54",
+  "results": [
+    {
+      "TZ": "Europe/Berlin",
+      "command": [
+        "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+        "test",
+        "-race",
+        "-count=1",
+        "./pkg/localdeps/go-utils/timeutil"
+      ],
+      "seconds": 2.684680392005248,
+      "exit_code": 0,
+      "log_sha256": "b7e53ed9e9ad938c4ac224361c1b61890028a04a1da3200c691edbad321af935",
+      "stdout": "ok  \tgo-wind-admin/pkg/localdeps/go-utils/timeutil\t1.022s\n"
+    },
+    {
+      "TZ": "UTC",
+      "command": [
+        "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+        "test",
+        "-race",
+        "-count=1",
+        "./pkg/localdeps/go-utils/timeutil"
+      ],
+      "seconds": 2.1188309419958387,
+      "exit_code": 0,
+      "log_sha256": "205c18b9b37355446e6f0864b4f244ddd5ed57bf0ffcc97bf516d036dc67d3f7",
+      "stdout": "ok  \tgo-wind-admin/pkg/localdeps/go-utils/timeutil\t1.020s\n"
+    },
+    {
+      "TZ": "Asia/Shanghai",
+      "command": [
+        "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+        "test",
+        "-race",
+        "-count=1",
+        "./pkg/localdeps/go-utils/timeutil"
+      ],
+      "seconds": 1.799912629998289,
+      "exit_code": 0,
+      "log_sha256": "205c18b9b37355446e6f0864b4f244ddd5ed57bf0ffcc97bf516d036dc67d3f7",
+      "stdout": "ok  \tgo-wind-admin/pkg/localdeps/go-utils/timeutil\t1.020s\n"
+    }
+  ],
+  "all_pass": true,
+  "business_code_changed": false
+}

@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"net/http/httptest"
@@ -205,7 +206,7 @@ func newOwnerCloseFixture(t *testing.T) *ownerCloseFixture {
 	admission := biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:synthetic-fixture", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: conformance.SnapshotSHA256V1, AcceptedAt: snapshot.DeadlineAt.Add(-time.Hour).UTC()}
 	admission = admissionfixture.Bind(t, admission)
 	snapshot = admission.Snapshot
-	plan, err := (biz.PipelineDispatchRequest{Admission: admission, Owner: biz.PipelineOwnerConfiguration{Reference: "owner-close-fixture", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}}).Freeze()
+	plan, err := (biz.PipelineDispatchRequest{Admission: admission, Owner: admission.Snapshot.DispatchOwner}).Freeze()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +219,7 @@ func newOwnerCloseFixture(t *testing.T) *ownerCloseFixture {
 	f.workflow.SetNamespace(snapshot.Environment.NamespaceName)
 	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = plan.Environment.ExperimentID, plan.DisplayName, plan.Environment.Identities.KFPStepServiceAccount
 	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": plan.PipelineID, "pipeline_version_id": plan.PipelineVersionID}
-	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}, "pipeline_root": plan.Owner.PipelineRoot}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID}, "pipeline_root": plan.Owner.PipelineRoot}
 	for _, raw := range record.Pods {
 		pod := unstructured.Unstructured{Object: raw}
 		pod.SetNamespace(snapshot.Environment.NamespaceName)
@@ -249,7 +250,7 @@ func newOwnerCloseFixture(t *testing.T) *ownerCloseFixture {
 }
 
 func (f *ownerCloseFixture) verifier() *runtimeproof.Verifier {
-	namespace := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": f.execution.Snapshot.Environment.NamespaceName, "uid": f.execution.Snapshot.Environment.NamespaceUID}}}
+	namespace := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": f.execution.Snapshot.Environment.NamespaceName, "uid": f.execution.Snapshot.Environment.NamespaceUID, "labels": map[string]any{"network.ani.io/tenant-id": f.execution.TenantID, "network.ani.io/managed-by": "ani-network-service"}}}}
 	objects := []runtime.Object{namespace, f.workflow}
 	for i := range f.pods {
 		objects = append(objects, &f.pods[i])
@@ -300,4 +301,25 @@ type ownerClosePlans struct{ dispatch biz.PipelineDispatch }
 
 func (p ownerClosePlans) Get(context.Context, string, string) (biz.PipelineDispatch, error) {
 	return p.dispatch, nil
+}
+
+// Provision through the real state machine before accepting any execution.
+func ensureOwnerCloseEnvironment(t *testing.T, pool *pgxpool.Pool, f *ownerCloseFixture) {
+	t.Helper()
+	oldHash := f.execution.SpecHash
+	f.execution.Admission = admissionfixture.EnsureEnvironment(t, pool, f.execution.Admission)
+	rehash := func(object *unstructured.Unstructured) {
+		raw, err := json.Marshal(object.Object)
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw = []byte(strings.ReplaceAll(strings.ReplaceAll(string(raw), oldHash, f.execution.SpecHash), f.dispatch.Plan.SpecHash, f.execution.SpecHash))
+		if err := json.Unmarshal(raw, object); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rehash(f.workflow)
+	for i := range f.pods {
+		rehash(&f.pods[i])
+	}
 }

@@ -1,0 +1,7 @@
+{
+  "status": "BLOCKED",
+  "read_only": false,
+  "reason": "CREATE-ARTIFACT-SERVICE-ACCOUNT_REJECTED_OR_UNKNOWN_NO_RETRY",
+  "writes": "POSSIBLE_READ_FIXED_NODE_JOURNAL_BEFORE_ANY_RETRY",
+  "ssh_exit": 1
+}

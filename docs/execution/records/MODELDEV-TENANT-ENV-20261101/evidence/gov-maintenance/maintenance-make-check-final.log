@@ -1,0 +1,429 @@
+bash scripts/ci/checks.sh
+quota Ent boundary: pass
+layout and formal dependency graph: pass
+.........................................ssss
+----------------------------------------------------------------------
+Ran 45 tests in 6.678s
+
+OK (skipped=4)
+make[1]: 进入目录“/home/chabking/workspace/ani-governance-runs/modeldev-create-maintenance-20261101/source”
+python3 scripts/tests/check-repo-entrypoints.py --repo "/home/chabking/workspace/ani-governance-runs/modeldev-create-maintenance-20261101/source"
+CHECK root-api
+CHECK root-build
+CHECK root-build-only
+CHECK root-gen
+CHECK root-ent
+CHECK root-all
+CHECK root-openapi
+CHECK service-api
+CHECK service-build
+CHECK service-build-only
+CHECK service-run
+CHECK service-gen
+CHECK service-ent
+CHECK service-app
+CHECK service-openapi
+CHECK root-parallel-build
+CHECK root-parallel-all
+CHECK service-parallel-app
+CHECK verify-ci-parallel
+CHECK reject-API
+CHECK reject-ENT
+CHECK reject-COMPILE
+CHECK reject-CHECK
+CHECK reject-INTEGRATION
+{
+  "scope": "mock Make delegation and retired entrypoints ONLY",
+  "pass": true,
+  "cases": [
+    {
+      "case": "root-api",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "root-build",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "root-build-only",
+      "pass": true,
+      "events": {
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "root-gen",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "SQL_EXPORT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "root-ent",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "ENT": 1,
+        "SQL_EXPORT": 1
+      }
+    },
+    {
+      "case": "root-all",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "SQL_EXPORT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "root-openapi",
+      "pass": true,
+      "events": {
+        "OPENAPI_RAW": 1,
+        "FINALIZE": 1
+      }
+    },
+    {
+      "case": "service-api",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "service-build",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "service-build-only",
+      "pass": true,
+      "events": {
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "service-run",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "RUN": 1
+      }
+    },
+    {
+      "case": "service-gen",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "service-ent",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "ENT": 1
+      }
+    },
+    {
+      "case": "service-app",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "service-openapi",
+      "pass": true,
+      "events": {
+        "OPENAPI_RAW": 1,
+        "FINALIZE": 1
+      }
+    },
+    {
+      "case": "root-parallel-build",
+      "pass": true,
+      "events": {
+        "BUILD_REDACT": 1,
+        "BUILD_GOW": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "root-parallel-all",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "SQL_EXPORT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "service-parallel-app",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "verify-ci-parallel",
+      "pass": true,
+      "events": {
+        "CHECK": 1,
+        "INTEGRATION": 1,
+        "GENERATION": 1
+      }
+    },
+    {
+      "case": "reject-API",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "reject-ENT",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "BUILD_GOW": 1,
+        "ENT": 1
+      }
+    },
+    {
+      "case": "reject-COMPILE",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "reject-CHECK",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "CHECK": 1
+      }
+    },
+    {
+      "case": "reject-INTEGRATION",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "CHECK": 1,
+        "INTEGRATION": 1
+      }
+    },
+    {
+      "case": "retired-install-dev",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-install-prod",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-install-golang",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-pm2-deploy",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-test-unit",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-verify-gpu",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-verify-gpu-regressions",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-verify-gpu-audit",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-verify-quota-ent",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    }
+  ],
+  "real_generation": "NOT_RUN",
+  "database": "NOT_RUN",
+  "deployment": "NOT_RUN"
+}
+make[1]: 离开目录“/home/chabking/workspace/ani-governance-runs/modeldev-create-maintenance-20261101/source”
+ok  	go-wind-admin/pkg/audit	0.005s
+ok  	go-wind-admin/pkg/authorizer	0.009s
+ok  	go-wind-admin/pkg/constants	0.009s
+ok  	go-wind-admin/pkg/crypto	0.007s
+ok  	go-wind-admin/pkg/entgo/viewer	0.009s
+ok  	go-wind-admin/pkg/fieldperm	0.008s
+ok  	go-wind-admin/pkg/jwt	0.009s
+?   	go-wind-admin/pkg/localdeps/go-crud/api/gen/go/pagination/v1	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/audit	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-crud/cache	0.117s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo	0.014s
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/enttest	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/hook	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/menu	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/migrate	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/predicate	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/privacy	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/runtime	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/schema	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/user	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/field	0.007s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/filter	0.009s
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/interceptor	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/mixin	0.003s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/pagination	0.005s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/rule	0.017s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/sorting	0.009s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/update	0.005s
+ok  	go-wind-admin/pkg/localdeps/go-crud/pagination	0.009s
+ok  	go-wind-admin/pkg/localdeps/go-crud/pagination/filter	0.010s
+ok  	go-wind-admin/pkg/localdeps/go-crud/pagination/paginator	0.008s
+ok  	go-wind-admin/pkg/localdeps/go-crud/pagination/sorting	0.006s
+?   	go-wind-admin/pkg/localdeps/go-crud/viewer	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-utils/aggregator	0.100s
+ok  	go-wind-admin/pkg/localdeps/go-utils/captcha	4.164s
+ok  	go-wind-admin/pkg/localdeps/go-utils/copierutil	0.006s
+ok  	go-wind-admin/pkg/localdeps/go-utils/crypto	0.423s
+ok  	go-wind-admin/pkg/localdeps/go-utils/fieldmaskutil	0.003s
+ok  	go-wind-admin/pkg/localdeps/go-utils/id	13.146s
+ok  	go-wind-admin/pkg/localdeps/go-utils/id/machineid	0.005s
+ok  	go-wind-admin/pkg/localdeps/go-utils/jwtutil	0.014s
+ok  	go-wind-admin/pkg/localdeps/go-utils/mapper	0.004s
+ok  	go-wind-admin/pkg/localdeps/go-utils/password	3.123s
+ok  	go-wind-admin/pkg/localdeps/go-utils/sliceutil	0.004s
+ok  	go-wind-admin/pkg/localdeps/go-utils/stringcase	0.003s
+ok  	go-wind-admin/pkg/localdeps/go-utils/timeutil	0.006s
+?   	go-wind-admin/pkg/localdeps/go-utils/tls	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-utils/trans	0.004s
+ok  	go-wind-admin/pkg/localdeps/go-wind/log	0.002s
+ok  	go-wind-admin/pkg/localdeps/go-wind-plugins/encoding	0.003s
+ok  	go-wind-admin/pkg/localdeps/go-wind-plugins/encoding/json	0.003s
+ok  	go-wind-admin/pkg/localdeps/go-wind-toolkit/protoc-gen-go-redact	0.033s
+ok  	go-wind-admin/pkg/localdeps/go-wind-toolkit/protoc-gen-go-redact/redact/v1	0.006s
+ok  	go-wind-admin/pkg/localdeps/kratos-authn/engine	0.005s
+ok  	go-wind-admin/pkg/localdeps/kratos-authn/engine/jwt	0.583s
+?   	go-wind-admin/pkg/localdeps/kratos-authz/engine	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-authz/engine/casbin	0.008s
+?   	go-wind-admin/pkg/localdeps/kratos-authz/engine/casbin/assets	[no test files]
+?   	go-wind-admin/pkg/localdeps/kratos-authz/engine/noop	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-authz/middleware	0.004s
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/api/gen/go/conf/v1	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/bootstrap	0.020s
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/cache/redis	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/config	0.004s [no tests to run]
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/database/ent	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/logger	0.009s
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/registry	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc	0.574s
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc/middleware/requestid	0.003s
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc/middleware/validate	0.006s [no tests to run]
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/tracer	[no test files]
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/transport/asynq	[no test files]
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/transport/sse	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-swagger-ui	0.017s
+?   	go-wind-admin/pkg/localdeps/kratos-swagger-ui/internal/swagger	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/broker	0.189s
+?   	go-wind-admin/pkg/localdeps/kratos-transport/tracing	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/transport	0.007s
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/transport/asynq	31.457s
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/transport/keepalive	0.109s
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/transport/sse	17.200s
+ok  	go-wind-admin/pkg/mailer	0.109s
+ok  	go-wind-admin/pkg/metadata	0.007s
+ok  	go-wind-admin/pkg/middleware/auth	0.026s
+ok  	go-wind-admin/pkg/middleware/ent	0.008s
+ok  	go-wind-admin/pkg/middleware/logging	0.074s
+ok  	go-wind-admin/pkg/middleware/requestid	0.008s
+ok  	go-wind-admin/pkg/netutil	0.012s
+ok  	go-wind-admin/pkg/password	0.002s
+ok  	go-wind-admin/pkg/permcode	0.003s
+ok  	go-wind-admin/pkg/quotaerrors	0.004s
+ok  	go-wind-admin/pkg/serviceid	0.004s
+?   	go-wind-admin/pkg/task	[no test files]
+ok  	go-wind-admin/pkg/utils	0.004s
+ok  	go-wind-admin/pkg/utils/converter	0.011s
+--- FAIL: TestVMCatalogUsesRuntimePathVariables (0.31s)
+    catalog_test.go:74: 
+        	Error Trace:	/home/chabking/workspace/ani-governance-runs/modeldev-create-maintenance-20261101/source/sql/bootstrap/catalog_test.go:74
+        	Error:      	Received unexpected error:
+        	            	permission code missing for "GET /api/v1/virtual-machines/{vm_id}/logs": not found in authoritative tables
+        	Test:       	TestVMCatalogUsesRuntimePathVariables
+FAIL
+FAIL	go-wind-admin/sql/bootstrap	0.641s
+FAIL
+make: *** [Makefile:235：check] 错误 1

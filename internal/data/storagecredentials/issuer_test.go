@@ -41,7 +41,7 @@ func TestIssuerScopesPublishCredentialsToExecutionAndRenews(t *testing.T) {
 		if r.Form.Get("Action") != "AssumeRole" || r.Form.Get("Version") != "2011-06-15" || r.Form.Get("DurationSeconds") != "900" || r.Form.Get("RoleSessionName") != "modeldev-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee-publish" {
 			t.Error("STS action, bounded duration or execution session identity changed")
 		}
-		want := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObject","s3:GetObjectVersion","s3:PutObject"],"Resource":["arn:aws:s3:::cpu-artifacts/tenant-fixed/executions/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/*"]}]}`
+		want := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObject","s3:GetObjectVersion","s3:PutObject"],"Resource":["arn:aws:s3:::cpu-artifacts/executions/11111111-2222-4333-8444-555555555555/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/*"]}]}`
 		if r.Form.Get("Policy") != want {
 			t.Errorf("publication session must be limited to this execution: %s", r.Form.Get("Policy"))
 		}
@@ -69,7 +69,7 @@ func TestIssuerPrepareLimitsReadingToFrozenInputVersion(t *testing.T) {
 		if r.ParseForm() != nil {
 			t.Fatal("invalid STS form")
 		}
-		want := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersion"],"Resource":["arn:aws:s3:::cpu-inputs/fixed/input/data.csv"],"Condition":{"StringEquals":{"s3:VersionId":["input-version-1"]}}}]}`
+		want := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersion"],"Resource":["arn:aws:s3:::cpu-inputs/inputs/11111111-2222-4333-8444-555555555555/data.csv"],"Condition":{"StringEquals":{"s3:VersionId":["input-version-1"]}}}]}`
 		if r.Form.Get("Policy") != want {
 			t.Errorf("prepare may read only the frozen input version: %s", r.Form.Get("Policy"))
 		}
@@ -81,13 +81,13 @@ func TestIssuerPrepareLimitsReadingToFrozenInputVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	credentials, err := issuer.IssueForExecution(context.Background(), execution, "prepare")
-	if err != nil || credentials.ObjectKey != "fixed/input/data.csv" || credentials.ObjectPrefix != "" || credentials.Bucket != "cpu-inputs" {
+	if err != nil || credentials.ObjectKey != "inputs/11111111-2222-4333-8444-555555555555/data.csv" || credentials.ObjectPrefix != "" || credentials.Bucket != "cpu-inputs" {
 		t.Fatalf("fixed input session scope changed: %+v / %v", credentials, err)
 	}
 }
 
 func TestIssuerRejectsUnapprovedExecutionScopesBeforeAssumeRole(t *testing.T) {
-	for _, mode := range []string{"other tenant", "other bucket", "other connection", "sibling prefix", "wildcard key", "expired execution", "unsupported step", "temporary owner"} {
+	for _, mode := range []string{"other tenant", "other bucket", "other connection", "sibling prefix", "wildcard key", "expired execution", "closed execution", "unsupported step", "temporary owner"} {
 		t.Run(mode, func(t *testing.T) {
 			execution := executionFixture(t)
 			var calls atomic.Int32
@@ -113,6 +113,8 @@ func TestIssuerRejectsUnapprovedExecutionScopesBeforeAssumeRole(t *testing.T) {
 				execution.Snapshot.DeadlineAt = time.Now().UTC().Truncate(time.Microsecond).Add(-time.Second)
 				execution.AcceptedAt = execution.Snapshot.DeadlineAt.Add(-time.Hour)
 				execution.Admission = admissionfixture.Bind(t, execution.Admission)
+			case "closed execution":
+				execution.States.Close = biz.CloseStateClosed
 			case "unsupported step":
 				purpose = "train-wait"
 			case "temporary owner":
@@ -122,7 +124,7 @@ func TestIssuerRejectsUnapprovedExecutionScopesBeforeAssumeRole(t *testing.T) {
 			}
 			var err error
 			execution.SpecHash, err = execution.Snapshot.Digest()
-			if err != nil && mode != "wildcard key" {
+			if err != nil && mode != "wildcard key" && mode != "sibling prefix" {
 				t.Fatal(err)
 			}
 			issuer, err := storagecredentials.New(config)
@@ -192,10 +194,9 @@ func configFixture(server *httptest.Server, execution biz.Execution) storagecred
 		Credentials: aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
 			return aws.Credentials{AccessKeyID: "synthetic-owner", SecretAccessKey: "synthetic-owner-secret"}, nil
 		}),
-		Bindings: []storagecredentials.Binding{
-			{TenantID: execution.TenantID, Purpose: "prepare", ConnectionID: "input-store-v1", Bucket: "cpu-inputs", Prefix: "fixed/input"},
-			{TenantID: execution.TenantID, Purpose: "publish", ConnectionID: "artifact-store-v1", Bucket: "cpu-artifacts", Prefix: "tenant-fixed/executions"},
-		},
+		InputConnectionID: "input-store-v1", InputBucket: "cpu-inputs",
+		PublicationConnectionID: "artifact-store-v1", PublicationBucket: "cpu-artifacts",
+		ModelConnectionID: "model-store-v1", ModelBucket: "ani-models",
 	}
 }
 

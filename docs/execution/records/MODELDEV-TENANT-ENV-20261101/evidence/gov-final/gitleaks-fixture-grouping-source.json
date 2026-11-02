@@ -1,0 +1,53 @@
+{
+  "scope": "one accurate grouping comment before the index-name negative fixture; no literal/case/assertion/scanner rule/ignore changed",
+  "source_base": "5cfa9065190b9585b799e428537a0019ca70e41a",
+  "source_file": "app/admin/service/internal/data/platform_component_log_scope_test.go",
+  "before_sha256": "ed2c75b6459485bd7407b772aa7faeef6e93c0cfe1b782b522edf9d066fc4ffb",
+  "after_sha256": "09df6e331be2b29939448147ed37f3336b9f3cdf9901f96f1ecd3ae701c7880a",
+  "before_git_blob": "b54cec04e6f355a199b47aad717cc4f125a1cd64",
+  "negative_values_before": [
+    "",
+    "ani-governance-sandbox-20261027-abcde",
+    "ani-governance-64bbb9fdf4-qmk2n",
+    "ani-auth-service",
+    "ani-logs-2026.10.28",
+    "ani-system/ani-governance",
+    "ANI-GOVERNANCE",
+    "ani_governance",
+    "ani-governance*",
+    "-ani-governance",
+    "ani governance",
+    "ani-governance/logs"
+  ],
+  "negative_values_after": [
+    "",
+    "ani-governance-sandbox-20261027-abcde",
+    "ani-governance-64bbb9fdf4-qmk2n",
+    "ani-auth-service",
+    "ani-logs-2026.10.28",
+    "ani-system/ani-governance",
+    "ANI-GOVERNANCE",
+    "ani_governance",
+    "ani-governance*",
+    "-ani-governance",
+    "ani governance",
+    "ani-governance/logs"
+  ],
+  "negative_values_equal": true,
+  "added_comment": "// Index names are not registered platform components.",
+  "removing_exact_added_comment_restores_original_bytes": true,
+  "result_commit": "f6a68ed7f89cca56b4ea97377a21e4146f4c6b62",
+  "target_test_receipt": "gitleaks-fixture-target-test-receipt.json",
+  "target_gitleaks_receipt": "gitleaks-fixture-target-scan-receipt.json",
+  "required_audit_receipt": "gitleaks-fixture-required-audit-receipt.json",
+  "target_test_exit_code": 0,
+  "target_gitleaks_exit_code": 0,
+  "required_audit_exit_code": 0,
+  "audit_summary": {
+    "called_vulnerabilities": 0,
+    "imported_package_vulnerabilities_not_called": 1,
+    "required_module_vulnerabilities_not_called": 10,
+    "gitleaks": "no leaks found",
+    "gitleaks_bytes_scanned": 35309654
+  }
+}

@@ -5,8 +5,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -29,6 +27,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment"
 	"google.golang.org/protobuf/encoding/protojson"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -222,21 +221,12 @@ func runCoreFlowCloseOnly(ctx context.Context, f coreFlowFixture, config *conf.B
 	if err != nil {
 		return result, errors.New("original environment evidence unavailable")
 	}
-	proof = bytes.TrimSuffix(proof, []byte{'\n'})
-	digest := sha256.Sum256(proof)
 	var identity struct {
-		SourceCommit string `json:"source_commit"`
+		SourceCommit     string          `json:"source_commit"`
+		BindingCanonical json.RawMessage `json:"binding_canonical"`
 	}
-	if hex.EncodeToString(digest[:]) != original.Snapshot.Environment.BindingDigest || json.Unmarshal(proof, &identity) != nil || identity.SourceCommit != close.OriginalSourceCommit {
-		return result, biz.ErrAdmissionConflict
-	}
-	bindingBytes, err := readCommandMaterial(config.Runtime.BindingFile, 1<<20)
-	if err != nil {
-		return result, errors.New("original owner binding unavailable")
-	}
-	bindDigest := sha256.Sum256(bindingBytes)
-	var binding biz.PipelineDispatchBinding
-	if hex.EncodeToString(bindDigest[:]) != config.Runtime.BindingSha256 || decodeRuntimeMaterial(bindingBytes, &binding) != nil || binding.Validate() != nil || binding.TenantID != original.TenantID || binding.Environment != original.Snapshot.Environment {
+	environment, err := tenantenvironment.NewRepository(pool).Get(ctx, original.TenantID, original.Snapshot.Environment.ClusterID)
+	if err != nil || decodeRuntimeMaterial(proof, &identity) != nil || identity.SourceCommit != close.OriginalSourceCommit || !bytes.Equal(identity.BindingCanonical, environment.BindingCanonical) || environment.BindingDigest != original.Snapshot.Environment.BindingDigest {
 		return result, biz.ErrAdmissionConflict
 	}
 	first, err := admissions.ApplyCloseIntent(ctx, stop)
@@ -445,15 +435,20 @@ func TestFinetuningCoreFlow(t *testing.T) {
 	if err != nil || intent.DatasetVersionID != ready.Import.InputVersionID {
 		t.Fatal("formal codec rejected fixture", err)
 	}
-	sources := make([]admissionfacts.FileSource, len(config.Command.AdmissionResolution.FactsFiles))
-	for i, p := range config.Command.AdmissionResolution.FactsFiles {
-		sources[i] = admissionfacts.FileSource{Path: p.Path, SHA256: p.Sha256}
-	}
-	facts, err := admissionfacts.Load(ctx, sources)
+	images, ensurer, closeImages, err := loadImageRuntime(config.ImageRuntime)
 	if err != nil {
-		t.Fatal("pinned managed facts unavailable", err)
+		t.Fatal(err)
 	}
-	resolver := biz.NewFinetuningAdmissionResolver(catalogue.NewReader(config.Command.AdmissionResolution.CatalogueDirectory), inputs, facts, coreFlowModelFixture{tenant: f.TenantID, base: f.BaseModel}, cpup01.ContentLimits{MaxContentBytes: 17179869184})
+	defer closeImages()
+	platform, err := tenantenvironment.NewPlatform(clients.environmentConfig, clients.environmentKube, ensurer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	facts, err := admissionfacts.New(tenantenvironment.NewRepository(pool), platform, catalogue.NewReader(config.Command.AdmissionResolution.CatalogueDirectory), clients.environmentConfig.ClusterID)
+	if err != nil {
+		t.Fatal("dynamic environment unavailable", err)
+	}
+	resolver := biz.NewFinetuningAdmissionResolver(catalogue.NewReader(config.Command.AdmissionResolution.CatalogueDirectory), inputs, facts, coreFlowModelFixture{tenant: f.TenantID, base: f.BaseModel}, images, cpup01.ContentLimits{MaxContentBytes: 17179869184})
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
 		t.Fatal(err)

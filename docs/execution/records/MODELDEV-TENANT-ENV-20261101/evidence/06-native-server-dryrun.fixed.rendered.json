@@ -1,0 +1,1155 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "admissionregistration.k8s.io/v1",
+      "kind": "ValidatingAdmissionPolicy",
+      "metadata": {
+        "name": "modeldev-bootstrap-v1"
+      },
+      "spec": {
+        "failurePolicy": "Fail",
+        "matchConstraints": {
+          "matchPolicy": "Equivalent",
+          "resourceRules": [
+            {
+              "apiGroups": [
+                ""
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "serviceaccounts",
+                "configmaps",
+                "secrets"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                "rbac.authorization.k8s.io"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "rolebindings"
+              ],
+              "scope": "Namespaced"
+            }
+          ]
+        },
+        "variables": [
+          {
+            "name": "standardNamespace",
+            "expression": "namespaceObject != null && has(namespaceObject.metadata.labels) && 'network.ani.io/tenant-id' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/tenant-id'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && namespaceObject.metadata.labels['network.ani.io/tenant-id'] != '00000000-0000-0000-0000-000000000000' && namespaceObject.metadata.name == 'tenant-' + namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'network.ani.io/managed-by' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/managed-by'] == 'ani-network-service'"
+          },
+          {
+            "name": "owner",
+            "expression": "has(object.metadata.labels) && has(object.metadata.annotations) && 'ani.io/managed-by' in object.metadata.labels && object.metadata.labels['ani.io/managed-by'] == 'ani-modeldev-service' && 'modeldev.ani.io/tenant-id' in object.metadata.labels && object.metadata.labels['modeldev.ani.io/tenant-id'] == namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'modeldev.ani.io/environment-id' in object.metadata.labels && object.metadata.labels['modeldev.ani.io/environment-id'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && object.metadata.labels['modeldev.ani.io/environment-id'] != '00000000-0000-0000-0000-000000000000' && 'modeldev.ani.io/namespace-uid' in object.metadata.annotations && object.metadata.annotations['modeldev.ani.io/namespace-uid'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && object.metadata.annotations['modeldev.ani.io/namespace-uid'] != '00000000-0000-0000-0000-000000000000'"
+          }
+        ],
+        "validations": [
+          {
+            "expression": "variables.standardNamespace && variables.owner",
+            "message": "ModelDev: standard namespace and original owner identity required"
+          },
+          {
+            "expression": "request.operation != 'UPDATE' || (has(oldObject.metadata.labels) && has(oldObject.metadata.annotations) && object.metadata.labels == oldObject.metadata.labels && object.metadata.annotations == oldObject.metadata.annotations)",
+            "message": "ModelDev: original managed identity metadata cannot change"
+          },
+          {
+            "expression": "request.resource.resource != 'serviceaccounts' || (object.metadata.name in [\"modeldev-step\",\"trainer-workload\",\"verifier\"] && ((object.metadata.name == 'trainer-workload' && (!has(object.imagePullSecrets) || size(object.imagePullSecrets) == 0) && has(object.automountServiceAccountToken) && !object.automountServiceAccountToken) || (object.metadata.name != 'trainer-workload' && has(object.imagePullSecrets) && size(object.imagePullSecrets) == 1 && object.imagePullSecrets[0].name.matches('^ani-pull-[0-9a-f]{32}$'))))",
+            "message": "ModelDev: fixed SA and managed pull references required"
+          },
+          {
+            "expression": "request.resource.resource != 'rolebindings' || ((object.metadata.name == \"modeldev-runtime\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-runtime-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"modeldev-control\" && object.subjects[0].namespace == \"ani-system\") || (object.metadata.name == \"modeldev-step\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-step-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"modeldev-step\" && object.subjects[0].namespace == request.namespace) || (object.metadata.name == \"modeldev-webhook-read\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-webhook-read-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"ani-modeldev-webhook\" && object.subjects[0].namespace == \"ani-system\") || (object.metadata.name == \"modeldev-kfp-api\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-kfp-api-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"ml-pipeline\" && object.subjects[0].namespace == \"kubeflow\") || (object.metadata.name == \"modeldev-kfp-access\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-kfp-access-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"modeldev-control\" && object.subjects[0].namespace == \"ani-system\"))",
+            "message": "ModelDev: five exact role references and subjects required"
+          },
+          {
+            "expression": "request.resource.resource != 'serviceaccounts' || request.operation != 'UPDATE' || ((has(object.imagePullSecrets) ? object.imagePullSecrets : []) == (has(oldObject.imagePullSecrets) ? oldObject.imagePullSecrets : []) && (has(object.automountServiceAccountToken) ? object.automountServiceAccountToken : true) == (has(oldObject.automountServiceAccountToken) ? oldObject.automountServiceAccountToken : true))",
+            "message": "ModelDev: original service account pull references and token policy cannot change"
+          },
+          {
+            "expression": "request.resource.resource != 'configmaps' || (has(object.immutable) && object.immutable && has(object.data) && (!has(object.binaryData) || size(object.binaryData) == 0) && ((object.metadata.name == \"modeldev-step-owner\" && size(object.data) == 3 && [\"config.json\",\"modeldev-ca.pem\",\"s3-ca.pem\"].all(k,k in object.data && size(object.data[k]) > 0)) || (object.metadata.name == \"ani-kfp-ca\" && size(object.data) == 1 && [\"ca.crt\"].all(k,k in object.data && size(object.data[k]) > 0)) || (object.metadata.name == \"kfp-launcher\" && size(object.data) == 2 && [\"providers\",\"defaultPipelineRoot\"].all(k,k in object.data && size(object.data[k]) > 0)) || (object.metadata.name == \"metadata-grpc-configmap\" && size(object.data) == 2 && [\"METADATA_GRPC_SERVICE_HOST\",\"METADATA_GRPC_SERVICE_PORT\"].all(k,k in object.data && size(object.data[k]) > 0)) || (object.metadata.name == \"modeldev-execution-environment\" && size(object.data) == 2 && [\"binding.json\",\"binding.sha256\"].all(k,k in object.data && size(object.data[k]) > 0))))",
+            "message": "ModelDev: fixed immutable ConfigMaps and exact key sets required"
+          },
+          {
+            "expression": "request.resource.resource != 'secrets' || (object.metadata.name == 'modeldev-kfp-artifacts' && object.type == 'Opaque' && has(object.data) && size(object.data) == 2 && ['access_key','secret_key'].all(k,k in object.data && size(object.data[k]) > 0) && (!has(object.stringData) || size(object.stringData) == 0) && size(object.metadata.labels) == 3 && size(object.metadata.annotations) == 1)",
+            "message": "ModelDev: dedicated two-key artifact Secret and identity-only metadata required"
+          }
+        ],
+        "matchConditions": [
+          {
+            "name": "control",
+            "expression": "request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\""
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "admissionregistration.k8s.io/v1",
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "metadata": {
+        "name": "modeldev-bootstrap-v1-binding"
+      },
+      "spec": {
+        "policyName": "modeldev-bootstrap-v1",
+        "validationActions": [
+          "Deny"
+        ]
+      }
+    },
+    {
+      "apiVersion": "admissionregistration.k8s.io/v1",
+      "kind": "ValidatingAdmissionPolicy",
+      "metadata": {
+        "name": "modeldev-environment-config-v1"
+      },
+      "spec": {
+        "failurePolicy": "Fail",
+        "matchConstraints": {
+          "matchPolicy": "Equivalent",
+          "resourceRules": [
+            {
+              "apiGroups": [
+                ""
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE",
+                "DELETE"
+              ],
+              "resources": [
+                "serviceaccounts",
+                "configmaps",
+                "secrets"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                "rbac.authorization.k8s.io"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE",
+                "DELETE"
+              ],
+              "resources": [
+                "rolebindings"
+              ],
+              "scope": "Namespaced"
+            }
+          ]
+        },
+        "variables": [
+          {
+            "name": "current",
+            "expression": "request.operation == 'DELETE' ? oldObject : object"
+          },
+          {
+            "name": "protected",
+            "expression": "variables.current.metadata.name in ['modeldev-execution-environment','modeldev-kfp-artifacts'] || (request.resource.resource == 'serviceaccounts' && variables.current.metadata.name in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (object != null && has(object.metadata.labels) && 'ani.io/managed-by' in object.metadata.labels && object.metadata.labels['ani.io/managed-by'] == 'ani-modeldev-service') || (oldObject != null && has(oldObject.metadata.labels) && 'ani.io/managed-by' in oldObject.metadata.labels && oldObject.metadata.labels['ani.io/managed-by'] == 'ani-modeldev-service')"
+          }
+        ],
+        "validations": [
+          {
+            "expression": "request.resource.resource != 'secrets' || !((object != null && has(object.type) && object.type == 'kubernetes.io/service-account-token' && has(object.metadata.annotations) && 'kubernetes.io/service-account.name' in object.metadata.annotations && object.metadata.annotations['kubernetes.io/service-account.name'] in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (oldObject != null && has(oldObject.type) && oldObject.type == 'kubernetes.io/service-account-token' && has(oldObject.metadata.annotations) && 'kubernetes.io/service-account.name' in oldObject.metadata.annotations && oldObject.metadata.annotations['kubernetes.io/service-account.name'] in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]))",
+            "message": "ModelDev: reserved SAs never receive legacy token Secrets"
+          },
+          {
+            "expression": "!variables.protected || request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\",\"kubernetes-admin\"]",
+            "message": "ModelDev: reserved configuration requires an exact platform writer"
+          },
+          {
+            "expression": "request.userInfo.username != \"system:serviceaccount:ani-system:modeldev-control\" || request.operation != 'UPDATE' || (oldObject != null && has(oldObject.metadata.labels) && 'ani.io/managed-by' in oldObject.metadata.labels && oldObject.metadata.labels['ani.io/managed-by'] == 'ani-modeldev-service')",
+            "message": "ModelDev: control cannot adopt foreign configuration"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "admissionregistration.k8s.io/v1",
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "metadata": {
+        "name": "modeldev-environment-config-v1-binding"
+      },
+      "spec": {
+        "policyName": "modeldev-environment-config-v1",
+        "validationActions": [
+          "Deny"
+        ]
+      }
+    },
+    {
+      "apiVersion": "admissionregistration.k8s.io/v1",
+      "kind": "ValidatingAdmissionPolicy",
+      "metadata": {
+        "name": "modeldev-workload-guard-v1"
+      },
+      "spec": {
+        "failurePolicy": "Fail",
+        "matchConstraints": {
+          "matchPolicy": "Equivalent",
+          "resourceRules": [
+            {
+              "apiGroups": [
+                "argoproj.io"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "workflows",
+                "workflows/status"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                "trainer.kubeflow.org"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "trainjobs",
+                "trainjobs/status",
+                "trainingruntimes"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                "jobset.x-k8s.io"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "jobsets",
+                "jobsets/status"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                "batch"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "jobs",
+                "jobs/status"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                ""
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "pods",
+                "pods/status",
+                "pods/ephemeralcontainers"
+              ],
+              "scope": "Namespaced"
+            }
+          ]
+        },
+        "variables": [
+          {
+            "name": "newPods",
+            "expression": "(object == null || !has(object.spec) ? [] : request.resource.resource == 'pods' ? [object.spec] : request.resource.resource == 'jobs' ? (has(object.spec.template) && has(object.spec.template.spec) ? [object.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(object.spec.replicatedJobs) ? object.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(object.spec.template) && has(object.spec.template.spec) ? (has(object.spec.template.spec.replicatedJobs) ? object.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [object.spec] + (has(object.spec.templates) ? object.spec.templates.map(t,{'serviceAccountName':dyn(has(t.serviceAccountName) ? t.serviceAccountName : ''), 'volumes':dyn(has(t.volumes) ? t.volumes : []), 'containers':dyn((has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : [])), 'initContainers':dyn(has(t.initContainers) ? t.initContainers : [])}) : []) : [])"
+          },
+          {
+            "name": "oldPods",
+            "expression": "(oldObject == null || !has(oldObject.spec) ? [] : request.resource.resource == 'pods' ? [oldObject.spec] : request.resource.resource == 'jobs' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? [oldObject.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(oldObject.spec.replicatedJobs) ? oldObject.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? (has(oldObject.spec.template.spec.replicatedJobs) ? oldObject.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [oldObject.spec] + (has(oldObject.spec.templates) ? oldObject.spec.templates.map(t,{'serviceAccountName':dyn(has(t.serviceAccountName) ? t.serviceAccountName : ''), 'volumes':dyn(has(t.volumes) ? t.volumes : []), 'containers':dyn((has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : [])), 'initContainers':dyn(has(t.initContainers) ? t.initContainers : [])}) : []) : [])"
+          },
+          {
+            "name": "protected",
+            "expression": "(object != null && ((has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))))) || (oldObject != null && ((has(oldObject.metadata.labels) && oldObject.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(oldObject.metadata.annotations) && oldObject.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(oldObject.metadata.finalizers) && oldObject.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))))) || variables.newPods.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (has(s.volumes) && s.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(x,has(x.secret) && x.secret.name == 'modeldev-kfp-artifacts')))) || (has(s.containers) && s.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.initContainers) && s.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.ephemeralContainers) && s.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))) || variables.oldPods.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (has(s.volumes) && s.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(x,has(x.secret) && x.secret.name == 'modeldev-kfp-artifacts')))) || (has(s.containers) && s.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.initContainers) && s.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.ephemeralContainers) && s.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))) || (request.resource.resource == 'workflows' && ((object != null && has(object.spec.templates) && object.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"])) || (oldObject != null && has(oldObject.spec.templates) && oldObject.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]))))"
+          },
+          {
+            "name": "standardNamespace",
+            "expression": "namespaceObject != null && has(namespaceObject.metadata.labels) && 'network.ani.io/tenant-id' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/tenant-id'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && namespaceObject.metadata.labels['network.ani.io/tenant-id'] != '00000000-0000-0000-0000-000000000000' && namespaceObject.metadata.name == 'tenant-' + namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'network.ani.io/managed-by' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/managed-by'] == 'ani-network-service'"
+          },
+          {
+            "name": "newLabels",
+            "expression": "(has(object.metadata.labels) ? object.metadata.labels : {})"
+          },
+          {
+            "name": "oldLabels",
+            "expression": "oldObject != null ? (has(oldObject.metadata.labels) ? oldObject.metadata.labels : {}) : {}"
+          },
+          {
+            "name": "newAnnotations",
+            "expression": "(has(object.metadata.annotations) ? object.metadata.annotations : {})"
+          },
+          {
+            "name": "oldAnnotations",
+            "expression": "oldObject != null ? (has(oldObject.metadata.annotations) ? oldObject.metadata.annotations : {}) : {}"
+          },
+          {
+            "name": "sameIdentity",
+            "expression": "variables.oldLabels.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/') || k == 'pipeline/runid') || (k in variables.newLabels && variables.oldLabels[k] == variables.newLabels[k])) && variables.newLabels.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/') || k == 'pipeline/runid') || (k in variables.oldLabels && variables.oldLabels[k] == variables.newLabels[k])) && variables.oldAnnotations.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/')) || (k in variables.newAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && variables.newAnnotations.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/')) || (k in variables.oldAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && (has(object.metadata.ownerReferences) ? object.metadata.ownerReferences : []) == (oldObject != null ? (has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []) : [])"
+          },
+          {
+            "name": "sameSpec",
+            "expression": "oldObject != null && object.spec == oldObject.spec"
+          },
+          {
+            "name": "sameRetention",
+            "expression": "oldObject == null || !has(oldObject.metadata.finalizers) || oldObject.metadata.finalizers.filter(f,f.startsWith('modeldev.ani.io/')).all(f,has(object.metadata.finalizers) && f in object.metadata.finalizers) || request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\""
+          },
+          {
+            "name": "suspendOnly",
+            "expression": "oldObject != null && request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\" && has(object.spec.suspend) && object.spec.suspend && object.spec.all(k,k == 'suspend' || (k in oldObject.spec && object.spec[k] == oldObject.spec[k])) && oldObject.spec.all(k,k == 'suspend' || (k in object.spec && object.spec[k] == oldObject.spec[k]))"
+          }
+        ],
+        "validations": [
+          {
+            "expression": "!variables.protected || variables.standardNamespace",
+            "message": "ModelDev: protected workload requires the standard owned namespace"
+          },
+          {
+            "expression": "!variables.protected || request.operation != 'CREATE' || ((request.resource.resource == \"workflows\" && request.userInfo.username in [\"system:serviceaccount:kubeflow:ml-pipeline\"]) || (request.resource.resource == \"trainjobs\" && request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\"]) || (request.resource.resource == \"trainingruntimes\" && request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\"]) || (request.resource.resource == \"jobsets\" && request.userInfo.username in [\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\"]) || (request.resource.resource == \"jobs\" && request.userInfo.username in [\"system:serviceaccount:kubeflow-system:jobset-controller-manager\"]) || (request.resource.resource == \"pods\" && request.userInfo.username in [\"system:serviceaccount:kubeflow:argo\",\"system:serviceaccount:kube-system:job-controller\"]))",
+            "message": "ModelDev: only exact original controllers create protected resources"
+          },
+          {
+            "expression": "!variables.protected || request.resource.resource != 'pods' || (has(object.spec.serviceAccountName) && ((object.spec.serviceAccountName == 'modeldev-step' && (request.operation != 'CREATE' || request.userInfo.username == \"system:serviceaccount:kubeflow:argo\")) || (object.spec.serviceAccountName == 'trainer-workload' && (request.operation != 'CREATE' || request.userInfo.username == \"system:serviceaccount:kube-system:job-controller\"))))",
+            "message": "ModelDev: reserved Secret, PVC or SA cannot be borrowed"
+          },
+          {
+            "expression": "!variables.protected || request.operation != 'UPDATE' || (request.userInfo.username in [\"kubernetes-admin\",\"system:node:node1\",\"system:node:node2\",\"system:node:node3\",\"system:serviceaccount:ani-system:ani-modeldev-webhook\",\"system:serviceaccount:ani-system:modeldev-control\",\"system:serviceaccount:kube-system:job-controller\",\"system:serviceaccount:kubeflow-system:jobset-controller-manager\",\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\",\"system:serviceaccount:kubeflow:argo\",\"system:serviceaccount:kubeflow:ml-pipeline\",\"system:serviceaccount:kubeflow:ml-pipeline-persistenceagent\"] && variables.sameIdentity && variables.sameRetention && (request.resource.resource == 'workflows' ? (object.spec.templates == oldObject.spec.templates && (has(object.spec.arguments) ? object.spec.arguments : {}) == (has(oldObject.spec.arguments) ? oldObject.spec.arguments : {}) && object.spec.entrypoint == oldObject.spec.entrypoint && object.spec.serviceAccountName == oldObject.spec.serviceAccountName && ((has(object.spec.activeDeadlineSeconds) ? object.spec.activeDeadlineSeconds : -1) == (has(oldObject.spec.activeDeadlineSeconds) ? oldObject.spec.activeDeadlineSeconds : -1) || (request.userInfo.username == \"system:serviceaccount:kubeflow:ml-pipeline\" && has(object.spec.activeDeadlineSeconds) && object.spec.activeDeadlineSeconds == 0))) : request.resource.resource == 'trainjobs' ? (variables.sameSpec || variables.suspendOnly) : request.resource.resource in ['pods','trainingruntimes'] ? variables.sameSpec : variables.newPods == variables.oldPods))",
+            "message": "ModelDev: original templates, four parameters, owner identity and retained Pod spec cannot change"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "admissionregistration.k8s.io/v1",
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "metadata": {
+        "name": "modeldev-workload-guard-v1-binding"
+      },
+      "spec": {
+        "policyName": "modeldev-workload-guard-v1",
+        "validationActions": [
+          "Deny"
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-runtime-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "patch",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods/log"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "persistentvolumeclaims"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "modeldev-step",
+            "trainer-workload",
+            "verifier"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "events"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "rolebindings"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "roles"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflows"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "trainer.kubeflow.org"
+          ],
+          "resources": [
+            "trainjobs"
+          ],
+          "verbs": [
+            "create",
+            "get",
+            "list",
+            "patch",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "trainer.kubeflow.org"
+          ],
+          "resources": [
+            "trainingruntimes"
+          ],
+          "verbs": [
+            "create",
+            "get",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "jobset.x-k8s.io"
+          ],
+          "resources": [
+            "jobsets"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "batch"
+          ],
+          "resources": [
+            "jobs"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "scheduling.volcano.sh"
+          ],
+          "resources": [
+            "podgroups"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-step-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "persistentvolumeclaims"
+          ],
+          "verbs": [
+            "create",
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflows"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "patch",
+            "update"
+          ]
+        },
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflowtaskresults"
+          ],
+          "verbs": [
+            "create",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "configmaps"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "kfp-launcher",
+            "metadata-grpc-configmap",
+            "ani-kfp-ca"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "secrets"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "modeldev-kfp-artifacts"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-webhook-read-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflows"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "batch"
+          ],
+          "resources": [
+            "jobs"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "jobset.x-k8s.io"
+          ],
+          "resources": [
+            "jobsets"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "trainer.kubeflow.org"
+          ],
+          "resources": [
+            "trainjobs",
+            "trainingruntimes"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "modeldev-step",
+            "trainer-workload",
+            "verifier"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "configmaps"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "modeldev-execution-environment"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-kfp-api-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflows"
+          ],
+          "verbs": [
+            "create",
+            "patch",
+            "delete"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-kfp-access-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "pipelines.kubeflow.org"
+          ],
+          "resources": [
+            "experiments"
+          ],
+          "verbs": [
+            "create",
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "pipelines.kubeflow.org"
+          ],
+          "resources": [
+            "runs"
+          ],
+          "verbs": [
+            "create",
+            "get",
+            "list",
+            "terminate",
+            "delete"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-environment-control-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "namespaces"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "serviceaccounts",
+            "configmaps",
+            "secrets"
+          ],
+          "verbs": [
+            "create"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "rolebindings"
+          ],
+          "verbs": [
+            "create"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ],
+          "resourceNames": [
+            "modeldev-step",
+            "trainer-workload",
+            "verifier"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "configmaps"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ],
+          "resourceNames": [
+            "modeldev-step-owner",
+            "ani-kfp-ca",
+            "kfp-launcher",
+            "metadata-grpc-configmap",
+            "modeldev-execution-environment"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "secrets"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ],
+          "resourceNames": [
+            "modeldev-kfp-artifacts"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "rolebindings"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ],
+          "resourceNames": [
+            "modeldev-runtime",
+            "modeldev-step",
+            "modeldev-webhook-read",
+            "modeldev-kfp-api",
+            "modeldev-kfp-access"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "clusterroles"
+          ],
+          "verbs": [
+            "bind"
+          ],
+          "resourceNames": [
+            "modeldev-runtime-v1",
+            "modeldev-step-v1",
+            "modeldev-webhook-read-v1",
+            "modeldev-kfp-api-v1",
+            "modeldev-kfp-access-v1"
+          ]
+        },
+        {
+          "apiGroups": [
+            "admissionregistration.k8s.io"
+          ],
+          "resources": [
+            "validatingadmissionpolicies"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "modeldev-bootstrap-v1",
+            "modeldev-environment-config-v1",
+            "modeldev-workload-guard-v1"
+          ]
+        },
+        {
+          "apiGroups": [
+            "admissionregistration.k8s.io"
+          ],
+          "resources": [
+            "validatingadmissionpolicybindings"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "modeldev-bootstrap-v1-binding",
+            "modeldev-environment-config-v1-binding",
+            "modeldev-workload-guard-v1-binding"
+          ]
+        },
+        {
+          "apiGroups": [
+            "admissionregistration.k8s.io"
+          ],
+          "resources": [
+            "mutatingwebhookconfigurations"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "ani-modeldev-webhook"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRoleBinding",
+      "metadata": {
+        "name": "modeldev-environment-control"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "modeldev-environment-control-v1"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-webhook-namespace-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "namespaces"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRoleBinding",
+      "metadata": {
+        "name": "modeldev-webhook-namespace"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "modeldev-webhook-namespace-v1"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "ani-modeldev-webhook",
+          "namespace": "ani-system"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-rbac-inventory-global-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "clusterrolebindings"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "clusterroles"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRoleBinding",
+      "metadata": {
+        "name": "modeldev-rbac-inventory-global"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "modeldev-rbac-inventory-global-v1"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-kfp-platform-read-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "pipelines.kubeflow.org"
+          ],
+          "resources": [
+            "pipelines"
+          ],
+          "verbs": [
+            "get"
+          ],
+          "resourceNames": [
+            "modeldev-mlp-cpu",
+            "modeldev-mlp-gpu",
+            "modeldev-sft-lora-cpu",
+            "modeldev-sft-lora-gpu"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "modeldev-kfp-platform-read",
+        "namespace": "ani-system"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "modeldev-kfp-platform-read-v1"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "modeldev-token-review-v1"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "authentication.k8s.io"
+          ],
+          "resources": [
+            "tokenreviews"
+          ],
+          "verbs": [
+            "create"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRoleBinding",
+      "metadata": {
+        "name": "modeldev-token-review"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "modeldev-token-review-v1"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ]
+    }
+  ]
+}

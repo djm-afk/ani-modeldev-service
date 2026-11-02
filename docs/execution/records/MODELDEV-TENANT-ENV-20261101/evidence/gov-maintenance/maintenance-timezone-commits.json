@@ -1,0 +1,28 @@
+[
+  {
+    "branch": "codex/modeldev-create-maintenance",
+    "base": "45ed49fe91608960cab89797c06dab2705a65740",
+    "commit": "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+    "files": [
+      "pkg/localdeps/go-utils/timeutil/diff_test.go"
+    ],
+    "test_sha256": "0fd2aae55d0288a97d260118eb2d1d486864ce894fbe96995d72d17506971a9f",
+    "production_diff_go_sha256": "5d646f6f948e5f41f4b7507c6fa27ae9d9e761875390e0eec9cbe3af278e3b54",
+    "working_tree_clean": true,
+    "push": "SSH443 exit0",
+    "full_check_new_commit": "NOT_RUN locally; original Workbench run_verify=true will run full candidate gate"
+  },
+  {
+    "branch": "codex/modeldev-dynamic-tenant-environment",
+    "base": "02f4f71e743b4ffe08ef04e880f1c431b62d7213",
+    "commit": "244780ffe6b9a7deb1c3f6f162e474e76a73a566",
+    "files": [
+      "pkg/localdeps/go-utils/timeutil/diff_test.go"
+    ],
+    "test_sha256": "0fd2aae55d0288a97d260118eb2d1d486864ce894fbe96995d72d17506971a9f",
+    "production_diff_go_sha256": "5d646f6f948e5f41f4b7507c6fa27ae9d9e761875390e0eec9cbe3af278e3b54",
+    "working_tree_clean": true,
+    "push": "SSH443 exit0",
+    "full_check_new_commit": "NOT_RUN locally; original Workbench run_verify=true will run full candidate gate"
+  }
+]

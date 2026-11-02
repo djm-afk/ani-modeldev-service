@@ -1,0 +1,2 @@
+PASS managed-runtime.yaml: explicit placeholder substitutions, strict protobuf decode, Bootstrap.Validate, retired binding_file rejected
+NOT_RUN platform file/credentials loading, upstream adapters, cluster writes, deployment and business acceptance

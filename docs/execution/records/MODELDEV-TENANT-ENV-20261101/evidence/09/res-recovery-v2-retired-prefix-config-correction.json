@@ -1,0 +1,32 @@
+{
+  "schema": "ani.resource.retired-prefix-exact-config-correction.v1",
+  "observed_at": "2026-11-01T04:57:31.266377+00:00",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api_server": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "ssh_user": "kubercloud",
+    "hostname": "node1"
+  },
+  "applied": true,
+  "secret_uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+  "before_resource_version": "20964527",
+  "after_resource_version": "20991327",
+  "before_config_sha256": "7ace04bb0a3f29c816914e7c4b3bbdeeb929d59207a5b748958739e3272cc3f2",
+  "after_config_sha256": "d3fd79712ed28807d6d132f47dc652bb2a140c108ad489c636e57214eb10e429",
+  "removed_exact_path": "network.namespace_prefix",
+  "removed_line_sha256": "75bed0afa124f45630a1460877e187bf6e37f577c31d9831d0d8828daca0999b",
+  "all_remaining_config_bytes_unchanged": true,
+  "all_other_structural_values_unchanged": true,
+  "all_other_secret_data_unchanged": true,
+  "inference_before_canonical_sha256": "b6361e16b187755b091149bebdda0b4809a44a1278640dd8442d764f967e21b0",
+  "inference_after_canonical_sha256": "b6361e16b187755b091149bebdda0b4809a44a1278640dd8442d764f967e21b0",
+  "deployment_unchanged_spec_sha256": "1b63a22a62c5b385100c3d26027a9babbad57ee4f35f8cc07131bee04ee0f5ca",
+  "deployment_gate_held": true,
+  "source_commit_unchanged": "67dceef03f01215c294a55f11464e3e3a52cb783",
+  "service_deployed": false,
+  "post_attempted": false,
+  "original_pod_log": "NOT_AVAILABLE_ALREADY_DELETED; config byte/source guard contradiction independently confirmed"
+}

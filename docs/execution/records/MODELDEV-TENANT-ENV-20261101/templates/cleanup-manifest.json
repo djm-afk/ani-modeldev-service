@@ -1,0 +1,69 @@
+{
+  "schema": "ani.modeldev.legacy-cleanup-manifest.v1",
+  "status": "TEMPLATE_NOT_EXECUTABLE",
+  "target_cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+  "manifest_sha256_excludes_this_field": null,
+  "generated_at": null,
+  "entries": [],
+  "entry_contract": {
+    "tenant_id": "resource UUID",
+    "gov_tenant_id": "numeric Gov tenant id",
+    "execution_id": "original UUID",
+    "operation_id": "original UUID",
+    "spec_hash": "original sha256",
+    "namespace_name": "original name",
+    "namespace_uid": "original UID",
+    "dispatch": {
+      "attempt_id": "original",
+      "plan_hash": "original",
+      "state": "original"
+    },
+    "run_id": "original or absent with proof",
+    "objects": [
+      {
+        "kind": "precise kind",
+        "name": "precise original name",
+        "uid": "original UID",
+        "resource_version": "observed",
+        "owner_evidence": "relative path",
+        "delete_eligibility": "proof path",
+        "result": "NOT_RUN"
+      }
+    ],
+    "storage_objects": [
+      {
+        "connection_id": "managed reference",
+        "bucket": "exact bucket",
+        "key": "exact object key",
+        "version_id": "exact version or absent",
+        "ownership_evidence": "not merely an InputRef",
+        "deletion_result": "NOT_RUN"
+      }
+    ],
+    "governance": {
+      "create_operation_id": "original",
+      "charges": [
+        {
+          "id": "original",
+          "original_units": "value",
+          "released_units": "value"
+        }
+      ],
+      "release_event_id": "original",
+      "ack": "APPLIED/ALREADY_APPLIED with evidence",
+      "reconciled": false
+    },
+    "close_evidence": null,
+    "cleanup_evidence": null,
+    "no_remaining_writer_evidence": null,
+    "db_delete_counts": null
+  },
+  "protected_assets": [
+    "A/B standard namespace",
+    "non-ModelDev VM/Instance/Sandbox/NAD/PVC",
+    "external input/base model",
+    "READY Model assets",
+    "shared Res image credentials",
+    "other owner quota and records"
+  ]
+}

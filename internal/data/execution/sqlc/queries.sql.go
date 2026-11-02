@@ -162,7 +162,7 @@ func (q *Queries) GetCloseIntentBySource(ctx context.Context, arg GetCloseIntent
 
 const getExecution = `-- name: GetExecution :one
 SELECT tenant_id, execution_id, operation_id, actor,
-    intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at
+    intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at, cluster_id, environment_binding_id, deadline_at
 FROM modeldev_executions
 WHERE tenant_id = $1::uuid
   AND execution_id = $2::uuid
@@ -186,6 +186,9 @@ func (q *Queries) GetExecution(ctx context.Context, arg GetExecutionParams) (Mod
 		&i.SnapshotCanonical,
 		&i.SpecHash,
 		&i.AcceptedAt,
+		&i.ClusterID,
+		&i.EnvironmentBindingID,
+		&i.DeadlineAt,
 	)
 	return i, err
 }
@@ -266,28 +269,32 @@ func (q *Queries) InsertCloseIntent(ctx context.Context, arg InsertCloseIntentPa
 const insertExecution = `-- name: InsertExecution :one
 INSERT INTO modeldev_executions (
     tenant_id, execution_id, operation_id, actor,
-    intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at
+    intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at, cluster_id, environment_binding_id, deadline_at
 ) VALUES (
     $1::uuid, $2::uuid,
     $3::uuid, $4,
     $5, $6,
-    $7, $8, $9
+    $7, $8, $9,
+    $10::uuid, $11::uuid, $12::timestamptz
 )
 ON CONFLICT DO NOTHING
 RETURNING tenant_id, execution_id, operation_id, actor,
-    intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at
+    intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at, cluster_id, environment_binding_id, deadline_at
 `
 
 type InsertExecutionParams struct {
-	TenantID          pgtype.UUID
-	ExecutionID       pgtype.UUID
-	OperationID       pgtype.UUID
-	Actor             string
-	IntentCanonical   []byte
-	IntentHash        string
-	SnapshotCanonical []byte
-	SpecHash          string
-	AcceptedAt        pgtype.Timestamptz
+	TenantID             pgtype.UUID
+	ExecutionID          pgtype.UUID
+	OperationID          pgtype.UUID
+	Actor                string
+	IntentCanonical      []byte
+	IntentHash           string
+	SnapshotCanonical    []byte
+	SpecHash             string
+	AcceptedAt           pgtype.Timestamptz
+	ClusterID            pgtype.UUID
+	EnvironmentBindingID pgtype.UUID
+	DeadlineAt           pgtype.Timestamptz
 }
 
 func (q *Queries) InsertExecution(ctx context.Context, arg InsertExecutionParams) (ModeldevExecution, error) {
@@ -301,6 +308,9 @@ func (q *Queries) InsertExecution(ctx context.Context, arg InsertExecutionParams
 		arg.SnapshotCanonical,
 		arg.SpecHash,
 		arg.AcceptedAt,
+		arg.ClusterID,
+		arg.EnvironmentBindingID,
+		arg.DeadlineAt,
 	)
 	var i ModeldevExecution
 	err := row.Scan(
@@ -313,6 +323,9 @@ func (q *Queries) InsertExecution(ctx context.Context, arg InsertExecutionParams
 		&i.SnapshotCanonical,
 		&i.SpecHash,
 		&i.AcceptedAt,
+		&i.ClusterID,
+		&i.EnvironmentBindingID,
+		&i.DeadlineAt,
 	)
 	return i, err
 }

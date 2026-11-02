@@ -1,0 +1,11 @@
+{
+  "observed_at_utc": "2026-10-31T22:24:05.211062+00:00",
+  "entry": "ssh kubercloud@100.64.128.12",
+  "attempts": 1,
+  "ssh_exit": 255,
+  "read_only": true,
+  "stderr_bytes": 43,
+  "stderr_sha256": "b03c63d58e9d666e879fe4ebb1c836a193f77e9518d9db0dd4cc1ed4365fb2ce",
+  "known_connection_error": "Connection closed",
+  "exception_classes": []
+}

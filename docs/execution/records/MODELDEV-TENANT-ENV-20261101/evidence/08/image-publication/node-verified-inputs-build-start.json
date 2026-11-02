@@ -1,0 +1,315 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_git_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "source_file_count": 689,
+  "all_689_sha_match": true,
+  "frozen_input_files_canonical_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+  "step_sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e",
+  "runner_sha256": "dedbd4874461a6dba93dbea0616bf3ffc4dea79e913654cba10964ff8da66619",
+  "source_fetch": {
+    "status": "FIXED_SOURCE_FETCH_FAILED",
+    "pid": 2395405,
+    "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+    "file_count": 689,
+    "archives_used": false,
+    "authentication": "anonymous public immutable commit URL, default TLS validation",
+    "matched": 31,
+    "reused_chunk_parts": 26,
+    "fetched": 576,
+    "errors": [
+      {
+        "path": "cmd/ani-modeldev-service/gpu_owner_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "cmd/ani-modeldev-service/main.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "cmd/ani-modeldev-service/runtime_storage_credentials_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "contract/cpup01/conformance/README.md",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "contract/cpup01/conformance/intent-canonical-v3.json",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "contract/cpup01/dataset_manifest_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "contract/cpup01/intent_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "contract/cpup01/output_manifest_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "contract/cpup01/training_image_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/biz/execution_state_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/biz/managed_runtime_prepared_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/biz/managed_task_identity_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/biz/publication.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/biz/verification_errors.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/biz/workload_view_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/catalogue/reader_atomic_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/cleanup/execution_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/cleanup/execution.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/cleanup/reconcile_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/execution/admission_invariants_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/execution/repository.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/execution/state.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/input/queries.sql",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/input/sqlc/db.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/kfp/managed_run.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/lifecycle/closed_stop_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/lifecycle/committed_close.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/lifecycle/early_close.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/lifecycle/registration_recovery.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/modelclient/facts_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/modelclient/rpc.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/resolutiontest/imagestub_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/resolutiontest/timing_configuration_revision_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/runtimeproof/compute_observer_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/runtimeproof/kubernetes.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/runtimeproof/owner_close.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/runtimeproof/native_task_fixture_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/runtimeproof/root_admission_close_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/submission/confirmed.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/submission/observation_time.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/submittest/deadline_flow_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/submittest/not_sent_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/submittest/owner_close_flow_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/submittest/pending_worker_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/tenantenvironment/repository.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/trainer/adapter.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/data/trainer/retention_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/server/command_certificate_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/server/commandtest/tls_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/server/modeldevwebhook/environment.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/server/observability.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/service/finetuning_materials.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/service/query_training_logs_recorded_test.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/testsupport/admissionfixture/admission.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "internal/testsupport/commandtls/certificates.go",
+        "error_class": "URLError",
+        "http_status": null
+      },
+      {
+        "path": "training/tests/test_native_training_dtype.py",
+        "error_class": "URLError",
+        "http_status": null
+      }
+    ],
+    "elapsed_seconds": 53.69
+  },
+  "step_compilation": "reused verified existing Fedora build; node Go metadata failed before toolchain download",
+  "runner_unit": "ani-modeldev-d807-runner.service",
+  "runner_start_exit": 0,
+  "runner_pid": "2416808"
+}

@@ -1,0 +1,10 @@
+{
+  "CheckedAt": "2026-11-01T00:20:46.060242+00:00",
+  "SourceManifestSHA256": "d6a92a049ab2ee818d9aa4dfae04c83b47f64f36cece670d55d02e177f54172d",
+  "LocalMatchesFedoraToolFiles": true,
+  "DocumentationSHA256": "6c246c5d94cfafddfbbcd2f85b86be17dfd49f973fb7a6d51d69f6c6506ad63e",
+  "ToolFileCount": 12,
+  "ComponentReceiptByteSHA256": "620223f36ede87638d42b402fb1607ad538f52b619cfa80f138e17a7172ab224",
+  "LiveWrite": "NOT_RUN",
+  "FullMakeVerify": "NOT_RUN; existing old-base required gate FAIL retained"
+}

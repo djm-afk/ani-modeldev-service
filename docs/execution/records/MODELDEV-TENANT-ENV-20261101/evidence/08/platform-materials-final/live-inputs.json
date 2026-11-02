@@ -1,0 +1,241 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "observed_at_unix": 1793500277.5930007,
+  "catalogue_source": {
+    "name": "modeldev-trainimg-catalogue-20261030",
+    "namespace": "ani-system",
+    "uid": "55060a0b-e39c-4e86-b48e-6c7337099185",
+    "resourceVersion": "18628497"
+  },
+  "materials": {
+    "builtin.mlp.cpu.json": {
+      "bytes": 2956,
+      "sha256": "ee63a789b23e0ece1db41c6ecd5a586ccb39fc259e5d089955123890f6869443"
+    },
+    "builtin.mlp.gpu.json": {
+      "bytes": 2957,
+      "sha256": "8e09390474e2fe557a7065d4d9dac61c0c8c993e946d265c59b0fbd27f299447"
+    },
+    "builtin.sft_lora.cpu.json": {
+      "bytes": 28628,
+      "sha256": "568299a665ab3920248ba995acfde801fe5e06a1d1cf42a3148ed7da007edce9"
+    },
+    "builtin.sft_lora.gpu.json": {
+      "bytes": 28629,
+      "sha256": "2630753f294981fd76018f2220bf975d4dbc2e894917843645e0585dbd5c2296"
+    }
+  },
+  "workspace_storage_class": {
+    "provisioner": "rook-ceph.cephfs.csi.ceph.com",
+    "volumeBindingMode": "Immediate",
+    "allowVolumeExpansion": true
+  },
+  "workspace_capability_evidence": [
+    {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-kfp-workspace-0374fd04-2b3c-4a7d-ac8c-e93ccaedc3ce",
+      "uid": "0bd5bb30-41b2-4776-bd6a-cd3ae7cbba6c",
+      "storage_class": "ani-cephfs",
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "phase": "Bound",
+      "capacity": "4Gi"
+    },
+    {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-kfp-workspace-111952ee-9d72-46d9-9981-c2a1ead73289",
+      "uid": "2df8339b-9cec-4c28-823a-bd73b6825535",
+      "storage_class": "ani-cephfs",
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "phase": "Bound",
+      "capacity": "4Gi"
+    },
+    {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-kfp-workspace-165037e3-49fd-4889-9018-cf9d95600b29",
+      "uid": "51db7d48-752a-4360-b3ae-d9ab1e255b17",
+      "storage_class": "ani-cephfs",
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "phase": "Bound",
+      "capacity": "64Gi"
+    },
+    {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-kfp-workspace-16d56223-4081-47ae-9ecd-61eb9104c6e7",
+      "uid": "27f46442-9fab-4984-abce-a6ede09d8eb7",
+      "storage_class": "ani-cephfs",
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "phase": "Bound",
+      "capacity": "64Gi"
+    },
+    {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-kfp-workspace-196d30c0-e63d-4f73-a073-fd0f49e5401d",
+      "uid": "789ef52a-8492-463f-bb94-817978e4decb",
+      "storage_class": "ani-cephfs",
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "phase": "Bound",
+      "capacity": "64Gi"
+    },
+    {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-kfp-workspace-1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "uid": "6a04378e-38d6-4e65-969e-c31da4322243",
+      "storage_class": "ani-cephfs",
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "phase": "Bound",
+      "capacity": "64Gi"
+    },
+    {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-kfp-workspace-1d8e112d-3612-4080-8dab-a24c383da879",
+      "uid": "4e576311-58e7-4354-a777-a9532b7f778d",
+      "storage_class": "ani-cephfs",
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "phase": "Bound",
+      "capacity": "64Gi"
+    },
+    {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-kfp-workspace-20a95266-634e-428c-9f08-13c64f225a4d",
+      "uid": "d26fc6ac-f2ea-4155-9d78-b3071465e4d9",
+      "storage_class": "ani-cephfs",
+      "access_modes": [
+        "ReadWriteMany"
+      ],
+      "phase": "Bound",
+      "capacity": "64Gi"
+    }
+  ],
+  "publication_sar": {
+    "principal": "system:serviceaccount:ani-system:modeldev-control",
+    "groups_supplied": false,
+    "reviews": [
+      {
+        "attributes": {
+          "group": "pipelines.kubeflow.org",
+          "version": "v1beta1",
+          "resource": "pipelines",
+          "namespace": "ani-system",
+          "verb": "create",
+          "name": ""
+        },
+        "status": {
+          "allowed": false
+        }
+      },
+      {
+        "attributes": {
+          "group": "pipelines.kubeflow.org",
+          "version": "v1beta1",
+          "resource": "pipelines",
+          "namespace": "ani-system",
+          "verb": "list",
+          "name": ""
+        },
+        "status": {
+          "allowed": false
+        }
+      },
+      {
+        "attributes": {
+          "group": "pipelines.kubeflow.org",
+          "version": "v1beta1",
+          "resource": "pipelines",
+          "namespace": "ani-system",
+          "verb": "get",
+          "name": "modeldev-mlp-cpu"
+        },
+        "status": {
+          "allowed": false
+        }
+      },
+      {
+        "attributes": {
+          "group": "pipelines.kubeflow.org",
+          "version": "v1beta1",
+          "resource": "pipelines",
+          "namespace": "ani-system",
+          "verb": "get",
+          "name": "modeldev-mlp-gpu"
+        },
+        "status": {
+          "allowed": false
+        }
+      },
+      {
+        "attributes": {
+          "group": "pipelines.kubeflow.org",
+          "version": "v1beta1",
+          "resource": "pipelines",
+          "namespace": "ani-system",
+          "verb": "get",
+          "name": "modeldev-sft-lora-cpu"
+        },
+        "status": {
+          "allowed": false
+        }
+      },
+      {
+        "attributes": {
+          "group": "pipelines.kubeflow.org",
+          "version": "v1beta1",
+          "resource": "pipelines",
+          "namespace": "ani-system",
+          "verb": "get",
+          "name": "modeldev-sft-lora-gpu"
+        },
+        "status": {
+          "allowed": false
+        }
+      }
+    ]
+  },
+  "support_images": {
+    "V2_DRIVER_IMAGE": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+    "V2_LAUNCHER_IMAGE": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+  },
+  "support_source": {
+    "name": "ml-pipeline",
+    "namespace": "kubeflow",
+    "uid": "56189e37-8874-4f2d-90bb-19846a332b64",
+    "resourceVersion": "388853"
+  },
+  "original_md": {
+    "uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "service_account": "modeldev-control",
+    "projected_tokens": [
+      {
+        "volume": "kfp-token",
+        "path": "token",
+        "audience": "pipelines.kubeflow.org",
+        "expiration_seconds": 3600
+      }
+    ]
+  },
+  "kfp_public_ca": {
+    "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236"
+  },
+  "registry_transport_sources": [],
+  "secrets_emitted": false
+}

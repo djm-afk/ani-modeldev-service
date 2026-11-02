@@ -1,0 +1,219 @@
+{
+  "schema": "ani.modeldev.original-owner-close-qualification.v1",
+  "observed_at": "2026-11-01T00:30:06.263303+00:00",
+  "read_only": true,
+  "sole_ssh_exit": 255,
+  "result": "PARTIAL_SOURCE_QUALIFIED_LIVE_CANONICAL_BLOCKED",
+  "safe_stderr_tail": "Connection closed by 100.64.128.12 port 22\r\n",
+  "identity_observation_this_attempt": "NOT_RUN_SSH_CLOSED_BEFORE_REMOTE_PYTHON",
+  "live_canonical_observation": "NOT_RUN",
+  "live_scoped_rowcounts": "NOT_RUN",
+  "expected_identity_reference": "workbench-maintenance-job.py:TARGET",
+  "source_pins": {
+    "modeldev_owner_ref": "9c2c623edea2128a5898fdb7a18d399b73cebe15",
+    "modeldev_baseline_ref": "21bf4bd6540d462a61c91b629f26250899583223",
+    "governance_maintenance_ref": "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+    "governance_original_module_ref": "c99c9f1081c754f7e38ceccd056db9a032ca3c27",
+    "worktree_current_md_head_at_read": "f7eb1f7e56a449ded1a6959821500657b5e5700d",
+    "fixed_ref_used_for_contract_analysis": true
+  },
+  "source_files": {
+    "modeldev": [
+      {
+        "path": "contract/cpup01/snapshot.go",
+        "sha256": "c5422cb34a0c3dee9a9020931e698a45bc752bee32f01ac04b181c5c6ae4d468"
+      },
+      {
+        "path": "contract/cpup01/intent.go",
+        "sha256": "b469ee2e4c64da7f0380768c734d623e8af813e9b69c5d8e2f039a4d3a5caf73"
+      },
+      {
+        "path": "internal/data/execution/repository.go",
+        "sha256": "fe2c088cd0afbc13b959368e7f47e590d969622e05e344c7f2d2d0924637bcdc"
+      },
+      {
+        "path": "internal/data/execution/query.go",
+        "sha256": "74cfd4bb3032359b1ec7b2092464ae5d800f52a9bc219fe5df3c88754b6d2333"
+      },
+      {
+        "path": "internal/data/execution/close.go",
+        "sha256": "c48bd2e4960d2969cd9caefea9da91f547a3e5653ff7b054079fadde26e0799e"
+      },
+      {
+        "path": "internal/data/lifecycle/repository.go",
+        "sha256": "7ffa7066bd0db0b2a5df57bd87fb85aed8bcb280321cdb1cae4b82ebbcefa428"
+      },
+      {
+        "path": "internal/data/lifecycle/validation.go",
+        "sha256": "a6fbba727ebd3f2ae3b50545f8fed61f9a10f310d214e6513967dd2632b86a07"
+      },
+      {
+        "path": "internal/data/submission/repository.go",
+        "sha256": "5e6e46509153f4e59d36d24a54354c3cf789e3bcf245f5c3d9c2b370bd819107"
+      }
+    ],
+    "governance": [
+      {
+        "path": "go.mod",
+        "sha256": "eccba55c294e83ea62420f2ff5a424f754b688f6dec8bee95ba25d6770e6883b"
+      },
+      {
+        "path": "app/admin/service/internal/data/modeldev_acceptance_repo.go",
+        "sha256": "d698f6eb27aa5615a5e40faad1c91deeab8d708be61aaa173b9e343e67ad285e"
+      },
+      {
+        "path": "app/admin/service/internal/data/modeldev_dispatch_repo.go",
+        "sha256": "477a38ff825546d20683f882339c5b217e1817e121ed371ba377c085cf34bc80"
+      },
+      {
+        "path": "app/admin/service/internal/data/modeldev_close_repo.go",
+        "sha256": "717e42997492d35c7ecf2cdac69bf795d64df38b330a43b718fcefd5c4fc9d9a"
+      },
+      {
+        "path": "app/admin/service/internal/data/modeldev_dispatch_client.go",
+        "sha256": "5543d3d86e0496554472b55e75ffafff58d4962bbf54f67d00a0a357fba8e4a0"
+      }
+    ]
+  },
+  "evidence_inputs": [
+    {
+      "path": "old-inventory.json",
+      "sha256": "aa5420bd1c2ad02f373509d625a99080b4c6721050de1bcdb3496ad1d15a44d2"
+    },
+    {
+      "path": "old-gov-inventory.json",
+      "sha256": "66a3e9b4eb4edc931e8bc452d1c48e671d97e3412c820c992b6f28044cf54406"
+    },
+    {
+      "path": "f216-original-reader-readonly-20261101.json",
+      "sha256": "dbd1a40857133c5c3d250fc9c984e7e698db9bc0c988411466b4f312f2cfcefd"
+    }
+  ],
+  "four_original_acceptances": [
+    {
+      "id": 55,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "13bd316b-0b85-4c8e-a005-698eb9ffdd5e",
+      "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+      "execution_spec_hash": "cb9831ca80e7df95cf1ca3746db4ff53b623b51671efcf34230275235e0c1690",
+      "dispatch_state": "UNKNOWN",
+      "retry_blocked": true,
+      "last_error_code": "INVALID_COMMAND",
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "canonical_shape": "UNKNOWN_NOT_INCLUDED_IN_HISTORICAL_INVENTORY_AND_LIVE_READ_FAILED",
+      "canonical_digest_verified_this_attempt": false,
+      "old_md_execution_in_historical_inventory": false
+    },
+    {
+      "id": 57,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "cd2ee5e3-e4fb-4515-99f8-33b3da892a8f",
+      "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+      "execution_spec_hash": "9883ac49d909b2809e78002db7d47d564caa88f84bd29ba14d6248a34e8bb096",
+      "dispatch_state": "UNKNOWN",
+      "retry_blocked": true,
+      "last_error_code": "INVALID_COMMAND",
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "canonical_shape": "UNKNOWN_NOT_INCLUDED_IN_HISTORICAL_INVENTORY_AND_LIVE_READ_FAILED",
+      "canonical_digest_verified_this_attempt": false,
+      "old_md_execution_in_historical_inventory": false
+    },
+    {
+      "id": 59,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "ff5fc1f4-d9a8-4c6a-8c47-5b1d4ef06f05",
+      "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+      "execution_spec_hash": "e75a332cef7521f278df8fc78df0b3f869d8499f96d188fd3b8a915fe02ec829",
+      "dispatch_state": "UNKNOWN",
+      "retry_blocked": true,
+      "last_error_code": "INVALID_COMMAND",
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "canonical_shape": "UNKNOWN_NOT_INCLUDED_IN_HISTORICAL_INVENTORY_AND_LIVE_READ_FAILED",
+      "canonical_digest_verified_this_attempt": false,
+      "old_md_execution_in_historical_inventory": false
+    },
+    {
+      "id": 60,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "25b88cf7-bccb-4fac-8c9a-6b3ff91477ee",
+      "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+      "execution_spec_hash": "85fa8793e5ff44c8c611316129f344a36124e027f03cc71bf797d89fa1d40a45",
+      "dispatch_state": "UNKNOWN",
+      "retry_blocked": true,
+      "last_error_code": "INVALID_COMMAND",
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "canonical_shape": "UNKNOWN_NOT_INCLUDED_IN_HISTORICAL_INVENTORY_AND_LIVE_READ_FAILED",
+      "canonical_digest_verified_this_attempt": false,
+      "old_md_execution_in_historical_inventory": false
+    }
+  ],
+  "f216_existing_receipt": {
+    "execution_id": "f2168fbf-d7c9-4e96-8cc6-784bb1546083",
+    "operation_id": "49a62211-703b-4adf-abae-70cf2af78e7e",
+    "schema_version": "ani.modeldev.execution-spec.v3",
+    "snapshot_sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+    "kind": "GENERAL_TRAINING",
+    "parameter_contract_version": "ani.mlp.parameters.v3",
+    "closed_at": "2026-10-30T06:31:38.08282+00:00",
+    "owner_revision": 7,
+    "close_generation": 1,
+    "runtime_selected_presence": {
+      "Workspace": false,
+      "Training": false,
+      "TrainingHandle": false,
+      "Observation": false,
+      "CloseEvidence": true,
+      "CloseAuthority": false,
+      "GPURelease": false,
+      "StepExitCleanup": false,
+      "ComputeCleanup": false,
+      "RuntimeTemplate": false
+    },
+    "owner_termination_present": false,
+    "resources_count": 8,
+    "skipped_count": 3,
+    "run_id_matches_authority": true,
+    "workflow_uid_matches_authority": true,
+    "canonical_full_shape": "UNKNOWN_HISTORICAL_INVENTORY_RETAINED_SELECTED_PROJECTION_ONLY",
+    "public_query_receipt": "login200 + query503 MODELDEV_QUERY_UNAVAILABLE at original receipt time; not repeated",
+    "exact_failing_guard": "UNDETERMINED_WITHOUT_ORIGINAL_CANONICAL_AND_ORIGINAL_OWNER_STAGE_DIAGNOSTIC"
+  },
+  "source_conclusions": {
+    "same_original_create_after_fence": "LEGAL_ORIGINAL_PROTOCOL: source tests explicitly deliver close before original queued Create. Must preserve original tenant/operation/execution/spec/intent/acceptedAt/deadline/actor and canonical bytes; it is not permission for a new execution or a KFP CreateRun resend.",
+    "close_ack_scope": "DurablyRecorded+CLOSING is a durable creation fence. It is not CLOSED_NO_DISPATCH by itself.",
+    "no_dispatch_close": "Original late admission must exist; Reserve observes close_generation>0 and gives no new send permit; original CloseUndispatched then records ClosedAt/NoDispatch under shared identity lock.",
+    "four_blocked_create": "ClaimDeliveryDue requires retry_blocked=false and (stop generation0 OR close ACKED). AcceptStop changes only Stop/close fields, not creation retry_blocked. Existing HTTP Create replay FindAccepted is read-only and does not rearm. No public/single-ID permanent-create-rearm entry was found in the scoped original files.",
+    "codec_version_conflict": "Gov c99 and MD21bf/9c2 both label snapshot v3. MD21bf/9c2 additionally require training_image for GENERAL_TRAINING, and add intent training_image_id/scope. Schema label/hash syntax alone is insufficient proof of same reader contract.",
+    "f216_owner_termination_absence": "NOT_A_PROVEN_FAILURE: nil OwnerTermination is explicitly accepted when resources+skipped>=4, and executionHistoryView returns partial history when nil; f216 historical count8+3 meets that count.",
+    "f216_gpu_anchor_absence": "NOT_A_PROVEN_FAILURE: nil GPURelease bypasses ValidGPUReleaseFacts and validateGPUReleaseAnchor; absent anchor cannot alone explain503.",
+    "f216_503_scope": "503 may result from original MD persistence/submission/runtime/view guard, owner unavailability, or Gov response validation. Retired top-level execution canonical is specifically mapped to NotFound by fixed9c2 GetQueryRecord, so503 does not identify that guard."
+  },
+  "minimum_legal_next_step": [
+    "After sole SSH recovers, verify all cluster identity fields before any reads; select only the five exact original rows and original dependent identities. Keep canonical bytes only in remote memory; emit digest/size/schema/kind/field presence/equality/finite reason.",
+    "Validate original Gov canonical with the exact c99 native codec and MD owner canonical with the exact21bf/9c2 reader. Specifically prove GENERAL_TRAINING training_image and input/identity/runtime plan fields; do not insert current defaults or re-encode old bytes.",
+    "For f216, distinguish raw owner RPC status from Gov response validation; evaluate original reader stages without mutating rows. Preserve existing503 receipt and return first exact failing guard only after observed validation.",
+    "Only if original canonical is valid at both owners: current-authorized BFF Stop -> original close delivery -> original durable fence ACK, then the original reliable Create delivery may legally resume with all immutable original fields and no new KFP permit.",
+    "Current four permanent blocked rows have no qualified existing rearm path established. Do not SQL-clear quarantine, restart all Create claims, or call a new HTTP Create as a workaround. If canonical passes, record the exact missing bounded-original-claim/reconciliation contract and obtain root decision on the minimal explicit maintenance correction before writes."
+  ],
+  "manifest_requirements": {
+    "per_original_entry": [
+      "numeric Gov tenant + Resource tenant UUID",
+      "acceptance ID + original operation/execution/spec/intent hash",
+      "original canonical SHA/length/codec-validation finite result",
+      "original actor/acceptedAt/deadline preserved privately, public equality checks only",
+      "committed Stop source generation/actor/time + MD close fence/revision + receipt hash",
+      "before/after exact rowcounts for identity/close/admission/runtime/dispatch/confirmed-run/authority",
+      "original charge/release-event/receipt association count and zero-delta account proof; never invent release when no original charge"
+    ],
+    "conditional_expected_delta": "If verified before identity=0/close=0, first original Stop adds1 identity+1close; replay adds0. Late original Create adds original admission only if codec valid; dispatch send-permit count must remain0 under original close fence. Exact actual counts are NOT_RUN this attempt."
+  },
+  "completed_at": "2026-11-01T00:33:10.488319+00:00"
+}

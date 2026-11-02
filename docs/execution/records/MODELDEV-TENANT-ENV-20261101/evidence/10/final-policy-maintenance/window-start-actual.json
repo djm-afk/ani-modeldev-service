@@ -1,0 +1,236 @@
+{
+  "schema": "ani.modeldev.spec54-original-window-start.v1",
+  "started_at": "2026-11-01T16:29:54.406833+00:00",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:29:54.623333+00:00"
+  },
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/4ae96c9a-8b9a-45b9-9abd-827c050a1865",
+      "status": 200,
+      "response_sha256": "10f183fac58a0694927f4de2a958234a2e6f3d131c7d22fe31738c825c6ffedb",
+      "at": "2026-11-01T16:29:56.008188+00:00"
+    },
+    {
+      "method": "DELETE",
+      "path": "/apis/v2beta1/runs/4ae96c9a-8b9a-45b9-9abd-827c050a1865",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "at": "2026-11-01T16:29:56.246846+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/4ae96c9a-8b9a-45b9-9abd-827c050a1865",
+      "status": 404,
+      "response_sha256": "4dfa953fbd2b46e74b1adafe7dbc6f00ede32a1ce69e7a2f515f76cd68ba19b7",
+      "at": "2026-11-01T16:29:56.253644+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/8c77338b-9913-41ac-8e60-7fde150800db",
+      "status": 200,
+      "response_sha256": "c1241c133ed617f8e4bd34dae918055d296e621408fb2cb73b9520d70c72f054",
+      "at": "2026-11-01T16:29:56.270263+00:00"
+    },
+    {
+      "method": "DELETE",
+      "path": "/apis/v2beta1/runs/8c77338b-9913-41ac-8e60-7fde150800db",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "at": "2026-11-01T16:29:56.499939+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/8c77338b-9913-41ac-8e60-7fde150800db",
+      "status": 404,
+      "response_sha256": "00eb6c19b9dc8e219327bb8f8a8b23b8ecfc500e994b36220e100ce43194d9d6",
+      "at": "2026-11-01T16:29:56.505208+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/9022dea3-0127-41cd-80d4-de0cae1cadea",
+      "status": 200,
+      "response_sha256": "dcb1014aefe22c29fa43efbf03c3ade619f5af2c6f7f9583dc4f0e2675b676cc",
+      "at": "2026-11-01T16:29:56.520709+00:00"
+    },
+    {
+      "method": "DELETE",
+      "path": "/apis/v2beta1/runs/9022dea3-0127-41cd-80d4-de0cae1cadea",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "at": "2026-11-01T16:29:56.748862+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/9022dea3-0127-41cd-80d4-de0cae1cadea",
+      "status": 404,
+      "response_sha256": "ac65d8493d2e6db0bc3c40af81a50a1fcb2fb9879d5afbe13e14a72475c58f7d",
+      "at": "2026-11-01T16:29:56.753868+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/97ec94c9-f5a0-4a94-9acb-f653d2963053",
+      "status": 200,
+      "response_sha256": "4708d595725e8f8d07505e3ee28332b128e707446e50a40e87c0d6b00bddd36e",
+      "at": "2026-11-01T16:29:56.779421+00:00"
+    },
+    {
+      "method": "DELETE",
+      "path": "/apis/v2beta1/runs/97ec94c9-f5a0-4a94-9acb-f653d2963053",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "at": "2026-11-01T16:29:57.010519+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/97ec94c9-f5a0-4a94-9acb-f653d2963053",
+      "status": 404,
+      "response_sha256": "a56ea23ca5ce1420c5a441303c55818a2c8d7b34472f0b24ea89424e998d4ac2",
+      "at": "2026-11-01T16:29:57.017766+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/0a449034-5763-4ac0-b559-14af3c896422",
+      "status": 200,
+      "response_sha256": "630f6e9ceaa94fb476ef8c2a98bba4425a927bde622d73e5609497bb19627506",
+      "at": "2026-11-01T16:29:57.033685+00:00"
+    },
+    {
+      "method": "DELETE",
+      "path": "/apis/v2beta1/runs/0a449034-5763-4ac0-b559-14af3c896422",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "at": "2026-11-01T16:29:57.260670+00:00"
+    },
+    {
+      "method": "GET",
+      "path": "/apis/v2beta1/runs/0a449034-5763-4ac0-b559-14af3c896422",
+      "status": 404,
+      "response_sha256": "4defd0fbd1471e46f0e54542a5c1629bf5af5629e319359c3ffb027c9b537c79",
+      "at": "2026-11-01T16:29:57.265711+00:00"
+    },
+    {
+      "action": "GOV_EXPLICIT_PAUSED_TRUE",
+      "uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5"
+    }
+  ],
+  "maintenance_exec_calls": 4,
+  "closure_basis": "Root confirmed original A3, B2, CPUStop, B3 and B4 CLOSED, compute APPLIED, B2 charge released before this maintenance",
+  "original_runtime": {
+    "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "pod_name": "ani-modeldev-6fd745c85c-z59v4",
+    "pod_uid": "b98cfbef-fd6d-4a8f-99fe-d47b6ed2d6f9",
+    "node": "node3",
+    "replicaset_uid": "9fd75510-459e-4242-b89f-d867a116032d",
+    "container_id": "containerd://e92145309ad9a6bf3e1a00d26361fb352a3a9d8e0fcb90d310eeb3b0816475b9",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+    "started_at": "2026-11-01T15:53:50Z",
+    "restart_count": 0
+  },
+  "token_public_sample": {
+    "claims": {
+      "iat": 1793550539,
+      "exp": 1793551139,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "pipelines.kubeflow.org"
+      ],
+      "jti_present": true,
+      "pod_uid": "b98cfbef-fd6d-4a8f-99fe-d47b6ed2d6f9",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 16,
+      "size_bytes": 1148,
+      "mtime_epoch": 1793550539,
+      "resolved_generation": "..2026_11_01_16_28_59.3116000079",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "original_completed_runs": [
+    {
+      "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+      "run_id": "4ae96c9a-8b9a-45b9-9abd-827c050a1865",
+      "attempt_id": "f279e51e-1439-411f-b674-63ae0f9cd824",
+      "plan_hash": "427519f1b72b217d5e458904a8e819adee03c61a7a16678630a87aa5fcfb3f93",
+      "experiment_id": "bd5b90f0-77c9-48df-ba81-70acb4e9b48a",
+      "after": "NotFound"
+    },
+    {
+      "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "execution_id": "0b3a2880-790b-4af5-a0e4-07e8fc322719",
+      "run_id": "8c77338b-9913-41ac-8e60-7fde150800db",
+      "attempt_id": "f1629285-bf3c-41f6-89ae-d67bc43118aa",
+      "plan_hash": "160f7a71e429c35a7cd5af3cc98a656200f2f8efb1e054b9397224c0b68347b3",
+      "experiment_id": "5889ac8e-40e3-49ff-8f37-5e5b8b18cfb9",
+      "after": "NotFound"
+    },
+    {
+      "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "execution_id": "bb4fd203-1a3d-4796-8aa8-783dd62e57ae",
+      "run_id": "9022dea3-0127-41cd-80d4-de0cae1cadea",
+      "attempt_id": "a0e89747-058a-4541-ab2d-5a224ede0213",
+      "plan_hash": "9083b3f4a6701b788bd5d41237c45caf05a4166ef748a06d19fd5d7bc565aa10",
+      "experiment_id": "5889ac8e-40e3-49ff-8f37-5e5b8b18cfb9",
+      "after": "NotFound"
+    },
+    {
+      "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "execution_id": "a3b48752-fc64-4ad6-903d-bf57c2f248b4",
+      "run_id": "97ec94c9-f5a0-4a94-9acb-f653d2963053",
+      "experiment_id": "5889ac8e-40e3-49ff-8f37-5e5b8b18cfb9",
+      "after": "NotFound"
+    },
+    {
+      "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "execution_id": "59f92b91-5e86-4dd1-90ec-cb1037756758",
+      "run_id": "0a449034-5763-4ac0-b559-14af3c896422",
+      "experiment_id": "5889ac8e-40e3-49ff-8f37-5e5b8b18cfb9",
+      "after": "NotFound"
+    }
+  ],
+  "identity_before_run_delete": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:29:57.235634+00:00"
+  },
+  "identity_before_pause": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:29:57.556845+00:00"
+  },
+  "governance_create_paused": true,
+  "identity_before_stop": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:30:04.193258+00:00"
+  },
+  "worker_replicas": 0,
+  "original_worker_pod_absent": true,
+  "status": "GOV_PAUSED_ORIGINAL_FIVE_RUNS_ABSENT_SINGLE_MD_WORKER_STOPPED",
+  "finished_at": "2026-11-01T16:30:06.460870+00:00"
+}

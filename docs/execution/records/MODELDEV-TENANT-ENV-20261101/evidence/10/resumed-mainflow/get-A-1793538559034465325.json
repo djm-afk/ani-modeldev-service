@@ -1,0 +1,120 @@
+{
+  "started_at": "2026-11-01T13:09:16.728254+00:00",
+  "mode": "get",
+  "tenant": "A",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/2d9bcccd-78e7-47ab-9922-dcee85021099",
+      "http_status": 200,
+      "response": {
+        "operation_id": "0af911b1-c5a4-464d-8da1-87b3e4949dd3",
+        "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+        "name": "tenantenv-a_cpu-935c3148-a3",
+        "kind": "GENERAL_TRAINING",
+        "implementation_id": "builtin.mlp",
+        "compute_preset_id": "84547768-be1b-45dd-bdb9-be824f58d583",
+        "input_version_id": "56676789-5fbc-4a13-b566-a2dcbb1b7f76",
+        "image_id": "img_3af6f494c02c493dbbdff11099290d72",
+        "image_version": "1",
+        "image_scope": "platform",
+        "compute_state": "SUCCEEDED",
+        "delivery_state": "PUBLISHED",
+        "close_state": "CLOSED",
+        "resource_state": "NOT_APPLICABLE",
+        "current_step": "CLOSE",
+        "stop_requested": false,
+        "close_generation": "1",
+        "accepted_at": "2026-11-01T12:06:30.781608Z",
+        "deadline_at": "2026-11-01T12:36:30.781608Z",
+        "observed_at": "2026-11-01T12:10:27.682065Z",
+        "parameter_contract_version": "ani.mlp.parameters.v3",
+        "resolved_configuration_sha256": "",
+        "compute": {
+          "compute_preset_id": "84547768-be1b-45dd-bdb9-be824f58d583",
+          "selection_digest": "cb5e1e771551411e51fa235b72c5d0faeaad00cb7b84577619e34d42bb124032",
+          "cpu_millis": "2000",
+          "memory_mib": "4096",
+          "device_mode": "cpu"
+        },
+        "timing": {
+          "execution_timeout_seconds": "1800",
+          "execution_timeout_max_seconds": "14400",
+          "step_timeout_seconds": "14400"
+        },
+        "history": {
+          "run_id": "4ae96c9a-8b9a-45b9-9abd-827c050a1865",
+          "workflow_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+          "observed_at": "2026-11-01T12:10:27.679046641Z",
+          "run_state": "SUCCEEDED",
+          "run_finished_at": "2026-11-01T12:10:25Z",
+          "workflow_phase": "SUCCEEDED",
+          "workflow_finished_at": "2026-11-01T12:10:25Z",
+          "workflow_resource_version": "21253042",
+          "workflow_nodes_sha256": "f9468746897e2d75be59279a6867b0b2dba7adb560cf532efad416884b1d497c"
+        },
+        "steps": [
+          {
+            "role": "prepare",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:07:40.956218Z",
+            "finished_at": "2026-11-01T12:08:10.325631Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T12:36:30.781608Z"
+          },
+          {
+            "role": "train-wait",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:08:10.325631Z",
+            "finished_at": "2026-11-01T12:08:49.625113Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T12:36:30.781608Z"
+          },
+          {
+            "role": "collect",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:08:49.625113Z",
+            "finished_at": "2026-11-01T12:09:24.81376Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T12:36:30.781608Z"
+          },
+          {
+            "role": "publish",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:09:24.81376Z",
+            "finished_at": "2026-11-01T12:09:27Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T12:36:30.781608Z"
+          },
+          {
+            "role": "close",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:10:27.679046641Z",
+            "finished_at": "2026-11-01T12:10:27.682065Z",
+            "exit_code": 0,
+            "deadline_at": ""
+          }
+        ],
+        "metrics": [
+          {
+            "name": "train.loss",
+            "decimal_value": "0.9185541272163391",
+            "step": "1"
+          },
+          {
+            "name": "train.loss",
+            "decimal_value": "0.6795239448547363",
+            "step": "2"
+          },
+          {
+            "name": "train.loss",
+            "decimal_value": "0.44855910539627075",
+            "step": "3"
+          }
+        ]
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T13:09:16.979384+00:00",
+  "transport_exit_code": 0
+}

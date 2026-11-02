@@ -1,0 +1,20 @@
+CL03 component cleanup coexistence
+Baseline: already verified ModelDev d807 API source; this follow-up changes only a test.
+Test file: internal/data/runtimeproof/coexisting_vm_cleanup_test.go
+Local SHA256: f85953dbd2f3930821313c5d3591ba742f19aa512a7ee9c7c3d5c4a55e143b95
+Fedora SHA256: f85953dbd2f3930821313c5d3591ba742f19aa512a7ee9c7c3d5c4a55e143b95
+Execution: ssh fedora:/home/chabking/tenantenv-20261101/modeldev-snapshot
+Command: GOTOOLCHAIN=auto go test ./internal/data/runtimeproof -run '^TestAutomaticComputeCleanupPreservesIndependentVMAndPVCInSameNamespace$' -count=1 -v
+Database: task-owned real PostgreSQL with isolated schema/restricted runtime role; admin/runtime DSNs read from existing private files, not recorded.
+Exit code: 0
+Scope: real Ensure/PG/cleanup/receipt logic; only Kubernetes/KFP external transport doubles supply the independent VM, launcher Pod and PVC. No cluster writes or actual KubeVirt/live coexistence acceptance.
+
+=== RUN   TestAutomaticComputeCleanupPreservesIndependentVMAndPVCInSameNamespace
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    coexisting_vm_cleanup_test.go:98: CL03 preserved kind=VirtualMachine name=independent-vm namespace=tenant-11111111-2222-4333-8444-555555555555 uid=18181818-1111-4111-8111-181818181818 health=map[conditions:[map[status:True type:Ready]] printableStatus:Running ready:true]
+    coexisting_vm_cleanup_test.go:98: CL03 preserved kind=PersistentVolumeClaim name=independent-vm-disk namespace=tenant-11111111-2222-4333-8444-555555555555 uid=29292929-2222-4222-8222-292929292929 health=map[phase:Bound]
+    coexisting_vm_cleanup_test.go:98: CL03 preserved kind=Pod name=independent-vm-launcher namespace=tenant-11111111-2222-4333-8444-555555555555 uid=3a3a3a3a-3333-4333-8333-3a3a3a3a3a3a health=map[conditions:[map[status:True type:Ready]] phase:Running]
+    coexisting_vm_cleanup_test.go:103: CL03 real PostgreSQL APPLIED: exactly 7 original compute targets removed; independent running VM/launcher and Bound PVC original UIDs/content unchanged
+--- PASS: TestAutomaticComputeCleanupPreservesIndependentVMAndPVCInSameNamespace (2.57s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof	2.594s

@@ -1,0 +1,27 @@
+{
+  "observed_at": "2026-10-31T20:23:29.000413+00:00",
+  "method": "original tools.write_stdin handles returned terminal exit codes; no test restart",
+  "sessions": [
+    {
+      "session_id": 44762,
+      "check": "original default/race",
+      "exit_code": 0,
+      "status": "TERMINAL",
+      "tool_chunk_id": "2cc17e"
+    },
+    {
+      "session_id": 46554,
+      "check": "original make check",
+      "exit_code": 2,
+      "status": "TERMINAL",
+      "tool_chunk_id": "416dd4"
+    },
+    {
+      "session_id": 91298,
+      "check": "original audit",
+      "exit_code": 1,
+      "status": "TERMINAL",
+      "tool_chunk_id": "6236bd"
+    }
+  ]
+}

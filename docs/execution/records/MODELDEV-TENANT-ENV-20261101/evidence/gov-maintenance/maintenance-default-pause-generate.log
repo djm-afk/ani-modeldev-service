@@ -1,0 +1,4 @@
+wrote pkg/permcode/management_gen.go
+wrote pkg/permcode/capability_gen.go
+wrote pkg/permcode/exempt_gen.go
+OK: management=227 capability=219 exempt=34 overlap=43（码一致）

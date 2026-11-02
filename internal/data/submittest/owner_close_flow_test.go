@@ -79,12 +79,12 @@ func TestMainFlowOwnerStopRecoversIntentAndTerminatesActualTraining(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	dispatchWorker, err := biz.NewDispatchWorker(submission.New(pool), submitter, biz.PipelineDispatchBinding{TenantID: f.request.Admission.TenantID, Environment: f.request.Admission.Snapshot.Environment, Owner: f.request.Owner}, 10, 100*time.Millisecond)
+	dispatchWorker, err := biz.NewDispatchWorker(submission.New(pool), submitter, f.request.Admission.Snapshot.Environment.ClusterID, testEnvironmentGate{f.request.Admission.Snapshot.Environment}, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if count, err := dispatchWorker.DispatchOnce(ctx); err != nil || count != 1 {
-		t.Fatalf("OWNER_CLOSE_PREFLIGHT: worker did not dispatch the committed admission: count=%d %v", count, err)
+	if count, err := dispatchWorker.DispatchOnce(ctx); err != nil || count.Succeeded != 1 {
+		t.Fatalf("OWNER_CLOSE_PREFLIGHT: worker did not dispatch the committed admission: count=%+v %v", count, err)
 	}
 	kube, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", Timeout: 10 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
 	if err != nil {

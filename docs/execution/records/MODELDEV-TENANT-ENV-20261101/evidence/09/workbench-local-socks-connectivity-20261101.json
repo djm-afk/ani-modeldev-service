@@ -1,0 +1,16 @@
+{
+  "time": "2026-10-31T22:29:02.322305+00:00",
+  "endpoint": "http://192.168.25.40:9998",
+  "proxy": "socks5h://127.0.0.1:7897",
+  "attempt": "GET /api/me only",
+  "result": "RemoteDisconnected before any authenticated job query",
+  "writes": false,
+  "existing_job_id": "eda85e66a4f24c3895b7be87a5211500",
+  "instruction": "Do not resubmit existing job or infer deployment outcome from this failure.",
+  "runtime_proxy_status": 200,
+  "runtime_proxy": {
+    "mode": "rule",
+    "mixed-port": 7897,
+    "socks-port": 0
+  }
+}

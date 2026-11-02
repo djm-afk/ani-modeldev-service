@@ -1,0 +1,6 @@
+=== RUN   TestOriginalF216PublicOwnerReader
+    original_owner_native_public_test.go:23: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    original_owner_native_public_test.go:36: NATIVE_OWNER_RESULT {"admission_revision":7,"execution_id":"f2168fbf-d7c9-4e96-8cc6-784bb1546083","fixture":"exact original 8-table rows restored unchanged to isolated real PostgreSQL","input_sha256":"3c50fa5dbf43a1fae162d39fe691b538cbda1c4be53fdba94f616e5938afb994","lifecycle_revision":7,"live_writes":0,"native_admitted_execution_reader":"PASS","native_authority_reader":"PASS","native_lifecycle_reader":"PASS","native_query_record_reader":"PASS","native_submission_reader":"PASS","query_revision":7}
+--- PASS: TestOriginalF216PublicOwnerReader (0.30s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle	0.308s

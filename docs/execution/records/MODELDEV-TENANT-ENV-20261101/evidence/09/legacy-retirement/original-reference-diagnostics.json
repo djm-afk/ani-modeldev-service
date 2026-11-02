@@ -1,0 +1,106 @@
+{
+  "observed_at": "2026-10-31T23:37:12.261085+00:00",
+  "control_pod_uid": "592bdd86-ab5b-4416-8a2c-07c21ee69f8d",
+  "configmap_uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+  "references": [
+    {
+      "connection": "kubernetes",
+      "file_kind": "CAFile",
+      "volume": "kube-api-access-mn8bl",
+      "volume_kind": [
+        "projected"
+      ],
+      "configured_reference_exists": true,
+      "configured_reference_path": "/var/lib/kubelet/pods/592bdd86-ab5b-4416-8a2c-07c21ee69f8d/volumes/kubernetes.io~projected/kube-api-access-mn8bl/ca.crt",
+      "sub_path": "",
+      "source_object_name": "",
+      "mount_path": "/var/run/secrets/kubernetes.io/serviceaccount",
+      "file_path": "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    },
+    {
+      "connection": "kubernetes",
+      "file_kind": "TokenFile",
+      "volume": "kube-api-access-mn8bl",
+      "volume_kind": [
+        "projected"
+      ],
+      "configured_reference_exists": true,
+      "configured_reference_path": "/var/lib/kubelet/pods/592bdd86-ab5b-4416-8a2c-07c21ee69f8d/volumes/kubernetes.io~projected/kube-api-access-mn8bl/token",
+      "sub_path": "",
+      "source_object_name": "",
+      "mount_path": "/var/run/secrets/kubernetes.io/serviceaccount",
+      "file_path": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    },
+    {
+      "connection": "pipeline",
+      "file_kind": "CAFile",
+      "volume": "config-current",
+      "volume_kind": [
+        "projected"
+      ],
+      "configured_reference_exists": false,
+      "configured_reference_path": "/var/lib/kubelet/pods/592bdd86-ab5b-4416-8a2c-07c21ee69f8d/volumes/kubernetes.io~projected/config-current/ca",
+      "sub_path": "ca",
+      "source_object_name": "",
+      "mount_path": "/etc/modeldev/ca",
+      "file_path": "/etc/modeldev/ca/kfp-ca.crt"
+    },
+    {
+      "connection": "pipeline",
+      "file_kind": "TokenFile",
+      "volume": "kfp-token",
+      "volume_kind": [
+        "projected"
+      ],
+      "configured_reference_exists": true,
+      "configured_reference_path": "/var/lib/kubelet/pods/592bdd86-ab5b-4416-8a2c-07c21ee69f8d/volumes/kubernetes.io~projected/kfp-token/token",
+      "sub_path": "",
+      "source_object_name": "",
+      "mount_path": "/var/run/modeldev-kfp",
+      "file_path": "/var/run/modeldev-kfp/token"
+    },
+    {
+      "connection": "governance",
+      "file_kind": "CAFile",
+      "volume": "config-current",
+      "volume_kind": [
+        "projected"
+      ],
+      "configured_reference_exists": false,
+      "configured_reference_path": "/var/lib/kubelet/pods/592bdd86-ab5b-4416-8a2c-07c21ee69f8d/volumes/kubernetes.io~projected/config-current/ca",
+      "sub_path": "ca",
+      "source_object_name": "",
+      "mount_path": "/etc/modeldev/ca",
+      "file_path": "/etc/modeldev/ca/governance-ca.crt"
+    },
+    {
+      "connection": "governance",
+      "file_kind": "CertificateFile",
+      "volume": "owner-client-v21",
+      "volume_kind": [
+        "secret"
+      ],
+      "configured_reference_exists": true,
+      "configured_reference_path": "/var/lib/kubelet/pods/592bdd86-ab5b-4416-8a2c-07c21ee69f8d/volumes/kubernetes.io~secret/owner-client-v21/tls.crt",
+      "sub_path": "tls.crt",
+      "source_object_name": "modeldev-v21-owner-client",
+      "mount_path": "/var/run/modeldev-owner/tls.crt",
+      "file_path": "/var/run/modeldev-owner/tls.crt"
+    },
+    {
+      "connection": "governance",
+      "file_kind": "PrivateKeyFile",
+      "volume": "owner-client-v21",
+      "volume_kind": [
+        "secret"
+      ],
+      "configured_reference_exists": true,
+      "configured_reference_path": "/var/lib/kubelet/pods/592bdd86-ab5b-4416-8a2c-07c21ee69f8d/volumes/kubernetes.io~secret/owner-client-v21/tls.key",
+      "sub_path": "tls.key",
+      "source_object_name": "modeldev-v21-owner-client",
+      "mount_path": "/var/run/modeldev-owner/tls.key",
+      "file_path": "/var/run/modeldev-owner/tls.key"
+    }
+  ],
+  "secret_values_printed": false
+}

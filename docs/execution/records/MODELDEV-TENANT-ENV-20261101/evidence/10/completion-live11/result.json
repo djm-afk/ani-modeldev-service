@@ -1,0 +1,35 @@
+{
+  "schema": "ani.modeldev.live11-final-reconciliation.v1",
+  "observed_at": "2026-11-01T17:06:07.991360+00:00",
+  "result": "PASS",
+  "evidence": [
+    {
+      "path": "evidence/10/completion-live11/preserved-assets-actual.json",
+      "sha256": "9a88053470ed687ad9cf12368ea0a9a66957d359cec178a5816cca6c80497965"
+    },
+    {
+      "path": "evidence/10/completion-live11/retired-entry-source-search.json",
+      "sha256": "82ecd6bc6fa76b91d6fa2c4465340cf5a713ce2d90a540d80a3602feccb0ba1a"
+    },
+    {
+      "path": "evidence/10/../09/legacy-data-cleanup/native-exact-discard-actual-result.json",
+      "sha256": "cce47eafa2f57ed990d6f3920ca76cd9ccbd8ce7b3f063b676604498909d71b7"
+    },
+    {
+      "path": "evidence/10/../09/legacy-data-cleanup/external-pods-pvc-release-result.json",
+      "sha256": "b9497401de2b81c534324e4923bbc080b7023b0e1cdac926e00d04e3b79886d9"
+    },
+    {
+      "path": "evidence/10/../09/legacy-data-cleanup/external-kfp-delete-result.json",
+      "sha256": "bcc2f799c1a772f7832d65c2684b2c3cb7a2ce3a14929db6070421791b22b6cb"
+    },
+    {
+      "path": "evidence/10/../09/legacy-data-cleanup/external-s3-version-delete-result.json",
+      "sha256": "dabe13af64c5d772ed935541536171865bc31d8aeec7e625449e3e9f5c512663"
+    }
+  ],
+  "bounds": "Original manifest rows/resources only. Current successful v4 executions, per-contract workspace PVCs, datasets, registered Model assets and current Environment registrations are retained; they are not historical residue. No new cleanup or SQL mutation during this reconciliation.",
+  "original_cleanup": "Original nine ModelDev tables and exact Gov primary keys were committed deleted with remaining=0; original charges fully released before deletion. Kubernetes/KFP/exclusive S3 original receipt checks complete.",
+  "coexistence": "All 41 original non-ModelDev assets (34 PVC,4 VM,3 VMI), both original Namespace UIDs/network labels, and unrelated original A/B workload Pods retain original UID and baseline health. Original stopped VM remains stopped; no unrelated asset restarted.",
+  "retired_entries": "v3 execution-spec parser/static binding/facts/STSs retired. Reserved proto names and per-execution StorageScope approved_prefix remain current validation or frozen data, not compatibility readers."
+}

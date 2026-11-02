@@ -1,0 +1,640 @@
+{
+  "schema": "ani.modeldev.native-server-dryrun.v1",
+  "observed_at": "2026-10-31T19:23:44.245569+00:00",
+  "ssh": "kubercloud@100.64.128.12",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "verified_at_unix": 1793474624.5022917
+  },
+  "rendered_manifest_sha256": "c0c0b90750be1817aa84c70636b77843d2296df018260b7233e87843903adbbe",
+  "dry_run_only": true,
+  "persistent_install": false,
+  "objects": [
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-bootstrap-v1",
+      "namespace": null,
+      "input_object_sha256": "4fec8dd509d5ceb3c17845ef6402474486f45a09458903d8177ac9e393bc6c2e",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 19891,
+      "stdout_sha256": "a5976c6eba805eef8bcc92764f590c6ef1ead6e3441de86dc28dc349e66cda0f",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-bootstrap-v1",
+        "namespace": null,
+        "uid": "a32d73eb-e696-4216-b0ef-c6e8aa256b60",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": {},
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-bootstrap-v1-binding",
+      "namespace": null,
+      "input_object_sha256": "e5fdfeadf332bdbd19988c06bd974cce1633ada6010653cf50714149d1680065",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 803,
+      "stdout_sha256": "c23b14749f123fb9f74d952466237839fb25cff561b7f4a18f97e8cbd07dc123",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-bootstrap-v1-binding",
+        "namespace": null,
+        "uid": "e9ba542d-dfcc-4b94-a95d-c2fcc1171657",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-environment-config-v1",
+      "namespace": null,
+      "input_object_sha256": "65434113cd059eab36c57a8721ef3d3e9c1f1600c382846f8b2530879cfaef80",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 7646,
+      "stdout_sha256": "d59c1d4293843f9f96c9fcb117e0917ea74b28e66cbf5bffb8be8394312023b9",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-environment-config-v1",
+        "namespace": null,
+        "uid": "f24dc3a1-08a3-466a-89a6-0f8bb5454ba6",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": {},
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-environment-config-v1-binding",
+      "namespace": null,
+      "input_object_sha256": "9f3e7a7a930d7131a67f4b22b9cee865e7c469cc73a37e5c58395086c67d2dea",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 839,
+      "stdout_sha256": "9dc036ac2689a365426d654824dcaf7b4c48b4562243ccca0b889eb8cfcbb0e0",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-environment-config-v1-binding",
+        "namespace": null,
+        "uid": "ae57f898-3418-4dcb-a576-f755c64af54d",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-workload-guard-v1",
+      "namespace": null,
+      "input_object_sha256": "0a00f4cabb31b0aff46be2eab6892fb8850a9d6ee158b04078e2b481b9abad0d",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 35464,
+      "stdout_sha256": "bbc4a98f62332fe8d7eabb00c66c37fe1c8e7e30fdf078fe83e191bc381bbeee",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-workload-guard-v1",
+        "namespace": null,
+        "uid": "1366d040-c0d4-4a02-95c4-91d3b5fb492f",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": {},
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-workload-guard-v1-binding",
+      "namespace": null,
+      "input_object_sha256": "737185a8493425ee4a2cd4367c2d7ef35163a4fdb04e7a9e901a6665c9a436dc",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 823,
+      "stdout_sha256": "9d8a7d920db1150f079b4ecff30ccb2a4ad7628df56d79b9273a93e4962fc679",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-workload-guard-v1-binding",
+        "namespace": null,
+        "uid": "4595cb9d-6fcc-4ecc-82b0-3a0f307ebf65",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-runtime-v1",
+      "namespace": null,
+      "input_object_sha256": "f9219ce6b1c4634214b4fafdaf78e32deafb2a4ea448a421a8d5970df78f9841",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 5475,
+      "stdout_sha256": "4f95614d9742730950bacf8347ab78765236252e74fca4c78aec47166e71d825",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-runtime-v1",
+        "namespace": null,
+        "uid": "ef6d0676-c545-4b42-a8cc-39f9acdae23b",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-step-v1",
+      "namespace": null,
+      "input_object_sha256": "39d56645802ec5151693f599458562718a64b986c0a0195f95963c7d507f4f50",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 2579,
+      "stdout_sha256": "9eb768812de613c0f6c109b5226c9fcd57d36e7a28a62e68159fe845936922e5",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-step-v1",
+        "namespace": null,
+        "uid": "7e12fc2f-c807-4ed0-aa60-e7d89659a63d",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-webhook-read-v1",
+      "namespace": null,
+      "input_object_sha256": "538aefe966e0818ceeaacef2eec38d73039e857b8e3c31b34a446e5f89b1eef8",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 2767,
+      "stdout_sha256": "a7617bf9bbcefdbcb2c26f644315c2c433294d354d21ab64fb7e7ef316914afe",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-webhook-read-v1",
+        "namespace": null,
+        "uid": "8bae79df-66b7-491a-a375-2f1b4c65d175",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-api-v1",
+      "namespace": null,
+      "input_object_sha256": "2be8c45a54068fa769fb270e58243452ff5c3a0add33b02d9133a9650f6ab49d",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 914,
+      "stdout_sha256": "01e01fa52759187580907b7a9f42e421780b1f6bb61a85cda854a38417344199",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-kfp-api-v1",
+        "namespace": null,
+        "uid": "71e0c60d-561c-4877-aba3-2238d695efbe",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-access-v1",
+      "namespace": null,
+      "input_object_sha256": "026597cc2c5da60319ab7ef31c3a6d6a1d3c6eddeb792ff0ff7c3f7ed460f235",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1406,
+      "stdout_sha256": "d8068a68bf0a20914714e782841e8f0c170044adde2e726dfd8ecbdbac7c3914",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-kfp-access-v1",
+        "namespace": null,
+        "uid": "9336829d-6d07-4f37-864d-071c8c97a05d",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-environment-control-v1",
+      "namespace": null,
+      "input_object_sha256": "0025ace0795cef1509ea463003ca5a87fedca732b1627eb53e097fe724ff767b",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 6642,
+      "stdout_sha256": "64bbc42c387fe15e6a43f2026df48a4bdc22e28696d9ea386bfa89c1d87fa62d",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-environment-control-v1",
+        "namespace": null,
+        "uid": "40e977ab-54e3-429b-b2db-f5f832e1d329",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-environment-control",
+      "namespace": null,
+      "input_object_sha256": "f9b38de70fc8a473dc55b635b604d20f0607246cb115bb5e05257ef3019fca4a",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1075,
+      "stdout_sha256": "e7e2a5a216b5e237e48332a12d30885d44a906c8769eb7916fe7c89c5e8697bb",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-environment-control",
+        "namespace": null,
+        "uid": "dba74dee-f3be-45a0-9c1d-211239c81a18",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-webhook-namespace-v1",
+      "namespace": null,
+      "input_object_sha256": "b77fb906cbfc270a4a1003afab582c8d7aef130667798138b0e0533c4de14416",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 836,
+      "stdout_sha256": "62e5d69282d3a3def5450331211cf313903baf9e1d98704e6d258bb40e277226",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-webhook-namespace-v1",
+        "namespace": null,
+        "uid": "82361cb3-e6f7-4e46-9f35-e9c2b99dbc04",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-webhook-namespace",
+      "namespace": null,
+      "input_object_sha256": "71fb29bcb2d7ee8153f050a8fe67e03a321c9a0cc24786ced6288da6d7e6cce2",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1075,
+      "stdout_sha256": "81e6e63bf35b53e1150c542791873632b60e8b50bde361192c9901ce3a9bfbc0",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-webhook-namespace",
+        "namespace": null,
+        "uid": "405170aa-8a07-45f1-8bcb-0fc12d28a62f",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-rbac-inventory-global-v1",
+      "namespace": null,
+      "input_object_sha256": "2f5064e7d1c6c02fa63f635038b7550e2d41fef22c22552fa6d665928dfa90ad",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1285,
+      "stdout_sha256": "112cdfcc7059fb267b6460250f7cc15be558bdc9f4500038ba13a3389f617a12",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-rbac-inventory-global-v1",
+        "namespace": null,
+        "uid": "81d835c1-06d9-4e9a-8b55-0e5ea0d8e6f6",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-rbac-inventory-global",
+      "namespace": null,
+      "input_object_sha256": "9140f249f24da4899db1a1df995bcc08177a2226a6b4dabc98581f1894430064",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1083,
+      "stdout_sha256": "e060b7e43acd32f1281c96245ca032b64029f11048d56b37e490b958ce476bdf",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-rbac-inventory-global",
+        "namespace": null,
+        "uid": "f72ab2be-c93b-429d-921e-c498db4f3a7c",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-platform-read-v1",
+      "namespace": null,
+      "input_object_sha256": "5d0614935e4a660543da1032939dc76f11fa9a194345efb7505fcd1771f80346",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1191,
+      "stdout_sha256": "a4cefb0219bfa72fc910d92001dcee9bc48bde113c295d23b0a9057d7ce07724",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-kfp-platform-read-v1",
+        "namespace": null,
+        "uid": "b3f7009b-ddc6-4207-991c-6ee57cfa16e8",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-kfp-platform-read",
+      "namespace": "ani-system",
+      "input_object_sha256": "f47d0eeed5a169dcaf356f61a9d0d3522e2ba1dd907b1ed7e7f80be27294f74e",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1117,
+      "stdout_sha256": "942227c96ffae66e74d2f0b5e211b9098a54d63b6bb872f29a7a6d9005b77b1e",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-kfp-platform-read",
+        "namespace": "ani-system",
+        "uid": "dd8527d9-bad7-43e5-9310-dd7252f3f112",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-token-review-v1",
+      "namespace": null,
+      "input_object_sha256": "dd3e4ff740747975eaa779741864b977dec080f09903d9a5f54edcbf935c7f1b",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 878,
+      "stdout_sha256": "9bb31dfd0c6a131b7785f2a1f0ce04e459cd8e96a755955551a717bf5ab82499",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-token-review-v1",
+        "namespace": null,
+        "uid": "a23d0931-6f9f-4630-a5d0-45dd509d4255",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-token-review",
+      "namespace": null,
+      "input_object_sha256": "f41d3861a03d8f3960ccabfc4382390c0350ae40e8577a4f1a618066d138c495",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1047,
+      "stdout_sha256": "8194ba7c710a1778747526206b0d3bcdceae50f2cc19e34939f505c0aa111394",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-token-review",
+        "namespace": null,
+        "uid": "2ccc160c-370d-480c-95c4-9027e043d46b",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    }
+  ],
+  "limits": {
+    "per_command_seconds": 15,
+    "stderr_bytes_per_object": 16384
+  },
+  "summary": {
+    "object_count": 21,
+    "accepted": 21,
+    "rejected": 0,
+    "timeouts": 0,
+    "all_original_objects_unchanged": true,
+    "scope": "schema/admission/CEL validation visible during server dry-run only; not installed typeChecking, AD01/AD02 or LIVE02 behavior acceptance"
+  }
+}

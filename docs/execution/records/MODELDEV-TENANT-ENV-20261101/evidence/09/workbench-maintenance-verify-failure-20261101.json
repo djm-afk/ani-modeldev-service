@@ -1,0 +1,179 @@
+{
+  "time": "2026-10-31T23:12:51.249666+00:00",
+  "job_id": "eda85e66a4f24c3895b7be87a5211500",
+  "job_status": "failed",
+  "error": "\u547d\u4ee4\u6267\u884c\u5931\u8d25\uff0c\u9000\u51fa\u7801 2\uff1b\u8bf7\u67e5\u770b\u6b65\u9aa4\u65e5\u5fd7",
+  "raw_log_bytes": 25925,
+  "raw_log_sha256": "ea9fd9f9c26c51f382a983b68f64cb2c1c8f0a4782d3d31cca114ac2a02984a4",
+  "filtered_diagnostic_lines": [
+    {
+      "line": 580,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/go-utils/sliceutil\t0.008s"
+    },
+    {
+      "line": 581,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/go-utils/stringcase\t0.006s"
+    },
+    {
+      "line": 582,
+      "text": "--- FAIL: TestTimeDifferenceDays (0.00s)"
+    },
+    {
+      "line": 583,
+      "text": "    diff_test.go:39:"
+    },
+    {
+      "line": 584,
+      "text": "        \tError Trace:\t/var/lib/ani-deploy/jobs/eda85e66a4f24c3895b7be87a5211500/source/pkg/localdeps/go-utils/timeutil/diff_test.go:39"
+    },
+    {
+      "line": 585,
+      "text": "        \tError:      \tNot equal:"
+    },
+    {
+      "line": 586,
+      "text": "        \t            \texpected: 192"
+    },
+    {
+      "line": 587,
+      "text": "        \t            \tactual  : 191"
+    },
+    {
+      "line": 588,
+      "text": "        \tTest:       \tTestTimeDifferenceDays"
+    },
+    {
+      "line": 589,
+      "text": "2026-10-31 2026-10-31"
+    },
+    {
+      "line": 590,
+      "text": "2026-10-01 2026-10-31"
+    },
+    {
+      "line": 636,
+      "text": "100"
+    },
+    {
+      "line": 637,
+      "text": "FAIL"
+    },
+    {
+      "line": 638,
+      "text": "FAIL\tgo-wind-admin/pkg/localdeps/go-utils/timeutil\t0.009s"
+    },
+    {
+      "line": 639,
+      "text": "?   \tgo-wind-admin/pkg/localdeps/go-utils/tls\t[no test files]"
+    },
+    {
+      "line": 640,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/go-utils/trans\t0.006s"
+    },
+    {
+      "line": 641,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/go-wind/log\t0.004s"
+    },
+    {
+      "line": 642,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/go-wind-plugins/encoding\t0.003s"
+    },
+    {
+      "line": 643,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/go-wind-plugins/encoding/json\t0.003s"
+    },
+    {
+      "line": 644,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/go-wind-toolkit/protoc-gen-go-redact\t0.035s"
+    },
+    {
+      "line": 645,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/go-wind-toolkit/protoc-gen-go-redact/redact/v1\t0.007s"
+    },
+    {
+      "line": 646,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-authn/engine\t0.007s"
+    },
+    {
+      "line": 671,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-transport/transport/asynq\t32.926s"
+    },
+    {
+      "line": 672,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-transport/transport/keepalive\t0.112s"
+    },
+    {
+      "line": 673,
+      "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-transport/transport/sse\t14.852s"
+    },
+    {
+      "line": 674,
+      "text": "ok  \tgo-wind-admin/pkg/mailer\t0.111s"
+    },
+    {
+      "line": 675,
+      "text": "ok  \tgo-wind-admin/pkg/metadata\t0.010s"
+    },
+    {
+      "line": 676,
+      "text": "ok  \tgo-wind-admin/pkg/middleware/auth\t0.035s"
+    },
+    {
+      "line": 677,
+      "text": "ok  \tgo-wind-admin/pkg/middleware/ent\t0.031s"
+    },
+    {
+      "line": 678,
+      "text": "ok  \tgo-wind-admin/pkg/middleware/logging\t0.077s"
+    },
+    {
+      "line": 679,
+      "text": "ok  \tgo-wind-admin/pkg/middleware/requestid\t0.008s"
+    },
+    {
+      "line": 680,
+      "text": "ok  \tgo-wind-admin/pkg/netutil\t0.051s"
+    },
+    {
+      "line": 681,
+      "text": "ok  \tgo-wind-admin/pkg/password\t0.004s"
+    },
+    {
+      "line": 682,
+      "text": "ok  \tgo-wind-admin/pkg/permcode\t0.004s"
+    },
+    {
+      "line": 683,
+      "text": "ok  \tgo-wind-admin/pkg/quotaerrors\t0.008s"
+    },
+    {
+      "line": 684,
+      "text": "ok  \tgo-wind-admin/pkg/serviceid\t0.006s"
+    },
+    {
+      "line": 685,
+      "text": "?   \tgo-wind-admin/pkg/task\t[no test files]"
+    },
+    {
+      "line": 686,
+      "text": "ok  \tgo-wind-admin/pkg/utils\t0.005s"
+    },
+    {
+      "line": 687,
+      "text": "ok  \tgo-wind-admin/pkg/utils/converter\t0.015s"
+    },
+    {
+      "line": 688,
+      "text": "FAIL"
+    },
+    {
+      "line": 689,
+      "text": "make: *** [Makefile:235: check] Error 1"
+    },
+    {
+      "line": 690,
+      "text": "\u53d1\u5e03\u5931\u8d25\uff1a\u547d\u4ee4\u6267\u884c\u5931\u8d25\uff0c\u9000\u51fa\u7801 2\uff1b\u8bf7\u67e5\u770b\u6b65\u9aa4\u65e5\u5fd7"
+    }
+  ],
+  "raw_log_retained": false
+}

@@ -1,0 +1,71 @@
+=== RUN   TestEnvironmentResourcesAndProjectionUseOriginalObjects
+--- PASS: TestEnvironmentResourcesAndProjectionUseOriginalObjects (0.01s)
+=== RUN   TestEnvironmentWrongNamespaceHasZeroChildWrites
+=== RUN   TestEnvironmentWrongNamespaceHasZeroChildWrites/missing
+=== RUN   TestEnvironmentWrongNamespaceHasZeroChildWrites/foreign
+=== RUN   TestEnvironmentWrongNamespaceHasZeroChildWrites/inactive
+=== RUN   TestEnvironmentWrongNamespaceHasZeroChildWrites/recreated
+--- PASS: TestEnvironmentWrongNamespaceHasZeroChildWrites (0.00s)
+    --- PASS: TestEnvironmentWrongNamespaceHasZeroChildWrites/missing (0.00s)
+    --- PASS: TestEnvironmentWrongNamespaceHasZeroChildWrites/foreign (0.00s)
+    --- PASS: TestEnvironmentWrongNamespaceHasZeroChildWrites/inactive (0.00s)
+    --- PASS: TestEnvironmentWrongNamespaceHasZeroChildWrites/recreated (0.00s)
+=== RUN   TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret
+=== RUN   TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/secrets-list
+=== RUN   TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/exec-get
+=== RUN   TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/wild-exec
+=== RUN   TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/token
+=== RUN   TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/impersonate
+=== RUN   TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/bind
+--- PASS: TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret (0.02s)
+    --- PASS: TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/secrets-list (0.00s)
+    --- PASS: TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/exec-get (0.00s)
+    --- PASS: TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/wild-exec (0.00s)
+    --- PASS: TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/token (0.00s)
+    --- PASS: TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/impersonate (0.00s)
+    --- PASS: TestEnvironmentDangerousGrantBlocksBeforeArtifactSecret/bind (0.00s)
+=== RUN   TestEnvironmentIncompleteAuthorizationAndExpiredProofDenySecret
+--- PASS: TestEnvironmentIncompleteAuthorizationAndExpiredProofDenySecret (0.01s)
+=== RUN   TestEnvironmentExperimentRecoversUnknownPostAndReadsRotatingToken
+--- PASS: TestEnvironmentExperimentRecoversUnknownPostAndReadsRotatingToken (0.01s)
+=== RUN   TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero
+=== RUN   TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/unique-second-page
+=== RUN   TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/duplicate
+=== RUN   TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/foreign
+=== RUN   TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/uncertain-zero
+=== RUN   TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/continue-loop
+--- PASS: TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero (0.01s)
+    --- PASS: TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/unique-second-page (0.00s)
+    --- PASS: TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/duplicate (0.00s)
+    --- PASS: TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/foreign (0.00s)
+    --- PASS: TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/uncertain-zero (0.00s)
+    --- PASS: TestEnvironmentExperimentPaginationAmbiguityAndUncertainZero/continue-loop (0.00s)
+=== RUN   TestEnvironmentProjectionRejectsUnknownAndUIDReplacement
+--- PASS: TestEnvironmentProjectionRejectsUnknownAndUIDReplacement (0.00s)
+=== RUN   TestEnvironmentIRPreservesOriginalBytesAndKFPPlatformDocumentShape
+--- PASS: TestEnvironmentIRPreservesOriginalBytesAndKFPPlatformDocumentShape (0.00s)
+=== RUN   TestEnvironmentAllFixedCreateKindsRecoverLostResponse
+=== RUN   TestEnvironmentAllFixedCreateKindsRecoverLostResponse/serviceaccounts
+=== RUN   TestEnvironmentAllFixedCreateKindsRecoverLostResponse/rolebindings
+=== RUN   TestEnvironmentAllFixedCreateKindsRecoverLostResponse/configmaps
+=== RUN   TestEnvironmentAllFixedCreateKindsRecoverLostResponse/secrets
+--- PASS: TestEnvironmentAllFixedCreateKindsRecoverLostResponse (0.02s)
+    --- PASS: TestEnvironmentAllFixedCreateKindsRecoverLostResponse/serviceaccounts (0.00s)
+    --- PASS: TestEnvironmentAllFixedCreateKindsRecoverLostResponse/rolebindings (0.00s)
+    --- PASS: TestEnvironmentAllFixedCreateKindsRecoverLostResponse/configmaps (0.01s)
+    --- PASS: TestEnvironmentAllFixedCreateKindsRecoverLostResponse/secrets (0.00s)
+=== RUN   TestEnvironmentPostgresConcurrentNaturalIdentityAndAdvisoryLock
+    repository_test.go:30: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestEnvironmentPostgresConcurrentNaturalIdentityAndAdvisoryLock (0.18s)
+=== RUN   TestEnvironmentPostgresVerticalEnsureSealPublishAndBusyRead
+    repository_test.go:113: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestEnvironmentPostgresVerticalEnsureSealPublishAndBusyRead (0.35s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment	0.627s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/tenantenvironment	[no test files]
+=== RUN   TestTenantEnvironmentRequiresExactVerifiedMethodAndNoUnknownFields
+--- PASS: TestTenantEnvironmentRequiresExactVerifiedMethodAndNoUnknownFields (0.00s)
+=== RUN   TestTenantEnvironmentViewPreservesBusyPersistentStateAndRejectsIncompleteReady
+--- PASS: TestTenantEnvironmentViewPreservesBusyPersistentStateAndRejectsIncompleteReady (0.00s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service	0.011s

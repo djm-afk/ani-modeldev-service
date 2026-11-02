@@ -1,0 +1,28 @@
+=== RUN   TestModelDevCreateMaintenanceConfigurationIsExplicit
+=== RUN   TestModelDevCreateMaintenanceConfigurationIsExplicit/#00
+=== RUN   TestModelDevCreateMaintenanceConfigurationIsExplicit/false
+=== RUN   TestModelDevCreateMaintenanceConfigurationIsExplicit/true
+=== RUN   TestModelDevCreateMaintenanceConfigurationIsExplicit/1
+=== RUN   TestModelDevCreateMaintenanceConfigurationIsExplicit/TRUE
+=== RUN   TestModelDevCreateMaintenanceConfigurationIsExplicit/_true
+--- PASS: TestModelDevCreateMaintenanceConfigurationIsExplicit (0.00s)
+    --- PASS: TestModelDevCreateMaintenanceConfigurationIsExplicit/#00 (0.00s)
+    --- PASS: TestModelDevCreateMaintenanceConfigurationIsExplicit/false (0.00s)
+    --- PASS: TestModelDevCreateMaintenanceConfigurationIsExplicit/true (0.00s)
+    --- PASS: TestModelDevCreateMaintenanceConfigurationIsExplicit/1 (0.00s)
+    --- PASS: TestModelDevCreateMaintenanceConfigurationIsExplicit/TRUE (0.00s)
+    --- PASS: TestModelDevCreateMaintenanceConfigurationIsExplicit/_true (0.00s)
+=== RUN   TestModelDevCreateMaintenanceConfigurationUnsetPauses
+--- PASS: TestModelDevCreateMaintenanceConfigurationUnsetPauses (0.00s)
+=== RUN   TestPlatformComponentLogScopeRejectsUnregistered
+--- PASS: TestPlatformComponentLogScopeRejectsUnregistered (0.00s)
+PASS
+ok  	go-wind-admin/app/admin/service/internal/data	1.155s
+=== RUN   TestModelDevCreateMaintenanceRejectsAdmissionAndPublisherBeforeDependencies
+--- PASS: TestModelDevCreateMaintenanceRejectsAdmissionAndPublisherBeforeDependencies (0.00s)
+=== RUN   TestModelDevCreateMaintenanceDrainPreservesCurrentWorkAndStopsNewClaims
+--- PASS: TestModelDevCreateMaintenanceDrainPreservesCurrentWorkAndStopsNewClaims (0.00s)
+=== RUN   TestModelDevCreateMaintenanceCanceledDrainCannotReportSuccess
+--- PASS: TestModelDevCreateMaintenanceCanceledDrainCannotReportSuccess (0.00s)
+PASS
+ok  	go-wind-admin/app/admin/service/internal/service	1.181s

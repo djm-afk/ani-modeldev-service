@@ -1,0 +1,92 @@
+{
+  "schema": "ani.modeldev.four-original-http-stop.v1",
+  "observed_at_utc": "2026-11-01T02:27:26.014920+00:00",
+  "status": "PASS",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "runtime": {
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "generation": 198,
+    "pod_uid": "7e3c6bd5-4d76-4b44-92bf-6e3b89d48a6f",
+    "pod_name": "ani-governance-7ddc444f78-nt5vc",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "pause_value": "default"
+  },
+  "login_http": 200,
+  "actor_authorization": "Normal Stop endpoint authorizes actual tenant-a/admin user",
+  "results": [
+    {
+      "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+      "http_status": 202,
+      "response_sha256": "b2955c757e820a6c231f6026ad0c90f0ded173e9bacfa4e9f873eddf722553c3",
+      "response": {
+        "operation_id": "13bd316b-0b85-4c8e-a005-698eb9ffdd5e",
+        "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+        "stop_requested": true,
+        "intent_generation": "1",
+        "replayed": false
+      },
+      "observed_prior_accepted_response_no_repost": true
+    },
+    {
+      "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+      "http_status": 202,
+      "response_sha256": "f0de71cc0d858a498150caac2eba4b716551c07040b160ebf38efae691e79bd6",
+      "response": {
+        "operation_id": "cd2ee5e3-e4fb-4515-99f8-33b3da892a8f",
+        "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+        "stop_requested": true,
+        "intent_generation": "1",
+        "replayed": false
+      }
+    },
+    {
+      "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+      "http_status": 202,
+      "response_sha256": "15bc7a61e627b119ca660d7b9ffaeccc2c41afb3c9b2676ecaefbde25a657f3c",
+      "response": {
+        "operation_id": "ff5fc1f4-d9a8-4c6a-8c47-5b1d4ef06f05",
+        "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+        "stop_requested": true,
+        "intent_generation": "1",
+        "replayed": false
+      }
+    },
+    {
+      "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+      "http_status": 202,
+      "response_sha256": "387796532458c9f19c96c036cb3c69efde88d13ef8f021a4194c474e98ad6cff",
+      "response": {
+        "operation_id": "25b88cf7-bccb-4fac-8c9a-6b3ff91477ee",
+        "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+        "stop_requested": true,
+        "intent_generation": "1",
+        "replayed": false
+      }
+    }
+  ],
+  "create_and_charge_ledger_before": {
+    "read_only": "on",
+    "acceptance_count": 54,
+    "active_create_leases": 0,
+    "operation_count": 23,
+    "create_fence_sha256": "9c87098913f7b9c31c6f22bb3a5ceb797264ff050dbbb4ed11183a6cfeca7227",
+    "charges_sha256": "afb30dddca83a5406f631167309c99bb261cda4c3772976c28ea60020d7f7fc8"
+  },
+  "create_and_charge_ledger_after": {
+    "read_only": "on",
+    "acceptance_count": 54,
+    "active_create_leases": 0,
+    "operation_count": 23,
+    "create_fence_sha256": "9c87098913f7b9c31c6f22bb3a5ceb797264ff050dbbb4ed11183a6cfeca7227",
+    "charges_sha256": "afb30dddca83a5406f631167309c99bb261cda4c3772976c28ea60020d7f7fc8"
+  },
+  "scope": "Normal durable Stop intent only; owner fence ACK and CLOSED must be read separately; no Create sent",
+  "ssh_exit": 0
+}

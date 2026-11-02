@@ -1,0 +1,56 @@
+{
+  "status": "QUERY",
+  "job": {
+    "id": "eda85e66a4f24c3895b7be87a5211500",
+    "request_id": "686ecb87-f8ba-4fb4-9dab-0ae6bb5439ac",
+    "project": "governance",
+    "branch": "codex/modeldev-create-maintenance",
+    "source_commit": "45ed49fe91608960cab89797c06dab2705a65740",
+    "run_verify": true,
+    "status": "failed",
+    "created_at": "2026-10-31T21:43:46.753648+00:00",
+    "started_at": "2026-10-31T21:43:46.755449+00:00",
+    "finished_at": "2026-10-31T22:04:07.312407+00:00",
+    "error_present": true,
+    "steps": [
+      {
+        "id": "fetch",
+        "status": "succeeded",
+        "started_at": "2026-10-31T21:43:46.755965+00:00",
+        "finished_at": "2026-10-31T21:43:52.354036+00:00",
+        "elapsed": 5.6
+      },
+      {
+        "id": "verify",
+        "status": "failed",
+        "started_at": "2026-10-31T21:43:52.354823+00:00",
+        "finished_at": "2026-10-31T22:04:07.310732+00:00",
+        "elapsed": 1214.96
+      },
+      {
+        "id": "build",
+        "status": "pending"
+      },
+      {
+        "id": "push",
+        "status": "pending"
+      },
+      {
+        "id": "deploy",
+        "status": "pending"
+      },
+      {
+        "id": "ready",
+        "status": "pending"
+      }
+    ],
+    "recipe_sha256": {},
+    "build": {}
+  },
+  "log": {
+    "bytes": 25925,
+    "sha256": "ea9fd9f9c26c51f382a983b68f64cb2c1c8f0a4782d3d31cca114ac2a02984a4",
+    "contents_omitted": true
+  },
+  "queried_at": "2026-10-31T23:11:25.024567+00:00"
+}

@@ -34,9 +34,19 @@ func (q *Queries) AdvanceOwnerRevision(ctx context.Context, arg AdvanceOwnerRevi
 	return owner_revision, err
 }
 
+const dispatchDiscoveryTime = `-- name: DispatchDiscoveryTime :one
+SELECT clock_timestamp()::timestamptz AS sweep_before
+`
+
+func (q *Queries) DispatchDiscoveryTime(ctx context.Context) (pgtype.Timestamptz, error) {
+	row := q.db.QueryRow(ctx, dispatchDiscoveryTime)
+	var sweep_before pgtype.Timestamptz
+	err := row.Scan(&sweep_before)
+	return sweep_before, err
+}
+
 const getAdmission = `-- name: GetAdmission :one
-SELECT tenant_id, execution_id, operation_id, actor,
-    intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at
+SELECT tenant_id, execution_id, operation_id, actor, intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at, cluster_id, environment_binding_id, deadline_at
 FROM modeldev_executions
 WHERE tenant_id = $1::uuid
   AND execution_id = $2::uuid
@@ -60,6 +70,9 @@ func (q *Queries) GetAdmission(ctx context.Context, arg GetAdmissionParams) (Mod
 		&i.SnapshotCanonical,
 		&i.SpecHash,
 		&i.AcceptedAt,
+		&i.ClusterID,
+		&i.EnvironmentBindingID,
+		&i.DeadlineAt,
 	)
 	return i, err
 }
@@ -442,39 +455,35 @@ func (q *Queries) ListConfirmedPipelineRuns(ctx context.Context, arg ListConfirm
 }
 
 const listPendingAdmissions = `-- name: ListPendingAdmissions :many
-SELECT admitted.tenant_id, admitted.execution_id, admitted.operation_id,
-    admitted.actor, admitted.intent_canonical, admitted.intent_hash,
-    admitted.snapshot_canonical, admitted.spec_hash, admitted.accepted_at
-FROM modeldev_executions AS admitted
-JOIN modeldev_execution_identities AS identity
-  ON identity.tenant_id = admitted.tenant_id
- AND identity.execution_id = admitted.execution_id
- AND identity.operation_id = admitted.operation_id
- AND identity.spec_hash = admitted.spec_hash
-WHERE admitted.tenant_id = $1::uuid
-  AND identity.close_generation = 0
-  AND (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'environment') = $2::jsonb
-  AND (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz > clock_timestamp()
-  AND NOT EXISTS (
-      SELECT 1 FROM modeldev_pipeline_dispatches AS dispatch
-      WHERE dispatch.tenant_id = admitted.tenant_id
-        AND dispatch.execution_id = admitted.execution_id
-  )
-ORDER BY admitted.accepted_at, admitted.execution_id
-LIMIT $3::integer
+SELECT a.tenant_id, a.execution_id, a.operation_id, a.actor, a.intent_canonical, a.intent_hash, a.snapshot_canonical, a.spec_hash, a.accepted_at, a.cluster_id, a.environment_binding_id, a.deadline_at
+FROM modeldev_executions AS a
+JOIN modeldev_execution_identities AS i ON i.tenant_id=a.tenant_id AND i.execution_id=a.execution_id AND i.operation_id=a.operation_id AND i.spec_hash=a.spec_hash
+WHERE a.cluster_id=$1::uuid AND i.close_generation=0
+ AND a.deadline_at>statement_timestamp()
+ AND NOT EXISTS(SELECT 1 FROM modeldev_pipeline_dispatches d WHERE d.tenant_id=a.tenant_id AND d.execution_id=a.execution_id)
+ AND a.tenant_id=$2::uuid AND a.accepted_at<=$3::timestamptz
+ AND ($4::uuid IS NULL OR (a.accepted_at,a.execution_id)>($5::timestamptz,$4::uuid))
+ORDER BY a.accepted_at,a.execution_id LIMIT $6::integer
 `
 
 type ListPendingAdmissionsParams struct {
-	TenantID    pgtype.UUID
-	Environment []byte
-	BatchSize   int32
+	ClusterID        pgtype.UUID
+	TenantID         pgtype.UUID
+	SweepBefore      pgtype.Timestamptz
+	AfterExecutionID pgtype.UUID
+	AfterAcceptedAt  pgtype.Timestamptz
+	BatchSize        int32
 }
 
-// A trusted worker selects one explicit tenant/environment owner binding.
-// This read grants no sending permission; Reserve repeats all creation checks
-// under the shared identity lock before its sole permit can reach KFP.
 func (q *Queries) ListPendingAdmissions(ctx context.Context, arg ListPendingAdmissionsParams) ([]ModeldevExecution, error) {
-	rows, err := q.db.Query(ctx, listPendingAdmissions, arg.TenantID, arg.Environment, arg.BatchSize)
+	rows, err := q.db.Query(ctx, listPendingAdmissions,
+		arg.ClusterID,
+		arg.TenantID,
+		arg.SweepBefore,
+		arg.AfterExecutionID,
+		arg.AfterAcceptedAt,
+		arg.BatchSize,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -492,10 +501,51 @@ func (q *Queries) ListPendingAdmissions(ctx context.Context, arg ListPendingAdmi
 			&i.SnapshotCanonical,
 			&i.SpecHash,
 			&i.AcceptedAt,
+			&i.ClusterID,
+			&i.EnvironmentBindingID,
+			&i.DeadlineAt,
 		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPendingDispatchTenants = `-- name: ListPendingDispatchTenants :many
+SELECT DISTINCT a.tenant_id
+FROM modeldev_executions AS a
+JOIN modeldev_execution_identities AS i ON i.tenant_id=a.tenant_id AND i.execution_id=a.execution_id AND i.operation_id=a.operation_id AND i.spec_hash=a.spec_hash
+WHERE a.cluster_id=$1::uuid AND i.close_generation=0
+ AND a.deadline_at>statement_timestamp()
+ AND NOT EXISTS(SELECT 1 FROM modeldev_pipeline_dispatches d WHERE d.tenant_id=a.tenant_id AND d.execution_id=a.execution_id)
+ AND ($2::uuid IS NULL OR a.tenant_id>$2::uuid)
+ORDER BY a.tenant_id LIMIT $3::integer
+`
+
+type ListPendingDispatchTenantsParams struct {
+	ClusterID     pgtype.UUID
+	AfterTenantID pgtype.UUID
+	BatchSize     int32
+}
+
+// Discovery grants no sending permission. Reserve is still authoritative.
+func (q *Queries) ListPendingDispatchTenants(ctx context.Context, arg ListPendingDispatchTenantsParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, listPendingDispatchTenants, arg.ClusterID, arg.AfterTenantID, arg.BatchSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var tenant_id pgtype.UUID
+		if err := rows.Scan(&tenant_id); err != nil {
+			return nil, err
+		}
+		items = append(items, tenant_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

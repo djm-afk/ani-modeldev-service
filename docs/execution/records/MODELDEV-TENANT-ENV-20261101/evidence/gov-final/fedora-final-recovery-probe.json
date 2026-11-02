@@ -1,0 +1,23 @@
+{
+  "started_at": "2026-10-31T20:12:40.481941+00:00",
+  "purpose": "one final recovery probe after at least 60 seconds; no test retry",
+  "command": [
+    "ssh",
+    "-o",
+    "ControlMaster=no",
+    "-o",
+    "ControlPath=none",
+    "-o",
+    "ConnectTimeout=10",
+    "-o",
+    "ServerAliveInterval=5",
+    "-o",
+    "ServerAliveCountMax=2",
+    "fedora",
+    "printf FEDORA_READY"
+  ],
+  "exit_code": 255,
+  "stdout": "",
+  "stderr": "Connection timed out during banner exchange\nConnection to 172.16.101.31 port 22 timed out\n",
+  "finished_at": "2026-10-31T20:12:50.503803+00:00"
+}

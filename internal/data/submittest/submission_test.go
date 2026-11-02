@@ -7,6 +7,9 @@ import (
 	"errors"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"io"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	dynamicfake "k8s.io/client-go/dynamic/fake"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -27,6 +30,8 @@ import (
 func TestSubmitLostResponsePersistsUncertaintyWithoutResendingAfterReconnect(t *testing.T) {
 	openPool := postgres.Prepare(t)
 	request := dispatchRequest(t)
+	request.Admission = admissionfixture.EnsureEnvironment(t, openPool(), request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	admissionPool := openPool()
@@ -62,7 +67,7 @@ func TestSubmitLostResponsePersistsUncertaintyWithoutResendingAfterReconnect(t *
 		// Independent wire literal; only the input's spec hash varies because
 		// this real reservation needs an unexpired fixture deadline. No sender
 		// encoder, frozen-plan encoder or captured request builds expectations.
-		expectedJSON := strings.ReplaceAll(`{
+		expectedJSON := frozenRunLiteral(request, `{
   "experiment_id":"44444444-4444-4444-8444-444444444444",
   "display_name":"md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
   "pipeline_version_reference":{
@@ -74,9 +79,9 @@ func TestSubmitLostResponsePersistsUncertaintyWithoutResendingAfterReconnect(t *
     "pipeline_root":"s3://fixture-kfp-artifacts/frozen-submit-root"
   },
   "service_account":"cpu-managed-step"
-}`, "FIXTURE_SPEC_HASH", request.Admission.SpecHash)
+}`)
 		if json.Unmarshal(body, &actual) != nil || json.Unmarshal([]byte(expectedJSON), &expected) != nil || !reflect.DeepEqual(actual, expected) {
-			t.Error("CPU07_SUBMIT_BEHAVIOR: POST differs from the original frozen execution/root")
+			t.Errorf("CPU07_SUBMIT_BEHAVIOR: POST differs from the original frozen execution/root: actual=%s expected=%s", body, expectedJSON)
 		}
 		readContext, readCancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer readCancel()
@@ -202,14 +207,12 @@ func dispatchRequest(t *testing.T) biz.PipelineDispatchRequest {
 		t.Fatal("CPU07_SUBMIT_PREFLIGHT: invalid intent fixture; behavior NOT_RUN")
 	}
 	specHash := ""
-	return biz.PipelineDispatchRequest{
-		Admission: admissionfixture.Bind(t, biz.Admission{
-			TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:synthetic-fixture",
-			OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
-			Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: acceptedAt,
-		}),
-		Owner: biz.PipelineOwnerConfiguration{Reference: "cpu07-submit-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/frozen-submit-root"},
-	}
+	a := admissionfixture.Bind(t, biz.Admission{
+		TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:synthetic-fixture",
+		OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+		Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: acceptedAt,
+	})
+	return biz.PipelineDispatchRequest{Admission: a, Owner: a.Snapshot.DispatchOwner}
 }
 
 func assertOriginalDispatch(t *testing.T, dispatch biz.PipelineDispatch, request biz.PipelineDispatchRequest) {
@@ -237,9 +240,31 @@ func newSubmitter(t *testing.T, repository *submission.Repository, server *httpt
 	if err != nil {
 		t.Fatal("CPU07_SUBMIT_PREFLIGHT: fixture client construction failed; behavior NOT_RUN")
 	}
+	client.WithMutationIdentity(submitIdentityFixture(t, dispatchRequest(t).Admission))
+
 	submitter, err := biz.NewPipelineSubmitter(repository, client, 3*time.Second)
 	if err != nil {
 		t.Fatal("CPU07_SUBMIT_PREFLIGHT: submitter construction failed; behavior NOT_RUN")
 	}
 	return submitter
+}
+
+// The literal fixes the wire shape independently of the sender. The actual
+// production Ensure supplies immutable environment receipts for this test.
+func frozenRunLiteral(request biz.PipelineDispatchRequest, raw string) string {
+	s := request.Admission.Snapshot
+	raw = strings.ReplaceAll(raw, "FIXTURE_SPEC_HASH", request.Admission.SpecHash)
+	return strings.NewReplacer(
+		"44444444-4444-4444-8444-444444444444", s.Environment.ExperimentID,
+		"cccccccc-cccc-4ccc-8ccc-cccccccccccc", s.Implementation.PipelineID,
+		"dddddddd-dddd-4ddd-8ddd-dddddddddddd", s.Implementation.PipelineVersionID,
+		"cpu-managed-step", s.Environment.Identities.KFPStepServiceAccount,
+		"s3://fixture-kfp-artifacts/frozen-submit-root", s.DispatchOwner.PipelineRoot,
+		`"spec_hash":"`+request.Admission.SpecHash+`"`, `"spec_hash":"`+request.Admission.SpecHash+`","environment_binding_id":"`+s.Environment.BindingID+`","namespace_uid":"`+s.Environment.NamespaceUID+`"`).Replace(raw)
+}
+
+func submitIdentityFixture(t *testing.T, a biz.Admission) *dynamicfake.FakeDynamicClient {
+	t.Helper()
+	ns := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": a.Snapshot.Environment.NamespaceName, "uid": a.Snapshot.Environment.NamespaceUID, "labels": map[string]any{"network.ani.io/managed-by": "ani-network-service", "network.ani.io/tenant-id": a.TenantID}}, "status": map[string]any{"phase": "Active"}}}
+	return dynamicfake.NewSimpleDynamicClient(runtime.NewScheme(), ns)
 }

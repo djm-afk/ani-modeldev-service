@@ -2,6 +2,7 @@ package lifecycle_test
 
 import (
 	"context"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"strings"
 	"testing"
 	"time"
@@ -49,8 +50,8 @@ func TestTrainingLogReviewKeepsOriginalStopUnclosedAndRetryable(t *testing.T) {
 	if err != nil || visible.Execution.States.Close != biz.CloseStateNeedsReview {
 		t.Fatalf("actual query did not expose NEEDS_REVIEW: %+v %v", visible.Execution.States, err)
 	}
-	binding := biz.PipelineDispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}}
-	pending, err := r.ListPendingClosures(ctx, binding, "", 10)
+	binding := admissionfixture.DispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}}
+	pending, err := testPendingCloseIDs(ctx, r, binding)
 	if err != nil || len(pending) != 1 || pending[0] != admission.ExecutionID {
 		t.Fatalf("review silently disabled normal owner retries: %v %v", pending, err)
 	}

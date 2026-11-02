@@ -2,6 +2,7 @@
 package postgres
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -117,14 +118,24 @@ func (fixture *schemaFixture) install(t *testing.T) {
 	defer cancel()
 	transaction := fixture.migrationTransaction(t, ctx)
 	defer rollbackMigration(transaction)
-	raw, err := os.ReadFile(filepath.Join(repositoryRoot(t), "migrations", "0001_current_baseline.up.sql"))
-	if err != nil {
-		t.Fatal("CPU04_DB_PREFLIGHT: current baseline unavailable; behavior NOT_RUN")
-	}
-	if _, err := transaction.Exec(ctx, string(raw)); err != nil {
-		t.Fatal("CPU04_DB_PREFLIGHT: current baseline initialization failed; behavior NOT_RUN")
+	for _, migration := range []string{"0001_current_baseline.up.sql", "0002_tenant_execution_environments.up.sql", "0003_execution_environment_projection.up.sql"} {
+		raw, err := os.ReadFile(filepath.Join(repositoryRoot(t), "migrations", migration))
+		if err != nil {
+			t.Fatal("CPU04_DB_PREFLIGHT: current schema unavailable; behavior NOT_RUN")
+		}
+		if migration == "0003_execution_environment_projection.up.sql" {
+			// The public scan helper is installed once in this exclusive DB by
+			// the test launcher, avoiding concurrent CREATE across test schemas.
+			raw = bytes.Split(raw, []byte("CREATE FUNCTION public.modeldev_scan_snapshot_jsonb"))[0]
+		}
+		if _, err := transaction.Exec(ctx, string(raw)); err != nil {
+			t.Fatal("CPU04_DB_PREFLIGHT: current schema initialization failed; behavior NOT_RUN")
+		}
 	}
 	schemaSQL, roleSQL := fixture.schemaSQL, fixture.roleSQL
+	if _, err := transaction.Exec(ctx, "GRANT INSERT, SELECT, UPDATE ON "+schemaSQL+".modeldev_tenant_execution_environments TO "+roleSQL); err != nil {
+		t.Fatal("CPU04_DB_PREFLIGHT: environment grant failed; behavior NOT_RUN")
+	}
 	if _, err := transaction.Exec(ctx, "GRANT USAGE ON SCHEMA "+schemaSQL+" TO "+roleSQL); err != nil {
 		t.Fatal("CPU04_DB_PREFLIGHT: runtime schema grant failed; behavior NOT_RUN")
 	}

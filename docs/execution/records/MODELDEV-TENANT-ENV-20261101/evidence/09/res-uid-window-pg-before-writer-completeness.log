@@ -1,0 +1,16 @@
+127.0.0.1:5432 - accepting connections
+PostgreSQL image=docker.io/library/postgres@sha256:4ef4dbc939d61acea57712655ddb4b4ab27419c913f94cca0cd57cb3ea3c2280 container=f2bc885ed715fd69db1fac113f6ce6a8120b122f3af5f97932974241e59b63b8
+=== RUN   TestNamespaceUIDWindowOldConflictWritesAndPreservedOperations
+    namespace_uid_window_integration_test.go:228: UID_WINDOW_CYCLE PASS: old existing-row ON CONFLICT23514; UPDATE23514; reads/original Delete/unrelated cluster preserve; official25; atomic ADD failure rollback; exact2 backfill; old backend/identity release guard; final temporary constraint absent
+--- PASS: TestNamespaceUIDWindowOldConflictWritesAndPreservedOperations (0.89s)
+=== RUN   TestNamespaceUIDWindowWaitsForInflightTransactionAndRejectsRowDrift
+    namespace_uid_window_integration_test.go:286: UID_WINDOW_RACE PASS: ACCESS EXCLUSIVE waits original writer; changed exact row set rejects whole initial freeze; migration remains24
+--- PASS: TestNamespaceUIDWindowWaitsForInflightTransactionAndRejectsRowDrift (0.75s)
+=== RUN   TestNamespaceUIDWindowFailureLeavesOriginalBarrier
+    namespace_uid_window_integration_test.go:334: UID_WINDOW_FAILURE PASS: wrong SHA, under-lock external identity failure, cancellation and NULL release refusal keep original committed guard
+--- PASS: TestNamespaceUIDWindowFailureLeavesOriginalBarrier (0.66s)
+=== RUN   TestTenantNamespaceBackfillIsExactAndNeverOverwritesUID
+--- PASS: TestTenantNamespaceBackfillIsExactAndNeverOverwritesUID (0.52s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-resource-service/internal/data/network	3.882s
+removed task container=f2bc885ed715fd69db1fac113f6ce6a8120b122f3af5f97932974241e59b63b8

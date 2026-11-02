@@ -1,0 +1,142 @@
+{
+  "started_at": "2026-11-01T11:05:29.702150+00:00",
+  "source_commit": "67b86699cb15e7ecdba5cc30f22c3be45b367726",
+  "source_tree": "3ffe6a4dcd103eb8ea3d9c6ad37d48898a91b05a",
+  "source_provenance": {
+    "base_git_archive": "df8dcfbfb0de02d4ebf61bea2e46897bd9bbd405",
+    "existing_base": "/var/lib/ani-deploy/jobs/5d522c953b6e4a9ba37708d2cd0096f3/source",
+    "delta_files": [
+      {
+        "path": "deploy/modeldev-tenant-policy/README.md",
+        "sha256": "7f732ad291cd39dfbc875a6cab23c95edb5501592e2eb5018f0db9af87b227a6"
+      },
+      {
+        "path": "deploy/modeldev-tenant-policy/render.py",
+        "sha256": "933c5eb99b9b46c94087de72b5273539d7cfd6410ba0e98ae0c9d8218c0c3894"
+      },
+      {
+        "path": "deploy/modeldev-tenant-policy/test_render.py",
+        "sha256": "254f8abb66069b26755deabcc6b1375db360eed93b2ad2e610aaaee912444ade"
+      },
+      {
+        "path": "internal/component/io.go",
+        "sha256": "8ab63ed0fc7599cbab3a8863db6fb1b287707187d750acaec0c680dc640d04da"
+      },
+      {
+        "path": "internal/data/runtimeproof/owner_close.go",
+        "sha256": "e15db8ad212d29dd16ec1908e8b391223e8421b0189e4c7f930c6a61392145ca"
+      },
+      {
+        "path": "internal/data/tenantenvironment/kfp.go",
+        "sha256": "7c8132c9443a08f835c5be2b2f965e5cf76ceddd854ff54d91527a85a7cc2659"
+      },
+      {
+        "path": "internal/data/tenantenvironment/kfp_fixed_images_test.go",
+        "sha256": "e1719f33bdc68df7224a9a5cb7232ae84966e1d089b39982c2075fdb056475ac"
+      }
+    ]
+  },
+  "tests_run": false,
+  "make_verify_run": false,
+  "new_tools_installed": false,
+  "cluster_patch_count": 0,
+  "credential_values_emitted": false,
+  "identity": {
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "resource_cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "resource_secret_uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+    "credential_source": "ani-system/ani-resource-private: image.harbor_username; harbor.password; harbor-ca.crt"
+  },
+  "build_command": [
+    "/var/lib/ani-deploy/cache/governance/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+    "build",
+    "-mod=readonly",
+    "-trimpath",
+    "-buildvcs=false",
+    "-ldflags=-s -w",
+    "-o",
+    "/root/ani-runs/modeldev-step-67b86699-20261101/ani-modeldev-step",
+    "./cmd/ani-modeldev-step"
+  ],
+  "build_exit": 0,
+  "build_seconds": 2.473,
+  "binary_path": "/root/ani-runs/modeldev-step-67b86699-20261101/ani-modeldev-step",
+  "binary_sha256": "bd0ab39051538e6648760be6c32b278efba3815a870198e734ce06c74fbd8e04",
+  "binary_bytes": 25907362,
+  "status": "THREE_IMAGES_PUBLISHED_EXACT_DIGEST_GET200",
+  "finished_at": "2026-11-01T11:05:40.944439+00:00",
+  "images": [
+    {
+      "kind": "step",
+      "base_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:439aa9c7541debe9d6b68ae73eacbb7ad0c08660a961b770fe06f805c3b4515d",
+      "manifest_get_status": 200,
+      "base_layers_reused": 1,
+      "base_compressed_bytes_reused": 16909525,
+      "base_descriptors_unchanged": true,
+      "runtime_config_unchanged_except_provenance_labels": true,
+      "config_digest": "sha256:80d87ab497aad432aab2c6ea7a1fd8c9aff084c4053aab37098491f6fd4caed3",
+      "uploads": [
+        {
+          "digest": "sha256:80d87ab497aad432aab2c6ea7a1fd8c9aff084c4053aab37098491f6fd4caed3",
+          "state": "UPLOADED"
+        },
+        {
+          "digest": "sha256:c7b49d33977c44e192deb9302b51e927f3407c6846722d8b6696333560a00fe6",
+          "state": "UPLOADED"
+        }
+      ]
+    },
+    {
+      "kind": "cpu",
+      "base_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+      "manifest_get_status": 200,
+      "base_layers_reused": 36,
+      "base_compressed_bytes_reused": 9369609309,
+      "base_descriptors_unchanged": true,
+      "runtime_config_unchanged_except_provenance_labels": true,
+      "config_digest": "sha256:e5bf651c79bb1a1a71838c309eac990e7ce2ebee94080eaac6c1add432b1a121",
+      "uploads": [
+        {
+          "digest": "sha256:e5bf651c79bb1a1a71838c309eac990e7ce2ebee94080eaac6c1add432b1a121",
+          "state": "UPLOADED"
+        },
+        {
+          "digest": "sha256:c7b49d33977c44e192deb9302b51e927f3407c6846722d8b6696333560a00fe6",
+          "state": "MOUNTED"
+        }
+      ]
+    },
+    {
+      "kind": "gpu",
+      "base_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+      "manifest_get_status": 200,
+      "base_layers_reused": 36,
+      "base_compressed_bytes_reused": 9369609309,
+      "base_descriptors_unchanged": true,
+      "runtime_config_unchanged_except_provenance_labels": true,
+      "config_digest": "sha256:79ae880c8703dffb8bf128cdbbf5ecd07bee6f0c60e7b7b72c3f209dc71885da",
+      "uploads": [
+        {
+          "digest": "sha256:79ae880c8703dffb8bf128cdbbf5ecd07bee6f0c60e7b7b72c3f209dc71885da",
+          "state": "UPLOADED"
+        },
+        {
+          "digest": "sha256:c7b49d33977c44e192deb9302b51e927f3407c6846722d8b6696333560a00fe6",
+          "state": "MOUNTED"
+        }
+      ]
+    }
+  ],
+  "new_binary_layer_digest": "sha256:c7b49d33977c44e192deb9302b51e927f3407c6846722d8b6696333560a00fe6",
+  "new_binary_layer_bytes": 8620513,
+  "oci_delta_archive_path": "/root/ani-runs/modeldev-step-67b86699-20261101/image/images.delta.oci.tar",
+  "oci_delta_archive_sha256": "36d2bd9870d417ca355f48b4a3a523d33a4d5413d32ac53fd3b624fcf0419685",
+  "oci_delta_base_layers_embedded": false,
+  "oci_delta_base_layers_retained_in_original_registry": true,
+  "private_source_and_unpacked_layers_removed": true
+}

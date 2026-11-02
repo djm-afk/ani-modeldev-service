@@ -24,15 +24,15 @@ func TestObserveSuspendedTrainJobDoesNotTreatFirstTrueConditionAsCompletion(t *t
 			return
 		}
 		switch r.URL.Path {
-		case "/api/v1/namespaces/cpu-execution":
-			fmt.Fprint(w, `{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"cpu-execution","uid":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"}}`)
-		case "/apis/trainer.kubeflow.org/v1alpha1/namespaces/cpu-execution/trainjobs/md-22222222-2222-4222-8222-222222222222":
+		case "/api/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111":
+			fmt.Fprint(w, `{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"tenant-11111111-1111-4111-8111-111111111111","uid":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"}}`)
+		case "/apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-1111-4111-8111-111111111111/trainjobs/md-22222222-2222-4222-8222-222222222222":
 			fmt.Fprint(w, `{
   "apiVersion":"trainer.kubeflow.org/v1alpha1",
   "kind":"TrainJob",
   "metadata":{
     "name":"md-22222222-2222-4222-8222-222222222222",
-    "namespace":"cpu-execution",
+    "namespace":"tenant-11111111-1111-4111-8111-111111111111",
     "uid":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
     "generation":7,
     "annotations":{
@@ -62,7 +62,7 @@ func TestObserveSuspendedTrainJobDoesNotTreatFirstTrueConditionAsCompletion(t *t
 		TenantID:     "11111111-1111-4111-8111-111111111111",
 		ExecutionID:  "22222222-2222-4222-8222-222222222222",
 		SpecSHA256:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-		Namespace:    "cpu-execution",
+		Namespace:    "tenant-11111111-1111-4111-8111-111111111111",
 		NamespaceUID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
 		Name:         "md-22222222-2222-4222-8222-222222222222",
 		UID:          "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",

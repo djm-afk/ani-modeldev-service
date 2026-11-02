@@ -1,0 +1,186 @@
+{
+  "schema": "ani.modeldev.fluentbit-cri-identity-fieldcaps.transport.v1",
+  "started_at": "2026-10-31T21:01:07.310941+00:00",
+  "ssh": "kubercloud@100.64.128.12",
+  "remote_runner_sha256": "430a2f2ccc0655460afdfc13d7a988e01c79eeb38f39f458714c529f49d9833e",
+  "read_only": true,
+  "ssh_exit_code": 0,
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "observation": {
+    "schema": "ani.modeldev.fluentbit-cri-identity-fieldcaps.v1",
+    "started_at": "2026-10-31T21:01:07.116299+00:00",
+    "ssh": "kubercloud@100.64.128.12",
+    "read_only": true,
+    "indices": [
+      "ani-logs-2026.10.29",
+      "ani-logs-2026.10.30"
+    ],
+    "log_or_document_reads": false,
+    "search_requests": 0,
+    "token_creation": false,
+    "raw_config_credentials_retained": false,
+    "identity": {
+      "ssh_user": "kubercloud",
+      "hostname": "node1",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+    },
+    "identity_verified": true,
+    "fluent_bit_daemonset": {
+      "namespace": "ani-observability",
+      "name": "ani-fluent-bit",
+      "uid": "0c2109a9-4271-45c9-bfb3-0c2993ae551e",
+      "resource_version": "17363031",
+      "configmap_refs": [
+        "ani-fluent-bit"
+      ]
+    },
+    "configmaps": [
+      {
+        "name": "ani-fluent-bit",
+        "uid": "05700e1c-4b55-4c34-9f3e-5f0fd30a9be5",
+        "resource_version": "17362528",
+        "files": [
+          {
+            "key": "custom_parsers.conf",
+            "bytes": 122,
+            "sha256": "db215a82b6dd48a6c19384ec51a8dbf22be773aca75550af8d70e884cf2e623b",
+            "sections": [
+              {
+                "section": "PARSER",
+                "entries": [
+                  {
+                    "key": "name",
+                    "value": "docker_no_time"
+                  },
+                  {
+                    "key": "format",
+                    "value": "json"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "key": "fluent-bit.conf",
+            "bytes": 2306,
+            "sha256": "3a1a113a2494015dc5c83e6fb2e97aac8c460673052f5317bc1e754066f8e751",
+            "sections": [
+              {
+                "section": "SERVICE",
+                "entries": []
+              },
+              {
+                "section": "INPUT",
+                "entries": [
+                  {
+                    "key": "name",
+                    "value": "tail"
+                  },
+                  {
+                    "key": "path",
+                    "value": "/var/log/containers/*.log"
+                  },
+                  {
+                    "key": "tag",
+                    "value": "kube.*"
+                  }
+                ]
+              },
+              {
+                "section": "FILTER",
+                "entries": [
+                  {
+                    "key": "name",
+                    "value": "kubernetes"
+                  },
+                  {
+                    "key": "match",
+                    "value": "kube.*"
+                  },
+                  {
+                    "key": "merge_log",
+                    "value": "On"
+                  },
+                  {
+                    "key": "merge_log_key",
+                    "value": "log_processed"
+                  },
+                  {
+                    "key": "keep_log",
+                    "value": "On"
+                  }
+                ]
+              },
+              {
+                "section": "FILTER",
+                "entries": [
+                  {
+                    "key": "name",
+                    "value": "grep"
+                  },
+                  {
+                    "key": "match",
+                    "value": "kube.*"
+                  }
+                ]
+              },
+              {
+                "section": "OUTPUT",
+                "entries": [
+                  {
+                    "key": "name",
+                    "value": "opensearch"
+                  },
+                  {
+                    "key": "match",
+                    "value": "kube.*"
+                  },
+                  {
+                    "key": "logstash_format",
+                    "value": "On"
+                  },
+                  {
+                    "key": "logstash_prefix",
+                    "value": "ani-logs"
+                  },
+                  {
+                    "key": "logstash_dateformat",
+                    "value": "%Y.%m.%d"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "field_candidates": [
+      "tag",
+      "tag.keyword",
+      "log.file.path",
+      "log.file.path.keyword",
+      "log_file_path",
+      "log_file_path.keyword",
+      "filename",
+      "filename.keyword",
+      "source",
+      "source.keyword"
+    ],
+    "configuration_derived_fields": [],
+    "field_caps": {
+      "http_status": 200,
+      "response_bytes": 69,
+      "response_sha256": "5a6893882b41f3eadac392efe88003f79f2dd8562054eecfeb143d12981ea0f9",
+      "tls_verified": true,
+      "auth_source": "existing ani-opensearch-admin Secret; process memory only",
+      "fields": {}
+    },
+    "result": "NO_CONFIGURED_MAPPED_CRI_IDENTITY_BRIDGE",
+    "completed_at": "2026-10-31T21:01:08.065328+00:00"
+  },
+  "completed_at": "2026-10-31T21:01:10.080045+00:00"
+}

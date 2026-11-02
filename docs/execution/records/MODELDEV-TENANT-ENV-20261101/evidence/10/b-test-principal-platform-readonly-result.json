@@ -1,0 +1,6 @@
+{
+  "status": "FAIL",
+  "reason": "B_TENANT_CHANGED",
+  "automatic_retry": false,
+  "ssh_exit": 1
+}

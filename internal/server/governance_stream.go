@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// verifiedQueryMethods lists every read that carries the BFF's per-request
+// verifiedQueryMethods lists methods carrying the BFF's per-request
 // current authorization, unary and streaming alike. It is one list so the two
 // transports cannot drift apart: the stream interceptor checks this same map,
 // and a method absent here is refused even after its own allow-list admits it.
@@ -50,6 +50,12 @@ func verifiedQueryMethods(query modeldevv1.ModelDevQueryServiceServer, extra Gov
 		methods[modeldevv1.ModelDevOperationsService_PlanExecutionCleanup_FullMethodName] = true
 		methods[modeldevv1.ModelDevOperationsService_ApplyExecutionCleanup_FullMethodName] = true
 		methods[modeldevv1.ModelDevOperationsService_ResumeModelRegistration_FullMethodName] = true
+	}
+	if extra.Environment != nil {
+		// Ensure is a write: delegation must name its exact method, following
+		// the BFF's current manage_environment permission and API grant check.
+		methods[modeldevv1.ModelDevTenantEnvironmentService_EnsureTenantExecutionEnvironment_FullMethodName] = true
+		methods[modeldevv1.ModelDevTenantEnvironmentService_GetTenantExecutionEnvironment_FullMethodName] = true
 	}
 	return methods
 }

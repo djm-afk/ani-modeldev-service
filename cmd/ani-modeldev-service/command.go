@@ -17,7 +17,6 @@ import (
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
@@ -68,6 +67,10 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 }
 
 func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, images biz.TrainingImageResolver, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+	return buildCommandServerWithEnvironment(listener, config, pool, query, verifier, operations, models, images, runtimeConfig, nil, nil, middlewares...)
+}
+
+func buildCommandServerWithEnvironment(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, images biz.TrainingImageResolver, runtimeConfig *conf.ManagedRuntime, facts biz.AdmissionFactsReader, environment modeldevv1.ModelDevTenantEnvironmentServiceServer, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
 	failed := func(message string) (*kratosgrpc.Server, error) { return nil, errors.New(message) }
 	if config == nil || (config.Model != nil && models == nil) {
 		return failed("shared Model resources required")
@@ -107,13 +110,8 @@ func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC,
 		if err != nil {
 			return failed("command content limits required")
 		}
-		sources := make([]admissionfacts.FileSource, len(resolution.FactsFiles))
-		for i, file := range resolution.FactsFiles {
-			sources[i] = admissionfacts.FileSource{Path: file.GetPath(), SHA256: file.GetSha256()}
-		}
-		facts, err := admissionfacts.Load(ctx, sources)
-		if err != nil {
-			return failed("command admission facts unavailable or invalid")
+		if facts == nil || environment == nil {
+			return failed("dynamic tenant execution environment required")
 		}
 		implementationMaterials := catalogue.NewReader(resolution.CatalogueDirectory)
 		if err := implementationMaterials.Check(ctx); err != nil {
@@ -133,7 +131,7 @@ func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC,
 			concrete.WithMaterials(materials).WithFinetuningFacts(models).WithFinetuningReadiness(source, limits)
 		}
 	}
-	s, err := server.NewGovernanceServicesServer(listener, server.CommandTLS{Certificate: certificate, ClientCAs: roots, GovernanceDNSName: config.GovernanceDnsName}, command, admission, query, server.GovernanceServices{Management: management, Operations: operations, ModelResolutionTimeout: runtimeConfig.ModelResolutionTimeout(), ImportTimeout: runtimeConfig.ImportTimeout()}, middlewares...)
+	s, err := server.NewGovernanceServicesServer(listener, server.CommandTLS{Certificate: certificate, ClientCAs: roots, GovernanceDNSName: config.GovernanceDnsName}, command, admission, query, server.GovernanceServices{Management: management, Operations: operations, Environment: environment, ModelResolutionTimeout: runtimeConfig.ModelResolutionTimeout(), ImportTimeout: runtimeConfig.ImportTimeout()}, middlewares...)
 	if err != nil {
 		return failed("command listener configuration invalid")
 	}

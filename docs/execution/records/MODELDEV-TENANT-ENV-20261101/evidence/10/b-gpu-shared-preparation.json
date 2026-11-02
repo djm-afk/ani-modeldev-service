@@ -1,0 +1,272 @@
+{
+  "schema": "ani.modeldev.b-gpu-shared-preparation.v1",
+  "prepared_at": "2026-11-01T00:39:03.278229+00:00",
+  "status": "SOURCE_PATH_SUPPORTED_LIVE_PREFLIGHT_BLOCKED_NOT_EXECUTED",
+  "read_only": true,
+  "network_attempts": 0,
+  "mutations": 0,
+  "scope": {
+    "gov_tenant_id": 40,
+    "resource_tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+    "original_plan_id": 2,
+    "original_plan_name": "ani-factor10-e2e",
+    "do_not_mutate_shared_plan2": true,
+    "new_compute_sku": false
+  },
+  "source": {
+    "governance_ref": "244780ffe6b9a7deb1c3f6f162e474e76a73a566",
+    "files": [
+      {
+        "path": "api/protos/admin/service/v1/i_plan.proto",
+        "sha256": "bcd19ccb6beca3ff4fbc3d811cc201488c549e04bc1e87aefa5cdd189c413458"
+      },
+      {
+        "path": "api/protos/admin/service/v1/i_plan_quota.proto",
+        "sha256": "8c0a958f18b40d3d83f28adcff940dd6bbdfe7323b4dac7a0d0608d4c3beae54"
+      },
+      {
+        "path": "api/protos/admin/service/v1/i_plan_module.proto",
+        "sha256": "a5d5314bfff38548a55d330dde9725dfa6d10593da21792f7152ea66572ec3ab"
+      },
+      {
+        "path": "api/protos/admin/service/v1/i_tenant.proto",
+        "sha256": "22f2347c2df1942a6bf344ffc13da67eb09f2bde8612f78199ca764735e91781"
+      },
+      {
+        "path": "api/protos/identity/service/v1/plan.proto",
+        "sha256": "e417a560be648d7e6d2dcfa85e275689d101a1f6fd08b320fea97e4b2703c3ef"
+      },
+      {
+        "path": "api/protos/identity/service/v1/plan_quota.proto",
+        "sha256": "40e8e812317b4e76b6c171fc79643edede50ba87c283bf71a960dda501d45039"
+      },
+      {
+        "path": "api/protos/identity/service/v1/plan_module.proto",
+        "sha256": "fb3b561e409f02c551067aff03c1c22f1f144de4295ef79830b1b9a9eb608bd7"
+      },
+      {
+        "path": "api/protos/identity/service/v1/tenant.proto",
+        "sha256": "73c538fc0a32b2a7b68563c5aa7cf8333be109fcf6a6b138878bed86b9b46caa"
+      },
+      {
+        "path": "app/admin/service/internal/data/quota_ledger_repo.go",
+        "sha256": "3aa2f97f37aa990de0525449b26a9c8b3daaba1a3c07e8db2c254f22157149e3"
+      },
+      {
+        "path": "app/admin/service/internal/data/plan_quota_repo.go",
+        "sha256": "34f84524a1f61b3349e7a4d4ee6b6cfaf79ae36ee1ec0a3e93d8ef70ac36a496"
+      },
+      {
+        "path": "app/admin/service/internal/data/tenant_repo.go",
+        "sha256": "c2386485a52898f275df083bc9e715eb8955fe3056f3f7065ef2cf43c8c44da3"
+      },
+      {
+        "path": "app/admin/service/internal/data/compute_catalog_authorization.go",
+        "sha256": "e31c4ed074de8b86109f0de95dbad767f22542452fbd68be0f4350b9baca0820"
+      },
+      {
+        "path": "api/protos/admin/service/v1/i_accelerator.proto",
+        "sha256": "d1cc0dfe51099bd9902d7bd89782c8fd23e81ac3a2217844ba4f52d1a7d23879"
+      }
+    ]
+  },
+  "policy_authority": {
+    "tenant_override_api": "NONE_FOUND_IN_CURRENT_CONTRACT_AND_LEDGER",
+    "effective_limit_rule": "QuotaLedgerRepo reads current tenant.PlanID, locks that Plan and reads its PlanQuota policies; there is no per-tenant override fallback. Missing required quotaCode fails QUOTA_NOT_CONFIGURED.",
+    "supported_bounded_path": "Use existing Plan/PlanModule/PlanQuota CRUD to prepare a task-private complete copy of B plan2, add only the existing gpu.shared_memory_mib policy, then existing PUT tenants/40 changes only B planId. This is policy/plan preparation, not a new compute SKU. No atomic clone or tenant override endpoint is claimed.",
+    "candidate_private_plan_name": "modeldev-live-b-20261101",
+    "private_plan_id": null,
+    "binding_invariant": "Before binding, new plan must have zero tenant references; after binding its only tenant reference must be id40 and original Resource UUID. Plan2 and all its other tenant references/policy rows remain unchanged.",
+    "no_fake_limit": "Do not insert or reset quota-account occupied_units/versions, and do not use gpu.count legacy policy for shared-memory admission."
+  },
+  "approved_A_candidate_limit_source": {
+    "path": "/home/chabking/workspace/ani-modeldev-service/.scratch/modeldev-execution-v2.1/new-env-setup/assembly/shared-node3-resume-20261023/gr03-normal-concurrency/quota-create.actual-receipt.json",
+    "sha256": "7690c764125b71929f779f894c358b531f88c4aa31ba2a20ae88e3764c5116b3",
+    "captured_at": "2026-10-23T08:43:16.153580+00:00",
+    "state": "TEMPORARY_SHARED_POLICY_CREATED_NORMAL_TENANT_LIMIT_VERIFIED",
+    "normal_api_policy_post_count": 1,
+    "original_A_gov_tenant_id": 2,
+    "original_A_plan_id": 3,
+    "created_policy": {
+      "id": 3,
+      "planId": 3,
+      "quotaCode": "gpu.shared_memory_mib",
+      "quotaValue": "49140",
+      "createdAt": "2026-10-23T08:42:38.748674Z"
+    },
+    "normal_tenant_account_readback_http": 200,
+    "candidate_B_quota_code": "gpu.shared_memory_mib",
+    "candidate_B_quota_value": "49140",
+    "scope_limit": "Historical actual A normal API and readback proof, not current A policy existence or a live B mutation. Candidate limit reuses that approved amount exactly; no new SKU/units invented."
+  },
+  "existing_shared_preset_candidate": {
+    "source_path": ".scratch/modeldev-dynamic-tenant-environment/evidence/09/old-inventory.json",
+    "source_sha256": "aa5420bd1c2ad02f373509d625a99080b4c6721050de1bcdb3496ad1d15a44d2",
+    "compute_preset_id": "4d34373d-be80-4c17-8ee3-fe24ec0e12d8",
+    "code": "mdv21-newenv-shared2-2c4g-20261023",
+    "cpu_millis": 2000,
+    "memory_mib": 4096,
+    "selection_digest": "995c5055fc9b8e208ef08d537b3c1c5b0815be30dd1833b9e91dd9a076fd0d00",
+    "profile_id": "ac998f7a-c39a-49aa-8aae-d932d567116a",
+    "profile_version": 1,
+    "spec_digest": "468c843dcc72591f40ceb3da380355bd3a61bf9c1e55a738cdd4ba0d60f5749e",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "pool_id": "d4f96424-d801-44cb-83cb-c5a448d1d187",
+    "mode": "SHARED_FIXED",
+    "devices_per_unit": 1,
+    "memory_mib_per_device": 24570,
+    "core_limit_percent": 50,
+    "current_B_selectability": "NOT_RUN; historical A accepted identity only",
+    "candidate_limit_capacity": "49140 MiB equals two original 24570 MiB units; training/finetuning suitability and actual scheduler availability remain unverified."
+  },
+  "requests_prepared_not_executable": [
+    {
+      "step": 1,
+      "action": "capture exact original tenant and full plan baseline",
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/v1/admin/tenants/40"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/admin/plans/2"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/admin/plan-modules",
+          "query": {
+            "noPaging": true,
+            "query": "{\"plan_id\":2}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/admin/plan-quotas",
+          "query": {
+            "noPaging": true,
+            "query": "{\"plan_id\":2}"
+          }
+        }
+      ],
+      "required_result": "Complete module and quota sets plus all Plan metadata; earlier B receipt intentionally selected only four relevant modules and GPU policy, so it is insufficient as a clone input."
+    },
+    {
+      "step": 2,
+      "action": "create private Plan using copied original metadata",
+      "method": "POST",
+      "path": "/api/v1/admin/plans",
+      "body_template": {
+        "data": {
+          "name": "modeldev-live-b-20261101",
+          "version": "<exact source Plan.version>",
+          "expiryPolicy": "<exact source Plan.expiryPolicy>",
+          "dataRetentionDays": "<exact source Plan.dataRetentionDays>",
+          "description": "Task-private B ModelDev 20261101 policy copy",
+          "remark": "source plan2; B tenant40 only; gpu.shared_memory_mib=49140"
+        }
+      },
+      "result": "API returns Empty, so resolve actual new id by exact unique name before any child calls; never guess an id."
+    },
+    {
+      "step": 3,
+      "action": "copy every exact original module and policy",
+      "module_request": {
+        "method": "POST",
+        "path": "/api/v1/admin/plan-modules",
+        "body_template": {
+          "data": {
+            "planId": "<resolved private plan id>",
+            "module": "<one exact original module enum>"
+          }
+        }
+      },
+      "quota_request": {
+        "method": "POST",
+        "path": "/api/v1/admin/plan-quotas",
+        "body_template": {
+          "data": {
+            "planId": "<resolved private plan id>",
+            "quotaCode": "<one exact original quota code>",
+            "quotaValue": "<exact original uint64 decimal string>"
+          }
+        }
+      },
+      "required_result": "Full copied sets equal original plan2 sets; preserve gpu.physical.count=1 and all unrelated original limits/modules."
+    },
+    {
+      "step": 4,
+      "action": "add original existing shared-memory policy only to private Plan",
+      "method": "POST",
+      "path": "/api/v1/admin/plan-quotas",
+      "body_template": {
+        "data": {
+          "planId": "<resolved private plan id>",
+          "quotaCode": "gpu.shared_memory_mib",
+          "quotaValue": "49140"
+        }
+      },
+      "precondition": "New plan has zero tenant references and no existing shared-memory policy; if a matching policy is observed after an uncertain POST, verify it rather than issue a second POST."
+    },
+    {
+      "step": 5,
+      "action": "bind only B after complete child readback",
+      "method": "PUT",
+      "path": "/api/v1/admin/tenants/40",
+      "body_template": {
+        "id": 40,
+        "data": {
+          "planId": "<resolved private plan id>"
+        },
+        "updateMask": "planId",
+        "allowMissing": false
+      },
+      "server_condition": "WHERE tenant.id=40 only; no expected original plan/resourceVersion field exists. External write quiescence and immediately preceding identity/current-plan read are mandatory; do not call it server-side CAS."
+    }
+  ],
+  "idempotency_and_reverse_read": {
+    "native_idempotency_key": "None on Plan/PlanModule/PlanQuota/Tenant CRUD DTOs. HTTP request id is not a business idempotency guarantee.",
+    "plan": "Name has database unique index; exact-name GET before creation; if prior unknown outcome then only exact-name/metadata readback and no blind repeat. Different matching task name/metadata is a conflict.",
+    "quota": "Unique(plan_id,quota_code); exact child row/value readback. Existing wrong value must not be silently replaced. Update API, if explicitly needed, is PUT /admin/plan-quotas/{id} with {id,data:{quotaValue:\"49140\"},updateMask:\"quotaValue\",allowMissing:false}; plan association is immutable.",
+    "module": "No unique(plan_id,module) contract was found. Hold a single task writer, compare full exact child set, persist one POST outcome, and never blindly repeat an uncertain POST. Duplicate module rows are a blocker.",
+    "tenant_binding": "Repeated exact assignment has same final plan pointer, but no compare-old-plan or version token exists. Last prewrite read must still be tenant40/expected UUID/plan2 with policy writers quiesced. Partial update uses only planId; no allowMissing.",
+    "readback": [
+      "GET /api/v1/admin/tenants/40 => original Resource UUID, new private planId, original status/code/admin unchanged.",
+      "GET /api/v1/admin/plans/{private_id}, GET plan-modules and plan-quotas filtered by plan_id => complete copied baseline + one shared policy49140, physical policy1 unchanged.",
+      "GET /api/v1/admin/tenants?noPaging=true&query={\"plan_id\":private_id} => exactly tenant40; snapshot of original plan2 children and other pointers unchanged.",
+      "GET /api/v1/admin/tenants/40/quota-accounts and actual B GET /api/v1/me/quota-accounts => shared limit49140 ENFORCED with consistent occupied/available; do not interpret absence as zero usage.",
+      "If any mutation outcome is uncertain, retain issued request and only inspect exact intended resource; never invent a replacement ID."
+    ],
+    "restore_boundary": "If reverting later, first prove B original operations/holds/releases settled and no pending business request. Restore only B pointer to original plan2, verify no references to task plan, then delete only exact task-created children/plan. No plan2 row or other tenant account is changed."
+  },
+  "required_permissions_and_versions": {
+    "provisioning": "Existing authorized root management principal with current API/Casbin grants for GET/POST plans, plan-modules, plan-quotas and PUT tenant40; this preparation did not inspect or change those current live grants. Do not grant an ordinary B user root administration.",
+    "B_business": "Current tenant40 ordinary principal + active ALL role26; exact training compute-preset grant and MODEL/ACCELERATOR entitlement. GPU preset intersection additionally checks current GET /api/v1/accelerator/profiles grant, which was not included in earlier B grant selection and remains NOT_RUN.",
+    "new_environment": "Formal API catalog sync and sql/data/20261101010000_modeldev_environment_permissions.sql must install manage/view environment grants; no test-only substitute.",
+    "versions": "Live B GET /api/v1/compute-presets?usage=TRAINING&compute_type=gpu&gpu_mode=SHARED_FIXED must return this exact preset/profile/version/digest as enabled/selectable. Preserve the returned immutable selection and use normal ModelDev resolution to freeze it; no device-mode/profile reconstruction.",
+    "catalog_state": "Actual ACC profile ACTIVE and correct tenant visibility/pool/supply, B anonymous/private image access, READY dataset/base-model scope and fine-tuning readiness remain independent gates.",
+    "concurrency": "No expected_version/If-Match/native idempotency fields exist in these CRUD contracts. Quiesce concurrent source Plan2/new Plan/B subscription writers and recheck exact rows; server SQL plan/account locks alone do not provide a conditional tenant pointer update."
+  },
+  "blockers": [
+    "No fresh complete Plan2 metadata/modules/all policies or writer quiescence evidence this read-only source turn.",
+    "No actual private PlanID: no Plan was created. Prepared DTOs contain explicit required substitutions and are not runnable as-is.",
+    "Current B GPU profile catalog grant, exact preset selectability/profile state and fine-tuning suitability were not queried.",
+    "Earlier live B record showed no shared-memory policy and no B input versions; actual B login/Ensure/model/data/I-O/training all remain NOT_RUN."
+  ],
+  "model_database_historical_reference": {
+    "path": "/home/chabking/workspace/ani-modeldev-service/.scratch/modeldev-execution-v2.1/records/model-runtime-deploy-preflight.json",
+    "sha256": "3cb7336a103e507f56f7711f53edd56c63fa08c1b430b3264e3e2383ae3a66e3",
+    "database": "ani_model",
+    "read_role": "ani_model_app",
+    "owner_role": "ani_model_owner (NOLOGIN)",
+    "chart_secret_reference": "ani-system/ani-model-database:dsn",
+    "physical_connection": "Pod-local 127.0.0.1:5432/ani_model",
+    "lines": [
+      42,
+      43,
+      195,
+      205
+    ],
+    "verification": "Existing local deployment receipt only; no DSN/secret values read or copied and no live DB query performed."
+  }
+}

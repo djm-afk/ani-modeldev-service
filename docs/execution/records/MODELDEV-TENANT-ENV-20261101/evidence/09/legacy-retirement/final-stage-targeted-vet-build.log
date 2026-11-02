@@ -1,0 +1,8 @@
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-legacy-retirement	0.015s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof	0.764s
+d661140bcc0528b0b8e9c1e662e55fc6ddc2741efc6e479a7a33776c49ead58b  cmd/ani-modeldev-legacy-retirement/main.go
+66682e1e7597590666e41f0a416c911299c55a4330f3d560ab427a7022270943  cmd/ani-modeldev-legacy-retirement/plan.go
+e2372a19af35d403b3b24c21bd7f3dbd0d5f07a8caeb781393aa714be7051225  internal/data/runtimeproof/owner_close.go
+2328572380b217c6db50a85c1ccb3e69e328f3b0e22556299786b7b29002d599  internal/data/runtimeproof/legacy_retirement.go
+8dc579477b0597a981b68ea8f2268d2729b684f256129b939e8b1f2633483ede  internal/data/runtimeproof/legacy_retirement_test.go
+123b9f575cb3efec2ea59e801d33ed2778ed71df36461140202863a7f6ca4fa3  /home/chabking/tenantenv-20261101/legacy-retirement-stage-linux-amd64

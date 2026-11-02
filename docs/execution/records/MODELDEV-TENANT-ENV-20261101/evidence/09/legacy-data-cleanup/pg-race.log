@@ -1,0 +1,47 @@
+=== RUN   TestApplyWithoutRootQualificationPreservesOriginalRows
+    command_test.go:11: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestApplyWithoutRootQualificationPreservesOriginalRows (0.54s)
+=== RUN   TestExactTwoPhaseDeletionPreservesOtherTenantOwnerAndAccounts
+    command_test.go:26: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestExactTwoPhaseDeletionPreservesOtherTenantOwnerAndAccounts (1.08s)
+=== RUN   TestUnreleasedChargeAndUnclosedExecutionRefuseDeletion
+=== RUN   TestUnreleasedChargeAndUnclosedExecutionRefuseDeletion/unreleased
+    refusal_test.go:23: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestUnreleasedChargeAndUnclosedExecutionRefuseDeletion/unclosed
+    refusal_test.go:23: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestUnreleasedChargeAndUnclosedExecutionRefuseDeletion (1.66s)
+    --- PASS: TestUnreleasedChargeAndUnclosedExecutionRefuseDeletion/unreleased (0.75s)
+    --- PASS: TestUnreleasedChargeAndUnclosedExecutionRefuseDeletion/unclosed (0.91s)
+=== RUN   TestOriginalGPUOutboxWithoutACKRefusesDeletion
+    refusal_test.go:50: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestOriginalGPUOutboxWithoutACKRefusesDeletion (0.91s)
+=== RUN   TestUnknownAcceptanceDoesNotInferQualificationFromRetryBlocked
+    refusal_test.go:66: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestUnknownAcceptanceDoesNotInferQualificationFromRetryBlocked (0.71s)
+=== RUN   TestReferenceChangeAndRowMismatchAbortWholeStage
+=== RUN   TestReferenceChangeAndRowMismatchAbortWholeStage/reference
+    refusal_test.go:89: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestReferenceChangeAndRowMismatchAbortWholeStage/rowcount
+    refusal_test.go:89: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestReferenceChangeAndRowMismatchAbortWholeStage (1.63s)
+    --- PASS: TestReferenceChangeAndRowMismatchAbortWholeStage/reference (0.85s)
+    --- PASS: TestReferenceChangeAndRowMismatchAbortWholeStage/rowcount (0.78s)
+=== RUN   TestConcurrentOriginalRevisionChangeIsRecheckedAfterDrain
+    refusal_test.go:123: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestConcurrentOriginalRevisionChangeIsRecheckedAfterDrain (0.89s)
+=== RUN   TestCancellationAfterEarlierDeletesRollsBackTheWholeGovTransaction
+    refusal_test.go:155: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestCancellationAfterEarlierDeletesRollsBackTheWholeGovTransaction (0.90s)
+=== RUN   TestModelDevPhaseWithoutQualifiedGovernanceReceiptIsBlocked
+    refusal_test.go:195: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestModelDevPhaseWithoutQualifiedGovernanceReceiptIsBlocked (0.77s)
+=== RUN   TestSemanticReferenceOutsideOriginalIDsRefusesDeletion
+=== RUN   TestSemanticReferenceOutsideOriginalIDsRefusesDeletion/acceptance
+    refusal_test.go:210: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestSemanticReferenceOutsideOriginalIDsRefusesDeletion/release_receipt
+    refusal_test.go:210: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestSemanticReferenceOutsideOriginalIDsRefusesDeletion (1.91s)
+    --- PASS: TestSemanticReferenceOutsideOriginalIDsRefusesDeletion/acceptance (0.92s)
+    --- PASS: TestSemanticReferenceOutsideOriginalIDsRefusesDeletion/release_receipt (0.99s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/legacy-modeldev-data-cleanup	12.023s

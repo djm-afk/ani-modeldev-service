@@ -1,0 +1,17 @@
+Execution host: ssh fedora
+Working directory: /home/chabking/tenantenv-20261101/modeldev-environment
+Command: python3 -m unittest discover -s deploy/modeldev-webhook -p 'test_*.py' -v
+test_changed_material_or_missing_driver_rejected (test_render.ManifestTests.test_changed_material_or_missing_driver_rejected) ... ok
+test_shared_bundle_init_regular_files_and_no_tenant_roles (test_render.ManifestTests.test_shared_bundle_init_regular_files_and_no_tenant_roles) ... ok
+test_single_global_or_match_and_no_creator_skip (test_render.ManifestTests.test_single_global_or_match_and_no_creator_skip) ... ok
+Ran 3 tests in 0.003s
+OK
+
+Command: python3 -m unittest discover -s deploy/modeldev-tenant-policy -p 'test_*.py' -v
+test_exact_policies_old_object_and_global_token_secret_guard (test_render.NativeTemplates.test_exact_policies_old_object_and_global_token_secret_guard) ... ok
+test_no_runtime_privilege_expansion (test_render.NativeTemplates.test_no_runtime_privilege_expansion) ... ok
+test_no_wildcard_or_missing_identity_default (test_render.NativeTemplates.test_no_wildcard_or_missing_identity_default) ... ok
+Ran 3 tests in 0.002s
+OK
+Exit code: 0
+Evidence is the executed renderer/component result, not API-server CEL validation or admission enforcement.

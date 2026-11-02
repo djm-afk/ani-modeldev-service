@@ -1,0 +1,12 @@
+{
+  "observation_session_id": 38705,
+  "observation_exit_code": 255,
+  "observed_last_output": "go mod verify\nTimeout, server 172.16.101.31 not responding.",
+  "observed_utc": "2026-10-31T22:44:19Z",
+  "authoritative_receipt_read_utc": "2026-10-31T22:45:17.351550Z",
+  "receipt_ended_utc": "2026-10-31T22:41:40.721999Z",
+  "receipt_exit_code": 0,
+  "rerun": false,
+  "receipt_file": "res-uid-window-verify-final-receipt.json",
+  "receipt_read_via": "one bounded read-only SSH to fedora; no restart"
+}

@@ -1,0 +1,221 @@
+{
+  "observed_at_utc": "2026-10-31T14:51:53.598497Z",
+  "requests": [
+    {
+      "observed_at_utc": "2026-10-31T14:51:53.755192Z",
+      "endpoint": "https://ani-kfp-entry.kubeflow.svc:8443/apis/v2beta1/healthz",
+      "connect_address": "10.96.159.221",
+      "identity_role": "unauthenticated",
+      "method": "GET",
+      "tls_verified": true,
+      "peer_certificate_sha256": "f7abdabca246929bddd894186ec1eaf0c56cd0b208f7ba42e8ed0162f1b9e2ad",
+      "http_status": 200,
+      "content_type": "application/json",
+      "location": null,
+      "response": {
+        "commit_sha": "85a38e0719870e5b2f97a74f5c966d79bcc7c960",
+        "tag_name": "2.16.0",
+        "multi_user": true,
+        "pipeline_store": "database"
+      }
+    },
+    {
+      "observed_at_utc": "2026-10-31T14:51:53.762995Z",
+      "endpoint": "https://ani-kfp-entry.kubeflow.svc:8443/apis/v2beta1/experiments/fb392303-5d43-45fc-af68-7100af343f8b",
+      "connect_address": "10.96.159.221",
+      "identity_role": "unauthenticated",
+      "method": "GET",
+      "tls_verified": true,
+      "peer_certificate_sha256": "f7abdabca246929bddd894186ec1eaf0c56cd0b208f7ba42e8ed0162f1b9e2ad",
+      "http_status": 401,
+      "content_type": "application/json",
+      "location": null,
+      "response": {
+        "code": 16,
+        "message": "Failed to fetch experiment: Failed to authorize the request: Failed to authorize with API: Unauthenticated: Failed to check authorization. User identity is empty in the request header: Unauthenticated: Request header error: there is no user identity header.: Request header error: there is no user identity header."
+      }
+    },
+    {
+      "observed_at_utc": "2026-10-31T14:51:53.855003Z",
+      "endpoint": "https://ani-kfp-entry.kubeflow.svc:8443/apis/v2beta1/experiments/fb392303-5d43-45fc-af68-7100af343f8b",
+      "connect_address": "10.96.159.221",
+      "identity_role": "fixed-invalid-token",
+      "method": "GET",
+      "tls_verified": true,
+      "peer_certificate_sha256": "f7abdabca246929bddd894186ec1eaf0c56cd0b208f7ba42e8ed0162f1b9e2ad",
+      "http_status": 401,
+      "content_type": "application/json",
+      "location": null,
+      "response": {
+        "code": 16,
+        "message": "Failed to fetch experiment: Failed to authorize the request: Failed to authorize with API: Unauthenticated: Failed to check authorization. User identity is empty in the request header: [Unauthenticated: Request header error: there is no user identity header.: Request header error: there is no user identity header., Authentication failure: Unauthenticated: Review.Status.Authenticated is false. Error invalid bearer token: Failed to authenticate token review]"
+      }
+    }
+  ],
+  "pod_probes": [
+    {
+      "label": "kfp-config",
+      "result": {
+        "MULTIUSER": null,
+        "MULTIUSER_SHARED_READ": null,
+        "REQUIRE_NAMESPACE_FOR_PIPELINES": null,
+        "TOKEN_REVIEW_AUDIENCE": null,
+        "KUBEFLOW_USERID_HEADER": null,
+        "KUBEFLOW_USERID_PREFIX": null,
+        "POD_NAMESPACE": null
+      }
+    },
+    {
+      "label": "kfp-command",
+      "result": "/bin/sh\u0000-c\u0000/bin/apiserver --config=/config --sampleconfig=/config/sample_config.json -logtostderr=true --logLevel=${LOG_LEVEL}\u0000"
+    },
+    {
+      "pod": "ani-modeldev-6995bd77c4-z2gxk",
+      "executable": "/bin/sh",
+      "result": {
+        "error": "error: Internal error occurred: Internal error occurred: error executing command in container: failed to exec in container: failed to start exec \"1dc45266a7ec931f1fd7a7c20ee1d294a8d7f50c0a06bdab82484fcaf6335726\": OCI runtime exec failed: exec failed: unable to start container process: exec: \"/bin/sh\": stat /bin/sh: no such file or directory\n",
+        "exit_code": 1
+      }
+    },
+    {
+      "pod": "ani-modeldev-6995bd77c4-z2gxk",
+      "executable": "/usr/bin/python3",
+      "result": {
+        "error": "error: Internal error occurred: Internal error occurred: error executing command in container: failed to exec in container: failed to start exec \"a9297a7318382b0dcdf70f02ff0f60c7d7f00308fa3bdb76a43f49f5767eeae9\": OCI runtime exec failed: exec failed: unable to start container process: exec: \"/usr/bin/python3\": stat /usr/bin/python3: no such file or directory\n",
+        "exit_code": 1
+      }
+    },
+    {
+      "pod": "ani-modeldev-6995bd77c4-z2gxk",
+      "executable": "/usr/bin/curl",
+      "result": {
+        "error": "error: Internal error occurred: Internal error occurred: error executing command in container: failed to exec in container: failed to start exec \"68c85f3ceefdc8b0a417c856da6e0fbb304f7dfa7ca0fbc6d676df9e39f791bf\": OCI runtime exec failed: exec failed: unable to start container process: exec: \"/usr/bin/curl\": stat /usr/bin/curl: no such file or directory\n",
+        "exit_code": 1
+      }
+    },
+    {
+      "pod": "ani-modeldev-6995bd77c4-z2gxk",
+      "executable": "/busybox/sh",
+      "result": {
+        "error": "error: Internal error occurred: Internal error occurred: error executing command in container: failed to exec in container: failed to start exec \"e91447906bdbfd77cacfe2a220cd87b4a9403c115eb62d1e70d86aa19f194fdb\": OCI runtime exec failed: exec failed: unable to start container process: exec: \"/busybox/sh\": stat /busybox/sh: no such file or directory\n",
+        "exit_code": 1
+      }
+    }
+  ],
+  "commands": [
+    {
+      "started_at_utc": "2026-10-31T14:51:53.672898Z",
+      "command": [
+        "kubectl",
+        "get",
+        "service",
+        "ani-kfp-entry",
+        "-n",
+        "kubeflow",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:51:53.753126Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "modeldev-trainimg-main-20261029b",
+        "-n",
+        "ani-system",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:51:54.010595Z",
+      "command": [
+        "kubectl",
+        "exec",
+        "-n",
+        "kubeflow",
+        "ml-pipeline-599bc84d9f-s8p7m",
+        "--",
+        "/bin/cat",
+        "/config/config.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:51:54.171483Z",
+      "command": [
+        "kubectl",
+        "exec",
+        "-n",
+        "kubeflow",
+        "ml-pipeline-599bc84d9f-s8p7m",
+        "--",
+        "/bin/cat",
+        "/proc/1/cmdline"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:51:54.295747Z",
+      "command": [
+        "kubectl",
+        "exec",
+        "-n",
+        "ani-system",
+        "ani-modeldev-6995bd77c4-z2gxk",
+        "--",
+        "/bin/sh",
+        "-c",
+        "command -v python3; command -v curl"
+      ],
+      "exit_code": 1
+    },
+    {
+      "started_at_utc": "2026-10-31T14:51:54.425274Z",
+      "command": [
+        "kubectl",
+        "exec",
+        "-n",
+        "ani-system",
+        "ani-modeldev-6995bd77c4-z2gxk",
+        "--",
+        "/usr/bin/python3",
+        "--version"
+      ],
+      "exit_code": 1
+    },
+    {
+      "started_at_utc": "2026-10-31T14:51:54.551571Z",
+      "command": [
+        "kubectl",
+        "exec",
+        "-n",
+        "ani-system",
+        "ani-modeldev-6995bd77c4-z2gxk",
+        "--",
+        "/usr/bin/curl",
+        "--version"
+      ],
+      "exit_code": 1
+    },
+    {
+      "started_at_utc": "2026-10-31T14:51:54.675010Z",
+      "command": [
+        "kubectl",
+        "exec",
+        "-n",
+        "ani-system",
+        "ani-modeldev-6995bd77c4-z2gxk",
+        "--",
+        "/busybox/sh",
+        "-c",
+        "command -v python3; command -v curl"
+      ],
+      "exit_code": 1
+    }
+  ]
+}

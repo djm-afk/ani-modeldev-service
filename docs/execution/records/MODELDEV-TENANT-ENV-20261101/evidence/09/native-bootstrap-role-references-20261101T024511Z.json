@@ -1,0 +1,82 @@
+{
+  "observed_at": "2026-11-01T02:45:09.843518+00:00",
+  "read_only": true,
+  "clusterrole_names": [
+    "ani-modeldev-v21-namespace",
+    "ani-modeldev-webhook"
+  ],
+  "all_namespace_binding_references": [
+    {
+      "kind": "ClusterRoleBinding",
+      "namespace": null,
+      "name": "ani-modeldev-v21-namespace",
+      "uid": "97b180a1-01a3-41a3-80d3-20541ebd2db8",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "ani-modeldev-v21-namespace"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        },
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-step",
+          "namespace": "ani-modeldev-tenant-a-v21"
+        }
+      ]
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "namespace": null,
+      "name": "ani-modeldev-webhook",
+      "uid": "a972d50e-50f5-4d6d-aa6f-48c1bb73cea1",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "ani-modeldev-webhook"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "ani-modeldev-webhook",
+          "namespace": "ani-system"
+        }
+      ]
+    }
+  ],
+  "other_owner_current_assets": [
+    {
+      "namespace": "ani-system",
+      "name": "ani-inference-service",
+      "uid": "f8b7c024-3854-47f9-b2fc-c1c247b03221",
+      "replicas": 1,
+      "spec_sha256": "63c893df7546a89767ae3d7482bfb862e5a4bc2450a9a55321f4982a8cf35084"
+    },
+    {
+      "namespace": "ani-system",
+      "name": "ani-model-service",
+      "uid": "d0a3f62b-ade3-4ce9-9fe6-ac973481aa0f",
+      "replicas": 1,
+      "spec_sha256": "ea36420ad76c238bc798be01a4b7053ac3f4a8f4c485f5e70ba297a00cfd76c2"
+    },
+    {
+      "namespace": "ani-system",
+      "name": "ani-resource-sandbox-20261027",
+      "uid": "81ec6bc5-c5b5-4535-af42-bb8d96b70864",
+      "replicas": 0,
+      "spec_sha256": "2c5b8796200e88ab57d5b0ba14f08d3dc1e45b5d90142fe585e719041c939835"
+    },
+    {
+      "namespace": "ani-system",
+      "name": "ani-resource-service",
+      "uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+      "replicas": 1,
+      "spec_sha256": "d22317a469c506af25c8a386d1995cd3e6c6fc933a6f46cde7ce0d1dddffea0b"
+    }
+  ],
+  "scope": "exact two legacy ClusterRole reference check and after-only unrelated deployment snapshot; not beforeafter proof"
+}

@@ -1,6 +1,9 @@
 package cpup01
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // These finite checks are shared by installed software materials and immutable
 // execution snapshots. They do not select current configuration or providers.
@@ -10,6 +13,14 @@ func invalidCPUResources(resources CPUResources) string {
 		return "CPU resources"
 	}
 	return ""
+}
+
+// Validate checks the shared workspace contract used by materials and sealed environments.
+func (workspace WorkspaceContract) Validate() error {
+	if invalidWorkspaceContract(workspace) != "" {
+		return fmt.Errorf("%w: workspace contract", ErrInvalidArgument)
+	}
+	return nil
 }
 
 func invalidWorkspaceContract(workspace WorkspaceContract) string {

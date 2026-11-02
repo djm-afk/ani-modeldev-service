@@ -1,0 +1,217 @@
+{
+  "purpose": "read-only explanation of newly reached VM catalog count assertion; no VM runtime or test expected count modified",
+  "proto": "api/protos/admin/service/v1/i_vm.proto",
+  "proto_sha256": "b2830910468eab36c4ab4cec2b03e226a7f5dc0680245d042e8a21ab2a6c894d",
+  "current_proto_route_count": 28,
+  "immutable_base": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+  "base_proto_route_count": 28,
+  "proto_routes_equal_to_base": true,
+  "actual_targeted_catalog_count": 28,
+  "unchanged_catalog_expected_count": 26,
+  "registered_vm_sql_route_count": 27,
+  "proto_routes_not_in_vm_sql": [
+    {
+      "rpc": "SetVMSecurityGroups",
+      "method": "PUT",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/security-groups"
+    }
+  ],
+  "routes": [
+    {
+      "rpc": "SetVMSecurityGroups",
+      "method": "PUT",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/security-groups",
+      "permission_code": "vm:security-groups:set",
+      "code_source": "scripts/ops/sql/register-security-group-permissions.sql"
+    },
+    {
+      "rpc": "CreateVM",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines",
+      "permission_code": "vm:create",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "ListVMs",
+      "method": "GET",
+      "path": "/api/v1/virtual-machines",
+      "permission_code": "vm:list",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "GetVM",
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}",
+      "permission_code": "vm:read",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "DeleteVM",
+      "method": "DELETE",
+      "path": "/api/v1/virtual-machines/{data.vm_id}",
+      "permission_code": "vm:delete",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "GetVMOperation",
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/operations/{operation_id}",
+      "permission_code": "vm:read",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "StartVM",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/start",
+      "permission_code": "vm:power",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "StopVM",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/stop",
+      "permission_code": "vm:power",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "ForceStopVM",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/force-stop",
+      "permission_code": "vm:force-stop",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "RestartVM",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/restart",
+      "permission_code": "vm:power",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "ListVMDisks",
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/disks",
+      "permission_code": "vm:read",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "CreateVMDisk",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/disks",
+      "permission_code": "vm:disk:write",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "AttachVMDisk",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/disks/{data.disk_id}/attach",
+      "permission_code": "vm:disk:write",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "DetachVMDisk",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/disks/{data.disk_id}/detach",
+      "permission_code": "vm:disk:write",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "DeleteVMDisk",
+      "method": "DELETE",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/disks/{data.disk_id}",
+      "permission_code": "vm:disk:write",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "SetVMMedia",
+      "method": "PUT",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/media/{data.slot}",
+      "permission_code": "vm:media:write",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "EjectVMMedia",
+      "method": "DELETE",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/media/{data.slot}",
+      "permission_code": "vm:media:write",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "SetVMBootDevice",
+      "method": "PUT",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/boot",
+      "permission_code": "vm:media:write",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "GetVMDNSDefaults",
+      "method": "GET",
+      "path": "/api/v1/virtual-machine-dns-defaults",
+      "permission_code": "vm:create",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "ListVMMedia",
+      "method": "GET",
+      "path": "/api/v1/virtual-machine-media",
+      "permission_code": "vm:read",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "ListVMSnapshots",
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/snapshots",
+      "permission_code": "vm:snapshot:read",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "GetVMSnapshot",
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/snapshots/{snapshot_id}",
+      "permission_code": "vm:snapshot:read",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "CreateVMSnapshot",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/snapshots",
+      "permission_code": "vm:snapshot:create",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "DeleteVMSnapshot",
+      "method": "DELETE",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/snapshots/{data.snapshot_id}",
+      "permission_code": "vm:snapshot:delete",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "PreviewVMRestore",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/snapshots/{data.snapshot_id}/restore-preview",
+      "permission_code": "vm:snapshot:restore",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "RestoreVMSnapshot",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/snapshots/{data.snapshot_id}/restore",
+      "permission_code": "vm:snapshot:restore",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "CreateVMConsoleSession",
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/console-sessions",
+      "permission_code": "vm:console",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    },
+    {
+      "rpc": "StreamVMLogs",
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/logs",
+      "permission_code": "vm:read",
+      "code_source": "scripts/ops/sql/register-vm-permissions.sql"
+    }
+  ]
+}

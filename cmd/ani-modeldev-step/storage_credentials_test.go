@@ -99,7 +99,7 @@ func (peer *credentialRPCPeer) GetStorageCredentials(ctx context.Context, reques
 	if n > 1 {
 		key, expiry = "synthetic-step-2", time.Now().Add(15*time.Minute)
 	}
-	value := &modeldevv1.TemporaryStorageCredentials{AccessKeyId: key, SecretAccessKey: "synthetic-step-secret", SessionToken: "synthetic-step-session", ExpiresAt: timestamppb.New(expiry), StorageConnectionId: "artifact-store-v1", Bucket: "cpu-artifacts", Scope: &modeldevv1.TemporaryStorageCredentials_ObjectPrefix{ObjectPrefix: "tenant-fixed/executions/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/"}}
+	value := &modeldevv1.TemporaryStorageCredentials{AccessKeyId: key, SecretAccessKey: "synthetic-step-secret", SessionToken: "synthetic-step-session", ExpiresAt: timestamppb.New(expiry), StorageConnectionId: "artifact-store-v1", Bucket: "cpu-artifacts", Scope: &modeldevv1.TemporaryStorageCredentials_ObjectPrefix{ObjectPrefix: peer.configuration.Snapshot.PublicationScope.ApprovedPrefix + "/" + peer.configuration.Identity.ExecutionId + "/"}}
 	response := &modeldevv1.GetStorageCredentialsResponse{Identity: proto.Clone(peer.configuration.Identity).(*trainingv1.ExecutionIdentity), Step: request.Context.Step, Credentials: value}
 	switch peer.mode {
 	case "expired":
@@ -111,7 +111,7 @@ func (peer *credentialRPCPeer) GetStorageCredentials(ctx context.Context, reques
 	case "wrong step":
 		response.Step = modeldevv1.PipelineStep_PIPELINE_STEP_PREPARE
 	case "broader prefix":
-		value.Scope = &modeldevv1.TemporaryStorageCredentials_ObjectPrefix{ObjectPrefix: "tenant-fixed/executions/"}
+		value.Scope = &modeldevv1.TemporaryStorageCredentials_ObjectPrefix{ObjectPrefix: peer.configuration.Snapshot.PublicationScope.ApprovedPrefix + "/"}
 	case "wrong connection":
 		value.StorageConnectionId = "other-store"
 	case "wrong bucket":

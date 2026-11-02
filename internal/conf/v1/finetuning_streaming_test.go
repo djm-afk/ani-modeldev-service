@@ -31,15 +31,16 @@ func TestFinetuningStreamingConfigurationBudgets(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := validConfig()
 			c.Command = commandConfiguration()
+			c.Command.AdmissionResolution = admissionConfiguration(t, 0)
 			c.Runtime = &ManagedRuntime{
 				Step:            &Server_GRPC{Network: "tcp", Addr: "127.0.0.1:19092", Timeout: durationpb.New(30 * time.Second)},
 				CertificateFile: c.Command.CertificateFile, PrivateKeyFile: c.Command.PrivateKeyFile,
-				Kubernetes:    &HTTPSWorkloadConnection{Endpoint: "https://kube.example.test", CaFile: "/owner/kube-ca", TokenFile: "/owner/kube-token"},
-				Pipeline:      &HTTPSWorkloadConnection{Endpoint: "https://pipeline.example.test", CaFile: "/owner/pipeline-ca", TokenFile: "/owner/pipeline-token"},
-				Limits:        &RuntimeLimits{MaxContentBytes: 64 << 20},
-				ObjectStorage: &ObjectStorageConnection{Endpoint: "https://storage.example.test", CaFile: "/owner/storage-ca", CredentialsFile: "/owner/storage-credentials", Region: "us-east-1", ConnectionId: "artifact-store-v1"},
-				BindingFile:   "/owner/binding.json", BindingSha256: strings.Repeat("a", 64), TokenAudience: "ani-managed-step",
-				ApiTimeout: durationpb.New(30 * time.Second), DispatchInterval: durationpb.New(time.Second), DispatchBatchSize: 4,
+				Kubernetes:            &HTTPSWorkloadConnection{Endpoint: "https://kube.example.test", CaFile: "/owner/kube-ca", TokenFile: "/owner/kube-token"},
+				Pipeline:              &HTTPSWorkloadConnection{Endpoint: "https://pipeline.example.test", CaFile: "/owner/pipeline-ca", TokenFile: "/owner/pipeline-token"},
+				Limits:                &RuntimeLimits{MaxContentBytes: 64 << 20},
+				ObjectStorage:         &ObjectStorageConnection{Endpoint: "https://storage.example.test", CaFile: "/owner/storage-ca", CredentialsFile: "/owner/storage-credentials", Region: "us-east-1", ConnectionId: "artifact-store-v1"},
+				TenantEnvironmentFile: "/owner/binding.json", TenantEnvironmentSha256: strings.Repeat("a", 64), TokenAudience: "ani-managed-step",
+				ApiTimeout: durationpb.New(30 * time.Second), DispatchInterval: durationpb.New(time.Second),
 			}
 			if test.change != nil {
 				test.change(c)

@@ -1,0 +1,82 @@
+{
+  "status": "REUSED_SUCCESSFUL_PARTS_SWITCHED_TO_IMMUTABLE_RAW_AND_ONLY_FAILED_REMAINDER",
+  "socket": "/home/chabking/workspace/.evidence/modeldev-node-control-20261101-v2/node.sock",
+  "root_owns_socket": true,
+  "file_count": 658,
+  "batch_count": 120,
+  "total_raw_bytes": 6576492,
+  "chunks": 718,
+  "batches": [
+    {
+      "batch": 0,
+      "payload_bytes": 18405,
+      "records": 6,
+      "exit": 0,
+      "seconds": 6.211
+    },
+    {
+      "batch": 1,
+      "payload_bytes": 20636,
+      "records": 3,
+      "exit": 0,
+      "seconds": 13.927
+    },
+    {
+      "batch": 2,
+      "payload_bytes": 19267,
+      "records": 3,
+      "exit": 0,
+      "seconds": 12.583
+    },
+    {
+      "batch": 3,
+      "payload_bytes": 18299,
+      "records": 3,
+      "exit": 0,
+      "seconds": 7.206
+    },
+    {
+      "batch": 4,
+      "payload_bytes": 18624,
+      "records": 2,
+      "exit": 0,
+      "seconds": 11.412
+    },
+    {
+      "batch": 5,
+      "payload_bytes": 20038,
+      "records": 3,
+      "exit": 0,
+      "seconds": 13.946
+    },
+    {
+      "batch": 6,
+      "payload_bytes": 19762,
+      "records": 2,
+      "exit": 0,
+      "seconds": 13.612
+    },
+    {
+      "batch": 7,
+      "payload_bytes": 21815,
+      "records": 6,
+      "exit": 0,
+      "seconds": 7.228
+    },
+    {
+      "batch": 8,
+      "payload_bytes": 20384,
+      "records": 5,
+      "exit": 0,
+      "seconds": 9.588
+    },
+    {
+      "batch": 9,
+      "payload_bytes": 22518,
+      "records": 5,
+      "exit": 0,
+      "seconds": 8.384
+    }
+  ],
+  "elapsed_seconds": 104.103
+}

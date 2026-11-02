@@ -62,6 +62,30 @@ func (repository *Repository) Reserve(ctx context.Context, request biz.PipelineD
 	}
 	defer rollback(transaction)
 	queries := submissionsql.New(transaction)
+	// Existing facts replay without consulting current environment readiness.
+	// First reservations lock environment before the execution identity.
+	_, prior := queries.GetPipelineDispatch(ctx, submissionsql.GetPipelineDispatchParams{TenantID: tenantID, ExecutionID: executionID})
+	if prior != nil && !errors.Is(prior, pgx.ErrNoRows) {
+		return biz.PipelineDispatchReservation{}, biz.ErrPersistence
+	}
+	if errors.Is(prior, pgx.ErrNoRows) {
+		var state, id, namespaceUID, digest string
+		lockErr := transaction.QueryRow(ctx, `SELECT state,environment_id::text,COALESCE(namespace_uid::text,''),COALESCE(binding_digest,'') FROM modeldev_tenant_execution_environments WHERE tenant_id=$1 AND cluster_id=$2::uuid FOR UPDATE`, tenantID, plan.Environment.ClusterID).Scan(&state, &id, &namespaceUID, &digest)
+		if errors.Is(lockErr, pgx.ErrNoRows) {
+			return biz.PipelineDispatchReservation{}, biz.ErrPipelineDispatchBlocked
+		}
+		if lockErr != nil {
+			return biz.PipelineDispatchReservation{}, biz.ErrPersistence
+		}
+		// A competing original reservation may have committed while we waited.
+		_, prior = queries.GetPipelineDispatch(ctx, submissionsql.GetPipelineDispatchParams{TenantID: tenantID, ExecutionID: executionID})
+		if errors.Is(prior, pgx.ErrNoRows) && (state != "READY" || id != plan.Environment.BindingID || namespaceUID != plan.Environment.NamespaceUID || digest != plan.Environment.BindingDigest) {
+			return biz.PipelineDispatchReservation{}, biz.ErrPipelineDispatchBlocked
+		}
+		if prior != nil && !errors.Is(prior, pgx.ErrNoRows) {
+			return biz.PipelineDispatchReservation{}, biz.ErrPersistence
+		}
+	}
 	identity, err := queries.LockExecutionIdentity(ctx, submissionsql.LockExecutionIdentityParams{TenantID: tenantID, ExecutionID: executionID})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return biz.PipelineDispatchReservation{}, biz.ErrExecutionNotFound

@@ -32,7 +32,7 @@ func TestGovernanceAcceptRejectsInvalidWireBeforePersistence(t *testing.T) {
 	reader := execution.New(openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	controlTarget, _ := validAcceptCommand(t)
+	controlTarget, _ := validAcceptCommand(t, openPool())
 	proveAcceptBoundaryControl(t, ctx, client, reader, controlTarget)
 	for _, test := range []struct {
 		name   string
@@ -71,7 +71,7 @@ func TestGovernanceAcceptRejectsInvalidWireBeforePersistence(t *testing.T) {
 		{"nested deadline loses microsecond precision", func(r *modeldevv1.AcceptExecutionRequest) { r.Snapshot.DeadlineAt.Nanos++ }},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			original, _ := validAcceptCommand(t)
+			original, _ := validAcceptCommand(t, openPool())
 			body := proto.Clone(original).(*modeldevv1.AcceptExecutionRequest)
 			test.change(body)
 			delivery := acceptCommandContext(ctx, original)
@@ -89,11 +89,11 @@ func TestGovernanceAcceptBodyCannotReplaceVerifiedTenantOrActor(t *testing.T) {
 	reader := execution.New(openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	controlTarget, _ := validAcceptCommand(t)
+	controlTarget, _ := validAcceptCommand(t, openPool())
 	proveAcceptBoundaryControl(t, ctx, client, reader, controlTarget)
 	for _, field := range []string{"tenant", "actor"} {
 		t.Run(field, func(t *testing.T) {
-			original, _ := validAcceptCommand(t)
+			original, _ := validAcceptCommand(t, openPool())
 			body := proto.Clone(original).(*modeldevv1.AcceptExecutionRequest)
 			if field == "tenant" {
 				body.ResourceTenantId = uuid.NewString()
@@ -121,7 +121,7 @@ func TestGovernanceAcceptConflictsRetainTheOriginalAdmission(t *testing.T) {
 	reader := execution.New(openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	request, dispatch := validAcceptCommand(t)
+	request, dispatch := validAcceptCommand(t, openPool())
 	proveAcceptBoundaryControl(t, ctx, client, reader, request)
 	// The existing public repository provides the original before testing
 	// the RPC conflict. A missing Accept RPC cannot masquerade as bad setup.
@@ -176,7 +176,7 @@ func TestGovernanceAcceptRequiresVerifiedContextAndNonNilBody(t *testing.T) {
 	handler := service.NewCommand(repository)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	request, _ := validAcceptCommand(t)
+	request, _ := validAcceptCommand(t, openPool())
 	proveAcceptBoundaryControl(t, ctx, client, reader, request)
 	md, _ := metadata.FromOutgoingContext(acceptCommandContext(ctx, request))
 	for _, test := range []struct {

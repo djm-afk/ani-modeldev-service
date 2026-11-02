@@ -1,0 +1,48 @@
+{
+  "result_commit": "02f4f71e743b4ffe08ef04e880f1c431b62d7213",
+  "source_base": "f6a68ed7f89cca56b4ea97377a21e4146f4c6b62",
+  "changed_files": [
+    "docs/contracts/permission-code-capability-map.tsv",
+    "pkg/permcode/capability_gen.go",
+    "pkg/permcode/permcode_test.go",
+    "sql/bootstrap/catalog_test.go"
+  ],
+  "source_sha256": {
+    "docs/contracts/permission-code-capability-map.tsv": "9bd2d471bdb49764468fe9866c39e8e0cf7b059c42edbdd9651769ece7b9a4f3",
+    "pkg/permcode/capability_gen.go": "362e30ef666e76ff6f829ea8c4214596a10e35c999ee26109ff77cfeb276f6df",
+    "pkg/permcode/permcode_test.go": "c890d0228f2bd9f793a9e73eee3b31f01135bd79474b456c797b6c7ae3818b1a",
+    "sql/bootstrap/catalog_test.go": "957d25d05f4260e6e33c453bdde9243f4e7d73afd7fa6bdc6433f6151bb1ef2c"
+  },
+  "local_hashes_match_target_and_check": true,
+  "authoritative_existing_contract": "scripts/ops/sql/register-vm-permissions.sql:21; same row exists at ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+  "generator": "python3 scripts/permcode/gen-go-maps.py",
+  "generator_and_check_receipts": [
+    "vm-log-map-generate-receipt.json",
+    "vm-log-map-generated-check-receipt.json"
+  ],
+  "unchanged_generated_files_sha256": {
+    "pkg/permcode/management_gen.go": "a3a6b333d30333ce9258bcf61e2b5168f0afb36fd8e54eae91327e475265d2c9",
+    "pkg/permcode/exempt_gen.go": "fd3d05f03633e80b581da29d806b3fc79587a89897f1cf2e3b223d60ef8ceb31"
+  },
+  "catalog_count_evidence": "vm-log-map-existing-28-contracts.json",
+  "count_maintenance": "one mapped route adds one capability and one unique key; existing base/current OpenAPI both have28 VM routes, each exact SQL permission source proven; preserve every assertion",
+  "first_targeted_failure_preserved": "vm-log-map-targeted.log and vm-log-map-targeted-receipt.json",
+  "targeted_final_exit_code": 0,
+  "make_check_exit_code": 0,
+  "audit_scope": "same final four-source-hash snapshot; make check -> scripts/ci/checks.sh last line -> bash scripts/ci/audit.sh, completed successfully, no extra independent repeat",
+  "final_audit": {
+    "called_vulnerabilities": 0,
+    "imported_package_vulnerabilities_not_called": 1,
+    "required_module_vulnerabilities_not_called": 10,
+    "gitleaks": "no leaks found",
+    "gitleaks_bytes_scanned": 35310357
+  },
+  "no_changes_to": [
+    "permission registration SQL",
+    "role or plan grants",
+    "VM business runtime logic",
+    "Inference",
+    "scanner rules or allowlist"
+  ],
+  "no_deployment": true
+}

@@ -1,0 +1,65 @@
+{
+  "schema": "ani.modeldev.original-open3.readonly-state-recheck.transport.v1",
+  "started_at": "2026-10-31T20:56:37.779930+00:00",
+  "ssh": "kubercloud@100.64.128.12",
+  "read_only": true,
+  "remote_runner_sha256": "cdefaee256910dd3c698250795c015e96f04685cc2d0d77f69a326b32b9980a0",
+  "ssh_exit_code": 0,
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "observation": {
+    "schema": "ani.modeldev.original-open3.readonly-state-recheck.v1",
+    "started_at": "2026-10-31T20:56:37.454612+00:00",
+    "ssh": "kubercloud@100.64.128.12",
+    "read_only": true,
+    "scope": "exact three original execution rows; no workload Pods, logs, Workflow/archive, OpenSearch, token creation or mutations",
+    "identity": {
+      "ssh_user": "kubercloud",
+      "hostname": "node1",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+    },
+    "identity_verified": true,
+    "sql_result": {
+      "transaction_read_only": "on",
+      "rows": [
+        {
+          "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+          "closed_at": null,
+          "close_generation": 2,
+          "owner_revision": 16,
+          "close_review_reason": "TRAINING_LOGS_UNAVAILABLE",
+          "close_evidence_present": false,
+          "still_open": true,
+          "qualification_facts_unchanged": true
+        },
+        {
+          "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+          "closed_at": null,
+          "close_generation": 2,
+          "owner_revision": 16,
+          "close_review_reason": "TRAINING_LOGS_UNAVAILABLE",
+          "close_evidence_present": false,
+          "still_open": true,
+          "qualification_facts_unchanged": true
+        },
+        {
+          "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+          "closed_at": null,
+          "close_generation": 1,
+          "owner_revision": 6,
+          "close_review_reason": "KFP_CREATE_UNRESOLVED",
+          "close_evidence_present": false,
+          "still_open": true,
+          "qualification_facts_unchanged": true
+        }
+      ]
+    },
+    "open_count": 3,
+    "result": "UNCHANGED_THREE_OPEN_NO_NEW_CLOSE_EVIDENCE",
+    "completed_at": "2026-10-31T20:56:37.873243+00:00"
+  },
+  "completed_at": "2026-10-31T20:56:39.885072+00:00"
+}

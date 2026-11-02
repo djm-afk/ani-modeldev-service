@@ -25,9 +25,11 @@ var _ biz.FinetuningModelFactsReader = (*LiveReader)(nil)
 var ErrInvalidModelFacts = errors.New("INVALID_MODEL_FACTS_CONFIGURATION")
 
 func NewLive(client ModelFactsClient, scope cpup01.StorageScope, limits cpup01.ContentLimits) (*LiveReader, error) {
+	scope.ApprovedPrefix = "base-model"
 	if client == nil || scope.Validate() != nil || limits.Validate() != nil {
 		return nil, ErrInvalidModelFacts
 	}
+	scope.ApprovedPrefix = ""
 	return &LiveReader{client: client, scope: scope, limits: limits}, nil
 }
 func (r *LiveReader) ResolveFinetuningModelFacts(ctx context.Context, tenant string, intent cpup01.Intent, material cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error) {
@@ -64,11 +66,15 @@ func (r *LiveReader) ResolveFinetuningSourceFacts(ctx context.Context, tenant, v
 	return r.resolve(ctx, tenant, &modelv1.ResolveFinetuningFactsRequest{TenantId: tenant, BaseModelVersionId: version}, material)
 }
 func (r *LiveReader) resolve(ctx context.Context, tenant string, in *modelv1.ResolveFinetuningFactsRequest, material cpup01.ImplementationMaterial) (cpup01.BaseModelRef, error) {
+	scope, err := cpup01.TenantStorageScope(r.scope, tenant, "base-model")
+	if err != nil {
+		return cpup01.BaseModelRef{}, biz.ErrInvalidAdmission
+	}
 	out, err := r.client.ResolveFinetuningFacts(ctx, tenant, in)
 	if err != nil {
 		return cpup01.BaseModelRef{}, err
 	}
-	if out.ValidateFor(in) != nil || out.Bucket != r.scope.Bucket || !strings.HasPrefix(out.ObjectKey, r.scope.ApprovedPrefix+"/") {
+	if out.ValidateFor(in) != nil || out.Bucket != scope.Bucket || !strings.HasPrefix(out.ObjectKey, scope.ApprovedPrefix+"/") {
 		return cpup01.BaseModelRef{}, biz.ErrModelDependencyUnavailable
 	}
 	tarBound, err := cpup01.TarReadBound(r.limits.MaxContentBytes)
@@ -79,7 +85,7 @@ func (r *LiveReader) resolve(ctx context.Context, tenant string, in *modelv1.Res
 		return cpup01.BaseModelRef{}, &cpup01.LimitViolation{Reason: "STRUCTURE_LIMIT_EXCEEDED", Kind: "base_model", LimitName: "tar_read_bound", Actual: out.SizeBytes, Limit: tarBound}
 	}
 	version := out.ObjectVersionId
-	base := cpup01.BaseModelRef{ModelID: out.ModelId, VersionID: out.ModelVersionId, Format: out.Format, Scope: r.scope, Object: cpup01.FixedObjectRef{StorageConnectionID: r.scope.StorageConnectionID, Bucket: out.Bucket, Key: out.ObjectKey, VersionID: &version, SizeBytes: out.SizeBytes, SHA256: out.Sha256}}
+	base := cpup01.BaseModelRef{ModelID: out.ModelId, VersionID: out.ModelVersionId, Format: out.Format, Scope: scope, Object: cpup01.FixedObjectRef{StorageConnectionID: scope.StorageConnectionID, Bucket: out.Bucket, Key: out.ObjectKey, VersionID: &version, SizeBytes: out.SizeBytes, SHA256: out.Sha256}}
 	var logical int64
 	for _, member := range out.Files {
 		logical, err = cpup01.CheckedAdd(logical, member.SizeBytes)

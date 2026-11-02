@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"reflect"
 	"strings"
@@ -471,7 +472,7 @@ func (f *computeCleanupFixture) worker(t *testing.T) *biz.CloseWorker {
 	if err != nil {
 		t.Fatal(err)
 	}
-	worker, err := biz.NewCloseWorker(facts, closer, biz.PipelineDispatchBinding{TenantID: f.step.f.execution.TenantID, Environment: f.step.f.execution.Snapshot.Environment, Owner: f.step.f.dispatch.Plan.Owner}, 10, 100*time.Millisecond)
+	worker, err := biz.NewCloseWorker(facts, closer, (admissionfixture.DispatchBinding{TenantID: f.step.f.execution.TenantID, Environment: f.step.f.execution.Snapshot.Environment, Owner: f.step.f.dispatch.Plan.Owner}).Environment.ClusterID, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}

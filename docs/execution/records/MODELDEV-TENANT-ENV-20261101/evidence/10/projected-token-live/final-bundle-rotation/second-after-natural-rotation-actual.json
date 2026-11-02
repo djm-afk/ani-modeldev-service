@@ -1,0 +1,272 @@
+{
+  "schema": "ani.modeldev.final-bundle-projected-natural-rotation.v1",
+  "phase": "after-natural-rotation",
+  "started_at": "2026-11-01T12:15:45.399308+00:00",
+  "maintenance_exec_calls": 8,
+  "token_value_or_digest_output": false,
+  "token_persisted": false,
+  "token_request_or_new_identity": false,
+  "kfp_writes": false,
+  "bundle_digest": "4a655afda6f4d1b6b798f30359c7ccfd0ce4271836b3bbba7f187b02c3f011e4",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "runtime": {
+    "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "pod_name": "ani-modeldev-5465b547f8-25k28",
+    "pod_uid": "afabe642-86f9-4c8d-a7d3-25669a17b4a5",
+    "node": "node3",
+    "replicaset_uid": "383df857-dd8e-4a21-a7d2-dfe50b859dce",
+    "container_id": "containerd://3f07aa126312ac05c586c2abb7542297e19224752144c4cecca45fe4c1776382",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:22cf5825120c58c43d6192ffc6ed38365449f3212dee0bffc466b4b1d76ae925",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:22cf5825120c58c43d6192ffc6ed38365449f3212dee0bffc466b4b1d76ae925",
+    "started_at": "2026-11-01T11:56:57Z",
+    "restart_count": 0
+  },
+  "maintenance_path": {
+    "namespace": "rook-ceph",
+    "pod_name": "rook-ceph.cephfs.csi.ceph.com-nodeplugin-2jv6t",
+    "pod_uid": "c80cfae3-618b-4b9a-9cee-e6d051fec23e",
+    "node": "node3",
+    "container": "csi-cephfsplugin",
+    "container_id": "containerd://0d6cedbacb54aee7125f825daad29b9fe94f15fe53c31b3719be63f53375ea5b",
+    "daemonset_uid": "e2476dc4-0d61-4591-9334-cfb5550e7fd8",
+    "host_path": "/var/lib/kubelet/pods",
+    "mount_path": "/var/lib/kubelet/pods",
+    "existing_image": "10.10.1.66:5001/cephcsi/cephcsi:v3.17.1"
+  },
+  "kfp_sample": {
+    "claims": {
+      "iat": 1793535239,
+      "exp": 1793535839,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "pipelines.kubeflow.org"
+      ],
+      "jti_present": true,
+      "pod_uid": "afabe642-86f9-4c8d-a7d3-25669a17b4a5",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 10,
+      "size_bytes": 1148,
+      "mtime_epoch": 1793535239,
+      "resolved_generation": "..2026_11_01_12_13_59.3535752275",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "natural_rotation": {
+    "same_pod_and_process": true,
+    "restart_count": 0,
+    "iat_increased": true,
+    "generation_changed": true,
+    "previous_iat": 1793534757,
+    "current_iat": 1793535239,
+    "previous_exp": 1793535357,
+    "current_exp": 1793535839
+  },
+  "transport": {
+    "host_sni": "ani-kfp-entry.kubeflow.svc",
+    "dial_service_ip": "10.96.159.221",
+    "service_uid": "85afe201-7cb5-47cd-a8c0-87929d3b5c07",
+    "ca_uid": "174a118b-adce-4ad1-91aa-b9a1b6c1f1ec",
+    "ca_sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+    "skip_tls": false
+  },
+  "calls": [
+    {
+      "label": "A-current-experiment",
+      "method": "GET",
+      "path": "/apis/v2beta1/experiments/bd5b90f0-77c9-48df-ba81-70acb4e9b48a",
+      "status": 200,
+      "response_bytes": 566,
+      "response_sha256": "7b0102b29cc446a2211b28c0f6fdf7ff8a347586c3702228b848fb0308c0a8f9",
+      "public_identity": {
+        "experiment_id": "bd5b90f0-77c9-48df-ba81-70acb4e9b48a",
+        "display_name": "md-env-01169a48-1980-42be-b2ed-c76731c10ac6",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "B-current-experiment",
+      "method": "GET",
+      "path": "/apis/v2beta1/experiments/5889ac8e-40e3-49ff-8f37-5e5b8b18cfb9",
+      "status": 200,
+      "response_bytes": 566,
+      "response_sha256": "3c72ba14b92a814b65309056bbb303e7682e4dfb62a9d93a2e22a614f2127043",
+      "public_identity": {
+        "experiment_id": "5889ac8e-40e3-49ff-8f37-5e5b8b18cfb9",
+        "display_name": "md-env-81df7d6b-8026-4849-b8f0-4a9800ff5ffe",
+        "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "modeldev-mlp-cpu-parent",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+      "status": 200,
+      "response_bytes": 341,
+      "response_sha256": "3db26213e44bb7c2c1535407aa0a0c985002298a65c0ae735dd4fa94202142bb",
+      "public_identity": {
+        "pipeline_id": "dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+        "namespace": "ani-system",
+        "display_name": "modeldev-mlp-cpu"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "modeldev-mlp-cpu-version",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e/versions/3df2416f-642a-4c4f-a78c-75c228f9b844",
+      "status": 200,
+      "response_bytes": 22731,
+      "response_sha256": "b1fb4735448ad9e01309e4e6fc265e0def505317878831b0e4e50790fe82ea85",
+      "public_identity": {
+        "pipeline_id": "dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+        "pipeline_version_id": "3df2416f-642a-4c4f-a78c-75c228f9b844"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "modeldev-mlp-gpu-parent",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+      "status": 200,
+      "response_bytes": 341,
+      "response_sha256": "2b571872d8d22655e1edbbaa2412467c92969dcb85f6d354075f305a522427d2",
+      "public_identity": {
+        "pipeline_id": "9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+        "namespace": "ani-system",
+        "display_name": "modeldev-mlp-gpu"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "modeldev-mlp-gpu-version",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39/versions/f7c84a7b-33a8-4c64-b3b0-cc5b41d0d25e",
+      "status": 200,
+      "response_bytes": 22731,
+      "response_sha256": "8a7a1b794fed9d37cbb011baa3a92d2153bab08ce0e87985ead4c56eb8584c68",
+      "public_identity": {
+        "pipeline_id": "9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+        "pipeline_version_id": "f7c84a7b-33a8-4c64-b3b0-cc5b41d0d25e"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "modeldev-sft-lora-cpu-parent",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863",
+      "status": 200,
+      "response_bytes": 356,
+      "response_sha256": "ff7beea3a9f6a55816aff9960bfb6a8dafa9b409e7b57d9438f2b693a93c183b",
+      "public_identity": {
+        "pipeline_id": "4d042c5b-fc25-4819-9a28-80ca7903c863",
+        "namespace": "ani-system",
+        "display_name": "modeldev-sft-lora-cpu"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "modeldev-sft-lora-cpu-version",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863/versions/7f3e6ae3-66e5-4f1d-aaec-9b64d0165a64",
+      "status": 200,
+      "response_bytes": 33350,
+      "response_sha256": "0adcd3a1dc513855b8f1f2283801ce51d719c64ecd3868eccfc5faf013ee3c2f",
+      "public_identity": {
+        "pipeline_id": "4d042c5b-fc25-4819-9a28-80ca7903c863",
+        "pipeline_version_id": "7f3e6ae3-66e5-4f1d-aaec-9b64d0165a64"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "modeldev-sft-lora-gpu-parent",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+      "status": 200,
+      "response_bytes": 356,
+      "response_sha256": "8ba72bcdf82a05583a20245c861dddd33794bc8e4f2affae93526a1b73978275",
+      "public_identity": {
+        "pipeline_id": "a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+        "namespace": "ani-system",
+        "display_name": "modeldev-sft-lora-gpu"
+      },
+      "exact_identity_matched": true
+    },
+    {
+      "label": "modeldev-sft-lora-gpu-version",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1/versions/aa58f5c6-c80f-4ba0-b526-6e455ecec9c5",
+      "status": 200,
+      "response_bytes": 33350,
+      "response_sha256": "26c48b06bc0253846856e11ab874ade0cc707d4f887e6b822326f6f5840d10b9",
+      "public_identity": {
+        "pipeline_id": "a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+        "pipeline_version_id": "aa58f5c6-c80f-4ba0-b526-6e455ecec9c5"
+      },
+      "exact_identity_matched": true
+    }
+  ],
+  "api_sample": {
+    "claims": {
+      "iat": 1793534216,
+      "exp": 1793537816,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "https://kubernetes.default.svc.cluster.local"
+      ],
+      "jti_present": true,
+      "pod_uid": "afabe642-86f9-4c8d-a7d3-25669a17b4a5",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 3600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 3,
+      "size_bytes": 1177,
+      "mtime_epoch": 1793534216,
+      "resolved_generation": "..2026_11_01_11_56_56.2890286767",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "negative_calls": [
+    {
+      "label": "outside-named-GET-authority-platform-list",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines?namespace=ani-system&page_size=1",
+      "expected_status": 403,
+      "actual_status": 403,
+      "expected_denial_observed": true,
+      "response_bytes": 947,
+      "response_sha256": "939e1b3b2addddd28f36642d18f98367408d40ee98a7876b81a5bf1f705aa439"
+    },
+    {
+      "label": "wrong-audience-original-platform-parent",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+      "expected_status": 401,
+      "actual_status": 401,
+      "expected_denial_observed": true,
+      "response_bytes": 987,
+      "response_sha256": "11273d1dc3fcc7eec3278f01877610454b71f8820957187f10b21d6c5a9dc97c"
+    }
+  ],
+  "fixed_denials_after_rotation_observed": true,
+  "same_process_after_calls": true,
+  "http200_exact_objects": true,
+  "status": "ACTUAL_SAME_PROCESS_TOKEN_AND_10_FIXED_KFP_GETS",
+  "finished_at": "2026-11-01T12:15:47.938649+00:00"
+}

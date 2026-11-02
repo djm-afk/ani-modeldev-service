@@ -1,0 +1,246 @@
+{
+  "immutable_base": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+  "current_vm_openapi_routes": 28,
+  "base_vm_openapi_routes": 28,
+  "current_minus_base": [],
+  "base_minus_current": [],
+  "every_route_has_exact_existing_sql_source": true,
+  "openapi_sha256": "79e9179e85316eacfd8dd2826c838ba57b91fcf5f4d324d58424b8affb2107ab",
+  "base_openapi_sha256": "cfa97d906d375412dcf9d115f8da52115e1e5404e7a5fc54adb5a5cdbc4e9534",
+  "sql_sources": {
+    "scripts/ops/sql/register-vm-permissions.sql": {
+      "sha256": "e2867adfbbbef61e5460dc0f575c6b6ae97237474e13e3551f37b46f3f86b661",
+      "equal_to_base": true
+    },
+    "scripts/ops/sql/register-security-group-permissions.sql": {
+      "sha256": "58c9d19c7d2ff384265db2e7a7a148c5603aaaa41ef7d16c00b8f53e39d27fc9",
+      "equal_to_base": true
+    }
+  },
+  "routes": [
+    {
+      "method": "DELETE",
+      "path": "/api/v1/virtual-machines/{data.vm_id}",
+      "operation": "VMService_DeleteVM",
+      "permission_code": "vm:delete",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/disks/{data.disk_id}",
+      "operation": "VMService_DeleteVMDisk",
+      "permission_code": "vm:disk:write",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/media/{data.slot}",
+      "operation": "VMService_EjectVMMedia",
+      "permission_code": "vm:media:write",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/snapshots/{data.snapshot_id}",
+      "operation": "VMService_DeleteVMSnapshot",
+      "permission_code": "vm:snapshot:delete",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machine-dns-defaults",
+      "operation": "VMService_GetVMDNSDefaults",
+      "permission_code": "vm:create",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machine-media",
+      "operation": "VMService_ListVMMedia",
+      "permission_code": "vm:read",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machines",
+      "operation": "VMService_ListVMs",
+      "permission_code": "vm:list",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}",
+      "operation": "VMService_GetVM",
+      "permission_code": "vm:read",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/disks",
+      "operation": "VMService_ListVMDisks",
+      "permission_code": "vm:read",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/logs",
+      "operation": "VMService_StreamVMLogs",
+      "permission_code": "vm:read",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/operations/{operation_id}",
+      "operation": "VMService_GetVMOperation",
+      "permission_code": "vm:read",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/snapshots",
+      "operation": "VMService_ListVMSnapshots",
+      "permission_code": "vm:snapshot:read",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/virtual-machines/{vm_id}/snapshots/{snapshot_id}",
+      "operation": "VMService_GetVMSnapshot",
+      "permission_code": "vm:snapshot:read",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines",
+      "operation": "VMService_CreateVM",
+      "permission_code": "vm:create",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/console-sessions",
+      "operation": "VMService_CreateVMConsoleSession",
+      "permission_code": "vm:console",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/disks",
+      "operation": "VMService_CreateVMDisk",
+      "permission_code": "vm:disk:write",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/disks/{data.disk_id}/attach",
+      "operation": "VMService_AttachVMDisk",
+      "permission_code": "vm:disk:write",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/disks/{data.disk_id}/detach",
+      "operation": "VMService_DetachVMDisk",
+      "permission_code": "vm:disk:write",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/force-stop",
+      "operation": "VMService_ForceStopVM",
+      "permission_code": "vm:force-stop",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/restart",
+      "operation": "VMService_RestartVM",
+      "permission_code": "vm:power",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/snapshots",
+      "operation": "VMService_CreateVMSnapshot",
+      "permission_code": "vm:snapshot:create",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/snapshots/{data.snapshot_id}/restore",
+      "operation": "VMService_RestoreVMSnapshot",
+      "permission_code": "vm:snapshot:restore",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/snapshots/{data.snapshot_id}/restore-preview",
+      "operation": "VMService_PreviewVMRestore",
+      "permission_code": "vm:snapshot:restore",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/start",
+      "operation": "VMService_StartVM",
+      "permission_code": "vm:power",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/stop",
+      "operation": "VMService_StopVM",
+      "permission_code": "vm:power",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/boot",
+      "operation": "VMService_SetVMBootDevice",
+      "permission_code": "vm:media:write",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/media/{data.slot}",
+      "operation": "VMService_SetVMMedia",
+      "permission_code": "vm:media:write",
+      "existing_sql_source": "scripts/ops/sql/register-vm-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/virtual-machines/{data.vm_id}/security-groups",
+      "operation": "VMService_SetVMSecurityGroups",
+      "permission_code": "vm:security-groups:set",
+      "existing_sql_source": "scripts/ops/sql/register-security-group-permissions.sql",
+      "exact_route_code_in_current_and_base_sql": true
+    }
+  ]
+}

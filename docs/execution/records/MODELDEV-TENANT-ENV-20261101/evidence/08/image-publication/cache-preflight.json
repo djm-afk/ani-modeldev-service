@@ -1,0 +1,371 @@
+{
+  "manifest_and_stores": {
+    "observed_at": "2026-11-01T00:40:14.318473+00:00",
+    "manifest": {
+      "path": "/home/chabking/workspace/finetuning-materials-20261028/source-amd64-manifest.json",
+      "sha256": "eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b",
+      "media_type": "application/vnd.oci.image.manifest.v1+json",
+      "layer_count": 29,
+      "compressed_layer_bytes": 9352641406,
+      "config": {
+        "mediaType": "application/vnd.oci.image.config.v1+json",
+        "digest": "sha256:3277d2e7e58494e6ff9dbbc5c880b2bfd25f60e311a22512473af0bfbf9b01fe",
+        "size": 30590
+      },
+      "layers": [
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:7021d1b70935851c95c45ed18156980b5024eda29b99564429025ea04f5ec109",
+          "size": 30439778
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:0d6448aff88945ea46a37cfe4330bdb0ada228268b80da6258a0fec63086f404",
+          "size": 4623694
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:0a7674e3e8fe69dcd7f1424fa29aa033b32c42269aab46cbe9818f8dd7154754",
+          "size": 57593640
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:b71b637b97c5efb435b9965058ad414f07afa99d320cf05e89f10441ec1becf4",
+          "size": 185
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:56dc8550293751a1604e97ac949cfae82ba20cb2a28e034737bafd7382559609",
+          "size": 6886
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:ec6d5f6c9ed94d2ee2eeaf048d90242af638325f57696909f1737b3158d838cf",
+          "size": 1374295401
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:47b8539d532f561cac6d7fb8ee2f46c902b66e4a60b103d19701829742a0d11e",
+          "size": 64047
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:fd9cc1ad8dee47ca559003714d462f4eb79cb6315a2708927c240b84d022b55f",
+          "size": 1684
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:83525caeeb359731f869f1ee87a32acdfdd5efb8af4cab06d8f4fdcf1f317daa",
+          "size": 1523
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:8e79813a7b9d5784bb880ca2909887465549de5183411b24f6de72fab0802bcd",
+          "size": 2646171659
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:312a542960e3345001fc709156a5139ff8a1d8cc21a51a50f83e87ec2982f579",
+          "size": 88858
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:3e14b472177a2b2b1bf496e4e6a89016275a5845dff81497990b94da434b956a",
+          "size": 1510442
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:e97dfafebbe66448955937c02791a4e6253efb7574302e701122acc886771ecc",
+          "size": 3276446965
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+          "size": 32
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:0a5030f9ea59c9d3fe2843472612be48fea9dbfde3b858ea81211541d81d5660",
+          "size": 99
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:ffb55de4d5fb8a07656f4829199798615d3f924676d93f63b3e91d979ab78a37",
+          "size": 810
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:a4f8ecff7e344f2866755346d7c051ec64252cf7bf75955913f8d0b10b2f8fbe",
+          "size": 80356161
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:7ea4f7e3598f59d14fd81b33e5b6f075d05aaa5eeb81b0ee53d6a9cb9bd45c47",
+          "size": 26592970
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:c39c6f3a22d86e1d0d5f8533dd0ee8b0d57dd451b0765a2ffad7ec6d90ff5e12",
+          "size": 186813
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:67ae6daf0925a3e2218bfe9266d5be249d4ff45459f7901ce506931e0761538f",
+          "size": 5802506
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:2661e5748163d0c6fc13453211b829e599f3bce76a3d84c776c7264a8e20fee9",
+          "size": 371982113
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:909dd5586468688381d85f6652f6e0b004e7587b9136ff576ab5f122070c7970",
+          "size": 1084460295
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:e4520c98b372c74917a16e085348c6ecb6ce32d469d99396a4810f727b7568f1",
+          "size": 167
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:18d5d24a83e65d6c6b93f95b8a6225f4a53f572b490c8bde522ea46a61101ca2",
+          "size": 93
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:14812be89aedb1f1b960d2648133377849738ee91223c86c4f13a8939d7a1a49",
+          "size": 6738945
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:685e74443e687817f589b3d7bcc6f1a7ca65eac89c392eee8df2e94cec6460ee",
+          "size": 5375241
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:c34fddb2c24fca7d5b4e6ec9b3dd785f3416723e64f1a48dd9725d61a8616b28",
+          "size": 379900195
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+          "size": 32
+        },
+        {
+          "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+          "digest": "sha256:e73dc9237a6a33a0ae2566594705447351c118c47eccf3e566498331a1398660",
+          "size": 172
+        }
+      ]
+    },
+    "default_store": {
+      "exit": 0,
+      "image_count": 215,
+      "digest_matches": [],
+      "training_candidates": [
+        {
+          "Id": "2693e473c766c96be5f93be6d94982cb4da9f151fc0bb63e306a7ef4a9f265e5",
+          "Names": [
+            "localhost/modeldev-finetuning-step:artifacts-only-e0d9743379a6"
+          ],
+          "RepoDigests": [
+            "localhost/modeldev-finetuning-step@sha256:3be15c528bf32faf6f183ff21065be259b70c18df7204b8cfa1e571bbe97ea37"
+          ],
+          "Size": 2546095960,
+          "Digest": "sha256:3be15c528bf32faf6f183ff21065be259b70c18df7204b8cfa1e571bbe97ea37"
+        },
+        {
+          "Id": "dfd1d239f5c43b06d86a7f098a8af636902f6f69217d6979f3edd5eb8da7f931",
+          "Names": [
+            "172.16.101.10:5000/ani/modeldev-finetuning-step-execution-v21:v21-ea047cc3029f"
+          ],
+          "RepoDigests": [
+            "172.16.101.10:5000/ani/modeldev-finetuning-step-execution-v21@sha256:835d621ee0d1c5560ffa9d1a4538d04fd0ca2c5c52add10a9641bdfd3beae021"
+          ],
+          "Size": 2556616538,
+          "Digest": "sha256:835d621ee0d1c5560ffa9d1a4538d04fd0ca2c5c52add10a9641bdfd3beae021"
+        },
+        {
+          "Id": "311d6945a72ea20ddd01f0bb5824dd15ddccc2ec38d6c9c306e1ff3c3f9e056a",
+          "Names": [
+            "localhost/modeldev-finetuning-step-execution-v21:20261022-01a15f47-6c1bd743175a"
+          ],
+          "RepoDigests": [
+            "localhost/modeldev-finetuning-step-execution-v21@sha256:90df9c051fd359dd4c55af15071e83d1c6b009b396f4fead228b0728c5089e03"
+          ],
+          "Size": 2556614726,
+          "Digest": "sha256:90df9c051fd359dd4c55af15071e83d1c6b009b396f4fead228b0728c5089e03"
+        },
+        {
+          "Id": "04f6702b699a6c2473dee81113964d68c2ac74b92342eb0bd727ae6eb89c9e66",
+          "Names": [
+            "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training:gpu-v21-886afca610d1",
+            "localhost/ani-modeldev-training-gpu:execution-v21-locked-20261022-01a15f47"
+          ],
+          "RepoDigests": [
+            "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training@sha256:108070070d0f7939d5a0f16bb7e365d70e548074a7af62ddc27bc8c6c29f1eba",
+            "localhost/ani-modeldev-training-gpu@sha256:108070070d0f7939d5a0f16bb7e365d70e548074a7af62ddc27bc8c6c29f1eba"
+          ],
+          "Size": 6773066911,
+          "Digest": "sha256:108070070d0f7939d5a0f16bb7e365d70e548074a7af62ddc27bc8c6c29f1eba"
+        },
+        {
+          "Id": "04f6702b699a6c2473dee81113964d68c2ac74b92342eb0bd727ae6eb89c9e66",
+          "Names": [
+            "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training:gpu-v21-886afca610d1",
+            "localhost/ani-modeldev-training-gpu:execution-v21-locked-20261022-01a15f47"
+          ],
+          "RepoDigests": [
+            "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training@sha256:108070070d0f7939d5a0f16bb7e365d70e548074a7af62ddc27bc8c6c29f1eba",
+            "localhost/ani-modeldev-training-gpu@sha256:108070070d0f7939d5a0f16bb7e365d70e548074a7af62ddc27bc8c6c29f1eba"
+          ],
+          "Size": 6773066911,
+          "Digest": "sha256:108070070d0f7939d5a0f16bb7e365d70e548074a7af62ddc27bc8c6c29f1eba"
+        },
+        {
+          "Id": "6ebae7ef9f21876728a1f44144e4cd6077cc042d2f3441d4d8c2e643149e1ec1",
+          "Names": [
+            "localhost/ani-modeldev-training-cpu:execution-v21-20261022-01a15f47"
+          ],
+          "RepoDigests": [
+            "localhost/ani-modeldev-training-cpu@sha256:d4cbfbf3018adcc123e4a8beba5e48506655961e4b1f3f89c14166d4e04815a9"
+          ],
+          "Size": 2520958141,
+          "Digest": "sha256:d4cbfbf3018adcc123e4a8beba5e48506655961e4b1f3f89c14166d4e04815a9"
+        },
+        {
+          "Id": "7a49d7d94ddad7ffe3c3199f6237d6b6d9dc8bcf1c5e5c019f6f114cab272e7b",
+          "Names": [
+            "localhost/ani-modeldev-training-gpu:execution-v21-20261022"
+          ],
+          "RepoDigests": [
+            "localhost/ani-modeldev-training-gpu@sha256:4739fcfb39e0c13190911538b3f00d853d3c4f0d796a4c82b129632fe05602a6"
+          ],
+          "Size": 6773068115,
+          "Digest": "sha256:4739fcfb39e0c13190911538b3f00d853d3c4f0d796a4c82b129632fe05602a6"
+        },
+        {
+          "Id": "dc73c9c60c03c0cdd7f22bcd3556df199de5abbea08e3a0981034bb3c4729bb5",
+          "Names": [
+            "localhost/ani-finetuning:workload-20261014"
+          ],
+          "RepoDigests": [
+            "localhost/ani-finetuning@sha256:6a5dffdc41828d51b8de9b6ec45ad413bb98e82f9bbc43fd8e63a0499e2442c3"
+          ],
+          "Size": 2520876283,
+          "Digest": "sha256:6a5dffdc41828d51b8de9b6ec45ad413bb98e82f9bbc43fd8e63a0499e2442c3"
+        },
+        {
+          "Id": "786b23390cb92251d83491d712293f018ff00790836285eebe74415c01d232f5",
+          "Names": [
+            "localhost/ani-finetuning:deps-20261014"
+          ],
+          "RepoDigests": [
+            "localhost/ani-finetuning@sha256:7157c73e4c89c5ad9d1a7002e76589d62c0f84662c91f0c8c0433698a5618aa1"
+          ],
+          "Size": 2376216315,
+          "Digest": "sha256:7157c73e4c89c5ad9d1a7002e76589d62c0f84662c91f0c8c0433698a5618aa1"
+        }
+      ],
+      "all_id_count": 215
+    },
+    "custom_store": {
+      "exit": 0,
+      "image_count": 3,
+      "digest_matches": [],
+      "training_candidates": [
+        {
+          "Id": "c1eb9355492835c7cb4897e01fb5b7c400fad91235e0910024c2ded76725e252",
+          "Names": [
+            "localhost/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-cymq2rk8"
+          ],
+          "RepoDigests": [
+            "localhost/ani-modeldev-webhook@sha256:49a2a74db318db0b627209738c4dc48d1d9f73ee80c8680cb1c25f0638cac317"
+          ],
+          "Size": 67703675,
+          "Digest": "sha256:49a2a74db318db0b627209738c4dc48d1d9f73ee80c8680cb1c25f0638cac317"
+        },
+        {
+          "Id": "102a17fcca37414302ee9703e310bae554905349d8f3b6556ac323ea1408a2a9",
+          "Names": [
+            "localhost/ani-modeldev-step:tenantenv-d807cbdbd5dd-cymq2rk8"
+          ],
+          "RepoDigests": [
+            "localhost/ani-modeldev-step@sha256:ff66486ba63d6edfaa7c227fe0fc2db3d897b1ab99db863752502f8089230815"
+          ],
+          "Size": 36725738,
+          "Digest": "sha256:ff66486ba63d6edfaa7c227fe0fc2db3d897b1ab99db863752502f8089230815"
+        }
+      ]
+    },
+    "disk_available": 103205851136
+  },
+  "compressed_layer_match": {
+    "observed_at": "2026-11-01T00:41:09.355484+00:00",
+    "default_graphroot": "/home/chabking/.local/share/containers/storage",
+    "store_layer_count": 552,
+    "metadata_fields": [
+      "compressed-diff-digest",
+      "compressed-size",
+      "compression",
+      "created",
+      "diff-digest",
+      "diff-size",
+      "gidset",
+      "id",
+      "uidset"
+    ],
+    "exact_compressed_digest_cached_count": 2,
+    "exact_compressed_cached_bytes": 64,
+    "missing_layer_count": 27,
+    "missing_compressed_layer_bytes": 9352641342,
+    "matched_digests": [
+      "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+      "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1"
+    ],
+    "missing_digests": [
+      "sha256:7021d1b70935851c95c45ed18156980b5024eda29b99564429025ea04f5ec109",
+      "sha256:0d6448aff88945ea46a37cfe4330bdb0ada228268b80da6258a0fec63086f404",
+      "sha256:0a7674e3e8fe69dcd7f1424fa29aa033b32c42269aab46cbe9818f8dd7154754",
+      "sha256:b71b637b97c5efb435b9965058ad414f07afa99d320cf05e89f10441ec1becf4",
+      "sha256:56dc8550293751a1604e97ac949cfae82ba20cb2a28e034737bafd7382559609",
+      "sha256:ec6d5f6c9ed94d2ee2eeaf048d90242af638325f57696909f1737b3158d838cf",
+      "sha256:47b8539d532f561cac6d7fb8ee2f46c902b66e4a60b103d19701829742a0d11e",
+      "sha256:fd9cc1ad8dee47ca559003714d462f4eb79cb6315a2708927c240b84d022b55f",
+      "sha256:83525caeeb359731f869f1ee87a32acdfdd5efb8af4cab06d8f4fdcf1f317daa",
+      "sha256:8e79813a7b9d5784bb880ca2909887465549de5183411b24f6de72fab0802bcd",
+      "sha256:312a542960e3345001fc709156a5139ff8a1d8cc21a51a50f83e87ec2982f579",
+      "sha256:3e14b472177a2b2b1bf496e4e6a89016275a5845dff81497990b94da434b956a",
+      "sha256:e97dfafebbe66448955937c02791a4e6253efb7574302e701122acc886771ecc",
+      "sha256:0a5030f9ea59c9d3fe2843472612be48fea9dbfde3b858ea81211541d81d5660",
+      "sha256:ffb55de4d5fb8a07656f4829199798615d3f924676d93f63b3e91d979ab78a37",
+      "sha256:a4f8ecff7e344f2866755346d7c051ec64252cf7bf75955913f8d0b10b2f8fbe",
+      "sha256:7ea4f7e3598f59d14fd81b33e5b6f075d05aaa5eeb81b0ee53d6a9cb9bd45c47",
+      "sha256:c39c6f3a22d86e1d0d5f8533dd0ee8b0d57dd451b0765a2ffad7ec6d90ff5e12",
+      "sha256:67ae6daf0925a3e2218bfe9266d5be249d4ff45459f7901ce506931e0761538f",
+      "sha256:2661e5748163d0c6fc13453211b829e599f3bce76a3d84c776c7264a8e20fee9",
+      "sha256:909dd5586468688381d85f6652f6e0b004e7587b9136ff576ab5f122070c7970",
+      "sha256:e4520c98b372c74917a16e085348c6ecb6ce32d469d99396a4810f727b7568f1",
+      "sha256:18d5d24a83e65d6c6b93f95b8a6225f4a53f572b490c8bde522ea46a61101ca2",
+      "sha256:14812be89aedb1f1b960d2648133377849738ee91223c86c4f13a8939d7a1a49",
+      "sha256:685e74443e687817f589b3d7bcc6f1a7ca65eac89c392eee8df2e94cec6460ee",
+      "sha256:c34fddb2c24fca7d5b4e6ec9b3dd785f3416723e64f1a48dd9725d61a8616b28",
+      "sha256:e73dc9237a6a33a0ae2566594705447351c118c47eccf3e566498331a1398660"
+    ],
+    "base_config_candidates": [
+      {
+        "name": "source-amd64-config.json",
+        "bytes": 34899,
+        "sha256": "e7b36d0c66ef6f23beb894f768595223ae08323f6c1d1f906bc07f6f8b1c12db"
+      },
+      {
+        "name": "smollm2-source-config.json",
+        "bytes": 703,
+        "sha256": "b71b51248408b1d87c563dee27e5a0736ef878f691877fb0b34c69060c2adbcb"
+      }
+    ],
+    "default_store_correction": "Different old training wrapper images are not the pinned LF base; cache classification uses exact compressed layer digest metadata."
+  }
+}

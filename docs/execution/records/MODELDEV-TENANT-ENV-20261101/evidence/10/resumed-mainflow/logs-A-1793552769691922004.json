@@ -1,0 +1,43 @@
+{
+  "started_at": "2026-11-01T17:06:07.368315+00:00",
+  "mode": "logs",
+  "tenant": "A",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/50dc7220-8001-463e-83f3-fe4d70f9af66/logs?pod_uid=497572f0-0130-41f9-ab94-a6272076af35&tail_lines=200&max_bytes=65536",
+      "http_status": 200,
+      "response": {
+        "log_id": "69abd283-307f-54b0-8cb9-648fd0a1b161",
+        "truncated": false,
+        "observed_at": "2026-11-01T17:02:57.291252573Z",
+        "source_kind": "TRAINER",
+        "container_name": "node",
+        "previous": false,
+        "available": true,
+        "pod_uid": "497572f0-0130-41f9-ab94-a6272076af35",
+        "training_metrics_only": [
+          {
+            "name": "train.loss",
+            "step": 1,
+            "value": 0.9185541272163391
+          },
+          {
+            "name": "train.loss",
+            "step": 2,
+            "value": 0.6795239448547363
+          },
+          {
+            "name": "train.loss",
+            "step": 3,
+            "value": 0.44855910539627075
+          }
+        ],
+        "raw_log_text_persisted": false,
+        "line_count": 3
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T17:06:07.626717+00:00",
+  "transport_exit_code": 0
+}

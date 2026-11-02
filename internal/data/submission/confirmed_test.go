@@ -14,7 +14,7 @@ import (
 
 func TestConfirmedRunSurvivesReconnectAfterCloseWithoutAnotherPermit(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	admissionPool := openPool()

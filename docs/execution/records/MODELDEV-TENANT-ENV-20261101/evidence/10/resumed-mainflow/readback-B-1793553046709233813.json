@@ -1,0 +1,2522 @@
+{
+  "started_at": "2026-11-01T17:10:43.327175+00:00",
+  "mode": "readback",
+  "tenant": "B",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3",
+      "http_status": 200,
+      "response": {
+        "operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a",
+        "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+        "name": "tenantenv-b_finetuning-935c3148-a5",
+        "kind": "FINETUNING",
+        "implementation_id": "builtin.sft_lora",
+        "compute_preset_id": "a240cb09-0816-4d19-8c04-c8fd36ded552",
+        "input_version_id": "0936b7ae-046f-4ae7-aaa5-2b66b1cf9ba0",
+        "image_id": "img_4e77202d4e3c49daac15d995366f2e8b",
+        "image_version": "1",
+        "image_scope": "platform",
+        "compute_state": "SUCCEEDED",
+        "delivery_state": "PUBLISHED",
+        "close_state": "CLOSING",
+        "resource_state": "NOT_APPLICABLE",
+        "current_step": "REGISTER",
+        "stop_requested": false,
+        "close_generation": "1",
+        "accepted_at": "2026-11-01T17:04:27.23855Z",
+        "deadline_at": "2026-11-01T18:04:27.23855Z",
+        "observed_at": "2026-11-01T17:09:39.551756Z",
+        "parameter_contract_version": "ani.sft-lora.parameters.v3",
+        "resolved_configuration_sha256": "b11d5353a979405d22830dc98f430d9382b72edfcd6502620f2ee70bb55e04d6",
+        "compute": {
+          "compute_preset_id": "a240cb09-0816-4d19-8c04-c8fd36ded552",
+          "selection_digest": "a4dfaf27490a0256afd271e3d4f70607bcb569d9db93115d8c46a188a2f5d54d",
+          "cpu_millis": "4000",
+          "memory_mib": "8192",
+          "device_mode": "gpu"
+        },
+        "timing": {
+          "execution_timeout_seconds": "3600",
+          "execution_timeout_max_seconds": "14400",
+          "step_timeout_seconds": "14400"
+        },
+        "model_registration": {
+          "state": "READY",
+          "registration_id": "18e8257f-c713-4c2c-b549-8f30316c5442",
+          "model_id": "1f7fb625-bb25-4075-9ea8-0b7e79a09c11",
+          "model_version_id": "f07553cf-41f5-4d02-98d6-2f743398b245",
+          "failure_code": ""
+        },
+        "steps": [
+          {
+            "role": "prepare",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:05:40.116819Z",
+            "finished_at": "2026-11-01T17:06:04.683808Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "train-wait",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:06:04.683808Z",
+            "finished_at": "2026-11-01T17:07:01.729341Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "export",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:07:01.748801897Z",
+            "finished_at": "2026-11-01T17:07:11.244920569Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "verify",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:07:42.063482872Z",
+            "finished_at": "2026-11-01T17:07:48.576497392Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "collect",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:08:22.005346Z",
+            "finished_at": "2026-11-01T17:08:53.256403Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "publish",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:08:53.256403Z",
+            "finished_at": "2026-11-01T17:09:01Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "register",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:09:35.887827Z",
+            "finished_at": "2026-11-01T17:09:39.551756Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "close",
+            "state": "PENDING",
+            "started_at": "",
+            "finished_at": "",
+            "exit_code": 0,
+            "deadline_at": ""
+          }
+        ],
+        "metrics": [
+          {
+            "name": "train.loss",
+            "decimal_value": "7.05126428604126",
+            "step": "1"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3/pods?includeRecycled=true",
+      "http_status": 200,
+      "response": {
+        "pods": [
+          {
+            "pod_name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0-0-75kbs",
+            "pod_uid": "4016d559-fbb0-4850-aaa9-8bd1e3da04d6",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:06:04Z",
+            "start_time": "2026-11-01T17:06:05Z",
+            "deletion_timestamp": "",
+            "layer": "TRAINER",
+            "availability": "LIVE",
+            "step_name": "",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "781af019-42f2-5cc1-b907-6d25c2f5d467",
+            "log_available": true,
+            "api_present": true,
+            "exit_code": 0,
+            "metric_instance_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "containers": [
+              {
+                "name": "node",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:07Z",
+                "finished_at": "2026-11-01T17:06:19Z"
+              }
+            ],
+            "init_containers": [],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-2495445098",
+            "pod_uid": "1d6f6c03-6fae-4975-89fe-e49726469cc4",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:04:29Z",
+            "start_time": "2026-11-01T17:04:29Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "993bab83-9f24-5967-85d5-2f9819377884",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:32Z",
+                "finished_at": "2026-11-01T17:04:34Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:32Z",
+                "finished_at": "2026-11-01T17:04:33Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:30Z",
+                "finished_at": "2026-11-01T17:04:30Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-933837651",
+            "pod_uid": "e20cb154-c72e-4bbc-a895-4722b6e1e542",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:04:39Z",
+            "start_time": "2026-11-01T17:04:39Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "fd662e4c-679d-551f-a5f0-4245f066233b",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:41Z",
+                "finished_at": "2026-11-01T17:04:43Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:41Z",
+                "finished_at": "2026-11-01T17:04:42Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:40Z",
+                "finished_at": "2026-11-01T17:04:40Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-1465094609",
+            "pod_uid": "6ab27f0c-d70e-40e7-9a71-d87567bf7a42",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:09:56Z",
+            "start_time": "2026-11-01T17:09:56Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.close-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "5b6f49c9-e432-5ee2-b55f-2257263111f3",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:59Z",
+                "finished_at": "2026-11-01T17:10:01Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:59Z",
+                "finished_at": "2026-11-01T17:10:00Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:57Z",
+                "finished_at": "2026-11-01T17:09:57Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-130235810",
+            "pod_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:10:07Z",
+            "start_time": "2026-11-01T17:10:07Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.close.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "fa5dd2d1-7517-58e4-95c2-6090f2ba99b4",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:14Z",
+                "finished_at": "2026-11-01T17:10:17Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:14Z",
+                "finished_at": "2026-11-01T17:10:16Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:11Z",
+                "finished_at": "2026-11-01T17:10:11Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:13Z",
+                "finished_at": "2026-11-01T17:10:13Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-645281567",
+            "pod_uid": "7bd82c79-da24-4773-a73a-8fe9595aa2bf",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:08:00Z",
+            "start_time": "2026-11-01T17:08:00Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.collect-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "e2d8d3b0-d3b0-581b-a3ac-72d04e7bc5b2",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:02Z",
+                "finished_at": "2026-11-01T17:08:05Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:03Z",
+                "finished_at": "2026-11-01T17:08:04Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:01Z",
+                "finished_at": "2026-11-01T17:08:01Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-2987274312",
+            "pod_uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:08:10Z",
+            "start_time": "2026-11-01T17:08:10Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.collect.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "ae2fd8b4-042e-505f-b814-47ef72ba200f",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:21Z",
+                "finished_at": "2026-11-01T17:08:25Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:21Z",
+                "finished_at": "2026-11-01T17:08:24Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:18Z",
+                "finished_at": "2026-11-01T17:08:19Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:20Z",
+                "finished_at": "2026-11-01T17:08:20Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-1343223775",
+            "pod_uid": "ad691b60-8105-491c-abbb-6a68fc433b9b",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:05:09Z",
+            "start_time": "2026-11-01T17:05:09Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.createpvc",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "23088d75-8320-57fc-a27d-4fa4914a922f",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:11Z",
+                "finished_at": "2026-11-01T17:05:14Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:12Z",
+                "finished_at": "2026-11-01T17:05:13Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:10Z",
+                "finished_at": "2026-11-01T17:05:10Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-3455352859",
+            "pod_uid": "c31ed179-78eb-4d0d-b48a-dea58262ae18",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:06:36Z",
+            "start_time": "2026-11-01T17:06:36Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.export-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "6eb11d07-d2d3-5d61-a44f-cfdfa5b1a148",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:38Z",
+                "finished_at": "2026-11-01T17:06:41Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:39Z",
+                "finished_at": "2026-11-01T17:06:40Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:37Z",
+                "finished_at": "2026-11-01T17:06:37Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-3645798460",
+            "pod_uid": "c9855028-3ebd-450a-b6cd-0ddf3d5ed59a",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:06:46Z",
+            "start_time": "2026-11-01T17:06:46Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.export.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "2bbf7e1d-b376-56fd-8266-2bdc92f55f89",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:00Z",
+                "finished_at": "2026-11-01T17:07:13Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:00Z",
+                "finished_at": "2026-11-01T17:07:12Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:57Z",
+                "finished_at": "2026-11-01T17:06:57Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:59Z",
+                "finished_at": "2026-11-01T17:06:59Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-3538225839",
+            "pod_uid": "8994c27b-3d45-4337-a010-9e5806ff770e",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:10:27Z",
+            "start_time": "2026-11-01T17:10:27Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.onExit.finalize-close-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "2b340244-5fcd-5019-8e06-32b75b515300",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:29Z",
+                "finished_at": "2026-11-01T17:10:31Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:29Z",
+                "finished_at": "2026-11-01T17:10:30Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:27Z",
+                "finished_at": "2026-11-01T17:10:28Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-1406814200",
+            "pod_uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+            "phase": "Running",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:10:37Z",
+            "start_time": "2026-11-01T17:10:37Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.onExit.finalize-close.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "d58b84fc-653a-5e26-acc6-99d8c8ed42bf",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:40Z",
+                "finished_at": "2026-11-01T17:10:42Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:40Z",
+                "finished_at": "2026-11-01T17:10:41Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:37Z",
+                "finished_at": "2026-11-01T17:10:38Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:10:39Z",
+                "finished_at": "2026-11-01T17:10:40Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-2294062444",
+            "pod_uid": "0cb6203d-123b-4598-a5e4-8af224676bbd",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:05:19Z",
+            "start_time": "2026-11-01T17:05:19Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.prepare-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "c4bff586-71f7-5b6e-9b14-ffdaef793c84",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:22Z",
+                "finished_at": "2026-11-01T17:05:24Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:22Z",
+                "finished_at": "2026-11-01T17:05:23Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:20Z",
+                "finished_at": "2026-11-01T17:05:20Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-1162571065",
+            "pod_uid": "39f4432b-3cd4-4841-9ae2-42f5e15194a8",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:05:29Z",
+            "start_time": "2026-11-01T17:05:29Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.prepare.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "a51bf0d0-8002-5140-94ea-912d90dbda1e",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:39Z",
+                "finished_at": "2026-11-01T17:05:47Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:39Z",
+                "finished_at": "2026-11-01T17:05:46Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:35Z",
+                "finished_at": "2026-11-01T17:05:35Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:37Z",
+                "finished_at": "2026-11-01T17:05:38Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-2355404292",
+            "pod_uid": "5ecd4685-7159-4db5-a595-1cad53284fe0",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:08:30Z",
+            "start_time": "2026-11-01T17:08:30Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.publish-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "8122bd90-c8d8-5aaa-a0f2-43d7be53c350",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:33Z",
+                "finished_at": "2026-11-01T17:08:35Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:33Z",
+                "finished_at": "2026-11-01T17:08:34Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:31Z",
+                "finished_at": "2026-11-01T17:08:31Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-2817735537",
+            "pod_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:08:41Z",
+            "start_time": "2026-11-01T17:08:41Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.publish.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "96870111-14a6-5d14-a55b-c465f0bdc7f5",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:52Z",
+                "finished_at": "2026-11-01T17:09:02Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:52Z",
+                "finished_at": "2026-11-01T17:09:01Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:50Z",
+                "finished_at": "2026-11-01T17:08:50Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:08:51Z",
+                "finished_at": "2026-11-01T17:08:52Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-2696923098",
+            "pod_uid": "88fbabfd-4361-4c97-9a4d-0b2481791e3e",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:09:12Z",
+            "start_time": "2026-11-01T17:09:12Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.register-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "a4e5e164-c9cb-54d9-b297-8ead770713e4",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:14Z",
+                "finished_at": "2026-11-01T17:09:16Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:14Z",
+                "finished_at": "2026-11-01T17:09:15Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:13Z",
+                "finished_at": "2026-11-01T17:09:13Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-413976831",
+            "pod_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:09:22Z",
+            "start_time": "2026-11-01T17:09:22Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.register.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "de5940a1-6858-5de4-8f17-f9c0b500af1e",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:34Z",
+                "finished_at": "2026-11-01T17:09:46Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:34Z",
+                "finished_at": "2026-11-01T17:09:46Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:30Z",
+                "finished_at": "2026-11-01T17:09:31Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:09:32Z",
+                "finished_at": "2026-11-01T17:09:33Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-3345347773",
+            "pod_uid": "a65ec33a-c05a-442f-99ba-02182392a7e6",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:05:50Z",
+            "start_time": "2026-11-01T17:05:50Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.train-wait-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "2d2c33e6-5f75-54e0-9b08-01efc03c61e6",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:52Z",
+                "finished_at": "2026-11-01T17:05:54Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:52Z",
+                "finished_at": "2026-11-01T17:05:53Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:50Z",
+                "finished_at": "2026-11-01T17:05:51Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-2278376422",
+            "pod_uid": "bf46485a-1207-4a1e-9570-4227152f821a",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:06:00Z",
+            "start_time": "2026-11-01T17:06:00Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.train-wait.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "38ece145-98ce-5278-a5dc-3c3225e9dc25",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:03Z",
+                "finished_at": "2026-11-01T17:06:26Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:03Z",
+                "finished_at": "2026-11-01T17:06:25Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:01Z",
+                "finished_at": "2026-11-01T17:06:01Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:06:02Z",
+                "finished_at": "2026-11-01T17:06:03Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-437364806",
+            "pod_uid": "cd48d62a-e464-44d7-999c-3187bbe315f2",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:07:23Z",
+            "start_time": "2026-11-01T17:07:23Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.verify-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "4230489a-51a5-5dd7-b704-29d674f85687",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:25Z",
+                "finished_at": "2026-11-01T17:07:27Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:25Z",
+                "finished_at": "2026-11-01T17:07:26Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:23Z",
+                "finished_at": "2026-11-01T17:07:24Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-3338752051",
+            "pod_uid": "390b149e-24d2-4a2a-bb6c-7e19fddbbdf0",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:07:33Z",
+            "start_time": "2026-11-01T17:07:33Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.verify.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "77d031d1-69a4-58a7-936f-5e70aa2e866a",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:40Z",
+                "finished_at": "2026-11-01T17:07:50Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:40Z",
+                "finished_at": "2026-11-01T17:07:49Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:38Z",
+                "finished_at": "2026-11-01T17:07:38Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:07:39Z",
+                "finished_at": "2026-11-01T17:07:40Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-1571433548",
+            "pod_uid": "20b08807-cbf3-4640-b185-c9f2091c95cb",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:04:49Z",
+            "start_time": "2026-11-01T17:04:49Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.workspace-name-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "6ddd044f-c2be-50ac-b557-2eb275d1725c",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:51Z",
+                "finished_at": "2026-11-01T17:04:53Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:51Z",
+                "finished_at": "2026-11-01T17:04:52Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:04:50Z",
+                "finished_at": "2026-11-01T17:04:50Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "ft-7vrhz-3674841241",
+            "pod_uid": "5970ac4b-f239-44a9-beac-2600d386e3ca",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T17:04:59Z",
+            "start_time": "2026-11-01T17:04:59Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "ft-7vrhz.root.exit-handler-1.workspace-name.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "86f972ff-8fd1-55d0-b6e5-3d0e3983498c",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:03Z",
+                "finished_at": "2026-11-01T17:05:05Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:03Z",
+                "finished_at": "2026-11-01T17:05:05Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:00Z",
+                "finished_at": "2026-11-01T17:05:00Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T17:05:01Z",
+                "finished_at": "2026-11-01T17:05:02Z"
+              }
+            ],
+            "ephemeral_containers": []
+          }
+        ],
+        "observed_at": "2026-11-01T17:10:43.780394626Z",
+        "availability": "LIVE",
+        "projection_truncated": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3/artifacts?page=1&pageSize=100",
+      "http_status": 200,
+      "response": {
+        "items": [
+          {
+            "artifact_id": "1181d80a-0d45-5657-890b-92cd4d6a91ee",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/tokenizer.json",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "3522871",
+            "sha256": "bf346d64f6f0fbcefb4c1b6928a98241467dff36c6fbae5fe1785c4ff90667f4",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "13a5f8c1-c413-5754-9a05-7002b10659b7",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/adapter_manifest.json",
+            "role": "SOURCE_METADATA",
+            "size_bytes": "1462",
+            "sha256": "f10b3cb3d900ac8e120eedaa085c4af50175c64bfa25f411725824791a9eeeee",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "25ae9c1a-1ddd-591c-b6a9-0742f2bac364",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/tokenizer_config.json",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "498",
+            "sha256": "cc8c9da869663aede24e63fecb420b5459a6f300533a9fb2ccee58d63b32f855",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "40c699ec-f388-5757-8a74-e62fb113eafe",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/adapter_model.safetensors",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "1274720",
+            "sha256": "c99f214957264a07c15ffd40f5ec1b96f1813dbb3d14a5320db249be9ae2f987",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "43a85831-06b3-5f65-8c8f-c1920b460de9",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/export/merged_manifest.json",
+            "role": "EXPORT_REPORT",
+            "size_bytes": "2535",
+            "sha256": "66d7278cf62c5c7f9049e9a8dd23d766932003d8379d0bfd162b4fccc4e3e669",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "46ba00fc-ed2e-53ed-b8b2-21bfce5c7e62",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/verify/verify.json",
+            "role": "VERIFY_REPORT",
+            "size_bytes": "7103",
+            "sha256": "b091b583f94e5f32a621618fab0cbd15b284b029d6d11f9f07d994a97871f55b",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "4bb7aa1e-e0ae-5ebe-a4c0-48e4059f99cc",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/adapter_config.json",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "1051",
+            "sha256": "ce701013ffa5ce087e5901fd423ba885021b06b7e9832071db20229c3f3ab5e6",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "4e163e33-7e37-559a-806f-37d3b77e5d06",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/model.safetensors",
+            "role": "HF_MODEL",
+            "size_bytes": "538090408",
+            "sha256": "35a0352f34e56aadd3ba846a048be3b1c3f46c2a3fea89b881d33a4f36fa561a",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "4ec1dff1-2144-5368-bdb0-6b3993d48e77",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/chat_template.jinja",
+            "role": "HF_MODEL",
+            "size_bytes": "657",
+            "sha256": "01628798fe5368ee59fea2f53917066483137c43cc26fe832271177ea09358e8",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "625ec501-cc21-52f2-a92b-9d327d91d397",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/effective-template.json",
+            "role": "SOURCE_METADATA",
+            "size_bytes": "1058",
+            "sha256": "b182d6404d80283693cc963b0716ff5025357ccecac3b52230b020c1701f4736",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "6f7d7e6b-5bce-5e69-9941-7c7eca1c4b96",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/export/export.json",
+            "role": "EXPORT_REPORT",
+            "size_bytes": "6703",
+            "sha256": "13217752ed9bc729e57842db68e3a7c8eed9915acc51e371086c961ee4f215f3",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "787fb455-74b5-54b9-b23a-1f37d0dedfe3",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/chat_template.jinja",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "657",
+            "sha256": "01628798fe5368ee59fea2f53917066483137c43cc26fe832271177ea09358e8",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "7ac30f81-fd09-546b-83f7-3e130870389a",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/summary.json",
+            "role": "SUMMARY",
+            "size_bytes": "32716",
+            "sha256": "aa188034f53c7849ac7f6f32e2941e2afb2612d20b44024670956efb7438b334",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "9dc32293-3616-50ef-b5f6-c26ed24ddbf6",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/metrics.jsonl",
+            "role": "METRICS",
+            "size_bytes": "137",
+            "sha256": "f905a437ff9042fe0790822f964cd991641ef3282248c68fde28cb4c6d44da42",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "cc09bffb-dccb-5a37-9b9d-1c39f6d34a1d",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/tokenizer_config.json",
+            "role": "HF_MODEL",
+            "size_bytes": "498",
+            "sha256": "cc8c9da869663aede24e63fecb420b5459a6f300533a9fb2ccee58d63b32f855",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "eee12270-44e3-5c19-8b17-4832586d6ea8",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/effective-template.jinja",
+            "role": "SOURCE_METADATA",
+            "size_bytes": "657",
+            "sha256": "01628798fe5368ee59fea2f53917066483137c43cc26fe832271177ea09358e8",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "eeed9ec4-7e2d-55a3-b0eb-c15c882cd11d",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/config.json",
+            "role": "HF_MODEL",
+            "size_bytes": "792",
+            "sha256": "7d166398c2a68500f38f018e945ecb4bc00cdb1dd7fc2305fcdf27abb42df950",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "f8d5706a-16fc-52d8-8570-7b6152f4f62e",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/tokenizer.json",
+            "role": "HF_MODEL",
+            "size_bytes": "3522871",
+            "sha256": "bf346d64f6f0fbcefb4c1b6928a98241467dff36c6fbae5fe1785c4ff90667f4",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "fef5bfef-99d7-5415-9350-d23bd071f55d",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/generation_config.json",
+            "role": "HF_MODEL",
+            "size_bytes": "148",
+            "sha256": "9469404d2e78ff55997be2f7568c09cf365ba27d24639212480414627caacf08",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          }
+        ],
+        "total": "19"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3/events?scope=all",
+      "http_status": 200,
+      "response": {
+        "events": [
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:10:37Z",
+            "last_timestamp": "2026-11-01T17:10:40Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1406814200",
+            "involved_uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:10:37Z",
+            "last_timestamp": "2026-11-01T17:10:40Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1406814200",
+            "involved_uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:10:37Z",
+            "last_timestamp": "2026-11-01T17:10:40Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1406814200",
+            "involved_uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:10:40Z",
+            "last_timestamp": "2026-11-01T17:10:40Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1406814200",
+            "involved_uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:10:39Z",
+            "last_timestamp": "2026-11-01T17:10:39Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1406814200",
+            "involved_uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T17:10:37Z",
+            "last_timestamp": "2026-11-01T17:10:37Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1406814200",
+            "involved_uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:10:37Z",
+            "last_timestamp": "2026-11-01T17:10:37Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1406814200",
+            "involved_uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeRunning",
+            "first_timestamp": "2026-11-01T17:05:19Z",
+            "last_timestamp": "2026-11-01T17:10:37Z",
+            "count": 37,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "ft-7vrhz",
+            "involved_uid": "7df535f0-4fd3-4db6-8aef-5fac0231f0f0",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T17:05:50Z",
+            "last_timestamp": "2026-11-01T17:10:37Z",
+            "count": 32,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "ft-7vrhz",
+            "involved_uid": "7df535f0-4fd3-4db6-8aef-5fac0231f0f0",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:10:27Z",
+            "last_timestamp": "2026-11-01T17:10:29Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-3538225839",
+            "involved_uid": "8994c27b-3d45-4337-a010-9e5806ff770e",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:10:27Z",
+            "last_timestamp": "2026-11-01T17:10:29Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-3538225839",
+            "involved_uid": "8994c27b-3d45-4337-a010-9e5806ff770e",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:10:27Z",
+            "last_timestamp": "2026-11-01T17:10:29Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-3538225839",
+            "involved_uid": "8994c27b-3d45-4337-a010-9e5806ff770e",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:10:29Z",
+            "last_timestamp": "2026-11-01T17:10:29Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-3538225839",
+            "involved_uid": "8994c27b-3d45-4337-a010-9e5806ff770e",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T17:10:27Z",
+            "last_timestamp": "2026-11-01T17:10:27Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-3538225839",
+            "involved_uid": "8994c27b-3d45-4337-a010-9e5806ff770e",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:10:27Z",
+            "last_timestamp": "2026-11-01T17:10:27Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-3538225839",
+            "involved_uid": "8994c27b-3d45-4337-a010-9e5806ff770e",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:10:11Z",
+            "last_timestamp": "2026-11-01T17:10:14Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-130235810",
+            "involved_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:10:11Z",
+            "last_timestamp": "2026-11-01T17:10:14Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-130235810",
+            "involved_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:10:11Z",
+            "last_timestamp": "2026-11-01T17:10:14Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-130235810",
+            "involved_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:10:14Z",
+            "last_timestamp": "2026-11-01T17:10:14Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-130235810",
+            "involved_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:10:13Z",
+            "last_timestamp": "2026-11-01T17:10:13Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-130235810",
+            "involved_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:10:11Z",
+            "last_timestamp": "2026-11-01T17:10:11Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-130235810",
+            "involved_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T17:10:07Z",
+            "last_timestamp": "2026-11-01T17:10:07Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-130235810",
+            "involved_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "SuccessfulAttachVolume",
+            "first_timestamp": "2026-11-01T17:10:07Z",
+            "last_timestamp": "2026-11-01T17:10:07Z",
+            "count": 1,
+            "source": "attachdetach-controller",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-130235810",
+            "involved_uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:09:57Z",
+            "last_timestamp": "2026-11-01T17:09:59Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1465094609",
+            "involved_uid": "6ab27f0c-d70e-40e7-9a71-d87567bf7a42",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:09:57Z",
+            "last_timestamp": "2026-11-01T17:09:59Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1465094609",
+            "involved_uid": "6ab27f0c-d70e-40e7-9a71-d87567bf7a42",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:09:59Z",
+            "last_timestamp": "2026-11-01T17:09:59Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1465094609",
+            "involved_uid": "6ab27f0c-d70e-40e7-9a71-d87567bf7a42",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:09:57Z",
+            "last_timestamp": "2026-11-01T17:09:58Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1465094609",
+            "involved_uid": "6ab27f0c-d70e-40e7-9a71-d87567bf7a42",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:09:57Z",
+            "last_timestamp": "2026-11-01T17:09:57Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1465094609",
+            "involved_uid": "6ab27f0c-d70e-40e7-9a71-d87567bf7a42",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T17:09:56Z",
+            "last_timestamp": "2026-11-01T17:09:56Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-1465094609",
+            "involved_uid": "6ab27f0c-d70e-40e7-9a71-d87567bf7a42",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:09:30Z",
+            "last_timestamp": "2026-11-01T17:09:34Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-413976831",
+            "involved_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:09:30Z",
+            "last_timestamp": "2026-11-01T17:09:34Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-413976831",
+            "involved_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:09:30Z",
+            "last_timestamp": "2026-11-01T17:09:34Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-413976831",
+            "involved_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:09:34Z",
+            "last_timestamp": "2026-11-01T17:09:34Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-413976831",
+            "involved_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:09:32Z",
+            "last_timestamp": "2026-11-01T17:09:32Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-413976831",
+            "involved_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:09:30Z",
+            "last_timestamp": "2026-11-01T17:09:30Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-413976831",
+            "involved_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "SuccessfulAttachVolume",
+            "first_timestamp": "2026-11-01T17:09:23Z",
+            "last_timestamp": "2026-11-01T17:09:23Z",
+            "count": 1,
+            "source": "attachdetach-controller",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-413976831",
+            "involved_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T17:09:22Z",
+            "last_timestamp": "2026-11-01T17:09:22Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-413976831",
+            "involved_uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:09:12Z",
+            "last_timestamp": "2026-11-01T17:09:14Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2696923098",
+            "involved_uid": "88fbabfd-4361-4c97-9a4d-0b2481791e3e",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:09:12Z",
+            "last_timestamp": "2026-11-01T17:09:14Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2696923098",
+            "involved_uid": "88fbabfd-4361-4c97-9a4d-0b2481791e3e",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:09:13Z",
+            "last_timestamp": "2026-11-01T17:09:14Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2696923098",
+            "involved_uid": "88fbabfd-4361-4c97-9a4d-0b2481791e3e",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:09:14Z",
+            "last_timestamp": "2026-11-01T17:09:14Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2696923098",
+            "involved_uid": "88fbabfd-4361-4c97-9a4d-0b2481791e3e",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T17:09:12Z",
+            "last_timestamp": "2026-11-01T17:09:12Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2696923098",
+            "involved_uid": "88fbabfd-4361-4c97-9a4d-0b2481791e3e",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:09:12Z",
+            "last_timestamp": "2026-11-01T17:09:12Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2696923098",
+            "involved_uid": "88fbabfd-4361-4c97-9a4d-0b2481791e3e",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:08:50Z",
+            "last_timestamp": "2026-11-01T17:08:52Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2817735537",
+            "involved_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:08:50Z",
+            "last_timestamp": "2026-11-01T17:08:52Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2817735537",
+            "involved_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:08:50Z",
+            "last_timestamp": "2026-11-01T17:08:52Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2817735537",
+            "involved_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:08:52Z",
+            "last_timestamp": "2026-11-01T17:08:52Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2817735537",
+            "involved_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:08:51Z",
+            "last_timestamp": "2026-11-01T17:08:51Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2817735537",
+            "involved_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:08:49Z",
+            "last_timestamp": "2026-11-01T17:08:49Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2817735537",
+            "involved_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T17:08:41Z",
+            "last_timestamp": "2026-11-01T17:08:41Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2817735537",
+            "involved_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "SuccessfulAttachVolume",
+            "first_timestamp": "2026-11-01T17:08:41Z",
+            "last_timestamp": "2026-11-01T17:08:41Z",
+            "count": 1,
+            "source": "attachdetach-controller",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2817735537",
+            "involved_uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:08:31Z",
+            "last_timestamp": "2026-11-01T17:08:33Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2355404292",
+            "involved_uid": "5ecd4685-7159-4db5-a595-1cad53284fe0",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:08:31Z",
+            "last_timestamp": "2026-11-01T17:08:33Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2355404292",
+            "involved_uid": "5ecd4685-7159-4db5-a595-1cad53284fe0",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:08:31Z",
+            "last_timestamp": "2026-11-01T17:08:33Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2355404292",
+            "involved_uid": "5ecd4685-7159-4db5-a595-1cad53284fe0",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:08:33Z",
+            "last_timestamp": "2026-11-01T17:08:33Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2355404292",
+            "involved_uid": "5ecd4685-7159-4db5-a595-1cad53284fe0",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:08:31Z",
+            "last_timestamp": "2026-11-01T17:08:31Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2355404292",
+            "involved_uid": "5ecd4685-7159-4db5-a595-1cad53284fe0",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T17:08:30Z",
+            "last_timestamp": "2026-11-01T17:08:30Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2355404292",
+            "involved_uid": "5ecd4685-7159-4db5-a595-1cad53284fe0",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T17:08:18Z",
+            "last_timestamp": "2026-11-01T17:08:21Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2987274312",
+            "involved_uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T17:08:18Z",
+            "last_timestamp": "2026-11-01T17:08:21Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2987274312",
+            "involved_uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:08:21Z",
+            "last_timestamp": "2026-11-01T17:08:21Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2987274312",
+            "involved_uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:08:18Z",
+            "last_timestamp": "2026-11-01T17:08:20Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2987274312",
+            "involved_uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T17:08:19Z",
+            "last_timestamp": "2026-11-01T17:08:19Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2987274312",
+            "involved_uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T17:08:18Z",
+            "last_timestamp": "2026-11-01T17:08:18Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2987274312",
+            "involved_uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "SuccessfulAttachVolume",
+            "first_timestamp": "2026-11-01T17:08:11Z",
+            "last_timestamp": "2026-11-01T17:08:11Z",
+            "count": 1,
+            "source": "attachdetach-controller",
+            "involved_kind": "Pod",
+            "involved_name": "ft-7vrhz-2987274312",
+            "involved_uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+            "reporting_instance": ""
+          }
+        ],
+        "observed_at": "2026-11-01T17:10:44.405785456Z",
+        "retention_hint": "1h",
+        "truncated": false
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T17:10:44.439249+00:00",
+  "transport_exit_code": 0
+}

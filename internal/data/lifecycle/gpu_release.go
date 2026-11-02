@@ -65,7 +65,7 @@ func gpuReleaseScope(execution biz.Execution, state biz.ExecutionRuntime, sealed
 			if resource.Kind != "Pod" {
 				continue
 			}
-			if resource.APIVersion != "v1" || resource.Namespace != execution.Snapshot.Environment.NamespaceName || len(validation.IsDNS1123Subdomain(resource.Name)) != 0 || !validOpaqueID(resource.UID) || seen[resource.UID] || !resource.Terminal || resource.ExitCode == nil {
+			if resource.APIVersion != "v1" || resource.Namespace != execution.Snapshot.Environment.NamespaceName || len(validation.IsDNS1123Subdomain(resource.Name)) != 0 || !validOpaqueID(resource.UID) || seen[resource.UID] || !resource.Terminal || resource.ExitCode == nil && !resource.TrainingAdmissionAbortedAt(state.Observation.ObservedAt) {
 				return biz.GPUReleaseScope{}, biz.ErrRuntimeConflict
 			}
 			seen[resource.UID] = true

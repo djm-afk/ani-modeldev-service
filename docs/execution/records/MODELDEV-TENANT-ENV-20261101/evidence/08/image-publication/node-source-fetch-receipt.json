@@ -1,0 +1,294 @@
+{
+  "status": "FIXED_SOURCE_FETCH_FAILED",
+  "pid": 2395405,
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "file_count": 689,
+  "archives_used": false,
+  "authentication": "anonymous public immutable commit URL, default TLS validation",
+  "matched": 31,
+  "reused_chunk_parts": 26,
+  "fetched": 576,
+  "errors": [
+    {
+      "path": "cmd/ani-modeldev-service/gpu_owner_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "cmd/ani-modeldev-service/main.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "cmd/ani-modeldev-service/runtime_storage_credentials_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "contract/cpup01/conformance/README.md",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "contract/cpup01/conformance/intent-canonical-v3.json",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "contract/cpup01/dataset_manifest_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "contract/cpup01/intent_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "contract/cpup01/output_manifest_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "contract/cpup01/training_image_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/biz/execution_state_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/biz/managed_runtime_prepared_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/biz/managed_task_identity_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/biz/publication.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/biz/verification_errors.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/biz/workload_view_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/catalogue/reader_atomic_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/cleanup/execution_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/cleanup/execution.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/cleanup/reconcile_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/execution/admission_invariants_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/execution/repository.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/execution/state.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/input/queries.sql",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/input/sqlc/db.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/kfp/managed_run.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/lifecycle/closed_stop_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/lifecycle/committed_close.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/lifecycle/early_close.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/lifecycle/registration_recovery.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/modelclient/facts_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/modelclient/rpc.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/resolutiontest/imagestub_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/resolutiontest/timing_configuration_revision_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/runtimeproof/compute_observer_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/runtimeproof/kubernetes.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/runtimeproof/owner_close.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/runtimeproof/native_task_fixture_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/runtimeproof/root_admission_close_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/submission/confirmed.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/submission/observation_time.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/submittest/deadline_flow_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/submittest/not_sent_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/submittest/owner_close_flow_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/submittest/pending_worker_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/tenantenvironment/repository.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/trainer/adapter.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/data/trainer/retention_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/server/command_certificate_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/server/commandtest/tls_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/server/modeldevwebhook/environment.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/server/observability.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/service/finetuning_materials.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/service/query_training_logs_recorded_test.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/testsupport/admissionfixture/admission.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "internal/testsupport/commandtls/certificates.go",
+      "error_class": "URLError",
+      "http_status": null
+    },
+    {
+      "path": "training/tests/test_native_training_dtype.py",
+      "error_class": "URLError",
+      "http_status": null
+    }
+  ],
+  "elapsed_seconds": 53.69
+}

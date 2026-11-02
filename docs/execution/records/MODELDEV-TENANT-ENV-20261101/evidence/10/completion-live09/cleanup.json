@@ -1,0 +1,23 @@
+{
+  "schema": "ani.modeldev.completion-live09.cleanup.v1",
+  "observed_at": "2026-11-01T17:08:10.129223+00:00",
+  "status": "PRIVATE_CLIENT_SOURCE_AND_STAGING_REMOVED",
+  "receipts": [
+    {
+      "file": "node-client-cleanup.json",
+      "sha256": "433a51eeac7131a5a214b55f16cac268498ebddad6a3c8937302d7e7579939c3"
+    },
+    {
+      "file": "workbench-client-cleanup.json",
+      "sha256": "499211ce016156916721d1bb2734f9404db747951e647147a8ebb0ac1395a29e"
+    },
+    {
+      "file": "local-client-cleanup.json",
+      "sha256": "174f16a16c28b0ac01e117f4f2b4f68020300d7f0ab3fa053e8d10cdd7442b9e"
+    }
+  ],
+  "public_actual_and_LIVE10_marker_preserved": true,
+  "main_step_binaries_OCI_and_shared_cache_preserved": true,
+  "credentials_persisted": false,
+  "cluster_writes": 0
+}

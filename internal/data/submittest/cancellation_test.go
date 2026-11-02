@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -36,6 +37,8 @@ func TestSubmitCancellationAfterRealHTTPObservationStillPersistsOriginalOutcome(
 			callerContext, cancelCaller := context.WithCancel(ctx)
 			defer cancelCaller()
 			request := dispatchRequest(t)
+			request.Admission = admissionfixture.EnsureEnvironment(t, openPool(), request.Admission)
+			request.Owner = request.Admission.Snapshot.DispatchOwner
 			readerPool := openPool()
 			if _, err := execution.New(readerPool).Accept(ctx, request.Admission); err != nil {
 				t.Fatalf("CPU07_CANCEL_PREFLIGHT: real Admission unavailable; behavior NOT_RUN: %v", err)
@@ -86,6 +89,7 @@ func TestSubmitCancellationAfterRealHTTPObservationStillPersistsOriginalOutcome(
 			if err != nil {
 				t.Fatal("CPU07_CANCEL_PREFLIGHT: actual TLS client unavailable; behavior NOT_RUN")
 			}
+			client.WithMutationIdentity(submitIdentityFixture(t, request.Admission))
 			creator := &cancelAfterHTTPObservation{delegate: client, cancel: cancelCaller, trace: trace}
 			submitter, err := biz.NewPipelineSubmitter(submission.New(writerPool), creator, trace.budget)
 			if err != nil {
@@ -187,11 +191,11 @@ func writeConfirmedSubmitResponse(t testing.TB, w http.ResponseWriter, request b
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]any{
 		"run_id":                     "55555555-6666-4777-8888-999999999999",
-		"experiment_id":              "44444444-4444-4444-8444-444444444444",
-		"display_name":               "md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
-		"pipeline_version_reference": map[string]string{"pipeline_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "pipeline_version_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd"},
-		"runtime_config":             map[string]any{"parameters": map[string]string{"execution_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", "spec_hash": request.Admission.SpecHash}, "pipeline_root": "s3://fixture-kfp-artifacts/frozen-submit-root"},
-		"service_account":            "cpu-managed-step", "state": "PENDING", "created_at": "2026-09-30T09:00:00Z",
+		"experiment_id":              request.Admission.Snapshot.Environment.ExperimentID,
+		"display_name":               "md-" + request.Admission.ExecutionID,
+		"pipeline_version_reference": map[string]string{"pipeline_id": request.Admission.Snapshot.Implementation.PipelineID, "pipeline_version_id": request.Admission.Snapshot.Implementation.PipelineVersionID},
+		"runtime_config":             map[string]any{"parameters": map[string]string{"execution_id": request.Admission.ExecutionID, "spec_hash": request.Admission.SpecHash, "environment_binding_id": request.Admission.Snapshot.Environment.BindingID, "namespace_uid": request.Admission.Snapshot.Environment.NamespaceUID}, "pipeline_root": request.Owner.PipelineRoot},
+		"service_account":            request.Admission.Snapshot.Environment.Identities.KFPStepServiceAccount, "state": "PENDING", "created_at": "2026-09-30T09:00:00Z",
 	}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		t.Error("CPU07_SUBMIT_FIXTURE: could not send fixed complete HTTP response")

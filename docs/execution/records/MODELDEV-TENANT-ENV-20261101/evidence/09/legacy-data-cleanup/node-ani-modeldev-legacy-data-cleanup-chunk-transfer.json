@@ -1,0 +1,243 @@
+{
+  "source": "Fixed source1464b131 Fedora-built legacy cleanup tool; ordinary compressed fixed-offset file transfer only, NOT_EXECUTED",
+  "source_sha256": "ac69b711dac92e168988d65959aa87fa93204b004e21abbce2aae014aef0503c",
+  "source_bytes": 25701605,
+  "resume": {
+    "complete": false,
+    "matching_part_offsets": [],
+    "source_fetch": null
+  },
+  "batch_count": 21,
+  "max_request_bytes": 1048576,
+  "batches": [
+    {
+      "batch": 0,
+      "payload_bytes": 915366,
+      "offsets": [
+        0,
+        524288,
+        1048576
+      ],
+      "exit": 0,
+      "seconds": 2.144
+    },
+    {
+      "batch": 1,
+      "payload_bytes": 858365,
+      "offsets": [
+        1572864,
+        2097152,
+        2621440
+      ],
+      "exit": 0,
+      "seconds": 2.685
+    },
+    {
+      "batch": 2,
+      "payload_bytes": 892856,
+      "offsets": [
+        3145728,
+        3670016,
+        4194304,
+        4718592
+      ],
+      "exit": 0,
+      "seconds": 2.327
+    },
+    {
+      "batch": 3,
+      "payload_bytes": 842853,
+      "offsets": [
+        5242880,
+        5767168,
+        6291456
+      ],
+      "exit": 0,
+      "seconds": 2.448
+    },
+    {
+      "batch": 4,
+      "payload_bytes": 1027019,
+      "offsets": [
+        6815744,
+        7340032,
+        7864320,
+        8388608,
+        8912896
+      ],
+      "exit": 0,
+      "seconds": 3.181
+    },
+    {
+      "batch": 5,
+      "payload_bytes": 670422,
+      "offsets": [
+        9437184,
+        9961472,
+        10485760,
+        11010048,
+        11534336
+      ],
+      "exit": 0,
+      "seconds": 1.787
+    },
+    {
+      "batch": 6,
+      "payload_bytes": 882712,
+      "offsets": [
+        12058624,
+        12582912
+      ],
+      "exit": 0,
+      "seconds": 2.465
+    },
+    {
+      "batch": 7,
+      "payload_bytes": 870268,
+      "offsets": [
+        13107200,
+        13631488
+      ],
+      "exit": 0,
+      "seconds": 2.343
+    },
+    {
+      "batch": 8,
+      "payload_bytes": 1013976,
+      "offsets": [
+        14155776,
+        14680064,
+        15204352,
+        15728640,
+        16252928
+      ],
+      "exit": 0,
+      "seconds": 2.564
+    },
+    {
+      "batch": 9,
+      "payload_bytes": 502084,
+      "offsets": [
+        16777216,
+        17301504
+      ],
+      "exit": 0,
+      "seconds": 1.432
+    },
+    {
+      "batch": 10,
+      "payload_bytes": 645620,
+      "offsets": [
+        17825792
+      ],
+      "exit": 0,
+      "seconds": 1.814
+    },
+    {
+      "batch": 11,
+      "payload_bytes": 698824,
+      "offsets": [
+        18350080
+      ],
+      "exit": 0,
+      "seconds": 1.894
+    },
+    {
+      "batch": 12,
+      "payload_bytes": 695008,
+      "offsets": [
+        18874368
+      ],
+      "exit": 0,
+      "seconds": 1.689
+    },
+    {
+      "batch": 13,
+      "payload_bytes": 700380,
+      "offsets": [
+        19398656
+      ],
+      "exit": 0,
+      "seconds": 2.003
+    },
+    {
+      "batch": 14,
+      "payload_bytes": 700312,
+      "offsets": [
+        19922944
+      ],
+      "exit": 0,
+      "seconds": 2.467
+    },
+    {
+      "batch": 15,
+      "payload_bytes": 699788,
+      "offsets": [
+        20447232
+      ],
+      "exit": 0,
+      "seconds": 1.892
+    },
+    {
+      "batch": 16,
+      "payload_bytes": 696748,
+      "offsets": [
+        20971520
+      ],
+      "exit": 0,
+      "seconds": 2.301
+    },
+    {
+      "batch": 17,
+      "payload_bytes": 700360,
+      "offsets": [
+        21495808
+      ],
+      "exit": 0,
+      "seconds": 1.908
+    },
+    {
+      "batch": 18,
+      "payload_bytes": 699864,
+      "offsets": [
+        22020096
+      ],
+      "exit": 0,
+      "seconds": 2.119
+    },
+    {
+      "batch": 19,
+      "payload_bytes": 693248,
+      "offsets": [
+        22544384
+      ],
+      "exit": 0,
+      "seconds": 2.231
+    },
+    {
+      "batch": 20,
+      "payload_bytes": 971023,
+      "offsets": [
+        23068672,
+        23592960,
+        24117248,
+        24641536,
+        25165824,
+        25690112
+      ],
+      "exit": 0,
+      "seconds": 2.304
+    }
+  ],
+  "status": "FULL_BINARY_SHA_MATCH",
+  "root_owns_socket": true,
+  "elapsed_seconds": 46.781,
+  "final": {
+    "path": "/home/kubercloud/tenantenv-20261101/legacy-cleanup-1464b131/ani-modeldev-legacy-data-cleanup",
+    "size": 25701605,
+    "sha256": "ac69b711dac92e168988d65959aa87fa93204b004e21abbce2aae014aef0503c",
+    "all_bytes_verified": true,
+    "mode": "0700",
+    "executed": false
+  }
+}

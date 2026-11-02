@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-11-01T01:04:28.966093+00:00",
+  "read_only": true,
+  "exact_original_scope": true,
+  "result": {
+    "database_name": "ani_modeldev_v21",
+    "transaction_read_only": "on",
+    "rows": [
+      {
+        "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "close_generation": 1,
+        "close_reason": "STEP_FAILED",
+        "close_requested_at": "2026-10-30T00:57:45.356467+00:00",
+        "closed_at": null
+      },
+      {
+        "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "close_generation": 1,
+        "close_reason": "STEP_FAILED",
+        "close_requested_at": "2026-10-29T16:00:01.066939+00:00",
+        "closed_at": null
+      }
+    ]
+  }
+}

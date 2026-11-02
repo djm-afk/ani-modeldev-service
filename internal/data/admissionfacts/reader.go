@@ -1,287 +1,101 @@
-// Package admissionfacts loads explicitly pinned private admission facts.
-// Loading bytes is not evidence that an environment or identity is usable.
+// Package admissionfacts reads current published tenant execution authority.
+// Business admission is read-only: missing environments are never provisioned.
 package admissionfacts
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
-	"io"
-	"os"
-	"path/filepath"
-	"reflect"
 	"strings"
-	"syscall"
-	"time"
-	"unicode/utf8"
 
-	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	projection "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/tenantenvironment"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
-const (
-	schemaVersion = "ani.modeldev.managed-admission-facts.v3"
-	maxFiles      = 64
-	maxFileBytes  = cpup01.MaxMaterialBytes
-	maxJSONDepth  = cpup01.MaxJSONDepth
-)
+var ErrInvalidFacts = errors.New("INVALID_MANAGED_ADMISSION_FACTS")
 
-var (
-	ErrInvalidFacts     = errors.New("INVALID_MANAGED_ADMISSION_FACTS")
-	ErrFactsUnavailable = errors.New("MANAGED_ADMISSION_FACTS_UNAVAILABLE")
-)
-
-// FileSource comes only from trusted startup configuration. SHA256 identifies
-// the actual file bytes and is neither an ENV binding nor an environment authorization.
-type FileSource struct {
-	Path   string
-	SHA256 string
+type EnvironmentReader interface {
+	ReadReadyBinding(context.Context, string, string) (projection.Binding, error)
 }
-
-// document is the private file format, not a public RPC or shared contract.
-// Evidence references locate independently reviewed source material. Their
-// presence and digest shape never establish a successful capability test.
-type document struct {
-	SchemaVersion       string                            `json:"schema_version"`
-	ResourceTenantID    string                            `json:"resource_tenant_id"`
-	ImplementationID    string                            `json:"implementation_id"`
-	Environment         cpup01.EnvironmentBindingSnapshot `json:"environment"`
-	InputScope          cpup01.StorageScope               `json:"input_scope"`
-	PublicationScope    cpup01.StorageScope               `json:"publication_scope"`
-	Timing              cpup01.TimingConfiguration        `json:"timing"`
-	Workspace           cpup01.WorkspaceContract          `json:"workspace"`
-	InputFilePath       string                            `json:"input_file_path"`
-	OutputDirectoryPath string                            `json:"output_directory_path"`
-	// TargetPlatform pins the OCI platform of this environment. General
-	// training resolves its image against it; it is never inferred from the
-	// CPU/GPU device name or the image name.
-	TargetPlatform      cpup01.TrainingPlatform `json:"target_platform"`
-	EnvironmentEvidence evidenceReference       `json:"environment_evidence"`
-	ApplicationEvidence evidenceReference       `json:"application_evidence"`
+type IdentityVerifier interface {
+	VerifyBinding(context.Context, string, cpup01.EnvironmentBindingSnapshot) error
 }
-
-type evidenceReference struct {
-	Reference string `json:"reference"`
-	SHA256    string `json:"sha256"`
-}
-
-// Reader owns immutable loaded facts, indexed by tenant and implementation.
-// It never approves parameter combinations or performs environment probes.
 type Reader struct {
-	documents map[documentKey]document
-}
-
-type documentKey struct {
-	tenantID         string
-	implementationID string
+	environments EnvironmentReader
+	identities   IdentityVerifier
+	clusterID    string
+	materials    biz.AdmissionMaterialReader
 }
 
 var _ biz.AdmissionFactsReader = (*Reader)(nil)
 
-func Load(ctx context.Context, sources []FileSource) (*Reader, error) {
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	if len(sources) == 0 || len(sources) > maxFiles {
+func New(environments EnvironmentReader, identities IdentityVerifier, materials biz.AdmissionMaterialReader, clusterID string) (*Reader, error) {
+	if environments == nil || identities == nil || materials == nil || !cpup01.CanonicalTenantID(clusterID) {
 		return nil, ErrInvalidFacts
 	}
-	documents := make(map[documentKey]document, len(sources))
-	var globalTiming *cpup01.TimingConfiguration
-	for _, source := range sources {
-		value, err := readDocument(ctx, source)
-		if err != nil {
-			return nil, err
-		}
-		if globalTiming == nil {
-			valueTiming := value.Timing
-			globalTiming = &valueTiming
-		} else if *globalTiming != value.Timing {
-			return nil, ErrInvalidFacts
-		}
-		key := documentKey{value.ResourceTenantID, value.ImplementationID}
-		if _, exists := documents[key]; exists {
-			return nil, ErrInvalidFacts
-		}
-		documents[key] = value
-	}
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	return &Reader{documents: documents}, nil
+	return &Reader{environments: environments, identities: identities, clusterID: clusterID, materials: materials}, nil
 }
-
 func (reader *Reader) ReadAdmissionFacts(ctx context.Context, tenantID, implementationID string) (biz.TenantAdmissionFacts, error) {
 	if err := ctx.Err(); err != nil {
 		return biz.TenantAdmissionFacts{}, err
 	}
-	if !canonicalID(tenantID) || (implementationID != "builtin.mlp" && implementationID != "builtin.sft_lora") {
+	if !cpup01.CanonicalTenantID(tenantID) || (implementationID != "builtin.mlp" && implementationID != "builtin.sft_lora") {
 		return biz.TenantAdmissionFacts{}, biz.ErrInvalidAdmission
 	}
-	if reader == nil {
-		return biz.TenantAdmissionFacts{}, biz.ErrAdmissionEnvironmentNotReady
+	if reader == nil || reader.environments == nil || reader.identities == nil {
+		return biz.TenantAdmissionFacts{}, biz.EnvironmentError("ENVIRONMENT_DEPENDENCY_UNAVAILABLE")
 	}
-	value, found := reader.documents[documentKey{tenantID, implementationID}]
-	if !found {
-		return biz.TenantAdmissionFacts{}, biz.ErrAdmissionEnvironmentNotReady
-	}
-	return biz.TenantAdmissionFacts{TenantID: value.ResourceTenantID, Environment: value.Environment, InputScope: value.InputScope, PublicationScope: value.PublicationScope, Workspace: value.Workspace, InputFilePath: value.InputFilePath, OutputDirectoryPath: value.OutputDirectoryPath, Timing: value.Timing, TargetPlatform: value.TargetPlatform}, nil
-}
-
-func readDocument(ctx context.Context, source FileSource) (document, error) {
-	if err := ctx.Err(); err != nil {
-		return document{}, err
-	}
-	if !filepath.IsAbs(source.Path) || filepath.Clean(source.Path) != source.Path || strings.ContainsRune(source.Path, 0) || !validDigest(source.SHA256) {
-		return document{}, ErrInvalidFacts
-	}
-	// The pathname is supplied only by trusted startup configuration. Avoid
-	// blocking on special files and do not follow a final-component symlink.
-	fd, err := syscall.Open(source.Path, syscall.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK|syscall.O_CLOEXEC, 0)
+	binding, err := reader.environments.ReadReadyBinding(ctx, tenantID, reader.clusterID)
 	if err != nil {
-		return document{}, ErrFactsUnavailable
-	}
-	file := os.NewFile(uintptr(fd), source.Path)
-	defer file.Close()
-	var before syscall.Stat_t
-	if syscall.Fstat(fd, &before) != nil || before.Mode&syscall.S_IFMT != syscall.S_IFREG || before.Nlink != 1 || before.Size <= 0 || before.Size > maxFileBytes {
-		return document{}, ErrInvalidFacts
-	}
-	raw, err := io.ReadAll(io.LimitReader(file, maxFileBytes+1))
-	if err := ctx.Err(); err != nil {
-		return document{}, err
-	}
-	if err != nil {
-		return document{}, ErrFactsUnavailable
-	}
-	var after syscall.Stat_t
-	if syscall.Fstat(fd, &after) != nil || int64(len(raw)) != before.Size || after.Size != before.Size || after.Nlink != 1 || after.Mtim != before.Mtim || after.Ctim != before.Ctim {
-		return document{}, ErrInvalidFacts
-	}
-	digest := sha256.Sum256(raw)
-	if hex.EncodeToString(digest[:]) != source.SHA256 || !utf8.Valid(raw) {
-		return document{}, ErrInvalidFacts
-	}
-	// The token pass rejects duplicate keys, nulls and excessive nesting before
-	// the typed decoder enforces the private field set and value types.
-	tokens := json.NewDecoder(bytes.NewReader(raw))
-	tokens.UseNumber()
-	if validJSONValue(tokens, 0) != nil {
-		return document{}, ErrInvalidFacts
-	}
-	if _, err := tokens.Token(); err != io.EOF {
-		return document{}, ErrInvalidFacts
-	}
-	var value document
-	decoder := json.NewDecoder(bytes.NewReader(raw))
-	decoder.DisallowUnknownFields()
-	if decoder.Decode(&value) != nil || !hasRequiredDocumentFields(raw, reflect.TypeOf(value)) || value.SchemaVersion != schemaVersion ||
-		!canonicalID(value.ResourceTenantID) || (value.ImplementationID != "builtin.mlp" && value.ImplementationID != "builtin.sft_lora") ||
-		!validEvidence(value.EnvironmentEvidence) || !validEvidence(value.ApplicationEvidence) {
-		return document{}, ErrInvalidFacts
-	}
-	if _, err := value.Timing.Resolve(time.Now().UTC().Truncate(time.Microsecond), nil); err != nil {
-		return document{}, ErrInvalidFacts
-	}
-	if err := ctx.Err(); err != nil {
-		return document{}, err
-	}
-	// Compatibility and the complete Snapshot shape remain in the existing biz
-	// resolver/shared contract. Loading this document never asserts ENV proof.
-	return value, nil
-}
-
-// Every field in this private document's tagged structs is required, including
-// explicitly empty input credential references. Walk those types instead of
-// copying nested field lists or inventing a Snapshot for validation. Scalar and
-// slice value types have already been checked by the strict typed decoder.
-func hasRequiredDocumentFields(raw []byte, shape reflect.Type) bool {
-	if shape.Kind() != reflect.Struct {
-		return true
-	}
-	var object map[string]json.RawMessage
-	if json.Unmarshal(raw, &object) != nil {
-		return false
-	}
-	for index := 0; index < shape.NumField(); index++ {
-		field := shape.Field(index)
-		name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
-		if name == "" || name == "-" {
-			return false
+		if errors.Is(err, biz.ErrTenantEnvironmentNotRegistered) {
+			return biz.TenantAdmissionFacts{}, biz.EnvironmentError("ENVIRONMENT_NOT_REGISTERED")
 		}
-		value, present := object[name]
-		if !present || !hasRequiredDocumentFields(value, field.Type) {
-			return false
+		return biz.TenantAdmissionFacts{}, err
+	}
+	raw, err := binding.Canonical()
+	if err != nil || binding.TenantID != tenantID || binding.Environment.ClusterID != reader.clusterID {
+		return biz.TenantAdmissionFacts{}, biz.EnvironmentError("ENVIRONMENT_DEPENDENCY_UNAVAILABLE")
+	}
+	for _, profile := range binding.Profiles {
+		implementation, mode := "builtin.mlp", "cpu"
+		switch profile.ID {
+		case "modeldev-mlp-cpu":
+		case "modeldev-mlp-gpu":
+			mode = "gpu"
+		case "modeldev-sft-lora-cpu":
+			implementation = "builtin.sft_lora"
+		case "modeldev-sft-lora-gpu":
+			implementation, mode = "builtin.sft_lora", "gpu"
+		default:
+			return biz.TenantAdmissionFacts{}, biz.EnvironmentError("FIXED_PIPELINE_MATERIAL_MISMATCH")
+		}
+		material, e := reader.materials.ReadImplementationMaterial(ctx, implementation, mode)
+		if e != nil {
+			return biz.TenantAdmissionFacts{}, biz.EnvironmentError("FIXED_PIPELINE_MATERIAL_MISMATCH")
+		}
+		canonical, e := material.Canonical()
+		if e != nil {
+			return biz.TenantAdmissionFacts{}, biz.EnvironmentError("ENVIRONMENT_DEPENDENCY_UNAVAILABLE")
+		}
+		hash := sha256.Sum256(canonical)
+		if profile.PipelineID != material.Implementation.PipelineID || profile.VersionID != material.Implementation.PipelineVersionID || profile.IRSHA256 != material.Implementation.PipelineIRSHA256 || profile.MaterialSHA256 != hex.EncodeToString(hash[:]) || binding.Workspace != material.Workspace {
+			return biz.TenantAdmissionFacts{}, biz.EnvironmentError("FIXED_PIPELINE_MATERIAL_MISMATCH")
 		}
 	}
-	return true
-}
-
-func canonicalID(value string) bool {
-	id, err := uuid.Parse(value)
-	return err == nil && id != uuid.Nil && id.String() == value
-}
-
-func validDigest(value string) bool {
-	return len(value) == 64 && strings.Trim(value, "0123456789abcdef") == ""
-}
-
-func validEvidence(value evidenceReference) bool {
-	if len(value.Reference) == 0 || len(value.Reference) > 512 || strings.Contains(value.Reference, "://") || !validDigest(value.SHA256) {
-		return false
+	environment := binding.Snapshot(projection.Digest(raw))
+	if err := reader.identities.VerifyBinding(ctx, tenantID, environment); err != nil {
+		return biz.TenantAdmissionFacts{}, err
 	}
-	for _, char := range value.Reference {
-		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || strings.ContainsRune("._:/-", char) {
-			continue
-		}
-		return false
+	// The environment freezes the tenant base root. Prepare appends exactly one
+	// execution UUID, before its candidate digest can be presented to Governance.
+	if !strings.HasSuffix(binding.DispatchOwner.PipelineRoot, "/artifacts/"+tenantID) || binding.ManagedImageAccess.Validate() != nil {
+		return biz.TenantAdmissionFacts{}, biz.EnvironmentError("ENVIRONMENT_DEPENDENCY_UNAVAILABLE")
 	}
-	return true
-}
-
-func validJSONValue(decoder *json.Decoder, depth int) error {
-	if depth > maxJSONDepth {
-		return ErrInvalidFacts
+	inputPath, outputPath := "/inputs/data.csv", "/outputs"
+	if implementationID == "builtin.sft_lora" {
+		inputPath, outputPath = "/workspace/inputs/data/finetune_data.jsonl", "/workspace/training"
 	}
-	token, err := decoder.Token()
-	if err != nil || token == nil {
-		return ErrInvalidFacts
-	}
-	if value, ok := token.(string); ok && strings.ContainsRune(value, utf8.RuneError) {
-		// encoding/json otherwise silently replaces invalid UTF-16 escapes.
-		return ErrInvalidFacts
-	}
-	switch token {
-	case json.Delim('{'):
-		keys := make(map[string]bool)
-		for decoder.More() {
-			token, err := decoder.Token()
-			key, ok := token.(string)
-			if err != nil || !ok || keys[key] || key != strings.ToLower(key) || strings.ContainsRune(key, utf8.RuneError) {
-				return ErrInvalidFacts
-			}
-			keys[key] = true
-			if err := validJSONValue(decoder, depth+1); err != nil {
-				return err
-			}
-		}
-		if token, err := decoder.Token(); err != nil || token != json.Delim('}') {
-			return ErrInvalidFacts
-		}
-	case json.Delim('['):
-		for decoder.More() {
-			if err := validJSONValue(decoder, depth+1); err != nil {
-				return err
-			}
-		}
-		if token, err := decoder.Token(); err != nil || token != json.Delim(']') {
-			return ErrInvalidFacts
-		}
-	case json.Delim('}'), json.Delim(']'):
-		return ErrInvalidFacts
-	}
-	return nil
+	return biz.TenantAdmissionFacts{TenantID: tenantID, Environment: environment, InputScope: binding.InputScope, ModelScope: binding.ModelScope, PublicationScope: binding.PublicationScope, Workspace: binding.Workspace, InputFilePath: inputPath, OutputDirectoryPath: outputPath, Timing: binding.Timing, TargetPlatform: binding.TargetPlatform, DispatchOwner: binding.DispatchOwner, ManagedImageAccess: binding.ManagedImageAccess}, nil
 }

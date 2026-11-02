@@ -1,0 +1,34 @@
+{
+  "schema": "ani.modeldev.original-command-retirement.delivery.v1",
+  "completed_at": "2026-11-01T02:11:26.889696+00:00",
+  "commit": "ca01cabf89d9c663b8b22883304d0258a869457e",
+  "branch": "codex/modeldev-original-command-retirement",
+  "push": "normal literal SSH443 exit0 new aux branch",
+  "frozen_maintenance_ref": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+  "owned_files": [
+    "app/admin/service/internal/data/modeldev_original_command_retirement.go",
+    "app/admin/service/internal/data/modeldev_original_codec_inventory.go",
+    "app/admin/service/internal/data/modeldev_original_command_retirement_test.go",
+    "app/admin/service/cmd/modeldev-original-command-retirement/main.go",
+    "docs/operations/modeldev-original-command-retirement.md"
+  ],
+  "source_hashes": {
+    "app/admin/service/internal/data/modeldev_original_command_retirement.go": "f5bf1a384fd7ecbf7bd5a38ab5cb7bd79e3e19a4f3ec4d7a0694fa1fe9ca52a0",
+    "app/admin/service/internal/data/modeldev_original_codec_inventory.go": "d44104dd6bbe8f84d18510d0b819c7965101c747aa6d3a22549bd6eb6abed900",
+    "app/admin/service/internal/data/modeldev_original_command_retirement_test.go": "ed6950b2e91cef48c721f605314b068d5936e4f770b430fec4ac8a957cb8a443",
+    "app/admin/service/cmd/modeldev-original-command-retirement/main.go": "314d2c43a4b6dd3e29218af79869e979a5842a4d81cec2dcde6c05630747843c",
+    "docs/operations/modeldev-original-command-retirement.md": "74d24be08764de4b807f6ef6aa9dd5526c9cc3ac9140fde06d9e1f6819d1572d"
+  },
+  "gov_final_required_gate_exit": 0,
+  "gov_final_gate_receipt": "final-gates-receipt.json",
+  "gov_native_original_four_pg_exit": 0,
+  "native_md_fence_reserve_exit": 0,
+  "native_md_receipt": "native-md-fence-reserve-receipt.json",
+  "binary_path_fedora": "/home/chabking/tenantenv-20261101/gov-original-command-retirement-evidence/modeldev-original-command-retirement",
+  "binary_sha256": "bbf33c31d36046f298bce3f5d95c90e1302362e99c1034ab0173da53297aa4e1",
+  "codec_audit": "original-50-54-codec-receipt.json; seven-original-codec-conflict.json (43/50 MD,47/54 Gov native21bf full byte equality; separate oldc99 seven PASS)",
+  "live_actions": "NOT_RUN: no apply/deployment; existing service maintenance ref not advanced",
+  "exact_scope": "four original IDs55/57/59/60 only; unchanged Stop/Close lease/sender/ACK then finite Create lease and unchanged sender/AckDelivery; no SQL ACK/CLOSED/canonical/accounting edits",
+  "proof_entry": "private root-approved planSHA + proofSHA + sourceproof byteSHA + configurationSHA, source6c17, full cluster identity/fresh real authenticated503 <=2min; DB global active leases0 and no original accounting rechecked",
+  "remaining_boundary": "Owner response CLOSING is retained. Native MD close worker must actually produce CLOSED/cleanup facts; CLI does not fabricate closure. Regenerate original deletion manifest for any new MD aggregate rows before DB cleanup apply."
+}

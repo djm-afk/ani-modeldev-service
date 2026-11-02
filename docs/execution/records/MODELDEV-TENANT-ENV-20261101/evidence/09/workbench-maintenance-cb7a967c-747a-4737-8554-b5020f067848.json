@@ -1,0 +1,12 @@
+{
+  "status": "POST_OUTCOME_UNKNOWN",
+  "recorded_at_utc": "2026-10-31T21:38:59.536937+00:00",
+  "selection": {
+    "command": "submit",
+    "commit": "45ed49fe91608960cab89797c06dab2705a65740",
+    "request_id": "cb7a967c-747a-4737-8554-b5020f067848",
+    "expected_deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5"
+  },
+  "instruction": "Reserved before SSH. Never resubmit this request ID; query it if interrupted.",
+  "reason": "Refusal"
+}

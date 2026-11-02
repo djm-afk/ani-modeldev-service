@@ -75,6 +75,7 @@ func NewGovernanceCommandServer(c *conf.Server_GRPC, security CommandTLS, comman
 type GovernanceServices struct {
 	Management             modeldevv1.ModelDevManagementServiceServer
 	Operations             modeldevv1.ModelDevOperationsServiceServer
+	Environment            modeldevv1.ModelDevTenantEnvironmentServiceServer
 	ModelResolutionTimeout time.Duration
 	ImportTimeout          time.Duration
 }
@@ -107,6 +108,10 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 			timeout = 5 * time.Minute
 		}
 		switch info.FullMethod {
+		case modeldevv1.ModelDevTenantEnvironmentService_EnsureTenantExecutionEnvironment_FullMethodName:
+			timeout = 25 * time.Second
+		case modeldevv1.ModelDevTenantEnvironmentService_GetTenantExecutionEnvironment_FullMethodName:
+			timeout = 3 * time.Second
 		case modeldevv1.ModelDevQueryService_CheckFinetuningReadiness_FullMethodName, modeldevv1.ModelDevAdmissionService_PrepareAdmission_FullMethodName:
 			timeout = modelResolutionTimeout(extra)
 		case modeldevv1.ModelDevManagementService_ImportCSV_FullMethodName, modeldevv1.ModelDevManagementService_ImportFinetuningDataset_FullMethodName:
@@ -150,6 +155,9 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 	}
 	if extra.Operations != nil {
 		modeldevv1.RegisterModelDevOperationsServiceServer(s, extra.Operations)
+	}
+	if extra.Environment != nil {
+		modeldevv1.RegisterModelDevTenantEnvironmentServiceServer(s, extra.Environment)
 	}
 	return s, nil
 }

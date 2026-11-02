@@ -1,0 +1,34 @@
+{
+  "StartedAt": "2026-11-01T01:06:50.447246+00:00",
+  "Commands": [
+    {
+      "Name": "mvs-graph-after",
+      "Command": [
+        "go",
+        "mod",
+        "graph"
+      ],
+      "StartedAt": "2026-11-01T01:06:50.447264+00:00",
+      "CompletedAt": "2026-11-01T01:06:50.478576+00:00",
+      "ExitCode": 0
+    },
+    {
+      "Name": "original-codec-green",
+      "Command": [
+        "go",
+        "test",
+        "-tags=modeldev_maintenance_codec",
+        "-count=1",
+        "-v",
+        "-timeout=3m",
+        "./app/admin/service/internal/data",
+        "-run",
+        "^TestMaintenanceOriginalFiveAcceptanceCodec$"
+      ],
+      "StartedAt": "2026-11-01T01:06:50.478871+00:00",
+      "CompletedAt": "2026-11-01T01:07:37.458034+00:00",
+      "ExitCode": 0
+    }
+  ],
+  "CompletedAt": "2026-11-01T01:07:37.458090+00:00"
+}

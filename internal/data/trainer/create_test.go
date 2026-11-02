@@ -122,7 +122,7 @@ func TestTrainingCreateFreezesCPUWorkspaceAndFindsUncertainResultWithoutRecreate
 	}
 	override := runtimePodTemplate(f)
 	sa, _, _ := unstructured.NestedString(override, "spec", "serviceAccountName")
-	if sa != "cpu-training" {
+	if sa != "trainer-workload" {
 		t.Fatalf("training used wrong service account %q", sa)
 	}
 	containers, _, _ := unstructured.NestedSlice(override, "spec", "containers")
@@ -303,9 +303,9 @@ func TestTrainingObserveRequiresRealPodExitAndChecksHistoricalWriters(t *testing
 		t.Fatalf("lost TrainJob/JobSet/Job/Pod history: %+v", observation.Resources)
 	}
 	f.mu.Lock()
-	f.oldPod = trainingObject(t, `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"cpu-execution","name":"prior-training-pod","uid":"11111111-1111-4111-8111-111111111111","resourceVersion":"1","finalizers":["modeldev.ani.io/training-exit-evidence"],"ownerReferences":[{"apiVersion":"batch/v1","kind":"Job","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","controller":true}]},"spec":{"serviceAccountName":"cpu-training","containers":[{"name":"node"}]},"status":{"phase":"Running","containerStatuses":[{"name":"node","state":{"running":{"startedAt":"2026-10-03T00:00:00Z"}}}]}}`)
+	f.oldPod = trainingObject(t, `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"tenant-11111111-1111-4111-8111-111111111111","name":"prior-training-pod","uid":"11111111-1111-4111-8111-111111111111","resourceVersion":"1","finalizers":["modeldev.ani.io/training-exit-evidence"],"ownerReferences":[{"apiVersion":"batch/v1","kind":"Job","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","controller":true}]},"spec":{"serviceAccountName":"trainer-workload","containers":[{"name":"node"}]},"status":{"phase":"Running","containerStatuses":[{"name":"node","state":{"running":{"startedAt":"2026-10-03T00:00:00Z"}}}]}}`)
 	f.mu.Unlock()
-	history := append(observation.Resources, biz.RuntimeResource{APIVersion: "v1", Kind: "Pod", Namespace: "cpu-execution", Name: "prior-training-pod", UID: "11111111-1111-4111-8111-111111111111", OwnerUID: childJobUID})
+	history := append(observation.Resources, biz.RuntimeResource{APIVersion: "v1", Kind: "Pod", Namespace: "tenant-11111111-1111-4111-8111-111111111111", Name: "prior-training-pod", UID: "11111111-1111-4111-8111-111111111111", OwnerUID: childJobUID})
 	observation, err = a.ObserveTraining(context.Background(), f.plan, handle, history)
 	if err != nil || observation.WritersAbsent {
 		t.Fatalf("old active Pod must keep writers present: %+v / %v", observation, err)
@@ -464,7 +464,7 @@ func TestTrainingObservationPreservesConfirmedPodExitAfterGarbageCollection(t *t
 	})
 	t.Run("missing Pod without prior exit remains unproven", func(t *testing.T) {
 		history := append(append([]biz.RuntimeResource{}, confirmed.Resources...), biz.RuntimeResource{
-			APIVersion: "v1", Kind: "Pod", Namespace: "cpu-execution", Name: "prior-training-pod",
+			APIVersion: "v1", Kind: "Pod", Namespace: "tenant-11111111-1111-4111-8111-111111111111", Name: "prior-training-pod",
 			UID: "11111111-1111-4111-8111-111111111111", OwnerUID: childJobUID,
 		})
 		observation, err := a.ObserveTraining(context.Background(), f.plan, handle, history)
@@ -510,19 +510,19 @@ type trainingFixture struct {
 func newTrainingFixture(t *testing.T) *trainingFixture {
 	t.Helper()
 	f := &trainingFixture{}
-	f.namespace = trainingObject(t, `{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"cpu-execution","uid":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"}}`)
-	f.pvc = trainingObject(t, `{"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"namespace":"cpu-execution","name":"cpu-workspace","uid":"cccccccc-cccc-4ccc-8ccc-cccccccccccc"},"spec":{"storageClassName":"task-workspace","accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"2147483648"}}},"status":{"phase":"Bound"}}`)
-	f.jobset = trainingObject(t, `{"apiVersion":"jobset.x-k8s.io/v1alpha2","kind":"JobSet","metadata":{"namespace":"cpu-execution","name":"md-22222222-2222-4222-8222-222222222222","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","generation":1,"ownerReferences":[{"apiVersion":"trainer.kubeflow.org/v1alpha1","kind":"TrainJob","name":"md-22222222-2222-4222-8222-222222222222","uid":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","controller":true}]},"spec":{"suspend":false},"status":{"conditions":[]}}`)
-	f.job = trainingObject(t, `{"apiVersion":"batch/v1","kind":"Job","metadata":{"namespace":"cpu-execution","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","ownerReferences":[{"apiVersion":"jobset.x-k8s.io/v1alpha2","kind":"JobSet","name":"md-22222222-2222-4222-8222-222222222222","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","controller":true}]},"spec":{"backoffLimit":0,"parallelism":1,"completions":1},"status":{"active":1,"conditions":[]}}`)
-	f.pod = trainingObject(t, `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"cpu-execution","name":"training-pod","uid":"ffffffff-ffff-4fff-8fff-ffffffffffff","ownerReferences":[{"apiVersion":"batch/v1","kind":"Job","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","controller":true}]},"spec":{"serviceAccountName":"cpu-training","restartPolicy":"Never","automountServiceAccountToken":false,"containers":[{"name":"node"}]},"status":{"phase":"Running","containerStatuses":[{"name":"node","state":{"running":{"startedAt":"2026-10-03T00:00:00Z"}}}]}}`)
+	f.namespace = trainingObject(t, `{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"tenant-11111111-1111-4111-8111-111111111111","uid":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"}}`)
+	f.pvc = trainingObject(t, `{"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"namespace":"tenant-11111111-1111-4111-8111-111111111111","name":"cpu-workspace","uid":"cccccccc-cccc-4ccc-8ccc-cccccccccccc"},"spec":{"storageClassName":"task-workspace","accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"2147483648"}}},"status":{"phase":"Bound"}}`)
+	f.jobset = trainingObject(t, `{"apiVersion":"jobset.x-k8s.io/v1alpha2","kind":"JobSet","metadata":{"namespace":"tenant-11111111-1111-4111-8111-111111111111","name":"md-22222222-2222-4222-8222-222222222222","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","generation":1,"ownerReferences":[{"apiVersion":"trainer.kubeflow.org/v1alpha1","kind":"TrainJob","name":"md-22222222-2222-4222-8222-222222222222","uid":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","controller":true}]},"spec":{"suspend":false},"status":{"conditions":[]}}`)
+	f.job = trainingObject(t, `{"apiVersion":"batch/v1","kind":"Job","metadata":{"namespace":"tenant-11111111-1111-4111-8111-111111111111","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","ownerReferences":[{"apiVersion":"jobset.x-k8s.io/v1alpha2","kind":"JobSet","name":"md-22222222-2222-4222-8222-222222222222","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","controller":true}]},"spec":{"backoffLimit":0,"parallelism":1,"completions":1},"status":{"active":1,"conditions":[]}}`)
+	f.pod = trainingObject(t, `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"tenant-11111111-1111-4111-8111-111111111111","name":"training-pod","uid":"ffffffff-ffff-4fff-8fff-ffffffffffff","ownerReferences":[{"apiVersion":"batch/v1","kind":"Job","name":"md-22222222-2222-4222-8222-222222222222-trainer-0","uid":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","controller":true}]},"spec":{"serviceAccountName":"trainer-workload","restartPolicy":"Never","automountServiceAccountToken":false,"containers":[{"name":"node"}]},"status":{"phase":"Running","containerStatuses":[{"name":"node","state":{"running":{"startedAt":"2026-10-03T00:00:00Z"}}}]}}`)
 
 	seed := conformance.SnapshotV1()
-	seed.Environment.NamespaceName, seed.Environment.NamespaceUID = "cpu-execution", trainingNamespaceUID
-	seed.Environment.Identities.TrainerServiceAccount = "cpu-training"
+	seed.Environment.NamespaceName, seed.Environment.NamespaceUID = "tenant-11111111-1111-4111-8111-111111111111", trainingNamespaceUID
+	seed.Environment.Identities.TrainerServiceAccount = "trainer-workload"
 	accepted := time.Now().UTC().Truncate(time.Microsecond)
 	seed.DeadlineAt = accepted.Add(time.Hour)
 	admission := admissionfixture.Bind(t, biz.Admission{TenantID: "11111111-1111-4111-8111-111111111111", OperationID: "33333333-3333-4333-8333-333333333333", ExecutionID: "22222222-2222-4222-8222-222222222222", Actor: "governance:user:trainer-fixture", Intent: conformance.IntentV1(), Snapshot: seed, AcceptedAt: accepted})
-	workspace := biz.WorkspaceBinding{Mode: seed.Workspace.Mode, NamespaceName: "cpu-execution", NamespaceUID: trainingNamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: workspaceUID, InputSubpath: seed.Workspace.InputSubpath, TrainingSubpath: seed.Workspace.TrainingSubpath, ReportsSubpath: seed.Workspace.ReportsSubpath, PublicationSubpath: seed.Workspace.PublicationSubpath, WorkSubpath: seed.Workspace.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
+	workspace := biz.WorkspaceBinding{Mode: seed.Workspace.Mode, NamespaceName: "tenant-11111111-1111-4111-8111-111111111111", NamespaceUID: trainingNamespaceUID, PVCName: biz.ExpectedWorkspacePVCName(admission.ExecutionID), PVCUID: workspaceUID, InputSubpath: seed.Workspace.InputSubpath, TrainingSubpath: seed.Workspace.TrainingSubpath, ReportsSubpath: seed.Workspace.ReportsSubpath, PublicationSubpath: seed.Workspace.PublicationSubpath, WorkSubpath: seed.Workspace.WorkSubpath, PreparedManifestSHA256: strings.Repeat("1", 64), PreparedManifestBytes: 256}
 	_ = unstructured.SetNestedField(f.pvc, workspace.PVCName, "metadata", "name")
 	plan, err := biz.FreezeTrainingPlan(biz.Execution{Admission: admission}, workspace, accepted)
 	if err != nil {
@@ -587,13 +587,13 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 			}
 			_, _ = w.Write([]byte(time.Now().UTC().Format(time.RFC3339Nano) + " retained original worker output\n"))
 			return
-		case path == "/api/v1/namespaces/cpu-execution":
+		case path == "/api/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111":
 			response = f.namespace
-		case path == "/api/v1/namespaces/cpu-execution/persistentvolumeclaims/"+f.plan.Workspace.PVCName:
+		case path == "/api/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111/persistentvolumeclaims/"+f.plan.Workspace.PVCName:
 			response = f.pvc
-		case path == "/apis/trainer.kubeflow.org/v1alpha1/namespaces/cpu-execution/trainingruntimes/"+f.plan.Snapshot.RuntimePlan.Name:
+		case path == "/apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-1111-4111-8111-111111111111/trainingruntimes/"+f.plan.Snapshot.RuntimePlan.Name:
 			response = f.runtime
-		case path == "/apis/trainer.kubeflow.org/v1alpha1/namespaces/cpu-execution/trainjobs" && r.Method == http.MethodPost:
+		case path == "/apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-1111-4111-8111-111111111111/trainjobs" && r.Method == http.MethodPost:
 			f.posts++
 			if f.createStatusCode != 0 {
 				if f.createStatusTruncated {
@@ -621,7 +621,7 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 			}
 			w.WriteHeader(http.StatusCreated)
 			response = f.train
-		case path == "/apis/trainer.kubeflow.org/v1alpha1/namespaces/cpu-execution/trainjobs/"+f.plan.Name:
+		case path == "/apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-1111-4111-8111-111111111111/trainjobs/"+f.plan.Name:
 			if r.Method == http.MethodPatch {
 				f.patches++
 				var patch []map[string]any
@@ -650,22 +650,22 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 				_ = unstructured.SetNestedField(f.train, true, "spec", "suspend")
 			}
 			response = f.train
-		case path == "/apis/jobset.x-k8s.io/v1alpha2/namespaces/cpu-execution/jobsets/"+f.plan.Name:
+		case path == "/apis/jobset.x-k8s.io/v1alpha2/namespaces/tenant-11111111-1111-4111-8111-111111111111/jobsets/"+f.plan.Name:
 			response = f.jobset
-		case path == "/apis/scheduling.volcano.sh/v1beta1/namespaces/cpu-execution/podgroups/"+f.plan.Name:
+		case path == "/apis/scheduling.volcano.sh/v1beta1/namespaces/tenant-11111111-1111-4111-8111-111111111111/podgroups/"+f.plan.Name:
 			f.podGroupGets.Add(1)
 			response = f.podGroup
-		case path == "/apis/batch/v1/namespaces/cpu-execution/jobs":
+		case path == "/apis/batch/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111/jobs":
 			response = map[string]any{"apiVersion": "batch/v1", "kind": "JobList", "metadata": map[string]any{}, "items": []any{f.job}}
-		case path == "/api/v1/namespaces/cpu-execution/pods":
+		case path == "/api/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111/pods":
 			items := []any{}
 			if f.pod != nil {
 				items = append(items, f.pod)
 			}
 			response = map[string]any{"apiVersion": "v1", "kind": "PodList", "metadata": map[string]any{"resourceVersion": f.podListResourceVersion}, "items": items}
-		case path == "/apis/batch/v1/namespaces/cpu-execution/jobs/"+f.job["metadata"].(map[string]any)["name"].(string):
+		case path == "/apis/batch/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111/jobs/"+f.job["metadata"].(map[string]any)["name"].(string):
 			response = f.job
-		case path == "/api/v1/namespaces/cpu-execution/pods/training-pod":
+		case path == "/api/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111/pods/training-pod":
 			if r.Method == http.MethodPatch {
 				f.podPatches++
 				if f.beforePodPatch != nil {
@@ -711,7 +711,7 @@ func (f *trainingFixture) adapter(t *testing.T) *trainer.Adapter {
 				}
 			}
 			response = f.pod
-		case path == "/api/v1/namespaces/cpu-execution/pods/prior-training-pod":
+		case path == "/api/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111/pods/prior-training-pod":
 			response = f.oldPod
 		default:
 			t.Errorf("unexpected Kubernetes operation %s %s", r.Method, path)

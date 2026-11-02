@@ -1,0 +1,2 @@
+go: downloading github.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261031082344-23e25b33ca02
+go: github.com/zhangzhe-ctrl/ani-resource-service@23e25b33ca02890231cd273ef7246b0fc415476c: github.com/zhangzhe-ctrl/ani-resource-service@v0.0.0-20261031082344-23e25b33ca02: read "https://goproxy.cn/github.com/zhangzhe-ctrl/ani-resource-service/@v/v0.0.0-20261031082344-23e25b33ca02.zip": stream error: stream ID 33; INTERNAL_ERROR; received from peer

@@ -1,0 +1,12 @@
+=== RUN   TestConfiguredScanRejectsRetiredFieldsWithoutExposingValues
+2026/11/01 02:37:59 INFO watcher's ctx cancel error="context canceled"
+2026/11/01 02:37:59 INFO watcher's ctx cancel error="context canceled"
+2026/11/01 02:37:59 INFO watcher's ctx cancel error="context canceled"
+2026/11/01 02:37:59 INFO watcher's ctx cancel error="context canceled"
+2026/11/01 02:37:59 INFO watcher's ctx cancel error="context canceled"
+--- PASS: TestConfiguredScanRejectsRetiredFieldsWithoutExposingValues (0.01s)
+=== RUN   TestConfiguredScanAcceptsCurrentResolvedSchema
+2026/11/01 02:37:59 INFO watcher's ctx cancel error="context canceled"
+--- PASS: TestConfiguredScanAcceptsCurrentResolvedSchema (0.00s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-service	0.027s

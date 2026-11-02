@@ -1,0 +1,207 @@
+{
+  "schema": "ani.modeldev.current-final-multitenant-full-flow-regression.v1",
+  "completed_at": "2026-11-01T17:13:34.298048+00:00",
+  "result": "PASS",
+  "test_id": "REG01",
+  "request": "User requested an additional current-version complete multi-tenant training/finetuning flow",
+  "path": "normal tenant password login -> authorized business Submit (fresh execution/idempotency key) -> original Reserve/dispatch -> real input/base reads -> actual training -> export/verify/collect/publish -> Model registration for finetuning -> logs and verified artifact download -> original owner close/compute cleanup and original quota release ACK",
+  "A": {
+    "tenant_id": 2,
+    "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "execution_id": "50dc7220-8001-463e-83f3-fe4d70f9af66",
+    "kind": "GENERAL_TRAINING",
+    "states": [
+      "SUCCEEDED",
+      "PUBLISHED",
+      "CLOSED"
+    ],
+    "metrics": [
+      {
+        "name": "train.loss",
+        "decimal_value": "0.9185541272163391",
+        "step": "1"
+      },
+      {
+        "name": "train.loss",
+        "decimal_value": "0.6795239448547363",
+        "step": "2"
+      },
+      {
+        "name": "train.loss",
+        "decimal_value": "0.44855910539627075",
+        "step": "3"
+      }
+    ],
+    "compute_cleanup": "APPLIED/7 original targets absent",
+    "artifact_download": "200/4504 bytes/sha256 matches PUBLISHED metadata"
+  },
+  "B": {
+    "tenant_id": 40,
+    "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+    "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+    "kind": "FINETUNING",
+    "states": [
+      "SUCCEEDED",
+      "PUBLISHED",
+      "CLOSED"
+    ],
+    "metrics": [
+      {
+        "name": "train.loss",
+        "decimal_value": "7.05126428604126",
+        "step": "1"
+      }
+    ],
+    "steps": [
+      {
+        "role": "prepare",
+        "state": "SUCCEEDED",
+        "started_at": "2026-11-01T17:05:40.116819Z",
+        "finished_at": "2026-11-01T17:06:04.683808Z",
+        "exit_code": 0,
+        "deadline_at": "2026-11-01T18:04:27.23855Z"
+      },
+      {
+        "role": "train-wait",
+        "state": "SUCCEEDED",
+        "started_at": "2026-11-01T17:06:04.683808Z",
+        "finished_at": "2026-11-01T17:07:01.729341Z",
+        "exit_code": 0,
+        "deadline_at": "2026-11-01T18:04:27.23855Z"
+      },
+      {
+        "role": "export",
+        "state": "SUCCEEDED",
+        "started_at": "2026-11-01T17:07:01.748801897Z",
+        "finished_at": "2026-11-01T17:07:11.244920569Z",
+        "exit_code": 0,
+        "deadline_at": "2026-11-01T18:04:27.23855Z"
+      },
+      {
+        "role": "verify",
+        "state": "SUCCEEDED",
+        "started_at": "2026-11-01T17:07:42.063482872Z",
+        "finished_at": "2026-11-01T17:07:48.576497392Z",
+        "exit_code": 0,
+        "deadline_at": "2026-11-01T18:04:27.23855Z"
+      },
+      {
+        "role": "collect",
+        "state": "SUCCEEDED",
+        "started_at": "2026-11-01T17:08:22.005346Z",
+        "finished_at": "2026-11-01T17:08:53.256403Z",
+        "exit_code": 0,
+        "deadline_at": "2026-11-01T18:04:27.23855Z"
+      },
+      {
+        "role": "publish",
+        "state": "SUCCEEDED",
+        "started_at": "2026-11-01T17:08:53.256403Z",
+        "finished_at": "2026-11-01T17:09:01Z",
+        "exit_code": 0,
+        "deadline_at": "2026-11-01T18:04:27.23855Z"
+      },
+      {
+        "role": "register",
+        "state": "SUCCEEDED",
+        "started_at": "2026-11-01T17:09:35.887827Z",
+        "finished_at": "2026-11-01T17:09:39.551756Z",
+        "exit_code": 0,
+        "deadline_at": "2026-11-01T18:04:27.23855Z"
+      },
+      {
+        "role": "close",
+        "state": "SUCCEEDED",
+        "started_at": "2026-11-01T17:10:49.265332339Z",
+        "finished_at": "2026-11-01T17:10:49.274274Z",
+        "exit_code": 0,
+        "deadline_at": ""
+      }
+    ],
+    "history": {
+      "run_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+      "workflow_uid": "7df535f0-4fd3-4db6-8aef-5fac0231f0f0",
+      "observed_at": "2026-11-01T17:10:49.265332339Z",
+      "run_state": "SUCCEEDED",
+      "run_finished_at": "2026-11-01T17:10:47Z",
+      "workflow_phase": "SUCCEEDED",
+      "workflow_finished_at": "2026-11-01T17:10:47Z",
+      "workflow_resource_version": "21437972",
+      "workflow_nodes_sha256": "b2f1d8be872fc797825e7662fa0b40aed4ad604a847ff7e9f9ea80236c727d1d"
+    },
+    "model_registration": {
+      "state": "READY",
+      "registration_id": "18e8257f-c713-4c2c-b549-8f30316c5442",
+      "model_id": "1f7fb625-bb25-4075-9ea8-0b7e79a09c11",
+      "model_version_id": "f07553cf-41f5-4d02-98d6-2f743398b245",
+      "failure_code": ""
+    },
+    "artifact_download": "200/1274720 bytes/sha256 matches PUBLISHED metadata",
+    "compute_cleanup": "APPLIED/7 original targets absent",
+    "original_quota_release": "24570 fully released; event0bf7bceb-738a-45bf-bb0e-158106b4b8f4 ACK APPLIED; account44 version10 occupied0=sum remaining0"
+  },
+  "tenant_boundary": "Normal A request for new B execution returns404; ordinary business account cannot obtain another tenant execution. Full original LIVE08 and current STS denial remain separately evidenced.",
+  "shared_process": "same original single ModelDev Pod6f29950c/CID24bd.../start16:30:58Z, zero restart, final platform2d759/runtime5c138; no tenant configuration array or per-tenant deployment",
+  "not_performed": [
+    "full make verify",
+    "GPU_WHOLE",
+    "all field combinations as live admission matrix"
+  ],
+  "interventions": {
+    "new_identity_or_RBAC": false,
+    "manual_stop_or_reconcile": false,
+    "SQL_mutation": false,
+    "runtime_or_deployment_change": false,
+    "note": "A4 also carried one original required STS read and 0.44s restored webhook dry-run fault window; its original real execution completed successfully."
+  },
+  "evidence": [
+    {
+      "path": "evidence/10/resumed-mainflow/readback-A-1793552739193803104.json",
+      "sha256": "3dcb1d471f9475352c59e16d0c7741b29d1f3f706daae2095efcf0590b9e5aa5"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/readback-B-1793553128307523346.json",
+      "sha256": "6b1a73a55701231c856167fdbcf80aadd38fbe5332fc43bfc716092474a1b82e"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/logs-A-1793552769691922004.json",
+      "sha256": "1a48fc3fc2f46869389f0b9745d645c95e7a4084b83465ebbd1bc56487408de1"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/download-A-1793552771527078753.json",
+      "sha256": "bffae444d874611edee3e2896993ed5a541425cd86d457c765723c70a5323814"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/logs-B-1793553132562666141.json",
+      "sha256": "54654a01f38d1b382e27660d4f8db1a427566509aefd378a8aca14f5792e6d1e"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/download-B-1793553133084060310.json",
+      "sha256": "b7852b3c7405361e72e39f2c7072ae0e7b564687f603cbf1a60bcf09ac599f90"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/model-B-1793553132545180562.json",
+      "sha256": "a304122414ff662d1a7f0dd8ea99115c155abaadcfc8ff83457a127225b11623"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/get-A-1793553131142394357.json",
+      "sha256": "be5e0ecc6e4fe6f404d09cca71e3ac5aa66d9ebd3a07a6b58d13be236f7b9710"
+    },
+    {
+      "path": "evidence/10/completion-multitenant-regression/a4-original-close-and-release-actual.json",
+      "sha256": "73db1fcda963ecc9553733bc70de9a9420ce90dac8953d1a74a09d1813a383e7"
+    },
+    {
+      "path": "evidence/10/completion-multitenant-regression/b5-original-close-and-release-actual.json",
+      "sha256": "18b5fa47441a8d172c5a5d79c95bbae4f53827d2025f16b84939454078939a86"
+    },
+    {
+      "path": "evidence/10/completion-multitenant-regression/final-coexistence-and-process.json",
+      "sha256": "dca1a724349db6a40e1970f257d29939a0ade64739eb0651dfb1e89bd163dee0"
+    },
+    {
+      "path": "evidence/10/completion-multitenant-regression/b5-original-pods.jsonl",
+      "sha256": "dcad29a451dbd42747fd4f30333ad9e9053aa35a07cbf323c0a4cba6ac859da3"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "observed_at": "2026-11-01T00:47:06.919689+00:00",
+  "source_commit": "ae42fb08f5a091ad8bdaac9418dc7925bf993532",
+  "evidence_sha256": "c67a4e26440d021594224ee8308beded69560b1f5d8d97892b2f891a5dca57ff",
+  "all_ten_original_uid_matches": true,
+  "exact_read_count": 10,
+  "controller_failure_conditions_present": {
+    "1cce950b-d6e9-453e-aa11-fffd8846224b": false,
+    "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc": false
+  },
+  "original_controllers_suspended": true,
+  "original_pod_exits": [
+    {
+      "execution": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc",
+      "uid": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+      "same_original_uid": true,
+      "status_phase": "Failed",
+      "container_exits": [
+        {
+          "name": "node",
+          "container_id": "containerd://4cddb476920a21444eba72d93ba814e17fda84cae8714fda23cc42be3e7fb5ab",
+          "restart_count": 0,
+          "terminated": {
+            "exitCode": 143,
+            "signal": null,
+            "reason": "Error",
+            "startedAt": "2026-10-30T00:57:46Z",
+            "finishedAt": "2026-10-30T00:57:49Z"
+          }
+        }
+      ]
+    },
+    {
+      "execution": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8",
+      "uid": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+      "same_original_uid": true,
+      "status_phase": "Failed",
+      "container_exits": [
+        {
+          "name": "node",
+          "container_id": "containerd://f76126a2196a82f34f390ae377728bfefed945de11b2c47735dfbfab1b6faf06",
+          "restart_count": 0,
+          "terminated": {
+            "exitCode": 143,
+            "signal": null,
+            "reason": "Error",
+            "startedAt": "2026-10-29T16:00:03Z",
+            "finishedAt": "2026-10-29T16:00:05Z"
+          }
+        }
+      ]
+    }
+  ],
+  "inference": "From actual original controller conditions and runtime_observe.go:263-270, FAILED is impossible; suspended original workers with real exit143 can leave UNKNOWN. The exact observer return flags were not serialized in the failing plan.",
+  "maintenance_extra_predicate": [
+    "cmd/ani-modeldev-legacy-retirement/plan.go:92",
+    "internal/biz/legacy_retirement.go:119"
+  ],
+  "minimal_correction_candidate": "Only fixed original two maintenance scopes: preserve truthful UNKNOWN outcome while requiring unchanged exact original worker exit143 and full current graph/writer/ACK qualification. Never invent Failed controller conditions or a captured log. No default runtime change. Root qualification decision pending; no guard changed yet.",
+  "apply": "NOT_RUN"
+}

@@ -1,0 +1,6 @@
+{
+  "status": "UNRESOLVED_READ_FIXED_NODE_JOURNALS_AND_ORIGINAL_INTENTS",
+  "reason": "NORMAL_STOP_NOT_CONFIRMED_READ_INTENTS_NO_RETRY",
+  "automatic_retry": false,
+  "ssh_exit": 1
+}

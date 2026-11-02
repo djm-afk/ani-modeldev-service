@@ -8,6 +8,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -66,12 +67,12 @@ func (verifier *Verifier) Verify(ctx context.Context, token string, plan biz.Pip
 		return ErrUnverified
 	}
 	serviceAccountUID, _, err := unstructured.NestedString(review.Object, "status", "user", "uid")
-	if err != nil || serviceAccountUID == "" {
+	if err != nil || serviceAccountUID == "" || serviceAccountUID != environment.Identities.KFPStepServiceAccountUID {
 		return ErrUnverified
 	}
 
 	namespace, err := verifier.client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, association.NamespaceName, metav1.GetOptions{})
-	if err != nil || !currentObject(namespace, "v1", "Namespace", "", association.NamespaceName, association.NamespaceUID) {
+	if err != nil || !currentObject(namespace, "v1", "Namespace", "", association.NamespaceName, association.NamespaceUID) || namespace.GetLabels()["network.ani.io/tenant-id"] != plan.TenantID || namespace.GetLabels()["network.ani.io/managed-by"] != "ani-network-service" {
 		return ErrUnverified
 	}
 	pod, err := verifier.client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "pods"}).Namespace(association.NamespaceName).Get(ctx, association.PodName, metav1.GetOptions{})
@@ -84,6 +85,9 @@ func (verifier *Verifier) Verify(ctx context.Context, token string, plan biz.Pip
 	}
 	account, err := verifier.client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "serviceaccounts"}).Namespace(association.NamespaceName).Get(ctx, serviceAccount, metav1.GetOptions{})
 	if err != nil || !currentObject(account, "v1", "ServiceAccount", association.NamespaceName, serviceAccount, serviceAccountUID) {
+		return ErrUnverified
+	}
+	if !exactPullSecrets(pod, account, plan.ManagedImageAccess.PullBindings) {
 		return ErrUnverified
 	}
 	workflow, err := verifier.client.Resource(schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}).Namespace(association.NamespaceName).Get(ctx, association.WorkflowName, metav1.GetOptions{})
@@ -125,4 +129,45 @@ func ownedByWorkflow(pod *unstructured.Unstructured, association biz.ManagedStep
 		}
 	}
 	return controllers == 1
+}
+
+// Both the current original ServiceAccount and the admitted Pod must carry
+// exactly the frozen managed reference set, never a name-prefix exception.
+func exactPullSecrets(pod, account *unstructured.Unstructured, frozen []cpup01.ManagedImagePullBinding) bool {
+	wanted, _, err := unstructured.NestedSlice(account.Object, "imagePullSecrets")
+	if err != nil {
+		return false
+	}
+	actual, _, err := unstructured.NestedSlice(pod.Object, "spec", "imagePullSecrets")
+	if err != nil || len(wanted) != len(actual) || len(wanted) != len(frozen) {
+		return false
+	}
+	seen := map[string]bool{}
+	for _, raw := range actual {
+		ref, ok := raw.(map[string]any)
+		if !ok || len(ref) != 1 {
+			return false
+		}
+		name, ok := ref["name"].(string)
+		if !ok || name == "" || seen[name] {
+			return false
+		}
+		seen[name] = true
+	}
+	for _, raw := range wanted {
+		ref, ok := raw.(map[string]any)
+		if !ok || len(ref) != 1 {
+			return false
+		}
+		name, ok := ref["name"].(string)
+		if !ok || !seen[name] {
+			return false
+		}
+	}
+	for _, ref := range frozen {
+		if !seen[ref.SecretName] {
+			return false
+		}
+	}
+	return true
 }

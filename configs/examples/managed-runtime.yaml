@@ -1,11 +1,12 @@
 # Explicit template; the default -conf configs loader ignores this directory.
 # Supply all mounted references and real ENV values before selecting this file.
+# See docs/modeldev-tenant-environments.md. This has no per-tenant bindings.
 # A ready listener means the runtime is assembled, not that training is accepted.
 server:
   grpc:
     network: tcp
     addr: "${COMMAND_LISTEN_ADDRESS}"
-    timeout: 10s
+    timeout: 30s
   admin:
     network: tcp
     addr: "${ADMIN_LISTEN_ADDRESS}"
@@ -17,6 +18,8 @@ command:
   certificate_file: "${COMMAND_CERTIFICATE_FILE}"
   private_key_file: "${COMMAND_PRIVATE_KEY_FILE}"
   governance_dns_name: "${GOVERNANCE_DNS_NAME}"
+  admission_resolution:
+    catalogue_directory: "${MODELDEV_MATERIAL_DIRECTORY}"
 runtime:
   limits:
     max_content_bytes: "${MODELDEV_MAX_CONTENT_BYTES}"
@@ -35,21 +38,31 @@ runtime:
   pipeline:
     endpoint: "${KFP_ENDPOINT}"
     ca_file: "${KFP_CA_FILE}"
-    token_file: "${KFP_BOUND_CONTROL_TOKEN_FILE}"
+    token_file: "${KFP_CONTROL_TOKEN_FILE}"
   object_storage:
     endpoint: "${S3_ENDPOINT}"
     ca_file: "${S3_CA_FILE}"
     region: "${S3_REGION}"
-    # JSON: restricted ordinary IAM access_key_id/secret_access_key and
-    # sts_bindings (tenant_id, purpose, connection_id, bucket, prefix).
+    # JSON: restricted ordinary IAM access_key_id/secret_access_key only.
+    # No tenant map, sts_bindings or session_token. Scope comes from the pinned
+    # platform buckets and the persisted v4 execution snapshot and tenant.
     # Only the control service mounts this identity; steps obtain scoped STS
     # sessions through their current authenticated workload RPC.
     credentials_file: "${S3_CREDENTIALS_FILE}"
     connection_id: "${PUBLICATION_STORAGE_CONNECTION_ID}"
-  # JSON: tenant_id, complete environment snapshot, and owner configuration.
-  binding_file: "${PIPELINE_DISPATCH_BINDING_FILE}"
-  binding_sha256: "${PIPELINE_DISPATCH_BINDING_SHA256}"
+  # One non-sensitive platform specification, schema
+  # ani.modeldev.tenant-environment-platform.v1; original raw bytes SHA256.
+  # Install as a regular read-only file with the pinned webhook init copy mode.
+  # Artifact access_key/secret_key files are independent of the STS IAM above.
+  tenant_environment_file: "${TENANT_ENVIRONMENT_FILE}"
+  tenant_environment_sha256: "${TENANT_ENVIRONMENT_SHA256}"
   token_audience: "${MANAGED_STEP_TOKEN_AUDIENCE}"
   api_timeout: 30s
   dispatch_interval: 1s
-  dispatch_batch_size: 10
+image_runtime:
+  endpoint: "${RESOURCE_IMAGE_RUNTIME_ENDPOINT}"
+  ca_file: "${RESOURCE_IMAGE_RUNTIME_CA_FILE}"
+  certificate_file: "${RESOURCE_IMAGE_RUNTIME_CERTIFICATE_FILE}"
+  private_key_file: "${RESOURCE_IMAGE_RUNTIME_PRIVATE_KEY_FILE}"
+  server_name: "${RESOURCE_IMAGE_RUNTIME_SERVER_NAME}"
+  timeout: 5s

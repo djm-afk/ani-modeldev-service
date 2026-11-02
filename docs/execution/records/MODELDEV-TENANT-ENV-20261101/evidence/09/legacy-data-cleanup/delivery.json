@@ -1,0 +1,39 @@
+{
+  "Schema": "ani.modeldev.legacy-cleanup-delivery.v1",
+  "ObservedAt": "2026-11-01T00:27:27.992613+00:00",
+  "Commit": "e682a29e3c617c184978c6833eb909cc8dc0b729",
+  "Branch": "codex/modeldev-legacy-retirement",
+  "CommitExitCode": 0,
+  "Push": {
+    "Transport": "ssh://git@ssh.github.com:443/zhangzhe-ctrl/ani-modeldev-service.git",
+    "ExitCode": 0,
+    "Output": "To ssh://ssh.github.com:443/zhangzhe-ctrl/ani-modeldev-service.git\n   205f9742..e682a29e  HEAD -> codex/modeldev-legacy-retirement\n"
+  },
+  "OwnedFiles": [
+    "docs/legacy-modeldev-data-cleanup.md",
+    "scripts/legacy-modeldev-data-cleanup/command.go",
+    "scripts/legacy-modeldev-data-cleanup/command_test.go",
+    "scripts/legacy-modeldev-data-cleanup/database.go",
+    "scripts/legacy-modeldev-data-cleanup/evidence.go",
+    "scripts/legacy-modeldev-data-cleanup/fixture_test.go",
+    "scripts/legacy-modeldev-data-cleanup/gpu_fixture_test.go",
+    "scripts/legacy-modeldev-data-cleanup/inventory.go",
+    "scripts/legacy-modeldev-data-cleanup/main.go",
+    "scripts/legacy-modeldev-data-cleanup/qualification.go",
+    "scripts/legacy-modeldev-data-cleanup/refusal_test.go",
+    "scripts/legacy-modeldev-data-cleanup/schema.go",
+    "scripts/legacy-modeldev-data-cleanup/schema_contract.json"
+  ],
+  "EvidenceSHA256": {
+    "build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "local-source-receipt.json": "736c369edfe026f9ffce30fcc782859c00442a315314ad397d79e6a645e6cec7",
+    "modverify.log": "b4537ed75f533f993f371954de47e42a793b8e5b0587577de7e27fb3e50696bd",
+    "pg-race.log": "4c716941a90214e0c1cd862226ebfbfffd4cadb81e5e875d9029c61bd2eac383",
+    "receipt.json": "620223f36ede87638d42b402fb1607ad538f52b619cfa80f138e17a7172ab224",
+    "vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "LiveApply": "NOT_RUN",
+  "RequiredFullMakeVerify": "NOT_RUN; old-base full required-gate FAIL retained, not mislabelled PASS",
+  "ExternalCleanupAndFreshRootProofCollection": "NOT_IMPLEMENTED; explicit root executor boundary",
+  "Qualification": "Default BLOCKED when missing; ordinary f216 and original four UNKNOWN not exempted"
+}

@@ -1,0 +1,19 @@
+{
+  "observed_at_utc": "2026-10-31T15:48:42.770149Z",
+  "status": "PASS",
+  "checks": [
+    "K00-K09 present",
+    "Q01-Q12 present",
+    "only allowed status/proof enums",
+    "all check evidence files exist",
+    "report evidence links resolve",
+    "credential-pattern and raw-Secret scan",
+    "archive root evidence/ only",
+    "original SHA256SUMS check retained"
+  ],
+  "limitations": [
+    "Pattern scan is supplementary; all collection used process whitelist projection.",
+    "No builds/training/resource mutation performed."
+  ],
+  "errors": []
+}

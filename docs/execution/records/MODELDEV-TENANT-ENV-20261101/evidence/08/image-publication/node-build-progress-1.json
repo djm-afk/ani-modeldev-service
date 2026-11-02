@@ -1,0 +1,2345 @@
+{
+  "status": "PASS",
+  "daemon_started": true,
+  "registry_push_issued": true,
+  "unit_limits": "MainPID=2417672\nControlGroup=/system.slice/ani-modeldev-d807-build.service\nCPUQuotaPerSecUSec=infinity\nMemoryMax=infinity\n",
+  "images": {
+    "cpu": {
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+      "exit": 0,
+      "elapsed_seconds": 6.11,
+      "log_bytes": 3819,
+      "log_sha256": "466c21510717c0afe67843520ca6e98cec7cb0f3ba485d2a81fd7f02b606de46",
+      "command": [
+        "sudo",
+        "-n",
+        "env",
+        "DOCKER_CONFIG=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/auth",
+        "SSL_CERT_FILE=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/ca.crt",
+        "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/tools/buildctl",
+        "--addr",
+        "unix:///home/kubercloud/tenantenv-20261101/images-d807-build-20261101/buildkitd.sock",
+        "build",
+        "--frontend",
+        "dockerfile.v0",
+        "--local",
+        "context=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/context",
+        "--local",
+        "dockerfile=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/context/training",
+        "--opt",
+        "filename=finetuning.Dockerfile",
+        "--opt",
+        "platform=linux/amd64",
+        "--opt",
+        "image-resolve-mode=local",
+        "--opt",
+        "force-network-mode=none",
+        "--opt",
+        "build-arg:ANI_DEVICE_MODE=cpu",
+        "--opt",
+        "label:org.opencontainers.image.revision=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "--opt",
+        "label:ani.modeldev.source_tree=141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "--opt",
+        "label:ani.modeldev.build_inputs_sha256=dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "--output",
+        "type=image,name=10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4,push=true,store=true,unpack=true,oci-mediatypes=true",
+        "--metadata-file",
+        "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/cpu-metadata.json",
+        "--progress",
+        "plain"
+      ],
+      "metadata": {
+        "containerimage.config.digest": "sha256:68d9e85a2d240edbf0c8f267b410019fe60ecfc831bdd546442be9be4fea97a4",
+        "containerimage.descriptor": {
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "digest": "sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+          "size": 7153,
+          "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+          }
+        },
+        "containerimage.digest": "sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+        "image.name": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4"
+      },
+      "registry": {
+        "digest": "sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+        "immutable_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+        "manifest": {
+          "schemaVersion": 2,
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "config": {
+            "mediaType": "application/vnd.oci.image.config.v1+json",
+            "digest": "sha256:68d9e85a2d240edbf0c8f267b410019fe60ecfc831bdd546442be9be4fea97a4",
+            "size": 34786
+          },
+          "layers": [
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:7021d1b70935851c95c45ed18156980b5024eda29b99564429025ea04f5ec109",
+              "size": 30439778
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:0d6448aff88945ea46a37cfe4330bdb0ada228268b80da6258a0fec63086f404",
+              "size": 4623694
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:0a7674e3e8fe69dcd7f1424fa29aa033b32c42269aab46cbe9818f8dd7154754",
+              "size": 57593640
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:b71b637b97c5efb435b9965058ad414f07afa99d320cf05e89f10441ec1becf4",
+              "size": 185
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:56dc8550293751a1604e97ac949cfae82ba20cb2a28e034737bafd7382559609",
+              "size": 6886
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:ec6d5f6c9ed94d2ee2eeaf048d90242af638325f57696909f1737b3158d838cf",
+              "size": 1374295401
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:47b8539d532f561cac6d7fb8ee2f46c902b66e4a60b103d19701829742a0d11e",
+              "size": 64047
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:fd9cc1ad8dee47ca559003714d462f4eb79cb6315a2708927c240b84d022b55f",
+              "size": 1684
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:83525caeeb359731f869f1ee87a32acdfdd5efb8af4cab06d8f4fdcf1f317daa",
+              "size": 1523
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:8e79813a7b9d5784bb880ca2909887465549de5183411b24f6de72fab0802bcd",
+              "size": 2646171659
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:312a542960e3345001fc709156a5139ff8a1d8cc21a51a50f83e87ec2982f579",
+              "size": 88858
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:3e14b472177a2b2b1bf496e4e6a89016275a5845dff81497990b94da434b956a",
+              "size": 1510442
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:e97dfafebbe66448955937c02791a4e6253efb7574302e701122acc886771ecc",
+              "size": 3276446965
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+              "size": 32
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:0a5030f9ea59c9d3fe2843472612be48fea9dbfde3b858ea81211541d81d5660",
+              "size": 99
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:ffb55de4d5fb8a07656f4829199798615d3f924676d93f63b3e91d979ab78a37",
+              "size": 810
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:a4f8ecff7e344f2866755346d7c051ec64252cf7bf75955913f8d0b10b2f8fbe",
+              "size": 80356161
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:7ea4f7e3598f59d14fd81b33e5b6f075d05aaa5eeb81b0ee53d6a9cb9bd45c47",
+              "size": 26592970
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:c39c6f3a22d86e1d0d5f8533dd0ee8b0d57dd451b0765a2ffad7ec6d90ff5e12",
+              "size": 186813
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:67ae6daf0925a3e2218bfe9266d5be249d4ff45459f7901ce506931e0761538f",
+              "size": 5802506
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:2661e5748163d0c6fc13453211b829e599f3bce76a3d84c776c7264a8e20fee9",
+              "size": 371982113
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:909dd5586468688381d85f6652f6e0b004e7587b9136ff576ab5f122070c7970",
+              "size": 1084460295
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:e4520c98b372c74917a16e085348c6ecb6ce32d469d99396a4810f727b7568f1",
+              "size": 167
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:18d5d24a83e65d6c6b93f95b8a6225f4a53f572b490c8bde522ea46a61101ca2",
+              "size": 93
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:14812be89aedb1f1b960d2648133377849738ee91223c86c4f13a8939d7a1a49",
+              "size": 6738945
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:685e74443e687817f589b3d7bcc6f1a7ca65eac89c392eee8df2e94cec6460ee",
+              "size": 5375241
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:c34fddb2c24fca7d5b4e6ec9b3dd785f3416723e64f1a48dd9725d61a8616b28",
+              "size": 379900195
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+              "size": 32
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:e73dc9237a6a33a0ae2566594705447351c118c47eccf3e566498331a1398660",
+              "size": 172
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:6f6ae1931e5074230dfc4b5955b1897033090af2d1ba427d856ca828fbfac83b",
+              "size": 16909510
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:c34755335a4c1843960d2702feb58986096145f5bc7f1f57cc31ac3ed8ab0d79",
+              "size": 7788
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:bf742c86140ba981b28c72b9cc9a5418d8eabf16558bc504aa35e28ac5ce3278",
+              "size": 23090
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+              "size": 32
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:24d40e8a719e8bff4d20921bae70edf201479e5407dcc41f7e0937fa712501e8",
+              "size": 3523
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:96fbef89ec907558ab9568443b876f38855f36484cf2983b83f78248e5e28802",
+              "size": 23928
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+              "size": 32
+            }
+          ]
+        },
+        "config": {
+          "architecture": "amd64",
+          "config": {
+            "User": "10001:10001",
+            "ExposedPorts": {
+              "7860/tcp": {},
+              "8000/tcp": {}
+            },
+            "Env": [
+              "PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/opt/conda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "NVARCH=x86_64",
+              "NVIDIA_REQUIRE_CUDA=cuda>=12.4 brand=tesla,driver>=470,driver<471 brand=unknown,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=geforce,driver>=470,driver<471 brand=geforcertx,driver>=470,driver<471 brand=quadro,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=titan,driver>=470,driver<471 brand=titanrtx,driver>=470,driver<471 brand=tesla,driver>=525,driver<526 brand=unknown,driver>=525,driver<526 brand=nvidia,driver>=525,driver<526 brand=nvidiartx,driver>=525,driver<526 brand=geforce,driver>=525,driver<526 brand=geforcertx,driver>=525,driver<526 brand=quadro,driver>=525,driver<526 brand=quadrortx,driver>=525,driver<526 brand=titan,driver>=525,driver<526 brand=titanrtx,driver>=525,driver<526 brand=tesla,driver>=535,driver<536 brand=unknown,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=geforce,driver>=535,driver<536 brand=geforcertx,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=titan,driver>=535,driver<536 brand=titanrtx,driver>=535,driver<536",
+              "NV_CUDA_CUDART_VERSION=12.4.127-1",
+              "NV_CUDA_COMPAT_PACKAGE=cuda-compat-12-4",
+              "CUDA_VERSION=12.4.1",
+              "LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+              "NVIDIA_VISIBLE_DEVICES=all",
+              "NVIDIA_DRIVER_CAPABILITIES=compute,utility",
+              "NV_CUDA_LIB_VERSION=12.4.1-1",
+              "NV_NVTX_VERSION=12.4.127-1",
+              "NV_LIBNPP_VERSION=12.2.5.30-1",
+              "NV_LIBNPP_PACKAGE=libnpp-12-4=12.2.5.30-1",
+              "NV_LIBCUSPARSE_VERSION=12.3.1.170-1",
+              "NV_LIBCUBLAS_PACKAGE_NAME=libcublas-12-4",
+              "NV_LIBCUBLAS_VERSION=12.4.5.8-1",
+              "NV_LIBCUBLAS_PACKAGE=libcublas-12-4=12.4.5.8-1",
+              "NV_LIBNCCL_PACKAGE_NAME=libnccl2",
+              "NV_LIBNCCL_PACKAGE_VERSION=2.21.5-1",
+              "NCCL_VERSION=2.21.5-1",
+              "NV_LIBNCCL_PACKAGE=libnccl2=2.21.5-1+cuda12.4",
+              "NVIDIA_PRODUCT_NAME=CUDA",
+              "NV_CUDA_CUDART_DEV_VERSION=12.4.127-1",
+              "NV_NVML_DEV_VERSION=12.4.127-1",
+              "NV_LIBCUSPARSE_DEV_VERSION=12.3.1.170-1",
+              "NV_LIBNPP_DEV_VERSION=12.2.5.30-1",
+              "NV_LIBNPP_DEV_PACKAGE=libnpp-dev-12-4=12.2.5.30-1",
+              "NV_LIBCUBLAS_DEV_VERSION=12.4.5.8-1",
+              "NV_LIBCUBLAS_DEV_PACKAGE_NAME=libcublas-dev-12-4",
+              "NV_LIBCUBLAS_DEV_PACKAGE=libcublas-dev-12-4=12.4.5.8-1",
+              "NV_CUDA_NSIGHT_COMPUTE_VERSION=12.4.1-1",
+              "NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE=cuda-nsight-compute-12-4=12.4.1-1",
+              "NV_NVPROF_VERSION=12.4.127-1",
+              "NV_NVPROF_DEV_PACKAGE=cuda-nvprof-12-4=12.4.127-1",
+              "NV_LIBNCCL_DEV_PACKAGE_NAME=libnccl-dev",
+              "NV_LIBNCCL_DEV_PACKAGE_VERSION=2.21.5-1",
+              "NV_LIBNCCL_DEV_PACKAGE=libnccl-dev=2.21.5-1+cuda12.4",
+              "LIBRARY_PATH=/usr/local/cuda/lib64/stubs",
+              "PYTORCH_VERSION=2.6.0",
+              "MAX_JOBS=16",
+              "VLLM_WORKER_MULTIPROC_METHOD=spawn",
+              "DEBIAN_FRONTEND=noninteractive",
+              "NODE_OPTIONS=",
+              "PIP_ROOT_USER_ACTION=ignore",
+              "FLASH_ATTENTION_FORCE_BUILD=TRUE",
+              "http_proxy=",
+              "https_proxy=",
+              "GRADIO_SERVER_PORT=7860",
+              "API_PORT=8000",
+              "PYTHONDONTWRITEBYTECODE=1",
+              "PYTHONUNBUFFERED=1",
+              "OMP_NUM_THREADS=2",
+              "MKL_NUM_THREADS=2",
+              "WORLD_SIZE=1",
+              "HF_HUB_OFFLINE=1",
+              "TRANSFORMERS_OFFLINE=1"
+            ],
+            "Entrypoint": [
+              "/ani-modeldev-step"
+            ],
+            "WorkingDir": "/opt/ani-modeldev",
+            "Labels": {
+              "ani.modeldev.build_inputs_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+              "ani.modeldev.device_mode": "cpu",
+              "ani.modeldev.source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "com.nvidia.volumes.needed": "nvidia_driver",
+              "maintainer": "NVIDIA CORPORATION <cudatools@nvidia.com>",
+              "org.opencontainers.image.ref.name": "ubuntu",
+              "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+              "org.opencontainers.image.version": "22.04"
+            },
+            "ArgsEscaped": true,
+            "Shell": [
+              "/bin/bash",
+              "-c"
+            ]
+          },
+          "created": "2026-11-01T10:14:35.421118418+08:00",
+          "history": [
+            {
+              "created": "2024-04-10T18:52:02.793393865Z",
+              "created_by": "/bin/sh -c #(nop)  ARG RELEASE",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-10T18:52:02.828022213Z",
+              "created_by": "/bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-10T18:52:02.855792154Z",
+              "created_by": "/bin/sh -c #(nop)  LABEL org.opencontainers.image.ref.name=ubuntu",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-10T18:52:02.883498404Z",
+              "created_by": "/bin/sh -c #(nop)  LABEL org.opencontainers.image.version=22.04",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-10T18:52:04.750464835Z",
+              "created_by": "/bin/sh -c #(nop) ADD file:3bd10da0673e2e72cb06a1f64a9df49a36341df39b0f762e3d1b38ee4de296fa in / "
+            },
+            {
+              "created": "2024-04-10T18:52:04.937319396Z",
+              "created_by": "/bin/sh -c #(nop)  CMD [\"/bin/bash\"]",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV NVARCH=x86_64",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV NVIDIA_REQUIRE_CUDA=cuda>=12.4 brand=tesla,driver>=470,driver<471 brand=unknown,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=geforce,driver>=470,driver<471 brand=geforcertx,driver>=470,driver<471 brand=quadro,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=titan,driver>=470,driver<471 brand=titanrtx,driver>=470,driver<471 brand=tesla,driver>=525,driver<526 brand=unknown,driver>=525,driver<526 brand=nvidia,driver>=525,driver<526 brand=nvidiartx,driver>=525,driver<526 brand=geforce,driver>=525,driver<526 brand=geforcertx,driver>=525,driver<526 brand=quadro,driver>=525,driver<526 brand=quadrortx,driver>=525,driver<526 brand=titan,driver>=525,driver<526 brand=titanrtx,driver>=525,driver<526 brand=tesla,driver>=535,driver<536 brand=unknown,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=geforce,driver>=535,driver<536 brand=geforcertx,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=titan,driver>=535,driver<536 brand=titanrtx,driver>=535,driver<536",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV NV_CUDA_CUDART_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV NV_CUDA_COMPAT_PACKAGE=cuda-compat-12-4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ARG TARGETARCH",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "LABEL maintainer=NVIDIA CORPORATION <cudatools@nvidia.com>",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-get update && apt-get install -y --no-install-recommends     gnupg2 curl ca-certificates &&     curl -fsSLO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/${NVARCH}/cuda-keyring_1.1-1_all.deb &&     dpkg -i cuda-keyring_1.1-1_all.deb &&     apt-get purge --autoremove -y curl     && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV CUDA_VERSION=12.4.1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:28.67175253Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-get update && apt-get install -y --no-install-recommends     cuda-cudart-12-4=${NV_CUDA_CUDART_VERSION}     ${NV_CUDA_COMPAT_PACKAGE}     && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:42:28.745952465Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c echo \"/usr/local/nvidia/lib\" >> /etc/ld.so.conf.d/nvidia.conf     && echo \"/usr/local/nvidia/lib64\" >> /etc/ld.so.conf.d/nvidia.conf # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:42:28.745952465Z",
+              "created_by": "ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:28.745952465Z",
+              "created_by": "ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:28.761632416Z",
+              "created_by": "COPY NGC-DL-CONTAINER-LICENSE / # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:42:28.761632416Z",
+              "created_by": "ENV NVIDIA_VISIBLE_DEVICES=all",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:28.761632416Z",
+              "created_by": "ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_CUDA_LIB_VERSION=12.4.1-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_NVTX_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNPP_VERSION=12.2.5.30-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNPP_PACKAGE=libnpp-12-4=12.2.5.30-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBCUSPARSE_VERSION=12.3.1.170-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBCUBLAS_PACKAGE_NAME=libcublas-12-4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBCUBLAS_VERSION=12.4.5.8-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBCUBLAS_PACKAGE=libcublas-12-4=12.4.5.8-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNCCL_PACKAGE_NAME=libnccl2",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNCCL_PACKAGE_VERSION=2.21.5-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NCCL_VERSION=2.21.5-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNCCL_PACKAGE=libnccl2=2.21.5-1+cuda12.4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ARG TARGETARCH",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "LABEL maintainer=NVIDIA CORPORATION <cudatools@nvidia.com>",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-get update && apt-get install -y --no-install-recommends     cuda-libraries-12-4=${NV_CUDA_LIB_VERSION}     ${NV_LIBNPP_PACKAGE}     cuda-nvtx-12-4=${NV_NVTX_VERSION}     libcusparse-12-4=${NV_LIBCUSPARSE_VERSION}     ${NV_LIBCUBLAS_PACKAGE}     ${NV_LIBNCCL_PACKAGE}     && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:46:26.653649031Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-mark hold ${NV_LIBCUBLAS_PACKAGE_NAME} ${NV_LIBNCCL_PACKAGE_NAME} # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:46:26.673320079Z",
+              "created_by": "COPY entrypoint.d/ /opt/nvidia/entrypoint.d/ # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:46:26.684665582Z",
+              "created_by": "COPY nvidia_entrypoint.sh /opt/nvidia/ # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:46:26.684665582Z",
+              "created_by": "ENV NVIDIA_PRODUCT_NAME=CUDA",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.684665582Z",
+              "created_by": "ENTRYPOINT [\"/opt/nvidia/nvidia_entrypoint.sh\"]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_CUDA_LIB_VERSION=12.4.1-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_CUDA_CUDART_DEV_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_NVML_DEV_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBCUSPARSE_DEV_VERSION=12.3.1.170-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNPP_DEV_VERSION=12.2.5.30-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNPP_DEV_PACKAGE=libnpp-dev-12-4=12.2.5.30-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBCUBLAS_DEV_VERSION=12.4.5.8-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME=libcublas-dev-12-4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBCUBLAS_DEV_PACKAGE=libcublas-dev-12-4=12.4.5.8-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_CUDA_NSIGHT_COMPUTE_VERSION=12.4.1-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE=cuda-nsight-compute-12-4=12.4.1-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_NVPROF_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_NVPROF_DEV_PACKAGE=cuda-nvprof-12-4=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNCCL_DEV_PACKAGE_NAME=libnccl-dev",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNCCL_DEV_PACKAGE_VERSION=2.21.5-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NCCL_VERSION=2.21.5-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNCCL_DEV_PACKAGE=libnccl-dev=2.21.5-1+cuda12.4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ARG TARGETARCH",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "LABEL maintainer=NVIDIA CORPORATION <cudatools@nvidia.com>",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-get update && apt-get install -y --no-install-recommends     cuda-cudart-dev-12-4=${NV_CUDA_CUDART_DEV_VERSION}     cuda-command-line-tools-12-4=${NV_CUDA_LIB_VERSION}     cuda-minimal-build-12-4=${NV_CUDA_LIB_VERSION}     cuda-libraries-dev-12-4=${NV_CUDA_LIB_VERSION}     cuda-nvml-dev-12-4=${NV_NVML_DEV_VERSION}     ${NV_NVPROF_DEV_PACKAGE}     ${NV_LIBNPP_DEV_PACKAGE}     libcusparse-dev-12-4=${NV_LIBCUSPARSE_DEV_VERSION}     ${NV_LIBCUBLAS_DEV_PACKAGE}     ${NV_LIBNCCL_DEV_PACKAGE}     ${NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE}     && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:54:42.199295308Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-mark hold ${NV_LIBCUBLAS_DEV_PACKAGE_NAME} ${NV_LIBNCCL_DEV_PACKAGE_NAME} # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:54:42.199295308Z",
+              "created_by": "ENV LIBRARY_PATH=/usr/local/cuda/lib64/stubs",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "ARG PYTORCH_VERSION=2.6.0",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "ARG TRITON_VERSION=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "ARG TARGETPLATFORM=linux/amd64",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "ARG CUDA_VERSION=12.4.1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "LABEL com.nvidia.volumes.needed=nvidia_driver",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "RUN |4 PYTORCH_VERSION=2.6.0 TRITON_VERSION= TARGETPLATFORM=linux/amd64 CUDA_VERSION=12.4.1 /bin/sh -c apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends         ca-certificates         libjpeg-dev         libpng-dev         && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-01-29T17:26:34.618604801Z",
+              "created_by": "COPY /opt/conda /opt/conda # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "RUN |4 PYTORCH_VERSION=2.6.0 TRITON_VERSION= TARGETPLATFORM=linux/amd64 CUDA_VERSION=12.4.1 /bin/sh -c if test -n \"${TRITON_VERSION}\" -a \"${TARGETPLATFORM}\" != \"linux/arm64\"; then         DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends gcc;         rm -rf /var/lib/apt/lists/*;     fi # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV PATH=/opt/conda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV NVIDIA_VISIBLE_DEVICES=all",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/opt/conda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV PYTORCH_VERSION=2.6.0",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.178687639Z",
+              "created_by": "WORKDIR /workspace",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV MAX_JOBS=16",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV VLLM_WORKER_MULTIPROC_METHOD=spawn",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV DEBIAN_FRONTEND=noninteractive",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV NODE_OPTIONS=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV PIP_ROOT_USER_ACTION=ignore",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ARG APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ARG PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c cp /etc/apt/sources.list /etc/apt/sources.list.bak &&     {     echo \"deb ${APT_SOURCE} jammy main restricted universe multiverse\";     echo \"deb ${APT_SOURCE} jammy-updates main restricted universe multiverse\";     echo \"deb ${APT_SOURCE} jammy-backports main restricted universe multiverse\";     echo \"deb ${APT_SOURCE} jammy-security main restricted universe multiverse\";     } > /etc/apt/sources.list # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:19.947696403Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c apt-get update &&     apt-get install -y -o Dpkg::Options::=\"--force-confdef\" systemd wget &&     apt-get clean # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:27.623361428Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c apt-get update &&     apt-get install -y git vim &&     apt-get clean # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:32.349155776Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c apt-get update &&     apt-get install -y gcc g++ &&     apt-get clean # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:35.223444737Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c pip config set global.index-url \"${PIP_INDEX}\" &&     pip config set global.extra-index-url \"${PIP_INDEX}\" &&     python -m pip install --upgrade pip # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:04:06.598265647Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c wget -nv https://ghfast.top/https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.4.post1/flash_attn-2.7.4.post1+cu12torch2.6cxx11abiFALSE-cp311-cp311-linux_x86_64.whl &&     pip install --no-cache-dir flash_attn-2.7.4.post1+cu12torch2.6cxx11abiFALSE-cp311-cp311-linux_x86_64.whl # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:05:11.67784056Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c wget -nv https://ghfast.top/https://github.com/flashinfer-ai/flashinfer/releases/download/v0.2.2.post1/flashinfer_python-0.2.2.post1+cu124torch2.6-cp38-abi3-linux_x86_64.whl &&     pip install --no-cache-dir flashinfer_python-0.2.2.post1+cu124torch2.6-cp38-abi3-linux_x86_64.whl # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:05:12.536000722Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c pip config unset global.index-url &&     pip config unset global.extra-index-url # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ARG PIP_INDEX=https://pypi.org/simple",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ARG INSTALL_FLASHATTN=false",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ARG HTTP_PROXY=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV MAX_JOBS=16",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV FLASH_ATTENTION_FORCE_BUILD=TRUE",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV VLLM_WORKER_MULTIPROC_METHOD=spawn",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV DEBIAN_FRONTEND=noninteractive",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV NODE_OPTIONS=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV PIP_ROOT_USER_ACTION=ignore",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV http_proxy=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV https_proxy=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "SHELL [/bin/bash -c]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "WORKDIR /app",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:31:36.790667215Z",
+              "created_by": "RUN |3 PIP_INDEX=https://pypi.org/simple INSTALL_FLASHATTN=false HTTP_PROXY= /bin/bash -c pip config set global.index-url \"${PIP_INDEX}\" &&     pip config set global.extra-index-url \"${PIP_INDEX}\" &&     pip install --no-cache-dir --upgrade pip packaging wheel setuptools editables \"hatchling>=1.18.0\" # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:31:37.266176862Z",
+              "created_by": "COPY . /app # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:32:24.634050267Z",
+              "created_by": "RUN |3 PIP_INDEX=https://pypi.org/simple INSTALL_FLASHATTN=false HTTP_PROXY= /bin/bash -c pip install --no-cache-dir --no-build-isolation -e . &&     pip install --no-cache-dir --no-build-isolation -r requirements/metrics.txt -r requirements/deepspeed.txt # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "RUN |3 PIP_INDEX=https://pypi.org/simple INSTALL_FLASHATTN=false HTTP_PROXY= /bin/bash -c if [ \"${INSTALL_FLASHATTN}\" == \"true\" ]; then         pip uninstall -y ninja &&         pip install --no-cache-dir ninja &&         pip install --no-cache-dir flash-attn --no-build-isolation;     fi # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "ENV GRADIO_SERVER_PORT=7860",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "EXPOSE [7860/tcp]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "ENV API_PORT=8000",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "EXPOSE [8000/tcp]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "ENV http_proxy=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "ENV https_proxy=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:25.230196619Z",
+              "created_by": "RUN |3 PIP_INDEX=https://pypi.org/simple INSTALL_FLASHATTN=false HTTP_PROXY= /bin/bash -c pip config unset global.index-url &&     pip config unset global.extra-index-url # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:34.783208392+08:00",
+              "created_by": "ARG ANI_DEVICE_MODE=cpu",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:34.783208392+08:00",
+              "created_by": "USER 0:0",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:34.783208392+08:00",
+              "created_by": "COPY --chmod=0755 bin/ani-modeldev-step /ani-modeldev-step # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:34.817392006+08:00",
+              "created_by": "COPY --chmod=0444 training/train_mlp.py training/implementation.py training/implementations.json training/dataset_manifest.py training/structure_limits.json /opt/ani-modeldev/training/ # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:34.829613466+08:00",
+              "created_by": "COPY training/finetuning/ /opt/ani-modeldev/training/finetuning/ # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:34.996357149+08:00",
+              "created_by": "RUN |1 ANI_DEVICE_MODE=cpu /bin/bash -c test \"$ANI_DEVICE_MODE\" = cpu -o \"$ANI_DEVICE_MODE\" = gpu # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:35.197035848+08:00",
+              "created_by": "RUN |1 ANI_DEVICE_MODE=cpu /bin/bash -c /opt/conda/bin/python -I /opt/ani-modeldev/training/finetuning/runtime-patches/apply.py /app # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:35.406232937+08:00",
+              "created_by": "RUN |1 ANI_DEVICE_MODE=cpu /bin/bash -c /opt/conda/bin/python -I -c 'from pathlib import Path; import os; p=Path(\"/etc/passwd\");g=Path(\"/etc/group\"); users=p.read_bytes();groups=g.read_bytes();assert not any(r.split(b\":\")[0]==b\"modeldev\" or r.split(b\":\")[2]==b\"10001\" for r in users.splitlines() if r and not r.startswith(b\"#\"));assert not any(r.split(b\":\")[0]==b\"modeldev\" or r.split(b\":\")[2]==b\"10001\" for r in groups.splitlines() if r and not r.startswith(b\"#\"));p.write_bytes(users+b\"modeldev:x:10001:10001:ModelDev training:/nonexistent:/usr/sbin/nologin\\n\");g.write_bytes(groups+b\"modeldev:x:10001:\\n\");root=Path(\"/opt/ani-modeldev\");[(os.chmod(v,0o755) if v.is_dir() else os.chmod(v,0o444)) for v in (root,*root.rglob(\"*\"))]' # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:35.406232937+08:00",
+              "created_by": "LABEL ani.modeldev.device_mode=cpu",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:35.406232937+08:00",
+              "created_by": "ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 WORLD_SIZE=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:35.406232937+08:00",
+              "created_by": "USER 10001:10001",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:35.421118418+08:00",
+              "created_by": "WORKDIR /opt/ani-modeldev",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:35.421118418+08:00",
+              "created_by": "ENTRYPOINT [\"/ani-modeldev-step\"]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:35.421118418+08:00",
+              "created_by": "CMD []",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            }
+          ],
+          "os": "linux",
+          "rootfs": {
+            "type": "layers",
+            "diff_ids": [
+              "sha256:e0a9f5911802534ba097660206feabeb0247a81e409029167b30e2e1f2803b57",
+              "sha256:47654eeadbc543f1dd44ebb41c6ca0954b9f1813efabdcd46b0e7f17ac4e9fd1",
+              "sha256:efe2b79b53de08e199a2ce107d83adc0cbdff94f605e03f5ef51f3df3ae31cfd",
+              "sha256:46d54736d31f4bfeb749544e22e8611dba11128bdb2cebb820a3b452b50e7d52",
+              "sha256:809d3bb9c80fb3d31d4c061ba0b38ba4e83b6329e33c2cb2bbf27251a8e527c6",
+              "sha256:1ffbbe19418f9726ebb365371ef96637c68f9d25af3f76a4f01f760e87fb31be",
+              "sha256:1b30dd39de2709bc00beebf392ea1f931d5f037d08e0f675a50855385cddad93",
+              "sha256:89fd878224a017aead1d4c83d5c62749307aa6f1a9e22087144ef339c3df8c1e",
+              "sha256:2b4acda8678c6f7ae0075eabb2c0c21078b80671800996ad2cf730f15fa0ef26",
+              "sha256:5fb5b17c5835e3e44f7c48dfc15f29504febad945f26dcfa11470d0070b166e4",
+              "sha256:b7fa3c6c5beea49f65d51f65f06a4a8af32b48f128c02bea3822e5afaf4ebf23",
+              "sha256:0d3c87ed9708bc14b9bfa9321d26942be8c3f42f5cae65f0a0f3436699945c3d",
+              "sha256:cfaa2b120999931e01139be6f09d4d43af394d77a2187b103c2354770d1cc534",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+              "sha256:d8ca5faf298e0fee3c271fc39a861463f961ebf6deac8e2108cce87d34ea3c4e",
+              "sha256:8081c936d071539bf9fbd27d1009cbf6222cdf5c782e39737e47053b5672094c",
+              "sha256:31a2b16ec025dc5a09621dfa759d3b9fbcaf41f43fd0485ceaa5ea266a10359c",
+              "sha256:adbbb0d028cc398de35806efa3868b61b2f980d666d484fdc2869c5d412ca4b0",
+              "sha256:f1b25e971799819141d82f9f3ed06563044733a7f233318a2ed72808bae239ca",
+              "sha256:aa8043e6a80b354647a2462b64611a586182b58da6693afb6318a3f43896c510",
+              "sha256:1aee4b671dbfb9f286a720ec83b93701394e948481621614c26bd0a80a84fea6",
+              "sha256:0df1637d668e40746541b7a809c766d30b6da0e5c7ed720b5449b3a1aa794ddc",
+              "sha256:8f4cab8e77e797e35cb8bfe51db5e6890160ac01a7e0052ce48ad237c2b3a55c",
+              "sha256:588145e8a7a4547b655ba6d8aee7b2bcbe9252159d350e507cf20856d59c1023",
+              "sha256:125556e1b739f7b513c33dbbe3ede56df40a6421a4e4615f551e71526aa19063",
+              "sha256:29f9e21032dc33f956883bdc947ccb7c04969b44df479b1e370526cfadce64a8",
+              "sha256:a6ceecf7ae6f4ca8e757c022af96ba14394f36218d188db0372290f673c0db70",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+              "sha256:c846e43c7f1e9ded211461db3742b665e66f9d0f6f08e63b78c0379c7ef837d7",
+              "sha256:53e50eff22f0dca991a2e6d3b10ab84398cea870a78beeac415efd1cd3792a91",
+              "sha256:2b9ea0147b08c06ab52826b46dd02df896b831e635854805ba11e23123b4e0a1",
+              "sha256:63dd7819eae6bb129c5b9f35c3aed72ab7762055221342456ed4bea83757374d",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+              "sha256:d595e5720063f8f2237941a9443e135ed8b76ad32ca76af12736b86deb6b5b98",
+              "sha256:68352dd102333f66360f9f925fb3af01c89dd0ef02b448ce95095a6c605b18d8",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+            ]
+          }
+        },
+        "config_digest": "sha256:68d9e85a2d240edbf0c8f267b410019fe60ecfc831bdd546442be9be4fea97a4",
+        "config_source": "local content-addressed blob hash equals live registry manifest config descriptor",
+        "compressed_layer_bytes": 9369609309,
+        "config_bytes": 34786,
+        "manifest_bytes": 7153,
+        "profiles": [
+          "modeldev-mlp-cpu",
+          "modeldev-sft-lora-cpu"
+        ]
+      },
+      "missing_configuration_startup": {
+        "exit": 1,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "21ac3d209363caf66fa79efdab1b9b164765a42c531ae0530beaa801b067e632",
+        "configuration_rejected": true
+      }
+    },
+    "gpu": {
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+      "exit": 0,
+      "elapsed_seconds": 6.437,
+      "log_bytes": 4298,
+      "log_sha256": "1958714c23525efc1a6cfe1f268c6e31d42ac8742907ea54d0e4d41756ab919d",
+      "command": [
+        "sudo",
+        "-n",
+        "env",
+        "DOCKER_CONFIG=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/auth",
+        "SSL_CERT_FILE=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/ca.crt",
+        "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/tools/buildctl",
+        "--addr",
+        "unix:///home/kubercloud/tenantenv-20261101/images-d807-build-20261101/buildkitd.sock",
+        "build",
+        "--frontend",
+        "dockerfile.v0",
+        "--local",
+        "context=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/context",
+        "--local",
+        "dockerfile=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/context/training",
+        "--opt",
+        "filename=finetuning.Dockerfile",
+        "--opt",
+        "platform=linux/amd64",
+        "--opt",
+        "image-resolve-mode=local",
+        "--opt",
+        "force-network-mode=none",
+        "--opt",
+        "build-arg:ANI_DEVICE_MODE=gpu",
+        "--opt",
+        "label:org.opencontainers.image.revision=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "--opt",
+        "label:ani.modeldev.source_tree=141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "--opt",
+        "label:ani.modeldev.build_inputs_sha256=dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "--output",
+        "type=image,name=10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4,push=true,store=true,unpack=true,oci-mediatypes=true",
+        "--metadata-file",
+        "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/gpu-metadata.json",
+        "--progress",
+        "plain"
+      ],
+      "metadata": {
+        "containerimage.config.digest": "sha256:f3b5ff33477dc184ba83bcf1dc8e35f42c1b5971def7d33b801820a73d57064d",
+        "containerimage.descriptor": {
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "digest": "sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+          "size": 7153,
+          "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+          }
+        },
+        "containerimage.digest": "sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+        "image.name": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4"
+      },
+      "registry": {
+        "digest": "sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+        "immutable_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+        "manifest": {
+          "schemaVersion": 2,
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "config": {
+            "mediaType": "application/vnd.oci.image.config.v1+json",
+            "digest": "sha256:f3b5ff33477dc184ba83bcf1dc8e35f42c1b5971def7d33b801820a73d57064d",
+            "size": 34785
+          },
+          "layers": [
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:7021d1b70935851c95c45ed18156980b5024eda29b99564429025ea04f5ec109",
+              "size": 30439778
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:0d6448aff88945ea46a37cfe4330bdb0ada228268b80da6258a0fec63086f404",
+              "size": 4623694
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:0a7674e3e8fe69dcd7f1424fa29aa033b32c42269aab46cbe9818f8dd7154754",
+              "size": 57593640
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:b71b637b97c5efb435b9965058ad414f07afa99d320cf05e89f10441ec1becf4",
+              "size": 185
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:56dc8550293751a1604e97ac949cfae82ba20cb2a28e034737bafd7382559609",
+              "size": 6886
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:ec6d5f6c9ed94d2ee2eeaf048d90242af638325f57696909f1737b3158d838cf",
+              "size": 1374295401
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:47b8539d532f561cac6d7fb8ee2f46c902b66e4a60b103d19701829742a0d11e",
+              "size": 64047
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:fd9cc1ad8dee47ca559003714d462f4eb79cb6315a2708927c240b84d022b55f",
+              "size": 1684
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:83525caeeb359731f869f1ee87a32acdfdd5efb8af4cab06d8f4fdcf1f317daa",
+              "size": 1523
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:8e79813a7b9d5784bb880ca2909887465549de5183411b24f6de72fab0802bcd",
+              "size": 2646171659
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:312a542960e3345001fc709156a5139ff8a1d8cc21a51a50f83e87ec2982f579",
+              "size": 88858
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:3e14b472177a2b2b1bf496e4e6a89016275a5845dff81497990b94da434b956a",
+              "size": 1510442
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:e97dfafebbe66448955937c02791a4e6253efb7574302e701122acc886771ecc",
+              "size": 3276446965
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+              "size": 32
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:0a5030f9ea59c9d3fe2843472612be48fea9dbfde3b858ea81211541d81d5660",
+              "size": 99
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:ffb55de4d5fb8a07656f4829199798615d3f924676d93f63b3e91d979ab78a37",
+              "size": 810
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:a4f8ecff7e344f2866755346d7c051ec64252cf7bf75955913f8d0b10b2f8fbe",
+              "size": 80356161
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:7ea4f7e3598f59d14fd81b33e5b6f075d05aaa5eeb81b0ee53d6a9cb9bd45c47",
+              "size": 26592970
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:c39c6f3a22d86e1d0d5f8533dd0ee8b0d57dd451b0765a2ffad7ec6d90ff5e12",
+              "size": 186813
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:67ae6daf0925a3e2218bfe9266d5be249d4ff45459f7901ce506931e0761538f",
+              "size": 5802506
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:2661e5748163d0c6fc13453211b829e599f3bce76a3d84c776c7264a8e20fee9",
+              "size": 371982113
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:909dd5586468688381d85f6652f6e0b004e7587b9136ff576ab5f122070c7970",
+              "size": 1084460295
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:e4520c98b372c74917a16e085348c6ecb6ce32d469d99396a4810f727b7568f1",
+              "size": 167
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:18d5d24a83e65d6c6b93f95b8a6225f4a53f572b490c8bde522ea46a61101ca2",
+              "size": 93
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:14812be89aedb1f1b960d2648133377849738ee91223c86c4f13a8939d7a1a49",
+              "size": 6738945
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:685e74443e687817f589b3d7bcc6f1a7ca65eac89c392eee8df2e94cec6460ee",
+              "size": 5375241
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:c34fddb2c24fca7d5b4e6ec9b3dd785f3416723e64f1a48dd9725d61a8616b28",
+              "size": 379900195
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+              "size": 32
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:e73dc9237a6a33a0ae2566594705447351c118c47eccf3e566498331a1398660",
+              "size": 172
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:6f6ae1931e5074230dfc4b5955b1897033090af2d1ba427d856ca828fbfac83b",
+              "size": 16909510
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:c34755335a4c1843960d2702feb58986096145f5bc7f1f57cc31ac3ed8ab0d79",
+              "size": 7788
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:bf742c86140ba981b28c72b9cc9a5418d8eabf16558bc504aa35e28ac5ce3278",
+              "size": 23090
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+              "size": 32
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:24d40e8a719e8bff4d20921bae70edf201479e5407dcc41f7e0937fa712501e8",
+              "size": 3523
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:96fbef89ec907558ab9568443b876f38855f36484cf2983b83f78248e5e28802",
+              "size": 23928
+            },
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+              "size": 32
+            }
+          ]
+        },
+        "config": {
+          "architecture": "amd64",
+          "config": {
+            "User": "10001:10001",
+            "ExposedPorts": {
+              "7860/tcp": {},
+              "8000/tcp": {}
+            },
+            "Env": [
+              "PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/opt/conda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "NVARCH=x86_64",
+              "NVIDIA_REQUIRE_CUDA=cuda>=12.4 brand=tesla,driver>=470,driver<471 brand=unknown,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=geforce,driver>=470,driver<471 brand=geforcertx,driver>=470,driver<471 brand=quadro,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=titan,driver>=470,driver<471 brand=titanrtx,driver>=470,driver<471 brand=tesla,driver>=525,driver<526 brand=unknown,driver>=525,driver<526 brand=nvidia,driver>=525,driver<526 brand=nvidiartx,driver>=525,driver<526 brand=geforce,driver>=525,driver<526 brand=geforcertx,driver>=525,driver<526 brand=quadro,driver>=525,driver<526 brand=quadrortx,driver>=525,driver<526 brand=titan,driver>=525,driver<526 brand=titanrtx,driver>=525,driver<526 brand=tesla,driver>=535,driver<536 brand=unknown,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=geforce,driver>=535,driver<536 brand=geforcertx,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=titan,driver>=535,driver<536 brand=titanrtx,driver>=535,driver<536",
+              "NV_CUDA_CUDART_VERSION=12.4.127-1",
+              "NV_CUDA_COMPAT_PACKAGE=cuda-compat-12-4",
+              "CUDA_VERSION=12.4.1",
+              "LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+              "NVIDIA_VISIBLE_DEVICES=all",
+              "NVIDIA_DRIVER_CAPABILITIES=compute,utility",
+              "NV_CUDA_LIB_VERSION=12.4.1-1",
+              "NV_NVTX_VERSION=12.4.127-1",
+              "NV_LIBNPP_VERSION=12.2.5.30-1",
+              "NV_LIBNPP_PACKAGE=libnpp-12-4=12.2.5.30-1",
+              "NV_LIBCUSPARSE_VERSION=12.3.1.170-1",
+              "NV_LIBCUBLAS_PACKAGE_NAME=libcublas-12-4",
+              "NV_LIBCUBLAS_VERSION=12.4.5.8-1",
+              "NV_LIBCUBLAS_PACKAGE=libcublas-12-4=12.4.5.8-1",
+              "NV_LIBNCCL_PACKAGE_NAME=libnccl2",
+              "NV_LIBNCCL_PACKAGE_VERSION=2.21.5-1",
+              "NCCL_VERSION=2.21.5-1",
+              "NV_LIBNCCL_PACKAGE=libnccl2=2.21.5-1+cuda12.4",
+              "NVIDIA_PRODUCT_NAME=CUDA",
+              "NV_CUDA_CUDART_DEV_VERSION=12.4.127-1",
+              "NV_NVML_DEV_VERSION=12.4.127-1",
+              "NV_LIBCUSPARSE_DEV_VERSION=12.3.1.170-1",
+              "NV_LIBNPP_DEV_VERSION=12.2.5.30-1",
+              "NV_LIBNPP_DEV_PACKAGE=libnpp-dev-12-4=12.2.5.30-1",
+              "NV_LIBCUBLAS_DEV_VERSION=12.4.5.8-1",
+              "NV_LIBCUBLAS_DEV_PACKAGE_NAME=libcublas-dev-12-4",
+              "NV_LIBCUBLAS_DEV_PACKAGE=libcublas-dev-12-4=12.4.5.8-1",
+              "NV_CUDA_NSIGHT_COMPUTE_VERSION=12.4.1-1",
+              "NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE=cuda-nsight-compute-12-4=12.4.1-1",
+              "NV_NVPROF_VERSION=12.4.127-1",
+              "NV_NVPROF_DEV_PACKAGE=cuda-nvprof-12-4=12.4.127-1",
+              "NV_LIBNCCL_DEV_PACKAGE_NAME=libnccl-dev",
+              "NV_LIBNCCL_DEV_PACKAGE_VERSION=2.21.5-1",
+              "NV_LIBNCCL_DEV_PACKAGE=libnccl-dev=2.21.5-1+cuda12.4",
+              "LIBRARY_PATH=/usr/local/cuda/lib64/stubs",
+              "PYTORCH_VERSION=2.6.0",
+              "MAX_JOBS=16",
+              "VLLM_WORKER_MULTIPROC_METHOD=spawn",
+              "DEBIAN_FRONTEND=noninteractive",
+              "NODE_OPTIONS=",
+              "PIP_ROOT_USER_ACTION=ignore",
+              "FLASH_ATTENTION_FORCE_BUILD=TRUE",
+              "http_proxy=",
+              "https_proxy=",
+              "GRADIO_SERVER_PORT=7860",
+              "API_PORT=8000",
+              "PYTHONDONTWRITEBYTECODE=1",
+              "PYTHONUNBUFFERED=1",
+              "OMP_NUM_THREADS=2",
+              "MKL_NUM_THREADS=2",
+              "WORLD_SIZE=1",
+              "HF_HUB_OFFLINE=1",
+              "TRANSFORMERS_OFFLINE=1"
+            ],
+            "Entrypoint": [
+              "/ani-modeldev-step"
+            ],
+            "WorkingDir": "/opt/ani-modeldev",
+            "Labels": {
+              "ani.modeldev.build_inputs_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+              "ani.modeldev.device_mode": "gpu",
+              "ani.modeldev.source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "com.nvidia.volumes.needed": "nvidia_driver",
+              "maintainer": "NVIDIA CORPORATION <cudatools@nvidia.com>",
+              "org.opencontainers.image.ref.name": "ubuntu",
+              "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+              "org.opencontainers.image.version": "22.04"
+            },
+            "ArgsEscaped": true,
+            "Shell": [
+              "/bin/bash",
+              "-c"
+            ]
+          },
+          "created": "2026-11-01T10:14:35.425295697+08:00",
+          "history": [
+            {
+              "created": "2024-04-10T18:52:02.793393865Z",
+              "created_by": "/bin/sh -c #(nop)  ARG RELEASE",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-10T18:52:02.828022213Z",
+              "created_by": "/bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-10T18:52:02.855792154Z",
+              "created_by": "/bin/sh -c #(nop)  LABEL org.opencontainers.image.ref.name=ubuntu",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-10T18:52:02.883498404Z",
+              "created_by": "/bin/sh -c #(nop)  LABEL org.opencontainers.image.version=22.04",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-10T18:52:04.750464835Z",
+              "created_by": "/bin/sh -c #(nop) ADD file:3bd10da0673e2e72cb06a1f64a9df49a36341df39b0f762e3d1b38ee4de296fa in / "
+            },
+            {
+              "created": "2024-04-10T18:52:04.937319396Z",
+              "created_by": "/bin/sh -c #(nop)  CMD [\"/bin/bash\"]",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV NVARCH=x86_64",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV NVIDIA_REQUIRE_CUDA=cuda>=12.4 brand=tesla,driver>=470,driver<471 brand=unknown,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=geforce,driver>=470,driver<471 brand=geforcertx,driver>=470,driver<471 brand=quadro,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=titan,driver>=470,driver<471 brand=titanrtx,driver>=470,driver<471 brand=tesla,driver>=525,driver<526 brand=unknown,driver>=525,driver<526 brand=nvidia,driver>=525,driver<526 brand=nvidiartx,driver>=525,driver<526 brand=geforce,driver>=525,driver<526 brand=geforcertx,driver>=525,driver<526 brand=quadro,driver>=525,driver<526 brand=quadrortx,driver>=525,driver<526 brand=titan,driver>=525,driver<526 brand=titanrtx,driver>=525,driver<526 brand=tesla,driver>=535,driver<536 brand=unknown,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=geforce,driver>=535,driver<536 brand=geforcertx,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=titan,driver>=535,driver<536 brand=titanrtx,driver>=535,driver<536",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV NV_CUDA_CUDART_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV NV_CUDA_COMPAT_PACKAGE=cuda-compat-12-4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ARG TARGETARCH",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "LABEL maintainer=NVIDIA CORPORATION <cudatools@nvidia.com>",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-get update && apt-get install -y --no-install-recommends     gnupg2 curl ca-certificates &&     curl -fsSLO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/${NVARCH}/cuda-keyring_1.1-1_all.deb &&     dpkg -i cuda-keyring_1.1-1_all.deb &&     apt-get purge --autoremove -y curl     && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:42:16.115559594Z",
+              "created_by": "ENV CUDA_VERSION=12.4.1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:28.67175253Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-get update && apt-get install -y --no-install-recommends     cuda-cudart-12-4=${NV_CUDA_CUDART_VERSION}     ${NV_CUDA_COMPAT_PACKAGE}     && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:42:28.745952465Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c echo \"/usr/local/nvidia/lib\" >> /etc/ld.so.conf.d/nvidia.conf     && echo \"/usr/local/nvidia/lib64\" >> /etc/ld.so.conf.d/nvidia.conf # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:42:28.745952465Z",
+              "created_by": "ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:28.745952465Z",
+              "created_by": "ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:28.761632416Z",
+              "created_by": "COPY NGC-DL-CONTAINER-LICENSE / # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:42:28.761632416Z",
+              "created_by": "ENV NVIDIA_VISIBLE_DEVICES=all",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:42:28.761632416Z",
+              "created_by": "ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_CUDA_LIB_VERSION=12.4.1-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_NVTX_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNPP_VERSION=12.2.5.30-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNPP_PACKAGE=libnpp-12-4=12.2.5.30-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBCUSPARSE_VERSION=12.3.1.170-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBCUBLAS_PACKAGE_NAME=libcublas-12-4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBCUBLAS_VERSION=12.4.5.8-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBCUBLAS_PACKAGE=libcublas-12-4=12.4.5.8-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNCCL_PACKAGE_NAME=libnccl2",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNCCL_PACKAGE_VERSION=2.21.5-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NCCL_VERSION=2.21.5-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ENV NV_LIBNCCL_PACKAGE=libnccl2=2.21.5-1+cuda12.4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "ARG TARGETARCH",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "LABEL maintainer=NVIDIA CORPORATION <cudatools@nvidia.com>",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.52148163Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-get update && apt-get install -y --no-install-recommends     cuda-libraries-12-4=${NV_CUDA_LIB_VERSION}     ${NV_LIBNPP_PACKAGE}     cuda-nvtx-12-4=${NV_NVTX_VERSION}     libcusparse-12-4=${NV_LIBCUSPARSE_VERSION}     ${NV_LIBCUBLAS_PACKAGE}     ${NV_LIBNCCL_PACKAGE}     && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:46:26.653649031Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-mark hold ${NV_LIBCUBLAS_PACKAGE_NAME} ${NV_LIBNCCL_PACKAGE_NAME} # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:46:26.673320079Z",
+              "created_by": "COPY entrypoint.d/ /opt/nvidia/entrypoint.d/ # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:46:26.684665582Z",
+              "created_by": "COPY nvidia_entrypoint.sh /opt/nvidia/ # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:46:26.684665582Z",
+              "created_by": "ENV NVIDIA_PRODUCT_NAME=CUDA",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:46:26.684665582Z",
+              "created_by": "ENTRYPOINT [\"/opt/nvidia/nvidia_entrypoint.sh\"]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_CUDA_LIB_VERSION=12.4.1-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_CUDA_CUDART_DEV_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_NVML_DEV_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBCUSPARSE_DEV_VERSION=12.3.1.170-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNPP_DEV_VERSION=12.2.5.30-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNPP_DEV_PACKAGE=libnpp-dev-12-4=12.2.5.30-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBCUBLAS_DEV_VERSION=12.4.5.8-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME=libcublas-dev-12-4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBCUBLAS_DEV_PACKAGE=libcublas-dev-12-4=12.4.5.8-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_CUDA_NSIGHT_COMPUTE_VERSION=12.4.1-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE=cuda-nsight-compute-12-4=12.4.1-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_NVPROF_VERSION=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_NVPROF_DEV_PACKAGE=cuda-nvprof-12-4=12.4.127-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNCCL_DEV_PACKAGE_NAME=libnccl-dev",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNCCL_DEV_PACKAGE_VERSION=2.21.5-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NCCL_VERSION=2.21.5-1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ENV NV_LIBNCCL_DEV_PACKAGE=libnccl-dev=2.21.5-1+cuda12.4",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "ARG TARGETARCH",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "LABEL maintainer=NVIDIA CORPORATION <cudatools@nvidia.com>",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2024-04-22T23:54:41.985340165Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-get update && apt-get install -y --no-install-recommends     cuda-cudart-dev-12-4=${NV_CUDA_CUDART_DEV_VERSION}     cuda-command-line-tools-12-4=${NV_CUDA_LIB_VERSION}     cuda-minimal-build-12-4=${NV_CUDA_LIB_VERSION}     cuda-libraries-dev-12-4=${NV_CUDA_LIB_VERSION}     cuda-nvml-dev-12-4=${NV_NVML_DEV_VERSION}     ${NV_NVPROF_DEV_PACKAGE}     ${NV_LIBNPP_DEV_PACKAGE}     libcusparse-dev-12-4=${NV_LIBCUSPARSE_DEV_VERSION}     ${NV_LIBCUBLAS_DEV_PACKAGE}     ${NV_LIBNCCL_DEV_PACKAGE}     ${NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE}     && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:54:42.199295308Z",
+              "created_by": "RUN |1 TARGETARCH=amd64 /bin/sh -c apt-mark hold ${NV_LIBCUBLAS_DEV_PACKAGE_NAME} ${NV_LIBNCCL_DEV_PACKAGE_NAME} # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2024-04-22T23:54:42.199295308Z",
+              "created_by": "ENV LIBRARY_PATH=/usr/local/cuda/lib64/stubs",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "ARG PYTORCH_VERSION=2.6.0",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "ARG TRITON_VERSION=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "ARG TARGETPLATFORM=linux/amd64",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "ARG CUDA_VERSION=12.4.1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "LABEL com.nvidia.volumes.needed=nvidia_driver",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:22:43.603287581Z",
+              "created_by": "RUN |4 PYTORCH_VERSION=2.6.0 TRITON_VERSION= TARGETPLATFORM=linux/amd64 CUDA_VERSION=12.4.1 /bin/sh -c apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends         ca-certificates         libjpeg-dev         libpng-dev         && rm -rf /var/lib/apt/lists/* # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-01-29T17:26:34.618604801Z",
+              "created_by": "COPY /opt/conda /opt/conda # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "RUN |4 PYTORCH_VERSION=2.6.0 TRITON_VERSION= TARGETPLATFORM=linux/amd64 CUDA_VERSION=12.4.1 /bin/sh -c if test -n \"${TRITON_VERSION}\" -a \"${TARGETPLATFORM}\" != \"linux/arm64\"; then         DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends gcc;         rm -rf /var/lib/apt/lists/*;     fi # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV PATH=/opt/conda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV NVIDIA_VISIBLE_DEVICES=all",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/opt/conda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.14137716Z",
+              "created_by": "ENV PYTORCH_VERSION=2.6.0",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-01-29T17:26:35.178687639Z",
+              "created_by": "WORKDIR /workspace",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV MAX_JOBS=16",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV VLLM_WORKER_MULTIPROC_METHOD=spawn",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV DEBIAN_FRONTEND=noninteractive",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV NODE_OPTIONS=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ENV PIP_ROOT_USER_ACTION=ignore",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ARG APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "ARG PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2025-05-28T13:03:05.299410868Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c cp /etc/apt/sources.list /etc/apt/sources.list.bak &&     {     echo \"deb ${APT_SOURCE} jammy main restricted universe multiverse\";     echo \"deb ${APT_SOURCE} jammy-updates main restricted universe multiverse\";     echo \"deb ${APT_SOURCE} jammy-backports main restricted universe multiverse\";     echo \"deb ${APT_SOURCE} jammy-security main restricted universe multiverse\";     } > /etc/apt/sources.list # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:19.947696403Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c apt-get update &&     apt-get install -y -o Dpkg::Options::=\"--force-confdef\" systemd wget &&     apt-get clean # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:27.623361428Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c apt-get update &&     apt-get install -y git vim &&     apt-get clean # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:32.349155776Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c apt-get update &&     apt-get install -y gcc g++ &&     apt-get clean # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:03:35.223444737Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c pip config set global.index-url \"${PIP_INDEX}\" &&     pip config set global.extra-index-url \"${PIP_INDEX}\" &&     python -m pip install --upgrade pip # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:04:06.598265647Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c wget -nv https://ghfast.top/https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.4.post1/flash_attn-2.7.4.post1+cu12torch2.6cxx11abiFALSE-cp311-cp311-linux_x86_64.whl &&     pip install --no-cache-dir flash_attn-2.7.4.post1+cu12torch2.6cxx11abiFALSE-cp311-cp311-linux_x86_64.whl # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:05:11.67784056Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c wget -nv https://ghfast.top/https://github.com/flashinfer-ai/flashinfer/releases/download/v0.2.2.post1/flashinfer_python-0.2.2.post1+cu124torch2.6-cp38-abi3-linux_x86_64.whl &&     pip install --no-cache-dir flashinfer_python-0.2.2.post1+cu124torch2.6-cp38-abi3-linux_x86_64.whl # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2025-05-28T13:05:12.536000722Z",
+              "created_by": "RUN |2 APT_SOURCE=https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ PIP_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple /bin/sh -c pip config unset global.index-url &&     pip config unset global.extra-index-url # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ARG PIP_INDEX=https://pypi.org/simple",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ARG INSTALL_FLASHATTN=false",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ARG HTTP_PROXY=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV MAX_JOBS=16",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV FLASH_ATTENTION_FORCE_BUILD=TRUE",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV VLLM_WORKER_MULTIPROC_METHOD=spawn",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV DEBIAN_FRONTEND=noninteractive",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV NODE_OPTIONS=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV PIP_ROOT_USER_ACTION=ignore",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV http_proxy=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "ENV https_proxy=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "SHELL [/bin/bash -c]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:31:33.577253238Z",
+              "created_by": "WORKDIR /app",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:31:36.790667215Z",
+              "created_by": "RUN |3 PIP_INDEX=https://pypi.org/simple INSTALL_FLASHATTN=false HTTP_PROXY= /bin/bash -c pip config set global.index-url \"${PIP_INDEX}\" &&     pip config set global.extra-index-url \"${PIP_INDEX}\" &&     pip install --no-cache-dir --upgrade pip packaging wheel setuptools editables \"hatchling>=1.18.0\" # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:31:37.266176862Z",
+              "created_by": "COPY . /app # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:32:24.634050267Z",
+              "created_by": "RUN |3 PIP_INDEX=https://pypi.org/simple INSTALL_FLASHATTN=false HTTP_PROXY= /bin/bash -c pip install --no-cache-dir --no-build-isolation -e . &&     pip install --no-cache-dir --no-build-isolation -r requirements/metrics.txt -r requirements/deepspeed.txt # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "RUN |3 PIP_INDEX=https://pypi.org/simple INSTALL_FLASHATTN=false HTTP_PROXY= /bin/bash -c if [ \"${INSTALL_FLASHATTN}\" == \"true\" ]; then         pip uninstall -y ninja &&         pip install --no-cache-dir ninja &&         pip install --no-cache-dir flash-attn --no-build-isolation;     fi # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "ENV GRADIO_SERVER_PORT=7860",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "EXPOSE [7860/tcp]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "ENV API_PORT=8000",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "EXPOSE [8000/tcp]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "ENV http_proxy=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:24.919653982Z",
+              "created_by": "ENV https_proxy=",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-10-21T07:32:25.230196619Z",
+              "created_by": "RUN |3 PIP_INDEX=https://pypi.org/simple INSTALL_FLASHATTN=false HTTP_PROXY= /bin/bash -c pip config unset global.index-url &&     pip config unset global.extra-index-url # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:34.783208392+08:00",
+              "created_by": "ARG ANI_DEVICE_MODE=gpu",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:34.783208392+08:00",
+              "created_by": "USER 0:0",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:34.783208392+08:00",
+              "created_by": "COPY --chmod=0755 bin/ani-modeldev-step /ani-modeldev-step # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:34.817392006+08:00",
+              "created_by": "COPY --chmod=0444 training/train_mlp.py training/implementation.py training/implementations.json training/dataset_manifest.py training/structure_limits.json /opt/ani-modeldev/training/ # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:34.829613466+08:00",
+              "created_by": "COPY training/finetuning/ /opt/ani-modeldev/training/finetuning/ # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:34.99443667+08:00",
+              "created_by": "RUN |1 ANI_DEVICE_MODE=gpu /bin/bash -c test \"$ANI_DEVICE_MODE\" = cpu -o \"$ANI_DEVICE_MODE\" = gpu # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:35.197548882+08:00",
+              "created_by": "RUN |1 ANI_DEVICE_MODE=gpu /bin/bash -c /opt/conda/bin/python -I /opt/ani-modeldev/training/finetuning/runtime-patches/apply.py /app # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:35.414708244+08:00",
+              "created_by": "RUN |1 ANI_DEVICE_MODE=gpu /bin/bash -c /opt/conda/bin/python -I -c 'from pathlib import Path; import os; p=Path(\"/etc/passwd\");g=Path(\"/etc/group\"); users=p.read_bytes();groups=g.read_bytes();assert not any(r.split(b\":\")[0]==b\"modeldev\" or r.split(b\":\")[2]==b\"10001\" for r in users.splitlines() if r and not r.startswith(b\"#\"));assert not any(r.split(b\":\")[0]==b\"modeldev\" or r.split(b\":\")[2]==b\"10001\" for r in groups.splitlines() if r and not r.startswith(b\"#\"));p.write_bytes(users+b\"modeldev:x:10001:10001:ModelDev training:/nonexistent:/usr/sbin/nologin\\n\");g.write_bytes(groups+b\"modeldev:x:10001:\\n\");root=Path(\"/opt/ani-modeldev\");[(os.chmod(v,0o755) if v.is_dir() else os.chmod(v,0o444)) for v in (root,*root.rglob(\"*\"))]' # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:35.414708244+08:00",
+              "created_by": "LABEL ani.modeldev.device_mode=gpu",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:35.414708244+08:00",
+              "created_by": "ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 WORLD_SIZE=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:35.414708244+08:00",
+              "created_by": "USER 10001:10001",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:35.425295697+08:00",
+              "created_by": "WORKDIR /opt/ani-modeldev",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:14:35.425295697+08:00",
+              "created_by": "ENTRYPOINT [\"/ani-modeldev-step\"]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:14:35.425295697+08:00",
+              "created_by": "CMD []",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            }
+          ],
+          "os": "linux",
+          "rootfs": {
+            "type": "layers",
+            "diff_ids": [
+              "sha256:e0a9f5911802534ba097660206feabeb0247a81e409029167b30e2e1f2803b57",
+              "sha256:47654eeadbc543f1dd44ebb41c6ca0954b9f1813efabdcd46b0e7f17ac4e9fd1",
+              "sha256:efe2b79b53de08e199a2ce107d83adc0cbdff94f605e03f5ef51f3df3ae31cfd",
+              "sha256:46d54736d31f4bfeb749544e22e8611dba11128bdb2cebb820a3b452b50e7d52",
+              "sha256:809d3bb9c80fb3d31d4c061ba0b38ba4e83b6329e33c2cb2bbf27251a8e527c6",
+              "sha256:1ffbbe19418f9726ebb365371ef96637c68f9d25af3f76a4f01f760e87fb31be",
+              "sha256:1b30dd39de2709bc00beebf392ea1f931d5f037d08e0f675a50855385cddad93",
+              "sha256:89fd878224a017aead1d4c83d5c62749307aa6f1a9e22087144ef339c3df8c1e",
+              "sha256:2b4acda8678c6f7ae0075eabb2c0c21078b80671800996ad2cf730f15fa0ef26",
+              "sha256:5fb5b17c5835e3e44f7c48dfc15f29504febad945f26dcfa11470d0070b166e4",
+              "sha256:b7fa3c6c5beea49f65d51f65f06a4a8af32b48f128c02bea3822e5afaf4ebf23",
+              "sha256:0d3c87ed9708bc14b9bfa9321d26942be8c3f42f5cae65f0a0f3436699945c3d",
+              "sha256:cfaa2b120999931e01139be6f09d4d43af394d77a2187b103c2354770d1cc534",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+              "sha256:d8ca5faf298e0fee3c271fc39a861463f961ebf6deac8e2108cce87d34ea3c4e",
+              "sha256:8081c936d071539bf9fbd27d1009cbf6222cdf5c782e39737e47053b5672094c",
+              "sha256:31a2b16ec025dc5a09621dfa759d3b9fbcaf41f43fd0485ceaa5ea266a10359c",
+              "sha256:adbbb0d028cc398de35806efa3868b61b2f980d666d484fdc2869c5d412ca4b0",
+              "sha256:f1b25e971799819141d82f9f3ed06563044733a7f233318a2ed72808bae239ca",
+              "sha256:aa8043e6a80b354647a2462b64611a586182b58da6693afb6318a3f43896c510",
+              "sha256:1aee4b671dbfb9f286a720ec83b93701394e948481621614c26bd0a80a84fea6",
+              "sha256:0df1637d668e40746541b7a809c766d30b6da0e5c7ed720b5449b3a1aa794ddc",
+              "sha256:8f4cab8e77e797e35cb8bfe51db5e6890160ac01a7e0052ce48ad237c2b3a55c",
+              "sha256:588145e8a7a4547b655ba6d8aee7b2bcbe9252159d350e507cf20856d59c1023",
+              "sha256:125556e1b739f7b513c33dbbe3ede56df40a6421a4e4615f551e71526aa19063",
+              "sha256:29f9e21032dc33f956883bdc947ccb7c04969b44df479b1e370526cfadce64a8",
+              "sha256:a6ceecf7ae6f4ca8e757c022af96ba14394f36218d188db0372290f673c0db70",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+              "sha256:c846e43c7f1e9ded211461db3742b665e66f9d0f6f08e63b78c0379c7ef837d7",
+              "sha256:53e50eff22f0dca991a2e6d3b10ab84398cea870a78beeac415efd1cd3792a91",
+              "sha256:2b9ea0147b08c06ab52826b46dd02df896b831e635854805ba11e23123b4e0a1",
+              "sha256:63dd7819eae6bb129c5b9f35c3aed72ab7762055221342456ed4bea83757374d",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+              "sha256:d595e5720063f8f2237941a9443e135ed8b76ad32ca76af12736b86deb6b5b98",
+              "sha256:68352dd102333f66360f9f925fb3af01c89dd0ef02b448ce95095a6c605b18d8",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+            ]
+          }
+        },
+        "config_digest": "sha256:f3b5ff33477dc184ba83bcf1dc8e35f42c1b5971def7d33b801820a73d57064d",
+        "config_source": "local content-addressed blob hash equals live registry manifest config descriptor",
+        "compressed_layer_bytes": 9369609309,
+        "config_bytes": 34785,
+        "manifest_bytes": 7153,
+        "profiles": [
+          "modeldev-mlp-gpu",
+          "modeldev-sft-lora-gpu"
+        ]
+      },
+      "missing_configuration_startup": {
+        "exit": 1,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "c29ad847d1b041b2cb86eeeac192e18e0728391a91de4439bf29caa0db198455",
+        "configuration_rejected": true
+      }
+    }
+  },
+  "cleanup": {
+    "daemon_stop_exit": 0,
+    "auth_absent": true
+  },
+  "original_tasks_missing": [],
+  "runner.log": {
+    "size": 139,
+    "sha256": "ad65eff679f1f630b69180d3d3339275c96bffbad89300bf15127c189a7a3bbb"
+  },
+  "daemon.log": {
+    "size": 4431,
+    "sha256": "8a6ac99a5a83f762de68d89d86054c71e76c203c93d5ec9c3a7b94427623b059"
+  },
+  "cpu-build.log": {
+    "size": 3819,
+    "sha256": "466c21510717c0afe67843520ca6e98cec7cb0f3ba485d2a81fd7f02b606de46",
+    "tail": [
+      "",
+      "#14 [auth] ani-resource-factor10-20261022/ani-modeldev-training-cpu:pull,push token for 10.10.1.66:30003",
+      "#14 DONE 0.0s",
+      "",
+      "#13 exporting to image",
+      "#13 pushing layers",
+      "#13 pushing layers 1.8s done",
+      "#13 pushing manifest for 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+      "#13 pushing manifest for 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5 0.3s done",
+      "#13 DONE 4.1s"
+    ]
+  },
+  "gpu-build.log": {
+    "size": 4298,
+    "sha256": "1958714c23525efc1a6cfe1f268c6e31d42ac8742907ea54d0e4d41756ab919d",
+    "tail": [
+      "#17 ...",
+      "",
+      "#18 [auth] ani-resource-factor10-20261022/ani-modeldev-training-gpu:pull,push token for 10.10.1.66:30003",
+      "#18 DONE 0.0s",
+      "",
+      "#17 exporting to image",
+      "#17 pushing layers 2.2s done",
+      "#17 pushing manifest for 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+      "#17 pushing manifest for 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e 0.3s done",
+      "#17 DONE 4.4s"
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "ssh_exit": 255,
+  "stderr": "Connection closed by 100.64.128.12 port 22\r\n",
+  "node_write_started": false
+}

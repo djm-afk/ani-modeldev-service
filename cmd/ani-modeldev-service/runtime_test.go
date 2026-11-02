@@ -2,11 +2,8 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"crypto/tls"
-	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -25,10 +22,11 @@ import (
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/storagecredentials"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/imageruntimefixture"
+	envfixture "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/tenantenvironment"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -46,7 +44,7 @@ func TestConfiguredRuntimeDispatchesPersistedCommandAndServesStepTLS(t *testing.
 	if err := observer.Ping(ctx); err != nil {
 		t.Fatal("RUNTIME_ASSEMBLY_PREFLIGHT: actual PostgreSQL unavailable")
 	}
-	preflight, err := f.peer.Client().Get(f.peer.URL + "/preflight")
+	preflight, err := f.peer.Client().Get(f.peer.URL + "/api/v1/namespaces/" + f.admission.Snapshot.Environment.NamespaceName)
 	if err != nil {
 		t.Fatal("RUNTIME_ASSEMBLY_PREFLIGHT: actual TLS API unavailable")
 	}
@@ -147,12 +145,12 @@ func TestConfiguredRuntimeDispatchesPersistedCommandAndServesStepTLS(t *testing.
 }
 
 func TestConfiguredRuntimeMissingMaterialsFailWithoutFallback(t *testing.T) {
-	for _, name := range []string{"binding digest", "Kubernetes credential", "storage credential"} {
+	for _, name := range []string{"platform digest", "Kubernetes credential", "storage credential"} {
 		t.Run(name, func(t *testing.T) {
 			f := runtimeAppFixture(t)
 			switch name {
-			case "binding digest":
-				f.config.Runtime.BindingSha256 = strings.Repeat("0", 64)
+			case "platform digest":
+				f.config.Runtime.TenantEnvironmentSha256 = strings.Repeat("0", 64)
 			case "Kubernetes credential":
 				f.config.Runtime.Kubernetes.TokenFile = filepath.Join(t.TempDir(), "missing-token")
 			case "storage credential":
@@ -175,6 +173,7 @@ type configuredRuntimeFixture struct {
 	admission      biz.Admission
 	peer           *httptest.Server
 	posts, reviews *atomic.Int32
+	environment    *envfixture.Fixture
 }
 
 func runtimeAppFixture(t *testing.T) configuredRuntimeFixture {
@@ -188,7 +187,9 @@ func runtimeAppFixture(t *testing.T) configuredRuntimeFixture {
 	admission := admissionfixture.Bind(t, biz.Admission{TenantID: uuid.NewString(), Actor: "governance:user:42", OperationID: uuid.NewString(), ExecutionID: uuid.NewString(), Intent: intent, Snapshot: snapshot, AcceptedAt: now})
 	snapshot = admission.Snapshot
 	posts, reviews := &atomic.Int32{}, &atomic.Int32{}
-	peer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	environment := envfixture.NewFixture(t, admission)
+	peer := environment.Server
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/preflight":
 			w.WriteHeader(http.StatusOK)
@@ -220,8 +221,10 @@ func runtimeAppFixture(t *testing.T) configuredRuntimeFixture {
 			t.Errorf("unexpected runtime API operation: %s %s", r.Method, r.URL.Path)
 			w.WriteHeader(http.StatusNotFound)
 		}
-	}))
-	t.Cleanup(peer.Close)
+	})
+	environment.RunHandler, environment.TokenReviewHandler = handler, handler
+	admission = environment.Ensure(t, openPool(), admission)
+	snapshot = admission.Snapshot
 	directory := t.TempDir()
 	write := func(name string, data []byte) string {
 		filename := filepath.Join(directory, name)
@@ -230,31 +233,26 @@ func runtimeAppFixture(t *testing.T) configuredRuntimeFixture {
 		}
 		return filename
 	}
-	caFile := write("external-ca.pem", pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: peer.Certificate().Raw}))
-	binding := biz.PipelineDispatchBinding{TenantID: admission.TenantID, Environment: snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-owner-v1", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://runtime-pipeline/tenant-root"}}
-	bindingBytes, err := json.Marshal(binding)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bindingDigest := sha256.Sum256(bindingBytes)
+	caFile := environment.CAFile
 	stepAddress := reserveAddress(t)
 	for stepAddress == config.Server.Grpc.Addr || stepAddress == config.Server.Admin.Addr {
 		stepAddress = reserveAddress(t)
 	}
-	storageBytes, err := json.Marshal(storageMaterial{AccessKeyID: "synthetic-key", SecretAccessKey: "synthetic-secret", STSBindings: []storagecredentials.Binding{
-		{TenantID: admission.TenantID, Purpose: "prepare", ConnectionID: snapshot.Input.Object.StorageConnectionID, Bucket: snapshot.Input.Object.Bucket, Prefix: "fixed/input"},
-		{TenantID: admission.TenantID, Purpose: "publish", ConnectionID: snapshot.PublicationScope.StorageConnectionID, Bucket: snapshot.PublicationScope.Bucket, Prefix: snapshot.PublicationScope.ApprovedPrefix},
-	}})
+	storageBytes, err := json.Marshal(storageMaterial{AccessKeyID: "synthetic-key", SecretAccessKey: "synthetic-secret"})
 	if err != nil {
 		t.Fatal(err)
 	}
+	material := conformance.MaterialV21()
+	image := imageruntimefixture.New(t, imageruntimefixture.DefaultResolution(material.Training.DefaultImage.ImageID, string(material.Training.DefaultImage.Scope), "registry.example.test"))
+	config.ImageRuntime = &conf.ImageRuntimeConnection{Endpoint: image.Endpoint, CaFile: image.CAFile, CertificateFile: image.CertificateFile, PrivateKeyFile: image.PrivateKeyFile, ServerName: image.ServerName, Timeout: durationpb.New(3 * time.Second)}
+	config.Command.AdmissionResolution = &conf.AdmissionResolution{CatalogueDirectory: environment.MaterialsDirectory}
 	config.Runtime = &conf.ManagedRuntime{
 		Step: &conf.Server_GRPC{Network: "tcp", Addr: stepAddress, Timeout: durationpb.New(3 * time.Second)}, CertificateFile: config.Command.CertificateFile, PrivateKeyFile: config.Command.PrivateKeyFile,
-		Kubernetes:    &conf.HTTPSWorkloadConnection{Endpoint: peer.URL, CaFile: caFile, TokenFile: write("kube-token", []byte("synthetic-kube-owner"))},
-		Pipeline:      &conf.HTTPSWorkloadConnection{Endpoint: peer.URL, CaFile: caFile, TokenFile: write("pipeline-token", []byte("synthetic-kfp-owner"))},
-		Limits:        &conf.RuntimeLimits{MaxContentBytes: 64 << 20},
-		ObjectStorage: &conf.ObjectStorageConnection{Endpoint: peer.URL, CaFile: caFile, Region: "us-east-1", CredentialsFile: write("storage-credentials", storageBytes), ConnectionId: snapshot.PublicationScope.StorageConnectionID},
-		BindingFile:   write("binding.json", bindingBytes), BindingSha256: hex.EncodeToString(bindingDigest[:]), TokenAudience: "ani-modeldev-managed-step", ApiTimeout: durationpb.New(3 * time.Second), DispatchInterval: durationpb.New(100 * time.Millisecond), DispatchBatchSize: 4,
+		Kubernetes:            &conf.HTTPSWorkloadConnection{Endpoint: peer.URL, CaFile: caFile, TokenFile: environment.KubernetesTokenFile},
+		Pipeline:              &conf.HTTPSWorkloadConnection{Endpoint: peer.URL, CaFile: caFile, TokenFile: environment.Config.KFPTokenFile},
+		Limits:                &conf.RuntimeLimits{MaxContentBytes: 64 << 20},
+		ObjectStorage:         &conf.ObjectStorageConnection{Endpoint: peer.URL, CaFile: caFile, Region: "us-east-1", CredentialsFile: write("storage-credentials", storageBytes), ConnectionId: snapshot.PublicationScope.StorageConnectionID},
+		TenantEnvironmentFile: environment.ConfigFile, TenantEnvironmentSha256: environment.ConfigSHA256, TokenAudience: "ani-modeldev-managed-step", ApiTimeout: durationpb.New(3 * time.Second), DispatchInterval: durationpb.New(time.Second),
 	}
-	return configuredRuntimeFixture{config: config, openPool: openPool, certificates: certificates, admission: admission, peer: peer, posts: posts, reviews: reviews}
+	return configuredRuntimeFixture{config: config, openPool: openPool, certificates: certificates, admission: admission, peer: peer, posts: posts, reviews: reviews, environment: environment}
 }

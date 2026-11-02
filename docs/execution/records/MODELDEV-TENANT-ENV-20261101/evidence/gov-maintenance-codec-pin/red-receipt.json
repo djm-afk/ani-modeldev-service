@@ -1,0 +1,38 @@
+{
+  "StartedAt": "2026-11-01T01:00:02.669550+00:00",
+  "Baseline": "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+  "SourceSHA256": "c747bad55e3504e7ac835168531f930600db84fb26e3c6472048de8bd7994d45",
+  "Commands": [
+    {
+      "Name": "mvs-before",
+      "Command": [
+        "go",
+        "list",
+        "-m",
+        "-json",
+        "all"
+      ],
+      "StartedAt": "2026-11-01T01:00:02.669669+00:00",
+      "CompletedAt": "2026-11-01T01:00:04.143004+00:00",
+      "ExitCode": 0
+    },
+    {
+      "Name": "original-codec-red",
+      "Command": [
+        "go",
+        "test",
+        "-tags=modeldev_maintenance_codec",
+        "-count=1",
+        "-v",
+        "-timeout=3m",
+        "./app/admin/service/internal/data",
+        "-run",
+        "^TestMaintenanceOriginalFiveAcceptanceCodec$"
+      ],
+      "StartedAt": "2026-11-01T01:00:04.143049+00:00",
+      "CompletedAt": "2026-11-01T01:02:23.920069+00:00",
+      "ExitCode": 1
+    }
+  ],
+  "CompletedAt": "2026-11-01T01:02:23.920574+00:00"
+}

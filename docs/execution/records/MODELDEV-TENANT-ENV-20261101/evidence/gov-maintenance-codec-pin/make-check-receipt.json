@@ -1,0 +1,29 @@
+{
+  "started_at": "2026-11-01T01:12:29.614297+00:00",
+  "command": [
+    "make",
+    "check"
+  ],
+  "cwd": "/home/chabking/tenantenv-20261101/gov-maintenance-codec-alignment",
+  "env": {
+    "GOTOOLCHAIN": "auto",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2",
+    "GOWORK": "off",
+    "GOPROXY": "https://proxy.golang.org,direct"
+  },
+  "source_hashes": {
+    "go.mod": "75a5b61c2236236d7041d392692939fd9cc380808f992fc021fecb87a4a6b8f9",
+    "go.sum": "f8b4d6aa240f18baf91f11f97a462a5ab3c76ba5fa22e31206d27978ae164d6e",
+    "app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go": "c747bad55e3504e7ac835168531f930600db84fb26e3c6472048de8bd7994d45"
+  },
+  "status": "TERMINAL",
+  "pid": 1128103,
+  "ended_at": "2026-11-01T01:18:15.229346+00:00",
+  "exit_code": 0,
+  "source_hashes_after": {
+    "go.mod": "75a5b61c2236236d7041d392692939fd9cc380808f992fc021fecb87a4a6b8f9",
+    "go.sum": "f8b4d6aa240f18baf91f11f97a462a5ab3c76ba5fa22e31206d27978ae164d6e",
+    "app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go": "c747bad55e3504e7ac835168531f930600db84fb26e3c6472048de8bd7994d45"
+  }
+}

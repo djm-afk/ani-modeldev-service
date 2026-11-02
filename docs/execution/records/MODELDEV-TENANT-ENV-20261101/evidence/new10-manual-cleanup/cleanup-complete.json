@@ -1,0 +1,57 @@
+{
+  "status": "NEW10_ORIGINAL_MODELDEV_RUNTIME_AND_DB_CLEANUP_COMPLETE",
+  "completed_at": "2026-11-01T08:50:33.372866+00:00",
+  "actual_removed_runtime_objects_including_pvcs": 42,
+  "actual_deleted_pvcs": 23,
+  "actual_reclaimed_pvs": 23,
+  "actual_released_charge_count": 2,
+  "actual_released_gpu_shared_memory_mib": 7680,
+  "remaining_account_occupied_units": 0,
+  "remaining_all_owner_charge_sum": 0,
+  "actual_deleted_gov_rows": {
+    "sys_modeldev_acceptances": 28,
+    "sys_quota_operations": 4,
+    "sys_quota_charges": 4,
+    "sys_quota_release_receipts": 2,
+    "sys_gpu_usage_sync": 4
+  },
+  "actual_deleted_md_rows": {
+    "modeldev_execution_cleanup_audits": 4,
+    "modeldev_execution_runtimes": 31,
+    "modeldev_pipeline_confirmed_runs": 30,
+    "modeldev_run_authorities": 23,
+    "modeldev_pipeline_dispatches": 30,
+    "modeldev_close_intents": 14,
+    "modeldev_executions": 31,
+    "modeldev_execution_identities": 31,
+    "modeldev_input_versions": 7
+  },
+  "md_total_deleted_rows": 201,
+  "gov_commit_exit": 0,
+  "md_commit_exit": 0,
+  "original_gov_not_replayed_after_commit": true,
+  "md_prior_two_failed_transactions_rolled_back": true,
+  "backups_created": false,
+  "fake_execution_states_or_ACKs_written": false,
+  "training_created": false,
+  "scope_preserved": [
+    "standard_and_legacy_namespaces",
+    "other-owner VM/Sandbox/Inference",
+    "accounts/users/roles/plans",
+    "platform services/RBAC"
+  ],
+  "evidence": [
+    {
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/new10-manual-cleanup/runtime-cleanup-actual.json",
+      "sha256": "727785952481d9934e5a50c7b1ff502cd4d19c8e35d22c0aac97249dd55d4dee"
+    },
+    {
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/new10-manual-cleanup/db-cleanup-actual.json",
+      "sha256": "256494f6294e6848fb906d1ed03008585d0c56edf95d9601249bec9b8da1aeee"
+    },
+    {
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/new10-manual-cleanup/md-cleanup-final-actual.json",
+      "sha256": "f302f6d70cd7a367d434aa4dba2f18b5aaf34862dd56532de0e064f620b5c2a9"
+    }
+  ]
+}

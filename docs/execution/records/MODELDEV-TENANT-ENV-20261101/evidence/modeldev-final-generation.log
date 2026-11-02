@@ -1,0 +1,17 @@
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf lint
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf build
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf generate --template buf.gen.yaml
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf lint
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf build
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf generate --template buf.api.gen.yaml
+test "$(/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc version)" = "v1.31.1"
+test "$(go version -m /home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc | awk '$1 == "mod" {print $2 "@" $3; exit}')" = "github.com/sqlc-dev/sqlc@v1.31.1"
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc generate
+python3 scripts/generate-contract-vectors.py
+1cd325e4ed737dc878dba20d1dde1eae8746af66876ee9cc6067a6f2aa560782  intent-input-v3.json
+b337b5e1f8025d381086bd4e157b32740746752b54ee457fde2d6f342715f2f0  intent-canonical-v3.json
+60af08a1661223601c41174b123cfe967e1e8eb737844a6071281ad498f1b921  snapshot-v4.json
+5ffb2cb0a0a2001c303b6440ec219d2296af6ceb2bf80ffd9784ad7373d211f6  vectors.go
+python3 scripts/generate-structure-limits.py
+go generate ./...
+find . -type f -name '*.go' -not -path './.git/*' -not -path './.tools/*' -print0 | xargs -0 --no-run-if-empty gofmt -w

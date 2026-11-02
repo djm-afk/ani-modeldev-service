@@ -35,7 +35,7 @@ func (query *Query) CheckFinetuningReadiness(ctx context.Context, request *model
 	if query == nil || query.sourceFacts == nil || query.contentLimits.Validate() != nil {
 		return nil, finetuningDependencyError(scope.RequestID)
 	}
-	material, _, err := query.materials.Implementation(ctx, scope.TenantID, "builtin.sft_lora", origin.DeviceMode)
+	material, err := query.materials.PlatformImplementation(ctx, "builtin.sft_lora", origin.DeviceMode)
 	if err != nil || material.Finetuning == nil {
 		if err != nil && ctx.Err() != nil {
 			return nil, queryError(ctx.Err(), scope.RequestID)

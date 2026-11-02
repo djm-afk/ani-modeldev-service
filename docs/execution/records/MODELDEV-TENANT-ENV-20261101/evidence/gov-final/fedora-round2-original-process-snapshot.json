@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-10-31T20:22:43.186262+00:00",
+  "read_only": true,
+  "method": "scan /proc entries whose cwd equals or descends from the original Gov source; original handles separately confirmed terminal",
+  "source": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source",
+  "matching_processes": [],
+  "exit_status_files_found": []
+}

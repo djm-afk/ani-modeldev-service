@@ -1,0 +1,367 @@
+{
+  "schema": "ani.modeldev.test-node-training-build-preflight.v1",
+  "observed_at": "2026-11-01T00:53:42.087518+00:00",
+  "read_only": true,
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "identity_match": true,
+  "hostname": "node1",
+  "tools": {
+    "buildkitd": null,
+    "buildctl": null,
+    "nerdctl": null,
+    "docker": null,
+    "podman": null,
+    "buildah": null,
+    "ctr": "/usr/local/bin/ctr",
+    "crictl": "/usr/local/bin/crictl",
+    "systemctl": "/usr/bin/systemctl",
+    "findmnt": "/usr/bin/findmnt"
+  },
+  "commands": {
+    "sudo_noninteractive": {
+      "exit": 0,
+      "stdout": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "cpu_memory": {
+      "exit": 0,
+      "stdout": "128\nMemTotal:       791119956 kB\nMemFree:        394683552 kB\nMemAvailable:   739700276 kB\nBuffers:        21635536 kB\nCached:         317190076 kB\n4.47 3.59 3.33 9/7059 2220482\n",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "disk": {
+      "exit": 0,
+      "stdout": "Filesystem                           1B-blocks         Used    Available Use% Mounted on\n/dev/mapper/ubuntu--vg-ubuntu--lv 844362571776 293185597440 508210524160  37% /\n/dev/mapper/ubuntu--vg-ubuntu--lv 844362571776 293185597440 508210524160  37% /\n/dev/mapper/ubuntu--vg-ubuntu--lv 844362571776 293185597440 508210524160  37% /\n",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "containerd_systemd": {
+      "exit": 0,
+      "stdout": "active\n",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "buildkit_systemd": {
+      "exit": 4,
+      "stdout": "inactive\n",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "containerd_images": {
+      "exit": 0,
+      "stdout": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training:tmpl-arch-v21-20261028-cpu                                                                  application/vnd.oci.image.manifest.v1+json           sha256:89f998fe157cabebb2cfa4a3070c8a21be26ff96d62dac74bb1e716ffaf29395 667.5 MiB linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training:tmpl-arch-v21-20261028-gpu                                                                  application/vnd.oci.image.manifest.v1+json           sha256:7af5e6fe206e1dd6f8417c8dd555b79dfd622deb9f0d53f984f8b748ae8d645e 6.5 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training@sha256:84778f8807f38514e67654a50a7b49b0cc1bbba4306b2a3819f972ce7623c749                     application/vnd.docker.distribution.manifest.v2+json sha256:84778f8807f38514e67654a50a7b49b0cc1bbba4306b2a3819f972ce7623c749 667.5 MiB linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training@sha256:a091dbe5ba2c110761cd2cc873b8c9ecacee1391c34d836a285601284e3d29c0                     application/vnd.docker.distribution.manifest.v2+json sha256:a091dbe5ba2c110761cd2cc873b8c9ecacee1391c34d836a285601284e3d29c0 6.5 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-gpu-platform/ani-modeldev-training@sha256:c3dc8d5a9914b5ed433c20da66a81105c05e663f7300623735f5894ce835423a                     application/vnd.docker.distribution.manifest.v2+json sha256:c3dc8d5a9914b5ed433c20da66a81105c05e663f7300623735f5894ce835423a 6.5 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:7c6cef0c6d7703c004ec5359c47b1f3f711a07d67e6703622d20c352ed423b20   application/vnd.oci.image.manifest.v1+json           sha256:7c6cef0c6d7703c004ec5359c47b1f3f711a07d67e6703622d20c352ed423b20 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:e3c8f7471f765466157da94b366fdf45b302c627e3293aa85f5690b71d66a83a   application/vnd.oci.image.manifest.v1+json           sha256:e3c8f7471f765466157da94b366fdf45b302c627e3293aa85f5690b71d66a83a 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa   application/vnd.oci.image.manifest.v1+json           sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:f9f88741276f749279463a8c7e87efa18d3652f62a5a2889e9318b3ed406ea30   application/vnd.oci.image.manifest.v1+json           sha256:f9f88741276f749279463a8c7e87efa18d3652f62a5a2889e9318b3ed406ea30 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:44f9ba3ef53d42f0c1a887d877783dbcf66fd179066d659783dbd71fe20242fb   application/vnd.oci.image.manifest.v1+json           sha256:44f9ba3ef53d42f0c1a887d877783dbcf66fd179066d659783dbd71fe20242fb 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:9d1dc444f06264ea905b41cad5eb113a7c4eecf2778d2a4678f201f1b34c29b1   application/vnd.oci.image.manifest.v1+json           sha256:9d1dc444f06264ea905b41cad5eb113a7c4eecf2778d2a4678f201f1b34c29b1 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:c1774417d3cbb3d6541fa5d64da29788886aef1f581aa7183005ba776a8e4768   application/vnd.oci.image.manifest.v1+json           sha256:c1774417d3cbb3d6541fa5d64da29788886aef1f581aa7183005ba776a8e4768 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \n10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b                application/vnd.oci.image.manifest.v1+json           sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            \nsha256:3277d2e7e58494e6ff9dbbc5c880b2bfd25f60e311a22512473af0bfbf9b01fe                                                                             application/vnd.oci.image.manifest.v1+json           sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b 8.7 GiB   linux/amd64 io.cri-containerd.image=managed                                                                                                                                                                                                            ",
+      "stderr_sha256": "8b27a5613ce7534bc6f817be1d3029dad226a623e4eedb8e2509c6ad2ca145df"
+    },
+    "containerd_content_list": {
+      "exit": 0,
+      "stdout": "omitted; used only to compare exact fixed manifest layer digests",
+      "stderr_sha256": "8b27a5613ce7534bc6f817be1d3029dad226a623e4eedb8e2509c6ad2ca145df"
+    },
+    "containerd_tasks": {
+      "exit": 0,
+      "stdout": "TASK                                                                PID        STATUS    \n48e49a186bfb26bb0c1107ed9674ec202088d646a122664048c45eb2398682a8    7645       RUNNING\n24098a57aa4ac47098f0002df8c36d7bcd2e9c3ac1f645097161f841ca3c909f    17725      RUNNING\n3f4ef6e426e6b15028988335e438c75d22cd381a2b8dc6721f1850ce2f057c5b    16306      RUNNING\n3b4a004386564036b84ffb43e095701514fd3412423970f879ba57043ea6ba65    17423      RUNNING\n93a422409ba9e1408c12f280965378a74233f780222c29570903fb500afa18b2    16316      RUNNING\n252dea300933c041272887d51d757e7b66935884159eac0f0ba6e6a873d49ff9    15563      RUNNING\n74ca4eb1ae4f60c07f4b13ac13c9572f3ba5f584026c2f5d2ed909c5dd77bde8    7593       RUNNING\n47ccca46dd7e8bf2a234fe8573ddc9e10fa714077bc95f087759c49b4f359e5b    917771     RUNNING\n1391ac05c2bb6527741c4b0199b0940c98aed6bf19e9756aa1e9a7a00c038416    16297      RUNNING\n3e6ff7d1f6797c808e27efa06c8d94d1157f83e2728c6f7806228b4b5ece11d3    16303      RUNNING\n1050ad5012979db061a46ff587894f34a823ece4892479c49aac6b65d4dd669b    15119      RUNNING\n0a1691e8aa6c7ed75acc332f7ffe3dca2086a83839fbf3577331305fa0887a83    13212      RUNNING\ne274c7adc549c0d50208ea3535a52120be0e991c9417fab2e719c9fd55a5103a    15597      RUNNING\n40cf80caa2036d7f4eead8cd28eab22e8e0ff9198b02cca33f31a2029db4703b    21975      RUNNING\n68288b1b5a1db852dd18bec1356ef2304a82975f45129c5aeea679999be23c22    11423      RUNNING\n3b21803c309e6e45e981abca4103413d28e81352160612f34de9f69c3daa182b    917862     RUNNING\n16eebdeab6584c2f330b303994ddbabadb3dcd785b9bc836f436006ba98cd066    21241      RUNNING\n45afe54e665652ff5c82468ccbfc4dcbf291b77d3569d4bec4f5eb9fdfe5e722    1856246    RUNNING\n2dcc9d915ed20aed62c5680827441eb92228594a80811036eda523ac320c9399    945648     RUNNING\n13baa7f480669b7f80a5c27f63569d9cc156ffc96263c77e872c4235631f2b5a    12725      RUNNING\n2c57418a73d093bbb0516ffb44610a19a8b434d586076685410cfb07a1343dde    5183       RUNNING\n35bb526f2936b206dbbc99d2688acfbdef6885c2e1ec69fe1ec334211335495e    11608      RUNNING\n9d1cf3923247722ca011fc37ff25850daa38bc6467dd5a7c058ddcb7d336d7a1    3608       RUNNING\n359fe997863676347b2e207b6e2e42c9d073bd59866303e745883b9489c9f3e3    3291909    RUNNING\nddd644744354125c89a5ad1f71c7fe3fa7aabe3cdb5a049673d54ef3c02fc6f9    1855764    RUNNING\n7e8cac80d421b9fecc236a52ea8a9306be44858783b10d20c39ab260917388d2    18985      RUNNING\ndffb1ecc0c64c7248a65713a0d22614dfecf6dc124ed40ae4457c41c3b8d9e6b    5091       RUNNING\nb2fb37874f3966175bda0f5d4d74886e6c3f8b135fb57101a50b70ee65b3897c    6155       RUNNING\n777d4893391b0ce26c52f94d7e72ed88aabc455e1b669c1809381d851995612d    15836      RUNNING\nf2318aceb6277017d0caf6e3ba53a7fe1d3ffa3f2f36828c7d5d867c0aa2ff59    15938      RUNNING\n3838181a71417481533ebfa78af67eb65ffe9849dda6881980a4166cb6751e9a    2657562    RUNNING\n52c75b99eace85760af8f97adf86aec3f249fb81d5a89c933f2b62bb1bc4b9fe    22337      RUNNING\nf91c561bcc476164f581bc03ad61bc2f8761ebb6dc14e8b6c401d0ec7eb9dc42    15422      RUNNING\n0e30f1040f958650aa17b07ae6b72d2a3c3800597191d532ad415bd229b35431    16293      RUNNING\n5a101a6e4e59d166bf272e89b87a908983e269b96ea04265dd7db5b793c27f2c    16079      RUNNING\nbf97e93fbba5b03fa7f4688f0299b527acc7500136e8021b1b184b34c63a54ee    13616      RUNNING\n788079655973baeee40e238aa8a842337837f5d07d2ce5757f9c3d3493752554    26186      RUNNING\nc7cae75727857316894651b2ac2388f5aa69fec8e29a973c731631c199b643ef    25718      RUNNING\n4b09a831263b41af77122513922edbf360ac1f4a5e7de14bf97bca4cfa0e88d7    2657746    RUNNING\naad7650434dc15b7da7046b370c75afe687f1833fb38732d514f626d7dc7bcee    23598      RUNNING\neb771ab2521d53ee4bbdb08060c68f49b765577b0fb6b628f32910a1aa972ca6    7437       RUNNING\na236b66172e23c320c07c6fcd7f6a1df14d7d086019150e39ea2b3d0853e55b1    21243      RUNNING\n4f0f16bfce743e4a389d57a9f30615f2b2177cbaa79d2d6d30d1739072301b5d    11421      RUNNING\ndd8e466345860771c654b37c49aa10e2b85057b56f7a61b40a4b6475a787a8a7    3713       RUNNING\n1e4635d7fdd0261e70b95cc6aee334a10770861f403b9f9077afeec0716dac90    23343      RUNNING\n25e5ccef9102f8014f70ad1a975caa786c6e878406ab8927e4ee38efcfc6aad7    1027118    RUNNING\n2b2f2d4289c7d3e4dc9378eca3e5744406370b3ccc45012139558dba789cf496    18946      RUNNING\ncce2831e4a7cbad342b753fb7456ccdf88008baaec7edd1e591c3d23206f1d3e    11630      RUNNING\nce0cbceca04ded064bd1f73507764a586ba54d6cfa4d30e8f57cf2cd9219c1c6    16043      RUNNING\n010ac532d2a07981614d9387ba965a3bbf300428f1e14d19d6c07ebc9864ddea    11419      RUNNING\n1282a7610a6729117a30a4a1e3c11d3df6458772519700931dc838af4f012d23    23785      RUNNING\na9b7879428dfe7c8f8fbb663370f4e9e2327cd663fc5702310e099af752a66cf    12135      RUNNING\ncd574513a8a41d9db54de45d29108fbf7b7e744b412db1a92d44b77489deb775    979641     RUNNING\na314161b373e6045bd9e728d75b3bc1396a942aa4351714895a809d9a10ad147    23715      RUNNING\n9d690b4d51cd6d5b9f018be0b09a726be64a08c404e88cd88cfa9187d1572665    12603      RUNNING\n28d5331de8878c02805d8de4f630280b44d5f026fb510d4fc7382cb491b4be0c    3291936    RUNNING\nf05d646dd34be73b95236ede6f708284675e1b3d70ad7e55bbb8ae7957f87eab    4048152    RUNNING\n25d5fe35d2ef04db18420e861ab7883a39a7a96629c8362b074e121a90614a02    21972      RUNNING\nb217538ab5eaeb0484c35b162c9f8f543b312706e59d4974a362eec0c0407e53    15068      RUNNING\nd9ed68cf2d7aee8f493d485ff8a2480fc3e8386007cae5af0b5c19b8126d24ff    22448      RUNNING\nb4363221646efa8cfc18e063900d433e2670b22ad700529ee41f74b64f178de1    19147      RUNNING\n2e40b09f1e9115e35fb1038af61309fc0b3af0de56babc3f4718c3ea3385eec4    19292      RUNNING\ne9205f63a7a6fcfde5eba488fac4a62bb01172538c4fd2ad6962948be64c6aa0    2127225    RUNNING\n7923f6e71a8cc322ea866f4c473c7dd2a9720d465aa5515b10e08004c2ba0446    3710       RUNNING\n4392c894dcbf03a8e3a4acf2c011d2b5d7be1c07b901bb482b82eb815b9d3106    22550      RUNNING\n95a3869e055541a10b35938a2d6ec458536ab145828e51407bdbd45c30169899    19604      RUNNING\n1acde065d0cc88742017bb3dc84d3c4d1b04466d4f03e1aae09bc821caeff568    3602       RUNNING\n0f79b68ecac833c40ea9b6686ca20069295f9940ebe518bfe5d9ba065e06e4b5    15019      RUNNING\ndff22fd0c46e70f498607777a5bb0a5e683ecb298e0c4328e2461a2765b9cb97    14801      RUNNING\na5e8ad2fa610dfababc1dd56d504d5b3af49ce4ce48c139b347a5fabf7054cd9    3727       RUNNING\nf11da9c335b923ed0cd4b8b45f133e329818c122ae8af122349f84037f3efa1d    14983      RUNNING\ncae95d27a011aa0634cb247d3e28b02999ac9b2f59d441e92e32add3c1339a29    15027      RUNNING\n48d649aeeb5404565c3d7b16895e451f616f6e2efdaa2d6dce232b4c2da43700    979564     RUNNING\nea681abe8eea8281fe04473d1a5355561e96fcc3f1a732891cca07612a66e714    19729      RUNNING\n550497c2fb6cce27e5cc2b3c941649157770a95f1e74afbe3cfbfdd3e56867e7    15579      RUNNING\nae2c40096071f6f2aa81c775bacb642185dee0f89ef71cb8c5b1b6b651d9287d    14636      RUNNING\n5369f89f9e8f825301346ae21aba98206d472918328b4078a61b27206ca3ae2c    25481      RUNNING\n88f25ecb3732aa9bfa22d85631403469563a57d8fd8beabaab9febf45e95cf49    15476      RUNNING\n0a16892b3124e19f0d2d1bac3ca181f2ba9b0e99b57266e9ed2901d531af634d    3723       RUNNING\n5d8fca29509694d7052af02a63df106cc9b5b",
+      "stderr_sha256": "74d148ad2d55443bd992534f90ff93e2c29a744b4c494f15b4dbbd0e7569c0ca"
+    },
+    "buildkit_sockets": {
+      "exit": 0,
+      "stdout": "srw-rw---- 1 root root 0 Oct 25 17:43 /run/containerd/containerd.sock",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "memory_process_totals": {
+      "exit": 0,
+      "stdout": "ceph-osd        19.3  1.7 13792804\nkube-apiserver  62.8  0.3 3005796\nVLLM::EngineCor  0.7  0.2 1792572\nvllm             0.1  0.1 1137108\nceph-mon         0.7  0.0 522092\netcd            18.2  0.0 408264\nenvoy            0.2  0.0 377980\nvirt-api         0.4  0.0 289308\nvirt-operator    0.6  0.0 283324\nkubelet         18.5  0.0 265356\ncontainerd      23.4  0.0 257716\nvirt-handler     0.3  0.0 179852",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "mutations": 0,
+  "containerd_image_row_count": 548,
+  "lf_manifest": {
+    "exit": 0,
+    "bytes": 5828,
+    "sha256": "eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b",
+    "media_type": "application/vnd.oci.image.manifest.v1+json",
+    "layers": [
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:7021d1b70935851c95c45ed18156980b5024eda29b99564429025ea04f5ec109",
+        "size": 30439778
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:0d6448aff88945ea46a37cfe4330bdb0ada228268b80da6258a0fec63086f404",
+        "size": 4623694
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:0a7674e3e8fe69dcd7f1424fa29aa033b32c42269aab46cbe9818f8dd7154754",
+        "size": 57593640
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:b71b637b97c5efb435b9965058ad414f07afa99d320cf05e89f10441ec1becf4",
+        "size": 185
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:56dc8550293751a1604e97ac949cfae82ba20cb2a28e034737bafd7382559609",
+        "size": 6886
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:ec6d5f6c9ed94d2ee2eeaf048d90242af638325f57696909f1737b3158d838cf",
+        "size": 1374295401
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:47b8539d532f561cac6d7fb8ee2f46c902b66e4a60b103d19701829742a0d11e",
+        "size": 64047
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:fd9cc1ad8dee47ca559003714d462f4eb79cb6315a2708927c240b84d022b55f",
+        "size": 1684
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:83525caeeb359731f869f1ee87a32acdfdd5efb8af4cab06d8f4fdcf1f317daa",
+        "size": 1523
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:8e79813a7b9d5784bb880ca2909887465549de5183411b24f6de72fab0802bcd",
+        "size": 2646171659
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:312a542960e3345001fc709156a5139ff8a1d8cc21a51a50f83e87ec2982f579",
+        "size": 88858
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:3e14b472177a2b2b1bf496e4e6a89016275a5845dff81497990b94da434b956a",
+        "size": 1510442
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:e97dfafebbe66448955937c02791a4e6253efb7574302e701122acc886771ecc",
+        "size": 3276446965
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+        "size": 32
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:0a5030f9ea59c9d3fe2843472612be48fea9dbfde3b858ea81211541d81d5660",
+        "size": 99
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:ffb55de4d5fb8a07656f4829199798615d3f924676d93f63b3e91d979ab78a37",
+        "size": 810
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:a4f8ecff7e344f2866755346d7c051ec64252cf7bf75955913f8d0b10b2f8fbe",
+        "size": 80356161
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:7ea4f7e3598f59d14fd81b33e5b6f075d05aaa5eeb81b0ee53d6a9cb9bd45c47",
+        "size": 26592970
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:c39c6f3a22d86e1d0d5f8533dd0ee8b0d57dd451b0765a2ffad7ec6d90ff5e12",
+        "size": 186813
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:67ae6daf0925a3e2218bfe9266d5be249d4ff45459f7901ce506931e0761538f",
+        "size": 5802506
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:2661e5748163d0c6fc13453211b829e599f3bce76a3d84c776c7264a8e20fee9",
+        "size": 371982113
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:909dd5586468688381d85f6652f6e0b004e7587b9136ff576ab5f122070c7970",
+        "size": 1084460295
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:e4520c98b372c74917a16e085348c6ecb6ce32d469d99396a4810f727b7568f1",
+        "size": 167
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:18d5d24a83e65d6c6b93f95b8a6225f4a53f572b490c8bde522ea46a61101ca2",
+        "size": 93
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:14812be89aedb1f1b960d2648133377849738ee91223c86c4f13a8939d7a1a49",
+        "size": 6738945
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:685e74443e687817f589b3d7bcc6f1a7ca65eac89c392eee8df2e94cec6460ee",
+        "size": 5375241
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:c34fddb2c24fca7d5b4e6ec9b3dd785f3416723e64f1a48dd9725d61a8616b28",
+        "size": 379900195
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+        "size": 32
+      },
+      {
+        "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+        "digest": "sha256:e73dc9237a6a33a0ae2566594705447351c118c47eccf3e566498331a1398660",
+        "size": 172
+      }
+    ],
+    "config": {
+      "mediaType": "application/vnd.oci.image.config.v1+json",
+      "digest": "sha256:3277d2e7e58494e6ff9dbbc5c880b2bfd25f60e311a22512473af0bfbf9b01fe",
+      "size": 30590
+    },
+    "compressed_layer_bytes": 9352641406,
+    "layer_count": 29
+  },
+  "lf_config": {
+    "exit": 0,
+    "bytes": 30590,
+    "sha256": "3277d2e7e58494e6ff9dbbc5c880b2bfd25f60e311a22512473af0bfbf9b01fe",
+    "os": "linux",
+    "architecture": "amd64",
+    "rootfs_layer_count": 29
+  },
+  "base_layer_presence": {
+    "unique_layer_count": 28,
+    "missing": [],
+    "missing_bytes": 0
+  },
+  "nodes": [
+    {
+      "name": "node1",
+      "uid": "b8c6525d-6d03-4ab9-a2ea-97753f0fca67",
+      "nodeNameMatchesHost": true,
+      "capacity": {
+        "cpu": "128",
+        "ephemeral-storage": "824572824Ki",
+        "memory": "791119956Ki"
+      },
+      "allocatable": {
+        "cpu": "127600m",
+        "ephemeral-storage": "824572824Ki",
+        "memory": "769077204594"
+      },
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    },
+    {
+      "name": "node2",
+      "uid": "b9f72348-e7e9-4a60-bdb4-2d2410845ce9",
+      "nodeNameMatchesHost": false,
+      "capacity": {
+        "cpu": "192",
+        "ephemeral-storage": "824572824Ki",
+        "memory": "527888244Ki"
+      },
+      "allocatable": {
+        "cpu": "191600m",
+        "ephemeral-storage": "824572824Ki",
+        "memory": "513005395361"
+      },
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    },
+    {
+      "name": "node3",
+      "uid": "5e736bcd-c06d-4713-a831-be9adc567e97",
+      "nodeNameMatchesHost": false,
+      "capacity": {
+        "cpu": "192",
+        "ephemeral-storage": "824572824Ki",
+        "memory": "527888188Ki"
+      },
+      "allocatable": {
+        "cpu": "191600m",
+        "ephemeral-storage": "824572824Ki",
+        "memory": "513005340884"
+      },
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    }
+  ]
+}

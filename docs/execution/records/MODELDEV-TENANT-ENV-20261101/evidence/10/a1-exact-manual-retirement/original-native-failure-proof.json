@@ -1,0 +1,249 @@
+{
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T11:31:02.196580+00:00"
+  },
+  "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60",
+  "operation_id": "136a3255-5c76-4c33-a8e8-79bb60968c11",
+  "kfp_run_id": "83e25294-500f-4d8b-8b02-9e3e3ae235d7",
+  "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+  "cluster_writes": 0,
+  "pod": {
+    "metadata": {
+      "name": "md-q9bb7-2399679389",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "580684e9-8d0d-4c32-85dd-06a551e67105",
+      "resourceVersion": "21194116",
+      "generation": 2,
+      "deletionTimestamp": "2026-11-01T10:36:20Z",
+      "ownerReferences": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "md-q9bb7",
+          "uid": "f048c2d6-90e9-40b9-afdf-dff24195ccc7"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ]
+    },
+    "node": "node3",
+    "declared_containers": [
+      "wait",
+      "main"
+    ],
+    "declared_init_containers": [
+      "init"
+    ],
+    "status": {
+      "conditions": [
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-01T10:06:20Z",
+          "observedGeneration": 2,
+          "status": "False",
+          "type": "PodReadyToStartContainers"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-01T10:06:20Z",
+          "message": "containers with incomplete status: [init]",
+          "observedGeneration": 2,
+          "reason": "ContainersNotInitialized",
+          "status": "False",
+          "type": "Initialized"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-01T10:06:20Z",
+          "message": "containers with unready status: [wait main]",
+          "observedGeneration": 2,
+          "reason": "ContainersNotReady",
+          "status": "False",
+          "type": "Ready"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-01T10:06:20Z",
+          "message": "containers with unready status: [wait main]",
+          "observedGeneration": 2,
+          "reason": "ContainersNotReady",
+          "status": "False",
+          "type": "ContainersReady"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-01T10:06:20Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "PodScheduled"
+        }
+      ],
+      "containerStatuses": [
+        {
+          "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+          "imageID": "",
+          "lastState": {},
+          "name": "main",
+          "ready": false,
+          "restartCount": 0,
+          "started": false,
+          "state": {
+            "waiting": {
+              "reason": "PodInitializing"
+            }
+          },
+          "volumeMounts": [
+            {
+              "mountPath": "/kfp/certs",
+              "name": "custom-ca"
+            },
+            {
+              "mountPath": "/var/run/argo",
+              "name": "var-run-argo"
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "name": "kube-api-access-9x6hk",
+              "readOnly": true,
+              "recursiveReadOnly": "Disabled"
+            }
+          ]
+        },
+        {
+          "image": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+          "imageID": "",
+          "lastState": {},
+          "name": "wait",
+          "ready": false,
+          "restartCount": 0,
+          "started": false,
+          "state": {
+            "waiting": {
+              "reason": "PodInitializing"
+            }
+          },
+          "volumeMounts": [
+            {
+              "mountPath": "/mainctrfs/kfp/certs",
+              "name": "custom-ca"
+            },
+            {
+              "mountPath": "/tmp",
+              "name": "tmp-dir-argo"
+            },
+            {
+              "mountPath": "/var/run/argo",
+              "name": "var-run-argo"
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "name": "kube-api-access-9x6hk",
+              "readOnly": true,
+              "recursiveReadOnly": "Disabled"
+            }
+          ]
+        }
+      ],
+      "hostIP": "10.10.1.68",
+      "hostIPs": [
+        {
+          "ip": "10.10.1.68"
+        }
+      ],
+      "initContainerStatuses": [
+        {
+          "image": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+          "imageID": "",
+          "lastState": {},
+          "name": "init",
+          "ready": false,
+          "restartCount": 0,
+          "started": false,
+          "state": {
+            "terminated": {
+              "exitCode": 137,
+              "finishedAt": null,
+              "message": "The container could not be located when the pod was terminated",
+              "reason": "ContainerStatusUnknown",
+              "startedAt": null
+            }
+          },
+          "volumeMounts": [
+            {
+              "mountPath": "/var/run/argo",
+              "name": "var-run-argo"
+            },
+            {
+              "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+              "name": "kube-api-access-9x6hk",
+              "readOnly": true,
+              "recursiveReadOnly": "Disabled"
+            }
+          ]
+        }
+      ],
+      "observedGeneration": 2,
+      "phase": "Failed",
+      "qosClass": "Burstable",
+      "startTime": "2026-11-01T10:06:20Z"
+    }
+  },
+  "workflow": {
+    "metadata": {
+      "name": "md-q9bb7",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "f048c2d6-90e9-40b9-afdf-dff24195ccc7",
+      "resourceVersion": "21194119",
+      "generation": 5,
+      "deletionTimestamp": null,
+      "finalizers": null
+    },
+    "service_account": "modeldev-step",
+    "active_deadline_seconds": 0,
+    "shutdown": null,
+    "phase": "Failed",
+    "started_at": "2026-11-01T10:06:20Z",
+    "finished_at": "2026-11-01T10:36:19Z",
+    "nodes": [
+      {
+        "id": "md-q9bb7",
+        "name": "md-q9bb7",
+        "displayName": "md-q9bb7",
+        "type": "DAG",
+        "phase": "Failed",
+        "message": null,
+        "startedAt": "2026-11-01T10:06:20Z",
+        "finishedAt": "2026-11-01T10:36:19Z"
+      },
+      {
+        "id": "md-q9bb7-2399679389",
+        "name": "md-q9bb7.root-driver",
+        "displayName": "root-driver",
+        "type": "Pod",
+        "phase": "Failed",
+        "message": "Step exceeded its deadline",
+        "startedAt": "2026-11-01T10:06:20Z",
+        "finishedAt": "2026-11-01T10:36:19Z"
+      },
+      {
+        "id": "md-q9bb7-3524768416",
+        "name": "md-q9bb7.root",
+        "displayName": "root",
+        "type": "Skipped",
+        "phase": "Omitted",
+        "message": "omitted: depends condition not met",
+        "startedAt": "2026-11-01T10:36:19Z",
+        "finishedAt": "2026-11-01T10:36:19Z"
+      }
+    ]
+  },
+  "observed_at": "2026-11-01T11:31:02.358766+00:00"
+}

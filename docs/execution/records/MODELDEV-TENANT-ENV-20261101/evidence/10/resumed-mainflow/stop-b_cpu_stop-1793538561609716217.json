@@ -1,0 +1,29 @@
+{
+  "started_at": "2026-11-01T13:09:19.097170+00:00",
+  "mode": "stop",
+  "tenant": "B",
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/v1/modeldev/executions/bb4fd203-1a3d-4796-8aa8-783dd62e57ae:stop",
+      "http_status": 202,
+      "response": {
+        "operation_id": "3ddec79e-9e03-46ab-9fbc-491d724415a0",
+        "execution_id": "bb4fd203-1a3d-4796-8aa8-783dd62e57ae",
+        "stop_requested": true,
+        "intent_generation": "1",
+        "replayed": false
+      }
+    }
+  ],
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "finished_at": "2026-11-01T13:09:19.555771+00:00",
+  "transport_exit_code": 0
+}

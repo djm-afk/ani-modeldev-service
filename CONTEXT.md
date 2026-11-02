@@ -2,6 +2,11 @@
 
 ModelDev 管理已受理训练的执行事实、受管计算和结果交付。
 
+执行环境采用一个共享实例及显式 Ensure/Get。每个可信 tenant＋固定 cluster
+只登记一个不可重绑的环境，复用 Network 已有标准 Namespace；Namespace 不存在即报错。
+Prepare/Finalize 和调度只读已发布 READY 环境，不隐式开通。部署入口与验证边界见
+[动态租户执行环境](docs/modeldev-tenant-environments.md)。
+
 ## Language
 
 **Execution（业务执行）**：一次已持久受理的训练请求，有稳定身份和不可变执行快照。请求重试仍是原执行，重新训练产生新执行。
@@ -24,6 +29,12 @@ _Avoid_: 审批、执行回执
 
 **ExecutionSnapshot（执行快照）**：业务受理时固定的完整训练配置，包含实现、计算来源、输入、全部解析参数、时限和运行计划。
 _Avoid_: 当前配置、运行状态
+
+**TenantExecutionEnvironment（租户执行环境）**：可信租户在固定集群内持久登记的执行环境，固定原 Namespace/SA UID、Experiment、范围、材料和配置。环境 ID 就是 BindingID；开通不创建 Execution、Reserve 或占额。
+_Avoid_: 新建 Namespace、每租户服务实例、启动时租户配置数组
+
+**EnvironmentBinding（环境绑定）**：环境 seal 后的完整非敏感规范字节及摘要；同一字节发布到不可变 Namespace 投影，供受理、调度及 webhook 验证。它不包含自身投影 UID/RV、可变状态或 Secret 数据。
+_Avoid_: 用户指定的 Namespace、可重写映射、声明 READY 的配置开关
 
 **RuntimePlan（运行计划）**：受理前固定的执行计算声明。实际创建的资源身份与运行状态另属执行事实。
 _Avoid_: 共享运行模板、已创建资源

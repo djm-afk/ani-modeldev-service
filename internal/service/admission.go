@@ -102,6 +102,9 @@ func (a *Admission) FinalizeAdmission(ctx context.Context, r *modeldevv1.Finaliz
 	return &modeldevv1.FinalizeAdmissionResponse{Snapshot: snapshot, ExecutionSpecHash: resolved.SpecHash}, nil
 }
 func admissionError(err error, requestID string) error {
+	if mapped, ok := admissionEnvironmentError(err, requestID); ok {
+		return mapped
+	}
 	if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
 		if mapped, ok := finetuningModelError(err, requestID); ok {
 			return mapped

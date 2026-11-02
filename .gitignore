@@ -40,3 +40,7 @@ Thumbs.db
 # Python bytecode produced by task-owned Fedora verification.
 __pycache__/
 *.pyc
+
+# Root build output and one-off SQL generation workspace.
+/ani-modeldev-service
+/tmp-ignore/

@@ -1,0 +1,242 @@
+{
+  "schema": "ani.modeldev.public-kfp-input-candidates.v1",
+  "read_only": true,
+  "observations_utc": [
+    "2026-10-31T20:24:38.107394+00:00",
+    "2026-10-31T20:27:09.633467+00:00",
+    "2026-10-31T20:28:09.515440+00:00"
+  ],
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "scope": "Only exact named public ConfigMap/Deployment/Service reads after full identity checks. Existing identity method selected only non-secret network.cluster_id remotely; no Secret data, token or storage credential retained. No cluster objects created or changed; no Pod/DNS/I-O probes.",
+  "classification": "Fresh existing live candidates for future new-system deployment; deployment-inputs/report unchanged. These do not establish new launcher loading, auth or artifact/MLMD I-O.",
+  "metadata": {
+    "source": {
+      "namespace": "kubeflow",
+      "name": "metadata-grpc-configmap",
+      "uid": "1ee4e1a9-879a-4a2a-9aa5-ebfb9f79ca29",
+      "resourceVersion": "24097"
+    },
+    "observed_data": {
+      "METADATA_GRPC_SERVICE_HOST": "metadata-grpc-service",
+      "METADATA_GRPC_SERVICE_PORT": "8080"
+    },
+    "candidate_for_new_tenant": {
+      "host": "metadata-grpc-service.kubeflow.svc",
+      "port": 8080
+    },
+    "host_derivation": "Namespace-qualified candidate derived from observed Service metadata-grpc-service in kubeflow; observed CM short host is relative to kubeflow and must not be copied unchanged into tenant Namespace. No DNS/MLMD I-O validation.",
+    "service": {
+      "source": {
+        "namespace": "kubeflow",
+        "name": "metadata-grpc-service",
+        "uid": "5b147509-8f8c-4946-b327-52ba6b156903",
+        "resourceVersion": "24115"
+      },
+      "type": "ClusterIP",
+      "ports": [
+        {
+          "name": "grpc-api",
+          "port": 8080,
+          "protocol": "TCP",
+          "targetPort": 8080
+        }
+      ],
+      "selector": {
+        "application-crd-id": "kubeflow-pipelines",
+        "component": "metadata-grpc-server"
+      },
+      "dns": "metadata-grpc-service.kubeflow.svc"
+    },
+    "legacy_namespace_configmap": "ani-modeldev-tenant-a-v21/metadata-grpc-configmap returned NotFound"
+  },
+  "kfp_entry": {
+    "candidate_https_endpoint": "https://ani-kfp-entry.kubeflow.svc:8443",
+    "service": {
+      "source": {
+        "namespace": "kubeflow",
+        "name": "ani-kfp-entry",
+        "uid": "85afe201-7cb5-47cd-a8c0-87929d3b5c07",
+        "resourceVersion": "25617"
+      },
+      "type": "NodePort",
+      "ports": [
+        {
+          "name": "https",
+          "nodePort": 30443,
+          "port": 8443,
+          "protocol": "TCP",
+          "targetPort": 8443
+        },
+        {
+          "name": "grpcs",
+          "nodePort": 30444,
+          "port": 8444,
+          "protocol": "TCP",
+          "targetPort": 8444
+        }
+      ],
+      "selector": {
+        "ani.io/kfp-role": "entry"
+      },
+      "dns": "ani-kfp-entry.kubeflow.svc"
+    },
+    "status": "Service source/https port observed; no new-system TLS/auth call performed"
+  },
+  "public_ca": {
+    "observed_at": "2026-10-31T20:28:09.515440+00:00",
+    "identity_reverified": true,
+    "configmap_uid": "174a118b-adce-4ad1-91aa-b9a1b6c1f1ec",
+    "configmap_resource_version": "24565",
+    "key": "ca.crt",
+    "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+    "deployment_uid": "56189e37-8874-4f2d-90bb-19846a332b64",
+    "mounts": [
+      {
+        "container": "ml-pipeline-api-server",
+        "mountPath": "/etc/ani-ca",
+        "name": "internal-ca",
+        "readOnly": true
+      }
+    ],
+    "configmap_volumes": [
+      {
+        "configMap": {
+          "defaultMode": 420,
+          "name": "ani-kfp-ca"
+        },
+        "name": "internal-ca"
+      }
+    ],
+    "saved_public_ca_file": "evidence/08-public-kfp-ca.crt",
+    "bytes": 713,
+    "source": "kubeflow/ConfigMap/ani-kfp-ca data[ca.crt]",
+    "ssl_cert_file_env": {
+      "source_deployment": {
+        "namespace": "kubeflow",
+        "name": "ml-pipeline",
+        "uid": "56189e37-8874-4f2d-90bb-19846a332b64",
+        "resourceVersion": "388853",
+        "generation": 1
+      },
+      "container": "ml-pipeline-api-server",
+      "name": "SSL_CERT_FILE",
+      "value": "/etc/ani-ca/ca.crt"
+    },
+    "status": "Public PEM is saved unchanged and mounted by current API server. Driver/launcher new-instance certificate loading and I-O NOT_RUN."
+  },
+  "images": {
+    "source_deployment": {
+      "namespace": "kubeflow",
+      "name": "ml-pipeline",
+      "uid": "56189e37-8874-4f2d-90bb-19846a332b64",
+      "resourceVersion": "388853",
+      "generation": 1
+    },
+    "api_server": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-api-server:2.16.0@sha256:5f9d674f75dbd9c056ad31a1d8c5432e1bdc1f0597dfefe6f58d00af983fbe22",
+    "driver": {
+      "source_env": "V2_DRIVER_IMAGE",
+      "value": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd"
+    },
+    "launcher": {
+      "source_env": "V2_LAUNCHER_IMAGE",
+      "value": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+    },
+    "argo_controller": {
+      "source": {
+        "namespace": "kubeflow",
+        "name": "workflow-controller",
+        "uid": "441104f5-3647-430e-a020-911dd99c0aca",
+        "resourceVersion": "404471",
+        "generation": 1
+      },
+      "service_account": "argo",
+      "containers": [
+        {
+          "name": "workflow-controller",
+          "image": "10.10.1.66:5001/ani-kubeflow/argoproj/workflow-controller:v3.7.3@sha256:5c8f5b6e5a2134dafdeadf758f230e4cc08db78f813e52d928e8f4f4541f243d",
+          "selected_env": [],
+          "selected_public_args": [
+            "--configmap",
+            "workflow-controller-configmap",
+            "--executor-image",
+            "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a"
+          ],
+          "selected_public_command": [
+            "workflow-controller"
+          ]
+        }
+      ]
+    },
+    "argo_executor_config": {
+      "namespace": "kubeflow",
+      "name": "workflow-controller-configmap",
+      "uid": "f16b79cc-6125-4cb8-825d-b861546e613f",
+      "resourceVersion": "24101",
+      "key_presence": {
+        "config": false,
+        "executor": true,
+        "workflowDefaults": false,
+        "artifactRepository": false
+      },
+      "executor_public": {
+        "image": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a"
+      }
+    },
+    "status": "Observed exact existing digests; future frozen support image list and access/pull proof remain separate."
+  },
+  "tls_flags": {
+    "driver": null,
+    "launcher": null,
+    "status": "NO_EXPLICIT_FLAG_FOUND_ON_EXAMINED_PUBLIC_SURFACES; UNKNOWN, not false",
+    "examined": [
+      "kubeflow/ml-pipeline Deployment public args and driver/launcher/mlmd/metadata/tls/ssl/cert env",
+      "kubeflow/workflow-controller Deployment selected public args",
+      "kubeflow/workflow-controller-configmap data executor/workflowDefaults/config keys"
+    ],
+    "observed": "API server SSL_CERT_FILE=/etc/ani-ca/ca.crt; workflow controller executor has only the observed image; workflowDefaults/config keys absent. This does not establish generated driver/launcher process flags."
+  },
+  "legacy_artifact_candidates": {
+    "source": {
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "kfp-launcher",
+      "uid": "bae6958f-0760-4f34-b14a-9f2f07067432",
+      "resourceVersion": "666227"
+    },
+    "defaultPipelineRoot": "s3://ani-md-v21-kfp-01a15f47/artifacts",
+    "s3_public_fields": [
+      {
+        "name": "default",
+        "endpoint": "ani-rustfs-svc.ani-platform.svc.cluster.local:9000",
+        "region": "us-east-1",
+        "disableSSL": false,
+        "forcePathStyle": true,
+        "maxRetries": 2
+      }
+    ],
+    "derived_transport": "disableSSL=false in existing configuration suggests HTTPS; no TLS or I-O proof",
+    "status": "Legacy bucket/root are observations, not a newly dedicated bucket/IAM identity or final new-system root. Credentials were not read."
+  },
+  "kubeflow_launcher_config": {
+    "source": {
+      "namespace": "kubeflow",
+      "name": "kfp-launcher",
+      "uid": "6b2aa04e-3c5b-4480-8728-ec2931526166",
+      "resourceVersion": "24095"
+    },
+    "defaultPipelineRoot": "",
+    "s3_candidates": []
+  },
+  "remaining_not_verified": [
+    "Explicit actual generated driver/launcher TLS flags",
+    "New-system CA load and MLMD/artifact real I-O",
+    "New dedicated artifact bucket/IAM scope and ordinary-tenant isolation",
+    "Future image/project access and deployment build mapping"
+  ]
+}

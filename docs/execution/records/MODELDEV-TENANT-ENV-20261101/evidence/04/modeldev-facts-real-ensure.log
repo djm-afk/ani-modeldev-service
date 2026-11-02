@@ -1,0 +1,14 @@
+=== RUN   TestDynamicFactsReadsPublishedEnvironmentAndReverifiesOriginalIdentity
+    reader_test.go:63: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestDynamicFactsReadsPublishedEnvironmentAndReverifiesOriginalIdentity (0.27s)
+=== RUN   TestDynamicFactsDoesNotProvisionMissingOrMismatchedMaterials
+    reader_test.go:83: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestDynamicFactsDoesNotProvisionMissingOrMismatchedMaterials (0.28s)
+=== RUN   TestPrepareFinalizeConsumesDynamicEnvironmentAndFrozenOwner
+    reader_test.go:107: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestPrepareFinalizeConsumesDynamicEnvironmentAndFrozenOwner (0.36s)
+=== RUN   TestSameReadyEnvironmentResolvesBothFixedImplementationPaths
+    reader_test.go:132: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestSameReadyEnvironmentResolvesBothFixedImplementationPaths (0.41s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts	1.335s

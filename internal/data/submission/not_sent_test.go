@@ -16,7 +16,7 @@ func TestNotSentRetainsLateConfirmedRunAfterCloseWithoutAnotherPermit(t *testing
 	openPool := postgres.Prepare(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	writerPool := openPool()
 	executions := execution.New(writerPool)
 	if _, err := executions.Accept(ctx, request.Admission); err != nil {

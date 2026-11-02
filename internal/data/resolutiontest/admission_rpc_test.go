@@ -44,7 +44,7 @@ func TestTwoPhaseRPCPreservesCandidateReadyInputAndFullPlanOverMTLS(t *testing.T
 		t.Fatal(e)
 	}
 	hash, _ := s.Digest()
-	if hash != finalized.ExecutionSpecHash || s.IdentityRef != candidate.Snapshot.IdentityRef || s.Resources != candidate.Snapshot.Resources || f.factReader.reads != before {
+	if hash != finalized.ExecutionSpecHash || s.IdentityRef != candidate.Snapshot.IdentityRef || s.Resources != candidate.Snapshot.Resources || f.factReader.reads != before+1 {
 		t.Fatal("wire finalize changed frozen facts")
 	}
 	second, e := client.FinalizeAdmission(admissionRPCContext(f.ctx, f.request.IdentityRef.TenantID), &modeldevv1.FinalizeAdmissionRequest{CandidateCanonical: response.CandidateCanonical, CandidateHash: response.CandidateHash})

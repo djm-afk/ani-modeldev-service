@@ -1,0 +1,204 @@
+{
+  "started_at": "2026-11-01T02:02:40.399475+00:00",
+  "base": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+  "commands": [
+    {
+      "name": "gofmt",
+      "command": [
+        "gofmt",
+        "-w",
+        "app/admin/service/internal/data/modeldev_original_command_retirement.go",
+        "app/admin/service/internal/data/modeldev_original_codec_inventory.go",
+        "app/admin/service/internal/data/modeldev_original_command_retirement_test.go",
+        "app/admin/service/cmd/modeldev-original-command-retirement/main.go"
+      ],
+      "started_at": "2026-11-01T02:02:40.399871+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:40.407970+00:00"
+    },
+    {
+      "name": "git-clone",
+      "command": [
+        "git",
+        "clone",
+        "--shared",
+        "--no-checkout",
+        "/home/chabking/tenantenv-20261101/gov-maintenance-codec-alignment",
+        "/home/chabking/tenantenv-20261101/gov-original-command-retirement-gitmeta"
+      ],
+      "started_at": "2026-11-01T02:02:40.408402+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:42.644959+00:00"
+    },
+    {
+      "name": "git-origin",
+      "command": [
+        "git",
+        "-C",
+        "/home/chabking/tenantenv-20261101/gov-original-command-retirement-gitmeta",
+        "remote",
+        "set-url",
+        "origin",
+        "ssh://git@ssh.github.com:443/zhangzhe-ctrl/ani-governance.git"
+      ],
+      "started_at": "2026-11-01T02:02:42.645386+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:42.647877+00:00"
+    },
+    {
+      "name": "git-fetch-base",
+      "command": [
+        "git",
+        "-C",
+        "/home/chabking/tenantenv-20261101/gov-original-command-retirement-gitmeta",
+        "fetch",
+        "--depth=16",
+        "origin",
+        "6c17f0103994620f49c8f6f10c09f414169c6b7d"
+      ],
+      "started_at": "2026-11-01T02:02:42.648171+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:49.252529+00:00"
+    },
+    {
+      "name": "git-head",
+      "command": [
+        "git",
+        "symbolic-ref",
+        "HEAD",
+        "refs/heads/codex/original-command-retirement-verification"
+      ],
+      "started_at": "2026-11-01T02:02:49.253379+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:49.256263+00:00"
+    },
+    {
+      "name": "git-base",
+      "command": [
+        "git",
+        "update-ref",
+        "refs/heads/codex/original-command-retirement-verification",
+        "6c17f0103994620f49c8f6f10c09f414169c6b7d"
+      ],
+      "started_at": "2026-11-01T02:02:49.256733+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:49.260714+00:00"
+    },
+    {
+      "name": "git-origin-main",
+      "command": [
+        "git",
+        "update-ref",
+        "refs/remotes/origin/main",
+        "ddd98f4c79751ba848fa862bab6878dc7bc99bb7"
+      ],
+      "started_at": "2026-11-01T02:02:49.261139+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:49.265549+00:00"
+    },
+    {
+      "name": "git-index",
+      "command": [
+        "git",
+        "read-tree",
+        "6c17f0103994620f49c8f6f10c09f414169c6b7d"
+      ],
+      "started_at": "2026-11-01T02:02:49.265915+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:49.307219+00:00"
+    },
+    {
+      "name": "git-intent",
+      "command": [
+        "git",
+        "add",
+        "-N",
+        "--",
+        "app/admin/service/internal/data/modeldev_original_command_retirement.go",
+        "app/admin/service/internal/data/modeldev_original_codec_inventory.go",
+        "app/admin/service/internal/data/modeldev_original_command_retirement_test.go",
+        "app/admin/service/cmd/modeldev-original-command-retirement/main.go",
+        "docs/operations/modeldev-original-command-retirement.md"
+      ],
+      "started_at": "2026-11-01T02:02:49.307638+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:49.315730+00:00"
+    },
+    {
+      "name": "git-source-diff",
+      "command": [
+        "git",
+        "diff",
+        "--stat",
+        "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+        "--"
+      ],
+      "started_at": "2026-11-01T02:02:49.316101+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:02:49.971805+00:00"
+    },
+    {
+      "name": "original-pg",
+      "command": [
+        "bash",
+        "/home/chabking/tenantenv-20261101/gov-original-command-retirement-evidence/run-original-pg.sh"
+      ],
+      "started_at": "2026-11-01T02:02:49.973275+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:03:28.587153+00:00"
+    },
+    {
+      "name": "tool-vet",
+      "command": [
+        "go",
+        "vet",
+        "./app/admin/service/cmd/modeldev-original-command-retirement"
+      ],
+      "started_at": "2026-11-01T02:03:28.587813+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:03:52.974730+00:00"
+    },
+    {
+      "name": "tool-build",
+      "command": [
+        "go",
+        "build",
+        "-trimpath",
+        "-o",
+        "/home/chabking/tenantenv-20261101/gov-original-command-retirement-evidence/modeldev-original-command-retirement",
+        "./app/admin/service/cmd/modeldev-original-command-retirement"
+      ],
+      "started_at": "2026-11-01T02:03:52.975688+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:04:23.585127+00:00"
+    },
+    {
+      "name": "complete-make-check",
+      "command": [
+        "make",
+        "check"
+      ],
+      "started_at": "2026-11-01T02:04:23.585746+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:09:46.943506+00:00"
+    }
+  ],
+  "status": "TERMINAL",
+  "source_hashes": {
+    "app/admin/service/internal/data/modeldev_original_command_retirement.go": "f5bf1a384fd7ecbf7bd5a38ab5cb7bd79e3e19a4f3ec4d7a0694fa1fe9ca52a0",
+    "app/admin/service/internal/data/modeldev_original_codec_inventory.go": "d44104dd6bbe8f84d18510d0b819c7965101c747aa6d3a22549bd6eb6abed900",
+    "app/admin/service/internal/data/modeldev_original_command_retirement_test.go": "ed6950b2e91cef48c721f605314b068d5936e4f770b430fec4ac8a957cb8a443",
+    "app/admin/service/cmd/modeldev-original-command-retirement/main.go": "314d2c43a4b6dd3e29218af79869e979a5842a4d81cec2dcde6c05630747843c",
+    "docs/operations/modeldev-original-command-retirement.md": "74d24be08764de4b807f6ef6aa9dd5526c9cc3ac9140fde06d9e1f6819d1572d"
+  },
+  "ended_at": "2026-11-01T02:09:46.946224+00:00",
+  "exit_code": 0,
+  "source_hashes_after": {
+    "app/admin/service/internal/data/modeldev_original_command_retirement.go": "f5bf1a384fd7ecbf7bd5a38ab5cb7bd79e3e19a4f3ec4d7a0694fa1fe9ca52a0",
+    "app/admin/service/internal/data/modeldev_original_codec_inventory.go": "d44104dd6bbe8f84d18510d0b819c7965101c747aa6d3a22549bd6eb6abed900",
+    "app/admin/service/internal/data/modeldev_original_command_retirement_test.go": "ed6950b2e91cef48c721f605314b068d5936e4f770b430fec4ac8a957cb8a443",
+    "app/admin/service/cmd/modeldev-original-command-retirement/main.go": "314d2c43a4b6dd3e29218af79869e979a5842a4d81cec2dcde6c05630747843c",
+    "docs/operations/modeldev-original-command-retirement.md": "74d24be08764de4b807f6ef6aa9dd5526c9cc3ac9140fde06d9e1f6819d1572d"
+  },
+  "binary_sha256": "bbf33c31d36046f298bce3f5d95c90e1302362e99c1034ab0173da53297aa4e1"
+}

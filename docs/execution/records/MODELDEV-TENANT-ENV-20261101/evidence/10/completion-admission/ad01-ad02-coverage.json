@@ -1,0 +1,189 @@
+{
+  "schema": "ani.modeldev.AD01-AD02-required-level-coverage.v1",
+  "prepared_at": "2026-11-01T17:12:20.797423+00:00",
+  "status": "PASS_AT_ORIGINAL_COMPONENT_AND_REAL_OWNER_CHAIN_LEVEL",
+  "grading_basis": "Original AD01 CEL+handler and AD02 native+original-owner-chain levels; this receipt does not redefine them as a complete live negative matrix.",
+  "baseline_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "final_admission_source": "4d6013c5b13cf150268ebbf63544ad16e1672d13",
+  "source_bridge": {
+    "go_webhook_production_diff_from_verified_baseline": 0,
+    "native_core_ordinary_tenant_ast_unchanged": true,
+    "proof": "source_equivalence",
+    "user_override": "Final platform-principal exemptions supersede the earlier platform-actor restrictions. They are not treated as ordinary-tenant negative cases or silently restored."
+  },
+  "AD01": {
+    "status": "PASS",
+    "required_level": "CEL+handler",
+    "clauses": [
+      {
+        "requirement": "Reserved SA, PVC, Secret, or protected marker independently selects the global webhook; removing a marker alone does not escape reserved references.",
+        "component_evidence": [
+          "renderer_components",
+          "source_equivalence"
+        ],
+        "component_tests": [
+          "test_single_global_or_match_and_no_creator_skip",
+          "test_exact_policies_old_object_and_global_token_secret_guard"
+        ],
+        "scope": "Executed renderer checks plus unchanged reserved-identity/reference OR and oldObject protection expressions. Final explicit platform-principal skip is a separately approved exception."
+      },
+      {
+        "requirement": "Unknown or stale environment projection is denied; a later READY environment is read without restarting the shared webhook.",
+        "component_evidence": [
+          "handler_components",
+          "verified_baseline",
+          "source_equivalence"
+        ],
+        "component_tests": [
+          "TestDynamicEnvironmentAppearsWithoutWebhookRestartAndIsReadOnEveryRequest",
+          "TestRefuseUntrustedScopeOwnerProfileImagesAndMounts"
+        ],
+        "scope": "Real handler/component code with external dependency doubles; includes missing projection, digest drift, original Namespace/SA/Workflow UID mismatch and dependency unavailability."
+      },
+      {
+        "requirement": "An ordinary unmarked Pod without reserved identities or references does not invoke ModelDev dependency readers or mutation.",
+        "component_evidence": [
+          "handler_components"
+        ],
+        "component_tests": [
+          "TestOutsideScopeDoesNotReadDependenciesOrMutate"
+        ],
+        "live_evidence": [
+          "live_fault_and_recovery"
+        ],
+        "scope": "Component proves zero dependency reads/patches. LIVE10 actual unrelated KubeVirt representative dry-run remains HTTP201 while the ModelDev webhook is unreachable; real-Argo ModelDev representative is 201→500→201 with identical clone request SHA. The unrelated representative used the existing operator, not an ordinary-tenant authentication claim."
+      }
+    ]
+  },
+  "AD02": {
+    "status": "PASS",
+    "required_level": "native+original-owner-chain",
+    "clauses": [
+      {
+        "requirement": "All four root parameters are checked for step and root driver; stale/original identity mismatch is rejected.",
+        "component_evidence": [
+          "handler_components",
+          "verified_baseline",
+          "source_equivalence"
+        ],
+        "component_tests": [
+          "TestDriverAndStepBothRejectOldRootParametersAndUnexpectedPullReferences",
+          "TestRefuseUntrustedScopeOwnerProfileImagesAndMounts"
+        ],
+        "live_evidence": [
+          "live_finetuning",
+          "live_fault_and_recovery"
+        ],
+        "scope": "Negative parameter/UID checks are executed component coverage. Actual B4 fine roles and current A4 real-Argo admission demonstrate valid original-owner creation/injection, not live replay of every negative field."
+      },
+      {
+        "requirement": "Parent templates, retained Pod identity/spec UPDATE and ephemeral-container injection cannot bypass protection.",
+        "component_evidence": [
+          "renderer_components",
+          "source_equivalence",
+          "handler_components"
+        ],
+        "component_tests": [
+          "test_exact_policies_old_object_and_global_token_secret_guard",
+          "TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift",
+          "TestHTTPSProfilesMountsPrecisePatchAndIdempotence",
+          "TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay"
+        ],
+        "live_evidence": [
+          "native_required_negatives",
+          "live_finetuning",
+          "live_fault_and_recovery"
+        ],
+        "scope": "Executed template/handler checks, unchanged workflow_equal/pod_identity/checks/rules AST and live valid owner-chain updates/creation. Individual parent/Pod mutation and ephemeral negative cases are component/static CEL evidence; no claim of a new full API-server negative matrix."
+      },
+      {
+        "requirement": "Reserved service accounts must never receive legacy service-account-token Secrets.",
+        "component_evidence": [
+          "renderer_components",
+          "source_equivalence"
+        ],
+        "live_evidence": [
+          "legacy_token_guard"
+        ],
+        "scope": "One actual server dry-run returns HTTP422 naming modeldev-environment-config-v1 and reserved-SAs legacy-token refusal; before/after target404. Existing Resource platform-owner principal with its real normative groups was impersonated by the authorized operator, not an ordinary-tenant or projected-token acceptance claim."
+      },
+      {
+        "requirement": "Exact activeDeadlineSeconds=0 stop remains allowed for the existing KFP API owner; normal Argo whole-object updates continue.",
+        "component_evidence": [
+          "source_equivalence",
+          "kfp_owner_components"
+        ],
+        "live_evidence": [
+          "owner_stop",
+          "owner_stop_readback",
+          "live_finetuning",
+          "live_finetuning_close"
+        ],
+        "scope": "Unchanged exact stop/workflow comparison expressions and original KFP/cleanup components; normal B CPU Stop202→stop_requested true→CLOSED plus actual original-owner fine workflow completion/automatic cleanup. No additional foreign-owner stop or actor exemptions were inferred."
+      }
+    ]
+  },
+  "limitations": [
+    "PASS combines executed component tests, explicit source equivalence and the identified real API-server/owner-chain evidence at the original acceptance-row level.",
+    "External K8s/KFP/projection boundaries in handler component tests are doubles; these are not relabeled as live server enforcement.",
+    "Only the named native negative cases and legacy-token refusal are live denial observations; individual field negatives were not all repeated on the API server.",
+    "LIVE10 retained original namespace/name/UID/Run/specHash and exact clone request/response hashes; its full original Pod spec was memory-only.",
+    "Final report and acceptance-results.tsv grading remain Root-owned; B5 business observation is not part of this evidence-only work."
+  ],
+  "new_activity": {
+    "tests": 0,
+    "cluster_calls": 0,
+    "source_changes": 0,
+    "deployment_changes": 0
+  },
+  "evidence": {
+    "source_equivalence": {
+      "path": "10/completion-admission/admission-source-existing-coverage.json",
+      "sha256": "7e43806f4eccd25186ebb69c4cf7fbda40783a08f776122d6eb8a913ae61d0b1"
+    },
+    "verified_baseline": {
+      "path": "modeldev-tested-source-identity.json",
+      "sha256": "cd0c32c86c346cd27acf885195efb505521fefa4e1baa0576a73fdb201d0a495"
+    },
+    "handler_components": {
+      "path": "06-webhook-component-tests.log",
+      "sha256": "0805868021f527d438586e17a64ca1e330fbdc06aaee17c42655d80045f050c9"
+    },
+    "renderer_components": {
+      "path": "06-renderer-component-tests.log",
+      "sha256": "36c042cdb2f6960cf282bd9ab0294f3843fe58bfd60a08ffcd3c996f81bf6a8e"
+    },
+    "native_required_negatives": {
+      "path": "10/completion-admission/native-evaluated.json",
+      "sha256": "73bc7c3121c233374d442f68fed4ee6b06c52212f41a46457413dd8599074f99"
+    },
+    "live_fault_and_recovery": {
+      "path": "10/completion-admission/result.json",
+      "sha256": "65cfe5d65be7b649da6519fb3e2d877d1c9a4abc34f9a629903c4b2d6328409f"
+    },
+    "legacy_token_guard": {
+      "path": "native-probes/resource-legacy-dryrun-1793507391969011769.json",
+      "sha256": "5c4ea7ffd197ea52734bbf8b854aca1e664468ffa6b6c4c9f30fed8cf781dc1c"
+    },
+    "owner_stop": {
+      "path": "10/resumed-mainflow/stop-b_cpu_stop-1793538561609716217.json",
+      "sha256": "290c4b1d253965e741926237a1cc7d90a04bcbc0d6ebde38c317f9f2dc1f41d9"
+    },
+    "owner_stop_readback": {
+      "path": "10/resumed-mainflow/live08-normal-jwt-negative-and-b-cpustop-1793539024651916679.json",
+      "sha256": "c1cc2b60799528a5c1a517ccec0131771bb4ef5b277e6011aa530ea08f5b7655"
+    },
+    "kfp_owner_components": {
+      "path": "10-kfp-cleanup-regression.log",
+      "sha256": "a90d433753e73e9e0314efec045d24ce5731a01627c58af1933efc726bf2a21a"
+    },
+    "live_finetuning": {
+      "path": "10/b4-real-finetuning/current.json",
+      "sha256": "a29fb3c79c4ef5e1553507021e725cb2d8cba5c9cdbc9f74366afc1bd1883f61"
+    },
+    "live_finetuning_close": {
+      "path": "10/resumed-mainflow/b4-original-close-and-release-final-1793549008812487147.json",
+      "sha256": "f3dbe26c3623f4a308e82833c98ef97e890ea9fa3d50beb57a2cfe73cedb8d4a"
+    }
+  }
+}

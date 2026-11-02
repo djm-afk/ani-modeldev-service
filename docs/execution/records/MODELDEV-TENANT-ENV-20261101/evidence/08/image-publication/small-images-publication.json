@@ -1,0 +1,52 @@
+{
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "source_inputs_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+  "started_at": "2026-11-01T00:44:56.793917+00:00",
+  "authority": "10.10.1.66:30003",
+  "project": "ani-resource-factor10-20261022",
+  "credential_source": {
+    "identity": {
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+    },
+    "deployment_uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+    "deployment_resource_version": "20340742",
+    "container": "resource",
+    "init_container": "private-regular-files",
+    "source_mount": "input:/input readonly",
+    "destination_mount": "private:/private",
+    "config_secret_uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+    "password_source": "ani-system/ani-resource-private:harbor.password",
+    "ca_source": "ani-system/ani-resource-private:harbor-ca.crt",
+    "password_file": "/private/harbor.password",
+    "ca_file": "/private/harbor-ca.crt",
+    "ca_sha256": "65f1a1d14d21fed31b89f25b143e78b16605b82d32c56ef6bf8167fe78bab871",
+    "credentials_emitted": false
+  },
+  "images": {
+    "step": {
+      "state": "PREFLIGHT",
+      "source_image_id": "102a17fcca37414302ee9703e310bae554905349d8f3b6556ac323ea1408a2a9",
+      "source_local_size_bytes": 36725738,
+      "source_labels": {
+        "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "io.ani.source-tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "io.ani.build-inputs-sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9"
+      },
+      "target": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step:tenantenv-d807cbdbd5dd-cymq2rk8"
+    }
+  },
+  "rollout": "NOT_RUN",
+  "credentials_emitted": false,
+  "status": "FAILED_OR_UNCERTAIN_READ_EXACT_TARGET_BEFORE_RETRY",
+  "error_class": "AssertionError",
+  "finite_reason": "REGISTRY_PREFLIGHT_NOT_PROVEN_ABSENT",
+  "temporary_auth_and_ca_removed": true,
+  "finished_at": "2026-11-01T00:45:02.322903+00:00",
+  "fedora_ssh_exit": 1
+}

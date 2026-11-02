@@ -1,0 +1,32 @@
+{
+  "observed_at": "2026-11-01T02:20:12.272932+00:00",
+  "scope": "Only human-approved three original legacy executions retirement; not whole dynamic tenant rollout or all old data deletion",
+  "source_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "status": "PASS",
+  "final_resume_exit_code": 0,
+  "first_apply_exit_code": 1,
+  "first_apply_partial_and_truthful_error": "Original close+cleanup committed; original short Gov DNS NXDOMAIN prevented ACK. No synthetic ACK or blind replay. Parent reviewed fixed-Service same-mTLS transport and new partial plan/gate before explicit resume.",
+  "initial_plan_sha256": "765b60dc82720999f4dc8712b729004c49f0fdcf326256d550ac4bba8b1ca9b9",
+  "reviewed_partial_plan_sha256": "5cbe9d22437cefc8f1b82e09ac4972b6514bbd88281850972c643dd80d57e9ef",
+  "reviewed_resume_gate_sha256": "4d997825f373bbb2d2c14cda5ae44628b5a57a2e9db2fc0152a3180e58b9bcbe",
+  "resume_actual_stdout": "original-stop-final-maintenance-resume.jsonl",
+  "durable_readback": "original-stop-final-durable-journals.json",
+  "three_closed_step_complete_compute_applied": true,
+  "compute_attempts_each": 1,
+  "captured_log_count_each": 0,
+  "two_training_logs": "TRAINING_LOGS_UNRECOVERABLE; never captured or fabricated",
+  "gpu_actual_ack": "ALREADY_APPLIED",
+  "gpu_original_event_id": "54c1fb78-da48-4586-990e-333ed8090aef",
+  "gpu_original_reason": "RESOURCE_RELEASED",
+  "gpu_account_delta": 0,
+  "gpu_before_after_evidence_sha256": "2c97a0d72b9755a128f31cdbe6da6a13b83af2ddcd1ff836c9726d5b6684d1aa",
+  "independent_gpu_journal_persisted": true,
+  "new_md_anchor_scope_outbox_or_release_event": false,
+  "post_retirement_exclusive_assets_and_data_cleanup": "NOT_RUN by this task; separately owned subsequent phases",
+  "retained_node_maintenance_files": {
+    "binary": "/tmp/modeldev-legacy-retirement-101a2fd",
+    "private_directory": "/tmp/modeldev-legacy-retirement-20261101",
+    "reason": "exact audit/recovery inputs kept until parent cleanup ledger; only file references, never private bytes copied from source mounts"
+  },
+  "temporary_transport_artifacts": "32 node chunks+directory and local32MB cache removed; HTTPdaemon/nonce actual cleanup recorded"
+}

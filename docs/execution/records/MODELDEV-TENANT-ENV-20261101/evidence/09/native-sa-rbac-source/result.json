@@ -1,0 +1,89 @@
+{
+  "current_platform_config": "../native-bootstrap-live/final-native-rbac-platform/platform-canonical-artifact-mount.json",
+  "current_platform_sha256": "152a1bdd511e8843065f93c13ee08f29fdbbe2d140338fba20ccd0dbdc412a7c",
+  "deployment_or_live_ab_status": "NOT_RUN by this gate",
+  "failure_isolation": {
+    "command": [
+      "go",
+      "test",
+      "-p=1",
+      "-count=1",
+      "./internal/data/input",
+      "./internal/data/submission",
+      "./internal/data/submittest"
+    ],
+    "log_sha256": "ec029a50485092d39c8d0488f60aea42ad1a1be7d51d18664f5f72826c9b9211",
+    "receipt": "modeldev-native-rbac-fullverify-20261101T045658Z.three-failed-packages-isolation.json",
+    "source_or_timeout_changes": false,
+    "status": "PASS"
+  },
+  "first_fullgate": {
+    "failures": [
+      "input fixture Ensure VERIFY deadline",
+      "submission other_tenant fixture Ensure NAMESPACE deadline",
+      "submittest cancellation real Admission PERSISTENCE_UNAVAILABLE"
+    ],
+    "log": "modeldev-native-rbac-fullverify-20261101T045658Z.make-verify.log",
+    "log_sha256": "04336ae8ee32bc57ca0f6f83d83c228b586a0c1a3c37f4f64f078a8fea53366f",
+    "receipt": "modeldev-native-rbac-fullverify-20261101T045658Z.result.json",
+    "status": "FAIL"
+  },
+  "preserved_test_harness_failures": [
+    "first-green-output.log",
+    "api-denial-fixture-deadlock-output.log",
+    "fullverify-orchestration-output.log"
+  ],
+  "required_fullgate": {
+    "GOFLAGS": "-p=1",
+    "checks": [
+      "pinned generator checks",
+      "generation byte stability",
+      "gofmt",
+      "go mod tidy -diff",
+      "all default go tests with real isolated restricted-role PostgreSQL and external boundary doubles",
+      "go vet",
+      "go build -trimpath",
+      "go mod verify",
+      "git diff --check"
+    ],
+    "command": [
+      "python3",
+      "scripts/with-test-postgres.py",
+      "make",
+      "verify",
+      "TOOLS_DIR=/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin"
+    ],
+    "exit": 0,
+    "finished_at": "2026-11-01T05:18:06.753182+00:00",
+    "log": "modeldev-native-rbac-fullverify-20261101T045658Z.sequential.make-verify.log",
+    "log_sha256": "745bf305ec61ea2c94600e87ab6b982e8da7e15271f9992183699e7f3169cfd9",
+    "receipt": "modeldev-native-rbac-fullverify-20261101T045658Z.sequential.result.json",
+    "runtime_cpu_memory_timeout_budgets_changed": false,
+    "started_at": "2026-11-01T05:08:00.114875+00:00",
+    "status": "PASS"
+  },
+  "schema": "ani.modeldev.native-sa-rbac-source-gate.v1",
+  "scope": "Native SA/RBAC runtime convergence and Root renderer changes; required precommit source gate, not deployment or A/B acceptance",
+  "source": {
+    "clean_head_claimed": false,
+    "committed_by_agent": false,
+    "expected_uncommitted_diff_recorded_in_manifest": true,
+    "frozen_head": "f22fd4cef5f13cf1210eae504690206fbf922723",
+    "index_metadata_correction": "modeldev-native-rbac-fullverify-20261101T045658Z.index-metadata-correction.json",
+    "local_post_mismatches": [],
+    "local_post_receipt": "fullverify-sequential-local-source-after.json",
+    "manifest": "fullverify-source-before.json",
+    "manifest_sha256": "cde9680bf0f331ba659048bdad353863f72f30330bf416ef094c4301ed7f9f78",
+    "remote_pre_and_post_mismatches": [],
+    "source_files": 1756
+  },
+  "status": "PASS",
+  "targeted_test_logs": [
+    "red-output.log",
+    "api-denial-behavior-red-output.log",
+    "api-denial-green-output.log",
+    "targeted-final-output.log",
+    "original-identity-red-output.log",
+    "original-identity-green-output.log"
+  ]
+}

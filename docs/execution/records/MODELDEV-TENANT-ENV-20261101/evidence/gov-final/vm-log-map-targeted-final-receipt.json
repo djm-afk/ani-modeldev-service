@@ -1,0 +1,28 @@
+{
+  "started_at": "2026-10-31T21:07:39.418601+00:00",
+  "completed_at": "2026-10-31T21:07:47.305442+00:00",
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-count=1",
+    "-v",
+    "./pkg/permcode",
+    "./sql/bootstrap"
+  ],
+  "cwd": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source",
+  "source_base": "f6a68ed7f89cca56b4ea97377a21e4146f4c6b62",
+  "exit_code": 0,
+  "environment": {
+    "GOTOOLCHAIN": "auto",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2"
+  },
+  "source_sha256": {
+    "docs/contracts/permission-code-capability-map.tsv": "9bd2d471bdb49764468fe9866c39e8e0cf7b059c42edbdd9651769ece7b9a4f3",
+    "pkg/permcode/capability_gen.go": "362e30ef666e76ff6f829ea8c4214596a10e35c999ee26109ff77cfeb276f6df",
+    "pkg/permcode/permcode_test.go": "c890d0228f2bd9f793a9e73eee3b31f01135bd79474b456c797b6c7ae3818b1a",
+    "sql/bootstrap/catalog_test.go": "957d25d05f4260e6e33c453bdde9243f4e7d73afd7fa6bdc6433f6151bb1ef2c"
+  },
+  "scope": "existing VM logs permission-map contract sync; original SQL, role/plan grants and VM runtime unchanged"
+}

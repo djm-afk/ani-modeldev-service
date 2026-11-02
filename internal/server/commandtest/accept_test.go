@@ -6,11 +6,11 @@ import (
 	"errors"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	trainingv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
@@ -29,7 +29,7 @@ import (
 
 func TestGovernanceAcceptExecutionCommitsAndReplaysCurrentState(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request, dispatchRequest := validAcceptCommand(t)
+	request, dispatchRequest := validAcceptCommand(t, openPool())
 	certificates := commandtls.New(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
@@ -185,7 +185,7 @@ func TestGovernanceAcceptExecutionCommitsAndReplaysCurrentState(t *testing.T) {
 	}
 }
 
-func validAcceptCommand(t *testing.T) (*modeldevv1.AcceptExecutionRequest, biz.PipelineDispatchRequest) {
+func validAcceptCommand(t *testing.T, pool *pgxpool.Pool) (*modeldevv1.AcceptExecutionRequest, biz.PipelineDispatchRequest) {
 	t.Helper()
 	snapshot := conformance.SnapshotV1()
 	acceptedAt := time.Now().UTC().Truncate(time.Microsecond)
@@ -201,6 +201,7 @@ func validAcceptCommand(t *testing.T) (*modeldevv1.AcceptExecutionRequest, biz.P
 		Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: acceptedAt,
 	}
 	admission = admissionfixture.Bind(t, admission)
+	admission = admissionfixture.EnsureEnvironment(t, pool, admission)
 	snapshot = admission.Snapshot
 	specHash, intentHash = admission.SpecHash, admission.IntentHash
 	if _, _, err := admission.CanonicalPayloads(); err != nil {
@@ -221,9 +222,7 @@ func validAcceptCommand(t *testing.T) (*modeldevv1.AcceptExecutionRequest, biz.P
 	}
 	// Same bounded synthetic owner configuration used by the submission tests;
 	// no fixture value establishes a deployed PipelineRoot or real ENV identity.
-	dispatch := biz.PipelineDispatchRequest{Admission: admission, Owner: biz.PipelineOwnerConfiguration{
-		Reference: "cpu07-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root",
-	}}
+	dispatch := biz.PipelineDispatchRequest{Admission: admission, Owner: admission.Snapshot.DispatchOwner}
 	if _, err := dispatch.Freeze(); err != nil {
 		t.Fatalf("CPU_ACCEPT_PREFLIGHT: owner plan fixture invalid: %v; behavior NOT_RUN", err)
 	}

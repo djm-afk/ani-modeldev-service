@@ -1,0 +1,10 @@
+=== RUN   TestMaintenanceOriginalFiveAcceptanceCodec
+    modeldev_maintenance_original_codec_test.go:80: original acceptance 55 rejected by pinned native decoder
+    modeldev_maintenance_original_codec_test.go:80: original acceptance 59 rejected by pinned native decoder
+    modeldev_maintenance_original_codec_test.go:80: original acceptance 60 rejected by pinned native decoder
+    modeldev_maintenance_original_codec_test.go:80: original acceptance 57 rejected by pinned native decoder
+    modeldev_maintenance_original_codec_test.go:80: original acceptance 74 rejected by pinned native decoder
+--- FAIL: TestMaintenanceOriginalFiveAcceptanceCodec (0.02s)
+FAIL
+FAIL	go-wind-admin/app/admin/service/internal/data	0.061s
+FAIL

@@ -1,0 +1,365 @@
+{
+  "schema": "ani.modeldev.B5-original-pod-observer.complete.v1",
+  "finished_at": "2026-11-01T17:13:30.176693+00:00",
+  "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+  "workflow_name": "ft-7vrhz",
+  "workflow_uid": "7df535f0-4fd3-4db6-8aef-5fac0231f0f0",
+  "status": "PIPELINE_TERMINAL_SUCCEEDED",
+  "watcher_ssh_exit": 0,
+  "interval_seconds": 5,
+  "record_count": 35,
+  "public_jsonl": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/10/completion-multitenant-regression/b5-original-pods.jsonl",
+  "public_jsonl_sha256": "dcad29a451dbd42747fd4f30333ad9e9053aa35a07cbf323c0a4cba6ac859da3",
+  "remote_public_copy": {
+    "path": "/home/kubercloud/tenantenv-20261101/completion-multitenant-regression/b5-original-pods.jsonl",
+    "sha256": "dcad29a451dbd42747fd4f30333ad9e9053aa35a07cbf323c0a4cba6ac859da3",
+    "bytes": 40229,
+    "observer_process_state": "ABSENT"
+  },
+  "latest_native_pod_facts": [
+    {
+      "uid": "39f4432b-3cd4-4841-9ae2-42f5e15194a8",
+      "name": "ft-7vrhz-1162571065",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:05:39Z",
+          "finished_at": "2026-11-01T17:05:46Z"
+        }
+      ]
+    },
+    {
+      "uid": "ad691b60-8105-491c-abbb-6a68fc433b9b",
+      "name": "ft-7vrhz-1343223775",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:05:12Z",
+          "finished_at": "2026-11-01T17:05:13Z"
+        }
+      ]
+    },
+    {
+      "uid": "20b08807-cbf3-4640-b185-c9f2091c95cb",
+      "name": "ft-7vrhz-1571433548",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:04:51Z",
+          "finished_at": "2026-11-01T17:04:52Z"
+        }
+      ]
+    },
+    {
+      "uid": "bf46485a-1207-4a1e-9570-4227152f821a",
+      "name": "ft-7vrhz-2278376422",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:06:03Z",
+          "finished_at": "2026-11-01T17:06:25Z"
+        }
+      ]
+    },
+    {
+      "uid": "0cb6203d-123b-4598-a5e4-8af224676bbd",
+      "name": "ft-7vrhz-2294062444",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:05:22Z",
+          "finished_at": "2026-11-01T17:05:23Z"
+        }
+      ]
+    },
+    {
+      "uid": "5ecd4685-7159-4db5-a595-1cad53284fe0",
+      "name": "ft-7vrhz-2355404292",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:08:33Z",
+          "finished_at": "2026-11-01T17:08:34Z"
+        }
+      ]
+    },
+    {
+      "uid": "1d6f6c03-6fae-4975-89fe-e49726469cc4",
+      "name": "ft-7vrhz-2495445098",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:04:32Z",
+          "finished_at": "2026-11-01T17:04:33Z"
+        }
+      ]
+    },
+    {
+      "uid": "88fbabfd-4361-4c97-9a4d-0b2481791e3e",
+      "name": "ft-7vrhz-2696923098",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:09:14Z",
+          "finished_at": "2026-11-01T17:09:15Z"
+        }
+      ]
+    },
+    {
+      "uid": "5e7803cb-92a6-4be9-9b96-e9678a5a90e5",
+      "name": "ft-7vrhz-2817735537",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:08:52Z",
+          "finished_at": "2026-11-01T17:09:01Z"
+        }
+      ]
+    },
+    {
+      "uid": "80695605-051b-44ba-a7be-5867f9d8c93d",
+      "name": "ft-7vrhz-2987274312",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:08:21Z",
+          "finished_at": "2026-11-01T17:08:24Z"
+        }
+      ]
+    },
+    {
+      "uid": "390b149e-24d2-4a2a-bb6c-7e19fddbbdf0",
+      "name": "ft-7vrhz-3338752051",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:07:40Z",
+          "finished_at": "2026-11-01T17:07:49Z"
+        }
+      ]
+    },
+    {
+      "uid": "a65ec33a-c05a-442f-99ba-02182392a7e6",
+      "name": "ft-7vrhz-3345347773",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:05:52Z",
+          "finished_at": "2026-11-01T17:05:53Z"
+        }
+      ]
+    },
+    {
+      "uid": "c31ed179-78eb-4d0d-b48a-dea58262ae18",
+      "name": "ft-7vrhz-3455352859",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:06:39Z",
+          "finished_at": "2026-11-01T17:06:40Z"
+        }
+      ]
+    },
+    {
+      "uid": "c9855028-3ebd-450a-b6cd-0ddf3d5ed59a",
+      "name": "ft-7vrhz-3645798460",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:07:00Z",
+          "finished_at": "2026-11-01T17:07:12Z"
+        }
+      ]
+    },
+    {
+      "uid": "5970ac4b-f239-44a9-beac-2600d386e3ca",
+      "name": "ft-7vrhz-3674841241",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:05:03Z",
+          "finished_at": "2026-11-01T17:05:05Z"
+        }
+      ]
+    },
+    {
+      "uid": "6e479428-c6e8-401a-8ed5-76fc0e12b887",
+      "name": "ft-7vrhz-413976831",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:09:34Z",
+          "finished_at": "2026-11-01T17:09:46Z"
+        }
+      ]
+    },
+    {
+      "uid": "cd48d62a-e464-44d7-999c-3187bbe315f2",
+      "name": "ft-7vrhz-437364806",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:07:25Z",
+          "finished_at": "2026-11-01T17:07:26Z"
+        }
+      ]
+    },
+    {
+      "uid": "7bd82c79-da24-4773-a73a-8fe9595aa2bf",
+      "name": "ft-7vrhz-645281567",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:08:03Z",
+          "finished_at": "2026-11-01T17:08:04Z"
+        }
+      ]
+    },
+    {
+      "uid": "e20cb154-c72e-4bbc-a895-4722b6e1e542",
+      "name": "ft-7vrhz-933837651",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:04:41Z",
+          "finished_at": "2026-11-01T17:04:42Z"
+        }
+      ]
+    },
+    {
+      "uid": "4016d559-fbb0-4850-aaa9-8bd1e3da04d6",
+      "name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0-0-75kbs",
+      "layer": "TRAINER",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "node",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:06:07Z",
+          "finished_at": "2026-11-01T17:06:19Z"
+        }
+      ]
+    },
+    {
+      "uid": "6ab27f0c-d70e-40e7-9a71-d87567bf7a42",
+      "name": "ft-7vrhz-1465094609",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:09:59Z",
+          "finished_at": "2026-11-01T17:10:00Z"
+        }
+      ]
+    },
+    {
+      "uid": "63e14c8b-1728-437c-97a7-26205407ff85",
+      "name": "ft-7vrhz-130235810",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:10:14Z",
+          "finished_at": "2026-11-01T17:10:16Z"
+        }
+      ]
+    },
+    {
+      "uid": "8994c27b-3d45-4337-a010-9e5806ff770e",
+      "name": "ft-7vrhz-3538225839",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:10:29Z",
+          "finished_at": "2026-11-01T17:10:30Z"
+        }
+      ]
+    },
+    {
+      "uid": "b9ea355b-0d4e-4fe6-a97d-04e0966c458a",
+      "name": "ft-7vrhz-1406814200",
+      "layer": "PIPELINE",
+      "phase": "Succeeded",
+      "containers": [
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T17:10:40Z",
+          "finished_at": "2026-11-01T17:10:41Z"
+        }
+      ]
+    }
+  ],
+  "local_helper_removed": {
+    "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/10/completion-multitenant-regression/watch-b5-original-pods.py",
+    "sha256_before": "769d03bd1d162658784b04bd4fbbd959fedb0d7ca053996efa01de4a13cb3b12",
+    "absent_after": true
+  },
+  "remote_program_was_stdin_only": true,
+  "cluster_writes": 0,
+  "business_log_or_ledger_queries": 0
+}

@@ -1,0 +1,153 @@
+{
+  "status": "QUERY",
+  "job": {
+    "id": "8d8b448e1a8846c0ba96bb391d323a7e",
+    "request_id": "1e16ba89-c936-4eb8-a89d-275db38bd07a",
+    "project": "governance",
+    "branch": "codex/modeldev-create-maintenance",
+    "source_commit": "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+    "run_verify": true,
+    "status": "running",
+    "created_at": "2026-10-31T23:40:01.138246+00:00",
+    "started_at": "2026-10-31T23:40:01.140109+00:00",
+    "error_present": false,
+    "steps": [
+      {
+        "id": "fetch",
+        "status": "succeeded",
+        "started_at": "2026-10-31T23:40:01.140727+00:00",
+        "finished_at": "2026-10-31T23:40:05.512808+00:00",
+        "elapsed": 4.37
+      },
+      {
+        "id": "verify",
+        "status": "running",
+        "started_at": "2026-10-31T23:40:05.513758+00:00"
+      },
+      {
+        "id": "build",
+        "status": "pending"
+      },
+      {
+        "id": "push",
+        "status": "pending"
+      },
+      {
+        "id": "deploy",
+        "status": "pending"
+      },
+      {
+        "id": "ready",
+        "status": "pending"
+      }
+    ],
+    "recipe_sha256": {},
+    "build": {}
+  },
+  "log": {
+    "bytes": 14449,
+    "sha256": "84de03fef6bc659c2b4868767a1d100fcd12b053327ab4a18e429f3de7900b7a",
+    "contents_omitted": true,
+    "safe_progress_lines": [
+      {
+        "line": 426,
+        "text": "?   \tgo-wind-admin/pkg/localdeps/kratos-bootstrap/transport/sse\t[no test files]"
+      },
+      {
+        "line": 427,
+        "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-swagger-ui\t0.105s"
+      },
+      {
+        "line": 428,
+        "text": "?   \tgo-wind-admin/pkg/localdeps/kratos-swagger-ui/internal/swagger\t[no test files]"
+      },
+      {
+        "line": 429,
+        "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-transport/broker\t0.189s"
+      },
+      {
+        "line": 430,
+        "text": "?   \tgo-wind-admin/pkg/localdeps/kratos-transport/tracing\t[no test files]"
+      },
+      {
+        "line": 431,
+        "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-transport/transport\t0.009s"
+      },
+      {
+        "line": 432,
+        "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-transport/transport/asynq\t33.980s"
+      },
+      {
+        "line": 433,
+        "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-transport/transport/keepalive\t0.111s"
+      },
+      {
+        "line": 434,
+        "text": "ok  \tgo-wind-admin/pkg/localdeps/kratos-transport/transport/sse\t14.734s"
+      },
+      {
+        "line": 435,
+        "text": "ok  \tgo-wind-admin/pkg/mailer\t0.111s"
+      },
+      {
+        "line": 436,
+        "text": "ok  \tgo-wind-admin/pkg/metadata\t0.010s"
+      },
+      {
+        "line": 437,
+        "text": "ok  \tgo-wind-admin/pkg/middleware/auth\t0.039s"
+      },
+      {
+        "line": 438,
+        "text": "ok  \tgo-wind-admin/pkg/middleware/ent\t0.008s"
+      },
+      {
+        "line": 439,
+        "text": "ok  \tgo-wind-admin/pkg/middleware/logging\t0.081s"
+      },
+      {
+        "line": 440,
+        "text": "ok  \tgo-wind-admin/pkg/middleware/requestid\t0.007s"
+      },
+      {
+        "line": 441,
+        "text": "ok  \tgo-wind-admin/pkg/netutil\t0.064s"
+      },
+      {
+        "line": 442,
+        "text": "ok  \tgo-wind-admin/pkg/password\t0.003s"
+      },
+      {
+        "line": 443,
+        "text": "ok  \tgo-wind-admin/pkg/permcode\t0.005s"
+      },
+      {
+        "line": 444,
+        "text": "ok  \tgo-wind-admin/pkg/quotaerrors\t0.006s"
+      },
+      {
+        "line": 445,
+        "text": "ok  \tgo-wind-admin/pkg/serviceid\t0.005s"
+      },
+      {
+        "line": 446,
+        "text": "?   \tgo-wind-admin/pkg/task\t[no test files]"
+      },
+      {
+        "line": 447,
+        "text": "ok  \tgo-wind-admin/pkg/utils\t0.005s"
+      },
+      {
+        "line": 448,
+        "text": "ok  \tgo-wind-admin/pkg/utils/converter\t0.020s"
+      },
+      {
+        "line": 449,
+        "text": "ok  \tgo-wind-admin/sql/bootstrap\t0.959s"
+      }
+    ],
+    "total_lines": 464,
+    "timeout_marker_present": false,
+    "test_failure_marker_present": false
+  }
+}

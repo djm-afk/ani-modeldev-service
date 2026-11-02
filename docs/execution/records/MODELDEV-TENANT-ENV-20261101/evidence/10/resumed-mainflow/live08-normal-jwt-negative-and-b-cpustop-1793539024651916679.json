@@ -1,0 +1,353 @@
+{
+  "schema": "ani.modeldev.live08.current-normal-jwt-cross-tenant.v1",
+  "started_at": "2026-11-01T13:17:00.745015+00:00",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "negative_calls": [
+    {
+      "tenant": "A",
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/0b3a2880-790b-4af5-a0e4-07e8fc322719",
+      "http_status": 404,
+      "response_sha256": "fd6362100887cb82a5696c3138cd4575fdf3dd35670864bcf33eb9fd1d61deb0",
+      "response_bytes": 140,
+      "error": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "resource unavailable"
+      },
+      "redirect_location_emitted": false
+    },
+    {
+      "tenant": "A",
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/0b3a2880-790b-4af5-a0e4-07e8fc322719/logs?pod_uid=b2b48664-991e-4de5-8ff9-f416b7a0e3fc&tail_lines=20&max_bytes=4096",
+      "http_status": 404,
+      "response_sha256": "b2c9bd29f63139ac7df26b0bbfff64ebe766cbaa010a46eb4d63f5a2b94bb040",
+      "response_bytes": 140,
+      "error": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "resource unavailable"
+      },
+      "redirect_location_emitted": false
+    },
+    {
+      "tenant": "A",
+      "method": "POST",
+      "path": "/api/v1/modeldev/executions/0b3a2880-790b-4af5-a0e4-07e8fc322719:stop",
+      "http_status": 404,
+      "response_sha256": "2698a91f7f56517341e958c8816d03eb1d1202a905293acbd3f46ec746b39481",
+      "response_bytes": 141,
+      "error": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "execution unavailable"
+      },
+      "redirect_location_emitted": false
+    },
+    {
+      "tenant": "B",
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/2d9bcccd-78e7-47ab-9922-dcee85021099",
+      "http_status": 404,
+      "response_sha256": "e4aa0d07c72aa03cf1024e848f00587fb7a2b49f3dc038cf5ec15af35ee5aada",
+      "response_bytes": 140,
+      "error": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "resource unavailable"
+      },
+      "redirect_location_emitted": false
+    },
+    {
+      "tenant": "B",
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/2d9bcccd-78e7-47ab-9922-dcee85021099/logs?pod_uid=c5f68ad7-48a9-49c0-9852-1caa97f530fe&tail_lines=20&max_bytes=4096",
+      "http_status": 404,
+      "response_sha256": "04ac22fd9f0597682edd4749415f329001f9c32198bf71f00ad14044477698af",
+      "response_bytes": 140,
+      "error": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "resource unavailable"
+      },
+      "redirect_location_emitted": false
+    },
+    {
+      "tenant": "B",
+      "method": "POST",
+      "path": "/api/v1/modeldev/executions/2d9bcccd-78e7-47ab-9922-dcee85021099:stop",
+      "http_status": 404,
+      "response_sha256": "c7d6afb1bacc77fd66b2ce9408c44f3846279cbe1e701512faba1b51993d8d68",
+      "response_bytes": 141,
+      "error": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "execution unavailable"
+      },
+      "redirect_location_emitted": false
+    },
+    {
+      "tenant": "B",
+      "method": "GET",
+      "path": "/api/v1/modeldev/artifacts/21d99ea5-85a7-5898-8834-6e505e9afe68/download",
+      "http_status": 404,
+      "response_sha256": "17dc3aa07dd2808337009e7e59335179ec820f48ccff066d369405f12ff42c78",
+      "response_bytes": 89,
+      "error": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "resource unavailable"
+      },
+      "redirect_location_emitted": false
+    }
+  ],
+  "tokens_or_passwords_persisted": false,
+  "new_create_count": 0,
+  "authorized_owned_stop_count": 0,
+  "credential_or_signed_url_emitted": false,
+  "normal_principals": [
+    {
+      "tenant": "A",
+      "tenant_name": "tenant-a",
+      "username": "admin",
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+    },
+    {
+      "tenant": "B",
+      "tenant_name": "e2e-full-20261029",
+      "username": "md-tenantenv-20261101",
+      "resource_tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2"
+    }
+  ],
+  "owned_stop_fields_before": {
+    "A": {
+      "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+      "operation_id": "0af911b1-c5a4-464d-8da1-87b3e4949dd3",
+      "stop_requested": false,
+      "close_generation": "1"
+    },
+    "B": {
+      "execution_id": "0b3a2880-790b-4af5-a0e4-07e8fc322719",
+      "operation_id": "c71f4c3b-a7ef-44c0-bc80-045f1e06019e",
+      "stop_requested": false,
+      "close_generation": "1"
+    }
+  },
+  "original_stop_fences_before": [
+    {
+      "execution_id": "0b3a2880-790b-4af5-a0e4-07e8fc322719",
+      "operation_id": "c71f4c3b-a7ef-44c0-bc80-045f1e06019e",
+      "resource_tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "close_dispatch_state": "IDLE",
+      "stop_intent_generation": 0
+    },
+    {
+      "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+      "operation_id": "0af911b1-c5a4-464d-8da1-87b3e4949dd3",
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "close_dispatch_state": "IDLE",
+      "stop_intent_generation": 0
+    }
+  ],
+  "owned_stop_fields_after": {
+    "A": {
+      "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+      "operation_id": "0af911b1-c5a4-464d-8da1-87b3e4949dd3",
+      "stop_requested": false,
+      "close_generation": "1"
+    },
+    "B": {
+      "execution_id": "0b3a2880-790b-4af5-a0e4-07e8fc322719",
+      "operation_id": "c71f4c3b-a7ef-44c0-bc80-045f1e06019e",
+      "stop_requested": false,
+      "close_generation": "1"
+    }
+  },
+  "original_stop_fences_after": [
+    {
+      "execution_id": "0b3a2880-790b-4af5-a0e4-07e8fc322719",
+      "operation_id": "c71f4c3b-a7ef-44c0-bc80-045f1e06019e",
+      "resource_tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "close_dispatch_state": "IDLE",
+      "stop_intent_generation": 0
+    },
+    {
+      "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+      "operation_id": "0af911b1-c5a4-464d-8da1-87b3e4949dd3",
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "close_dispatch_state": "IDLE",
+      "stop_intent_generation": 0
+    }
+  ],
+  "no_stop_side_effect": true,
+  "all_actual_denied": true,
+  "a_to_b_artifact": "NOT_RUN: await B2 published artifact identity",
+  "status": "SEVEN_CURRENT_CROSS_TENANT_REQUESTS_DENIED_NO_STOP_SIDE_EFFECT",
+  "b_cpu_stop_readback": {
+    "execution_id": "bb4fd203-1a3d-4796-8aa8-783dd62e57ae",
+    "calls": [
+      {
+        "method": "GET",
+        "path": "/api/v1/modeldev/executions/bb4fd203-1a3d-4796-8aa8-783dd62e57ae",
+        "http_status": 200,
+        "response": {
+          "operation_id": "3ddec79e-9e03-46ab-9fbc-491d724415a0",
+          "execution_id": "bb4fd203-1a3d-4796-8aa8-783dd62e57ae",
+          "name": "tenantenv-b_cpu_stop-935c3148",
+          "kind": "GENERAL_TRAINING",
+          "implementation_id": "builtin.mlp",
+          "compute_preset_id": "9f5a0625-1eab-4a65-95af-68962138ef86",
+          "input_version_id": "bfcd2434-ad4d-4daf-85ca-1bd55f0e4c4b",
+          "image_id": "img_3af6f494c02c493dbbdff11099290d72",
+          "image_version": "1",
+          "image_scope": "platform",
+          "compute_state": "TRAINING",
+          "delivery_state": "PENDING",
+          "close_state": "CLOSED",
+          "resource_state": "NOT_APPLICABLE",
+          "current_step": "CLOSE",
+          "stop_requested": true,
+          "close_generation": "1",
+          "accepted_at": "2026-11-01T13:05:44.10499Z",
+          "deadline_at": "2026-11-01T13:35:44.10499Z",
+          "observed_at": "2026-11-01T13:09:47.709522Z",
+          "parameter_contract_version": "ani.mlp.parameters.v3",
+          "resolved_configuration_sha256": "",
+          "compute": {
+            "compute_preset_id": "9f5a0625-1eab-4a65-95af-68962138ef86",
+            "selection_digest": "e21a6d593c0044b7963518fff122f2ce4a1764b8f74d877595c66696d831ff2f",
+            "cpu_millis": "1000",
+            "memory_mib": "2048",
+            "device_mode": "cpu"
+          },
+          "timing": {
+            "execution_timeout_seconds": "1800",
+            "execution_timeout_max_seconds": "14400",
+            "step_timeout_seconds": "14400"
+          },
+          "history": {
+            "run_id": "9022dea3-0127-41cd-80d4-de0cae1cadea",
+            "workflow_uid": "a59d9276-abc7-46c3-bb9f-8e2bb33a8aa7",
+            "observed_at": "2026-11-01T13:09:47.70685622Z",
+            "run_state": "",
+            "run_finished_at": "",
+            "workflow_phase": "",
+            "workflow_finished_at": "",
+            "workflow_resource_version": "",
+            "workflow_nodes_sha256": ""
+          },
+          "steps": [
+            {
+              "role": "prepare",
+              "state": "SUCCEEDED",
+              "started_at": "2026-11-01T13:06:58.358661Z",
+              "finished_at": "2026-11-01T13:07:30.89494Z",
+              "exit_code": 0,
+              "deadline_at": "2026-11-01T13:35:44.10499Z"
+            },
+            {
+              "role": "train-wait",
+              "state": "STOPPED",
+              "started_at": "2026-11-01T13:07:30.89494Z",
+              "finished_at": "",
+              "exit_code": 0,
+              "deadline_at": "2026-11-01T13:35:44.10499Z"
+            },
+            {
+              "role": "collect",
+              "state": "PENDING",
+              "started_at": "",
+              "finished_at": "",
+              "exit_code": 0,
+              "deadline_at": ""
+            },
+            {
+              "role": "publish",
+              "state": "PENDING",
+              "started_at": "",
+              "finished_at": "",
+              "exit_code": 0,
+              "deadline_at": ""
+            },
+            {
+              "role": "close",
+              "state": "SUCCEEDED",
+              "started_at": "2026-11-01T13:09:47.70685622Z",
+              "finished_at": "2026-11-01T13:09:47.709522Z",
+              "exit_code": 0,
+              "deadline_at": ""
+            }
+          ],
+          "metrics": []
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/modeldev/executions/bb4fd203-1a3d-4796-8aa8-783dd62e57ae/pods?includeRecycled=true",
+        "http_status": 200,
+        "response": {
+          "pods": [
+            {
+              "pod_name": "md-bb4fd203-1a3d-4796-8aa8-783dd62e57ae-node-0-0-6sqvg",
+              "pod_uid": "722f1034-2747-440e-8138-41ed38d6f8ed",
+              "phase": "",
+              "ready": false,
+              "node_name": "",
+              "restarts": 0,
+              "created_at": "",
+              "start_time": "",
+              "deletion_timestamp": "",
+              "layer": "TRAINER",
+              "availability": "RECYCLED",
+              "step_name": "",
+              "attempt": 0,
+              "job_index": 0,
+              "log_id": "725124cd-2ee9-5356-bd93-be5677c0d1c2",
+              "log_available": true,
+              "api_present": false,
+              "exit_code": 143,
+              "metric_instance_id": "",
+              "containers": [
+                {
+                  "name": "node",
+                  "type": "container",
+                  "state": "terminated",
+                  "reason": "",
+                  "restart_count": 0,
+                  "started_at": "",
+                  "finished_at": ""
+                }
+              ],
+              "init_containers": [],
+              "ephemeral_containers": []
+            }
+          ],
+          "observed_at": "2026-11-01T13:17:02.401894526Z",
+          "availability": "RECYCLED",
+          "projection_truncated": false
+        }
+      }
+    ],
+    "runtime": {
+      "closed_at": "2026-11-01T13:09:47.709522+00:00",
+      "close_reason": "USER_STOP",
+      "owner_revision": 82,
+      "writers_absent": true,
+      "close_generation": 1,
+      "compute_cleanup_phase": "APPLIED",
+      "compute_cleanup_attempts": 1,
+      "step_cleanup_completed_at": "2026-11-01T13:10:00.538036Z",
+      "compute_cleanup_completed_at": "2026-11-01T13:10:07.61046Z",
+      "compute_cleanup_confirmed_absent": 6
+    }
+  },
+  "finished_at": "2026-11-01T13:17:02.592472+00:00"
+}

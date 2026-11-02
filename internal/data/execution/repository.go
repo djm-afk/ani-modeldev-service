@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/google/uuid"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -43,15 +44,18 @@ func (r *Repository) Accept(ctx context.Context, admission biz.Admission) (biz.A
 		return biz.AcceptReceipt{}, err
 	}
 	command := executionsql.InsertExecutionParams{
-		TenantID:          tenantID,
-		ExecutionID:       executionID,
-		OperationID:       operationID,
-		Actor:             admission.Actor,
-		IntentCanonical:   intent,
-		IntentHash:        admission.IntentHash,
-		SnapshotCanonical: snapshot,
-		SpecHash:          admission.SpecHash,
-		AcceptedAt:        pgtype.Timestamptz{Time: admission.AcceptedAt.UTC(), Valid: true},
+		ClusterID:            pgtype.UUID{Bytes: uuid.MustParse(admission.Snapshot.Environment.ClusterID), Valid: true},
+		EnvironmentBindingID: pgtype.UUID{Bytes: uuid.MustParse(admission.Snapshot.Environment.BindingID), Valid: true},
+		DeadlineAt:           pgtype.Timestamptz{Time: admission.Snapshot.DeadlineAt.UTC(), Valid: true},
+		TenantID:             tenantID,
+		ExecutionID:          executionID,
+		OperationID:          operationID,
+		Actor:                admission.Actor,
+		IntentCanonical:      intent,
+		IntentHash:           admission.IntentHash,
+		SnapshotCanonical:    snapshot,
+		SpecHash:             admission.SpecHash,
+		AcceptedAt:           pgtype.Timestamptz{Time: admission.AcceptedAt.UTC(), Valid: true},
 	}
 	transaction, queries, err := r.lockIdentity(ctx, executionsql.InsertExecutionIdentityParams{
 		TenantID: tenantID, ExecutionID: executionID, OperationID: operationID, SpecHash: admission.SpecHash,
@@ -105,6 +109,7 @@ func (r *Repository) Accept(ctx context.Context, admission biz.Admission) (biz.A
 
 func sameAdmission(row executionsql.ModeldevExecution, command executionsql.InsertExecutionParams) bool {
 	return row.TenantID == command.TenantID &&
+		row.ClusterID == command.ClusterID && row.EnvironmentBindingID == command.EnvironmentBindingID && row.DeadlineAt.Valid && row.DeadlineAt.Time.Equal(command.DeadlineAt.Time) &&
 		row.ExecutionID == command.ExecutionID &&
 		row.OperationID == command.OperationID &&
 		row.Actor == command.Actor &&
@@ -231,6 +236,9 @@ func executionFromRow(row executionsql.ModeldevExecution) (biz.Execution, error)
 	var intentErr, snapshotErr error
 	execution.Intent, intentErr = cpup01.DecodeCanonicalIntent(row.IntentCanonical)
 	execution.Snapshot, snapshotErr = cpup01.DecodeCanonicalSnapshot(row.SnapshotCanonical)
+	if snapshotErr == nil && (row.ClusterID.String() != execution.Snapshot.Environment.ClusterID || row.EnvironmentBindingID.String() != execution.Snapshot.Environment.BindingID || !row.DeadlineAt.Valid || !row.DeadlineAt.Time.Equal(execution.Snapshot.DeadlineAt)) {
+		return biz.Execution{}, biz.ErrPersistence
+	}
 	if intentErr != nil || snapshotErr != nil {
 		if errors.Is(intentErr, cpup01.ErrInvalidArgument) || errors.Is(snapshotErr, cpup01.ErrInvalidArgument) {
 			return biz.Execution{}, ErrUndecodableExecution

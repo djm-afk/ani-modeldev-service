@@ -1,0 +1,174 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "old_goal_entries": [
+    {
+      "name": "build-cluster-training.py",
+      "directory": false
+    },
+    {
+      "name": "build-model-provider-83866cb.py",
+      "directory": false
+    },
+    {
+      "name": "buildkit-state",
+      "directory": true
+    },
+    {
+      "name": "buildkit.sock",
+      "directory": false
+    },
+    {
+      "name": "buildkitd.pid",
+      "directory": false
+    },
+    {
+      "name": "buildkitd.toml",
+      "directory": false
+    },
+    {
+      "name": "create-sft-image-fixture.py",
+      "directory": false
+    },
+    {
+      "name": "debug-template-encoding.py",
+      "directory": false
+    },
+    {
+      "name": "evidence",
+      "directory": true
+    },
+    {
+      "name": "governance-catalogue-1d2142d9ac1a",
+      "directory": true
+    },
+    {
+      "name": "mlp-cpu-v2-fixture-builder",
+      "directory": true
+    },
+    {
+      "name": "mlp-fixture-builder",
+      "directory": true
+    },
+    {
+      "name": "model-provider-83866cb58c0c",
+      "directory": true
+    },
+    {
+      "name": "platform",
+      "directory": true
+    },
+    {
+      "name": "platform-current-f839f438ee14",
+      "directory": true
+    },
+    {
+      "name": "platform-sft-runtime-eos-20261029",
+      "directory": true
+    },
+    {
+      "name": "platform-sft-runtime-final-20261029",
+      "directory": true
+    },
+    {
+      "name": "prepare-image-qualification.go",
+      "directory": false
+    },
+    {
+      "name": "prepare-platform-operator.py",
+      "directory": false
+    },
+    {
+      "name": "private",
+      "directory": true
+    },
+    {
+      "name": "publish-exact-image.py",
+      "directory": false
+    },
+    {
+      "name": "publish-model-provider.py",
+      "directory": false
+    },
+    {
+      "name": "qualification",
+      "directory": true
+    },
+    {
+      "name": "qualification-builder",
+      "directory": true
+    },
+    {
+      "name": "qualify-cluster-arrow.py",
+      "directory": false
+    },
+    {
+      "name": "qualify-cluster-mlp.py",
+      "directory": false
+    },
+    {
+      "name": "qualify-cluster-sft.py",
+      "directory": false
+    },
+    {
+      "name": "qualify-detached-sft.py",
+      "directory": false
+    },
+    {
+      "name": "read-platform-training-images.py",
+      "directory": false
+    },
+    {
+      "name": "register-platform-training-images.py",
+      "directory": false
+    },
+    {
+      "name": "run-cluster-arrow-baseline.py",
+      "directory": false
+    },
+    {
+      "name": "run-image-diagnostic.py",
+      "directory": false
+    },
+    {
+      "name": "run-large-manifest-consumer-test.py",
+      "directory": false
+    },
+    {
+      "name": "run-native-framework-tests.py",
+      "directory": false
+    },
+    {
+      "name": "test_finetuning_framework_configuration.py",
+      "directory": false
+    },
+    {
+      "name": "test_finetuning_manifest_limits.py",
+      "directory": false
+    },
+    {
+      "name": "tools",
+      "directory": true
+    }
+  ],
+  "known_go_paths": [],
+  "tools_entries": [
+    "buildctl",
+    "buildkit-v0.34.1.linux-amd64.tar.gz",
+    "buildkitd"
+  ],
+  "module_cache": {
+    "path": "/home/kubercloud/go/pkg/mod",
+    "exists": false
+  },
+  "build_cache": {
+    "path": "/home/kubercloud/.cache/go-build",
+    "exists": false
+  }
+}

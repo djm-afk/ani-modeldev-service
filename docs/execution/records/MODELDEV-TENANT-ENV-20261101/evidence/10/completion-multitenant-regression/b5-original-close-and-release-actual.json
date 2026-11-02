@@ -1,0 +1,374 @@
+{
+  "schema": "ani.modeldev.b5-original-close-and-release.v1",
+  "observed_at": "2026-11-01T17:12:04.965259+00:00",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T17:12:05.169376+00:00"
+  },
+  "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+  "operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a",
+  "persistent_mutations": false,
+  "modeldev": {
+    "closed_at": "2026-11-01T17:10:49.274274+00:00",
+    "spec_hash": "ebcfdfeac235a167bdf121eb83e423af76c2f4f8a10da56ed68194df55cbaf1d",
+    "workspace": {
+      "PVCUID": "9c25cc49-50b7-45ed-843b-d4598c65f5e1",
+      "PVCName": "ani-kfp-workspace-636f6bee-093a-4ea4-b768-029bb5031ca3"
+    },
+    "gpu_release": {
+      "scope": {
+        "ref": {
+          "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "resource_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "owner_service": "ani-modeldev-service",
+          "create_operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a"
+        },
+        "pods": [
+          {
+            "uid": "4016d559-fbb0-4850-aaa9-8bd1e3da04d6",
+            "name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0-0-75kbs",
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+            "container_name": "node"
+          }
+        ],
+        "sealed_at": "2026-11-01T17:11:36.985285Z",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "close_operation_id": "6c1923f2-6f1a-4e91-9645-efad357bc1d9"
+      },
+      "outbox": {
+        "ack": {
+          "status": "APPLIED",
+          "resource_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "release_event_id": "0bf7bceb-738a-45bf-bb0e-158106b4b8f4",
+          "create_operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a"
+        },
+        "event": {
+          "reason": "RESOURCE_RELEASED",
+          "resource_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "release_event_id": "0bf7bceb-738a-45bf-bb0e-158106b4b8f4",
+          "create_operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a"
+        },
+        "created_at": "2026-11-01T17:11:36.985285Z",
+        "delivered_at": "2026-11-01T17:11:37.108529Z"
+      },
+      "no_dispatch": false,
+      "scope_sha256": "f0c86a1571736eed6a799a8d03041ee74587f5b94b60ec6b1a8a075b806af8c4"
+    },
+    "close_reason": "NATURAL_TERMINAL",
+    "operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a",
+    "owner_revision": 74,
+    "writers_absent": true,
+    "close_authority": null,
+    "compute_cleanup": {
+      "actor": "modeldev:compute-cleanup",
+      "phase": "APPLIED",
+      "targets": [
+        {
+          "UID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Kind": "TrainJob",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "trainer.kubeflow.org/v1alpha1",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "14e99b88-328d-48a7-a944-513e9a4fd78d",
+          "Kind": "JobSet",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "jobset.x-k8s.io/v1alpha2",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "79aa3211-c5e4-485f-b008-bcf938ccf0b3",
+          "Kind": "Job",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0",
+          "ExitCode": null,
+          "OwnerUID": "14e99b88-328d-48a7-a944-513e9a4fd78d",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "batch/v1",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "4016d559-fbb0-4850-aaa9-8bd1e3da04d6",
+          "Kind": "Pod",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0-0-75kbs",
+          "ExitCode": 0,
+          "OwnerUID": "79aa3211-c5e4-485f-b008-bcf938ccf0b3",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "v1",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "d434180b-7e1c-46b4-a511-5509c61a5fc5",
+          "Kind": "PodGroup",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "scheduling.volcano.sh/v1beta1",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "7df535f0-4fd3-4db6-8aef-5fac0231f0f0",
+          "Kind": "Workflow",
+          "Name": "ft-7vrhz",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "argoproj.io/v1alpha1",
+          "APIObjectPresent": true,
+          "CreationDisabled": true
+        },
+        {
+          "UID": "b71813f8-0cab-4c05-8ede-fbbf47801086",
+          "Kind": "TrainingRuntime",
+          "Name": "mdrt-a678979fd82d4f3732004f4ecf843f1615f0c3153ed8e705",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "trainer.kubeflow.org/v1alpha1",
+          "APIObjectPresent": true,
+          "CreationDisabled": true
+        }
+      ],
+      "attempts": 2,
+      "requested": [
+        {
+          "UID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Kind": "TrainJob",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "trainer.kubeflow.org/v1alpha1",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "14e99b88-328d-48a7-a944-513e9a4fd78d",
+          "Kind": "JobSet",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "jobset.x-k8s.io/v1alpha2",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "79aa3211-c5e4-485f-b008-bcf938ccf0b3",
+          "Kind": "Job",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0",
+          "ExitCode": null,
+          "OwnerUID": "14e99b88-328d-48a7-a944-513e9a4fd78d",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "batch/v1",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "4016d559-fbb0-4850-aaa9-8bd1e3da04d6",
+          "Kind": "Pod",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0-0-75kbs",
+          "ExitCode": 0,
+          "OwnerUID": "79aa3211-c5e4-485f-b008-bcf938ccf0b3",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "v1",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "d434180b-7e1c-46b4-a511-5509c61a5fc5",
+          "Kind": "PodGroup",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "scheduling.volcano.sh/v1beta1",
+          "APIObjectPresent": true,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "7df535f0-4fd3-4db6-8aef-5fac0231f0f0",
+          "Kind": "Workflow",
+          "Name": "ft-7vrhz",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "argoproj.io/v1alpha1",
+          "APIObjectPresent": true,
+          "CreationDisabled": true
+        },
+        {
+          "UID": "b71813f8-0cab-4c05-8ede-fbbf47801086",
+          "Kind": "TrainingRuntime",
+          "Name": "mdrt-a678979fd82d4f3732004f4ecf843f1615f0c3153ed8e705",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "trainer.kubeflow.org/v1alpha1",
+          "APIObjectPresent": true,
+          "CreationDisabled": true
+        }
+      ],
+      "logs_ready": true,
+      "started_at": "2026-11-01T17:11:22.652852Z",
+      "plan_sha256": "c96acdae77685c4176fd031b36cbebc84462a52989dbe118341e09e9a2f6b38a",
+      "completed_at": "2026-11-01T17:11:36.904162Z",
+      "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+      "reconciled_at": "0001-01-01T00:00:00Z",
+      "close_generation": 1,
+      "confirmed_absent": [
+        {
+          "UID": "14e99b88-328d-48a7-a944-513e9a4fd78d",
+          "Kind": "JobSet",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "jobset.x-k8s.io/v1alpha2",
+          "APIObjectPresent": false,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "4016d559-fbb0-4850-aaa9-8bd1e3da04d6",
+          "Kind": "Pod",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0-0-75kbs",
+          "ExitCode": 0,
+          "OwnerUID": "79aa3211-c5e4-485f-b008-bcf938ccf0b3",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "v1",
+          "APIObjectPresent": false,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "79aa3211-c5e4-485f-b008-bcf938ccf0b3",
+          "Kind": "Job",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0",
+          "ExitCode": null,
+          "OwnerUID": "14e99b88-328d-48a7-a944-513e9a4fd78d",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "batch/v1",
+          "APIObjectPresent": false,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "7df535f0-4fd3-4db6-8aef-5fac0231f0f0",
+          "Kind": "Workflow",
+          "Name": "ft-7vrhz",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "argoproj.io/v1alpha1",
+          "APIObjectPresent": false,
+          "CreationDisabled": true
+        },
+        {
+          "UID": "b71813f8-0cab-4c05-8ede-fbbf47801086",
+          "Kind": "TrainingRuntime",
+          "Name": "mdrt-a678979fd82d4f3732004f4ecf843f1615f0c3153ed8e705",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "trainer.kubeflow.org/v1alpha1",
+          "APIObjectPresent": false,
+          "CreationDisabled": true
+        },
+        {
+          "UID": "d434180b-7e1c-46b4-a511-5509c61a5fc5",
+          "Kind": "PodGroup",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "scheduling.volcano.sh/v1beta1",
+          "APIObjectPresent": false,
+          "CreationDisabled": false
+        },
+        {
+          "UID": "e826c753-fb0e-4d61-85be-6c87f75d6110",
+          "Kind": "TrainJob",
+          "Name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "trainer.kubeflow.org/v1alpha1",
+          "APIObjectPresent": false,
+          "CreationDisabled": false
+        }
+      ]
+    },
+    "close_generation": 1,
+    "close_requested_at": "2026-11-01T17:10:15.329997Z",
+    "close_review_reason": "",
+    "step_cleanup_completed_at": "2026-11-01T17:11:22.588253Z"
+  },
+  "governance": {
+    "charge": {
+      "charge_id": "25b2a4ce-08ea-42c1-8986-c7b64ce4043f",
+      "tenant_id": 40,
+      "quota_code": "gpu.shared_memory_mib",
+      "updated_at": "2026-11-01T17:11:37.068364+00:00",
+      "operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a",
+      "original_units": 24570,
+      "released_units": 24570,
+      "remaining_units": 0
+    },
+    "account": {
+      "id": 44,
+      "version": 10,
+      "occupied_units": 0,
+      "remaining_charge_sum": 0
+    },
+    "acceptances": [
+      {
+        "id": 97,
+        "lease_owner": null,
+        "lease_until": null,
+        "dispatch_state": "ACKED",
+        "close_lease_owner": null,
+        "close_lease_until": null,
+        "close_dispatch_state": "IDLE",
+        "stop_intent_generation": 0
+      }
+    ]
+  },
+  "finished_at": "2026-11-01T17:12:05.646779+00:00"
+}

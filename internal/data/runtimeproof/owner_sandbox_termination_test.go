@@ -43,7 +43,7 @@ func capturedEvictedOwner(t *testing.T) *ownerCloseFixture {
 	plan := f.dispatch.Plan
 	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = plan.Environment.ExperimentID, plan.DisplayName, plan.Environment.Identities.KFPStepServiceAccount
 	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": plan.PipelineID, "pipeline_version_id": plan.PipelineVersionID}
-	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}, "pipeline_root": plan.Owner.PipelineRoot}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID}, "pipeline_root": plan.Owner.PipelineRoot}
 	f.pods = nil
 	for _, raw := range record.Pods {
 		var pod unstructured.Unstructured

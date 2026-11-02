@@ -1,0 +1,624 @@
+{
+  "schema": "ani.modeldev.native-server-dryrun.v1",
+  "observed_at": "2026-10-31T19:19:48.412404+00:00",
+  "ssh": "kubercloud@100.64.128.12",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "verified_at_unix": 1793474388.6701062
+  },
+  "rendered_manifest_sha256": "c5366329d5c8e40e3505b03d986c5e05cd3290769995ca1d53db4d7356e896bf",
+  "dry_run_only": true,
+  "persistent_install": false,
+  "objects": [
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-bootstrap-v1",
+      "namespace": null,
+      "input_object_sha256": "6b61a757d254879ca0230d377be79c8e60301e997ce1d08d8876ce2d528f7348",
+      "before": {
+        "present": false
+      },
+      "exit_code": 1,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 149,
+      "stderr_sha256": "801c599727c37604d2733dd0ff3a6e0c835ac32d5bf9877125b922f7ff08dbee",
+      "stderr_truncated": false,
+      "stderr": "The ValidatingAdmissionPolicy \"modeldev-bootstrap-v1\" is invalid: spec.variables[0].name: Invalid value: \"namespace\": must be a valid CEL identifier\n",
+      "result": "SERVER_DRYRUN_REJECTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-bootstrap-v1-binding",
+      "namespace": null,
+      "input_object_sha256": "e5fdfeadf332bdbd19988c06bd974cce1633ada6010653cf50714149d1680065",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 803,
+      "stdout_sha256": "70ff89bd332b1810f3c12ba28ea322ba2993daa1ad46b5487e0f6d01f88471a9",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-bootstrap-v1-binding",
+        "namespace": null,
+        "uid": "f7ddabed-3f39-4db1-a07e-32bcce7d3f83",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-environment-config-v1",
+      "namespace": null,
+      "input_object_sha256": "65434113cd059eab36c57a8721ef3d3e9c1f1600c382846f8b2530879cfaef80",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 7646,
+      "stdout_sha256": "b11af34b3023b1596b5c4ad8b30cab2264aced9392016cc793e16b2451e7b174",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-environment-config-v1",
+        "namespace": null,
+        "uid": "98926d44-0138-4958-9666-48647a5344f2",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": {},
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-environment-config-v1-binding",
+      "namespace": null,
+      "input_object_sha256": "9f3e7a7a930d7131a67f4b22b9cee865e7c469cc73a37e5c58395086c67d2dea",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 839,
+      "stdout_sha256": "a56961f47dc3b2d3dd9027dc88e6bc71d22e30c1d47220b707b3fa0cb364f15b",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-environment-config-v1-binding",
+        "namespace": null,
+        "uid": "f7f16cf2-6f89-4d8f-8d06-4a2c8cffb6c8",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-workload-guard-v1",
+      "namespace": null,
+      "input_object_sha256": "baf2fd2c8a50b12853a3a3b12472db949102721370d62c56d3ea9d23e8a47be0",
+      "before": {
+        "present": false
+      },
+      "exit_code": 1,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_bytes": 8272,
+      "stderr_sha256": "9d0a1773f73a7dfd1fd850594b3eb1ecd5b7bb0e90a121d5849f9a5c3cc1bfa9",
+      "stderr_truncated": false,
+      "stderr": "The ValidatingAdmissionPolicy \"modeldev-workload-guard-v1\" is invalid: \n* spec.variables[0].expression: Invalid value: \"(object == null || !has(object.spec) ? [] : request.resource.resource == 'pods' ? [object.spec] : request.resource.resource == 'jobs' ? (has(object.spec.template) && has(object.spec.template.spec) ? [object.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(object.spec.replicatedJobs) ? object.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(object.spec.template) && has(object.spec.template.spec) ? (has(object.spec.template.spec.replicatedJobs) ? object.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [object.spec] + (has(object.spec.templates) ? object.spec.templates.map(t,{'serviceAccountName':has(t.serviceAccountName) ? t.serviceAccountName : '', 'volumes':has(t.volumes) ? t.volumes : [], 'containers':(has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : []), 'initContainers':has(t.initContainers) ? t.initContainers : []}) : []) : [])\": compilation failed: ERROR: <input>:1:1206: expected type 'dyn' but found 'list(dyn)'\n | (object == null || !has(object.spec) ? [] : request.resource.resource == 'pods' ? [object.spec] : request.resource.resource == 'jobs' ? (has(object.spec.template) && has(object.spec.template.spec) ? [object.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(object.spec.replicatedJobs) ? object.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(object.spec.template) && has(object.spec.template.spec) ? (has(object.spec.template.spec.replicatedJobs) ? object.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [object.spec] + (has(object.spec.templates) ? object.spec.templates.map(t,{'serviceAccountName':has(t.serviceAccountName) ? t.serviceAccountName : '', 'volumes':has(t.volumes) ? t.volumes : [], 'containers':(has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : []), 'initContainers':has(t.initContainers) ? t.initContainers : []}) : []) : [])\n | .....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................^\n* spec.variables[1].expression: Invalid value: \"(oldObject == null || !has(oldObject.spec) ? [] : request.resource.resource == 'pods' ? [oldObject.spec] : request.resource.resource == 'jobs' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? [oldObject.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(oldObject.spec.replicatedJobs) ? oldObject.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? (has(oldObject.spec.template.spec.replicatedJobs) ? oldObject.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [oldObject.spec] + (has(oldObject.spec.templates) ? oldObject.spec.templates.map(t,{'serviceAccountName':has(t.serviceAccountName) ? t.serviceAccountName : '', 'volumes':has(t.volumes) ? t.volumes : [], 'containers':(has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : []), 'initContainers':has(t.initContainers) ? t.initContainers : []}) : []) : [])\": compilation failed: ERROR: <input>:1:1251: expected type 'dyn' but found 'list(dyn)'\n | (oldObject == null || !has(oldObject.spec) ? [] : request.resource.resource == 'pods' ? [oldObject.spec] : request.resource.resource == 'jobs' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? [oldObject.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(oldObject.spec.replicatedJobs) ? oldObject.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? (has(oldObject.spec.template.spec.replicatedJobs) ? oldObject.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [oldObject.spec] + (has(oldObject.spec.templates) ? oldObject.spec.templates.map(t,{'serviceAccountName':has(t.serviceAccountName) ? t.serviceAccountName : '', 'volumes':has(t.volumes) ? t.volumes : [], 'containers':(has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : []), 'initContainers':has(t.initContainers) ? t.initContainers : []}) : []) : [])\n | ..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................^\n* spec.variables[3].name: Invalid value: \"namespace\": must be a valid CEL identifier\n",
+      "result": "SERVER_DRYRUN_REJECTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-workload-guard-v1-binding",
+      "namespace": null,
+      "input_object_sha256": "737185a8493425ee4a2cd4367c2d7ef35163a4fdb04e7a9e901a6665c9a436dc",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 823,
+      "stdout_sha256": "0179d695f2fb626b094f30917dea5081a4fbf9117d24c0731c9f472c9de175d7",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-workload-guard-v1-binding",
+        "namespace": null,
+        "uid": "48521dab-3387-4ff2-a351-9817889f726e",
+        "generation": 1,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-runtime-v1",
+      "namespace": null,
+      "input_object_sha256": "f9219ce6b1c4634214b4fafdaf78e32deafb2a4ea448a421a8d5970df78f9841",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 5475,
+      "stdout_sha256": "a0fc806f5004963e9abd8be372b413728277b7da1bd2c8cbb28fd15b8ed6af9d",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-runtime-v1",
+        "namespace": null,
+        "uid": "2ab0b14e-e7ab-4240-9419-a54488d8937e",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-step-v1",
+      "namespace": null,
+      "input_object_sha256": "39d56645802ec5151693f599458562718a64b986c0a0195f95963c7d507f4f50",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 2579,
+      "stdout_sha256": "64bbbb7b91b18da8d433df95b4534a5a4666a8016e31f4509646cb20588793d6",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-step-v1",
+        "namespace": null,
+        "uid": "51441917-25e3-44fb-86a1-ddfdc3690011",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-webhook-read-v1",
+      "namespace": null,
+      "input_object_sha256": "538aefe966e0818ceeaacef2eec38d73039e857b8e3c31b34a446e5f89b1eef8",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 2767,
+      "stdout_sha256": "cb21a18e38a1f83ffd0ae57cddad409f2600bad3ec0f66dadbfc17d8bf580a0f",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-webhook-read-v1",
+        "namespace": null,
+        "uid": "74eae97b-65b3-4d4b-a38f-869467c60f5f",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-api-v1",
+      "namespace": null,
+      "input_object_sha256": "2be8c45a54068fa769fb270e58243452ff5c3a0add33b02d9133a9650f6ab49d",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 914,
+      "stdout_sha256": "f18f2a3121a8e5b53b5f88601862a0ddcb215df32698e65c4ccabbbdf8491929",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-kfp-api-v1",
+        "namespace": null,
+        "uid": "5e3fc6fc-17d8-48a1-bff2-eef4b9c0b02c",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-access-v1",
+      "namespace": null,
+      "input_object_sha256": "026597cc2c5da60319ab7ef31c3a6d6a1d3c6eddeb792ff0ff7c3f7ed460f235",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1406,
+      "stdout_sha256": "2075218945de8b5b0e213894e1b5ae17c8021fee9823aae44844fb89f5036ed1",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-kfp-access-v1",
+        "namespace": null,
+        "uid": "1f886a04-b6a0-4758-b9cc-09d694fd2370",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-environment-control-v1",
+      "namespace": null,
+      "input_object_sha256": "0025ace0795cef1509ea463003ca5a87fedca732b1627eb53e097fe724ff767b",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 6642,
+      "stdout_sha256": "c6e38043672355166fd224d493df5047aad72e013a6d71d434d79af6d4f2e8c6",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-environment-control-v1",
+        "namespace": null,
+        "uid": "0e2d5cc0-7eb1-4d14-ac72-ad7801c51c5e",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-environment-control",
+      "namespace": null,
+      "input_object_sha256": "f9b38de70fc8a473dc55b635b604d20f0607246cb115bb5e05257ef3019fca4a",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1075,
+      "stdout_sha256": "e2a60e3cc5275b6a64de3feb3d1b3e7db062caa60fb64bd7d4452339d6b93086",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-environment-control",
+        "namespace": null,
+        "uid": "098d4e08-c216-4914-87db-f9ffbde7345e",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-webhook-namespace-v1",
+      "namespace": null,
+      "input_object_sha256": "b77fb906cbfc270a4a1003afab582c8d7aef130667798138b0e0533c4de14416",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 836,
+      "stdout_sha256": "0a8722e84bcfff793b5bac8b0350cd35899c3a8d0e6f06d78f79a58b80ca44ec",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-webhook-namespace-v1",
+        "namespace": null,
+        "uid": "8e65e78f-520b-41ba-8225-19eabe0c9d4b",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-webhook-namespace",
+      "namespace": null,
+      "input_object_sha256": "71fb29bcb2d7ee8153f050a8fe67e03a321c9a0cc24786ced6288da6d7e6cce2",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1075,
+      "stdout_sha256": "418afaa2c2a7c0bfda26e63f500f798dcc1e5a4df129bd0bd7f7700773149288",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-webhook-namespace",
+        "namespace": null,
+        "uid": "88db7dc9-6cb0-41f7-aed9-9e0f33193a1b",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-rbac-inventory-global-v1",
+      "namespace": null,
+      "input_object_sha256": "2f5064e7d1c6c02fa63f635038b7550e2d41fef22c22552fa6d665928dfa90ad",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1285,
+      "stdout_sha256": "639fb0482ed987b84126c8b5c280a3ba5d797161def2785bedf37431a07ee80e",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-rbac-inventory-global-v1",
+        "namespace": null,
+        "uid": "94ad5413-e46c-4e84-bda3-6c6f0b94d8df",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-rbac-inventory-global",
+      "namespace": null,
+      "input_object_sha256": "9140f249f24da4899db1a1df995bcc08177a2226a6b4dabc98581f1894430064",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1083,
+      "stdout_sha256": "e249ec64724edf3b78b151da3a6afe419eebe67d3a2216cd4a9f5b34ea017d91",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-rbac-inventory-global",
+        "namespace": null,
+        "uid": "316e2c46-7679-4475-8a37-b3fb3e395d9e",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-platform-read-v1",
+      "namespace": null,
+      "input_object_sha256": "5d0614935e4a660543da1032939dc76f11fa9a194345efb7505fcd1771f80346",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1191,
+      "stdout_sha256": "f9d602621dd4d42b79ac2078a496a8b6781c16add882f48fc792665d391961bb",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-kfp-platform-read-v1",
+        "namespace": null,
+        "uid": "80d2217e-aa92-4bfe-a4eb-3a7c26733c88",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-kfp-platform-read",
+      "namespace": "ani-system",
+      "input_object_sha256": "f47d0eeed5a169dcaf356f61a9d0d3522e2ba1dd907b1ed7e7f80be27294f74e",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1117,
+      "stdout_sha256": "0161bfe980849346af01bbd008cf64d21b55176829b2ad9f0491953a03ce31a7",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-kfp-platform-read",
+        "namespace": "ani-system",
+        "uid": "38d57e26-9adb-4091-b7c3-8ce0b5f213f8",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-token-review-v1",
+      "namespace": null,
+      "input_object_sha256": "dd3e4ff740747975eaa779741864b977dec080f09903d9a5f54edcbf935c7f1b",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 878,
+      "stdout_sha256": "0cfb1eab6e11c5643217234f4ceb098e5fc217296de2069224e80fdbe3d3e477",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-token-review-v1",
+        "namespace": null,
+        "uid": "afe47ad1-f445-45cc-98c1-9d6ac4b86ac4",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-token-review",
+      "namespace": null,
+      "input_object_sha256": "f41d3861a03d8f3960ccabfc4382390c0350ae40e8577a4f1a618066d138c495",
+      "before": {
+        "present": false
+      },
+      "exit_code": 0,
+      "stdout_bytes": 1047,
+      "stdout_sha256": "9735d02550d8cfc0e5448a949296e5755b8bbdbabe561c698800dbadf18a328b",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_truncated": false,
+      "stderr": "",
+      "returned_metadata": {
+        "name": "modeldev-token-review",
+        "namespace": null,
+        "uid": "90777ec3-b94a-4e59-9f62-72ac3aac42df",
+        "generation": null,
+        "resourceVersion": null
+      },
+      "returned_status": null,
+      "result": "SERVER_DRYRUN_ACCEPTED",
+      "after": {
+        "present": false
+      },
+      "original_object_unchanged": true
+    }
+  ],
+  "limits": {
+    "per_command_seconds": 15,
+    "stderr_bytes_per_object": 16384
+  },
+  "summary": {
+    "object_count": 21,
+    "accepted": 19,
+    "rejected": 2,
+    "timeouts": 0,
+    "all_original_objects_unchanged": true,
+    "scope": "schema/admission/CEL validation visible during server dry-run only; not installed typeChecking, AD01/AD02 or LIVE02 behavior acceptance"
+  }
+}

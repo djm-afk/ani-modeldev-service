@@ -99,7 +99,7 @@ func ComputeCleanupTargets(execution Execution, owner RunAuthorityCandidate, sta
 		}
 		byUID := map[string]RuntimeResource{}
 		for _, resource := range state.Observation.Resources {
-			valid := resource.Kind == "Pod" && resource.APIVersion == "v1" && resource.Terminal && resource.ExitCode != nil || resource.Kind == "TrainJob" && resource.APIVersion == "trainer.kubeflow.org/v1alpha1" && (resource.Terminal || resource.CreationDisabled) || resource.Kind == "JobSet" && resource.APIVersion == "jobset.x-k8s.io/v1alpha2" && (resource.Terminal || resource.CreationDisabled) || resource.Kind == "Job" && resource.APIVersion == "batch/v1" && (resource.Terminal || resource.CreationDisabled)
+			valid := resource.Kind == "Pod" && resource.APIVersion == "v1" && resource.Terminal && (resource.ExitCode != nil || resource.TrainingAdmissionAbortedAt(state.Observation.ObservedAt)) || resource.Kind == "TrainJob" && resource.APIVersion == "trainer.kubeflow.org/v1alpha1" && (resource.Terminal || resource.CreationDisabled) || resource.Kind == "JobSet" && resource.APIVersion == "jobset.x-k8s.io/v1alpha2" && (resource.Terminal || resource.CreationDisabled) || resource.Kind == "Job" && resource.APIVersion == "batch/v1" && (resource.Terminal || resource.CreationDisabled)
 			valid = valid || resource.Kind == "PodGroup" && resource.APIVersion == "scheduling.volcano.sh/v1beta1" && resource.OwnerUID == state.TrainingHandle.TrainJobUID && resource.Name == state.Training.Name && resource.Terminal
 			if !valid || resource.Name == "" || resource.UID == "" || resource.Namespace != owner.NamespaceName || byUID[resource.UID].UID != "" {
 				return nil, "", ErrCleanupBlocked
@@ -162,6 +162,12 @@ func ComputeCleanupLogsComplete(execution Execution, state ExecutionRuntime, log
 	if state.Observation != nil {
 		for _, resource := range state.Observation.Resources {
 			if resource.Kind == "Pod" {
+				if resource.AdmissionAbort != nil {
+					if !resource.TrainingAdmissionAbortedAt(state.Observation.ObservedAt) {
+						return false
+					}
+					continue // A never-created container has no log to capture.
+				}
 				pods++
 				if resource.TrainingLog == nil {
 					return false

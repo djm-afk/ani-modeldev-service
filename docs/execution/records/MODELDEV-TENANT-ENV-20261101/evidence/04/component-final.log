@@ -1,0 +1,8 @@
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01	(cached)
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf	(cached)
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts	0.039s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp	0.709s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/storagecredentials	0.164s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/finetuningmodel	0.084s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity	0.117s

@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -29,7 +28,7 @@ func TestCloseBeforeReservationRejectsFirstSendPermit(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			admissions := execution.New(openPool())
@@ -61,7 +60,7 @@ func TestCloseBeforeReservationRejectsFirstSendPermit(t *testing.T) {
 
 func TestReservedDispatchAfterCloseReplaysOnlyOriginalFact(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	admissions := execution.New(openPool())
@@ -90,16 +89,18 @@ func TestReservationRejectsDifferentCompleteAdmissionBeforeAndAfterFirstPermit(t
 			a.Snapshot.Implementation.PipelineVersionID = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"
 		}},
 		{"experiment", func(a *biz.Admission) { a.Snapshot.Environment.ExperimentID = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa" }},
-		{"service account", func(a *biz.Admission) { a.Snapshot.Environment.Identities.KFPStepServiceAccount = "other-managed-step" }},
+		{"service account UID", func(a *biz.Admission) {
+			a.Snapshot.Environment.Identities.KFPStepServiceAccountUID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
+		}},
 		{"deadline", func(a *biz.Admission) { a.Snapshot.DeadlineAt = a.Snapshot.DeadlineAt.Add(time.Minute) }},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			candidate := request
 			testCase.mutate(&candidate.Admission)
-			refreshDispatchHashes(t, &candidate.Admission)
+			refreshDispatchHashes(t, openPool(), &candidate)
 			if _, err := candidate.Freeze(); err != nil {
 				t.Fatalf("conflicting fixture must be individually valid: %v", err)
 			}
@@ -138,7 +139,7 @@ func TestReservationCannotReplaceFrozenOwnerConfiguration(t *testing.T) {
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			acceptDispatchAdmission(t, ctx, execution.New(openPool()), request)
@@ -154,9 +155,9 @@ func TestReservationCannotReplaceFrozenOwnerConfiguration(t *testing.T) {
 
 func TestReservationAndGetKeepTenantBoundaryAndCanonicalUUIDAliases(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	request.Admission.TenantID = "aaaaaaaa-2222-4333-8444-555555555555"
-	refreshDispatchHashes(t, &request.Admission)
+	refreshDispatchHashes(t, openPool(), &request)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	repository := submission.New(openPool())
@@ -180,7 +181,7 @@ func TestReservationAndGetKeepTenantBoundaryAndCanonicalUUIDAliases(t *testing.T
 	assertDispatchReplay(t, ctx, submission.New(openPool()), alias, first.Dispatch)
 	wrongTenant := request
 	wrongTenant.Admission.TenantID = otherDispatchTenant
-	refreshDispatchHashes(t, &wrongTenant.Admission)
+	refreshDispatchHashes(t, openPool(), &wrongTenant)
 	got, err = repository.Reserve(ctx, wrongTenant)
 	assertRejectedReservation(t, got, err, biz.ErrExecutionNotFound)
 	assertNoDispatch(t, ctx, repository, otherDispatchTenant, request.Admission.ExecutionID)
@@ -243,9 +244,14 @@ func assertDispatchReplay(t *testing.T, ctx context.Context, repository *submiss
 	}
 }
 
-func refreshDispatchHashes(t *testing.T, admission *biz.Admission) {
+func refreshDispatchHashes(t *testing.T, pool *pgxpool.Pool, request *biz.PipelineDispatchRequest) {
 	t.Helper()
-	*admission = admissionfixture.Bind(t, *admission)
+	changedTenant := request.Admission.Snapshot.Environment.NamespaceName != "tenant-"+strings.ToLower(request.Admission.TenantID)
+	request.Admission = admissionfixture.Bind(t, request.Admission)
+	if changedTenant {
+		request.Admission = admissionfixture.EnsureEnvironment(t, pool, request.Admission)
+	}
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 }
 
 func assertSameDispatchAdmission(t *testing.T, got, original biz.Admission) {

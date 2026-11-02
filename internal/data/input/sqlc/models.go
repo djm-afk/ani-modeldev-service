@@ -23,15 +23,18 @@ type ModeldevCloseIntent struct {
 }
 
 type ModeldevExecution struct {
-	TenantID          pgtype.UUID
-	ExecutionID       pgtype.UUID
-	OperationID       pgtype.UUID
-	Actor             string
-	IntentCanonical   []byte
-	IntentHash        string
-	SnapshotCanonical []byte
-	SpecHash          string
-	AcceptedAt        pgtype.Timestamptz
+	TenantID             pgtype.UUID
+	ExecutionID          pgtype.UUID
+	OperationID          pgtype.UUID
+	Actor                string
+	IntentCanonical      []byte
+	IntentHash           string
+	SnapshotCanonical    []byte
+	SpecHash             string
+	AcceptedAt           pgtype.Timestamptz
+	ClusterID            pgtype.UUID
+	EnvironmentBindingID pgtype.UUID
+	DeadlineAt           pgtype.Timestamptz
 }
 
 type ModeldevExecutionCleanupAudit struct {
@@ -139,4 +142,34 @@ type ModeldevRunAuthority struct {
 	WorkflowName  string
 	WorkflowUid   string
 	BoundAt       pgtype.Timestamptz
+}
+
+type ModeldevTenantExecutionEnvironment struct {
+	EnvironmentID          pgtype.UUID
+	TenantID               pgtype.UUID
+	ClusterID              pgtype.UUID
+	NamespaceName          string
+	NamespaceUid           pgtype.UUID
+	State                  string
+	Phase                  string
+	ProvisionSpecCanonical []byte
+	ProvisionSpecHash      string
+	BindingCanonical       []byte
+	BindingDigest          pgtype.Text
+	KfpConnectionRef       string
+	ExperimentName         string
+	ExperimentID           pgtype.UUID
+	ExperimentCreateIntent []byte
+	ResourceReceipts       []byte
+	FirstOperationID       pgtype.UUID
+	LastOperationID        pgtype.UUID
+	FirstActorID           string
+	LastActorID            string
+	ReasonCode             string
+	ReasonStage            string
+	RowVersion             int64
+	CreatedAt              pgtype.Timestamptz
+	UpdatedAt              pgtype.Timestamptz
+	LastVerifiedAt         pgtype.Timestamptz
+	ReadyAt                pgtype.Timestamptz
 }

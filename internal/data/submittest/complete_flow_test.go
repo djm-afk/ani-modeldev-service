@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -63,9 +64,10 @@ func TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication(t *test
 func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	t.Setenv("ANI_MODELDEV_WEBHOOK_MAINFLOW", "1")
 	f := newCompleteFixture(t)
-	f.admitModelDevSteps(t)
 	open := postgres.Prepare(t)
 	pool := open()
+	f.ensureEnvironment(t, pool)
+	f.admitModelDevSteps(t)
 	admissions := execution.New(pool)
 	dispatch := submission.New(pool)
 	facts := lifecycle.New(pool)
@@ -103,18 +105,19 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	runs.WithMutationIdentity(f.mutationKube(t))
 	submitter, err := biz.NewPipelineSubmitter(dispatch, runs, 3*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
-	worker, err := biz.NewDispatchWorker(dispatch, submitter, biz.PipelineDispatchBinding{TenantID: f.request.Admission.TenantID, Environment: f.request.Admission.Snapshot.Environment, Owner: f.request.Owner}, 10, time.Second)
+	worker, err := biz.NewDispatchWorker(dispatch, submitter, f.request.Admission.Snapshot.Environment.ClusterID, testEnvironmentGate{f.request.Admission.Snapshot.Environment}, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if count, err := worker.DispatchOnce(ctx); err != nil || count != 1 {
+	if count, err := worker.DispatchOnce(ctx); err != nil || count.Succeeded != 1 {
 		t.Fatal(err)
 	}
-	kube, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", Timeout: 10 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
+	kube, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", RateLimiter: f.kubeRateLimiter, Timeout: 10 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,6 +142,7 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	// Match configs/examples/managed-runtime.yaml's step timeout. The real
 	// client-go limiter remains enabled: the complete authenticated Ensure
 	// performs more reads than the narrow Begin-only fixture's five seconds.
+	managed.WithPullSecrets(submissionImages{reference: f.image})
 	client, stop := startMainFlowStepHandler(t, service.NewRuntimeStep(steps, managed), 30*time.Second)
 	inventoryPath := filepath.Join(f.root, f.workspace.PublicationSubpath, "collected-output.json")
 	refPath := filepath.Join(t.TempDir(), "publication-ref.json")
@@ -365,7 +369,13 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 	}
 	f.finishStep("close")
 	f.finishWorkflowNaturally()
+	f.mu.Lock()
+	closeAPIStart := f.kubeRequests
+	f.mu.Unlock()
 	finished, err := closeWorker.ReconcileOnce(ctx)
+	f.mu.Lock()
+	t.Logf("NATURAL_CLOSE_KUBE_REQUESTS: before=%d owner_reconcile=%d total=%d", closeAPIStart, f.kubeRequests-closeAPIStart, f.kubeRequests)
+	f.mu.Unlock()
 	if err != nil || finished.Closed != 1 {
 		inspect, done := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 		state, readErr := facts.GetRuntime(inspect, original.TenantID, original.ExecutionID)
@@ -376,6 +386,16 @@ func runCompleteMainFlow(t *testing.T, rejectedInput bool) {
 		}
 		if receipt := state.ComputeCleanup; receipt != nil {
 			t.Logf("NATURAL_CLOSE_COMPUTE_GC: phase=%s attempts=%d logs_ready=%t targets=%d requested=%d confirmed_absent=%d last_error=%s", receipt.Phase, receipt.Attempts, receipt.LogsReady, len(receipt.Targets), len(receipt.Requested), len(receipt.ConfirmedAbsent), receipt.LastError)
+			f.mu.Lock()
+			for _, target := range receipt.Targets {
+				t.Logf("NATURAL_CLOSE_COMPUTE_TARGET: kind=%s name=%s uid=%s parent=%s", target.Kind, target.Name, target.UID, target.OwnerUID)
+			}
+			for path, object := range f.objects {
+				if strings.Contains(path, "/trainingruntimes/") || strings.Contains(path, "/jobs/") || strings.Contains(path, "/jobsets/") || strings.Contains(path, "/podgroups/") || strings.HasSuffix(path, "/actual-training-pod") {
+					t.Logf("NATURAL_CLOSE_COMPUTE_REMAINS: path=%s metadata=%v", path, object["metadata"])
+				}
+			}
+			f.mu.Unlock()
 		}
 		t.Fatal("full naturally terminal writer proof did not close", finished, err)
 	}

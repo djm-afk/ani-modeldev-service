@@ -50,6 +50,12 @@ func NewInClusterReader(timeout time.Duration) (*KubernetesReader, error) {
 func (reader *KubernetesReader) Namespace(ctx context.Context, name string) (*corev1.Namespace, error) {
 	return reader.core.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 }
+func (reader *KubernetesReader) Environment(ctx context.Context, namespace string) (*corev1.ConfigMap, error) {
+	return reader.core.CoreV1().ConfigMaps(namespace).Get(ctx, "modeldev-execution-environment", metav1.GetOptions{})
+}
+func (reader *KubernetesReader) ServiceAccount(ctx context.Context, namespace, name string) (*corev1.ServiceAccount, error) {
+	return reader.core.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
+}
 
 func (reader *KubernetesReader) Workflow(ctx context.Context, namespace, name string) (*unstructured.Unstructured, error) {
 	return reader.dynamic.Resource(schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})

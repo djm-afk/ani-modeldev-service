@@ -1,0 +1,333 @@
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/namespace_deadline
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/workflow_canceled
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/namespace_forbidden
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/workflow_not_found
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/workflow_transport
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/namespace_unavailable_nil
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/workflow_dependency_deadline
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/parent_canceled
+=== RUN   TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/parent_deadline
+--- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed (0.19s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/namespace_deadline (0.02s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/workflow_canceled (0.02s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/namespace_forbidden (0.01s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/workflow_not_found (0.01s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/workflow_transport (0.01s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/namespace_unavailable_nil (0.02s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/workflow_dependency_deadline (0.07s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/parent_canceled (0.01s)
+    --- PASS: TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed/parent_deadline (0.02s)
+=== RUN   TestAdmissionSuccessAndPolicyDenialDoNotAcquireDependencyDiagnosticFields
+--- PASS: TestAdmissionSuccessAndPolicyDenialDoNotAcquireDependencyDiagnosticFields (0.03s)
+=== RUN   TestDynamicEnvironmentAppearsWithoutWebhookRestartAndIsReadOnEveryRequest
+--- PASS: TestDynamicEnvironmentAppearsWithoutWebhookRestartAndIsReadOnEveryRequest (0.03s)
+=== RUN   TestDriverAndStepBothRejectOldRootParametersAndUnexpectedPullReferences
+=== RUN   TestDriverAndStepBothRejectOldRootParametersAndUnexpectedPullReferences/step
+=== RUN   TestDriverAndStepBothRejectOldRootParametersAndUnexpectedPullReferences/root-driver
+--- PASS: TestDriverAndStepBothRejectOldRootParametersAndUnexpectedPullReferences (0.04s)
+    --- PASS: TestDriverAndStepBothRejectOldRootParametersAndUnexpectedPullReferences/step (0.02s)
+    --- PASS: TestDriverAndStepBothRejectOldRootParametersAndUnexpectedPullReferences/root-driver (0.02s)
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/workspace-name
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/prepare
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/train-wait
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/collect
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/publish
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/close
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/finalize-close
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/workspace-name
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/prepare
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/train-wait
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/collect
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/publish
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/close
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/finalize-close
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/export
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/verify
+=== RUN   TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/register
+--- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence (0.10s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/workspace-name (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/prepare (0.00s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/train-wait (0.00s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/collect (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/publish (0.00s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/close (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-mlp-cpu/finalize-close (0.00s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/workspace-name (0.00s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/prepare (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/train-wait (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/collect (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/publish (0.00s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/close (0.00s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/finalize-close (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/export (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/verify (0.01s)
+    --- PASS: TestHTTPSProfilesMountsPrecisePatchAndIdempotence/modeldev-sft-lora-cpu/register (0.01s)
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_training
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_reports/train
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_export
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_reports/export
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_inputs
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/missing_training
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/wrong_subpath_training
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/missing_reports/train
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/wrong_subpath_reports/train
+=== RUN   TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/extra_writable_subtree
+--- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay (0.05s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_training (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_reports/train (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_export (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_reports/export (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/repair_writable_inputs (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/missing_training (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/wrong_subpath_training (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/missing_reports/train (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/wrong_subpath_reports/train (0.00s)
+    --- PASS: TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay/extra_writable_subtree (0.00s)
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/namespace_UID
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/namespace_owner
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/workflow_UID
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/workflow_run
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/creator
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/profile_missing
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/profile_unknown
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/role_unknown
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/step_SA
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/owner_missing
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/main_image
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/mutable_support
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/mount_subpath
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/mount_expr
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/extra_writer_mount
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/host_namespace
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/untrusted_volume_source
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/privileged
+=== RUN   TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/API_unavailable
+--- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts (0.40s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/namespace_UID (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/namespace_owner (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/workflow_UID (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/workflow_run (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/creator (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/profile_missing (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/profile_unknown (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/role_unknown (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/step_SA (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/owner_missing (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/main_image (0.03s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/mutable_support (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/mount_subpath (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/mount_expr (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/extra_writer_mount (0.03s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/host_namespace (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/untrusted_volume_source (0.02s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/privileged (0.03s)
+    --- PASS: TestRefuseUntrustedScopeOwnerProfileImagesAndMounts/API_unavailable (0.02s)
+=== RUN   TestOutsideScopeDoesNotReadDependenciesOrMutate
+--- PASS: TestOutsideScopeDoesNotReadDependenciesOrMutate (0.02s)
+=== RUN   TestBoundedConcurrencyBodyDeadlineAndReadiness
+--- PASS: TestBoundedConcurrencyBodyDeadlineAndReadiness (0.53s)
+=== RUN   TestConfigFreezesReleaseAndOptionalLivePipelineVersion
+--- PASS: TestConfigFreezesReleaseAndOptionalLivePipelineVersion (0.08s)
+=== RUN   TestPinnedBackendDriversRetainOnlyOriginalExitEvidence
+--- PASS: TestPinnedBackendDriversRetainOnlyOriginalExitEvidence (0.05s)
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-wrapper
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-subcommand
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/unknown-option
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/option-order
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/invalid-log-level
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/invalid-log-format
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/noncanonical-glog-level
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/missing-delimiter
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-executable
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/extra-command
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/extra-prefix
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-image
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-run
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-owner
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-wrapper
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-subcommand
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/unknown-option
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/option-order
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/invalid-log-level
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/invalid-log-format
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/noncanonical-glog-level
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/missing-delimiter
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-executable
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/extra-command
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/extra-prefix
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-image
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-run
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-owner
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-wrapper
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-subcommand
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/unknown-option
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/option-order
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/invalid-log-level
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/invalid-log-format
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/noncanonical-glog-level
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/missing-delimiter
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-executable
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/extra-command
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/extra-prefix
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-image
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-run
+=== RUN   TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-owner
+--- PASS: TestPinnedBackendDriverArgoEmissaryCommand (0.08s)
+    --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG (0.02s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-wrapper (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-subcommand (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/unknown-option (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/option-order (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/invalid-log-level (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/invalid-log-format (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/noncanonical-glog-level (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/missing-delimiter (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-executable (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/extra-command (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/extra-prefix (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-image (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-run (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/ROOT_DAG/other-owner (0.00s)
+    --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG (0.02s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-wrapper (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-subcommand (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/unknown-option (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/option-order (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/invalid-log-level (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/invalid-log-format (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/noncanonical-glog-level (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/missing-delimiter (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-executable (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/extra-command (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/extra-prefix (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-image (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-run (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/DAG/other-owner (0.00s)
+    --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER (0.02s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-wrapper (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-subcommand (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/unknown-option (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/option-order (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/invalid-log-level (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/invalid-log-format (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/noncanonical-glog-level (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/missing-delimiter (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-executable (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/extra-command (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/extra-prefix (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-image (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-run (0.00s)
+        --- PASS: TestPinnedBackendDriverArgoEmissaryCommand/CONTAINER/other-owner (0.00s)
+=== RUN   TestNewFreezesCallerOwnedProfileAndDriverSlices
+--- PASS: TestNewFreezesCallerOwnedProfileAndDriverSlices (0.02s)
+=== RUN   TestContainerSeccompCannotOverrideFrozenDefault
+--- PASS: TestContainerSeccompCannotOverrideFrozenDefault (0.03s)
+=== RUN   TestInitCopiesOnlyPinnedBundleIntoRegularReadOnlyFiles
+--- PASS: TestInitCopiesOnlyPinnedBundleIntoRegularReadOnlyFiles (0.00s)
+=== RUN   TestPlatformInitCopiesPinnedProjectionWithoutChangingItsBytes
+--- PASS: TestPlatformInitCopiesPinnedProjectionWithoutChangingItsBytes (0.00s)
+=== RUN   TestComponentResourcesComeFromImmutableMaterialRoleWithoutHiddenMaximum
+--- PASS: TestComponentResourcesComeFromImmutableMaterialRoleWithoutHiddenMaximum (0.03s)
+=== RUN   TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial
+=== RUN   TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial/prepare
+=== RUN   TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial/collect
+=== RUN   TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial/publish
+--- PASS: TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial (0.04s)
+    --- PASS: TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial/prepare (0.01s)
+    --- PASS: TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial/collect (0.01s)
+    --- PASS: TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial/publish (0.01s)
+=== RUN   TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom
+=== RUN   TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/native_metadata_with_explicit_work_paths
+=== RUN   TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/other_configmap
+=== RUN   TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/secret
+=== RUN   TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/prefixed_metadata
+=== RUN   TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/required_metadata
+=== RUN   TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/duplicate_metadata
+=== RUN   TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/metadata_cannot_supply_missing_work_paths
+--- PASS: TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom (0.03s)
+    --- PASS: TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/native_metadata_with_explicit_work_paths (0.01s)
+    --- PASS: TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/other_configmap (0.00s)
+    --- PASS: TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/secret (0.00s)
+    --- PASS: TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/prefixed_metadata (0.00s)
+    --- PASS: TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/required_metadata (0.00s)
+    --- PASS: TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/duplicate_metadata (0.00s)
+    --- PASS: TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom/metadata_cannot_supply_missing_work_paths (0.00s)
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/native_bootstrap
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/missing
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/other_subpath
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/expression
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/duplicate
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/other_PVC
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/native_bootstrap
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/missing
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/other_subpath
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/expression
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/duplicate
+=== RUN   TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/other_PVC
+--- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath (0.04s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/native_bootstrap (0.01s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/missing (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/other_subpath (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/expression (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/duplicate (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-mlp-cpu/other_PVC (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/native_bootstrap (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/missing (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/other_subpath (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/expression (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/duplicate (0.00s)
+    --- PASS: TestPrepareBootstrapRequiresExactSamePVCSubPath/modeldev-sft-lora-cpu/other_PVC (0.00s)
+=== RUN   TestRealHTTPSAdmissionAndCertificateRotationWithoutRestart
+--- PASS: TestRealHTTPSAdmissionAndCertificateRotationWithoutRestart (0.02s)
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/original
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/sidecar
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/init
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/ephemeral
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/overhead
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/pod-resources
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/gpu-injection
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/memory-limit
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/env-secret
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/creator
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/runtime-uid
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/runtime-spec
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/job-owner
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/image
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/privileged
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/workspace
+=== RUN   TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/retention
+--- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift (0.46s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/original (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/sidecar (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/init (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/ephemeral (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/overhead (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/pod-resources (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/gpu-injection (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/memory-limit (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/env-secret (0.02s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/creator (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/runtime-uid (0.02s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/runtime-spec (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/job-owner (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/image (0.02s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/privileged (0.03s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/workspace (0.02s)
+    --- PASS: TestActualTrainingGraphAdmissionRejectsEffectiveResourceAndIdentityDrift/retention (0.02s)
+=== RUN   TestTrainingAdmissionPatchesMetricLabelsFromVerifiedSources
+--- PASS: TestTrainingAdmissionPatchesMetricLabelsFromVerifiedSources (0.03s)
+=== RUN   TestTrainingAdmissionRejectsRequestedMetricLabelSpoofing
+--- PASS: TestTrainingAdmissionRejectsRequestedMetricLabelSpoofing (0.02s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/modeldevwebhook	2.347s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-webhook	[no test files]

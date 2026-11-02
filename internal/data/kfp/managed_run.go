@@ -84,7 +84,7 @@ func (client *Client) GetManagedRun(ctx context.Context, plan biz.PipelineDispat
 	expected, err := json.Marshal(createRunBody{
 		ExperimentID: strings.ToLower(plan.Environment.ExperimentID), DisplayName: plan.DisplayName,
 		PipelineVersionReference: pipelineVersionReference{PipelineID: strings.ToLower(plan.PipelineID), PipelineVersionID: strings.ToLower(plan.PipelineVersionID)},
-		RuntimeConfig:            runtimeConfig{Parameters: map[string]string{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}, PipelineRoot: plan.Owner.PipelineRoot},
+		RuntimeConfig:            runtimeConfig{Parameters: map[string]string{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID}, PipelineRoot: plan.Owner.PipelineRoot},
 		ServiceAccount:           plan.Environment.Identities.KFPStepServiceAccount,
 	})
 	if err != nil || confirmedRunID(body, expected) != runID {

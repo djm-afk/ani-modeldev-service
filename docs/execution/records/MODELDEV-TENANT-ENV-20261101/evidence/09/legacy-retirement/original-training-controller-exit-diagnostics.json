@@ -1,0 +1,500 @@
+{
+  "observed_at": "2026-11-01T00:47:06.919689+00:00",
+  "read_only": true,
+  "original_control_identity": true,
+  "token_request_count": 0,
+  "exact_original_object_count": 10,
+  "objects": [
+    {
+      "execution": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "expected_uid": "1aeb3e82-3d4e-4495-b2e2-bf36aefdb100",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "JobSet",
+      "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "uid": "1aeb3e82-3d4e-4495-b2e2-bf36aefdb100",
+      "same_original_uid": true,
+      "resource_version": "17032363",
+      "generation": 2,
+      "deletion_timestamp": null,
+      "finalizers": [],
+      "owners": [
+        {
+          "apiVersion": "trainer.kubeflow.org/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "TrainJob",
+          "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+          "uid": "6916fc18-5972-4808-be88-6b66c310272d"
+        }
+      ],
+      "spec_suspend": true,
+      "status_observed_generation": null,
+      "status_phase": null,
+      "status_active": null,
+      "status_ready": null,
+      "status_succeeded": null,
+      "status_failed": null,
+      "conditions": [
+        {
+          "type": "Suspended",
+          "status": "True",
+          "reason": "SuspendedJobs",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-30T00:57:48Z"
+        }
+      ]
+    },
+    {
+      "execution": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "expected_uid": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "Pod",
+      "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc",
+      "uid": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+      "same_original_uid": true,
+      "resource_version": "17032495",
+      "generation": 2,
+      "deletion_timestamp": "2026-10-30T00:57:50Z",
+      "finalizers": [
+        "modeldev.ani.io/training-exit-evidence"
+      ],
+      "owners": [
+        {
+          "apiVersion": "batch/v1",
+          "kind": "Job",
+          "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0",
+          "uid": "f9bf2c20-cff0-4b39-99e3-1789b2bf0b4c",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "spec_suspend": null,
+      "status_observed_generation": 2,
+      "status_phase": "Failed",
+      "status_active": null,
+      "status_ready": null,
+      "status_succeeded": null,
+      "status_failed": null,
+      "conditions": [
+        {
+          "type": "PodReadyToStartContainers",
+          "status": "False",
+          "reason": null,
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-30T00:57:49Z"
+        },
+        {
+          "type": "Initialized",
+          "status": "True",
+          "reason": null,
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-30T00:57:37Z"
+        },
+        {
+          "type": "Ready",
+          "status": "False",
+          "reason": "PodFailed",
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-30T00:57:49Z"
+        },
+        {
+          "type": "ContainersReady",
+          "status": "False",
+          "reason": "PodFailed",
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-30T00:57:49Z"
+        },
+        {
+          "type": "PodScheduled",
+          "status": "True",
+          "reason": null,
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-30T00:57:37Z"
+        }
+      ],
+      "container_exits": [
+        {
+          "name": "node",
+          "container_id": "containerd://4cddb476920a21444eba72d93ba814e17fda84cae8714fda23cc42be3e7fb5ab",
+          "restart_count": 0,
+          "terminated": {
+            "exitCode": 143,
+            "signal": null,
+            "reason": "Error",
+            "startedAt": "2026-10-30T00:57:46Z",
+            "finishedAt": "2026-10-30T00:57:49Z"
+          }
+        }
+      ]
+    },
+    {
+      "execution": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "expected_uid": "6916fc18-5972-4808-be88-6b66c310272d",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "TrainJob",
+      "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "uid": "6916fc18-5972-4808-be88-6b66c310272d",
+      "same_original_uid": true,
+      "resource_version": "17032367",
+      "generation": 2,
+      "deletion_timestamp": null,
+      "finalizers": [],
+      "owners": [],
+      "spec_suspend": true,
+      "status_observed_generation": null,
+      "status_phase": null,
+      "status_active": null,
+      "status_ready": null,
+      "status_succeeded": null,
+      "status_failed": null,
+      "conditions": [
+        {
+          "type": "Suspended",
+          "status": "True",
+          "reason": "Suspended",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-30T00:57:48Z"
+        }
+      ]
+    },
+    {
+      "execution": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "expected_uid": "b97b7d40-30cc-43b2-983c-7ac093bcf8d3",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "PodGroup",
+      "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "uid": "b97b7d40-30cc-43b2-983c-7ac093bcf8d3",
+      "same_original_uid": true,
+      "resource_version": "17032476",
+      "generation": 6,
+      "deletion_timestamp": null,
+      "finalizers": [],
+      "owners": [
+        {
+          "apiVersion": "trainer.kubeflow.org/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "TrainJob",
+          "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+          "uid": "6916fc18-5972-4808-be88-6b66c310272d"
+        }
+      ],
+      "spec_suspend": null,
+      "status_observed_generation": null,
+      "status_phase": "Completed",
+      "status_active": null,
+      "status_ready": null,
+      "status_succeeded": null,
+      "status_failed": 1,
+      "conditions": [
+        {
+          "type": "Scheduled",
+          "status": "True",
+          "reason": "tasks in gang are ready to be scheduled",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-30T00:57:47Z"
+        },
+        {
+          "type": "Unschedulable",
+          "status": "True",
+          "reason": "NotEnoughResources",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-30T00:57:49Z"
+        }
+      ]
+    },
+    {
+      "execution": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "expected_uid": "f9bf2c20-cff0-4b39-99e3-1789b2bf0b4c",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "Job",
+      "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0",
+      "uid": "f9bf2c20-cff0-4b39-99e3-1789b2bf0b4c",
+      "same_original_uid": true,
+      "resource_version": "17032494",
+      "generation": 2,
+      "deletion_timestamp": null,
+      "finalizers": [],
+      "owners": [
+        {
+          "apiVersion": "jobset.x-k8s.io/v1alpha2",
+          "kind": "JobSet",
+          "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+          "uid": "1aeb3e82-3d4e-4495-b2e2-bf36aefdb100",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "spec_suspend": true,
+      "status_observed_generation": null,
+      "status_phase": null,
+      "status_active": null,
+      "status_ready": 0,
+      "status_succeeded": null,
+      "status_failed": null,
+      "conditions": [
+        {
+          "type": "Suspended",
+          "status": "True",
+          "reason": "JobSuspended",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-30T00:57:48Z"
+        }
+      ],
+      "worker_template_finalizers": [
+        "modeldev.ani.io/training-exit-evidence"
+      ]
+    },
+    {
+      "execution": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "expected_uid": "04175cfa-ce30-46b7-8011-6c2e4c305a83",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "PodGroup",
+      "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "uid": "04175cfa-ce30-46b7-8011-6c2e4c305a83",
+      "same_original_uid": true,
+      "resource_version": "15339159",
+      "generation": 4,
+      "deletion_timestamp": null,
+      "finalizers": [],
+      "owners": [
+        {
+          "apiVersion": "trainer.kubeflow.org/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "TrainJob",
+          "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+          "uid": "d3a32f9e-e015-49ce-8305-5d388826021c"
+        }
+      ],
+      "spec_suspend": null,
+      "status_observed_generation": null,
+      "status_phase": "Completed",
+      "status_active": null,
+      "status_ready": null,
+      "status_succeeded": null,
+      "status_failed": 1,
+      "conditions": [
+        {
+          "type": "Scheduled",
+          "status": "True",
+          "reason": "tasks in gang are ready to be scheduled",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-29T15:59:54Z"
+        },
+        {
+          "type": "Unschedulable",
+          "status": "True",
+          "reason": "NotEnoughResources",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-29T16:00:06Z"
+        }
+      ]
+    },
+    {
+      "execution": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "expected_uid": "642dcaaf-9a64-44e5-b604-68364d3df579",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "JobSet",
+      "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "uid": "642dcaaf-9a64-44e5-b604-68364d3df579",
+      "same_original_uid": true,
+      "resource_version": "15338987",
+      "generation": 2,
+      "deletion_timestamp": null,
+      "finalizers": [],
+      "owners": [
+        {
+          "apiVersion": "trainer.kubeflow.org/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "TrainJob",
+          "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+          "uid": "d3a32f9e-e015-49ce-8305-5d388826021c"
+        }
+      ],
+      "spec_suspend": true,
+      "status_observed_generation": null,
+      "status_phase": null,
+      "status_active": null,
+      "status_ready": null,
+      "status_succeeded": null,
+      "status_failed": null,
+      "conditions": [
+        {
+          "type": "Suspended",
+          "status": "True",
+          "reason": "SuspendedJobs",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-29T16:00:04Z"
+        }
+      ]
+    },
+    {
+      "execution": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "expected_uid": "7b0c6b6b-3efb-46b8-909a-5dafb1b18f27",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "Job",
+      "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0",
+      "uid": "7b0c6b6b-3efb-46b8-909a-5dafb1b18f27",
+      "same_original_uid": true,
+      "resource_version": "15339136",
+      "generation": 2,
+      "deletion_timestamp": null,
+      "finalizers": [],
+      "owners": [
+        {
+          "apiVersion": "jobset.x-k8s.io/v1alpha2",
+          "kind": "JobSet",
+          "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+          "uid": "642dcaaf-9a64-44e5-b604-68364d3df579",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "spec_suspend": true,
+      "status_observed_generation": null,
+      "status_phase": null,
+      "status_active": null,
+      "status_ready": 0,
+      "status_succeeded": null,
+      "status_failed": null,
+      "conditions": [
+        {
+          "type": "Suspended",
+          "status": "True",
+          "reason": "JobSuspended",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-29T16:00:04Z"
+        }
+      ],
+      "worker_template_finalizers": [
+        "modeldev.ani.io/training-exit-evidence"
+      ]
+    },
+    {
+      "execution": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "expected_uid": "d3a32f9e-e015-49ce-8305-5d388826021c",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "TrainJob",
+      "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "uid": "d3a32f9e-e015-49ce-8305-5d388826021c",
+      "same_original_uid": true,
+      "resource_version": "15338988",
+      "generation": 2,
+      "deletion_timestamp": null,
+      "finalizers": [],
+      "owners": [],
+      "spec_suspend": true,
+      "status_observed_generation": null,
+      "status_phase": null,
+      "status_active": null,
+      "status_ready": null,
+      "status_succeeded": null,
+      "status_failed": null,
+      "conditions": [
+        {
+          "type": "Suspended",
+          "status": "True",
+          "reason": "Suspended",
+          "observedGeneration": null,
+          "lastTransitionTime": "2026-10-29T16:00:04Z"
+        }
+      ]
+    },
+    {
+      "execution": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "expected_uid": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+      "http_status": 200,
+      "api_reason": "",
+      "kind": "Pod",
+      "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8",
+      "uid": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+      "same_original_uid": true,
+      "resource_version": "15339137",
+      "generation": 2,
+      "deletion_timestamp": "2026-10-29T16:00:06Z",
+      "finalizers": [
+        "modeldev.ani.io/training-exit-evidence"
+      ],
+      "owners": [
+        {
+          "apiVersion": "batch/v1",
+          "kind": "Job",
+          "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0",
+          "uid": "7b0c6b6b-3efb-46b8-909a-5dafb1b18f27",
+          "controller": true,
+          "blockOwnerDeletion": true
+        }
+      ],
+      "spec_suspend": null,
+      "status_observed_generation": 2,
+      "status_phase": "Failed",
+      "status_active": null,
+      "status_ready": null,
+      "status_succeeded": null,
+      "status_failed": null,
+      "conditions": [
+        {
+          "type": "PodReadyToStartContainers",
+          "status": "False",
+          "reason": null,
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-29T16:00:05Z"
+        },
+        {
+          "type": "Initialized",
+          "status": "True",
+          "reason": null,
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-29T15:59:53Z"
+        },
+        {
+          "type": "Ready",
+          "status": "False",
+          "reason": "PodFailed",
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-29T16:00:05Z"
+        },
+        {
+          "type": "ContainersReady",
+          "status": "False",
+          "reason": "PodFailed",
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-29T16:00:05Z"
+        },
+        {
+          "type": "PodScheduled",
+          "status": "True",
+          "reason": null,
+          "observedGeneration": 2,
+          "lastTransitionTime": "2026-10-29T15:59:53Z"
+        }
+      ],
+      "container_exits": [
+        {
+          "name": "node",
+          "container_id": "containerd://f76126a2196a82f34f390ae377728bfefed945de11b2c47735dfbfab1b6faf06",
+          "restart_count": 0,
+          "terminated": {
+            "exitCode": 143,
+            "signal": null,
+            "reason": "Error",
+            "startedAt": "2026-10-29T16:00:03Z",
+            "finishedAt": "2026-10-29T16:00:05Z"
+          }
+        }
+      ]
+    }
+  ],
+  "logs_or_manifest_bodies_saved": false
+}

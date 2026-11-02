@@ -40,7 +40,7 @@ func finetuningPredecessorFixture(t *testing.T) (*ownerCloseFixture, biz.Managed
 	if err != nil {
 		t.Fatal(err)
 	}
-	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}, "pipeline_root": plan.Owner.PipelineRoot}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID}, "pipeline_root": plan.Owner.PipelineRoot}
 	f.run["state"] = "RUNNING"
 	association := biz.ManagedStepAssociation{RunID: f.runID, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUID: snapshot.Environment.NamespaceUID, WorkflowName: f.workflow.GetName(), WorkflowUID: string(f.workflow.GetUID()), PodName: "verify-original-pod", PodUID: "88888888-aaaa-4bbb-8ccc-dddddddddddd"}
 	completed := time.Now().UTC().Add(-time.Second)

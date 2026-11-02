@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-11-01T01:16:28.297242+00:00",
+  "source_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "binary_sha256": "4e8d7f7177a7efb521fb27ac9b59b2fe752f8e9cd75d0295dfec0e50af2377a4",
+  "sole_entry": "kubercloud@100.64.128.12",
+  "operation": "refresh complete cluster identity and original control Pod/config refs before transfer/readonly plan",
+  "attempt_exit_code": 255,
+  "stderr": "Connection closed by 100.64.128.12 port 22",
+  "stdout_bytes": 0,
+  "remote_script_executed": false,
+  "helper_source_sha256": "32963f130bcd8a0d22214b9de0265028a82c1c53d08771510d3916373b007b2d",
+  "new_binary_transferred_to_node": false,
+  "current_source_live_plan": "NOT_RUN",
+  "apply": "NOT_RUN",
+  "cluster_mutation_count": 0,
+  "database_mutation_count": 0,
+  "token_request_count": 0,
+  "last_actual_plan_source_commit": "101a2fddbc33147cffdff8bce3ae5d3691fcc679",
+  "last_actual_plan_evidence": "suspended-exit-live-readonly-plan.json",
+  "last_actual_plan_ready": false,
+  "qualified_third_execution_only": true,
+  "next_step": "When sole-entry SSH is usable, rerun original full identity/ref prep, transfer verified final single binary, run one read-only plan. Actual Gov503/zero lease and root reviewed Ready gate still required before any apply."
+}

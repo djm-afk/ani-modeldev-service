@@ -1,0 +1,60 @@
+{
+  "recorded_utc": "2026-10-31T22:51:12.935189+00:00",
+  "commit": "67dceef03f01215c294a55f11464e3e3a52cb783",
+  "branch": "codex/modeldev-dynamic-tenant-environment",
+  "push": {
+    "transport": "ssh://git@ssh.github.com:443/zhangzhe-ctrl/ani-resource-service.git",
+    "exit_code": 0,
+    "output": "71b3ad7..67dceef HEAD -> codex/modeldev-dynamic-tenant-environment"
+  },
+  "local_worktree_clean": true,
+  "pg": {
+    "result": "PASS_COMPONENT_REAL_PG",
+    "exit_code": 0,
+    "started_utc": "2026-10-31T22:37:43.474373+00:00",
+    "ended_utc": "2026-10-31T22:38:06.715224+00:00",
+    "receipt": "res-uid-window-pg-final-receipt.json",
+    "log": "res-uid-window-pg-final.log"
+  },
+  "required_make_verify": {
+    "result": "PASS",
+    "exit_code": 0,
+    "started_utc": "2026-10-31T22:38:06.717633+00:00",
+    "ended_utc": "2026-10-31T22:41:40.721999+00:00",
+    "receipt": "res-uid-window-verify-final-receipt.json",
+    "log": "res-uid-window-verify-final.log",
+    "observer_exit_255_does_not_override_terminal_receipt": true
+  },
+  "source_identity": {
+    "matched_files": 8458,
+    "missing": [],
+    "mismatches": [],
+    "full_manifest_sha256": "5b8b7d57ffb27c58906d51739cbafbd00f6630e953ecc035dac32dafd31fe991",
+    "tested_nine_file_manifest_sha256": "6e9aa4b90913c85ec91e011ee04d6cccc8ca6104d44c1581a3b40eb9e6567fb4",
+    "tested_nine_file_hashes_same_across_pg_verify_and_final_commit": true,
+    "execution_docs_appended_after_tests": true
+  },
+  "api_migrations_dependency_files_changed": false,
+  "live": {
+    "freeze": "NOT_RUN",
+    "migration25": "NOT_RUN",
+    "guard_swap": "NOT_RUN",
+    "backfill": "NOT_RUN",
+    "zero_target_null": "NOT_RUN",
+    "deployment": "NOT_RUN",
+    "release_guard": "NOT_RUN",
+    "live_plan_sha256": null
+  },
+  "manifest_template": {
+    "file": "res-namespace-window-manifest-template.json",
+    "sha256": "b6e5c8709b2af3f5b27248d4f4c9312b37aeab46668a9b0dedddf9eb5543701c",
+    "apply_ready": false,
+    "missing_current_facts": [
+      "runtime role",
+      "Resource Deployment name/UID/container",
+      "original Pod name/UID/IP set",
+      "actual final build source/image digest mapping for release"
+    ]
+  },
+  "parameters": "res-namespace-window-preparation.md"
+}

@@ -86,9 +86,17 @@ func CompileRuntimePlan(snapshot cpup01.Snapshot) (cpup01.RuntimePlan, error) {
 	if snapshot.TrainingImage != nil {
 		// The general-training Pod must reference the shared tenant pull Secret
 		// by name. The name is derived offline from the same rule Resource uses;
-		// the Secret material itself never enters this plan. The finetuning
-		// chain keeps its own unchanged template.
+		// the Secret material itself never enters this plan. The finetuning chain explicitly freezes managed references.
 		pod["imagePullSecrets"] = []any{map[string]any{"name": snapshot.TrainingImage.PullSecretRef}}
+	} else if snapshot.Kind == "FINETUNING" {
+		if snapshot.ManagedImageAccess.Validate() != nil {
+			return cpup01.RuntimePlan{}, ErrInvalidAdmission
+		}
+		refs := []any{}
+		for _, binding := range snapshot.ManagedImageAccess.Canonical().PullBindings {
+			refs = append(refs, map[string]any{"name": binding.SecretName})
+		}
+		pod["imagePullSecrets"] = refs
 	}
 	if snapshot.GPU != nil {
 		gpu := snapshot.GPU.Execution

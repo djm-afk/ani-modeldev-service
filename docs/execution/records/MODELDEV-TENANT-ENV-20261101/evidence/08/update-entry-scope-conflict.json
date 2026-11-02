@@ -1,0 +1,46 @@
+{
+  "schema": "ani.modeldev.update-entry-scope-conflict.v1",
+  "recorded_at": "2026-11-01T00:22:45.861636+00:00",
+  "user_constraint": "更新测试环境使用 http://192.168.25.40:9998/",
+  "observed_entry_contract": "image-only current main-service projects; exact seven request fields; no artifact-only job or configurable webhook/step/training target",
+  "evidence": [
+    "../08-workbench-build-only-readonly-20261101.json",
+    "../09/workbench-gov-maintenance-entry-readonly-20261101.json"
+  ],
+  "fixed_source": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "required_artifacts": [
+    {
+      "purpose": "webhook",
+      "dockerfile": "deploy/modeldev-webhook/Dockerfile",
+      "local_build": "PASS; build/build-receipt.json",
+      "publication": "NOT_RUN",
+      "entry_target": "not exposed"
+    },
+    {
+      "purpose": "step",
+      "dockerfile": "pipelines/step.Dockerfile",
+      "local_build": "PASS; build/build-receipt.json",
+      "publication": "NOT_RUN",
+      "entry_target": "not exposed"
+    },
+    {
+      "purpose": "training cpu/gpu",
+      "dockerfile": "training/finetuning.Dockerfile",
+      "local_build": "BLOCKED cached fixed official base missing",
+      "publication": "NOT_RUN",
+      "entry_target": "not exposed"
+    }
+  ],
+  "bootstrap_scope": "spec10.3/13.3 fixed RBAC/native/webhook and new global platform configuration/mounts; image-only main-service patch does not apply these templates",
+  "proposed_minimal_routes": [
+    {
+      "choice": "Main-service image upgrades through Workbench; fixed materials and planned bootstrap through Fedora plus the same designated SSH entry",
+      "changes": "No Workbench service/config source extension. Publish only fixed source images to verified authority10.10.1.66:30003/projectani-resource-factor10-20261022; apply only the approved spec bootstrap and original-UID guarded config changes; retain all required identity, cleanup and quality gates."
+    },
+    {
+      "choice": "Every artifact and bootstrap update must pass Workbench",
+      "changes": "Its owner must add exact fixed targets and bootstrap/material operations before those updates. Do not use a failing service rollout as a build-only workaround."
+    }
+  ],
+  "no_action_yet": "No new publication, bootstrap installation, Workbench extension, role expansion, identity substitution or new service rollout was performed by this proposal."
+}

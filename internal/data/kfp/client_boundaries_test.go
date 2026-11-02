@@ -200,6 +200,7 @@ func TestCreateRunRejectsUntrustedTLSCertificate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	client.WithMutationIdentity(fixtureMutationIdentity())
 	observation, err := client.CreateRun(context.Background(), fixtureCreateRequest(t, fixtureAdmission(t)))
 	if !errors.Is(err, kfp.ErrUncertain) || observation.State != biz.PipelineSubmissionUncertain || requests.Load() != 0 {
 		t.Fatalf("TLS peer not rejected: %+v %v requests=%d", observation, err, requests.Load())

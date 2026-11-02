@@ -1,0 +1,78 @@
+{
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_git_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "tested_manifest_sha256": "cd0c32c86c346cd27acf885195efb505521fefa4e1baa0576a73fdb201d0a495",
+  "input_files_canonical_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+  "platform": "linux/amd64",
+  "files": {
+    "training/finetuning.Dockerfile": {
+      "sha256": "db36755524f553e331682aa71f05037b7c822a9cf53fa7517a58f86e96020a1f",
+      "size": 1683
+    },
+    "training/train_mlp.py": {
+      "sha256": "4a732add0a4457b21c15df2ae5250ca262e80397e737e8ee62b37375c17f9a2f",
+      "size": 17470
+    },
+    "training/implementation.py": {
+      "sha256": "fa63a69c4f8853aac54ee06962fd4026e37d1bee14cc38c4abf9e2badfdac82f",
+      "size": 398
+    },
+    "training/implementations.json": {
+      "sha256": "25ae0f2358570046678a78710cd37e6ff75038f444030badedc8410b06374186",
+      "size": 793
+    },
+    "training/dataset_manifest.py": {
+      "sha256": "2dadb8c30ff4a0793b31d016344dc06ea757769347cdb1067f0745c0dce63803",
+      "size": 6229
+    },
+    "training/structure_limits.json": {
+      "sha256": "2ded16c971e9b9e11625b5e0f00bb4df8d1f7d1885ccfc00f5d959da0178f33d",
+      "size": 444
+    },
+    "training/finetuning/README.md": {
+      "sha256": "c0bb6f8fabce51ceb10e13b6711ff7093c3f396d7d3ac485dfe511cb208b89de",
+      "size": 4043
+    },
+    "training/finetuning/configuration.py": {
+      "sha256": "05caa944998bb3142548afec183d3d7da4c7057175cb03441e763ad5bab3beda",
+      "size": 6334
+    },
+    "training/finetuning/finetune_entry.py": {
+      "sha256": "291ad123bcbe39ac1c335e5b3d1efcc497062b36fa782b51a80daa814c16b7ac",
+      "size": 34416
+    },
+    "training/finetuning/inspect_runtime.py": {
+      "sha256": "a3584fb6921350454174f5845f6b58ed1b9be7388cc4b29867c6c6fe0da93efc",
+      "size": 2447
+    },
+    "training/finetuning/native_stages.py": {
+      "sha256": "ee1e455c596fc42d2433b773af648cb7760590bb3cd9f8a3f1475ff99abec70a",
+      "size": 9016
+    },
+    "training/finetuning/phase_measurement.py": {
+      "sha256": "4a58fa7e2871b3e809424c80f8e27dd48b1ba8ea8a6bc4a4bd19b1bc0d5c32e2",
+      "size": 10494
+    },
+    "training/finetuning/runtime-patches/align-writer-batch-size.patch": {
+      "sha256": "b06ddc25ab04024dfe8248da9eac5f64fce1097da7611df41941a0e654f65af4",
+      "size": 424
+    },
+    "training/finetuning/runtime-patches/apply.py": {
+      "sha256": "89efc11055345ae81fc81c2747ec2d4fc689b6f7177d340baaa2a09ef03aa9d8",
+      "size": 2582
+    },
+    "training/finetuning/runtime-patches/official-source.json": {
+      "sha256": "6b16ebe084e9d544a5ea8f45fc32371e980f0ef074a993456e28c2a02a441bba",
+      "size": 755
+    },
+    "training/finetuning/template_runtime.py": {
+      "sha256": "bcd79b3267a93faddbee41a68c7ed1373d87ec11e8bec0023c0cd96e511c6d8a",
+      "size": 14843
+    }
+  },
+  "binary": {
+    "path": "bin/ani-modeldev-step",
+    "size": 36720665,
+    "sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e"
+  }
+}

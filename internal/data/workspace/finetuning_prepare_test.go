@@ -369,6 +369,7 @@ func prepareFinetuningInputs(t *testing.T, mode string) finetuningPrepareFixture
 	snapshot.Finetuning.VerifyProgram.ResolvedArgs = arguments("verify")
 	e := biz.Execution{Admission: biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:prepare-fixture", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, AcceptedAt: snapshot.Timing.AcceptedAt}}
 	refreshSpec(t, &e)
+	snapshot = e.Snapshot
 	dataStore, dataClient := newPipelineS3(t, e, data)
 	baseObject := snapshot.Finetuning.BaseModel.Object
 	gets := &atomic.Int64{}

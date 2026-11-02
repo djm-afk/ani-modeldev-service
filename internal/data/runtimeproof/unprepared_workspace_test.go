@@ -84,7 +84,7 @@ func capturedLauncherFailedPVC(t *testing.T) (*ownerCloseFixture, *unstructured.
 	plan := f.dispatch.Plan
 	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = plan.Environment.ExperimentID, plan.DisplayName, plan.Environment.Identities.KFPStepServiceAccount
 	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": plan.PipelineID, "pipeline_version_id": plan.PipelineVersionID}
-	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}, "pipeline_root": plan.Owner.PipelineRoot}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID}, "pipeline_root": plan.Owner.PipelineRoot}
 	owner := f.authority()
 	return f, pvc, biz.ManagedStepAssociation{RunID: f.runID, NamespaceName: owner.NamespaceName, NamespaceUID: owner.NamespaceUID, WorkflowName: owner.WorkflowName, WorkflowUID: owner.WorkflowUID, PodName: "md-glh4c-2627411080", PodUID: "59c354aa-a46a-438e-bfea-7f6619a2c368"}
 }
@@ -99,7 +99,7 @@ func TestPrepareLauncherFailureBeforeBeginClosesAndReclaimsExactPVC(t *testing.T
 
 func unpreparedBoundary(f *ownerCloseFixture, pvc *unstructured.Unstructured, extra ...runtime.Object) (*runtimeproof.Verifier, *dynamicfake.FakeDynamicClient) {
 	ns := f.execution.Snapshot.Environment
-	objects := []runtime.Object{&unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": ns.NamespaceName, "uid": ns.NamespaceUID}}}, f.workflow, pvc}
+	objects := []runtime.Object{&unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": ns.NamespaceName, "uid": ns.NamespaceUID, "labels": map[string]any{"network.ani.io/tenant-id": f.execution.TenantID, "network.ani.io/managed-by": "ani-network-service"}}}}, f.workflow, pvc}
 	for i := range f.pods {
 		objects = append(objects, &f.pods[i])
 	}

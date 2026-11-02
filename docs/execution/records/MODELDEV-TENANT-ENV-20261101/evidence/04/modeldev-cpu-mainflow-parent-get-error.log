@@ -1,0 +1,41 @@
+=== RUN   TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed
+    complete_flow_test.go:67: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    complete_flow_test.go:70: WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary
+2026/11/01 03:31:12 INFO [gRPC] server listening addr=127.0.0.1:33819
+2026/11/01 03:31:12 INFO [gRPC] server stopping
+2026/11/01 03:31:12 INFO [gRPC] server listening addr=127.0.0.1:36445
+2026/11/01 03:31:12 INFO [gRPC] server listening addr=127.0.0.1:34033
+    complete_flow_test.go:193: MAIN_FLOW: Governance mTLS command -> durable inbox -> one KFP CreateRun -> authenticated Begin
+    complete_flow_test.go:272: MAIN_FLOW: fixed S3 CSV actual bytes verified and prepared workspace committed
+    complete_fixture_test.go:180: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555
+    complete_fixture_test.go:180: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555/persistentvolumeclaims/ani-kfp-workspace-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee
+    complete_fixture_test.go:180: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555
+    complete_fixture_test.go:180: MAIN_FLOW_TRAIN_CREATE: GET /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainingruntimes/mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529
+    complete_fixture_test.go:180: MAIN_FLOW_TRAIN_CREATE: GET /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainjobs/md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee
+    complete_fixture_test.go:180: MAIN_FLOW_TRAIN_CREATE: POST /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainjobs
+    complete_flow_test.go:522: MAIN_FLOW_TRAIN_CREATE_RESULT: error=<nil> timing=&{AdmittedAt:2026-10-31 19:31:54.905136 +0000 UTC DeadlineAt:2026-10-31 19:46:54.905136 +0000 UTC} binding={NamespaceUID:9aea935b-fd36-5eea-8aea-0cbe26371889 Name:mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529 UID:77777777-aaaa-4bbb-8ccc-111111111111 ObservedSpecSHA256:61f84be489e96c84144299dc101d5f2332aca2df563ee49587d8965f5ff2645a}
+    complete_fixture_test.go:486: MAIN_FLOW_ACTUAL_PROCESS: container=cpu-p01-mainflow-ab91522b-c409-4d52-b36c-f9b1136ebe1a context_error=<nil> process_error=<nil> exit_proof_error=<nil>
+    complete_flow_test.go:319: MAIN_FLOW: exactly one TrainJob -> real CPU MLP completed 48 optimizer steps -> Pod exit observed
+    complete_flow_test.go:355: MAIN_FLOW: actual files + manifest + tar uploaded; completed uploader and remote bytes verified before publication
+COMPUTE_PARENTS_ABSENCE_ERROR: parent=TrainJob/md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee err=client rate limiter Wait returned an error: rate: Wait(n=1) would exceed context deadline context=<nil>
+    complete_flow_test.go:377: NATURAL_CLOSE_KUBE_REQUESTS: before=559 owner_reconcile=154 total=713
+    complete_flow_test.go:383: NATURAL_CLOSE_FACTS: closed=2026-10-31 19:32:53.618895 +0000 UTC review= step_cleanup_present=true read_error=<nil>
+    complete_flow_test.go:385: NATURAL_CLOSE_STEP_GC: completed=2026-10-31 19:33:01.820724 +0000 UTC original_exits=7 removed=7
+    complete_flow_test.go:388: NATURAL_CLOSE_COMPUTE_GC: phase=NEEDS_REVIEW attempts=1 logs_ready=true targets=7 requested=7 confirmed_absent=3 last_error=IDENTITY_CONFLICT
+    complete_flow_test.go:391: NATURAL_CLOSE_COMPUTE_TARGET: kind=TrainJob name=md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee uid=babababa-dcdc-4fef-8bbb-222222222222 parent=
+    complete_flow_test.go:391: NATURAL_CLOSE_COMPUTE_TARGET: kind=JobSet name=md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee uid=dddddddd-aaaa-4bbb-8ccc-333333333333 parent=babababa-dcdc-4fef-8bbb-222222222222
+    complete_flow_test.go:391: NATURAL_CLOSE_COMPUTE_TARGET: kind=Job name=md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee-node-0 uid=eeeeeeee-aaaa-4bbb-8ccc-444444444444 parent=dddddddd-aaaa-4bbb-8ccc-333333333333
+    complete_flow_test.go:391: NATURAL_CLOSE_COMPUTE_TARGET: kind=Pod name=actual-training-pod uid=ffffffff-aaaa-4bbb-8ccc-555555555555 parent=eeeeeeee-aaaa-4bbb-8ccc-444444444444
+    complete_flow_test.go:391: NATURAL_CLOSE_COMPUTE_TARGET: kind=PodGroup name=md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee uid=12345678-aaaa-4bbb-8ccc-111111111111 parent=babababa-dcdc-4fef-8bbb-222222222222
+    complete_flow_test.go:391: NATURAL_CLOSE_COMPUTE_TARGET: kind=Workflow name=main-flow uid=cccccccc-dddd-4eee-8fff-111111111111 parent=
+    complete_flow_test.go:391: NATURAL_CLOSE_COMPUTE_TARGET: kind=TrainingRuntime name=mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529 uid=77777777-aaaa-4bbb-8ccc-111111111111 parent=
+    complete_flow_test.go:395: NATURAL_CLOSE_COMPUTE_REMAINS: path=/apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainingruntimes/mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529 metadata=map[annotations:map[modeldev.ani.io/create-operation-id:bbbbbbbb-cccc-4ddd-8eee-ffffffffffff modeldev.ani.io/execution-id:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee modeldev.ani.io/execution-spec-sha256:33276a30f056313e88d66a4b564642d6dc9d276c4c989640f6a9466d10ba4a91 modeldev.ani.io/runtime-spec-sha256:61f84be489e96c84144299dc101d5f2332aca2df563ee49587d8965f5ff2645a modeldev.ani.io/tenant-id:11111111-2222-4333-8444-555555555555 modeldev.ani.io/workspace-uid:abababab-cdcd-4efe-8aaa-111111111111] generation:1 name:mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529 namespace:tenant-11111111-2222-4333-8444-555555555555 resourceVersion:1 uid:77777777-aaaa-4bbb-8ccc-111111111111]
+    complete_flow_test.go:395: NATURAL_CLOSE_COMPUTE_REMAINS: path=/apis/scheduling.volcano.sh/v1beta1/namespaces/tenant-11111111-2222-4333-8444-555555555555/podgroups/md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee metadata=map[generation:1 name:md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee namespace:tenant-11111111-2222-4333-8444-555555555555 ownerReferences:[] resourceVersion:2 uid:12345678-aaaa-4bbb-8ccc-111111111111]
+    complete_flow_test.go:395: NATURAL_CLOSE_COMPUTE_REMAINS: path=/api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555/pods/actual-training-pod metadata=map[finalizers:[] generation:1 name:actual-training-pod namespace:tenant-11111111-2222-4333-8444-555555555555 ownerReferences:[] resourceVersion:3 uid:ffffffff-aaaa-4bbb-8ccc-555555555555]
+    complete_flow_test.go:400: full naturally terminal writer proof did not close {1 0 1 EXECUTION_CLEANUP_PLAN_CONFLICT} <nil>
+2026/11/01 03:33:22 INFO [gRPC] server stopping
+2026/11/01 03:33:22 INFO [gRPC] server stopping
+--- FAIL: TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed (135.84s)
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	135.867s
+FAIL

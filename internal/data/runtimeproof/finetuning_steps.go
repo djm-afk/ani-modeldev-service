@@ -51,7 +51,9 @@ func (verifier *Verifier) VerifyFinetuningStepPredecessor(ctx context.Context, e
 	}
 	if role == "verify" {
 		for _, start := range state.FinetuningSteps {
-			if start.Binding.Role == "export" && (task.ID != start.Binding.TaskID || pod.GetName() != start.Binding.PodName || start.Result.FinishedAt.After(completed)) {
+			// Pod finishedAt is a metav1.Time with second precision; compare the
+			// process report at that precision without changing either fact.
+			if start.Binding.Role == "export" && (task.ID != start.Binding.TaskID || pod.GetName() != start.Binding.PodName || start.Result.FinishedAt.Truncate(time.Second).After(completed)) {
 				return biz.ErrRuntimeConflict
 			}
 		}

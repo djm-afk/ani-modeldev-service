@@ -1,0 +1,129 @@
+{
+  "observed_at_utc": "2026-10-31T14:52:37.226285Z",
+  "source_ref": "Secret ani-system/ani-resource-private key config.yaml; process-only decode; no raw credential fields retained",
+  "commands": [
+    {
+      "started_at_utc": "2026-10-31T14:52:37.304825Z",
+      "command": [
+        "kubectl",
+        "--context=kubernetes-admin@ani-kcn-full",
+        "--request-timeout=15s",
+        "get",
+        "secret",
+        "ani-resource-private",
+        "-n",
+        "ani-system",
+        "-o",
+        "jsonpath={.data.config\\.yaml}"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "top_level_keys": [
+    "image",
+    "network",
+    "object_storage",
+    "server"
+  ],
+  "network": {
+    "namespace_prefix": "tenant-",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "configuration_keys": [
+      "cluster_id",
+      "cursor_signing_key",
+      "database_dsn",
+      "instance_consumer_endpoint",
+      "kubeconfig",
+      "namespace_prefix",
+      "observation",
+      "platform_default_vpc_egress",
+      "vpc_cidr_presets",
+      "worker"
+    ]
+  },
+  "image": {
+    "pull_secret_cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "pull_secret_callers": [
+      {
+        "cluster_ids": [
+          "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+        ],
+        "namespaces": [
+          "ani-modeldev-tenant-a-v21"
+        ],
+        "owner_labels": [
+          "modeldev-execution-v21"
+        ],
+        "require_tenant_label": true,
+        "subject": "ani-modeldev-service"
+      },
+      {
+        "cluster_ids": [
+          "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+        ],
+        "namespaces": [
+          "ani-system"
+        ],
+        "owner_labels": [],
+        "require_tenant_label": false,
+        "subject": "ani-inference-service"
+      }
+    ],
+    "configuration_keys": [
+      "allow_never_expires",
+      "cursor_signing_key_file",
+      "database_dsn_file",
+      "enabled",
+      "encryption_keys_file",
+      "harbor_ca_file",
+      "harbor_password_file",
+      "harbor_url",
+      "harbor_username",
+      "installation_id",
+      "platform_project",
+      "publisher_days",
+      "pull_days",
+      "pull_secret_callers",
+      "pull_secret_cluster_id",
+      "pull_secret_kubeconfig",
+      "request_timeout",
+      "robot_name_prefix"
+    ],
+    "pull_secret_fields": {
+      "pull_secret_callers": [
+        {
+          "cluster_ids": [
+            "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+          ],
+          "namespaces": [
+            "ani-modeldev-tenant-a-v21"
+          ],
+          "owner_labels": [
+            "modeldev-execution-v21"
+          ],
+          "require_tenant_label": true,
+          "subject": "ani-modeldev-service"
+        },
+        {
+          "cluster_ids": [
+            "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+          ],
+          "namespaces": [
+            "ani-system"
+          ],
+          "owner_labels": [],
+          "require_tenant_label": false,
+          "subject": "ani-inference-service"
+        }
+      ],
+      "pull_secret_cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "pull_secret_kubeconfig": ""
+    }
+  },
+  "storage": {
+    "configuration_keys": []
+  },
+  "sandbox": {
+    "configuration_keys": []
+  }
+}

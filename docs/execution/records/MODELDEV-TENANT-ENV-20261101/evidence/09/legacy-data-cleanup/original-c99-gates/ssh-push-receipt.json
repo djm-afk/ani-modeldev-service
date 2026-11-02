@@ -1,0 +1,7 @@
+{
+  "exit": 0,
+  "target": "ssh://git@ssh.github.com:443/zhangzhe-ctrl/ani-modeldev-service.git",
+  "ref": "refs/heads/codex/modeldev-legacy-retirement",
+  "source_commit": "1464b131185791f71990b1cf864e1468186c8bd4",
+  "output": "651f5ea1..1464b131 HEAD -> codex/modeldev-legacy-retirement"
+}

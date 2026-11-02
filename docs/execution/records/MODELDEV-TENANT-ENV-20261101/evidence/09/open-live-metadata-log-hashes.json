@@ -1,0 +1,144 @@
+{
+  "observed_at": "2026-10-31T18:57:52.725246+00:00",
+  "read_only": true,
+  "pods": [
+    {
+      "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc",
+      "uid": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+      "resource_version": "17032495",
+      "phase": "Failed",
+      "node": "node1",
+      "deletion_timestamp": "2026-10-30T00:57:50Z",
+      "finalizers": [
+        "modeldev.ani.io/training-exit-evidence"
+      ],
+      "owners": [
+        {
+          "apiVersion": "batch/v1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Job",
+          "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0",
+          "uid": "f9bf2c20-cff0-4b39-99e3-1789b2bf0b4c"
+        }
+      ],
+      "containers": [
+        {
+          "name": "node",
+          "restartCount": 0,
+          "containerID": "containerd://4cddb476920a21444eba72d93ba814e17fda84cae8714fda23cc42be3e7fb5ab",
+          "state": {
+            "terminated": {
+              "containerID": "containerd://4cddb476920a21444eba72d93ba814e17fda84cae8714fda23cc42be3e7fb5ab",
+              "exitCode": 143,
+              "finishedAt": "2026-10-30T00:57:49Z",
+              "reason": "Error",
+              "startedAt": "2026-10-30T00:57:46Z"
+            }
+          },
+          "lastState": {}
+        }
+      ],
+      "log_reads": [
+        {
+          "previous": false,
+          "exit_code": 0,
+          "bytes": 115,
+          "sha256": "224eade78cbd65470c1e776fdae13018619345eff1a3be65cfde0ef0c3f20ad0",
+          "lines": 1,
+          "utf8_valid": true,
+          "result": "OK",
+          "error_bytes": 0,
+          "error_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "previous": true,
+          "exit_code": 1,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "lines": 0,
+          "utf8_valid": true,
+          "result": "PREVIOUS_NOT_FOUND",
+          "error_bytes": 143,
+          "error_sha256": "1b083035ba9841c9d3ce21bcd43e750871373d9ade9695f309496b3549a75e84"
+        }
+      ]
+    },
+    {
+      "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8",
+      "uid": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+      "resource_version": "15339137",
+      "phase": "Failed",
+      "node": "node1",
+      "deletion_timestamp": "2026-10-29T16:00:06Z",
+      "finalizers": [
+        "modeldev.ani.io/training-exit-evidence"
+      ],
+      "owners": [
+        {
+          "apiVersion": "batch/v1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Job",
+          "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0",
+          "uid": "7b0c6b6b-3efb-46b8-909a-5dafb1b18f27"
+        }
+      ],
+      "containers": [
+        {
+          "name": "node",
+          "restartCount": 0,
+          "containerID": "containerd://f76126a2196a82f34f390ae377728bfefed945de11b2c47735dfbfab1b6faf06",
+          "state": {
+            "terminated": {
+              "containerID": "containerd://f76126a2196a82f34f390ae377728bfefed945de11b2c47735dfbfab1b6faf06",
+              "exitCode": 143,
+              "finishedAt": "2026-10-29T16:00:05Z",
+              "reason": "Error",
+              "startedAt": "2026-10-29T16:00:03Z"
+            }
+          },
+          "lastState": {}
+        }
+      ],
+      "log_reads": [
+        {
+          "previous": false,
+          "exit_code": 0,
+          "bytes": 115,
+          "sha256": "9ce39f9afd60e2fad4686865e363b3978b52907559bf7bfa75aa34dcdeb6f7fc",
+          "lines": 1,
+          "utf8_valid": true,
+          "result": "OK",
+          "error_bytes": 0,
+          "error_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "previous": true,
+          "exit_code": 1,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "lines": 0,
+          "utf8_valid": true,
+          "result": "PREVIOUS_NOT_FOUND",
+          "error_bytes": 143,
+          "error_sha256": "66e1e29a8b89ff7e9fe19d1072e790b5e4f4264cfb0bf83033c7a9e4b31094f8"
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "name": "ft-sw2pr",
+      "found": false
+    },
+    {
+      "name": "ft-j4ncq",
+      "found": false
+    },
+    {
+      "name": "md-kpwkw",
+      "found": false
+    }
+  ]
+}

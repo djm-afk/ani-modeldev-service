@@ -1,0 +1,18 @@
+{
+  "started_at": "2026-11-01T02:03:57.224716+00:00",
+  "source_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "command": [
+    "go",
+    "test",
+    "-count=1",
+    "-v",
+    "-timeout=3m",
+    "./internal/data/execution",
+    "./internal/data/submission",
+    "-run",
+    "^(TestUserStopBeforeAdmissionPersistsClosingTombstoneAcrossNewConnections|TestAcceptReceiptAfterEarlierCloseIsFirstAndPreservesCloseOnReplay|TestCloseBeforeReservationRejectsFirstSendPermit)$"
+  ],
+  "scope": "native owner PG proof; not external peer substitution",
+  "exit_code": 0,
+  "ended_at": "2026-11-01T02:03:59.699185+00:00"
+}

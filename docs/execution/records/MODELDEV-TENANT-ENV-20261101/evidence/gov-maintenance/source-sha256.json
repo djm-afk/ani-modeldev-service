@@ -1,0 +1,16 @@
+{
+  "app/admin/service/cmd/server/wiring_ent.go": "0d1c7898130f0ac341f8c32904cf1fa03f83198f117a5a643fb9fd8fc75fad46",
+  "app/admin/service/internal/data/modeldev_dispatch_repo.go": "477a38ff825546d20683f882339c5b217e1817e121ed371ba377c085cf34bc80",
+  "app/admin/service/internal/data/modeldev_maintenance_config.go": "21351f9fedb847aac7908b2e6093a22d99ffec914d185cf47356bf5d176c20a7",
+  "app/admin/service/internal/data/modeldev_maintenance_config_test.go": "cd8df045c2c809c9ac0b2925000458113b5ae56c71aa309f861e74cf65914780",
+  "app/admin/service/internal/data/modeldev_maintenance_lease_test.go": "2b6985cabb768ca838e8782080914bf893dc637741611004406dc6892fc12081",
+  "app/admin/service/internal/service/modeldev_create_maintenance.go": "5e7d5bae4d878319ad914bea2e37d8f3fdb27cc1a630e6ca0b2c745db8e2f189",
+  "app/admin/service/internal/service/modeldev_create_maintenance_test.go": "0acabf5e47c956ed11ac9af3a3450608e8ff408169ed525565103b99dd32f8c0",
+  "app/admin/service/internal/service/modeldev_dispatch_worker.go": "fb681945fa10ce71fad1c2c48dbac0df97d5ecb743cdee97f8d5e878cca9d000",
+  "app/admin/service/internal/service/modeldev_service.go": "b8b79eb20df1c95b0160bd6fb07e8b23d6a42c67abdb643e4ef026043bd0e2be",
+  "docs/contracts/frontend-http-api.md": "3e61a211a3ff3709051afc462cc00c5e79bc544757d3febca27daed2c0f3b83a",
+  "docs/contracts/service-to-service-calls.md": "1b0e6d94d618b67a4e3258d4e62ea30ffbd658682ceed0c4630823143b603b8c",
+  "go.mod": "eccba55c294e83ea62420f2ff5a424f754b688f6dec8bee95ba25d6770e6883b",
+  "go.sum": "898509f4d5b534b6d02c4220dc7fbf64bd3643433e9ffc6316cb8eca429dfa94",
+  "pkg/middleware/logging/network_redaction_test.go": "49643cca7d112b2f1b250b69de9282369a92e35fb8dd15f6f4068df1fee482f2"
+}

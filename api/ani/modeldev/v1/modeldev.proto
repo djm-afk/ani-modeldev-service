@@ -228,6 +228,7 @@ enum ErrorReason {
   ERROR_REASON_DATASET_INVALID = 35;
   ERROR_REASON_INPUT_VALIDATION_BUSY = 36;
   ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE = 37;
+  ERROR_REASON_ENVIRONMENT_NOT_REGISTERED = 38;
 }
 
 message FieldViolation {
@@ -747,6 +748,9 @@ message RuntimeIdentityRefs {
   string trainer_service_account = 3;
   string verifier_service_account = 4;
   string tenant_proxy_identity = 5;
+  string kfp_step_service_account_uid = 6;
+  string trainer_service_account_uid = 7;
+  string verifier_service_account_uid = 8;
 }
 
 message EnvironmentBindingSnapshot {
@@ -765,6 +769,21 @@ message StorageScope {
   string bucket = 2;
   string approved_prefix = 3;
   string credential_reference = 4;
+}
+
+message DispatchOwner {
+  string reference = 1;
+  string revision_sha256 = 2;
+  string pipeline_root = 3;
+}
+
+message ManagedImagePullBinding {
+  string registry_authority = 1;
+  string secret_name = 2;
+}
+
+message ManagedImageAccess {
+  repeated ManagedImagePullBinding pull_bindings = 1;
 }
 
 // Immutable after Governance admission. Runtime IDs generated afterwards
@@ -795,6 +814,8 @@ message ExecutionSnapshot {
   // Catalogue resolution facts of a general-training image. Absent for
   // finetuning, whose image identity is frozen by its material.
   TrainingImageFacts training_image = 21;
+  DispatchOwner dispatch_owner = 22;
+  ManagedImageAccess managed_image_access = 23;
 }
 
 // TrainingPlatform is the resolved target platform of the selected image.

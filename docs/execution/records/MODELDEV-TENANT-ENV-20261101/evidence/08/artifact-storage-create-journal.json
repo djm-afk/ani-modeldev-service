@@ -1,0 +1,45 @@
+{
+  "create-artifact-service-account-issued.json": {
+    "issued_at_utc": "2026-11-01T02:05:04.698091+00:00",
+    "phase": "create-artifact-service-account",
+    "unknown_outcome_requires_readback": true
+  },
+  "create-artifact-service-account-response.json": {
+    "error_code": "InvalidRequest",
+    "http_status": 400
+  },
+  "create-dedicated-bucket-issued.json": {
+    "issued_at_utc": "2026-11-01T02:05:04.632128+00:00",
+    "phase": "create-dedicated-bucket",
+    "unknown_outcome_requires_readback": true
+  },
+  "create-dedicated-bucket-response.json": {
+    "error_code": null,
+    "http_status": 200
+  },
+  "create-source-secret-issued.json": {
+    "issued_at_utc": "2026-11-01T02:05:04.514419+00:00",
+    "phase": "create-source-secret",
+    "unknown_outcome_requires_readback": true
+  },
+  "create-source-secret-response.json": {
+    "error_code": null,
+    "http_status": 201
+  },
+  "enable-bucket-versioning-issued.json": {
+    "issued_at_utc": "2026-11-01T02:05:04.679453+00:00",
+    "phase": "enable-bucket-versioning",
+    "unknown_outcome_requires_readback": true
+  },
+  "enable-bucket-versioning-response.json": {
+    "error_code": null,
+    "http_status": 200
+  },
+  "source-secret-identity.json": {
+    "name": "modeldev-tenantenv-artifact-source-20261101",
+    "namespace": "ani-system",
+    "resourceVersion": "20887925",
+    "uid": "bc62d45a-d83c-4ca8-b5fa-ca07c6cadb47"
+  },
+  "ssh_exit": 0
+}

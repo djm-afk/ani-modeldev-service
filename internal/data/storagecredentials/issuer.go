@@ -21,27 +21,24 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
-	"github.com/google/uuid"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
 var ErrUnavailable = errors.New("execution storage credentials unavailable")
 
-type Binding struct {
-	TenantID     string `json:"tenant_id"`
-	Purpose      string `json:"purpose"`
-	ConnectionID string `json:"connection_id"`
-	Bucket       string `json:"bucket"`
-	Prefix       string `json:"prefix"`
-}
-
 type Config struct {
-	Endpoint    string
-	Region      string
-	RootCAs     *x509.CertPool
-	Credentials aws.CredentialsProvider
-	Bindings    []Binding
-	Timeout     time.Duration
+	Endpoint                string
+	Region                  string
+	RootCAs                 *x509.CertPool
+	Credentials             aws.CredentialsProvider
+	InputConnectionID       string
+	InputBucket             string
+	PublicationConnectionID string
+	PublicationBucket       string
+	ModelConnectionID       string
+	ModelBucket             string
+	Timeout                 time.Duration
 }
 
 type Issuer struct {
@@ -55,19 +52,9 @@ var regionName = regexp.MustCompile(`^[a-z0-9-]{1,64}$`)
 func New(config Config) (*Issuer, error) {
 	endpoint, err := url.Parse(config.Endpoint)
 	if err != nil || endpoint.Scheme != "https" || endpoint.Hostname() == "" || endpoint.User != nil || endpoint.RawQuery != "" || endpoint.ForceQuery || endpoint.Fragment != "" || endpoint.RawPath != "" || (endpoint.Path != "" && endpoint.Path != "/") ||
-		!regionName.MatchString(config.Region) || config.RootCAs == nil || config.Credentials == nil || config.Timeout <= 0 || config.Timeout > time.Minute || len(config.Bindings) == 0 || len(config.Bindings) > 64 {
+		!regionName.MatchString(config.Region) || config.RootCAs == nil || config.Credentials == nil || config.Timeout <= 0 || config.Timeout > time.Minute || !biz.ValidStorageReference(config.InputConnectionID) || !bucketName.MatchString(config.InputBucket) || !biz.ValidStorageReference(config.PublicationConnectionID) || !bucketName.MatchString(config.PublicationBucket) || !biz.ValidStorageReference(config.ModelConnectionID) || !bucketName.MatchString(config.ModelBucket) {
 		return nil, ErrUnavailable
 	}
-	seen := make(map[Binding]bool)
-	for _, binding := range config.Bindings {
-		id, err := uuid.Parse(binding.TenantID)
-		if err != nil || id == uuid.Nil || id.String() != binding.TenantID || (binding.Purpose != "prepare" && binding.Purpose != "prepare-base-model" && binding.Purpose != "publish") ||
-			!biz.ValidStorageReference(binding.ConnectionID) || !bucketName.MatchString(binding.Bucket) || !safePolicyKey(binding.Prefix) || seen[binding] {
-			return nil, ErrUnavailable
-		}
-		seen[binding] = true
-	}
-	config.Bindings = append([]Binding(nil), config.Bindings...)
 	transport := &http.Transport{
 		Proxy: nil, DialContext: (&net.Dialer{Timeout: config.Timeout}).DialContext,
 		TLSClientConfig:     &tls.Config{RootCAs: config.RootCAs, MinVersion: tls.VersionTLS12},
@@ -86,7 +73,7 @@ func (issuer *Issuer) IssueForExecution(ctx context.Context, execution biz.Execu
 		}
 		return biz.TemporaryStorageCredentials{}, ErrUnavailable
 	}
-	if issuer == nil || ctx == nil || ctx.Err() != nil || !execution.Snapshot.DeadlineAt.After(time.Now()) {
+	if issuer == nil || ctx == nil || ctx.Err() != nil || !execution.Snapshot.DeadlineAt.After(time.Now()) || execution.Close != nil || execution.States.Close == biz.CloseStateClosed {
 		return failure()
 	}
 	if _, _, err := execution.CanonicalPayloads(); err != nil {
@@ -215,19 +202,26 @@ func (issuer *Issuer) scope(execution biz.Execution, purpose string) (biz.Tempor
 	if !safePolicyKey(object) {
 		return biz.TemporaryStorageCredentials{}, nil, "", false
 	}
-	for _, binding := range issuer.config.Bindings {
-		if binding.TenantID != execution.TenantID || binding.Purpose != purpose || binding.ConnectionID != connection || binding.Bucket != bucket || !strings.HasPrefix(object, binding.Prefix+"/") {
-			continue
-		}
-		credentials := biz.TemporaryStorageCredentials{StorageConnectionID: connection, Bucket: bucket, ObjectKey: key}
-		resource := "arn:aws:s3:::" + bucket + "/" + key
-		if purpose == "publish" {
-			credentials.ObjectPrefix = prefix + "/"
-			resource = "arn:aws:s3:::" + bucket + "/" + credentials.ObjectPrefix + "*"
-		}
-		return credentials, actions, resource, true
+	if !cpup01.CanonicalTenantID(execution.TenantID) || execution.TenantID != execution.Snapshot.IdentityRef.TenantID || execution.ExecutionID != execution.Snapshot.IdentityRef.ExecutionID {
+		return biz.TemporaryStorageCredentials{}, nil, "", false
 	}
-	return biz.TemporaryStorageCredentials{}, nil, "", false
+	approvedConnection, approvedBucket, approvedPrefix := issuer.config.InputConnectionID, issuer.config.InputBucket, "inputs/"+execution.TenantID
+	switch purpose {
+	case "prepare-base-model":
+		approvedConnection, approvedBucket, approvedPrefix = issuer.config.ModelConnectionID, issuer.config.ModelBucket, execution.TenantID
+	case "publish":
+		approvedConnection, approvedBucket, approvedPrefix = issuer.config.PublicationConnectionID, issuer.config.PublicationBucket, "executions/"+execution.TenantID
+	}
+	if connection != approvedConnection || bucket != approvedBucket || !strings.HasPrefix(object, approvedPrefix+"/") {
+		return biz.TemporaryStorageCredentials{}, nil, "", false
+	}
+	credentials := biz.TemporaryStorageCredentials{StorageConnectionID: connection, Bucket: bucket, ObjectKey: key}
+	resource := "arn:aws:s3:::" + bucket + "/" + key
+	if purpose == "publish" {
+		credentials.ObjectPrefix = prefix + "/"
+		resource = "arn:aws:s3:::" + bucket + "/" + credentials.ObjectPrefix + "*"
+	}
+	return credentials, actions, resource, true
 }
 
 func safePolicyKey(value string) bool {

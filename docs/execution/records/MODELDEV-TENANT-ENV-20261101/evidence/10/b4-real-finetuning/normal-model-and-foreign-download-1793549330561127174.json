@@ -1,0 +1,49 @@
+{
+  "schema": "ani.modeldev.b4-normal-model-and-foreign-artifact-readback.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:08:48.153309+00:00"
+  },
+  "at": "2026-11-01T16:08:48.153326+00:00",
+  "calls": [
+    {
+      "label": "B normal own Model version",
+      "method": "GET",
+      "path": "/api/v1/model-versions/6afb1f32-a0d4-4c92-8d82-7799e450f5ee",
+      "http_status": 200,
+      "response_sha256": "a761af2447e0af218eaa73d101b2dac2a1396ff997bf935c15bfb58cc76e36cc",
+      "version": {
+        "id": "6afb1f32-a0d4-4c92-8d82-7799e450f5ee",
+        "model_id": "tenantenv-b-smollm2-935c3148-a4",
+        "version": "exec-59f92b91-5e86-4dd1-90ec-cb1037756758",
+        "status": "ready",
+        "format": "safetensors",
+        "size_bytes": "541620736",
+        "checksum_sha256": "3354c60b0177555b7712b13be7c23fab2e2b6b7a1df50f927e3947345bf8d63a",
+        "is_encrypted": false,
+        "created_at": "2026-11-01T16:00:50.137632Z"
+      }
+    },
+    {
+      "label": "A normal foreign B published adapter download",
+      "method": "GET",
+      "path": "/api/v1/modeldev/artifacts/2a4c5e05-5707-5a7f-9e0c-181a2f939c7e/download",
+      "http_status": 404,
+      "response_sha256": "17dc3aa07dd2808337009e7e59335179ec820f48ccff066d369405f12ff42c78",
+      "safe_error": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "resource unavailable"
+      }
+    }
+  ],
+  "persistent_mutations": false,
+  "B_formal_model_version_ready": false,
+  "A_foreign_published_download_denied": true,
+  "status": "FAIL_ACTUAL_RESPONSE"
+}

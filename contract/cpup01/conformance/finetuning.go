@@ -73,8 +73,8 @@ func FinetuningSnapshotV1() cpup01.Snapshot {
 	datasetDigest, _ := dataset.Digest()
 	snapshot.Program.ResolvedArgs = []string{"train", "--configuration", "/workspace/inputs/finetune_configuration.json", "--workspace", "/workspace", "--dataset-manifest", "/workspace/inputs/dataset-manifest.json", "--expected-dataset-manifest-sha256", datasetDigest, "--expected-base-manifest-sha256", strings.Repeat("d", 64)}
 	version := "base-version-1"
-	baseObject := cpup01.FixedObjectRef{StorageConnectionID: "model-store-v1", Bucket: "base-models", Key: "approved/qwen/base.tar", VersionID: &version, SizeBytes: 20480, SHA256: strings.Repeat("e", 64)}
-	base := cpup01.BaseModelRef{ModelID: "66666666-6666-4666-8666-666666666666", VersionID: *intent.BaseModelVersionID, Format: "safetensors", Object: baseObject, Scope: cpup01.StorageScope{StorageConnectionID: "model-store-v1", Bucket: "base-models", ApprovedPrefix: "approved/qwen", CredentialReference: "modeldev-base-read-v1"}}
+	baseObject := cpup01.FixedObjectRef{StorageConnectionID: "model-store-v1", Bucket: "base-models", Key: "77777777-7777-4777-8777-777777777777/base.tar", VersionID: &version, SizeBytes: 20480, SHA256: strings.Repeat("e", 64)}
+	base := cpup01.BaseModelRef{ModelID: "66666666-6666-4666-8666-666666666666", VersionID: *intent.BaseModelVersionID, Format: "safetensors", Object: baseObject, Scope: cpup01.StorageScope{StorageConnectionID: "model-store-v1", Bucket: "base-models", ApprovedPrefix: "77777777-7777-4777-8777-777777777777", CredentialReference: "modeldev-base-read-v1"}}
 	for _, name := range []string{"config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json"} {
 		base.Files = append(base.Files, cpup01.BaseModelFile{Path: name, SizeBytes: 1024, SHA256: strings.Repeat("f", 64)})
 	}

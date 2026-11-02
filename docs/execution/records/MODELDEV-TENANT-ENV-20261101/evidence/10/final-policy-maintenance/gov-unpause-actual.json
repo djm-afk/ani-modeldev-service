@@ -1,0 +1,27 @@
+{
+  "schema": "ani.modeldev.spec54-final-policy-gov-unpause.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:32:11.368747+00:00"
+  },
+  "started_at": "2026-11-01T16:32:11.368767+00:00",
+  "identity_before_write": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:32:11.655532+00:00"
+  },
+  "status": "GOV_CREATE_RESTORED_UNSET_DEFAULT_FALSE_READY",
+  "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+  "explicit_pause_env": "UNSET",
+  "other_spec_fields_unchanged": true,
+  "finished_at": "2026-11-01T16:32:18.037795+00:00"
+}

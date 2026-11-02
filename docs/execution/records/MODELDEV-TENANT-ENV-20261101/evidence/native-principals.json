@@ -1,0 +1,673 @@
+{
+  "schema": "ani.modeldev.native-principals-evidence.v1",
+  "observed_at": "2026-10-31T18:51:29.937015+00:00",
+  "read_only": true,
+  "identity": {
+    "ssh_host": "100.64.128.12",
+    "ssh_user": "kubercloud",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "identity_match": true,
+  "principals": {
+    "control": "system:serviceaccount:ani-system:modeldev-control",
+    "webhook": "system:serviceaccount:ani-system:ani-modeldev-webhook",
+    "kfp_api": "system:serviceaccount:kubeflow:ml-pipeline",
+    "argo": "system:serviceaccount:kubeflow:argo",
+    "trainer": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+    "jobset": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+    "persistence_agent": "system:serviceaccount:kubeflow:ml-pipeline-persistenceagent",
+    "job_controller": "system:serviceaccount:kube-system:job-controller",
+    "maintenance": "kubernetes-admin"
+  },
+  "node_principals": [
+    "system:node:node1",
+    "system:node:node2",
+    "system:node:node3"
+  ],
+  "kfp_ca_key": "ca.crt",
+  "render_input": {
+    "principals": {
+      "control": "system:serviceaccount:ani-system:modeldev-control",
+      "webhook": "system:serviceaccount:ani-system:ani-modeldev-webhook",
+      "kfp_api": "system:serviceaccount:kubeflow:ml-pipeline",
+      "argo": "system:serviceaccount:kubeflow:argo",
+      "trainer": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+      "jobset": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+      "persistence_agent": "system:serviceaccount:kubeflow:ml-pipeline-persistenceagent",
+      "job_controller": "system:serviceaccount:kube-system:job-controller",
+      "maintenance": "kubernetes-admin"
+    },
+    "node_principals": [
+      "system:node:node1",
+      "system:node:node2",
+      "system:node:node3"
+    ],
+    "kfp_ca_key": "ca.crt"
+  },
+  "sources": {
+    "control": {
+      "deployment": {
+        "namespace": "ani-system",
+        "name": "ani-modeldev",
+        "uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+        "deleting": false
+      },
+      "service_account": {
+        "namespace": "ani-system",
+        "name": "modeldev-control",
+        "uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+        "deleting": false
+      },
+      "desired_replicas": 1,
+      "available_replicas": 1,
+      "pods": [
+        {
+          "namespace": "ani-system",
+          "name": "ani-modeldev-6995bd77c4-z2gxk",
+          "uid": "592bdd86-ab5b-4416-8a2c-07c21ee69f8d",
+          "deleting": false,
+          "service_account": "modeldev-control",
+          "phase": "Running",
+          "ready": "True",
+          "node": "node1",
+          "containers": [
+            {
+              "name": "modeldev",
+              "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:b0358ec0c5babcdaa97c645c06f89564478406715a4958e121099c4f6534e38d",
+              "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:b0358ec0c5babcdaa97c645c06f89564478406715a4958e121099c4f6534e38d"
+            }
+          ]
+        }
+      ]
+    },
+    "webhook": {
+      "deployment": {
+        "namespace": "ani-system",
+        "name": "ani-modeldev-webhook",
+        "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea",
+        "deleting": false
+      },
+      "service_account": {
+        "namespace": "ani-system",
+        "name": "ani-modeldev-webhook",
+        "uid": "eb28c30d-6d87-435e-a3cf-07e440dd5f93",
+        "deleting": false
+      },
+      "desired_replicas": 2,
+      "available_replicas": 2,
+      "pods": [
+        {
+          "namespace": "ani-system",
+          "name": "ani-modeldev-webhook-5d4cccd55-5mg74",
+          "uid": "a7f5ce44-f6c0-401f-9bfa-93949735c578",
+          "deleting": false,
+          "service_account": "ani-modeldev-webhook",
+          "phase": "Running",
+          "ready": "True",
+          "node": "node3",
+          "containers": [
+            {
+              "name": "webhook",
+              "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+              "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03"
+            }
+          ]
+        },
+        {
+          "namespace": "ani-system",
+          "name": "ani-modeldev-webhook-5d4cccd55-rvgk2",
+          "uid": "2a575fe5-3e17-4c68-9216-00fa95a99306",
+          "deleting": false,
+          "service_account": "ani-modeldev-webhook",
+          "phase": "Running",
+          "ready": "True",
+          "node": "node2",
+          "containers": [
+            {
+              "name": "webhook",
+              "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+              "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03"
+            }
+          ]
+        }
+      ]
+    },
+    "kfp_api": {
+      "deployment": {
+        "namespace": "kubeflow",
+        "name": "ml-pipeline",
+        "uid": "56189e37-8874-4f2d-90bb-19846a332b64",
+        "deleting": false
+      },
+      "service_account": {
+        "namespace": "kubeflow",
+        "name": "ml-pipeline",
+        "uid": "a9a9487e-4cde-4821-9c86-cf0c67a2d635",
+        "deleting": false
+      },
+      "desired_replicas": 1,
+      "available_replicas": 1,
+      "pods": [
+        {
+          "namespace": "kubeflow",
+          "name": "ml-pipeline-599bc84d9f-s8p7m",
+          "uid": "6cfb81d8-c39d-4a4e-9c8c-33ab09c7651e",
+          "deleting": false,
+          "service_account": "ml-pipeline",
+          "phase": "Running",
+          "ready": "True",
+          "node": "node2",
+          "containers": [
+            {
+              "name": "ml-pipeline-api-server",
+              "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-api-server:2.16.0@sha256:5f9d674f75dbd9c056ad31a1d8c5432e1bdc1f0597dfefe6f58d00af983fbe22",
+              "image_id": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-api-server@sha256:5f9d674f75dbd9c056ad31a1d8c5432e1bdc1f0597dfefe6f58d00af983fbe22"
+            }
+          ]
+        }
+      ]
+    },
+    "argo": {
+      "deployment": {
+        "namespace": "kubeflow",
+        "name": "workflow-controller",
+        "uid": "441104f5-3647-430e-a020-911dd99c0aca",
+        "deleting": false
+      },
+      "service_account": {
+        "namespace": "kubeflow",
+        "name": "argo",
+        "uid": "fad3d394-d7ef-4be1-a1d8-a864a3497c58",
+        "deleting": false
+      },
+      "desired_replicas": 1,
+      "available_replicas": 1,
+      "pods": [
+        {
+          "namespace": "kubeflow",
+          "name": "workflow-controller-65f677577c-rxk9t",
+          "uid": "e91979c6-b012-4fff-a555-aa85db4c9e7c",
+          "deleting": false,
+          "service_account": "argo",
+          "phase": "Running",
+          "ready": "True",
+          "node": "node1",
+          "containers": [
+            {
+              "name": "workflow-controller",
+              "image": "10.10.1.66:5001/ani-kubeflow/argoproj/workflow-controller:v3.7.3@sha256:5c8f5b6e5a2134dafdeadf758f230e4cc08db78f813e52d928e8f4f4541f243d",
+              "image_id": "10.10.1.66:5001/ani-kubeflow/argoproj/workflow-controller@sha256:5c8f5b6e5a2134dafdeadf758f230e4cc08db78f813e52d928e8f4f4541f243d"
+            }
+          ]
+        }
+      ]
+    },
+    "trainer": {
+      "deployment": {
+        "namespace": "kubeflow-system",
+        "name": "kubeflow-trainer-controller-manager",
+        "uid": "3f58bec1-34ef-4378-ab3c-396489748da9",
+        "deleting": false
+      },
+      "service_account": {
+        "namespace": "kubeflow-system",
+        "name": "kubeflow-trainer-controller-manager",
+        "uid": "781dc0e1-3eb1-4732-a3fd-ea5f28594cdf",
+        "deleting": false
+      },
+      "desired_replicas": 1,
+      "available_replicas": 1,
+      "pods": [
+        {
+          "namespace": "kubeflow-system",
+          "name": "kubeflow-trainer-controller-manager-76b46445b5-jbb4x",
+          "uid": "6825f7b8-5cca-4efe-9a90-fe790a2f3570",
+          "deleting": false,
+          "service_account": "kubeflow-trainer-controller-manager",
+          "phase": "Running",
+          "ready": "True",
+          "node": "node1",
+          "containers": [
+            {
+              "name": "manager",
+              "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/trainer/trainer-controller-manager:v2.1.0@sha256:aa5949fc4ccbbed2537fa05f08ca330bc83b40aef930d2a0d44970922f197a73",
+              "image_id": "10.10.1.66:5001/ani-kubeflow/kubeflow/trainer/trainer-controller-manager@sha256:aa5949fc4ccbbed2537fa05f08ca330bc83b40aef930d2a0d44970922f197a73"
+            }
+          ]
+        }
+      ]
+    },
+    "jobset": {
+      "deployment": {
+        "namespace": "kubeflow-system",
+        "name": "jobset-controller-manager",
+        "uid": "3647f135-ce0c-46b1-9c00-76f77b8f994c",
+        "deleting": false
+      },
+      "service_account": {
+        "namespace": "kubeflow-system",
+        "name": "jobset-controller-manager",
+        "uid": "c7a11510-9a94-4030-9f4f-aefde6912cc4",
+        "deleting": false
+      },
+      "desired_replicas": 1,
+      "available_replicas": 1,
+      "pods": [
+        {
+          "namespace": "kubeflow-system",
+          "name": "jobset-controller-manager-5c6997b7c5-7s48j",
+          "uid": "34df0faf-9b15-4431-af7a-fdcff3f2ee42",
+          "deleting": false,
+          "service_account": "jobset-controller-manager",
+          "phase": "Running",
+          "ready": "True",
+          "node": "node2",
+          "containers": [
+            {
+              "name": "manager",
+              "image": "10.10.1.66:5001/ani-kubeflow/jobset/jobset:v0.10.1@sha256:a018e2ca9b2a73645e108930a1a1795392fe8b765e4c81f5240f640b854436c4",
+              "image_id": "10.10.1.66:5001/ani-kubeflow/jobset/jobset@sha256:a018e2ca9b2a73645e108930a1a1795392fe8b765e4c81f5240f640b854436c4"
+            }
+          ]
+        }
+      ]
+    },
+    "persistence_agent": {
+      "deployment": {
+        "namespace": "kubeflow",
+        "name": "ml-pipeline-persistenceagent",
+        "uid": "ecdd6857-98e6-487e-8628-b92011967229",
+        "deleting": false
+      },
+      "service_account": {
+        "namespace": "kubeflow",
+        "name": "ml-pipeline-persistenceagent",
+        "uid": "09efd5d9-4c52-47e0-9ba1-e3e7c758bacc",
+        "deleting": false
+      },
+      "desired_replicas": 1,
+      "available_replicas": 1,
+      "pods": [
+        {
+          "namespace": "kubeflow",
+          "name": "ml-pipeline-persistenceagent-867bfc46c4-hfcg5",
+          "uid": "cdaa151b-372c-4f89-bf39-d70c48e59e7e",
+          "deleting": false,
+          "service_account": "ml-pipeline-persistenceagent",
+          "phase": "Running",
+          "ready": "True",
+          "node": "node1",
+          "containers": [
+            {
+              "name": "ml-pipeline-persistenceagent",
+              "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-persistence-agent:2.16.0@sha256:7d44250d37fd8026740d1640cb91313580c05c875bd72ccbd66bc0ed44e3ed2b",
+              "image_id": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-persistence-agent@sha256:7d44250d37fd8026740d1640cb91313580c05c875bd72ccbd66bc0ed44e3ed2b"
+            }
+          ]
+        }
+      ]
+    },
+    "job_controller": {
+      "service_account": {
+        "namespace": "kube-system",
+        "name": "job-controller",
+        "uid": "acfc8104-f943-43c9-b60a-f130d6e03895",
+        "deleting": false
+      },
+      "controller_manager_pods": [
+        {
+          "namespace": "kube-system",
+          "name": "kube-controller-manager-node1",
+          "uid": "534eb3de-50a8-499b-b360-70610c466d17",
+          "deleting": false,
+          "ready": "True",
+          "public_flags": [
+            "--controllers=*,bootstrapsigner,tokencleaner",
+            "--use-service-account-credentials=true"
+          ]
+        },
+        {
+          "namespace": "kube-system",
+          "name": "kube-controller-manager-node2",
+          "uid": "5f47821a-3ae2-4c68-9aa1-9e7f1fa91c6a",
+          "deleting": false,
+          "ready": "True",
+          "public_flags": [
+            "--controllers=*,bootstrapsigner,tokencleaner",
+            "--use-service-account-credentials=true"
+          ]
+        },
+        {
+          "namespace": "kube-system",
+          "name": "kube-controller-manager-node3",
+          "uid": "b9c15d2f-a41e-45b1-9fd9-68fc2879e1e9",
+          "deleting": false,
+          "ready": "True",
+          "public_flags": [
+            "--controllers=*,bootstrapsigner,tokencleaner",
+            "--use-service-account-credentials=true"
+          ]
+        }
+      ],
+      "clusterrolebindings": [
+        {
+          "namespace": null,
+          "name": "system:controller:job-controller",
+          "uid": "98d8121d-8423-429d-84b4-12bb9413c5e7",
+          "deleting": false,
+          "role_ref": {
+            "apiGroup": "rbac.authorization.k8s.io",
+            "kind": "ClusterRole",
+            "name": "system:controller:job-controller"
+          }
+        }
+      ],
+      "derivation": "observed --use-service-account-credentials=true plus actual job-controller ServiceAccount and binding"
+    },
+    "maintenance": {
+      "self_subject_review": {
+        "username": "kubernetes-admin",
+        "groups": [
+          "kubeadm:cluster-admins",
+          "system:authenticated"
+        ]
+      },
+      "scope": "exact authenticated designated SSH kubeconfig principal; no group-prefix exemption"
+    }
+  },
+  "nodes": [
+    {
+      "namespace": null,
+      "name": "node1",
+      "uid": "b8c6525d-6d03-4ab9-a2ea-97753f0fca67",
+      "deleting": false,
+      "principal": "system:node:node1",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory",
+          "lastTransitionTime": "2026-10-22T02:10:16Z"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure",
+          "lastTransitionTime": "2026-10-22T02:10:16Z"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID",
+          "lastTransitionTime": "2026-10-22T02:10:16Z"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady",
+          "lastTransitionTime": "2026-10-22T02:10:16Z"
+        }
+      ],
+      "kubelet_version": "v1.35.8"
+    },
+    {
+      "namespace": null,
+      "name": "node2",
+      "uid": "b9f72348-e7e9-4a60-bdb4-2d2410845ce9",
+      "deleting": false,
+      "principal": "system:node:node2",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory",
+          "lastTransitionTime": "2026-10-22T01:45:02Z"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure",
+          "lastTransitionTime": "2026-10-22T01:45:02Z"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID",
+          "lastTransitionTime": "2026-10-22T01:45:02Z"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady",
+          "lastTransitionTime": "2026-10-22T01:45:02Z"
+        }
+      ],
+      "kubelet_version": "v1.35.8"
+    },
+    {
+      "namespace": null,
+      "name": "node3",
+      "uid": "5e736bcd-c06d-4713-a831-be9adc567e97",
+      "deleting": false,
+      "principal": "system:node:node3",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory",
+          "lastTransitionTime": "2026-10-22T01:34:22Z"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure",
+          "lastTransitionTime": "2026-10-22T01:34:22Z"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID",
+          "lastTransitionTime": "2026-10-22T01:34:22Z"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady",
+          "lastTransitionTime": "2026-10-22T01:34:22Z"
+        }
+      ],
+      "kubelet_version": "v1.35.8"
+    }
+  ],
+  "node_principal_evidence": {
+    "method": "exact current Node names plus Node,RBAC authorization contract; no broad system: prefix",
+    "api_server": [
+      {
+        "namespace": "kube-system",
+        "name": "kube-apiserver-node1",
+        "uid": "d5fd178f-d604-48be-b66d-a3bde48ca16a",
+        "deleting": false,
+        "public_flags": [
+          "--authorization-mode=Node,RBAC"
+        ]
+      },
+      {
+        "namespace": "kube-system",
+        "name": "kube-apiserver-node2",
+        "uid": "af6a15b7-67db-4ef5-a08b-cb1aba37f5a3",
+        "deleting": false,
+        "public_flags": [
+          "--authorization-mode=Node,RBAC"
+        ]
+      },
+      {
+        "namespace": "kube-system",
+        "name": "kube-apiserver-node3",
+        "uid": "f549894c-926e-44fb-8549-c897d67dae51",
+        "deleting": false,
+        "public_flags": [
+          "--authorization-mode=Node,RBAC"
+        ]
+      }
+    ],
+    "current_csr_count": 0,
+    "authenticated_admission_probes": "NOT_RUN; verify during native-policy server dry-run acceptance"
+  },
+  "kfp_ca_source": {
+    "deployment": {
+      "namespace": "kubeflow",
+      "name": "ml-pipeline",
+      "uid": "56189e37-8874-4f2d-90bb-19846a332b64",
+      "deleting": false
+    },
+    "public_env": [
+      {
+        "name": "CABUNDLE_CONFIGMAP_NAME",
+        "value": "ani-kfp-ca"
+      },
+      {
+        "name": "CABUNDLE_KEY_NAME",
+        "value": "ca.crt"
+      }
+    ],
+    "configmap": {
+      "namespace": "kubeflow",
+      "name": "ani-kfp-ca",
+      "uid": "174a118b-adce-4ad1-91aa-b9a1b6c1f1ec",
+      "deleting": false
+    },
+    "keys": [
+      "ca.crt"
+    ]
+  },
+  "controller_deployments_all_namespaces": [
+    {
+      "namespace": "ani-system",
+      "name": "ani-modeldev",
+      "uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+      "deleting": false,
+      "service_account": "modeldev-control",
+      "replicas": 1,
+      "available_replicas": 1
+    },
+    {
+      "namespace": "ani-system",
+      "name": "ani-modeldev-webhook",
+      "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea",
+      "deleting": false,
+      "service_account": "ani-modeldev-webhook",
+      "replicas": 2,
+      "available_replicas": 2
+    },
+    {
+      "namespace": "kubeflow-system",
+      "name": "jobset-controller-manager",
+      "uid": "3647f135-ce0c-46b1-9c00-76f77b8f994c",
+      "deleting": false,
+      "service_account": "jobset-controller-manager",
+      "replicas": 1,
+      "available_replicas": 1
+    },
+    {
+      "namespace": "kubeflow-system",
+      "name": "kubeflow-trainer-controller-manager",
+      "uid": "3f58bec1-34ef-4378-ab3c-396489748da9",
+      "deleting": false,
+      "service_account": "kubeflow-trainer-controller-manager",
+      "replicas": 1,
+      "available_replicas": 1
+    },
+    {
+      "namespace": "kubeflow",
+      "name": "ani-kfp-entry",
+      "uid": "69d5d9ad-2a3b-4ba8-8f49-6f17392fd605",
+      "deleting": false,
+      "service_account": "ani-kfp-entry",
+      "replicas": 1,
+      "available_replicas": 1
+    },
+    {
+      "namespace": "kubeflow",
+      "name": "ml-pipeline",
+      "uid": "56189e37-8874-4f2d-90bb-19846a332b64",
+      "deleting": false,
+      "service_account": "ml-pipeline",
+      "replicas": 1,
+      "available_replicas": 1
+    },
+    {
+      "namespace": "kubeflow",
+      "name": "ml-pipeline-persistenceagent",
+      "uid": "ecdd6857-98e6-487e-8628-b92011967229",
+      "deleting": false,
+      "service_account": "ml-pipeline-persistenceagent",
+      "replicas": 1,
+      "available_replicas": 1
+    },
+    {
+      "namespace": "kubeflow",
+      "name": "ml-pipeline-scheduledworkflow",
+      "uid": "706b3d7f-e268-4de4-8460-9d8277fe0699",
+      "deleting": false,
+      "service_account": "ml-pipeline-scheduledworkflow",
+      "replicas": 1,
+      "available_replicas": 1
+    },
+    {
+      "namespace": "kubeflow",
+      "name": "workflow-controller",
+      "uid": "441104f5-3647-430e-a020-911dd99c0aca",
+      "deleting": false,
+      "service_account": "argo",
+      "replicas": 1,
+      "available_replicas": 1
+    }
+  ],
+  "namespace_samples": [
+    {
+      "name": "A",
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "expected_namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+      "observed": {
+        "namespace": null,
+        "name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+        "deleting": false
+      },
+      "phase": "Active",
+      "network_labels": {
+        "network.ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "network.ani.io/managed-by": "ani-network-service"
+      },
+      "identity_match": true
+    },
+    {
+      "name": "B",
+      "resource_tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "expected_namespace_uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347",
+      "observed": {
+        "namespace": null,
+        "name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347",
+        "deleting": false
+      },
+      "phase": "Active",
+      "network_labels": {
+        "network.ani.io/tenant-id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "network.ani.io/managed-by": "ani-network-service"
+      },
+      "identity_match": true
+    }
+  ],
+  "conflicts": [],
+  "live_native_dry_run": "NOT_RUN",
+  "offline_render_validation": {
+    "status": "PASS",
+    "scope": "pure render input shape only; no server dry-run or policy install",
+    "object_count": 21,
+    "render_input_sha256": "c8bfb12bf36eaa8fcb181054481c45c17c8ee414f3e502deb0b62e5c21ee57ec"
+  }
+}

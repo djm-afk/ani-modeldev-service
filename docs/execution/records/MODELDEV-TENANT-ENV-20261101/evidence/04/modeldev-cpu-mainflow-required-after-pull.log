@@ -1,0 +1,39 @@
+=== RUN   TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed
+    complete_flow_test.go:66: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    complete_flow_test.go:69: WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary
+2026/11/01 03:14:10 INFO [gRPC] server listening addr=127.0.0.1:42929
+2026/11/01 03:14:11 INFO [gRPC] server stopping
+2026/11/01 03:14:11 INFO [gRPC] server listening addr=127.0.0.1:45637
+2026/11/01 03:14:11 INFO [gRPC] server listening addr=127.0.0.1:45915
+    complete_flow_test.go:192: MAIN_FLOW: Governance mTLS command -> durable inbox -> one KFP CreateRun -> authenticated Begin
+    complete_flow_test.go:271: MAIN_FLOW: fixed S3 CSV actual bytes verified and prepared workspace committed
+    complete_fixture_test.go:177: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555
+    complete_fixture_test.go:177: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555/persistentvolumeclaims/ani-kfp-workspace-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee
+    complete_fixture_test.go:177: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555
+    complete_fixture_test.go:177: MAIN_FLOW_TRAIN_CREATE: GET /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainingruntimes/mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529
+    complete_fixture_test.go:177: MAIN_FLOW_TRAIN_CREATE: GET /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainjobs/md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee
+    complete_fixture_test.go:177: MAIN_FLOW_TRAIN_CREATE: POST /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainjobs
+    complete_flow_test.go:505: MAIN_FLOW_TRAIN_CREATE_RESULT: error=<nil> timing=&{AdmittedAt:2026-10-31 19:14:53.893687 +0000 UTC DeadlineAt:2026-10-31 19:29:53.893687 +0000 UTC} binding={NamespaceUID:9aea935b-fd36-5eea-8aea-0cbe26371889 Name:mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529 UID:77777777-aaaa-4bbb-8ccc-111111111111 ObservedSpecSHA256:61f84be489e96c84144299dc101d5f2332aca2df563ee49587d8965f5ff2645a}
+    complete_fixture_test.go:482: MAIN_FLOW_ACTUAL_PROCESS: container=cpu-p01-mainflow-28806454-653c-437e-8526-bb7b87e8cc52 context_error=<nil> process_error=<nil> exit_proof_error=<nil>
+    complete_flow_test.go:318: MAIN_FLOW: exactly one TrainJob -> real CPU MLP completed 48 optimizer steps -> Pod exit observed
+    complete_flow_test.go:354: MAIN_FLOW: actual files + manifest + tar uploaded; completed uploader and remote bytes verified before publication
+    complete_flow_test.go:376: NATURAL_CLOSE_FACTS: closed=2026-10-31 19:16:19.616039 +0000 UTC review= step_cleanup_present=true read_error=<nil>
+    complete_flow_test.go:378: NATURAL_CLOSE_STEP_GC: completed=2026-10-31 19:16:27.015493 +0000 UTC original_exits=6 removed=6
+    complete_flow_test.go:381: NATURAL_CLOSE_COMPUTE_GC: phase=NEEDS_REVIEW attempts=1 logs_ready=true targets=7 requested=7 confirmed_absent=3 last_error=IDENTITY_CONFLICT
+    complete_flow_test.go:383: full naturally terminal writer proof did not close {1 0 1 EXECUTION_CLEANUP_PLAN_CONFLICT} <nil>
+2026/11/01 03:16:48 INFO [gRPC] server stopping
+2026/11/01 03:16:48 INFO [gRPC] server stopping
+--- FAIL: TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed (164.36s)
+=== RUN   TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication
+    complete_flow_test.go:66: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    complete_flow_test.go:69: WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary
+2026/11/01 03:16:53 INFO [gRPC] server listening addr=127.0.0.1:44245
+2026/11/01 03:16:53 INFO [gRPC] server stopping
+2026/11/01 03:16:53 INFO [gRPC] server listening addr=127.0.0.1:43337
+    complete_flow_test.go:192: MAIN_FLOW: Governance mTLS command -> durable inbox -> one KFP CreateRun -> authenticated Begin
+    complete_flow_test.go:243: failed original Workflow did not close through its owner: {Examined:1 Closed:0 Unresolved:1 LastError:KFP_MANAGED_RUN_UNVERIFIED} <nil>
+2026/11/01 03:17:25 INFO [gRPC] server stopping
+--- FAIL: TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication (36.14s)
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	200.533s
+FAIL

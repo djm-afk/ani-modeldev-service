@@ -1,0 +1,42 @@
+{
+  "started_at": "2026-10-31T21:22:59.743739+00:00",
+  "completed_at": "2026-10-31T21:26:55.026977+00:00",
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-count=1",
+    "-v",
+    "-timeout=3m",
+    "-run",
+    "^(TestModelDevCreateMaintenance|TestPlatformComponentLogScopeRejectsUnregistered)",
+    "./app/admin/service/internal/data",
+    "./app/admin/service/internal/service"
+  ],
+  "cwd": "/home/chabking/workspace/ani-governance-runs/modeldev-create-maintenance-20261101/source",
+  "execution_host": "ssh fedora",
+  "source_base": "6a7c721ea113d51497421d7975122ec7ca8105c2",
+  "exit_code": 0,
+  "source_sha256": {
+    "app/admin/service/internal/data/modeldev_maintenance_config.go": "bcc4bb20aa002a0cb5ac200b9e541fcd8964344b387c5c41977a6a77e8c3a21d",
+    "app/admin/service/internal/data/modeldev_maintenance_config_test.go": "d259f1062df39b6808f109a2341f6c2a72deb18c6eb8e27a6879fd54559a4a3b",
+    "app/admin/service/internal/data/platform_component_log_scope_test.go": "09df6e331be2b29939448147ed37f3336b9f3cdf9901f96f1ecd3ae701c7880a",
+    "app/admin/service/internal/service/modeldev_create_maintenance_test.go": "c5cdd8f4e7adc7837feaf7f02493a199620bb504a3b7e0985db9142255fc5725",
+    "docs/contracts/frontend-http-api.md": "0d649e953183fa60957656c901e300685dd3714d46ae20c0e1b4d6e586c2383d",
+    "docs/contracts/permission-code-capability-map.tsv": "8597ac86fcf7d490cae8fc82ef908fa9666991ea54dffde5c78d40132fbec074",
+    "docs/contracts/service-to-service-calls.md": "4e90bd7c62956ffac2e1b954655a911a43e1341a656f81e8441eac38b1616f4a",
+    "pkg/permcode/capability_gen.go": "0d15643294197429d326e2e696e8fd5079996d62604edd29443a202e65e637f2",
+    "pkg/permcode/permcode_test.go": "859e2a89104f13d5808adad4e20c1e185b82cb33ae30f34272fe55d332386dac",
+    "sql/bootstrap/catalog_test.go": "957d25d05f4260e6e33c453bdde9243f4e7d73afd7fa6bdc6433f6151bb1ef2c"
+  },
+  "dependency_sha256": {
+    "go.mod": "eccba55c294e83ea62420f2ff5a424f754b688f6dec8bee95ba25d6770e6883b",
+    "go.sum": "898509f4d5b534b6d02c4220dc7fbf64bd3643433e9ffc6316cb8eca429dfa94"
+  },
+  "environment": {
+    "GOTOOLCHAIN": "auto",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2"
+  },
+  "scope": "dedicated old-API maintenance candidate; default paused, explicit false resumes; no dynamic environment API/pin migration; no PG lease rerun"
+}

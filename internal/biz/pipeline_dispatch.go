@@ -23,11 +23,7 @@ var ErrPipelineDispatchBlocked = errors.New("PIPELINE_DISPATCH_BLOCKED")
 // PipelineOwnerConfiguration is an explicitly supplied owner configuration
 // revision. Its digest is a reference, not proof that the configuration exists
 // or that the control workload may use its storage. It contains no credentials.
-type PipelineOwnerConfiguration struct {
-	Reference      string `json:"reference"`
-	RevisionSHA256 string `json:"revision_sha256"`
-	PipelineRoot   string `json:"pipeline_root"`
-}
+type PipelineOwnerConfiguration = cpup01.DispatchOwnerSnapshot
 
 type PipelineDispatchRequest struct {
 	Admission Admission
@@ -35,21 +31,22 @@ type PipelineDispatchRequest struct {
 }
 
 // PipelineDispatchPlan is internal owner state, separate from the shared
-// execution snapshot. Admission.SpecHash does not cover Owner.PipelineRoot.
+// execution snapshot. Admission.SpecHash covers the exact frozen owner.
 // Repositories accept a request and derive this plan from its validated
 // admission; a caller-supplied plan is never an admission replacement.
 type PipelineDispatchPlan struct {
-	SchemaVersion     string                            `json:"schema_version"`
-	TenantID          string                            `json:"tenant_id"`
-	ExecutionID       string                            `json:"execution_id"`
-	OperationID       string                            `json:"operation_id"`
-	SpecHash          string                            `json:"spec_hash"`
-	Owner             PipelineOwnerConfiguration        `json:"owner"`
-	Environment       cpup01.EnvironmentBindingSnapshot `json:"environment"`
-	PipelineID        string                            `json:"pipeline_id"`
-	PipelineVersionID string                            `json:"pipeline_version_id"`
-	DisplayName       string                            `json:"display_name"`
-	DeadlineAt        time.Time                         `json:"deadline_at"`
+	SchemaVersion      string                            `json:"schema_version"`
+	TenantID           string                            `json:"tenant_id"`
+	ExecutionID        string                            `json:"execution_id"`
+	OperationID        string                            `json:"operation_id"`
+	SpecHash           string                            `json:"spec_hash"`
+	Owner              PipelineOwnerConfiguration        `json:"owner"`
+	Environment        cpup01.EnvironmentBindingSnapshot `json:"environment"`
+	ManagedImageAccess cpup01.ManagedImageAccessSnapshot `json:"managed_image_access"`
+	PipelineID         string                            `json:"pipeline_id"`
+	PipelineVersionID  string                            `json:"pipeline_version_id"`
+	DisplayName        string                            `json:"display_name"`
+	DeadlineAt         time.Time                         `json:"deadline_at"`
 }
 
 var pipelineOwnerReferencePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/-]{0,511}$`)
@@ -74,6 +71,9 @@ func (request PipelineDispatchRequest) Freeze() (PipelineDispatchPlan, error) {
 	if json.Unmarshal(snapshotBytes, &snapshot) != nil {
 		return PipelineDispatchPlan{}, ErrInvalidAdmission
 	}
+	if owner != snapshot.DispatchOwner {
+		return PipelineDispatchPlan{}, ErrAdmissionConflict
+	}
 	return PipelineDispatchPlan{
 		SchemaVersion: "ani.modeldev.pipeline-dispatch-plan.v1",
 		TenantID:      strings.ToLower(request.Admission.TenantID),
@@ -81,7 +81,8 @@ func (request PipelineDispatchRequest) Freeze() (PipelineDispatchPlan, error) {
 		OperationID:   strings.ToLower(request.Admission.OperationID),
 		SpecHash:      request.Admission.SpecHash,
 		Owner:         owner, Environment: snapshot.Environment,
-		PipelineID: snapshot.Implementation.PipelineID, PipelineVersionID: snapshot.Implementation.PipelineVersionID,
+		ManagedImageAccess: snapshot.ManagedImageAccess,
+		PipelineID:         snapshot.Implementation.PipelineID, PipelineVersionID: snapshot.Implementation.PipelineVersionID,
 		DisplayName: "md-" + strings.ToLower(request.Admission.ExecutionID),
 		DeadlineAt:  snapshot.DeadlineAt,
 	}, nil

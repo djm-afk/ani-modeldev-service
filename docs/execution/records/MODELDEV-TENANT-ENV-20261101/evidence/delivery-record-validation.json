@@ -1,0 +1,15 @@
+{
+  "schema": "ani.modeldev.delivery-record-validation.v1",
+  "status": "PASS",
+  "scope": "record links/status/manifest integrity only, not product acceptance",
+  "acceptance_rows": 32,
+  "status_counts": {
+    "PASS": 19,
+    "BLOCKED": 13
+  },
+  "missing_evidence_paths": [],
+  "missing_report_links": [],
+  "sensitive_format_hits_without_values": [],
+  "runnable_go_evidence_files": 0,
+  "overall_product_status": "BLOCKED"
+}

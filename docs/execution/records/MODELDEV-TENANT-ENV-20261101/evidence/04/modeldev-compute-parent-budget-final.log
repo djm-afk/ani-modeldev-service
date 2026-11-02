@@ -1,0 +1,185 @@
+=== RUN   TestComputeParentDependencyFailureDoesNotBecomeIdentityConflict
+--- PASS: TestComputeParentDependencyFailureDoesNotBecomeIdentityConflict (0.00s)
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/original
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/completed-after-close
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/missing-completion-time
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/future-completion
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/duplicate-completion
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/set-generation3
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/set-not-suspended
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/train-no-suspend-report
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/set-replacement
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/set-foreign-owner
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/unknown-running-writer
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/original-writer-running
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/reader-unavailable-after-log-commit
+    completed_set_cleanup_test.go:22: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport (24.38s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/original (3.21s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/completed-after-close (2.00s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/missing-completion-time (2.84s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/future-completion (1.84s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/duplicate-completion (1.67s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/set-generation3 (1.74s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/set-not-suspended (1.60s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/train-no-suspend-report (1.54s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/set-replacement (1.79s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/set-foreign-owner (2.27s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/unknown-running-writer (0.83s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/original-writer-running (0.90s)
+    --- PASS: TestAutomaticComputeCleanupCompletedBeforeCloseWithoutSetSuspendedReport/reader-unavailable-after-log-commit (2.16s)
+=== RUN   TestExhaustedComputeCleanupObservesOriginalAbsenceWithoutNewAttempt
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestExhaustedComputeCleanupObservesOriginalAbsenceWithoutNewAttempt (3.06s)
+=== RUN   TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence
+=== RUN   TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/original_still_present
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/replacement_UID
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/unknown_read
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/replacement_PVC
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/replacement_namespace
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence (14.39s)
+    --- PASS: TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/original_still_present (2.46s)
+    --- PASS: TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/replacement_UID (4.09s)
+    --- PASS: TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/unknown_read (2.47s)
+    --- PASS: TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/replacement_PVC (2.64s)
+    --- PASS: TestExhaustedComputeCleanupObservationRejectsUnprovenAbsence/replacement_namespace (2.72s)
+=== RUN   TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs/expired_original_attempt
+=== RUN   TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs/missing_logs
+=== RUN   TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs/changed_hash
+=== RUN   TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs/changed_requested_UID
+--- PASS: TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs (2.46s)
+    --- PASS: TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs/expired_original_attempt (0.05s)
+    --- PASS: TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs/missing_logs (0.05s)
+    --- PASS: TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs/changed_hash (0.04s)
+    --- PASS: TestComputeCleanupAbsenceRequiresCompleteOriginalScopeAndLogs/changed_requested_UID (0.04s)
+=== RUN   TestComputeCleanupWaitsForConfirmedAsyncPodRemoval
+=== RUN   TestComputeCleanupWaitsForConfirmedAsyncPodRemoval/original_eventually_absent
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestComputeCleanupWaitsForConfirmedAsyncPodRemoval/replacement_UID
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestComputeCleanupWaitsForConfirmedAsyncPodRemoval/unknown_finalizer
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestComputeCleanupWaitsForConfirmedAsyncPodRemoval/caller_deadline
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestComputeCleanupWaitsForConfirmedAsyncPodRemoval (13.79s)
+    --- PASS: TestComputeCleanupWaitsForConfirmedAsyncPodRemoval/original_eventually_absent (3.71s)
+    --- PASS: TestComputeCleanupWaitsForConfirmedAsyncPodRemoval/replacement_UID (2.98s)
+    --- PASS: TestComputeCleanupWaitsForConfirmedAsyncPodRemoval/unknown_finalizer (2.83s)
+    --- PASS: TestComputeCleanupWaitsForConfirmedAsyncPodRemoval/caller_deadline (4.27s)
+=== RUN   TestAutomaticComputeCleanupOriginalGraphAndRestart
+=== RUN   TestAutomaticComputeCleanupOriginalGraphAndRestart/CPU
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupOriginalGraphAndRestart/FINETUNING
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAutomaticComputeCleanupOriginalGraphAndRestart (5.74s)
+    --- PASS: TestAutomaticComputeCleanupOriginalGraphAndRestart/CPU (2.52s)
+    --- PASS: TestAutomaticComputeCleanupOriginalGraphAndRestart/FINETUNING (3.22s)
+=== RUN   TestAutomaticComputeCleanupLostDeleteAndUIDConflicts
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAutomaticComputeCleanupLostDeleteAndUIDConflicts (2.38s)
+=== RUN   TestAutomaticComputeCleanupAfterOriginalStopAndDeadline
+=== RUN   TestAutomaticComputeCleanupAfterOriginalStopAndDeadline/USER_STOP
+    compute_cleanup_test.go:570: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupAfterOriginalStopAndDeadline/DEADLINE
+    compute_cleanup_test.go:570: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAutomaticComputeCleanupAfterOriginalStopAndDeadline (7.40s)
+    --- PASS: TestAutomaticComputeCleanupAfterOriginalStopAndDeadline/USER_STOP (3.02s)
+    --- PASS: TestAutomaticComputeCleanupAfterOriginalStopAndDeadline/DEADLINE (4.38s)
+=== RUN   TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter
+=== RUN   TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/unobserved-suspend
+    compute_cleanup_test.go:600: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/unreported-suspend
+    compute_cleanup_test.go:600: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stale-suspend-report
+    compute_cleanup_test.go:600: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/changed-suspend-generation
+    compute_cleanup_test.go:600: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/protected-pvc-owner
+    compute_cleanup_test.go:600: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stopped-unknown-writer
+    compute_cleanup_test.go:600: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stopped-replacement
+    compute_cleanup_test.go:600: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter (9.49s)
+    --- PASS: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/unobserved-suspend (1.20s)
+    --- PASS: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/unreported-suspend (1.44s)
+    --- PASS: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stale-suspend-report (1.68s)
+    --- PASS: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/changed-suspend-generation (1.31s)
+    --- PASS: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/protected-pvc-owner (1.19s)
+    --- PASS: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stopped-unknown-writer (1.29s)
+    --- PASS: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stopped-replacement (1.38s)
+=== RUN   TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter
+=== RUN   TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/replace-at-delete
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/foreign-finalizer
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/unknown-writer
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter (3.28s)
+    --- PASS: TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/replace-at-delete (1.31s)
+    --- PASS: TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/foreign-finalizer (1.22s)
+    --- PASS: TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/unknown-writer (0.75s)
+=== RUN   TestAutomaticComputeCleanupRejectsCorruptDurableTargetBeforeFurtherDelete
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAutomaticComputeCleanupRejectsCorruptDurableTargetBeforeFurtherDelete (1.36s)
+=== RUN   TestAutomaticComputeCleanupBoundsBlockedAttemptsAndRetainsForeignFinalizer
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAutomaticComputeCleanupBoundsBlockedAttemptsAndRetainsForeignFinalizer (1.69s)
+=== RUN   TestComputeCleanupPreservesConfiguredTrainingObserver
+=== RUN   TestComputeCleanupPreservesConfiguredTrainingObserver/configured_owner_capability
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestComputeCleanupPreservesConfiguredTrainingObserver/configured_owner_refuses_observation
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestComputeCleanupPreservesConfiguredTrainingObserver (3.00s)
+    --- PASS: TestComputeCleanupPreservesConfiguredTrainingObserver/configured_owner_capability (1.73s)
+    --- PASS: TestComputeCleanupPreservesConfiguredTrainingObserver/configured_owner_refuses_observation (1.27s)
+=== RUN   TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery
+=== RUN   TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery/ordinary-owner-attempt
+    compute_retained_gc_test.go:18: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery/exhausted-original-operator-retry
+    compute_retained_gc_test.go:18: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery (6.93s)
+    --- PASS: TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery/ordinary-owner-attempt (2.61s)
+    --- PASS: TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery/exhausted-original-operator-retry (4.32s)
+=== RUN   TestExplicitComputeCleanupRetryPreservesFailedAttemptsAndOriginalScope
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestExplicitComputeCleanupRetryPreservesFailedAttemptsAndOriginalScope (3.35s)
+=== RUN   TestExplicitComputeCleanupRetryDoesNotAuthorizeReplacementUID
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestExplicitComputeCleanupRetryDoesNotAuthorizeReplacementUID (1.90s)
+=== RUN   TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt/requested
+=== RUN   TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt/confirmed_absent
+=== RUN   TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt/not_closed
+=== RUN   TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt/changed_original_UID
+--- PASS: TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt (1.95s)
+    --- PASS: TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt/requested (0.00s)
+    --- PASS: TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt/confirmed_absent (0.00s)
+    --- PASS: TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt/not_closed (0.00s)
+    --- PASS: TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt/changed_original_UID (0.00s)
+=== RUN   TestExplicitComputeCleanupRetryDeadlineBlocksFurtherDeletes
+    compute_cleanup_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestExplicitComputeCleanupRetryDeadlineBlocksFurtherDeletes (1.88s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof	108.464s

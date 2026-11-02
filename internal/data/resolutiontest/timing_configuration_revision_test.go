@@ -13,16 +13,18 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
+	envrepo "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// TM02: the configured timing source is real file-backed admission facts. The
+// TM02: current timing is frozen in the published dynamic environment. The
 // command travels over the existing verified Governance mTLS seam and commits
 // through the actual restricted PostgreSQL inbox; no acceptance is substituted.
-func TestAcceptedTimingSurvivesConfigurationRevisionAndOnlyNewCandidateUsesIt(t *testing.T) {
+func TestAcceptedTimingSurvivesEnvironmentConfigDriftAndNewAdmissionStops(t *testing.T) {
 	f := prepareResolution(t)
 	if f.request.Intent.TimeoutSeconds != nil {
 		t.Fatal("this regression must exercise the configured default")
@@ -58,22 +60,26 @@ func TestAcceptedTimingSurvivesConfigurationRevisionAndOnlyNewCandidateUsesIt(t 
 		t.Fatal("old accepted Runtime Job did not retain its original S900")
 	}
 
-	// Rewrite the actual configuration fixture and load the production reader.
-	// Do not mutate the old candidate, old snapshot, or any persisted row.
-	f.facts.Timing = cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 14400, ExecutionTimeoutMaxSeconds: 14400, StepTimeoutSeconds: 14400}
-	revised, err := admissionfacts.Load(f.ctx, []admissionfacts.FileSource{writeManagedFactsFixture(t, f)})
+	// A changed current platform configuration must not replace this tenant's
+	// fixed provision specification. Ensure records NEEDS_REVIEW; both fresh
+	// admission and Finalize must stop, while an already accepted original stays.
+	revisedConfig := f.environment.Config
+	revisedConfig.Timing = cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 14400, ExecutionTimeoutMaxSeconds: 14400, StepTimeoutSeconds: 14400}
+	revisedPlatform, err := envrepo.NewPlatform(revisedConfig, f.environment.Kube, fixtureImages{})
 	if err != nil {
-		t.Fatal("revised concrete timing source", err)
+		t.Fatal(err)
 	}
-	f.factReader.reader = revised
-	reads := f.factReader.reads
+	environments, err := biz.NewTenantEnvironment(envrepo.NewRepository(f.openPool()), revisedPlatform, revisedConfig.ClusterID, revisedConfig.KFPConnectionRef)
+	if err != nil {
+		t.Fatal(err)
+	}
+	row, err := environments.Ensure(f.ctx, f.request.IdentityRef.TenantID, f.request.IdentityRef.Actor, uuid.NewString())
+	if err != nil || row.State != biz.EnvironmentNeedsReview || row.ReasonCode != "ENVIRONMENT_CONFIG_DRIFT" {
+		t.Fatal("changed configuration replaced environment authority", row.State, row.ReasonCode, err)
+	}
 	again, err := admissionClient.FinalizeAdmission(ctx, finalize)
-	if err != nil || again.ExecutionSpecHash != resolved.ExecutionSpecHash || f.factReader.reads != reads {
-		t.Fatal("old candidate Finalize read or adopted revised timing", err)
-	}
-	againSnapshot, err := contractpb.DecodeSnapshot(again.Snapshot)
-	if err != nil || !reflect.DeepEqual(againSnapshot.Timing, oldTiming) || timingRevisionJobDeadline(t, againSnapshot) != 900 {
-		t.Fatal("old candidate timing changed", err)
+	if again != nil || status.Code(err) != codes.Unavailable {
+		t.Fatal("Finalize ignored current environment review", err)
 	}
 	replay, err := commandClient.AcceptExecution(ctx, command)
 	if err != nil || !replay.Replayed || replay.Identity.ExecutionId != f.request.IdentityRef.ExecutionID || replay.Revision != first.Revision {
@@ -88,42 +94,20 @@ func TestAcceptedTimingSurvivesConfigurationRevisionAndOnlyNewCandidateUsesIt(t 
 		t.Fatal("configuration change/replay replaced original canonical database bytes")
 	}
 
-	// Only an independent identity performs another Prepare against new facts.
+	// A new identity cannot silently adopt the changed timing on this binding.
 	newFixture := f
 	newFixture.request.IdentityRef.ExecutionID = uuid.NewString()
 	newFixture.request.IdentityRef.OperationID = uuid.NewString()
 	newFixture.request.AcceptedAt = f.request.AcceptedAt.Add(time.Second)
 	next, err := admissionClient.PrepareAdmission(ctx, admissionRPCRequest(t, newFixture))
-	if err != nil {
-		t.Fatal("new independent Prepare", err)
-	}
-	newResolved, err := admissionClient.FinalizeAdmission(ctx, &modeldevv1.FinalizeAdmissionRequest{CandidateCanonical: next.CandidateCanonical, CandidateHash: next.CandidateHash})
-	if err != nil {
-		t.Fatal("new independent Finalize", err)
-	}
-	newSnapshot, err := contractpb.DecodeSnapshot(newResolved.Snapshot)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want, err := f.facts.Timing.Resolve(newFixture.request.AcceptedAt, nil)
-	if err != nil || !reflect.DeepEqual(newSnapshot.Timing, want) || newResolved.ExecutionSpecHash == resolved.ExecutionSpecHash || f.factReader.reads != reads+1 {
-		t.Fatal("new candidate failed to consume revised default/M/S once", err)
-	}
-	if want.ExecutionTimeoutSeconds != 14400 || want.ExecutionTimeoutMaxSeconds != 14400 || want.StepTimeoutSeconds != 14400 || timingRevisionJobDeadline(t, newSnapshot) != 14400 {
-		t.Fatal("legal max default=M=S14400 did not reach the actual Runtime Job deadline")
-	}
-	if _, err := commandClient.AcceptExecution(ctx, timingRevisionCommand(t, newFixture.request, newSnapshot, newResolved.ExecutionSpecHash)); err != nil {
-		t.Fatal("new independent formal Accept", err)
-	}
-	newStored, err := execution.New(f.openPool()).Get(f.ctx, newFixture.request.IdentityRef.TenantID, newFixture.request.IdentityRef.ExecutionID)
-	if err != nil || !reflect.DeepEqual(newStored.Snapshot.Timing, want) || timingRevisionJobDeadline(t, newStored.Snapshot) != 14400 {
-		t.Fatal("new timing did not survive independent Get", err)
+	if next != nil || status.Code(err) != codes.Unavailable {
+		t.Fatal("new Prepare bypassed environment configuration review", err)
 	}
 	afterIntent, afterSnapshot = timingRevisionStoredBytes(t, f)
 	if !bytes.Equal(beforeIntent, afterIntent) || !bytes.Equal(beforeSnapshot, afterSnapshot) {
 		t.Fatal("new max-budget acceptance changed original accepted canonical bytes")
 	}
-	t.Log("TM02/TM05 FEDORA: old accepted T3600/M7200/S900 and canonical bytes retained; only new identity used default=M=S14400 through real Prepare/Finalize/Accept/Get and Runtime Job activeDeadlineSeconds14400; no four-hour wait or live long task inferred")
+	t.Log("TM02 FEDORA: accepted T3600/M7200/S900 and original canonical bytes retained through config drift, replay and Get; READY binding was not rewritten; subsequent Prepare/Finalize refused NEEDS_REVIEW; no long-running live task inferred")
 }
 
 func timingRevisionJobDeadline(t *testing.T, snapshot cpup01.Snapshot) uint64 {

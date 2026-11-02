@@ -1,0 +1,1090 @@
+{
+  "source": "Fixed source ca01cabf original Fedora-built Gov auxiliary CLI; ordinary compressed fixed-offset file transfer only, NOT_EXECUTED",
+  "source_sha256": "bbf33c31d36046f298bce3f5d95c90e1302362e99c1034ab0173da53297aa4e1",
+  "source_bytes": 151354706,
+  "resume": {
+    "complete": false,
+    "matching_part_offsets": [],
+    "source_fetch": null
+  },
+  "batch_count": 97,
+  "max_request_bytes": 1048576,
+  "batches": [
+    {
+      "batch": 0,
+      "payload_bytes": 928972,
+      "offsets": [
+        0,
+        524288,
+        1048576
+      ],
+      "exit": 0,
+      "seconds": 2.297
+    },
+    {
+      "batch": 1,
+      "payload_bytes": 823903,
+      "offsets": [
+        1572864,
+        2097152,
+        2621440
+      ],
+      "exit": 0,
+      "seconds": 2.123
+    },
+    {
+      "batch": 2,
+      "payload_bytes": 921258,
+      "offsets": [
+        3145728,
+        3670016,
+        4194304,
+        4718592
+      ],
+      "exit": 0,
+      "seconds": 2.126
+    },
+    {
+      "batch": 3,
+      "payload_bytes": 827975,
+      "offsets": [
+        5242880,
+        5767168,
+        6291456
+      ],
+      "exit": 0,
+      "seconds": 2.129
+    },
+    {
+      "batch": 4,
+      "payload_bytes": 1033382,
+      "offsets": [
+        6815744,
+        7340032,
+        7864320,
+        8388608
+      ],
+      "exit": 0,
+      "seconds": 2.431
+    },
+    {
+      "batch": 5,
+      "payload_bytes": 782019,
+      "offsets": [
+        8912896,
+        9437184,
+        9961472
+      ],
+      "exit": 0,
+      "seconds": 1.886
+    },
+    {
+      "batch": 6,
+      "payload_bytes": 907386,
+      "offsets": [
+        10485760,
+        11010048,
+        11534336,
+        12058624
+      ],
+      "exit": 0,
+      "seconds": 2.201
+    },
+    {
+      "batch": 7,
+      "payload_bytes": 1003494,
+      "offsets": [
+        12582912,
+        13107200,
+        13631488,
+        14155776,
+        14680064,
+        15204352
+      ],
+      "exit": 0,
+      "seconds": 2.289
+    },
+    {
+      "batch": 8,
+      "payload_bytes": 943994,
+      "offsets": [
+        15728640,
+        16252928,
+        16777216,
+        17301504,
+        17825792
+      ],
+      "exit": 0,
+      "seconds": 2.203
+    },
+    {
+      "batch": 9,
+      "payload_bytes": 974182,
+      "offsets": [
+        18350080,
+        18874368,
+        19398656,
+        19922944,
+        20447232
+      ],
+      "exit": 0,
+      "seconds": 2.427
+    },
+    {
+      "batch": 10,
+      "payload_bytes": 990502,
+      "offsets": [
+        20971520,
+        21495808,
+        22020096,
+        22544384,
+        23068672
+      ],
+      "exit": 0,
+      "seconds": 2.52
+    },
+    {
+      "batch": 11,
+      "payload_bytes": 960470,
+      "offsets": [
+        23592960,
+        24117248,
+        24641536,
+        25165824,
+        25690112
+      ],
+      "exit": 0,
+      "seconds": 2.385
+    },
+    {
+      "batch": 12,
+      "payload_bytes": 909410,
+      "offsets": [
+        26214400,
+        26738688,
+        27262976,
+        27787264,
+        28311552,
+        28835840,
+        29360128
+      ],
+      "exit": 0,
+      "seconds": 2.317
+    },
+    {
+      "batch": 13,
+      "payload_bytes": 897502,
+      "offsets": [
+        29884416,
+        30408704,
+        30932992,
+        31457280
+      ],
+      "exit": 0,
+      "seconds": 2.418
+    },
+    {
+      "batch": 14,
+      "payload_bytes": 802794,
+      "offsets": [
+        31981568,
+        32505856,
+        33030144
+      ],
+      "exit": 0,
+      "seconds": 2.536
+    },
+    {
+      "batch": 15,
+      "payload_bytes": 1000798,
+      "offsets": [
+        33554432,
+        34078720,
+        34603008,
+        35127296
+      ],
+      "exit": 0,
+      "seconds": 2.669
+    },
+    {
+      "batch": 16,
+      "payload_bytes": 943366,
+      "offsets": [
+        35651584,
+        36175872,
+        36700160,
+        37224448
+      ],
+      "exit": 0,
+      "seconds": 2.197
+    },
+    {
+      "batch": 17,
+      "payload_bytes": 975694,
+      "offsets": [
+        37748736,
+        38273024,
+        38797312,
+        39321600,
+        39845888
+      ],
+      "exit": 0,
+      "seconds": 2.434
+    },
+    {
+      "batch": 18,
+      "payload_bytes": 868870,
+      "offsets": [
+        40370176,
+        40894464,
+        41418752,
+        41943040
+      ],
+      "exit": 0,
+      "seconds": 2.055
+    },
+    {
+      "batch": 19,
+      "payload_bytes": 845782,
+      "offsets": [
+        42467328,
+        42991616,
+        43515904,
+        44040192
+      ],
+      "exit": 0,
+      "seconds": 2.029
+    },
+    {
+      "batch": 20,
+      "payload_bytes": 924790,
+      "offsets": [
+        44564480,
+        45088768,
+        45613056,
+        46137344
+      ],
+      "exit": 0,
+      "seconds": 2.566
+    },
+    {
+      "batch": 21,
+      "payload_bytes": 965030,
+      "offsets": [
+        46661632,
+        47185920,
+        47710208,
+        48234496,
+        48758784,
+        49283072
+      ],
+      "exit": 0,
+      "seconds": 2.547
+    },
+    {
+      "batch": 22,
+      "payload_bytes": 905614,
+      "offsets": [
+        49807360,
+        50331648,
+        50855936,
+        51380224,
+        51904512,
+        52428800
+      ],
+      "exit": 0,
+      "seconds": 2.327
+    },
+    {
+      "batch": 23,
+      "payload_bytes": 970958,
+      "offsets": [
+        52953088,
+        53477376,
+        54001664,
+        54525952,
+        55050240
+      ],
+      "exit": 0,
+      "seconds": 2.497
+    },
+    {
+      "batch": 24,
+      "payload_bytes": 952286,
+      "offsets": [
+        55574528,
+        56098816,
+        56623104,
+        57147392
+      ],
+      "exit": 0,
+      "seconds": 2.467
+    },
+    {
+      "batch": 25,
+      "payload_bytes": 636886,
+      "offsets": [
+        57671680,
+        58195968,
+        58720256
+      ],
+      "exit": 0,
+      "seconds": 1.814
+    },
+    {
+      "batch": 26,
+      "payload_bytes": 812110,
+      "offsets": [
+        59244544,
+        59768832
+      ],
+      "exit": 0,
+      "seconds": 1.949
+    },
+    {
+      "batch": 27,
+      "payload_bytes": 950674,
+      "offsets": [
+        60293120,
+        60817408,
+        61341696
+      ],
+      "exit": 0,
+      "seconds": 2.279
+    },
+    {
+      "batch": 28,
+      "payload_bytes": 1030962,
+      "offsets": [
+        61865984,
+        62390272,
+        62914560
+      ],
+      "exit": 0,
+      "seconds": 2.376
+    },
+    {
+      "batch": 29,
+      "payload_bytes": 1003246,
+      "offsets": [
+        63438848,
+        63963136,
+        64487424,
+        65011712
+      ],
+      "exit": 0,
+      "seconds": 1.898
+    },
+    {
+      "batch": 30,
+      "payload_bytes": 1013434,
+      "offsets": [
+        65536000,
+        66060288,
+        66584576,
+        67108864,
+        67633152,
+        68157440,
+        68681728,
+        69206016,
+        69730304,
+        70254592,
+        70778880,
+        71303168,
+        71827456,
+        72351744,
+        72876032,
+        73400320,
+        73924608,
+        74448896,
+        74973184,
+        75497472,
+        76021760,
+        76546048
+      ],
+      "exit": 0,
+      "seconds": 2.461
+    },
+    {
+      "batch": 31,
+      "payload_bytes": 659170,
+      "offsets": [
+        77070336,
+        77594624,
+        78118912,
+        78643200
+      ],
+      "exit": 0,
+      "seconds": 1.648
+    },
+    {
+      "batch": 32,
+      "payload_bytes": 881490,
+      "offsets": [
+        79167488,
+        79691776
+      ],
+      "exit": 0,
+      "seconds": 2.077
+    },
+    {
+      "batch": 33,
+      "payload_bytes": 904002,
+      "offsets": [
+        80216064,
+        80740352
+      ],
+      "exit": 0,
+      "seconds": 2.183
+    },
+    {
+      "batch": 34,
+      "payload_bytes": 1038570,
+      "offsets": [
+        81264640,
+        81788928,
+        82313216
+      ],
+      "exit": 0,
+      "seconds": 2.414
+    },
+    {
+      "batch": 35,
+      "payload_bytes": 716466,
+      "offsets": [
+        82837504,
+        83361792
+      ],
+      "exit": 0,
+      "seconds": 1.839
+    },
+    {
+      "batch": 36,
+      "payload_bytes": 875326,
+      "offsets": [
+        83886080,
+        84410368
+      ],
+      "exit": 0,
+      "seconds": 2.235
+    },
+    {
+      "batch": 37,
+      "payload_bytes": 935026,
+      "offsets": [
+        84934656,
+        85458944,
+        85983232
+      ],
+      "exit": 0,
+      "seconds": 2.173
+    },
+    {
+      "batch": 38,
+      "payload_bytes": 1010186,
+      "offsets": [
+        86507520,
+        87031808,
+        87556096
+      ],
+      "exit": 0,
+      "seconds": 2.452
+    },
+    {
+      "batch": 39,
+      "payload_bytes": 1012010,
+      "offsets": [
+        88080384,
+        88604672,
+        89128960,
+        89653248,
+        90177536
+      ],
+      "exit": 0,
+      "seconds": 3.338
+    },
+    {
+      "batch": 40,
+      "payload_bytes": 974562,
+      "offsets": [
+        90701824,
+        91226112,
+        91750400,
+        92274688,
+        92798976,
+        93323264,
+        93847552
+      ],
+      "exit": 0,
+      "seconds": 2.414
+    },
+    {
+      "batch": 41,
+      "payload_bytes": 957726,
+      "offsets": [
+        94371840,
+        94896128,
+        95420416,
+        95944704,
+        96468992,
+        96993280,
+        97517568
+      ],
+      "exit": 0,
+      "seconds": 2.447
+    },
+    {
+      "batch": 42,
+      "payload_bytes": 922876,
+      "offsets": [
+        98041856,
+        98566144,
+        99090432,
+        99614720,
+        100139008,
+        100663296
+      ],
+      "exit": 0,
+      "seconds": 2.124
+    },
+    {
+      "batch": 43,
+      "payload_bytes": 966852,
+      "offsets": [
+        101187584,
+        101711872,
+        102236160,
+        102760448,
+        103284736,
+        103809024
+      ],
+      "exit": 0,
+      "seconds": 2.398
+    },
+    {
+      "batch": 44,
+      "payload_bytes": 907915,
+      "offsets": [
+        104333312,
+        104857600,
+        105381888,
+        105906176,
+        106430464
+      ],
+      "exit": 0,
+      "seconds": 2.162
+    },
+    {
+      "batch": 45,
+      "payload_bytes": 483984,
+      "offsets": [
+        106954752,
+        107479040
+      ],
+      "exit": 0,
+      "seconds": 1.393
+    },
+    {
+      "batch": 46,
+      "payload_bytes": 699667,
+      "offsets": [
+        108003328
+      ],
+      "exit": 0,
+      "seconds": 2.258
+    },
+    {
+      "batch": 47,
+      "payload_bytes": 699287,
+      "offsets": [
+        108527616
+      ],
+      "exit": 0,
+      "seconds": 2.073
+    },
+    {
+      "batch": 48,
+      "payload_bytes": 698439,
+      "offsets": [
+        109051904
+      ],
+      "exit": 0,
+      "seconds": 1.818
+    },
+    {
+      "batch": 49,
+      "payload_bytes": 697735,
+      "offsets": [
+        109576192
+      ],
+      "exit": 0,
+      "seconds": 1.725
+    },
+    {
+      "batch": 50,
+      "payload_bytes": 699303,
+      "offsets": [
+        110100480
+      ],
+      "exit": 0,
+      "seconds": 1.786
+    },
+    {
+      "batch": 51,
+      "payload_bytes": 693527,
+      "offsets": [
+        110624768
+      ],
+      "exit": 0,
+      "seconds": 1.715
+    },
+    {
+      "batch": 52,
+      "payload_bytes": 694899,
+      "offsets": [
+        111149056
+      ],
+      "exit": 0,
+      "seconds": 1.814
+    },
+    {
+      "batch": 53,
+      "payload_bytes": 689995,
+      "offsets": [
+        111673344
+      ],
+      "exit": 0,
+      "seconds": 1.713
+    },
+    {
+      "batch": 54,
+      "payload_bytes": 693163,
+      "offsets": [
+        112197632
+      ],
+      "exit": 0,
+      "seconds": 1.699
+    },
+    {
+      "batch": 55,
+      "payload_bytes": 699627,
+      "offsets": [
+        112721920
+      ],
+      "exit": 0,
+      "seconds": 1.864
+    },
+    {
+      "batch": 56,
+      "payload_bytes": 693063,
+      "offsets": [
+        113246208
+      ],
+      "exit": 0,
+      "seconds": 1.824
+    },
+    {
+      "batch": 57,
+      "payload_bytes": 640183,
+      "offsets": [
+        113770496
+      ],
+      "exit": 0,
+      "seconds": 1.61
+    },
+    {
+      "batch": 58,
+      "payload_bytes": 681747,
+      "offsets": [
+        114294784
+      ],
+      "exit": 0,
+      "seconds": 1.746
+    },
+    {
+      "batch": 59,
+      "payload_bytes": 700399,
+      "offsets": [
+        114819072
+      ],
+      "exit": 0,
+      "seconds": 1.723
+    },
+    {
+      "batch": 60,
+      "payload_bytes": 700391,
+      "offsets": [
+        115343360
+      ],
+      "exit": 0,
+      "seconds": 1.82
+    },
+    {
+      "batch": 61,
+      "payload_bytes": 700331,
+      "offsets": [
+        115867648
+      ],
+      "exit": 0,
+      "seconds": 1.825
+    },
+    {
+      "batch": 62,
+      "payload_bytes": 699871,
+      "offsets": [
+        116391936
+      ],
+      "exit": 0,
+      "seconds": 1.93
+    },
+    {
+      "batch": 63,
+      "payload_bytes": 699095,
+      "offsets": [
+        116916224
+      ],
+      "exit": 0,
+      "seconds": 1.858
+    },
+    {
+      "batch": 64,
+      "payload_bytes": 697343,
+      "offsets": [
+        117440512
+      ],
+      "exit": 0,
+      "seconds": 1.894
+    },
+    {
+      "batch": 65,
+      "payload_bytes": 700111,
+      "offsets": [
+        117964800
+      ],
+      "exit": 0,
+      "seconds": 2.037
+    },
+    {
+      "batch": 66,
+      "payload_bytes": 699163,
+      "offsets": [
+        118489088
+      ],
+      "exit": 0,
+      "seconds": 2.002
+    },
+    {
+      "batch": 67,
+      "payload_bytes": 698487,
+      "offsets": [
+        119013376
+      ],
+      "exit": 0,
+      "seconds": 1.765
+    },
+    {
+      "batch": 68,
+      "payload_bytes": 700083,
+      "offsets": [
+        119537664
+      ],
+      "exit": 0,
+      "seconds": 1.838
+    },
+    {
+      "batch": 69,
+      "payload_bytes": 700043,
+      "offsets": [
+        120061952
+      ],
+      "exit": 0,
+      "seconds": 1.997
+    },
+    {
+      "batch": 70,
+      "payload_bytes": 698159,
+      "offsets": [
+        120586240
+      ],
+      "exit": 0,
+      "seconds": 1.909
+    },
+    {
+      "batch": 71,
+      "payload_bytes": 697635,
+      "offsets": [
+        121110528
+      ],
+      "exit": 0,
+      "seconds": 1.837
+    },
+    {
+      "batch": 72,
+      "payload_bytes": 697159,
+      "offsets": [
+        121634816
+      ],
+      "exit": 0,
+      "seconds": 1.716
+    },
+    {
+      "batch": 73,
+      "payload_bytes": 697907,
+      "offsets": [
+        122159104
+      ],
+      "exit": 0,
+      "seconds": 1.927
+    },
+    {
+      "batch": 74,
+      "payload_bytes": 697787,
+      "offsets": [
+        122683392
+      ],
+      "exit": 0,
+      "seconds": 1.998
+    },
+    {
+      "batch": 75,
+      "payload_bytes": 700091,
+      "offsets": [
+        123207680
+      ],
+      "exit": 0,
+      "seconds": 1.942
+    },
+    {
+      "batch": 76,
+      "payload_bytes": 700291,
+      "offsets": [
+        123731968
+      ],
+      "exit": 0,
+      "seconds": 2.706
+    },
+    {
+      "batch": 77,
+      "payload_bytes": 699587,
+      "offsets": [
+        124256256
+      ],
+      "exit": 0,
+      "seconds": 1.937
+    },
+    {
+      "batch": 78,
+      "payload_bytes": 699243,
+      "offsets": [
+        124780544
+      ],
+      "exit": 0,
+      "seconds": 1.708
+    },
+    {
+      "batch": 79,
+      "payload_bytes": 698591,
+      "offsets": [
+        125304832
+      ],
+      "exit": 0,
+      "seconds": 1.714
+    },
+    {
+      "batch": 80,
+      "payload_bytes": 696603,
+      "offsets": [
+        125829120
+      ],
+      "exit": 0,
+      "seconds": 1.952
+    },
+    {
+      "batch": 81,
+      "payload_bytes": 691183,
+      "offsets": [
+        126353408
+      ],
+      "exit": 0,
+      "seconds": 1.886
+    },
+    {
+      "batch": 82,
+      "payload_bytes": 696471,
+      "offsets": [
+        126877696
+      ],
+      "exit": 0,
+      "seconds": 1.864
+    },
+    {
+      "batch": 83,
+      "payload_bytes": 697011,
+      "offsets": [
+        127401984
+      ],
+      "exit": 0,
+      "seconds": 1.738
+    },
+    {
+      "batch": 84,
+      "payload_bytes": 698755,
+      "offsets": [
+        127926272
+      ],
+      "exit": 0,
+      "seconds": 1.718
+    },
+    {
+      "batch": 85,
+      "payload_bytes": 652363,
+      "offsets": [
+        128450560
+      ],
+      "exit": 0,
+      "seconds": 1.777
+    },
+    {
+      "batch": 86,
+      "payload_bytes": 672643,
+      "offsets": [
+        128974848
+      ],
+      "exit": 0,
+      "seconds": 2.025
+    },
+    {
+      "batch": 87,
+      "payload_bytes": 647643,
+      "offsets": [
+        129499136
+      ],
+      "exit": 0,
+      "seconds": 1.629
+    },
+    {
+      "batch": 88,
+      "payload_bytes": 698971,
+      "offsets": [
+        130023424
+      ],
+      "exit": 0,
+      "seconds": 1.852
+    },
+    {
+      "batch": 89,
+      "payload_bytes": 699727,
+      "offsets": [
+        130547712
+      ],
+      "exit": 0,
+      "seconds": 1.857
+    },
+    {
+      "batch": 90,
+      "payload_bytes": 692367,
+      "offsets": [
+        131072000
+      ],
+      "exit": 0,
+      "seconds": 1.849
+    },
+    {
+      "batch": 91,
+      "payload_bytes": 696775,
+      "offsets": [
+        131596288
+      ],
+      "exit": 0,
+      "seconds": 1.887
+    },
+    {
+      "batch": 92,
+      "payload_bytes": 674211,
+      "offsets": [
+        132120576
+      ],
+      "exit": 0,
+      "seconds": 1.688
+    },
+    {
+      "batch": 93,
+      "payload_bytes": 681255,
+      "offsets": [
+        132644864
+      ],
+      "exit": 0,
+      "seconds": 1.848
+    },
+    {
+      "batch": 94,
+      "payload_bytes": 992410,
+      "offsets": [
+        133169152,
+        133693440,
+        134217728,
+        134742016
+      ],
+      "exit": 0,
+      "seconds": 2.287
+    },
+    {
+      "batch": 95,
+      "payload_bytes": 980405,
+      "offsets": [
+        135266304,
+        135790592,
+        136314880,
+        136839168,
+        137363456,
+        137887744,
+        138412032
+      ],
+      "exit": 0,
+      "seconds": 2.234
+    },
+    {
+      "batch": 96,
+      "payload_bytes": 1023054,
+      "offsets": [
+        138936320,
+        139460608,
+        139984896,
+        140509184,
+        141033472,
+        141557760,
+        142082048,
+        142606336,
+        143130624,
+        143654912,
+        144179200,
+        144703488,
+        145227776,
+        145752064,
+        146276352,
+        146800640,
+        147324928,
+        147849216,
+        148373504,
+        148897792,
+        149422080,
+        149946368,
+        150470656,
+        150994944
+      ],
+      "exit": 0,
+      "seconds": 2.507
+    }
+  ],
+  "status": "FULL_BINARY_SHA_MATCH",
+  "root_owns_socket": true,
+  "elapsed_seconds": 201.876,
+  "final": {
+    "path": "/home/kubercloud/tenantenv-20261101/gov-original-command-retirement-ca01cabf/modeldev-original-command-retirement",
+    "size": 151354706,
+    "sha256": "bbf33c31d36046f298bce3f5d95c90e1302362e99c1034ab0173da53297aa4e1",
+    "all_bytes_verified": true,
+    "mode": "0700",
+    "executed": false
+  }
+}

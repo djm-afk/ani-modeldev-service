@@ -1,0 +1,12 @@
+[
+  "system:node:node1",
+  "system:node:node2",
+  "system:node:node3",
+  "system:serviceaccount:kcn-system:kcn-controller",
+  "system:serviceaccount:kube-system:ani-multus",
+  "system:serviceaccount:kube-system:generic-garbage-collector",
+  "system:serviceaccount:kube-system:volcano-device-plugin",
+  "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+  "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+  "system:serviceaccount:volcano-system:ani-volcano-scheduler"
+]

@@ -24,9 +24,9 @@ func TestOwnerRevisionSerializesDuplicateAndMixedWriters(t *testing.T) {
 	openPool := postgres.Prepare(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	request.Admission.TenantID = "aaaaaaaa-2222-4333-8444-555555555555"
-	refreshDispatchHashes(t, &request.Admission)
+	refreshDispatchHashes(t, openPool(), &request)
 	alias := request
 	alias.Admission.TenantID = strings.ToUpper(alias.Admission.TenantID)
 	alias.Admission.ExecutionID = strings.ToUpper(alias.Admission.ExecutionID)
@@ -215,7 +215,7 @@ func TestOwnerRevisionRollsBackWithDeferredCommitFailures(t *testing.T) {
 		openPool := postgres.Prepare(t)
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
-		request := validDispatchRequest(t)
+		request := validDispatchRequest(t, openPool())
 		fixture := openPool()
 		trace := &revisionCommitTrace{}
 		writer := revisionTracePool(t, ctx, fixture, trace)
@@ -256,7 +256,7 @@ func TestOwnerRevisionRollsBackWithDeferredCommitFailures(t *testing.T) {
 		openPool := postgres.Prepare(t)
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
-		request := validDispatchRequest(t)
+		request := validDispatchRequest(t, openPool())
 		fixture := openPool()
 		trace := &revisionCommitTrace{}
 		writer := revisionTracePool(t, ctx, fixture, trace)
@@ -410,7 +410,7 @@ func TestOwnerRevisionGetReturnsFactsFromOneDatabaseSnapshot(t *testing.T) {
 			openPool := postgres.Prepare(t)
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			writer := openPool()
 			executions, dispatches := execution.New(writer), submission.New(writer)
 			accepted, err := executions.Accept(ctx, request.Admission)

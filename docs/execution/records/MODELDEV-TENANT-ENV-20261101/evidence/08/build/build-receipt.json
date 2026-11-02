@@ -1,0 +1,530 @@
+{
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_git_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "input_files_canonical_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+  "work_directory": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8",
+  "storage_root": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+  "runroot": "/run/user/1000/modeldev-open-limits-image-storage",
+  "tmpdir": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+  "started_at_utc": "2026-10-31T22:53:49.142062+00:00",
+  "commands": [
+    {
+      "name": "go-version",
+      "command": [
+        "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+        "version"
+      ],
+      "cwd": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/source",
+      "exit": 0,
+      "expected_exit": 0,
+      "seconds": 0.008,
+      "log": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/go-version.log"
+    },
+    {
+      "name": "build-binaries",
+      "command": [
+        "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+        "build",
+        "-mod=readonly",
+        "-buildvcs=false",
+        "-trimpath",
+        "-o",
+        "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/bin/",
+        "./cmd/ani-modeldev-step",
+        "./cmd/ani-modeldev-webhook"
+      ],
+      "cwd": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/source",
+      "exit": 0,
+      "expected_exit": 0,
+      "seconds": 22.552,
+      "log": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/build-binaries.log"
+    },
+    {
+      "name": "build-step",
+      "command": [
+        "podman",
+        "--root",
+        "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+        "--runroot",
+        "/run/user/1000/modeldev-open-limits-image-storage",
+        "--tmpdir",
+        "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+        "--storage-driver",
+        "overlay",
+        "build",
+        "--pull=never",
+        "--network=none",
+        "--http-proxy=false",
+        "--format=oci",
+        "--platform=linux/amd64",
+        "--cpu-period=100000",
+        "--cpu-quota=200000",
+        "--memory=2g",
+        "--memory-swap=2g",
+        "--cap-drop=all",
+        "--security-opt=no-new-privileges",
+        "--jobs=1",
+        "--build-arg",
+        "SOURCE_REVISION=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "--build-arg",
+        "SOURCE_TREE=141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "--label",
+        "io.ani.build-inputs-sha256=dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "--iidfile",
+        "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/step.iid",
+        "--tag",
+        "localhost/ani-modeldev-step:tenantenv-d807cbdbd5dd-cymq2rk8",
+        "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/step-context"
+      ],
+      "cwd": null,
+      "exit": 0,
+      "expected_exit": 0,
+      "seconds": 5.08,
+      "log": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/build-step.log"
+    },
+    {
+      "name": "missing-config-step",
+      "command": [
+        "podman",
+        "--root",
+        "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+        "--runroot",
+        "/run/user/1000/modeldev-open-limits-image-storage",
+        "--tmpdir",
+        "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+        "--storage-driver",
+        "overlay",
+        "run",
+        "--rm",
+        "--network=none",
+        "--read-only",
+        "--cap-drop=all",
+        "--security-opt=no-new-privileges",
+        "--cpus=1",
+        "--memory=512m",
+        "--pids-limit=64",
+        "--tmpfs=/tmp:rw,nosuid,nodev,size=64m",
+        "localhost/ani-modeldev-step:tenantenv-d807cbdbd5dd-cymq2rk8"
+      ],
+      "cwd": null,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.365,
+      "log": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/missing-config-step.log"
+    },
+    {
+      "name": "build-webhook",
+      "command": [
+        "podman",
+        "--root",
+        "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+        "--runroot",
+        "/run/user/1000/modeldev-open-limits-image-storage",
+        "--tmpdir",
+        "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+        "--storage-driver",
+        "overlay",
+        "build",
+        "--pull=never",
+        "--network=none",
+        "--http-proxy=false",
+        "--format=oci",
+        "--platform=linux/amd64",
+        "--cpu-period=100000",
+        "--cpu-quota=200000",
+        "--memory=2g",
+        "--memory-swap=2g",
+        "--cap-drop=all",
+        "--security-opt=no-new-privileges",
+        "--jobs=1",
+        "--build-arg",
+        "SOURCE_REVISION=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "--build-arg",
+        "SOURCE_TREE=141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "--label",
+        "io.ani.build-inputs-sha256=dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "--iidfile",
+        "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/webhook.iid",
+        "--tag",
+        "localhost/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-cymq2rk8",
+        "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/webhook-context"
+      ],
+      "cwd": null,
+      "exit": 0,
+      "expected_exit": 0,
+      "seconds": 2.672,
+      "log": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/build-webhook.log"
+    },
+    {
+      "name": "missing-config-webhook",
+      "command": [
+        "podman",
+        "--root",
+        "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+        "--runroot",
+        "/run/user/1000/modeldev-open-limits-image-storage",
+        "--tmpdir",
+        "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+        "--storage-driver",
+        "overlay",
+        "run",
+        "--rm",
+        "--network=none",
+        "--read-only",
+        "--cap-drop=all",
+        "--security-opt=no-new-privileges",
+        "--cpus=1",
+        "--memory=512m",
+        "--pids-limit=64",
+        "--tmpfs=/tmp:rw,nosuid,nodev,size=64m",
+        "localhost/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-cymq2rk8"
+      ],
+      "cwd": null,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.265,
+      "log": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/missing-config-webhook.log"
+    }
+  ],
+  "images": {
+    "step": {
+      "Id": "102a17fcca37414302ee9703e310bae554905349d8f3b6556ac323ea1408a2a9",
+      "Digest": "sha256:ff66486ba63d6edfaa7c227fe0fc2db3d897b1ab99db863752502f8089230815",
+      "Os": "linux",
+      "Architecture": "amd64",
+      "Size": 36725738,
+      "RepoTags": [
+        "localhost/ani-modeldev-step:tenantenv-d807cbdbd5dd-cymq2rk8"
+      ],
+      "tag": "localhost/ani-modeldev-step:tenantenv-d807cbdbd5dd-cymq2rk8",
+      "labels": {
+        "io.ani.build-inputs-sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "io.ani.source-tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "io.buildah.version": "1.43.2",
+        "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "binary_sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e",
+      "dockerfile_sha256": "5dfa10fe1692d8e7bd4a0c25250cb5d28a90f8ca1081f47588dd617bcbdb208c",
+      "user": "10001:10001"
+    },
+    "webhook": {
+      "Id": "c1eb9355492835c7cb4897e01fb5b7c400fad91235e0910024c2ded76725e252",
+      "Digest": "sha256:49a2a74db318db0b627209738c4dc48d1d9f73ee80c8680cb1c25f0638cac317",
+      "Os": "linux",
+      "Architecture": "amd64",
+      "Size": 67703675,
+      "RepoTags": [
+        "localhost/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-cymq2rk8"
+      ],
+      "tag": "localhost/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-cymq2rk8",
+      "labels": {
+        "io.ani.build-inputs-sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "io.ani.source-tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "io.buildah.version": "1.43.2",
+        "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "binary_sha256": "6deb8d923a5e3f93afba7672ba8133e07c2f9066d810e275bc50e43743cf571f",
+      "dockerfile_sha256": "ce7df200aa9baf1391b7631fde751c6ab68b5d0987564614fe612ccb29dae652",
+      "user": "10001:10001"
+    }
+  },
+  "push": "NOT_RUN",
+  "rollout": "NOT_RUN",
+  "training_cpu": "BLOCKED_CACHED_OFFICIAL_BASE_MISSING",
+  "training_gpu": "BLOCKED_CACHED_OFFICIAL_BASE_MISSING",
+  "source_mismatches": [],
+  "copied_verified_files": 689,
+  "go_binary": {
+    "path": "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+    "sha256": "9c2a37ae5b21ba1d5a004bb9ab4d0c64de6fc5778e9d30487adccea62678b8b5"
+  },
+  "go_version": "go version go1.26.10 linux/amd64",
+  "binaries": {
+    "ani-modeldev-step": {
+      "bytes": 36720665,
+      "sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e"
+    },
+    "ani-modeldev-webhook": {
+      "bytes": 67696833,
+      "sha256": "6deb8d923a5e3f93afba7672ba8133e07c2f9066d810e275bc50e43743cf571f"
+    }
+  },
+  "status": "STEP_WEBHOOK_LOCAL_PASS_TRAINING_BLOCKED_BASE_MISSING",
+  "finished_at_utc": "2026-10-31T22:54:21.335842+00:00",
+  "input_manifest_file_sha256": "4a7fbf7d4eab3552cd1f6018b2cd389958d1137d04bc8ea41d57afc3072bc29c",
+  "builder_script_sha256": "21ea2bb77cb26f897ee36ab26942f7413fcccbe5b4bc03993dcd1e8235126efe",
+  "preflight": {
+    "observed_at_utc": "2026-10-31T22:46:28.817978+00:00",
+    "work_directory": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8",
+    "storage_root": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+    "runroot": "/run/user/1000/modeldev-open-limits-image-storage",
+    "tmpdir": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+    "before": {
+      "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp": [
+        {
+          "path": "exits",
+          "bytes": 0,
+          "dir": true
+        },
+        {
+          "path": "persist",
+          "bytes": 0,
+          "dir": true
+        },
+        {
+          "path": "alive.lck",
+          "bytes": 0,
+          "dir": false
+        },
+        {
+          "path": "alive",
+          "bytes": 37,
+          "dir": false
+        }
+      ],
+      "/run/user/1000/modeldev-open-limits-image-storage": [
+        {
+          "path": "networks",
+          "bytes": 60,
+          "dir": true
+        },
+        {
+          "path": "overlay-locks",
+          "bytes": 40,
+          "dir": true
+        },
+        {
+          "path": "overlay-containers",
+          "bytes": 40,
+          "dir": true
+        },
+        {
+          "path": "overlay",
+          "bytes": 100,
+          "dir": true
+        },
+        {
+          "path": "networks/rootless-netns",
+          "bytes": 40,
+          "dir": true
+        },
+        {
+          "path": "overlay/native-diff()-true",
+          "bytes": 0,
+          "dir": false
+        },
+        {
+          "path": "overlay/metacopy()-false",
+          "bytes": 0,
+          "dir": false
+        },
+        {
+          "path": "overlay/overlay-true",
+          "bytes": 0,
+          "dir": false
+        }
+      ]
+    },
+    "db_paths_equal": true,
+    "container_pod_counts": {
+      "ContainerConfig": 0,
+      "ContainerState": 0,
+      "ContainerExecSession": 0,
+      "PodConfig": 0,
+      "PodState": 0
+    },
+    "related_processes": 0,
+    "mounts": 0,
+    "old_temporary_directories_preserved_at": {
+      "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp.preboot-images-d807-cymq2rk8",
+      "/run/user/1000/modeldev-open-limits-image-storage": "/run/user/1000/modeldev-open-limits-image-storage.preboot-images-d807-cymq2rk8"
+    },
+    "changes": "Only two verified inactive temporary paths renamed to unique preserved locations and recreated0700; no image layers or DB deleted.",
+    "base_inspect_exit": 125,
+    "base_error": "Error: 10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b: image not known",
+    "images_list_exit": 0,
+    "existing_related_images": []
+  },
+  "cached_images_before_build": {
+    "command": [
+      "podman",
+      "--root",
+      "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+      "--runroot",
+      "/run/user/1000/modeldev-open-limits-image-storage",
+      "--tmpdir",
+      "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+      "--storage-driver",
+      "overlay",
+      "images",
+      "--no-trunc",
+      "--format",
+      "json"
+    ],
+    "exit": 0,
+    "image_count": 0,
+    "image_rows": [],
+    "base_available": false,
+    "base_result": "complete specified LF reference not known; no stored images"
+  },
+  "source_snapshot_mismatch": {
+    "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+    "source_git_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+    "input_files_canonical_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+    "work_directory": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8",
+    "storage_root": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+    "runroot": "/run/user/1000/modeldev-open-limits-image-storage",
+    "tmpdir": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+    "started_at_utc": "2026-10-31T22:50:43.670251+00:00",
+    "commands": [],
+    "images": {},
+    "push": "NOT_RUN",
+    "rollout": "NOT_RUN",
+    "training_cpu": "BLOCKED_CACHED_OFFICIAL_BASE_MISSING",
+    "training_gpu": "BLOCKED_CACHED_OFFICIAL_BASE_MISSING",
+    "source_mismatches": [
+      "cmd/ani-modeldev-service/config_scan.go",
+      "cmd/ani-modeldev-service/config_scan_test.go",
+      "cmd/ani-modeldev-service/runtime.go",
+      "cmd/ani-modeldev-service/runtime_clients.go",
+      "cmd/ani-modeldev-service/runtime_environment.go",
+      "go.mod",
+      "go.sum",
+      "internal/biz/close_worker.go",
+      "internal/biz/dispatch_worker.go",
+      "internal/biz/pipeline_dispatch.go",
+      "internal/biz/worker_coordinator.go",
+      "internal/biz/worker_coordinator_test.go",
+      "internal/data/cleanup/reconcile_test.go",
+      "internal/data/execution/repository.go",
+      "internal/data/input/prepared_vertical_test.go",
+      "internal/data/input/sqlc/models.go",
+      "internal/data/kfp/client_test.go",
+      "internal/data/lifecycle/finetuning_steps_test.go",
+      "internal/data/lifecycle/pending_safety_test.go",
+      "internal/data/lifecycle/repository_test.go",
+      "internal/data/runtimeproof/compute_cleanup.go",
+      "internal/data/runtimeproof/compute_parent_error_test.go",
+      "internal/data/storagecredentials/issuer.go",
+      "internal/data/submission/confirmed_commit_test.go",
+      "internal/data/submission/confirmed_invariants_test.go",
+      "internal/data/submission/confirmed_test.go",
+      "internal/data/submission/deadline_test.go",
+      "internal/data/submission/invariants_test.go",
+      "internal/data/submission/not_sent_invariants_test.go",
+      "internal/data/submission/not_sent_test.go",
+      "internal/data/submission/owner_revision_atomic_test.go",
+      "internal/data/submission/owner_revision_bounds_test.go",
+      "internal/data/submission/owner_revision_test.go",
+      "internal/data/submission/pending.go",
+      "internal/data/submission/repository.go",
+      "internal/data/submission/repository_test.go",
+      "internal/data/submission/run_authority_test.go",
+      "internal/data/submission/uncertain_invariants_test.go",
+      "internal/data/submission/uncertain_test.go",
+      "internal/data/submittest/cleanup_recovery_test.go",
+      "internal/data/submittest/discovery_fairness_test.go",
+      "internal/data/submittest/discovery_recovery_test.go",
+      "internal/data/submittest/not_sent_test.go",
+      "internal/data/submittest/operations_test.go",
+      "internal/data/submittest/reservation_commit_test.go",
+      "internal/data/submittest/webhook_flow_test.go",
+      "internal/server/commandtest/accept_boundary_test.go",
+      "internal/server/commandtest/accept_persistence_test.go",
+      "internal/server/commandtest/accept_test.go",
+      "internal/service/admission.go",
+      "internal/service/environment_error.go",
+      "internal/service/materials.go",
+      "internal/service/query.go",
+      "internal/testsupport/admissionfixture/admission.go",
+      "internal/testsupport/postgres/current_baseline_test.go"
+    ],
+    "status": "BLOCKED",
+    "reason": "RuntimeError: fixed source mismatch; no compilation attempted",
+    "finished_at_utc": "2026-10-31T22:50:51.672942+00:00"
+  },
+  "preserved_failed_attempts": {
+    "source-preflight-mismatch.json": {
+      "sha256": "5fe7a300197cda0cf908e1bd6a9e79845356c547143eb293d67686e00725b583",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/source-preflight-mismatch.json"
+    },
+    "toolchain-launch-failure.json": {
+      "sha256": "6bd575efe927d520295a43e349e1fe9e222bf72ee688f11ceeaf5b263274d990",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/toolchain-launch-failure.json"
+    },
+    "go-version.initial-failure.log": {
+      "sha256": "a9313d947bcabe6da6c240b9af84a8a0b907d26eb8a9958a7050c9b87e122b19",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/go-version.initial-failure.log"
+    },
+    "copy-start-order-failure.json": {
+      "sha256": "7afb0c14f4db1de0ffe3efcca1eb3cd532a71b528a1effc4a33e4c30e9797af2",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/copy-start-order-failure.json"
+    }
+  },
+  "logs": {
+    "build-binaries.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "remote_file": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/build-binaries.log"
+    },
+    "build-step.log": {
+      "bytes": 864,
+      "sha256": "54514265b093d44ceb41b0684151b999c07f1dfd353ca35b0131a8bd6acddd5b",
+      "remote_file": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/build-step.log"
+    },
+    "build-webhook.log": {
+      "bytes": 1289,
+      "sha256": "12cb0d8ed2d2c7489f3294be106c3092ce741489f201b7d7379c72db92a57cb0",
+      "remote_file": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/build-webhook.log"
+    },
+    "go-version.initial-failure.log": {
+      "bytes": 115,
+      "sha256": "a9313d947bcabe6da6c240b9af84a8a0b907d26eb8a9958a7050c9b87e122b19",
+      "remote_file": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/go-version.initial-failure.log"
+    },
+    "go-version.log": {
+      "bytes": 33,
+      "sha256": "4e0b213cba780f63b02f3ab9001ee61e4101d254e0af1a8205574c19dad0f93b",
+      "remote_file": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/go-version.log",
+      "text": "go version go1.26.10 linux/amd64\n"
+    },
+    "missing-config-step.log": {
+      "bytes": 74,
+      "sha256": "c817edc31a87a89793f1d509f03e7d46012841f12ef9da36512ef2dd06709bfb",
+      "remote_file": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/missing-config-step.log",
+      "text": "managed component failed stage=bootstrap class=configuration code=Unknown\n"
+    },
+    "missing-config-webhook.log": {
+      "bytes": 43,
+      "sha256": "cfb7323ca36cd670d40eb3df62832eedc78098c7cd0ba7b700fc36fcb2312bee",
+      "remote_file": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/missing-config-webhook.log",
+      "text": "modeldev webhook startup or serving failed\n"
+    }
+  },
+  "container_cleanup": {
+    "command": [
+      "podman",
+      "--root",
+      "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-storage",
+      "--runroot",
+      "/run/user/1000/modeldev-open-limits-image-storage",
+      "--tmpdir",
+      "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/runtime-image-tmp",
+      "--storage-driver",
+      "overlay",
+      "ps",
+      "-a",
+      "--format",
+      "json"
+    ],
+    "exit": 0,
+    "container_count": 0
+  },
+  "disk_after": {
+    "available_bytes": 103303069696,
+    "total_bytes": 534721310720
+  },
+  "collected_at_utc": "2026-10-31T22:55:25.375091+00:00"
+}

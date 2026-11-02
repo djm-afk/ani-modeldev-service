@@ -1,0 +1,24 @@
+{
+  "started_at": "2026-11-01T16:36:03.996776+00:00",
+  "mode": "environment",
+  "tenant": "A",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/environment",
+      "http_status": 200,
+      "response": {
+        "environment_id": "fa7f113c-58c1-4692-a9e2-e9687e8dd162",
+        "state": "READY",
+        "phase": "COMPLETE",
+        "reason_code": "",
+        "namespace_name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+        "experiment_id": "e8308780-256f-43b8-88c8-a88c044d1c56",
+        "binding_digest": "08232bdc365360ff601fbce828aaf510519dee0848e2d1487018a37f0021c893"
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T16:36:04.188338+00:00",
+  "transport_exit_code": 0
+}

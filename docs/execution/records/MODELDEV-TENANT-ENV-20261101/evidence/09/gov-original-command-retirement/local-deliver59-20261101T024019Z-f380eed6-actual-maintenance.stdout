@@ -1,0 +1,45 @@
+{
+  "schema": "ani.modeldev.governance-maintenance-acceptance.v1",
+  "observed_at": "2026-11-01T02:40:20.420176+00:00",
+  "status": "PASS",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "runtime": {
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "generation": 198,
+    "pod_uid": "7e3c6bd5-4d76-4b44-92bf-6e3b89d48a6f",
+    "pod_name": "ani-governance-7ddc444f78-nt5vc",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "pause_value": "default"
+  },
+  "tenant_authentication": "actual login HTTP200; token omitted",
+  "probe_id": "076fbe97-25d6-493a-bf63-adf55a980129",
+  "create_http_status": 503,
+  "create_reason": "MODELDEV_CREATE_MAINTENANCE",
+  "create_response_sha256": "c376d17e4c7d851163eae2af046a0d73331e4090bcdddb3f7d3a68b6ec9e2420",
+  "ledger_before": {
+    "read_only": "on",
+    "acceptance_count": 54,
+    "active_create_leases": 0,
+    "operation_count": 23,
+    "create_fence_sha256": "7fa70bff1f900e72b94c9caa195e7827dbfce9142548d8d7230542dada2e1bba",
+    "charges_sha256": "afb30dddca83a5406f631167309c99bb261cda4c3772976c28ea60020d7f7fc8"
+  },
+  "ledger_after": {
+    "read_only": "on",
+    "acceptance_count": 54,
+    "active_create_leases": 0,
+    "operation_count": 23,
+    "create_fence_sha256": "7fa70bff1f900e72b94c9caa195e7827dbfce9142548d8d7230542dada2e1bba",
+    "charges_sha256": "afb30dddca83a5406f631167309c99bb261cda4c3772976c28ea60020d7f7fc8"
+  },
+  "scope": "Create denial, drained leases and no new acceptance/charge/publisher claims only",
+  "stop_close_release": "NOT_RUN by this probe",
+  "root_apply_authorized": false
+}

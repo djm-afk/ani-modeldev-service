@@ -1,0 +1,55 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "harbor_artifacts": {
+    "cpu": {
+      "http_status": 200,
+      "digest": "sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+      "size": 9369651248,
+      "type": "IMAGE",
+      "manifest_media_type": "application/vnd.oci.image.manifest.v1+json",
+      "media_type": "application/vnd.oci.image.config.v1+json",
+      "push_time": "2026-11-01T02:14:39.335Z",
+      "extra_attrs": {
+        "architecture": "amd64",
+        "os": "linux"
+      }
+    },
+    "gpu": {
+      "http_status": 200,
+      "digest": "sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+      "size": 9369651247,
+      "type": "IMAGE",
+      "manifest_media_type": "application/vnd.oci.image.manifest.v1+json",
+      "media_type": "application/vnd.oci.image.config.v1+json",
+      "push_time": "2026-11-01T02:14:39.681Z",
+      "extra_attrs": {
+        "architecture": "amd64",
+        "os": "linux"
+      }
+    }
+  },
+  "original_buildkit": {
+    "pid": 2756988,
+    "readlink_exit": 0,
+    "exe": "/home/kubercloud/modeldev-open-limits-image-build-20261029/tools/buildkitd"
+  },
+  "task_units": {
+    "ani-modeldev-d807-runner.service": {
+      "exit": 0,
+      "fields": "MainPID=0\nLoadState=not-found\nActiveState=inactive\n"
+    },
+    "ani-modeldev-d807-build.service": {
+      "exit": 0,
+      "fields": "MainPID=0\nLoadState=not-found\nActiveState=inactive\n"
+    }
+  },
+  "own_socket_exists": false,
+  "auth_exists": false
+}

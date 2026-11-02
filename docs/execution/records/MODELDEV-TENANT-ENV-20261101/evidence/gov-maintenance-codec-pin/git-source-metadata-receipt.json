@@ -1,0 +1,44 @@
+{
+  "StartedAt": "2026-11-01T01:08:17.141751+00:00",
+  "Commands": [
+    {
+      "Command": [
+        "git",
+        "clone",
+        "--shared",
+        "--no-checkout",
+        "/home/chabking/workspace/ani-governance",
+        "/home/chabking/tenantenv-20261101/gov-codec-gitmeta"
+      ],
+      "ExitCode": 0,
+      "Output": "\u6b63\u514b\u9686\u5230 '/home/chabking/tenantenv-20261101/gov-codec-gitmeta'...\n\u5b8c\u6210\u3002\n"
+    },
+    {
+      "Command": [
+        "git",
+        "-C",
+        "/home/chabking/tenantenv-20261101/gov-codec-gitmeta",
+        "remote",
+        "set-url",
+        "origin",
+        "ssh://git@ssh.github.com:443/zhangzhe-ctrl/ani-governance.git"
+      ],
+      "ExitCode": 0,
+      "Output": ""
+    },
+    {
+      "Command": [
+        "git",
+        "-C",
+        "/home/chabking/tenantenv-20261101/gov-codec-gitmeta",
+        "fetch",
+        "--depth=16",
+        "origin",
+        "32c61fcbd57c70ca996d62ad2b234ba84ff0b052"
+      ],
+      "ExitCode": 128,
+      "Output": "Host key verification failed.\n\u81f4\u547d\u9519\u8bef\uff1a\u65e0\u6cd5\u8bfb\u53d6\u8fdc\u7a0b\u4ed3\u5e93\u3002\n\n\u8bf7\u786e\u8ba4\u60a8\u6709\u6b63\u786e\u7684\u8bbf\u95ee\u6743\u9650\u5e76\u4e14\u4ed3\u5e93\u5b58\u5728\u3002\n"
+    }
+  ],
+  "CompletedAt": "2026-11-01T01:08:18.868627+00:00"
+}

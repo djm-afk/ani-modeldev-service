@@ -1,0 +1,109 @@
+{
+  "captured_at_utc": "2026-10-31T21:21:34.623244+00:00",
+  "status": "PREPARED_WAIT_NEW_SHA_AND_REQUIRED_GATES",
+  "scope": "Known GET endpoints/local contract only; no POST, build, push, deployment, config or cluster mutation.",
+  "entry": "ssh kubercloud@100.64.128.12 -> http://192.168.25.40:9998",
+  "live_facts": {
+    "catalog": {
+      "status": 200,
+      "sha256": "4fd14c045936e3c9a94f2ae46810952c8f09ccd164d68adea594b8ec1defd3ec",
+      "project": "governance",
+      "repository": "https://github.com/zhangzhe-ctrl/ani-governance.git",
+      "kind": "governance",
+      "environment_id": "ani-kcn-full",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "namespace": "ani-system",
+      "deployment": "ani-governance",
+      "container": "governance",
+      "harbor_id": "intranet",
+      "registry": "10.10.1.66:30003",
+      "image_repository": "ani-gpu-platform/ani-governance",
+      "verify_label": "make verify",
+      "verify_command": "make check",
+      "verify_ready": true
+    },
+    "environment": {
+      "status": 200,
+      "sha256": "36a7b29d4791e710edf8fa640fa67810a0e640116452631acaa6ee68c486223f",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:0518f2d3616c8a088113b0e604540565d4419ae1921446d17ca4b233c4090fc0",
+      "replicas": 1,
+      "ready": 1,
+      "strategy": "RollingUpdate",
+      "pod_uid": "76211ecd-65c5-43f2-9c17-f373df78ce20",
+      "env_field_exposed": false
+    },
+    "branch_get_previous": {
+      "captured_at_utc": "2026-10-31T21:18:37.740363+00:00",
+      "path": "/api/branches?project=governance",
+      "status": 502,
+      "body": "not retained; exact cause unknown"
+    },
+    "branch_get_single_followup": {
+      "captured_at_utc": "2026-10-31T21:21:34.623244+00:00",
+      "path": "/api/branches?project=governance",
+      "status": 200,
+      "sha256": "b128616932d0229c7c3d5546ba9c374d1f83f951eb53fe81ab08767942ce4b79",
+      "branch": "codex/modeldev-create-maintenance",
+      "sha": "6a7c721ea113d51497421d7975122ec7ca8105c2"
+    },
+    "branch_read_stage": "Existing handler calls git HTTP/1.1 ls-remote --heads with 30s timeout; the earlier error body was not retained, so no exact timeout or network cause is asserted."
+  },
+  "prepared_request": {
+    "method": "POST",
+    "url": "http://192.168.25.40:9998/api/jobs",
+    "executed": false,
+    "headers": {
+      "Origin": "http://192.168.25.40:9998",
+      "Content-Type": "application/json",
+      "X-CSRF-Token": "fresh /api/me csrf from same cookie session; do not persist"
+    },
+    "body": {
+      "project": "governance",
+      "branch": "codex/modeldev-create-maintenance",
+      "commit": "PENDING_NEW_RESOURCE_AGENT_FULL_40_HEX_SHA",
+      "environment": "ani-kcn-full",
+      "harbor": "intranet",
+      "run_verify": true,
+      "request_id": "5df332e9-a7f4-4db3-9c1f-1722fade2a4c"
+    },
+    "pending_commit_is_intentionally_invalid": true,
+    "idempotency": "Reuse identical body/request_id only for a retry of the same operation; use a fresh request_id if SHA or another selection changes."
+  },
+  "mandatory_before_submit": [
+    "Obtain new maintenance-only SHA and evidence from resource agent: empty/true pauses Create by default, explicit false restores, final dynamic branch defaults unchanged, no v4 pin. Planned behavior is not treated as implemented by this receipt.",
+    "Obtain required candidate gates; keep run_verify=true so Workbench also executes original make check then git diff --exit-code. verify_ready=true is configuration, not a passed gate.",
+    "GET /api/branches?project=governance must return branch head exactly equal to the new SHA. Last observed 6a7c721 is the prior candidate, not the forthcoming candidate. Server rejects arbitrary historical commits.",
+    "Before any write, recheck full designated identity over ssh kubercloud@100.64.128.12: context kubernetes-admin@ani-kcn-full; API https://lb.kubesphere.local:6443; cluster_id f39bf6e2-f3ed-4191-ada3-caeebf86c220; kube-system UID 3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24. This Workbench-only inquiry did not redo that full check.",
+    "Confirm fresh Gov target and no active queued/running job via existing GETs; obtain same-session /api/me cookie/CSRF immediately before submission.",
+    "After publication, verify new image digest/source and actual old Create pause/drain behavior; readiness alone does not establish stopped admission."
+  ],
+  "publication_contract": {
+    "target": "Only ani-system/ani-governance container governance image; existing command/args/env/mounts preserved. Not ModelDev, Resource, webhook, DB, materials, or v4 switch.",
+    "source": "Seven exact body fields; full commit must match remote branch HEAD; fetch then detached HEAD rev-parse must equal selected SHA. Build recipe hash/source snapshot and immutable pushed digest recorded.",
+    "recipe": "Existing governance recipe builds ./app/admin/service/cmd/server and includes pkg/localdeps; no v4 pin required by recipe. New candidate retains old upstream API pins per resource evidence still required.",
+    "pause": "No environment override field exists. New candidate default-pause behavior is the intended way to remove that prior contract gap; existing env is preserved, so an explicit pre-existing false would override the default and must be checked before declaring paused.",
+    "quality": "run_verify=true invokes make check and git diff --exit-code; failure stops build/push/deploy. run_verify=false exists but is not selected or authorized as a gate bypass here."
+  },
+  "existing_failure_recovery": {
+    "before_patch": "No Gov image mutation if fetch/check/build/push fails; pushed image may exist.",
+    "after_patch": "Job stores deployment-before/previous_image and intent; on failure it attempts previous image restore only when original UID and expected updated spec still match, with RV test, then waits ready.",
+    "concurrency_or_interruption": "Concurrent spec/UID change stops automatic restore; report manual check. Service restart marks unfinished job interrupted without replay. Inspect known job/detail/log/environment endpoints, never assume rollback or resubmit blindly.",
+    "business_effect": "Rollback restores the old image; it can reopen Create, so verify pause/admission state separately."
+  },
+  "local_evidence": {
+    "root": "/home/chabking/workspace/ani-deploy",
+    "references": {
+      "pipeline.py": "165-186 exact fields+branch; 262-282 Gov gate; 441-455 fixed SHA; 521-555 target image+conditional restore",
+      "remote.py": "41-50 UID/spec/RV guarded image-only patch",
+      "server.py": "146-177 same-origin, JSON, session/CSRF, jobs submit",
+      "recipes/governance/Dockerfile": "26-31 server build; 65-78 service image"
+    },
+    "sha256": {
+      "pipeline.py": "b907e7d6c22f1f8616e54d769062592422b9667405713463eec6fe4c86d3dc1c",
+      "remote.py": "48dbbca2886ae776ba420fc4374de618b06e0186ab8d63c6c07969626f8f4a26",
+      "web/app.js": "11c9c4d5cd525fac1bb47344228b51ad4e7963bcf63713786abd608ec82b9848",
+      "recipes/governance/Dockerfile": "8c1d6ae8f51f6b8102cf991c20a2cab94d55433d5c44e088f93fa6dda8102cfd"
+    },
+    "identity_limit": "Backend live file hashes are not exposed. Backend behavior is inspected local contract; live catalog/branch/environment are direct GET facts. Prior 08 receipt matched live frontend bytes."
+  }
+}

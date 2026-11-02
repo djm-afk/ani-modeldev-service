@@ -1,0 +1,18 @@
+{
+  "StartedAt": "2026-11-01T01:05:52.281457+00:00",
+  "Commands": [
+    {
+      "Name": "mvs-after-name-version",
+      "Command": [
+        "go",
+        "list",
+        "-m",
+        "all"
+      ],
+      "StartedAt": "2026-11-01T01:05:52.281476+00:00",
+      "CompletedAt": "2026-11-01T01:05:52.330710+00:00",
+      "ExitCode": 1
+    }
+  ],
+  "CompletedAt": "2026-11-01T01:05:52.330776+00:00"
+}

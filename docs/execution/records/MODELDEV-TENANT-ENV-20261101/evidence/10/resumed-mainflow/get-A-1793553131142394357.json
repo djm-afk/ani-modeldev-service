@@ -1,0 +1,22 @@
+{
+  "started_at": "2026-11-01T17:12:08.896023+00:00",
+  "mode": "get",
+  "tenant": "A",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3",
+      "http_status": 404,
+      "response": {
+        "code": 404,
+        "reason": "RESOURCE_NOT_FOUND",
+        "message": "resource unavailable",
+        "metadata": {
+          "request_id": "ae3b6b2c-a65d-4c64-8131-de1e3d1e3cc8"
+        }
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T17:12:09.075271+00:00",
+  "transport_exit_code": 0
+}

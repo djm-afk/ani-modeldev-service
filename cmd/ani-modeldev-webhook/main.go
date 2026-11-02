@@ -34,7 +34,27 @@ func execute(ctx context.Context, arguments []string, output io.Writer) error {
 	check := flags.Bool("check-config", false, "validate frozen profiles without Kubernetes or TLS startup")
 	certificate := flags.String("tls-cert", "", "projected server certificate")
 	key := flags.String("tls-key", "", "projected server private key")
-	if flags.Parse(arguments) != nil || *path == "" || flags.NArg() != 0 {
+	copyFrom := flags.String("copy-materials-from", "", "init-only projected source directory")
+	copyTo := flags.String("copy-materials-to", "", "init-only regular material directory")
+	copyDigest := flags.String("copy-materials-manifest-sha256", "", "fixed expected manifest bytes digest")
+	platformFrom := flags.String("copy-platform-from", "", "init-only projected public platform file")
+	platformTo := flags.String("copy-platform-to", "", "init-only regular public platform file")
+	platformDigest := flags.String("copy-platform-sha256", "", "fixed expected platform bytes digest")
+	if flags.Parse(arguments) != nil || flags.NArg() != 0 {
+		return modeldevwebhook.ErrConfiguration
+	}
+	copyMaterials := *copyFrom != "" || *copyTo != "" || *copyDigest != ""
+	copyPlatform := *platformFrom != "" || *platformTo != "" || *platformDigest != ""
+	if copyMaterials || copyPlatform {
+		if *path != "" || *check || *certificate != "" || *key != "" || (copyMaterials && copyPlatform) {
+			return modeldevwebhook.ErrConfiguration
+		}
+		if copyPlatform {
+			return modeldevwebhook.CopyPlatform(*platformFrom, *platformTo, *platformDigest)
+		}
+		return modeldevwebhook.CopyMaterials(*copyFrom, *copyTo, *copyDigest)
+	}
+	if *path == "" {
 		return modeldevwebhook.ErrConfiguration
 	}
 	config, err := modeldevwebhook.LoadConfig(*path)
@@ -42,7 +62,7 @@ func execute(ctx context.Context, arguments []string, output io.Writer) error {
 		return err
 	}
 	if *check {
-		return json.NewEncoder(output).Encode(map[string]any{"valid": true, "profiles": len(config.Profiles), "namespace_bindings": len(config.Bindings), "registered": false})
+		return json.NewEncoder(output).Encode(map[string]any{"valid": true, "profiles": len(config.Profiles), "dynamic_environments": true, "registered": false})
 	}
 	if *certificate != "" {
 		config.CertificateFile = *certificate

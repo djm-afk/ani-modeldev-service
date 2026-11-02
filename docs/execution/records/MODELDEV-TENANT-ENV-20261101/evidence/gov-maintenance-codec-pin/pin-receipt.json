@@ -1,0 +1,45 @@
+{
+  "StartedAt": "2026-11-01T01:04:01.131441+00:00",
+  "BeforeGoModSHA256": "eccba55c294e83ea62420f2ff5a424f754b688f6dec8bee95ba25d6770e6883b",
+  "BeforeGoSumSHA256": "898509f4d5b534b6d02c4220dc7fbf64bd3643433e9ffc6316cb8eca429dfa94",
+  "Commands": [
+    {
+      "Name": "go-get-exact-md21bf",
+      "Command": [
+        "go",
+        "get",
+        "github.com/zhangzhe-ctrl/ani-modeldev-service@21bf4bd6540d462a61c91b629f26250899583223"
+      ],
+      "StartedAt": "2026-11-01T01:04:01.131951+00:00",
+      "CompletedAt": "2026-11-01T01:04:13.800979+00:00",
+      "ExitCode": 0
+    },
+    {
+      "Name": "mod-tidy",
+      "Command": [
+        "go",
+        "mod",
+        "tidy"
+      ],
+      "StartedAt": "2026-11-01T01:04:13.801179+00:00",
+      "CompletedAt": "2026-11-01T01:04:16.076284+00:00",
+      "ExitCode": 0
+    },
+    {
+      "Name": "mvs-after",
+      "Command": [
+        "go",
+        "list",
+        "-m",
+        "-json",
+        "all"
+      ],
+      "StartedAt": "2026-11-01T01:04:16.076334+00:00",
+      "CompletedAt": "2026-11-01T01:04:17.912949+00:00",
+      "ExitCode": 1
+    }
+  ],
+  "CompletedAt": "2026-11-01T01:04:17.912993+00:00",
+  "AfterGoModSHA256": "75a5b61c2236236d7041d392692939fd9cc380808f992fc021fecb87a4a6b8f9",
+  "AfterGoSumSHA256": "f8b4d6aa240f18baf91f11f97a462a5ab3c76ba5fa22e31206d27978ae164d6e"
+}

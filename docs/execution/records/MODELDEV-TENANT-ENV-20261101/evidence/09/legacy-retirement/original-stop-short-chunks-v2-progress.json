@@ -1,0 +1,493 @@
+{
+  "source_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "source_sha256": "4e8d7f7177a7efb521fb27ac9b59b2fe752f8e9cd75d0295dfec0e50af2377a4",
+  "source_bytes": 32694434,
+  "shared_control_socket": "/home/chabking/workspace/.evidence/modeldev-node-control-20261101-v2/node.sock",
+  "transport": "one channel at a time through parent v2 SSH compression/IPQoS=none CM; fallback disabled",
+  "chunks": [
+    {
+      "index": 0,
+      "bytes": 1048576,
+      "expected_sha256": "feb9cd4dc955492d2a91586226ced318ba66df4de4b0b33da4cfdd6d70b476cf",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 0,
+        "bytes": 1048576,
+        "sha256": "feb9cd4dc955492d2a91586226ced318ba66df4de4b0b33da4cfdd6d70b476cf",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:00:55.623838+00:00"
+      },
+      "elapsed_seconds": 22.761
+    },
+    {
+      "index": 1,
+      "bytes": 1048576,
+      "expected_sha256": "57d8b9587acc649a2753fc97e4eda73fa34544f9be399c6ca68e42aa2b980fc8",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 1,
+        "bytes": 1048576,
+        "sha256": "57d8b9587acc649a2753fc97e4eda73fa34544f9be399c6ca68e42aa2b980fc8",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:01:33.189647+00:00"
+      },
+      "elapsed_seconds": 6.46
+    },
+    {
+      "index": 2,
+      "bytes": 1048576,
+      "expected_sha256": "ff13e6786321ab540293974942da6d0ef54dc4063d6093571fd9328a7f379751",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 2,
+        "bytes": 1048576,
+        "sha256": "ff13e6786321ab540293974942da6d0ef54dc4063d6093571fd9328a7f379751",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:01:47.686025+00:00"
+      },
+      "elapsed_seconds": 14.56
+    },
+    {
+      "index": 4,
+      "bytes": 1048576,
+      "expected_sha256": "56c20d870e144745918903b839c6b702872f126ab761fce80f64f4bd9fb8498d",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 4,
+        "bytes": 1048576,
+        "sha256": "56c20d870e144745918903b839c6b702872f126ab761fce80f64f4bd9fb8498d",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:02:00.334660+00:00"
+      },
+      "elapsed_seconds": 12.644
+    },
+    {
+      "index": 5,
+      "bytes": 1048576,
+      "expected_sha256": "6d96ca1aa702d20ffc09db0f0728dfd0a9c14c884d2be42a56a8537a51d5ccf3",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 5,
+        "bytes": 1048576,
+        "sha256": "6d96ca1aa702d20ffc09db0f0728dfd0a9c14c884d2be42a56a8537a51d5ccf3",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:02:08.106074+00:00"
+      },
+      "elapsed_seconds": 7.729
+    },
+    {
+      "index": 6,
+      "bytes": 1048576,
+      "expected_sha256": "f7f433f69dfe87d9e1a5b1b5341c0fc4d5b3ab162705577ec2abf2f345bd7f07",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 6,
+        "bytes": 1048576,
+        "sha256": "f7f433f69dfe87d9e1a5b1b5341c0fc4d5b3ab162705577ec2abf2f345bd7f07",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:02:19.619166+00:00"
+      },
+      "elapsed_seconds": 11.504
+    },
+    {
+      "index": 7,
+      "bytes": 1048576,
+      "expected_sha256": "fccd74d307ac2eaebb72a3b40cb2a4684df8ae63f22e163cd9d0cf189e4903a8",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 7,
+        "bytes": 1048576,
+        "sha256": "fccd74d307ac2eaebb72a3b40cb2a4684df8ae63f22e163cd9d0cf189e4903a8",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:02:33.200029+00:00"
+      },
+      "elapsed_seconds": 13.633
+    },
+    {
+      "index": 8,
+      "bytes": 1048576,
+      "expected_sha256": "1c54b784837ba794684a3ac22e6f54c803608afaa05eca388df9483c75c39f45",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 8,
+        "bytes": 1048576,
+        "sha256": "1c54b784837ba794684a3ac22e6f54c803608afaa05eca388df9483c75c39f45",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:02:46.237348+00:00"
+      },
+      "elapsed_seconds": 13.549
+    },
+    {
+      "index": 9,
+      "bytes": 1048576,
+      "expected_sha256": "d9cc56a2279460f7aeb1db883057fda5940b75b6f207723af12371e1c215240c",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 9,
+        "bytes": 1048576,
+        "sha256": "d9cc56a2279460f7aeb1db883057fda5940b75b6f207723af12371e1c215240c",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:02:54.313827+00:00"
+      },
+      "elapsed_seconds": 7.523
+    },
+    {
+      "index": 10,
+      "bytes": 1048576,
+      "expected_sha256": "ed9caebda507e6bded23ba50e7df45690b6ff24099a1b00b35686012e5b8c0d6",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 10,
+        "bytes": 1048576,
+        "sha256": "ed9caebda507e6bded23ba50e7df45690b6ff24099a1b00b35686012e5b8c0d6",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:03:03.824307+00:00"
+      },
+      "elapsed_seconds": 9.543
+    },
+    {
+      "index": 11,
+      "bytes": 1048576,
+      "expected_sha256": "31297bf73b2fe554a554332c7c3c2f540aa038a1250d401a30fe1c3802a03934",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 11,
+        "bytes": 1048576,
+        "sha256": "31297bf73b2fe554a554332c7c3c2f540aa038a1250d401a30fe1c3802a03934",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:03:10.233820+00:00"
+      },
+      "elapsed_seconds": 8.658
+    },
+    {
+      "index": 13,
+      "bytes": 1048576,
+      "expected_sha256": "bb6be49699dfa7860e181210e04b220530cf1e2cac0c75326e889912dcfe5087",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 13,
+        "bytes": 1048576,
+        "sha256": "bb6be49699dfa7860e181210e04b220530cf1e2cac0c75326e889912dcfe5087",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:03:19.209256+00:00"
+      },
+      "elapsed_seconds": 6.85
+    },
+    {
+      "index": 14,
+      "bytes": 1048576,
+      "expected_sha256": "51f50ff594b9029fa4c6e7a6a736c23f6b2037bef6d531cc8e9d460c3ce56558",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 14,
+        "bytes": 1048576,
+        "sha256": "51f50ff594b9029fa4c6e7a6a736c23f6b2037bef6d531cc8e9d460c3ce56558",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:03:35.441061+00:00"
+      },
+      "elapsed_seconds": 16.053
+    },
+    {
+      "index": 15,
+      "bytes": 1048576,
+      "expected_sha256": "650ccb902d3bf7d707a18c2d7f9b2acc687fe654c58740ae7f52718891cdddd4",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 15,
+        "bytes": 1048576,
+        "sha256": "650ccb902d3bf7d707a18c2d7f9b2acc687fe654c58740ae7f52718891cdddd4",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:03:42.553505+00:00"
+      },
+      "elapsed_seconds": 7.177
+    },
+    {
+      "index": 16,
+      "bytes": 1048576,
+      "expected_sha256": "2d51e29d3281c6a4cb7b817b0dfa9a6e5fb24b8d31dcfb9f238324d798e25370",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 16,
+        "bytes": 1048576,
+        "sha256": "2d51e29d3281c6a4cb7b817b0dfa9a6e5fb24b8d31dcfb9f238324d798e25370",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:03:51.319617+00:00"
+      },
+      "elapsed_seconds": 8.716
+    },
+    {
+      "index": 17,
+      "bytes": 1048576,
+      "expected_sha256": "c49f542d6759589ca5189f06ca2d991e9c6d346fa991b6a0a3d3b81d76dd453c",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 17,
+        "bytes": 1048576,
+        "sha256": "c49f542d6759589ca5189f06ca2d991e9c6d346fa991b6a0a3d3b81d76dd453c",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:04:00.557236+00:00"
+      },
+      "elapsed_seconds": 9.229
+    },
+    {
+      "index": 18,
+      "bytes": 1048576,
+      "expected_sha256": "0954a50fa20de13522bf9cace0a727c571ef32237d7dc958ac6d0df1115063b4",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 18,
+        "bytes": 1048576,
+        "sha256": "0954a50fa20de13522bf9cace0a727c571ef32237d7dc958ac6d0df1115063b4",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:04:14.576815+00:00"
+      },
+      "elapsed_seconds": 14.3
+    },
+    {
+      "index": 19,
+      "bytes": 1048576,
+      "expected_sha256": "d1c4c9796e0febbd2da1c24a9dac3b217d5b676b6069767effcf212a0347b51c",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 19,
+        "bytes": 1048576,
+        "sha256": "d1c4c9796e0febbd2da1c24a9dac3b217d5b676b6069767effcf212a0347b51c",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:04:22.614501+00:00"
+      },
+      "elapsed_seconds": 7.751
+    },
+    {
+      "index": 20,
+      "bytes": 1048576,
+      "expected_sha256": "3d8528b7f12e845c7bcd1baea3c33bf63b337b38727c3ad57219d39f99a98b18",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 20,
+        "bytes": 1048576,
+        "sha256": "3d8528b7f12e845c7bcd1baea3c33bf63b337b38727c3ad57219d39f99a98b18",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:04:23.364885+00:00"
+      },
+      "elapsed_seconds": 0.749
+    },
+    {
+      "index": 21,
+      "bytes": 1048576,
+      "expected_sha256": "04f7c219ad495212e27502abee45082667468dcba11b72bbf355167e63c76205",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 21,
+        "bytes": 1048576,
+        "sha256": "04f7c219ad495212e27502abee45082667468dcba11b72bbf355167e63c76205",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:04:25.610074+00:00"
+      },
+      "elapsed_seconds": 2.298
+    },
+    {
+      "index": 22,
+      "bytes": 1048576,
+      "expected_sha256": "07a4e4ad69495e734dabdbe9250d22cd25b7b3132d7fba7926c5499cf8e492e3",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 22,
+        "bytes": 1048576,
+        "sha256": "07a4e4ad69495e734dabdbe9250d22cd25b7b3132d7fba7926c5499cf8e492e3",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:04:40.596171+00:00"
+      },
+      "elapsed_seconds": 15.009
+    },
+    {
+      "index": 23,
+      "bytes": 1048576,
+      "expected_sha256": "7f78e53e0cb247e101b374d7d788bae33f04b8234fc3b606742d7d146e80f0fc",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 23,
+        "bytes": 1048576,
+        "sha256": "7f78e53e0cb247e101b374d7d788bae33f04b8234fc3b606742d7d146e80f0fc",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:05:03.661222+00:00"
+      },
+      "elapsed_seconds": 22.988
+    },
+    {
+      "index": 24,
+      "bytes": 1048576,
+      "expected_sha256": "ffe88366cdb2008fae70e82cd58bd0d92be8dcc01a6547c06a5a7bbd9369614d",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 24,
+        "bytes": 1048576,
+        "sha256": "ffe88366cdb2008fae70e82cd58bd0d92be8dcc01a6547c06a5a7bbd9369614d",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:05:24.452402+00:00"
+      },
+      "elapsed_seconds": 20.792
+    },
+    {
+      "index": 25,
+      "bytes": 1048576,
+      "expected_sha256": "71607c002e1879cd4157eec5fb24d86434d19c4c339d0406ed0b7a98f7cbff08",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 25,
+        "bytes": 1048576,
+        "sha256": "71607c002e1879cd4157eec5fb24d86434d19c4c339d0406ed0b7a98f7cbff08",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:05:50.764556+00:00"
+      },
+      "elapsed_seconds": 26.371
+    },
+    {
+      "index": 26,
+      "bytes": 1048576,
+      "expected_sha256": "fda54fb08f90c90f19ea61e7ad66276bf4de799e79e8f102f26e7161434bfb7a",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 26,
+        "bytes": 1048576,
+        "sha256": "fda54fb08f90c90f19ea61e7ad66276bf4de799e79e8f102f26e7161434bfb7a",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:05:53.477754+00:00"
+      },
+      "elapsed_seconds": 2.714
+    },
+    {
+      "index": 27,
+      "bytes": 1048576,
+      "expected_sha256": "53872ce4aff3ad9c4d1f0d2b836bc1b091c9d57c4eebdc9854a6beb25b1f3de9",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 27,
+        "bytes": 1048576,
+        "sha256": "53872ce4aff3ad9c4d1f0d2b836bc1b091c9d57c4eebdc9854a6beb25b1f3de9",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:06:05.497853+00:00"
+      },
+      "elapsed_seconds": 11.961
+    },
+    {
+      "index": 28,
+      "bytes": 1048576,
+      "expected_sha256": "739b76de87cc3dad99afc4e36b0ab9f80cb85303f4351b0a5610f0cdf8eadbb9",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 28,
+        "bytes": 1048576,
+        "sha256": "739b76de87cc3dad99afc4e36b0ab9f80cb85303f4351b0a5610f0cdf8eadbb9",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:06:13.222267+00:00"
+      },
+      "elapsed_seconds": 7.722
+    },
+    {
+      "index": 29,
+      "bytes": 1048576,
+      "expected_sha256": "0ec03bff929362fbb1cc91687926aa261a688fbd550a5b6fa7519b5a2378f08e",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 29,
+        "bytes": 1048576,
+        "sha256": "0ec03bff929362fbb1cc91687926aa261a688fbd550a5b6fa7519b5a2378f08e",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:06:20.681793+00:00"
+      },
+      "elapsed_seconds": 7.457
+    },
+    {
+      "index": 30,
+      "bytes": 1048576,
+      "expected_sha256": "a3a76c593c6e95282c9a83fc6981debbb9a6a5141c8d50ae082ebcef56b52263",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 30,
+        "bytes": 1048576,
+        "sha256": "a3a76c593c6e95282c9a83fc6981debbb9a6a5141c8d50ae082ebcef56b52263",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:06:31.041037+00:00"
+      },
+      "elapsed_seconds": 10.361
+    },
+    {
+      "index": 31,
+      "bytes": 188578,
+      "expected_sha256": "3cf0dcf7b1f79887d86b5f35bf700a78b6696d5cc455ec0dd400ef22b8d52ec0",
+      "exit_code": 0,
+      "stderr": "",
+      "status": "PASS",
+      "receipt": {
+        "index": 31,
+        "bytes": 188578,
+        "sha256": "3cf0dcf7b1f79887d86b5f35bf700a78b6696d5cc455ec0dd400ef22b8d52ec0",
+        "status": "PASS",
+        "observed_at": "2026-11-01T02:06:32.164858+00:00"
+      },
+      "elapsed_seconds": 1.124
+    }
+  ],
+  "plan": "NOT_RUN",
+  "apply": "NOT_RUN",
+  "local_temporary_chunks_cleaned": true,
+  "observed_at": "2026-11-01T02:06:34.185164+00:00"
+}

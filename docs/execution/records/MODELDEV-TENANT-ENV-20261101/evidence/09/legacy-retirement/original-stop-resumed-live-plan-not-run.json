@@ -1,0 +1,41 @@
+{
+  "observed_at": "2026-11-01T01:31:04.609157+00:00",
+  "source_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "binary_sha256": "4e8d7f7177a7efb521fb27ac9b59b2fe752f8e9cd75d0295dfec0e50af2377a4",
+  "sole_entry": "kubercloud@100.64.128.12",
+  "shared_control_socket": "/home/chabking/workspace/.evidence/modeldev-node-control-20261101/node.sock",
+  "control_socket_owner": "root parent agent; not closed or modified by this task",
+  "full_identity_and_original_ref_refresh": {
+    "status": "PASS",
+    "observed_at": "2026-11-01T01:25:30.982469+00:00",
+    "evidence": "original-stop-resumed-node-original-source-preflight.json",
+    "exit_code": 0
+  },
+  "single_compressed_delta_transfer": {
+    "status": "FAIL",
+    "exit_code": 12,
+    "target": "/tmp/modeldev-legacy-retirement-101a2fd",
+    "source_binary_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+    "error": "rsync connection unexpectedly closed (34393 bytes received so far) [sender]; code12",
+    "evidence": "original-stop-resumed-binary-transfer.log",
+    "node_final_binary_sha": "RESULT_UNKNOWN; transfer failure cannot prove new file completion"
+  },
+  "mux_only_sha_guard_and_plan_command": {
+    "exit_code": 255,
+    "ssh_fallback_disabled": true,
+    "error": "Connection closed by UNKNOWN port 65535",
+    "stdout_bytes": 0,
+    "remote_sha_guard_executed": false,
+    "plan_executed": false,
+    "evidence": "original-stop-resumed-live-readonly-plan.stderr"
+  },
+  "current_source_live_plan": "NOT_RUN",
+  "apply": "NOT_RUN",
+  "new_cluster_or_database_mutations": 0,
+  "token_requests": 0,
+  "retransfers": 0,
+  "last_actual_plan_source_commit": "101a2fddbc33147cffdff8bce3ae5d3691fcc679",
+  "last_actual_plan_evidence": "suspended-exit-live-readonly-plan.json",
+  "last_actual_plan_ready": false,
+  "next_step": "Parent restores sole-entry shared connection; verify and complete original-path transfer with exact final SHA, then original-ref refresh and one read-only plan. No apply before actual Gov503, zero lease and exact reviewed Ready plan gate."
+}

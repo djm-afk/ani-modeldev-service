@@ -1,0 +1,16 @@
+{
+  "command": [
+    "ssh",
+    "-S",
+    "/home/chabking/workspace/.evidence/modeldev-node-control-20261101-v2/node.sock",
+    "-o",
+    "ProxyCommand=false",
+    "-o",
+    "BatchMode=yes",
+    "kubercloud@100.64.128.12",
+    "python3",
+    "-"
+  ],
+  "observed_at": "2026-11-01T02:31:40.948993+00:00",
+  "exit": 0
+}

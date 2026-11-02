@@ -47,7 +47,7 @@ func TestManagedStorageCredentialsRequireCurrentExecutionAuthorityAndRefuseClose
 		Credentials: aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
 			return aws.Credentials{AccessKeyID: "synthetic-restricted-owner", SecretAccessKey: "synthetic-restricted-secret"}, nil
 		}),
-		Bindings: []storagecredentials.Binding{{TenantID: f.request.Admission.TenantID, Purpose: "prepare", ConnectionID: input.StorageConnectionID, Bucket: input.Bucket, Prefix: input.Key[:strings.LastIndex(input.Key, "/")]}},
+		InputConnectionID: input.StorageConnectionID, InputBucket: input.Bucket, PublicationConnectionID: f.request.Admission.Snapshot.PublicationScope.StorageConnectionID, PublicationBucket: f.request.Admission.Snapshot.PublicationScope.Bucket, ModelConnectionID: "model-store-v1", ModelBucket: "model-models",
 	})
 	if err != nil {
 		t.Fatal(err)

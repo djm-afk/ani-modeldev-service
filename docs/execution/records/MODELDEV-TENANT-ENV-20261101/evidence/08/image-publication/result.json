@@ -1,0 +1,76 @@
+{
+  "schema": "ani.modeldev.image-publication.v1",
+  "status": "FOUR_IMAGES_PUBLISHED_DIGEST_VERIFIED",
+  "observed_at_utc": "2026-11-01T02:24:42.972458+00:00",
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_git_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "input_files_canonical_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+  "authority": "10.10.1.66:30003",
+  "project": "ani-resource-factor10-20261022",
+  "tls": "Original Harbor CA, certificate verification enabled",
+  "images": {
+    "cpu": {
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+      "immutable_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+      "digest": "sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+      "layer_count": 36,
+      "compressed_layer_bytes": 9369609309,
+      "artifact_size_bytes": 9369651248,
+      "source_receipt": "node-receipt.json",
+      "missing_configuration_rejected": true
+    },
+    "gpu": {
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+      "immutable_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+      "digest": "sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+      "layer_count": 36,
+      "compressed_layer_bytes": 9369609309,
+      "artifact_size_bytes": 9369651247,
+      "source_receipt": "node-receipt.json",
+      "missing_configuration_rejected": true
+    },
+    "step": {
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+      "immutable_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "digest": "sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "layer_count": 1,
+      "compressed_layer_bytes": 16909525,
+      "artifact_size_bytes": 16911953,
+      "source_receipt": "node-small-receipt.json",
+      "missing_configuration_rejected": true
+    },
+    "webhook": {
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+      "immutable_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+      "digest": "sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+      "layer_count": 1,
+      "compressed_layer_bytes": 27602030,
+      "artifact_size_bytes": 27604938,
+      "source_receipt": "node-small-receipt.json",
+      "missing_configuration_rejected": true
+    }
+  },
+  "training_base": "Exact original29layer cache; new base download bytes0",
+  "original_tasks_missing": {
+    "training": [],
+    "small": []
+  },
+  "deployment": "NOT_RUN_NO_DEPLOYMENT_CHANGED",
+  "business_acceptance": "NOT_RUN_IMAGE_PUBLICATION_ONLY",
+  "cleanup": "Image build tools/private root333493615B and local transit/context files removed; private units MainPID0/inactive; auth absent; original BuildKit/tools/cache/tasks and delivered images retained. Required auxiliary CLI retained for parent/environment; parent owns shared CM cleanup.",
+  "cleanup_ledger": "added-tools-cleanup-ledger.json",
+  "preserved_failures": [
+    "node-build-status.pre-node-completion.json",
+    "result.pre-node-completion.json",
+    "node-source-fetch-receipt.json",
+    "node-go-prepare-receipt.json",
+    "http-transport-closed-cleanup.json",
+    "node-step-chunk-transfer.initial-guard.json"
+  ],
+  "cleanup_evidence": [
+    "node-private-build-cleanup.json",
+    "local-transit-cleanup.json",
+    "added-tools-cleanup-ledger.json"
+  ],
+  "auxiliary_tool_receipt": "node-gov-aux-chunk-transfer.json"
+}

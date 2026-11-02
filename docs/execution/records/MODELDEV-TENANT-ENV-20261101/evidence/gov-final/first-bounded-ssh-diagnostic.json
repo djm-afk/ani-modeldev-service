@@ -1,0 +1,24 @@
+{
+  "recorded_at": "2026-10-31T20:15:24.669604+00:00",
+  "observed_before_utc": "2026-10-31T20:11:29Z",
+  "exact_first_start_utc_captured": false,
+  "session_id": 25215,
+  "command": [
+    "ssh",
+    "-o",
+    "ControlMaster=no",
+    "-o",
+    "ControlPath=none",
+    "-o",
+    "ConnectTimeout=10",
+    "-o",
+    "ServerAliveInterval=5",
+    "-o",
+    "ServerAliveCountMax=2",
+    "fedora",
+    "uptime; free -m"
+  ],
+  "exit_code": 255,
+  "stdout": "",
+  "stderr": "Connection timed out during banner exchange\r\nConnection to 172.16.101.31 port 22 timed out\r\n"
+}

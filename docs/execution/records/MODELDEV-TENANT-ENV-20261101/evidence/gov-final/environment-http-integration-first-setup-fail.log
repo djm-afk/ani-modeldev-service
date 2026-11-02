@@ -1,0 +1,8 @@
+127.0.0.1:5432 - accepting connections
+PostgreSQL=docker.io/library/postgres@sha256:4ef4dbc939d61acea57712655ddb4b4ab27419c913f94cca0cd57cb3ea3c2280 Redis=sha256:a9cc41d6d01da2aa26c219e4f99ecbeead955a7b656c1c499cce8922311b2514; exclusive loopback resources and separate runtime/fixture roles
+# go-wind-admin/app/admin/service/internal/server
+app/admin/service/internal/server/modeldev_query_integration_test.go:36:2: package go-wind-admin/app/admin/service/internal/data/ent/modeldevreleasebinding is not in std (/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/go-wind-admin/app/admin/service/internal/data/ent/modeldevreleasebinding)
+FAIL	go-wind-admin/app/admin/service/internal/server [setup failed]
+FAIL
+removed owned PostgreSQL container=fdd004238a7be36b1da8f0a4396ca1d63eaf7ea7991aaf8d5efaaa44353c149a
+removed owned Redis container=acac108a82ce5b95251342ef95f46aaaebf736c881cef50c2d45b259e247a90e

@@ -1,0 +1,405 @@
+{
+  "read_only": true,
+  "observed_at_utc": "2026-10-31T23:22:19.137810+00:00",
+  "read_errors": [],
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "identity_match": true,
+  "resource_image": {
+    "source": {
+      "name": "ani-resource-private",
+      "namespace": "ani-system",
+      "uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+      "resourceVersion": "20339931",
+      "key": "config.yaml"
+    },
+    "enabled": true,
+    "managed_registry_authority": "10.10.1.66:30003",
+    "platform_project": "ani-resource-factor10-20261022",
+    "harbor_public_ca_file": "/private/harbor-ca.crt",
+    "source_paths": [
+      "image.harbor_url",
+      "image.platform_project",
+      "image.harbor_ca_file"
+    ],
+    "credentials_emitted": false
+  },
+  "md_deployment": {
+    "name": "ani-modeldev",
+    "namespace": "ani-system",
+    "uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "resourceVersion": "18629334"
+  },
+  "md_main_config_source": {
+    "name": "modeldev-trainimg-main-20261029b",
+    "namespace": "ani-system",
+    "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+    "resourceVersion": "14648501",
+    "key": "config.yaml"
+  },
+  "object_storage": {
+    "endpoint": "https://ani-rustfs-svc.ani-platform.svc.cluster.local:9000",
+    "region": "us-east-1",
+    "connection_id": "modeldev-newenv-rustfs-20261022",
+    "ca_file": "/etc/modeldev/ca/s3-ca.crt"
+  },
+  "pipeline": {
+    "endpoint": "https://ani-kfp-entry.kubeflow.svc:8443",
+    "ca_file": "/etc/modeldev/ca/kfp-ca.crt"
+  },
+  "step_listener": {
+    "addr": "0.0.0.0:9001",
+    "network": "tcp"
+  },
+  "model_base_scope": {
+    "connection_id": "modeldev-newenv-rustfs-20261022",
+    "bucket": "ani-models-v21-01a15f47"
+  },
+  "catalogue_directory": "/etc/modeldev/catalogue",
+  "md_service": {
+    "source": {
+      "name": "ani-modeldev",
+      "namespace": "ani-system",
+      "uid": "b9ba8e4b-3120-45be-8e77-109b866dd18d",
+      "resourceVersion": "682804"
+    },
+    "ports": [
+      {
+        "name": "command",
+        "port": 9000,
+        "targetPort": "command",
+        "protocol": "TCP"
+      },
+      {
+        "name": "step",
+        "port": 9001,
+        "targetPort": "step",
+        "protocol": "TCP"
+      },
+      {
+        "name": "admin",
+        "port": 9002,
+        "targetPort": "admin",
+        "protocol": "TCP"
+      }
+    ],
+    "selector": {
+      "app": "ani-modeldev"
+    }
+  },
+  "kfp_tls_flags": {
+    "driver": "UNKNOWN",
+    "launcher": "UNKNOWN",
+    "reason": "Previous exact KFP public-surface inspection had no explicit flags; runtime.pipeline endpoint/CA above are transport candidates, not generated process-flag or I/O proof.",
+    "previous_evidence": "evidence/08-public-inputs-readonly-20261101.json"
+  },
+  "classification": "Current existing-source candidates only; not a new-system deployment, bucket IAM, CA loading, auth or actual I/O acceptance. All Secret values/configurations stayed process-only.",
+  "sole_entry": "ssh kubercloud@100.64.128.12",
+  "cluster_writes": 0,
+  "workbench_posts": 0,
+  "projected_reference_supplement": {
+    "observed_at_utc": "2026-10-31T23:25:22.395681+00:00",
+    "selected_materials": [
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-catalogue-20261030",
+          "uid": "55060a0b-e39c-4e86-b48e-6c7337099185",
+          "resourceVersion": "18628497",
+          "key": "builtin.mlp.cpu.json"
+        },
+        "container_path": "/etc/modeldev/catalogue/builtin.mlp.cpu.json",
+        "json_path": "$",
+        "workspace": {
+          "mode": "EXECUTION_PVC",
+          "storage_class": "ani-cephfs",
+          "capacity_bytes": "4294967296",
+          "input_subpath": "inputs",
+          "training_subpath": "training",
+          "reports_subpath": "reports",
+          "publication_subpath": "publication"
+        }
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-catalogue-20261030",
+          "uid": "55060a0b-e39c-4e86-b48e-6c7337099185",
+          "resourceVersion": "18628497",
+          "key": "builtin.mlp.gpu.json"
+        },
+        "container_path": "/etc/modeldev/catalogue/builtin.mlp.gpu.json",
+        "json_path": "$",
+        "workspace": {
+          "mode": "EXECUTION_PVC",
+          "storage_class": "ani-cephfs",
+          "capacity_bytes": "4294967296",
+          "input_subpath": "inputs",
+          "training_subpath": "training",
+          "reports_subpath": "reports",
+          "publication_subpath": "publication"
+        }
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-catalogue-20261030",
+          "uid": "55060a0b-e39c-4e86-b48e-6c7337099185",
+          "resourceVersion": "18628497",
+          "key": "builtin.sft_lora.cpu.json"
+        },
+        "container_path": "/etc/modeldev/catalogue/builtin.sft_lora.cpu.json",
+        "json_path": "$",
+        "workspace": {
+          "mode": "EXECUTION_PVC",
+          "storage_class": "ani-cephfs",
+          "capacity_bytes": "68719476736",
+          "input_subpath": "inputs",
+          "training_subpath": "training",
+          "reports_subpath": "reports",
+          "publication_subpath": "publication"
+        }
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-catalogue-20261030",
+          "uid": "55060a0b-e39c-4e86-b48e-6c7337099185",
+          "resourceVersion": "18628497",
+          "key": "builtin.sft_lora.gpu.json"
+        },
+        "container_path": "/etc/modeldev/catalogue/builtin.sft_lora.gpu.json",
+        "json_path": "$",
+        "workspace": {
+          "mode": "EXECUTION_PVC",
+          "storage_class": "ani-cephfs",
+          "capacity_bytes": "68719476736",
+          "input_subpath": "inputs",
+          "training_subpath": "training",
+          "reports_subpath": "reports",
+          "publication_subpath": "publication"
+        }
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-main-20261029b",
+          "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+          "resourceVersion": "14648501",
+          "key": "builtin.mlp.facts.json"
+        },
+        "container_path": "/etc/modeldev/facts/builtin.mlp.json",
+        "json_path": "$",
+        "input_scope": {
+          "storage_connection_id": "modeldev-newenv-rustfs-20261022",
+          "bucket": "ani-md-v21-input-01a15f47",
+          "approved_prefix": "inputs/fixed"
+        },
+        "publication_scope": {
+          "storage_connection_id": "modeldev-newenv-rustfs-20261022",
+          "bucket": "ani-md-v21-output-01a15f47",
+          "approved_prefix": "executions/64c5c35a-f554-432c-b4bc-7b4f36f08420/modeldev-v21-01a15f47"
+        },
+        "workspace": {
+          "mode": "EXECUTION_PVC",
+          "storage_class": "ani-cephfs",
+          "capacity_bytes": "4294967296",
+          "input_subpath": "inputs",
+          "training_subpath": "training",
+          "reports_subpath": "reports",
+          "publication_subpath": "publication"
+        }
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-main-20261029b",
+          "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+          "resourceVersion": "14648501",
+          "key": "builtin.sft_lora.facts.json"
+        },
+        "container_path": "/etc/modeldev/facts/builtin.sft_lora.json",
+        "json_path": "$",
+        "input_scope": {
+          "storage_connection_id": "modeldev-newenv-rustfs-20261022",
+          "bucket": "ani-md-v21-input-01a15f47",
+          "approved_prefix": "inputs/fixed"
+        },
+        "publication_scope": {
+          "storage_connection_id": "modeldev-newenv-rustfs-20261022",
+          "bucket": "ani-md-v21-output-01a15f47",
+          "approved_prefix": "executions/64c5c35a-f554-432c-b4bc-7b4f36f08420/modeldev-v21-01a15f47"
+        },
+        "workspace": {
+          "mode": "EXECUTION_PVC",
+          "storage_class": "ani-cephfs",
+          "capacity_bytes": "68719476736",
+          "input_subpath": "inputs",
+          "training_subpath": "training",
+          "reports_subpath": "reports",
+          "publication_subpath": "publication"
+        }
+      }
+    ],
+    "public_ca_objects": [
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-v21-server-tls",
+          "uid": "6b854755-c99c-44b7-9648-57ec54dfeeeb",
+          "resourceVersion": "652775",
+          "key": "ca.crt"
+        },
+        "container_path": "/var/run/modeldev-tls/ca.crt",
+        "bytes": 713,
+        "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+        "read_only_mount": true
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-v21-server-tls",
+          "uid": "6b854755-c99c-44b7-9648-57ec54dfeeeb",
+          "resourceVersion": "652775",
+          "key": "tls.crt"
+        },
+        "container_path": "/var/run/modeldev-tls/tls.crt",
+        "bytes": 798,
+        "sha256": "8c35e8d24705e6a3ae57b0ecbeada3c71bbca0518e49f18e098cf71fa3310b2e",
+        "read_only_mount": true,
+        "dns_sans": [
+          "ani-modeldev-service",
+          "ani-modeldev",
+          "ani-modeldev.ani-system.svc",
+          "ani-modeldev.ani-system.svc.cluster.local"
+        ]
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-main-20261029b",
+          "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+          "resourceVersion": "14648501",
+          "key": "kfp-ca.crt"
+        },
+        "container_path": "/etc/modeldev/ca/kfp-ca.crt",
+        "bytes": 713,
+        "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+        "read_only_mount": true
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-main-20261029b",
+          "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+          "resourceVersion": "14648501",
+          "key": "model-ca.crt"
+        },
+        "container_path": "/etc/modeldev/ca/model-ca.crt",
+        "bytes": 713,
+        "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+        "read_only_mount": true
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "modeldev-trainimg-main-20261029b",
+          "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+          "resourceVersion": "14648501",
+          "key": "s3-ca.crt"
+        },
+        "container_path": "/etc/modeldev/ca/s3-ca.crt",
+        "bytes": 713,
+        "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+        "read_only_mount": true
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "ani-internal-service-ca",
+          "uid": "9587d616-9949-4306-b881-3e2fce0b55fa",
+          "resourceVersion": "5052890",
+          "key": "ca.crt"
+        },
+        "container_path": "/etc/modeldev/ca/grpc-ca.crt",
+        "bytes": 713,
+        "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+        "read_only_mount": true
+      },
+      {
+        "source": {
+          "namespace": "ani-system",
+          "name": "ani-internal-service-ca",
+          "uid": "9587d616-9949-4306-b881-3e2fce0b55fa",
+          "resourceVersion": "5052890",
+          "key": "ca.crt"
+        },
+        "container_path": "/etc/modeldev/ca/governance-ca.crt",
+        "bytes": 713,
+        "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+        "read_only_mount": true
+      }
+    ],
+    "read_errors": [],
+    "identity_reverified": true,
+    "resource_harbor_ca": {
+      "source": {
+        "namespace": "ani-system",
+        "name": "ani-resource-private",
+        "uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+        "resourceVersion": "20339931",
+        "key": "harbor-ca.crt"
+      },
+      "bytes": 1493,
+      "sha256": "65f1a1d14d21fed31b89f25b143e78b16605b82d32c56ef6bf8167fe78bab871",
+      "configured_file": "/private/harbor-ca.crt"
+    },
+    "step_callback_candidate": {
+      "target": "ani-modeldev.ani-system.svc:9001",
+      "derivation": "previous exact Service ani-modeldev/step port9001 plus runtime.step.addr0.0.0.0:9001; candidate DNS, not an executed RPC",
+      "server_name": "See exact current server certificate DNS SANs; final frozen owner must select the correct SAN",
+      "actual_rpc": "NOT_RUN"
+    }
+  },
+  "deployment_input_candidates": {
+    "platform_materials.managed_registry_authority": "10.10.1.66:30003",
+    "platform_materials.platform_project": "ani-resource-factor10-20261022",
+    "platform_materials.catalogue_path": "/etc/modeldev/catalogue (observed legacy mount; final immutable bundle path remains /etc/modeldev-materials as implemented)",
+    "storage.input.connection_id": "modeldev-newenv-rustfs-20261022",
+    "storage.input.bucket": "ani-md-v21-input-01a15f47",
+    "storage.publication.connection_id": "modeldev-newenv-rustfs-20261022",
+    "storage.publication.bucket": "ani-md-v21-output-01a15f47",
+    "storage.model.connection_id": "modeldev-newenv-rustfs-20261022",
+    "storage.model.bucket": "ani-models-v21-01a15f47",
+    "storage.kfp_artifacts.endpoint": "https://ani-rustfs-svc.ani-platform.svc.cluster.local:9000",
+    "storage.kfp_artifacts.region": "us-east-1",
+    "platform_materials.workspace_storage_class": "ani-cephfs",
+    "platform_materials.workspace_size": "UNRESOLVED: current MLP=4294967296 (4GiB); current SFT=68719476736 (64GiB)",
+    "platform_materials.step_callback_endpoint": "ani-modeldev.ani-system.svc:9001 (derived from exact current Service/listener; no RPC executed)",
+    "step_owner.grpc_server_name": "ani-modeldev.ani-system.svc (matches exact current server certificate DNS SAN)",
+    "platform_materials.modeldev_public_ca_file": "evidence/08-public-kfp-ca.crt",
+    "platform_materials.s3_public_ca_file": "evidence/08-public-kfp-ca.crt"
+  },
+  "reused_public_ca_material": {
+    "file": "evidence/08-public-kfp-ca.crt",
+    "bytes": 713,
+    "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+    "current_MD_and_S3_public_CA_source_bytes_have_same_SHA": true,
+    "new_launcher_or_step_CA_loading": "NOT_RUN"
+  },
+  "remaining_minimum_gaps": [
+    "Current shared platform Workspace capacity must be fixed consistently with new four-profile materials; old MLP and SFT capacities differ. Do not silently select one or retain per-tenant/static facts compatibility.",
+    "Input/publication/model names above are exact existing configured bucket references, not a new bucket HEAD/IAM/isolation proof. Final prefixes are inputs/<tenantUUID>, executions/<tenantUUID>, and <tenantUUID>; old static prefixes are evidence only.",
+    "A final dedicated KFP artifact bucket and its bucket-only IAM/credential files remain unverified; the earlier legacy KFP bucket is not silently adopted as a new dedicated identity.",
+    "Generated driver/launcher explicit TLS flags remain UNKNOWN. Configured HTTPS endpoint/public CA presence is not runtime loading, token auth or I/O acceptance.",
+    "New immutable catalogue/IR/bundle hashes and exact published IDs still require final image materials; observed /etc/modeldev/catalogue is the old deployment path, not the new /etc/modeldev-materials mapping."
+  ],
+  "sensitive_values_saved_or_printed": false,
+  "deployment_inputs_file_modified": false
+}

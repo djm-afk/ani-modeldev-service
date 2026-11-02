@@ -1,0 +1,579 @@
+{
+  "schema": "ani.modeldev.existing-publisher-identities.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "observed_at_unix": 1793500753.1272504,
+  "matching_existing_bindings": [
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "cluster-admin",
+      "namespace": null,
+      "uid": "f8639944-3145-4e28-88b5-c3a7f524ac62",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "cluster-admin"
+      },
+      "matching_rules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "*"
+          ]
+        }
+      ],
+      "subjects": []
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "kubeadm:cluster-admins",
+      "namespace": null,
+      "uid": "286cfca7-5c63-4c91-b721-8188043d1a55",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "cluster-admin"
+      },
+      "matching_rules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "*"
+          ]
+        }
+      ],
+      "subjects": []
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "system:controller:generic-garbage-collector",
+      "namespace": null,
+      "uid": "17509203-05f9-477b-a1ad-94e77924870b",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:controller:generic-garbage-collector"
+      },
+      "matching_rules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "delete",
+            "get",
+            "list",
+            "patch",
+            "update",
+            "watch"
+          ]
+        }
+      ],
+      "subjects": [
+        {
+          "principal": "system:serviceaccount:kube-system:generic-garbage-collector",
+          "subject_kind": "ServiceAccount"
+        }
+      ]
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "system:controller:namespace-controller",
+      "namespace": null,
+      "uid": "af7f4c0c-37d2-47ba-9f9a-293b3614d215",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:controller:namespace-controller"
+      },
+      "matching_rules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "delete",
+            "deletecollection",
+            "get",
+            "list",
+            "watch"
+          ]
+        }
+      ],
+      "subjects": [
+        {
+          "principal": "system:serviceaccount:kube-system:namespace-controller",
+          "subject_kind": "ServiceAccount"
+        }
+      ]
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "system:controller:resourcequota-controller",
+      "namespace": null,
+      "uid": "afcb781b-e939-41bb-9e1e-1bf2178b65fd",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:controller:resourcequota-controller"
+      },
+      "matching_rules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "list",
+            "watch"
+          ]
+        }
+      ],
+      "subjects": [
+        {
+          "principal": "system:serviceaccount:kube-system:resourcequota-controller",
+          "subject_kind": "ServiceAccount"
+        }
+      ]
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "system:kube-controller-manager",
+      "namespace": null,
+      "uid": "87932283-31f5-44dc-a68a-f65ed7b0a05d",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:kube-controller-manager"
+      },
+      "matching_rules": [
+        {
+          "apiGroups": [
+            "*"
+          ],
+          "resources": [
+            "*"
+          ],
+          "verbs": [
+            "list",
+            "watch"
+          ]
+        }
+      ],
+      "subjects": [
+        {
+          "principal": "system:kube-controller-manager",
+          "subject_kind": "User"
+        }
+      ]
+    }
+  ],
+  "group_only_bindings_not_reused": [
+    {
+      "binding": "cluster-admin",
+      "group": "system:masters",
+      "usable_by_KFP_groups_omitted_SAR": false
+    },
+    {
+      "binding": "kubeadm:cluster-admins",
+      "group": "kubeadm:cluster-admins",
+      "usable_by_KFP_groups_omitted_SAR": false
+    }
+  ],
+  "candidate_reviews": {
+    "system:serviceaccount:kube-system:generic-garbage-collector": {
+      "binding_sources": [
+        {
+          "binding_kind": "ClusterRoleBinding",
+          "binding": "system:controller:generic-garbage-collector",
+          "role": "system:controller:generic-garbage-collector"
+        }
+      ],
+      "reviews": [
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "create",
+            "name": ""
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "list",
+            "name": ""
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-mlp-cpu"
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-mlp-gpu"
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-sft-lora-cpu"
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-sft-lora-gpu"
+          },
+          "status": {
+            "allowed": true
+          }
+        }
+      ],
+      "all_required_allowed": false,
+      "source_proven_as_managed_publisher": false
+    },
+    "system:serviceaccount:kube-system:namespace-controller": {
+      "binding_sources": [
+        {
+          "binding_kind": "ClusterRoleBinding",
+          "binding": "system:controller:namespace-controller",
+          "role": "system:controller:namespace-controller"
+        }
+      ],
+      "reviews": [
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "create",
+            "name": ""
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "list",
+            "name": ""
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-mlp-cpu"
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-mlp-gpu"
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-sft-lora-cpu"
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-sft-lora-gpu"
+          },
+          "status": {
+            "allowed": true
+          }
+        }
+      ],
+      "all_required_allowed": false,
+      "source_proven_as_managed_publisher": false
+    },
+    "system:serviceaccount:kube-system:resourcequota-controller": {
+      "binding_sources": [
+        {
+          "binding_kind": "ClusterRoleBinding",
+          "binding": "system:controller:resourcequota-controller",
+          "role": "system:controller:resourcequota-controller"
+        }
+      ],
+      "reviews": [
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "create",
+            "name": ""
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "list",
+            "name": ""
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-mlp-cpu"
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-mlp-gpu"
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-sft-lora-cpu"
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-sft-lora-gpu"
+          },
+          "status": {
+            "allowed": false
+          }
+        }
+      ],
+      "all_required_allowed": false,
+      "source_proven_as_managed_publisher": false
+    },
+    "system:kube-controller-manager": {
+      "binding_sources": [
+        {
+          "binding_kind": "ClusterRoleBinding",
+          "binding": "system:kube-controller-manager",
+          "role": "system:kube-controller-manager"
+        }
+      ],
+      "reviews": [
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "create",
+            "name": ""
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "list",
+            "name": ""
+          },
+          "status": {
+            "allowed": true
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-mlp-cpu"
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-mlp-gpu"
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-sft-lora-cpu"
+          },
+          "status": {
+            "allowed": false
+          }
+        },
+        {
+          "attributes": {
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "pipelines",
+            "namespace": "ani-system",
+            "verb": "get",
+            "name": "modeldev-sft-lora-gpu"
+          },
+          "status": {
+            "allowed": false
+          }
+        }
+      ],
+      "all_required_allowed": false,
+      "source_proven_as_managed_publisher": false
+    }
+  },
+  "no_principal_selected_by_power_alone": true,
+  "groups_supplied": false,
+  "token_request_issued": false,
+  "impersonation_used": false,
+  "rbac_modified": false,
+  "publication_issued": false
+}

@@ -182,6 +182,9 @@ func readRuntime(ctx context.Context, tx pgx.Tx, tenantID, executionID pgtype.UU
 	if err != nil {
 		return nil, biz.ErrPersistence
 	}
+	if row.ClusterID.String() != admitted.Snapshot.Environment.ClusterID || row.EnvironmentBindingID.String() != admitted.Snapshot.Environment.BindingID || !row.DeadlineAt.Valid || !row.DeadlineAt.Time.Equal(admitted.Snapshot.DeadlineAt) {
+		return nil, biz.ErrPersistence
+	}
 	intent, snapshot, err := admitted.CanonicalPayloads()
 	if err != nil || !bytes.Equal(intent, row.IntentCanonical) || !bytes.Equal(snapshot, row.SnapshotCanonical) {
 		return nil, biz.ErrPersistence

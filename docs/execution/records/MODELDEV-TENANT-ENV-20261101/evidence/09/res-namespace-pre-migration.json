@@ -1,0 +1,76 @@
+{
+  "schema": "ani.resource.namespace-uid.pre-migration-readonly.v1",
+  "read_only": true,
+  "observed_at": "2026-10-31T19:24:52.697150+00:00",
+  "ssh": "kubercloud@100.64.128.12",
+  "target": {
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+  },
+  "database": "ani_resource",
+  "namespace_uid_column_present": false,
+  "identity_rows_total": 2,
+  "identity_rows_served_cluster": 2,
+  "rows": [
+    {
+      "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "namespace_uid": null,
+      "expected_namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "live": {
+        "name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347",
+        "phase": "Active",
+        "deleting": false,
+        "tenant_label": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "managed_by_label": "ani-network-service",
+        "resource_version": "13674619"
+      },
+      "reasons": []
+    },
+    {
+      "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "namespace_uid": null,
+      "expected_namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "live": {
+        "name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+        "phase": "Active",
+        "deleting": false,
+        "tenant_label": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "managed_by_label": "ani-network-service",
+        "resource_version": "8282166"
+      },
+      "reasons": []
+    }
+  ],
+  "blockers": [],
+  "null_uid_before_count": 2,
+  "preserved_table_counts": {
+    "network_eips": 12,
+    "network_provider_bindings": 43,
+    "network_subnets": 6,
+    "network_tenant_namespaces": 2,
+    "network_vpcs": 12
+  },
+  "preserved_vm_instance_table_counts": {
+    "instance.instance_operations": 4,
+    "instance.instances": 2,
+    "instance.workspace_bindings": 2,
+    "vm.disks": 15,
+    "vm.operations": 68,
+    "vm.virtual_machines": 8
+  },
+  "migration_applied": false,
+  "backfill_executed": false,
+  "service_updated": false,
+  "vm_instance_mutations": false,
+  "plan_status": "PRE_MIGRATION_IDENTITIES_MATCH",
+  "apply_plan_sha256": null,
+  "apply_plan_note": "No production-tool plan/apply executed: UID column not migrated or admission writers not paused; this is a read-only pre-migration equivalent check only."
+}

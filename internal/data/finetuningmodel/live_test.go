@@ -42,7 +42,7 @@ func liveModelFixture(t *testing.T) (*liveModelBoundary, cpup01.StorageScope, cp
 	for name, raw := range map[string][]byte{"config.json": config, "model.safetensors": []byte("original-weight-boundary-bytes"), "tokenizer.model": []byte("native-sentencepiece-boundary"), "tokenizer_config.json": tokenizer} {
 		setLiveFile(out, name, raw)
 	}
-	return &liveModelBoundary{response: out}, cpup01.StorageScope{StorageConnectionID: "model-store-v1", Bucket: "ani-models", ApprovedPrefix: tenant + "/models", CredentialReference: "model-base-read"}, intent, conformance.FinetuningMaterialV21()
+	return &liveModelBoundary{response: out}, cpup01.StorageScope{StorageConnectionID: "model-store-v1", Bucket: "ani-models", ApprovedPrefix: tenant, CredentialReference: "model-base-read"}, intent, conformance.FinetuningMaterialV21()
 }
 func setLiveFile(out *modelv1.ResolveFinetuningFactsResponse, name string, raw []byte) {
 	hash := sha256.Sum256(raw)
@@ -141,7 +141,9 @@ func TestLiveModelReaderRejectsUnfixedForeignOrChangedProviderFacts(t *testing.T
 		{"null version", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ObjectVersionId = "null" }},
 		{"wrong tenant", func(r *modelv1.ResolveFinetuningFactsResponse) { r.TenantId = r.ModelId }},
 		{"foreign bucket", func(r *modelv1.ResolveFinetuningFactsResponse) { r.Bucket = "other" }},
-		{"foreign prefix", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ObjectKey = r.TenantId + "/other/model.tar" }},
+		{"foreign prefix", func(r *modelv1.ResolveFinetuningFactsResponse) {
+			r.ObjectKey = "99999999-9999-4999-8999-999999999999/other/model.tar"
+		}},
 		{"config mismatch", func(r *modelv1.ResolveFinetuningFactsResponse) { r.ConfigJson = append(r.ConfigJson, ' ') }},
 		{"injected target", func(r *modelv1.ResolveFinetuningFactsResponse) {
 			r.Target = &modelv1.ResolveFinetuningFactsResponse_NewModelName{NewModelName: "different"}
@@ -244,5 +246,26 @@ func TestModelArchitectureAndOriginalDtypeRemainDescriptions(t *testing.T) {
 	base, err := reader.ResolveFinetuningModelFacts(context.Background(), b.response.TenantId, intent, material)
 	if err != nil || len(base.Facts.Architectures) != 0 || base.Facts.OriginalDtype != `{"decoder":"float16"}` {
 		t.Fatalf("ARCHITECTURE_DTYPE_DESCRIPTION_REQUIRED: %+v %v", base.Facts, err)
+	}
+}
+
+func TestLiveSourceOnlyReadDerivesBModelScopeFromPlatformBucket(t *testing.T) {
+	boundary, platform, intent, material := liveModelFixture(t)
+	tenant := "207328fc-f08d-4dc4-b403-16ec86396ce2"
+	boundary.response.TenantId = tenant
+	boundary.response.ObjectKey = tenant + "/models/base.tar"
+	boundary.response.Target = nil
+	platform.ApprovedPrefix = ""
+	reader, err := NewLive(boundary, platform, modelTestLimits)
+	if err != nil {
+		t.Fatal(err)
+	}
+	base, err := reader.ResolveFinetuningSourceFacts(context.Background(), tenant, *intent.BaseModelVersionID, material)
+	if err != nil || base.Scope.ApprovedPrefix != tenant || base.Object.Bucket != platform.Bucket || boundary.tenant != tenant {
+		t.Fatalf("B source-only model scope: %+v %v", base.Scope, err)
+	}
+	boundary.response.ObjectKey = "64c5c35a-f554-432c-b4bc-7b4f36f08420/models/base.tar"
+	if _, err = reader.ResolveFinetuningSourceFacts(context.Background(), tenant, *intent.BaseModelVersionID, material); err == nil {
+		t.Fatal("B read accepted A object")
 	}
 }

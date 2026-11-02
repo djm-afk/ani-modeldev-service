@@ -1,0 +1,47 @@
+{
+  "schema": "ani.modeldev.b4-exact-s3-target.v1",
+  "purpose": "LIVE09 A prepare STS cross-scope negative target",
+  "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+  "execution_id": "59f92b91-5e86-4dd1-90ec-cb1037756758",
+  "artifact_id": "2a4c5e05-5707-5a7f-9e0c-181a2f939c7e",
+  "filename": "training/adapter/adapter_model.safetensors",
+  "delivery_state_from_public_receipt": "PUBLISHED",
+  "target": {
+    "bucket": "ani-md-v21-output-01a15f47",
+    "key": "executions/207328fc-f08d-4dc4-b403-16ec86396ce2/59f92b91-5e86-4dd1-90ec-cb1037756758/training/adapter/adapter_model.safetensors",
+    "version_id": "dec3d751-6c3d-442f-8c21-8d921d9fa531",
+    "sha256": "c99f214957264a07c15ffd40f5ec1b96f1813dbb3d14a5320db249be9ae2f987",
+    "size_bytes": "1274720",
+    "storage_connection_id": "modeldev-newenv-rustfs-20261022"
+  },
+  "source_receipts": [
+    {
+      "path": ".scratch/modeldev-dynamic-tenant-environment/evidence/10/resumed-mainflow/readback-B-1793548972071555495.json",
+      "sha256": "76fc668e69dc32461f48063f15ae6a53403c4f531a6b3f1c5a1fb6afebf6e92d"
+    },
+    {
+      "path": ".scratch/modeldev-dynamic-tenant-environment/evidence/10/resumed-mainflow/download-B-1793549202671540591.json",
+      "sha256": "eb8ca8a1847bbb367fc38f8a490a64a67a84c770ac48ad12e38cb41e29c4ed6e"
+    }
+  ],
+  "object_metadata_read": {
+    "transport": "ssh kubercloud@100.64.128.12 direct, no proxy, no ControlMaster",
+    "helper_path": ".scratch/modeldev-dynamic-tenant-environment/evidence/10/resumed-mainflow/b4-original-close-read-node.py",
+    "helper_sha256": "523aa7d47ac29dc740b261086b669452b6800e7dda8d3e3e253fe55481f60ef4",
+    "functions_reused": [
+      "require",
+      "now",
+      "k",
+      "read"
+    ],
+    "database": "ani_modeldev_v21",
+    "query": "SELECT jsonb_build_object('tenant_id',tenant_id,'execution_id',execution_id,'publication_id',facts->'Publication'->>'ID','publication_verified_at',facts->'Publication'->>'VerifiedAt','artifact_id',f->>'ArtifactID','target',f->'Object') FROM modeldev_execution_runtimes CROSS JOIN LATERAL jsonb_array_elements(facts->'Publication'->'Files') f WHERE tenant_id='207328fc-f08d-4dc4-b403-16ec86396ce2' AND execution_id='59f92b91-5e86-4dd1-90ec-cb1037756758' AND f->>'ArtifactID'='2a4c5e05-5707-5a7f-9e0c-181a2f939c7e';",
+    "observed_at": "2026-11-01T16:54:01.049563+00:00",
+    "publication_id": "0b544060-f2f8-5fa9-bee5-e37a5420d5e4",
+    "publication_verified_at": "2026-11-01T16:00:44.178898804Z",
+    "persistent_mutations": false,
+    "secret_values_read": false,
+    "sts_called": false,
+    "token_request_called": false
+  }
+}

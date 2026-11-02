@@ -1,0 +1,50 @@
+{
+  "read_only": true,
+  "observed_at": "2026-10-31T19:14:27.420021+00:00",
+  "indices": [
+    "ani-logs-2026.10.29",
+    "ani-logs-2026.10.30"
+  ],
+  "auth_source": "existing ani-opensearch-admin Secret; no credential output",
+  "tls_verified": true,
+  "uid_container_binding_evidence": "open-live-metadata-log-hashes.json",
+  "query_limit": "one size=1 exact metadata/hash search per original container; no raw log output",
+  "queries": [],
+  "field_caps": {
+    "http_status": 200,
+    "response_bytes": 805,
+    "response_sha256": "f76a96ebb849534c5a200515f15c839abf9a63372c1b4ec4e3e1763a1cfc103f",
+    "fields": {
+      "kubernetes": [
+        "object"
+      ],
+      "@timestamp": [
+        "date"
+      ],
+      "kubernetes.container_name": [
+        "text"
+      ],
+      "kubernetes.pod_name": [
+        "text"
+      ],
+      "kubernetes.pod_name.keyword": [
+        "keyword"
+      ],
+      "kubernetes.namespace_name.keyword": [
+        "keyword"
+      ],
+      "kubernetes.namespace_name": [
+        "text"
+      ],
+      "kubernetes.container_name.keyword": [
+        "keyword"
+      ]
+    }
+  },
+  "selected_fields": {
+    "container_id": null,
+    "namespace": "kubernetes.namespace_name.keyword",
+    "pod_name": "kubernetes.pod_name.keyword"
+  },
+  "result": "BLOCKED_NO_EXACT_CONTAINER_MAPPING"
+}

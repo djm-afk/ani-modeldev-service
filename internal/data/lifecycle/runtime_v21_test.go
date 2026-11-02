@@ -16,6 +16,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
 )
 
@@ -42,10 +43,12 @@ func preparedRuntimeV21(t *testing.T, stepSeconds uint64) (func() *pgxpool.Pool,
 	i := s.IdentityRef
 	a := biz.Admission{TenantID: i.TenantID, Actor: i.Actor, OperationID: i.OperationID, ExecutionID: i.ExecutionID, Intent: intent, IntentHash: i.IntentHash, Snapshot: s, SpecHash: hash, AcceptedAt: accepted}
 	pool := open()
+	a = admissionfixture.EnsureEnvironment(t, pool, a)
+	s = a.Snapshot
 	if _, err := execution.New(pool).Accept(ctx, a); err != nil {
 		t.Fatal("accept", err)
 	}
-	dispatch, err := submission.New(pool).Reserve(ctx, biz.PipelineDispatchRequest{Admission: a, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-v21-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}})
+	dispatch, err := submission.New(pool).Reserve(ctx, biz.PipelineDispatchRequest{Admission: a, Owner: a.Snapshot.DispatchOwner})
 	if err != nil || dispatch.SendPermit == nil {
 		t.Fatal("dispatch", err)
 	}

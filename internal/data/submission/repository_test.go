@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
@@ -20,7 +20,7 @@ import (
 
 func TestReserveSubmissionCommitsOnePermitAcrossIndependentPools(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	expectedPlan, err := request.Freeze()
 	if err != nil {
 		t.Fatalf("invalid dispatch fixture: %v", err)
@@ -145,7 +145,7 @@ func assertFrozenDispatch(t *testing.T, got biz.PipelineDispatch, request biz.Pi
 	}
 }
 
-func validDispatchRequest(t *testing.T) biz.PipelineDispatchRequest {
+func validDispatchRequest(t *testing.T, pool *pgxpool.Pool) biz.PipelineDispatchRequest {
 	t.Helper()
 	snapshot := conformance.SnapshotV1()
 	acceptedAt := time.Now().UTC().Truncate(time.Microsecond)
@@ -156,12 +156,14 @@ func validDispatchRequest(t *testing.T) biz.PipelineDispatchRequest {
 		t.Fatalf("intent fixture: %v", err)
 	}
 	specHash := ""
-	return biz.PipelineDispatchRequest{
+	request := biz.PipelineDispatchRequest{
 		Admission: admissionfixture.Bind(t, biz.Admission{
 			TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42",
 			OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
 			Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: acceptedAt,
 		}),
-		Owner: biz.PipelineOwnerConfiguration{Reference: "cpu07-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"},
 	}
+	request.Admission = admissionfixture.EnsureEnvironment(t, pool, request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
+	return request
 }

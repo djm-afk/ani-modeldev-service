@@ -1,0 +1,34 @@
+=== RUN   TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed
+    complete_flow_test.go:66: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    complete_flow_test.go:69: WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary
+2026/11/01 03:04:23 INFO [gRPC] server listening addr=127.0.0.1:44329
+2026/11/01 03:04:23 INFO [gRPC] server stopping
+2026/11/01 03:04:23 INFO [gRPC] server listening addr=127.0.0.1:42207
+2026/11/01 03:04:23 INFO [gRPC] server listening addr=127.0.0.1:33055
+    complete_flow_test.go:191: MAIN_FLOW: Governance mTLS command -> durable inbox -> one KFP CreateRun -> authenticated Begin
+    complete_flow_test.go:270: MAIN_FLOW: fixed S3 CSV actual bytes verified and prepared workspace committed
+    complete_flow_test.go:169: MAIN_FLOW_FAILURE: trainjob_creates=0 actual_process_started=false process_error=<nil> runtime=&{Name:mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529 NamespaceUID:9aea935b-fd36-5eea-8aea-0cbe26371889 ExpectedSpecSHA256:61f84be489e96c84144299dc101d5f2332aca2df563ee49587d8965f5ff2645a Attempts:[{DispatchedAt:2026-10-31 19:05:06.426148 +0000 UTC NotSentAt:<nil> NotSentReason:}] Binding:<nil> ReviewReason: NextAction:} training_reserved=false handle_recorded=false observation=<nil> state_read_error=<nil>
+    complete_flow_test.go:170: component train-wait failed: rpc error: code = Unauthenticated desc = managed workload authentication failed
+2026/11/01 03:10:23 INFO [gRPC] server stopping
+2026/11/01 03:10:23 INFO [gRPC] server stopping
+--- FAIL: TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed (364.37s)
+=== RUN   TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication
+    complete_flow_test.go:66: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    complete_flow_test.go:69: WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary
+2026/11/01 03:10:28 INFO [gRPC] server listening addr=127.0.0.1:39785
+2026/11/01 03:10:28 INFO [gRPC] server stopping
+2026/11/01 03:10:28 INFO [gRPC] server listening addr=127.0.0.1:35781
+    complete_flow_test.go:191: MAIN_FLOW: Governance mTLS command -> durable inbox -> one KFP CreateRun -> authenticated Begin
+    complete_flow_test.go:242: failed original Workflow did not close through its owner: {Examined:1 Closed:0 Unresolved:1 LastError:KFP_MANAGED_RUN_UNVERIFIED} <nil>
+2026/11/01 03:10:59 INFO [gRPC] server stopping
+--- FAIL: TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication (36.21s)
+=== RUN   TestManagedStorageCredentialsRequireCurrentExecutionAuthorityAndRefuseCloseRefresh
+    storage_credentials_flow_test.go:56: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 03:11:00 INFO [gRPC] server listening addr=127.0.0.1:35991
+2026/11/01 03:11:00 INFO [gRPC] server stopping
+2026/11/01 03:11:00 INFO [gRPC] server listening addr=127.0.0.1:36209
+2026/11/01 03:11:17 INFO [gRPC] server stopping
+--- PASS: TestManagedStorageCredentialsRequireCurrentExecutionAuthorityAndRefuseCloseRefresh (17.87s)
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	418.474s
+FAIL

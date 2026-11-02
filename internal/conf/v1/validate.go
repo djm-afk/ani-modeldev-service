@@ -65,8 +65,8 @@ func (c *Bootstrap) Validate() error {
 		return fmt.Errorf("grpc and admin listeners must use distinct ports")
 	}
 	if c.Runtime != nil {
-		if c.Command == nil {
-			return fmt.Errorf("managed runtime requires the durable command connection")
+		if c.Command == nil || c.Command.AdmissionResolution == nil {
+			return fmt.Errorf("managed runtime requires the durable command connection and platform catalogue")
 		}
 		if err := validateManagedRuntime(c.Runtime, grpcPort, adminPort); err != nil {
 			return err
@@ -90,7 +90,7 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 	if port == commandPort || port == adminPort {
 		return fmt.Errorf("managed step listener requires a separate port")
 	}
-	for _, reference := range []string{config.CertificateFile, config.PrivateKeyFile, config.BindingFile, config.Kubernetes.CaFile, config.Kubernetes.TokenFile, config.Pipeline.CaFile, config.Pipeline.TokenFile, config.ObjectStorage.CaFile, config.ObjectStorage.CredentialsFile} {
+	for _, reference := range []string{config.CertificateFile, config.PrivateKeyFile, config.TenantEnvironmentFile, config.Kubernetes.CaFile, config.Kubernetes.TokenFile, config.Pipeline.CaFile, config.Pipeline.TokenFile, config.ObjectStorage.CaFile, config.ObjectStorage.CredentialsFile} {
 		if !filepath.IsAbs(reference) || filepath.Clean(reference) != reference || strings.ContainsRune(reference, 0) {
 			return fmt.Errorf("managed runtime materials require absolute file references")
 		}
@@ -101,8 +101,8 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 			return fmt.Errorf("managed runtime requires explicit HTTPS endpoints")
 		}
 	}
-	if len(config.BindingSha256) != 64 || strings.Trim(config.BindingSha256, "0123456789abcdef") != "" || config.TokenAudience == "" || len(config.TokenAudience) > 2048 || strings.ContainsAny(config.TokenAudience, " \t\r\n") {
-		return fmt.Errorf("managed runtime requires a pinned binding and token audience")
+	if len(config.TenantEnvironmentSha256) != 64 || strings.Trim(config.TenantEnvironmentSha256, "0123456789abcdef") != "" || config.TokenAudience == "" || len(config.TokenAudience) > 2048 || strings.ContainsAny(config.TokenAudience, " \t\r\n") {
+		return fmt.Errorf("managed runtime requires a pinned platform provision spec and token audience")
 	}
 	if config.ObjectStorage.ConnectionId == "" || config.ObjectStorage.Region == "" {
 		return fmt.Errorf("managed storage requires connection and region")
@@ -118,8 +118,8 @@ func validateManagedRuntime(config *ManagedRuntime, commandPort, adminPort int) 
 	if err := validateDuration("dispatch interval", config.DispatchInterval, time.Minute); err != nil {
 		return err
 	}
-	if config.DispatchInterval.AsDuration() < 100*time.Millisecond || config.DispatchBatchSize == 0 || config.DispatchBatchSize > 100 {
-		return fmt.Errorf("dispatch requires interval at least 100ms and batch size 1..100")
+	if config.DispatchInterval.AsDuration() < time.Second {
+		return fmt.Errorf("dispatch requires interval at least one second; discovery bounds are fixed")
 	}
 	return nil
 }
@@ -189,7 +189,7 @@ func validateModelConnection(config *ModelConnection) error {
 		return fmt.Errorf("model connection requires original base-model storage authority")
 	}
 	scope := config.BaseModelStorageScope
-	if (cpup01.StorageScope{StorageConnectionID: scope.ConnectionId, Bucket: scope.Bucket, ApprovedPrefix: scope.ApprovedPrefix, CredentialReference: scope.CredentialReference}).Validate() != nil {
+	if (cpup01.StorageScope{StorageConnectionID: scope.ConnectionId, Bucket: scope.Bucket, ApprovedPrefix: "tenant-scope-validation", CredentialReference: scope.CredentialReference}).Validate() != nil {
 		return fmt.Errorf("model connection requires valid base-model storage authority")
 	}
 	return validateDuration("model connection", config.Timeout, maximumModelOperationTimeout)
@@ -201,14 +201,6 @@ func validateAdmissionResolution(config *AdmissionResolution) error {
 	}
 	if !validReference(config.CatalogueDirectory) {
 		return fmt.Errorf("admission catalogue requires an absolute directory reference")
-	}
-	if len(config.FactsFiles) == 0 || len(config.FactsFiles) > 64 {
-		return fmt.Errorf("admission requires 1..64 explicitly pinned facts files")
-	}
-	for _, file := range config.FactsFiles {
-		if file == nil || !validReference(file.Path) || len(file.Sha256) != 64 || strings.Trim(file.Sha256, "0123456789abcdef") != "" {
-			return fmt.Errorf("admission facts require absolute file references and lowercase SHA256 pins")
-		}
 	}
 	return nil
 }

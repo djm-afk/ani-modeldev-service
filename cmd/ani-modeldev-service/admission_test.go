@@ -6,12 +6,10 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
-	"encoding/json"
 	"io"
 	"net"
 	"net/url"
 	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -20,13 +18,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -38,12 +36,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestConfiguredAdmissionResolvesPinnedFilesAndDurableReadyInput(t *testing.T) {
+func TestConfiguredAdmissionResolvesReadyEnvironmentAndDurableReadyInput(t *testing.T) {
 	fixture := prepareConfiguredAdmission(t)
 	connection, stop := startConfiguredAdmissionApp(t, fixture)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	t.Log("ADMISSION_STARTUP_PREFLIGHT PASS: real catalogue and pinned facts files, recovered READY PostgreSQL input, actual buildApp mTLS listener")
+	t.Log("ADMISSION_STARTUP_PREFLIGHT PASS: real immutable catalogue, Ensure-sealed READY environment, recovered READY PostgreSQL input, actual buildApp mTLS listener")
 	beforeRequest := proto.Clone(fixture.request)
 	rpcContext := metadata.NewOutgoingContext(ctx, metadata.Pairs(
 		"x-ani-tenant-id", fixture.tenantID, "x-ani-actor", "governance:user:42", "x-ani-request-id", uuid.NewString(),
@@ -64,7 +62,7 @@ func TestConfiguredAdmissionResolvesPinnedFilesAndDurableReadyInput(t *testing.T
 	}
 	canonical, err := snapshot.Canonical()
 	if err != nil || !bytes.Equal(canonical, fixture.wantCanonical) || response.ExecutionSpecHash != fixture.wantHash {
-		t.Fatalf("ADMISSION_STARTUP_BEHAVIOR: startup dependencies did not produce the complete independently expected snapshot and hash: %v", err)
+		t.Fatalf("ADMISSION_STARTUP_BEHAVIOR: startup dependencies did not produce the complete expected environment-bound snapshot and hash: %v", err)
 	}
 	if !proto.Equal(fixture.request, beforeRequest) {
 		t.Fatal("ADMISSION_STARTUP_BEHAVIOR: startup resolution changed the caller's request")
@@ -188,21 +186,14 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	applicationName := connection.Query().Get("application_name")
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	material, seed := conformance.MaterialV21(), conformance.SnapshotV1()
+	seed := runtimeFixture.admission.Snapshot
 	config.Runtime.Limits.MaxContentBytes = seed.Limits.MaxContentBytes
-	directory := t.TempDir()
-	materialBytes, err := material.Canonical()
+	directory := runtimeFixture.environment.MaterialsDirectory
+	material, err := catalogue.ReadImplementationMaterial(ctx, directory, "builtin.mlp", "cpu")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: actual finite software material read failed", err)
 	}
-	if err = os.WriteFile(filepath.Join(directory, "builtin.mlp.cpu.json"), materialBytes, 0600); err != nil {
-		t.Fatal(err)
-	}
-	loadedMaterial, err := catalogue.ReadImplementationMaterial(ctx, directory, "builtin.mlp", "cpu")
-	if err != nil || !reflect.DeepEqual(loadedMaterial, material) {
-		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: actual finite software material read failed")
-	}
-	imported := biz.InputImport{TenantID: runtimeFixture.admission.TenantID, RequestID: uuid.NewString(), InputVersionID: seed.Input.InputVersionID, Format: "CSV", Actor: "governance:user:42", RequestedAt: time.Now().UTC().Truncate(time.Microsecond).Add(-time.Minute), Scope: cpup01.StorageScope{StorageConnectionID: seed.Input.Object.StorageConnectionID, Bucket: seed.Input.Object.Bucket, ApprovedPrefix: "fixed/input"}, Object: seed.Input.Object}
+	imported := biz.InputImport{TenantID: runtimeFixture.admission.TenantID, RequestID: uuid.NewString(), InputVersionID: seed.Input.InputVersionID, Format: "CSV", Actor: "governance:user:42", RequestedAt: time.Now().UTC().Truncate(time.Microsecond).Add(-time.Minute), Scope: cpup01.StorageScope{StorageConnectionID: seed.Input.Object.StorageConnectionID, Bucket: seed.Input.Object.Bucket, ApprovedPrefix: "inputs/" + runtimeFixture.admission.TenantID}, Object: seed.Input.Object}
 	writer := openPool()
 	repository := input.New(writer)
 	if _, err = repository.FreezeImport(ctx, imported); err != nil {
@@ -220,17 +211,15 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	if err != nil || !reflect.DeepEqual(recovered, ready) {
 		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: fresh connection cannot recover READY")
 	}
-	facts := biz.TenantAdmissionFacts{TenantID: imported.TenantID, Environment: seed.Environment, InputScope: imported.Scope, PublicationScope: seed.PublicationScope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}}
-	source := writeConfiguredAdmissionFacts(t, material, facts)
-	reader, err := admissionfacts.Load(ctx, []admissionfacts.FileSource{source})
+	reader, err := admissionfacts.New(tenantenvironment.NewRepository(openPool()), runtimeFixture.environment.Platform, catalogue.NewReader(directory), seed.Environment.ClusterID)
 	if err != nil {
-		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed", err)
+		t.Fatal(err)
 	}
-	loaded, err := reader.ReadAdmissionFacts(ctx, imported.TenantID, "builtin.mlp")
-	if err != nil || !reflect.DeepEqual(loaded, facts) {
-		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: pinned facts differ from authored facts")
+	facts, err := reader.ReadAdmissionFacts(ctx, imported.TenantID, "builtin.mlp")
+	if err != nil {
+		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: actual READY environment read", err)
 	}
-	config.Command.AdmissionResolution = &conf.AdmissionResolution{CatalogueDirectory: directory, FactsFiles: []*conf.AdmissionFactsFile{{Path: source.Path, Sha256: source.SHA256}}}
+	config.Command.AdmissionResolution = &conf.AdmissionResolution{CatalogueDirectory: directory}
 	rate := "0.0200"
 	intent := cpup01.Intent{Name: "configured-admission", Kind: "GENERAL_TRAINING", ImplementationID: "builtin.mlp", ComputePresetID: seed.ComputeOrigin.ComputePresetID, DatasetVersionID: imported.InputVersionID, MLP: &cpup01.MLPParameters{LearningRate: &rate}}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
@@ -243,15 +232,23 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	}
 	acceptedAt := time.Now().UTC().Truncate(time.Microsecond)
 	identity := cpup01.IdentityRef{TenantID: imported.TenantID, Actor: imported.Actor, OperationID: "88888888-8888-4888-8888-888888888888", ExecutionID: "99999999-9999-4999-8999-999999999999", IntentHash: intentHash}
-	// Expected facts are authored from the independent material/input facts and
-	// full literal Runtime spec below. No resolver/compiler/RPC result is reused.
+	// Freeze independently read catalogue/input/environment facts and authored
+	// program parameters. Runtime plan correctness has its own compiler contract tests.
 	want := seed
 	want.IdentityRef = identity
 	want.Program.ResolvedParameters = []cpup01.Parameter{{Name: "batch_size", Type: "INTEGER", Value: "64"}, {Name: "epochs", Type: "INTEGER", Value: "3"}, {Name: "learning_rate", Type: "DECIMAL", Value: "0.02"}, {Name: "seed", Type: "INTEGER", Value: "42"}}
 	want.Program.ResolvedArgs = []string{"--dataset-manifest", "/inputs/dataset-manifest.json", "--expected-dataset-manifest-sha256", "8c9f127ef9e0450d3945aee643366e253574a97c3ead985a87e3f9e3617e75ed", "--work-root", "/workspace/work/train", "--output", "/outputs", "--learning-rate", "0.02", "--epochs", "3", "--batch-size", "64", "--seed", "42"}
 	want.Timing = cpup01.Timing{AcceptedAt: acceptedAt, ExecutionTimeoutSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900, ExecutionDeadlineAt: acceptedAt.Add(time.Hour)}
 	want.DeadlineAt = want.Timing.ExecutionDeadlineAt
-	want.RuntimePlan = independentConfiguredRuntime(t)
+	want.Implementation = material.Implementation
+	want.Environment, want.ManagedImageAccess, want.PublicationScope, want.Workspace = facts.Environment, facts.ManagedImageAccess, facts.PublicationScope, facts.Workspace
+	want.DispatchOwner = facts.DispatchOwner
+	want.DispatchOwner.PipelineRoot += "/" + identity.ExecutionID
+	want.TrainingImage.PullSecretRef, _ = cpup01.PullSecretName(identity.TenantID, facts.Environment.ClusterID, facts.Environment.NamespaceName, want.TrainingImage.RegistryAuthority)
+	want.RuntimePlan, err = biz.CompileRuntimePlan(want)
+	if err != nil {
+		t.Fatal(err)
+	}
 	canonical, err := want.Canonical()
 	if err != nil {
 		t.Fatal("ADMISSION_STARTUP_PREFLIGHT: independent complete expectation invalid", err)
@@ -259,53 +256,6 @@ func prepareConfiguredAdmission(t *testing.T) configuredAdmissionFixture {
 	digest := sha256.Sum256(canonical)
 	request := &modeldevv1.PrepareAdmissionRequest{Intent: wireIntent, IdentityRef: &modeldevv1.IdentityRef{TenantId: identity.TenantID, Actor: identity.Actor, OperationId: identity.OperationID, ExecutionId: identity.ExecutionID, IntentHash: intentHash}, AcceptedAt: timestamppb.New(acceptedAt), ComputeSelectionCanonical: []byte(seed.ComputeOrigin.SelectionJSON), SelectionDigest: seed.ComputeOrigin.SelectionDigest}
 	return configuredAdmissionFixture{config: config, openPool: openPool, certificates: certificates, applicationName: applicationName, tenantID: imported.TenantID, ready: ready, request: request, wantCanonical: canonical, wantHash: hex.EncodeToString(digest[:]), wantSnapshot: want, material: material}
-}
-
-func independentConfiguredRuntime(t *testing.T) cpup01.RuntimePlan {
-	t.Helper()
-	const literal = `{"mlPolicy":{"numNodes":1},"podGroupPolicy":{"volcano":{}},"template":{"metadata":{"annotations":{"scheduling.volcano.sh/queue-name":"default"}},"spec":{"failurePolicy":{"maxRestarts":0,"restartStrategy":"Recreate"},"replicatedJobs":[{"groupName":"default","name":"node","replicas":1,"template":{"metadata":{"labels":{"trainer.kubeflow.org/trainjob-ancestor-step":"trainer"}},"spec":{"activeDeadlineSeconds":900,"backoffLimit":0,"completionMode":"Indexed","completions":1,"parallelism":1,"template":{"metadata":{"finalizers":["modeldev.ani.io/training-exit-evidence"]},"spec":{"automountServiceAccountToken":false,"containers":[{"args":["--dataset-manifest","/inputs/dataset-manifest.json","--expected-dataset-manifest-sha256","8c9f127ef9e0450d3945aee643366e253574a97c3ead985a87e3f9e3617e75ed","--work-root","/workspace/work/train","--output","/outputs","--learning-rate","0.02","--epochs","3","--batch-size","64","--seed","42"],"command":["python","/opt/mlp/train.py"],"env":[{"name":"TMPDIR","value":"/workspace/work/train/tmp"},{"name":"HF_HOME","value":"/workspace/work/train/hf"},{"name":"HF_DATASETS_CACHE","value":"/workspace/work/train/hf/datasets"},{"name":"MPLCONFIGDIR","value":"/workspace/work/train/matplotlib"}],"image":"registry.example.test/cpu/mlp@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","imagePullPolicy":"IfNotPresent","name":"node","resources":{"limits":{"cpu":"1","memory":"1Gi"},"requests":{"cpu":"1","memory":"1Gi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true},"volumeMounts":[{"mountPath":"/inputs","name":"input","readOnly":true,"subPath":"inputs"},{"mountPath":"/outputs","name":"output","readOnly":false,"subPath":"training"},{"mountPath":"/workspace/work/train","name":"work","readOnly":false,"subPath":"work/train"}]}],"restartPolicy":"Never","schedulerName":"volcano","securityContext":{"fsGroup":10001,"runAsGroup":10001,"runAsNonRoot":true,"runAsUser":10001,"seccompProfile":{"type":"RuntimeDefault"}},"serviceAccountName":"cpu-training","terminationGracePeriodSeconds":5,"volumes":[{"name":"input","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}},{"name":"output","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}},{"name":"work","persistentVolumeClaim":{"claimName":"ani-kfp-workspace-99999999-9999-4999-8999-999999999999"}}]}}}}}]}}}`
-	var object any
-	if err := json.Unmarshal([]byte(literal), &object); err != nil {
-		t.Fatal(err)
-	}
-	raw, err := json.Marshal(object)
-	if err != nil {
-		t.Fatal(err)
-	}
-	digest := sha256.Sum256(raw)
-	return cpup01.RuntimePlan{GeneratorVersion: "ani.modeldev.runtime.v1", APIGroup: "trainer.kubeflow.org", Kind: "TrainingRuntime", Namespace: "cpu-contract-fixture", Name: cpup01.RuntimeName("33333333-3333-4333-8333-333333333333", "99999999-9999-4999-8999-999999999999"), ExpectedSpec: raw, ExpectedSpecSHA256: hex.EncodeToString(digest[:]), DefaultingRules: "trainer-2.1.0-jobset-explicit-v1", TargetJobs: []string{"node"}}
-}
-
-func writeConfiguredAdmissionFacts(t *testing.T, material cpup01.ImplementationMaterial, facts biz.TenantAdmissionFacts) admissionfacts.FileSource {
-	t.Helper()
-	type evidence struct {
-		Reference string `json:"reference"`
-		SHA256    string `json:"sha256"`
-	}
-	document := struct {
-		SchemaVersion       string                            `json:"schema_version"`
-		ResourceTenantID    string                            `json:"resource_tenant_id"`
-		ImplementationID    string                            `json:"implementation_id"`
-		Environment         cpup01.EnvironmentBindingSnapshot `json:"environment"`
-		InputScope          cpup01.StorageScope               `json:"input_scope"`
-		PublicationScope    cpup01.StorageScope               `json:"publication_scope"`
-		Timing              cpup01.TimingConfiguration        `json:"timing"`
-		Workspace           cpup01.WorkspaceContract          `json:"workspace"`
-		InputFilePath       string                            `json:"input_file_path"`
-		OutputDirectoryPath string                            `json:"output_directory_path"`
-		EnvironmentEvidence evidence                          `json:"environment_evidence"`
-		ApplicationEvidence evidence                          `json:"application_evidence"`
-	}{SchemaVersion: "ani.modeldev.managed-admission-facts.v3", ResourceTenantID: facts.TenantID, ImplementationID: material.Implementation.ImplementationID, Environment: facts.Environment, InputScope: facts.InputScope, PublicationScope: facts.PublicationScope, Timing: facts.Timing, Workspace: facts.Workspace, InputFilePath: facts.InputFilePath, OutputDirectoryPath: facts.OutputDirectoryPath, EnvironmentEvidence: evidence{Reference: "module-fixture:startup-environment", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, ApplicationEvidence: evidence{Reference: "module-fixture:startup-application", SHA256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}}
-	raw, err := json.Marshal(document)
-	if err != nil {
-		t.Fatal(err)
-	}
-	file := filepath.Join(t.TempDir(), "managed-admission-facts.json")
-	if err = os.WriteFile(file, raw, 0600); err != nil {
-		t.Fatal(err)
-	}
-	digest := sha256.Sum256(raw)
-	return admissionfacts.FileSource{Path: file, SHA256: hex.EncodeToString(digest[:])}
 }
 
 func countConfiguredAdmissionConnections(t *testing.T, observer *pgxpool.Pool, applicationName string) int {

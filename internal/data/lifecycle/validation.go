@@ -63,11 +63,17 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 			return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 		}
 		previous, existed := history[resource.UID]
+		if resource.AdmissionAbort != nil && !resource.TrainingAdmissionAbortedAt(observation.ObservedAt) {
+			return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+		}
 		if existed {
 			if previous.APIVersion != resource.APIVersion || previous.Kind != resource.Kind || previous.Namespace != resource.Namespace || previous.Name != resource.Name || previous.OwnerUID != resource.OwnerUID || previous.Terminal && !resource.Terminal {
 				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 			}
 			if previous.ExitCode != nil && (resource.ExitCode == nil || *previous.ExitCode != *resource.ExitCode) {
+				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
+			}
+			if previous.AdmissionAbort != nil && !reflect.DeepEqual(previous.AdmissionAbort, resource.AdmissionAbort) {
 				return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 			}
 			if previous.TrainingLog != nil && !reflect.DeepEqual(previous.TrainingLog, resource.TrainingLog) {
@@ -95,7 +101,7 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 	for _, resource := range history {
 		// Aborted initialization or sandbox termination proves only an owner-controlled KFP Pod. It
 		// cannot replace any training controller or writer exit observation.
-		if resource.InitializationAbort != nil || resource.SandboxTermination != nil {
+		if resource.InitializationAbort != nil || resource.SandboxTermination != nil || resource.AdmissionAbort != nil && !resource.TrainingAdmissionAbortedAt(observation.ObservedAt) {
 			return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 		}
 		switch resource.Kind {
@@ -131,7 +137,7 @@ func mergeObservation(state biz.ExecutionRuntime, observation biz.TrainingRuntim
 			return biz.TrainingRuntimeObservation{}, biz.ErrRuntimeConflict
 		}
 		if resource.Kind == "Pod" {
-			if !resource.Terminal || resource.ExitCode == nil {
+			if !resource.Terminal || resource.ExitCode == nil && !resource.TrainingAdmissionAbortedAt(observation.ObservedAt) {
 				allTerminal = false
 			}
 		} else if !resource.Terminal && !resource.CreationDisabled {
@@ -274,6 +280,9 @@ func validCloseEvidence(authority biz.RunAuthorityCandidate, reason string, evid
 	}
 	seen := make(map[string]bool, len(evidence.Resources))
 	for _, resource := range evidence.Resources {
+		if resource.AdmissionAbort != nil {
+			return false // Training-only proof cannot authorize a KFP step.
+		}
 		if !validOpaqueID(resource.UID) || seen[resource.UID] || resource.APIVersion != "v1" || resource.Kind != "Pod" || resource.Namespace != authority.NamespaceName || len(validation.IsDNS1123Subdomain(resource.Name)) != 0 || resource.OwnerUID != authority.WorkflowUID || !resource.APIObjectPresent || !resource.Terminal {
 			return false
 		}

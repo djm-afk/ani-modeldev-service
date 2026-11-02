@@ -1,0 +1,22 @@
+{
+  "schema": "ani.modeldev.native-rbac-tested-release-source-equivalence.v1",
+  "observed_at": "2026-11-01T05:20:54.930334+00:00",
+  "release_commit": "d423ff9b31b1097ae972e346353e36dc7f0289d8",
+  "release_branch": "codex/modeldev-tenantenv-native-rbac-20261101",
+  "source_tree": "1772c45a996c400dc79231cf4eb53c13a3696e9e",
+  "tested_source_manifest": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/09/native-sa-rbac-source/fullverify-source-before.json",
+  "tested_source_manifest_sha256": "cde9680bf0f331ba659048bdad353863f72f30330bf416ef094c4301ed7f9f78",
+  "tested_source_count": 1756,
+  "committed_source_count": 1756,
+  "committed_paths_equal_tested": true,
+  "local_post_commit_mismatches": [],
+  "worktree_diff_from_commit_empty": true,
+  "required_gate_result": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/09/native-sa-rbac-source/result.json",
+  "required_gate_result_sha256": "475c9360ec39054880ad1c912de1e3d35c20eede24dd4ca946a7d0898b225b1d",
+  "gate_log_path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/09/native-sa-rbac-source/modeldev-native-rbac-fullverify-20261101T045658Z.sequential.make-verify.log",
+  "gate_log_sha256": "745bf305ec61ea2c94600e87ab6b982e8da7e15271f9992183699e7f3169cfd9",
+  "precommit_gate_finished_at": "2026-11-01T05:18:06.753182+00:00",
+  "transport": "SSH normal fast-forward push; new immutable release ref; originalf22ref retained",
+  "api_consumers": "No protobuf/SDK contract change; existing pinned Governance d807 API remains valid",
+  "real_deployment_or_ab": "NOT_RUN by this source equivalence"
+}

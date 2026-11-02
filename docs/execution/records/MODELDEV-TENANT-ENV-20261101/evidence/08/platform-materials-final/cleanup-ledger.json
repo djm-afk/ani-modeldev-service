@@ -1,0 +1,26 @@
+{
+  "schema": "ani.modeldev.material-preparation-cleanup.v1",
+  "updated_at": "2026-11-01T02:39:28.307644+00:00",
+  "new_global_tools_installed": false,
+  "original_tools_retained": [
+    "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/kfp-resource-venv",
+    "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64"
+  ],
+  "task_private_root": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101",
+  "temporary_renderer": {
+    "path": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+    "sha256": "e4fb94044a470de18758e883cda00ef9c056645788508ed50208eddeea954097",
+    "bytes": 16698528,
+    "status": "RETAIN_NEEDED_FOR_LATER_REAL_PUBLISHED_MATERIAL_CANONICAL_RENDER_THEN_REMOVE"
+  },
+  "prepared_materials_and_source": "RETAIN_IMMUTABLE_PREPARED_IR_INPUTS_UNTIL_PUBLICATION_AND_SEAL",
+  "node_ephemeral_containers": {
+    "cpu": "ani-md-d807-material-inspect-cpu-20261101-8f6ba4",
+    "gpu": "ani-md-d807-material-inspect-gpu-20261101-8f6ba4",
+    "cleanup": "BOTH_ABSENT_AFTER_CTR_RUN_RM",
+    "evidence": "final-runtime-capabilities.json"
+  },
+  "tokens_credentials_files_created": false,
+  "node_new_tools_installed": false,
+  "shared_ssh_cm": "Parent owns closure; not modified"
+}

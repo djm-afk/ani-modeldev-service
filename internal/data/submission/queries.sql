@@ -24,8 +24,7 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
 RETURNING owner_revision;
 
 -- name: GetAdmission :one
-SELECT tenant_id, execution_id, operation_id, actor,
-    intent_canonical, intent_hash, snapshot_canonical, spec_hash, accepted_at
+SELECT *
 FROM modeldev_executions
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND execution_id = sqlc.arg(execution_id)::uuid;
@@ -207,27 +206,27 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
 RETURNING tenant_id, execution_id, operation_id, spec_hash, attempt_id,
     plan_canonical, plan_hash, state, reserved_at, uncertain_at, not_sent_at;
 
--- A trusted worker selects one explicit tenant/environment owner binding.
--- This read grants no sending permission; Reserve repeats all creation checks
--- under the shared identity lock before its sole permit can reach KFP.
+-- Discovery grants no sending permission. Reserve is still authoritative.
+-- name: ListPendingDispatchTenants :many
+SELECT DISTINCT a.tenant_id
+FROM modeldev_executions AS a
+JOIN modeldev_execution_identities AS i ON i.tenant_id=a.tenant_id AND i.execution_id=a.execution_id AND i.operation_id=a.operation_id AND i.spec_hash=a.spec_hash
+WHERE a.cluster_id=sqlc.arg(cluster_id)::uuid AND i.close_generation=0
+ AND a.deadline_at>statement_timestamp()
+ AND NOT EXISTS(SELECT 1 FROM modeldev_pipeline_dispatches d WHERE d.tenant_id=a.tenant_id AND d.execution_id=a.execution_id)
+ AND (sqlc.narg(after_tenant_id)::uuid IS NULL OR a.tenant_id>sqlc.narg(after_tenant_id)::uuid)
+ORDER BY a.tenant_id LIMIT sqlc.arg(batch_size)::integer;
+
+-- name: DispatchDiscoveryTime :one
+SELECT clock_timestamp()::timestamptz AS sweep_before;
+
 -- name: ListPendingAdmissions :many
-SELECT admitted.tenant_id, admitted.execution_id, admitted.operation_id,
-    admitted.actor, admitted.intent_canonical, admitted.intent_hash,
-    admitted.snapshot_canonical, admitted.spec_hash, admitted.accepted_at
-FROM modeldev_executions AS admitted
-JOIN modeldev_execution_identities AS identity
-  ON identity.tenant_id = admitted.tenant_id
- AND identity.execution_id = admitted.execution_id
- AND identity.operation_id = admitted.operation_id
- AND identity.spec_hash = admitted.spec_hash
-WHERE admitted.tenant_id = sqlc.arg(tenant_id)::uuid
-  AND identity.close_generation = 0
-  AND (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'environment') = sqlc.arg(environment)::jsonb
-  AND (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz > clock_timestamp()
-  AND NOT EXISTS (
-      SELECT 1 FROM modeldev_pipeline_dispatches AS dispatch
-      WHERE dispatch.tenant_id = admitted.tenant_id
-        AND dispatch.execution_id = admitted.execution_id
-  )
-ORDER BY admitted.accepted_at, admitted.execution_id
-LIMIT sqlc.arg(batch_size)::integer;
+SELECT a.*
+FROM modeldev_executions AS a
+JOIN modeldev_execution_identities AS i ON i.tenant_id=a.tenant_id AND i.execution_id=a.execution_id AND i.operation_id=a.operation_id AND i.spec_hash=a.spec_hash
+WHERE a.cluster_id=sqlc.arg(cluster_id)::uuid AND i.close_generation=0
+ AND a.deadline_at>statement_timestamp()
+ AND NOT EXISTS(SELECT 1 FROM modeldev_pipeline_dispatches d WHERE d.tenant_id=a.tenant_id AND d.execution_id=a.execution_id)
+ AND a.tenant_id=sqlc.arg(tenant_id)::uuid AND a.accepted_at<=sqlc.arg(sweep_before)::timestamptz
+ AND (sqlc.narg(after_execution_id)::uuid IS NULL OR (a.accepted_at,a.execution_id)>(sqlc.narg(after_accepted_at)::timestamptz,sqlc.narg(after_execution_id)::uuid))
+ORDER BY a.accepted_at,a.execution_id LIMIT sqlc.arg(batch_size)::integer;

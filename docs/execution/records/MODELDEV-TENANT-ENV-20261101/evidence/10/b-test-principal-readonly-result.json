@@ -1,0 +1,6 @@
+{
+  "status": "FAIL",
+  "reason": "HTTP_400",
+  "automatic_retry": false,
+  "ssh_exit": 1
+}

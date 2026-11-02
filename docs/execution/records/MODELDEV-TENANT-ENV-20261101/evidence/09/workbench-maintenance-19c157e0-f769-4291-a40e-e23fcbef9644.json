@@ -1,0 +1,15 @@
+{
+  "status": "POST_OUTCOME_UNKNOWN",
+  "selection": {
+    "project": "governance",
+    "branch": "codex/modeldev-create-maintenance",
+    "commit": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+    "environment": "ani-kcn-full",
+    "harbor": "intranet",
+    "run_verify": false,
+    "request_id": "19c157e0-f769-4291-a40e-e23fcbef9644"
+  },
+  "reason": "HTTPError",
+  "http_status": 500,
+  "instruction": "Do not resubmit; query the same request_id."
+}

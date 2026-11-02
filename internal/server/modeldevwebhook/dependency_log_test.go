@@ -86,7 +86,7 @@ func TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed(t *testin
 				ctx, cancel = context.WithDeadline(ctx, time.Now().Add(-time.Second))
 			}
 			defer cancel()
-			raw, err := json.Marshal(request(t, config, "sft-v1", "export"))
+			raw, err := json.Marshal(request(t, config, "modeldev-sft-lora-cpu", "export"))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -113,7 +113,7 @@ func TestDependencyAdmissionFailureLogsOnlyBoundedStageClassAndElapsed(t *testin
 					t.Fatalf("unapproved diagnostic key %q", key)
 				}
 			}
-			for _, private := range []string{secret, "api.invalid", namespaceUID, workflowUID, runID, requestUID, "test-tenant", "/workspace"} {
+			for _, private := range []string{secret, "api.invalid", namespaceUID, workflowUID, runID, requestUID, "tenant-9a1f3c62-4b7d-4e05-8c31-2d6f5b0e7a48", "/workspace"} {
 				if strings.Contains(logs.String(), private) {
 					t.Fatalf("private error or identity logged: %s", logs.String())
 				}
@@ -130,7 +130,7 @@ func TestAdmissionSuccessAndPolicyDenialDoNotAcquireDependencyDiagnosticFields(t
 		if err != nil {
 			t.Fatal(err)
 		}
-		body := request(t, config, "sft-v1", "export")
+		body := request(t, config, "modeldev-sft-lora-cpu", "export")
 		if deny {
 			body.Request.UserInfo.Username = "foreign-creator"
 		}

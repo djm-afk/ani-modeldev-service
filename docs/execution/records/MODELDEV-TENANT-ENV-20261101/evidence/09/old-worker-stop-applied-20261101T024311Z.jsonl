@@ -1,0 +1,1011 @@
+{"event": "original_worker_scale_zero_acknowledged", "observed_at": "2026-11-01T02:43:11.442055+00:00", "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3", "resource_version": "20910745", "replicas": 0, "only_replicas_changed": true}
+{
+  "event": "original_worker_stop_receipt",
+  "receipt": {
+    "observed_at": "2026-11-01T02:43:13.633966+00:00",
+    "before": {
+      "observed_at": "2026-11-01T02:43:11.355866+00:00",
+      "identity": {
+        "ssh": "kubercloud@100.64.128.12",
+        "context": "kubernetes-admin@ani-kcn-full",
+        "apiserver": "https://lb.kubesphere.local:6443",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+      },
+      "deployment": {
+        "name": "ani-modeldev",
+        "namespace": "ani-system",
+        "uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+        "resource_version": "18629334",
+        "generation": 69,
+        "replicas": 1,
+        "selector": "app=ani-modeldev",
+        "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:b0358ec0c5babcdaa97c645c06f89564478406715a4958e121099c4f6534e38d",
+        "spec_sha256": "901a79d01c3077ee08d16528418a600d92661047a0875357ece5544aee80c582",
+        "source_reference": "fixed original v3 runtime image; no image update",
+        "volume_refs": [
+          {
+            "name": "private",
+            "config_map": null,
+            "secret": "modeldev-v21-runtime-private",
+            "projected_source_kinds": []
+          },
+          {
+            "name": "kfp-token",
+            "config_map": null,
+            "secret": null,
+            "projected_source_kinds": [
+              "serviceAccountToken"
+            ]
+          },
+          {
+            "name": "modeldev-tls",
+            "config_map": null,
+            "secret": "modeldev-v21-server-tls",
+            "projected_source_kinds": []
+          },
+          {
+            "name": "owner-client-v21",
+            "config_map": null,
+            "secret": "modeldev-v21-owner-client",
+            "projected_source_kinds": []
+          },
+          {
+            "name": "owner-signing-v21",
+            "config_map": null,
+            "secret": "modeldev-v21-gpu-owner-signing",
+            "projected_source_kinds": []
+          },
+          {
+            "name": "owner-storage-v21",
+            "config_map": null,
+            "secret": "modeldev-v21-runtime-issuer-01a15f47-r1",
+            "projected_source_kinds": []
+          },
+          {
+            "name": "config-current",
+            "config_map": null,
+            "secret": null,
+            "projected_source_kinds": [
+              "configMap",
+              "configMap",
+              "configMap",
+              "configMap"
+            ]
+          }
+        ]
+      },
+      "pods": [
+        {
+          "name": "ani-modeldev-6995bd77c4-z2gxk",
+          "uid": "592bdd86-ab5b-4416-8a2c-07c21ee69f8d",
+          "resource_version": "18629328",
+          "node": "node1",
+          "owner_references": [
+            {
+              "apiVersion": "apps/v1",
+              "blockOwnerDeletion": true,
+              "controller": true,
+              "kind": "ReplicaSet",
+              "name": "ani-modeldev-6995bd77c4",
+              "uid": "91edf1d2-d57b-4ec1-8fde-c49e0160567c"
+            }
+          ]
+        }
+      ],
+      "configuration": {
+        "name": "modeldev-trainimg-main-20261029b",
+        "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+        "resource_version": "14648501",
+        "data_sha256": "aba1fc39f470b121cc084023e70a22b1b90fc3a010dac36dea7c780a1c3e3565",
+        "keys": [
+          "builtin.mlp.facts.json",
+          "builtin.sft_lora.facts.json",
+          "config.yaml",
+          "dispatch-binding.json",
+          "kfp-ca.crt",
+          "model-ca.crt",
+          "s3-ca.crt"
+        ]
+      },
+      "modeldev": {
+        "observed_at": "2026-11-01T02:43:10.888211+00:00",
+        "transaction_read_only": "on",
+        "database_user": "modeldev_v21_runtime",
+        "admissions": 54,
+        "identities": 54,
+        "runtimes": 54,
+        "closed_runtimes": 54,
+        "open_admitted": [],
+        "rows": [
+          {
+            "execution_id": "0374fd04-2b3c-4a7d-ac8c-e93ccaedc3ce",
+            "close_generation": 1,
+            "owner_revision": 31,
+            "closed_at": "2026-10-30T06:51:35.834977+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "111952ee-9d72-46d9-9981-c2a1ead73289",
+            "close_generation": 2,
+            "owner_revision": 63,
+            "closed_at": "2026-10-29T13:30:16.61847+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "165037e3-49fd-4889-9018-cf9d95600b29",
+            "close_generation": 2,
+            "owner_revision": 28,
+            "closed_at": "2026-10-29T11:10:03.224172+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "16d56223-4081-47ae-9ecd-61eb9104c6e7",
+            "close_generation": 1,
+            "owner_revision": 24,
+            "closed_at": "2026-10-30T02:58:46.384066+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "196d30c0-e63d-4f73-a073-fd0f49e5401d",
+            "close_generation": 1,
+            "owner_revision": 69,
+            "closed_at": "2026-10-29T05:42:45.809438+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+            "close_generation": 2,
+            "owner_revision": 22,
+            "closed_at": "2026-11-01T02:11:55.723087+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "1d8e112d-3612-4080-8dab-a24c383da879",
+            "close_generation": 2,
+            "owner_revision": 50,
+            "closed_at": "2026-10-29T11:16:54.916825+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "2454cb50-d7f6-4efb-a1fd-f8d289631ba2",
+            "close_generation": 1,
+            "owner_revision": 148,
+            "closed_at": "2026-10-29T04:58:55.252009+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+            "close_generation": 1,
+            "owner_revision": 3,
+            "closed_at": "2026-11-01T02:37:44.885086+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "2a7b1169-7466-4561-85bf-faceee50b027",
+            "close_generation": 1,
+            "owner_revision": 30,
+            "closed_at": "2026-10-30T09:34:33.829968+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "2ab49378-9784-4ea9-a06a-b84ad255f238",
+            "close_generation": 1,
+            "owner_revision": 32,
+            "closed_at": "2026-10-30T10:28:45.029984+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "2abb5610-1bb7-4ca1-8bb1-29a691add6f3",
+            "close_generation": 2,
+            "owner_revision": 49,
+            "closed_at": "2026-10-29T11:15:53.122612+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "34b225da-9028-4793-84db-4501c708076e",
+            "close_generation": 1,
+            "owner_revision": 7,
+            "closed_at": "2026-10-29T14:35:15.030635+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "3aca77ad-0de5-482d-bb9a-2427a19ce60e",
+            "close_generation": 1,
+            "owner_revision": 36,
+            "closed_at": "2026-10-29T03:20:54.665137+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "3f91e6cb-0348-4808-af67-b86c96806116",
+            "close_generation": 1,
+            "owner_revision": 62,
+            "closed_at": "2026-10-29T04:27:49.677937+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "43d9a893-ff56-41ca-b36c-ea77ef546d0c",
+            "close_generation": 1,
+            "owner_revision": 34,
+            "closed_at": "2026-10-30T07:17:10.342241+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "4534a7de-480c-4a8f-ae76-e647cf7c158c",
+            "close_generation": 1,
+            "owner_revision": 13,
+            "closed_at": "2026-10-28T23:11:15.545652+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "486a9036-7dc9-477d-af9b-06e00920c6ef",
+            "close_generation": 1,
+            "owner_revision": 33,
+            "closed_at": "2026-10-30T00:18:44.130265+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+            "close_generation": 2,
+            "owner_revision": 22,
+            "closed_at": "2026-11-01T02:12:04.676492+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "4c06e7ed-6f0c-46b8-adbf-c060f0233dae",
+            "close_generation": 2,
+            "owner_revision": 31,
+            "closed_at": "2026-10-30T02:55:03.869424+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "4de6d08d-b41e-4940-b777-a7b9d6d0370b",
+            "close_generation": 1,
+            "owner_revision": 47,
+            "closed_at": "2026-10-30T07:09:58.620346+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "500063f2-2f5d-4e82-9208-1e3ad92dfee5",
+            "close_generation": 1,
+            "owner_revision": 45,
+            "closed_at": "2026-10-30T08:35:40.653988+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "5953c2e1-107e-4d46-af6d-4c718c7fb10c",
+            "close_generation": 1,
+            "owner_revision": 12,
+            "closed_at": "2026-10-29T00:04:53.937262+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "5f0b866e-31d1-4b44-8a7c-5cc900767e00",
+            "close_generation": 1,
+            "owner_revision": 16,
+            "closed_at": "2026-10-29T01:28:26.695694+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "6c603151-edf3-4785-a3b0-00aaa6607c1d",
+            "close_generation": 1,
+            "owner_revision": 30,
+            "closed_at": "2026-10-30T02:19:29.269603+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "6df02902-13bf-4b35-9f74-93dae719888c",
+            "close_generation": 1,
+            "owner_revision": 46,
+            "closed_at": "2026-10-30T08:37:39.278964+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "6ea21854-9dbd-44e1-92a0-ee9e0613a3a5",
+            "close_generation": 1,
+            "owner_revision": 45,
+            "closed_at": "2026-10-30T08:23:04.244302+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "7646dbe7-bcbb-4760-926a-580c9ca6934a",
+            "close_generation": 1,
+            "owner_revision": 31,
+            "closed_at": "2026-10-30T04:08:32.810007+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "78ef7040-bd1c-4bff-b974-b9c4fa379dda",
+            "close_generation": 1,
+            "owner_revision": 22,
+            "closed_at": "2026-10-29T02:08:52.918569+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "8540d576-fe69-4937-a703-6d9e67fb093d",
+            "close_generation": 1,
+            "owner_revision": 28,
+            "closed_at": "2026-10-29T16:10:15.991781+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "87181865-8f35-4983-94d7-92b9afc9b9cf",
+            "close_generation": 1,
+            "owner_revision": 22,
+            "closed_at": "2026-10-29T02:08:51.125592+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+            "close_generation": 1,
+            "owner_revision": 3,
+            "closed_at": "2026-11-01T02:40:21.951747+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "97f2f3d1-c20e-4f35-91d4-2e860a333962",
+            "close_generation": 1,
+            "owner_revision": 13,
+            "closed_at": "2026-10-30T07:19:14.801555+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "abe39ad8-c017-416b-8041-6f097e8fd50a",
+            "close_generation": 2,
+            "owner_revision": 614,
+            "closed_at": "2026-10-30T03:51:30.616861+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "b857f693-8c61-4c7e-bc11-805679f06b26",
+            "close_generation": 1,
+            "owner_revision": 22,
+            "closed_at": "2026-10-30T01:14:58.750352+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "b911aeeb-6a40-4738-aab5-78c7fdfdf21f",
+            "close_generation": 2,
+            "owner_revision": 23,
+            "closed_at": "2026-10-29T11:09:53.963137+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "b95620b8-9d13-416a-aeab-8576833a7e8c",
+            "close_generation": 1,
+            "owner_revision": 47,
+            "closed_at": "2026-10-30T08:04:39.024142+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "ba7440e0-2f4e-49fa-8b90-ce25bc73474c",
+            "close_generation": 1,
+            "owner_revision": 45,
+            "closed_at": "2026-10-30T04:01:35.019526+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "bbc8e3ac-b712-4507-8846-9b09e13717de",
+            "close_generation": 1,
+            "owner_revision": 46,
+            "closed_at": "2026-10-30T05:46:31.851938+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "bc870703-9ffd-47e8-871c-893e676c5ce1",
+            "close_generation": 1,
+            "owner_revision": 54,
+            "closed_at": "2026-10-29T02:13:34.281231+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "c01f0bd0-32d8-411e-bb0c-a52d51833ce1",
+            "close_generation": 1,
+            "owner_revision": 37,
+            "closed_at": "2026-10-29T11:05:14.171095+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "c0fa3739-d279-4bb3-85be-0f74b8d4773a",
+            "close_generation": 1,
+            "owner_revision": 27,
+            "closed_at": "2026-10-29T02:06:33.624428+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "c436b386-b875-4365-be8c-39398228e137",
+            "close_generation": 1,
+            "owner_revision": 27,
+            "closed_at": "2026-10-30T02:27:48.070497+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "c8b9dada-caaf-451b-8aeb-809396f0c075",
+            "close_generation": 1,
+            "owner_revision": 64,
+            "closed_at": "2026-10-30T00:36:47.931414+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+            "close_generation": 1,
+            "owner_revision": 3,
+            "closed_at": "2026-11-01T02:40:16.953002+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "cb9b2b16-ebbe-4690-a1f4-0bbc6651174b",
+            "close_generation": 1,
+            "owner_revision": 42,
+            "closed_at": "2026-10-30T08:24:15.020029+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "ce31c3da-f948-4dcf-b01c-8943b0f36d7f",
+            "close_generation": 1,
+            "owner_revision": 30,
+            "closed_at": "2026-10-30T09:44:49.230611+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "dc612759-06fc-4b4a-b79c-b812f4b5ee5b",
+            "close_generation": 1,
+            "owner_revision": 34,
+            "closed_at": "2026-10-30T00:52:15.466865+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "e94344af-a825-4ba2-9fa1-838638cc4d5f",
+            "close_generation": 1,
+            "owner_revision": 45,
+            "closed_at": "2026-10-29T11:03:07.412102+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "ec57bafc-56bd-4f7e-8f65-45527aa4d0e3",
+            "close_generation": 1,
+            "owner_revision": 16,
+            "closed_at": "2026-10-29T01:57:13.806486+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+            "close_generation": 1,
+            "owner_revision": 13,
+            "closed_at": "2026-11-01T02:12:14.238116+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+            "close_generation": 1,
+            "owner_revision": 3,
+            "closed_at": "2026-11-01T02:40:25.968273+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "f2168fbf-d7c9-4e96-8cc6-784bb1546083",
+            "close_generation": 1,
+            "owner_revision": 7,
+            "closed_at": "2026-10-30T06:31:38.08282+00:00",
+            "close_review_reason": ""
+          },
+          {
+            "execution_id": "fd413b1b-58f5-440c-b95c-20be5062d272",
+            "close_generation": 1,
+            "owner_revision": 57,
+            "closed_at": "2026-10-29T03:25:59.177701+00:00",
+            "close_review_reason": ""
+          }
+        ]
+      },
+      "governance": {
+        "observed_at": "2026-11-01T02:43:11.1064+00:00",
+        "transaction_read_only": "on",
+        "database_user": "gov_runtime",
+        "acceptance_count": 54,
+        "active_create_leases": 0,
+        "active_close_leases": 0,
+        "dispatch_states": {
+          "ACKED": 54
+        },
+        "close_dispatch_states": {
+          "ACKED": 18,
+          "IDLE": 36
+        },
+        "unresolved_create_ids": []
+      },
+      "other_owner_deployments": [
+        {
+          "name": "ani-governance",
+          "uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+          "replicas": 1,
+          "spec_sha256": "bb08a9638ab86128f4697c008da29f00e262be8877c28025b757c9845218fc22"
+        },
+        {
+          "name": "ani-resource",
+          "not_found_or_read_error": true,
+          "exit": 1
+        },
+        {
+          "name": "ani-inference",
+          "not_found_or_read_error": true,
+          "exit": 1
+        }
+      ],
+      "cluster_mutations": false,
+      "credential_values_saved": false,
+      "ready_to_scale_zero": true
+    },
+    "exact_patch": [
+      {
+        "op": "test",
+        "path": "/metadata/uid",
+        "value": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3"
+      },
+      {
+        "op": "test",
+        "path": "/metadata/resourceVersion",
+        "value": "18629334"
+      },
+      {
+        "op": "test",
+        "path": "/spec/replicas",
+        "value": 1
+      },
+      {
+        "op": "test",
+        "path": "/spec/template/spec/containers/0/image",
+        "value": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:b0358ec0c5babcdaa97c645c06f89564478406715a4958e121099c4f6534e38d"
+      },
+      {
+        "op": "replace",
+        "path": "/spec/replicas",
+        "value": 0
+      }
+    ],
+    "patch_applied": true,
+    "patch_response_sha256": "4e11741947ac69616d78e4da1499dfb59323cb4673f417ebd0b9f30f85387f7a",
+    "deployment_after": {
+      "uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+      "resource_version": "20910766",
+      "generation": 70,
+      "replicas": 0,
+      "ready_replicas": 0,
+      "available_replicas": 0
+    },
+    "wait_exit": 0,
+    "original_pod_uid_absent": true,
+    "selector_pods_remaining": [],
+    "modeldev_after": {
+      "observed_at": "2026-11-01T02:43:13.113153+00:00",
+      "transaction_read_only": "on",
+      "database_user": "modeldev_v21_runtime",
+      "admissions": 54,
+      "identities": 54,
+      "runtimes": 54,
+      "closed_runtimes": 54,
+      "open_admitted": [],
+      "rows": [
+        {
+          "execution_id": "0374fd04-2b3c-4a7d-ac8c-e93ccaedc3ce",
+          "close_generation": 1,
+          "owner_revision": 31,
+          "closed_at": "2026-10-30T06:51:35.834977+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "111952ee-9d72-46d9-9981-c2a1ead73289",
+          "close_generation": 2,
+          "owner_revision": 63,
+          "closed_at": "2026-10-29T13:30:16.61847+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "165037e3-49fd-4889-9018-cf9d95600b29",
+          "close_generation": 2,
+          "owner_revision": 28,
+          "closed_at": "2026-10-29T11:10:03.224172+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "16d56223-4081-47ae-9ecd-61eb9104c6e7",
+          "close_generation": 1,
+          "owner_revision": 24,
+          "closed_at": "2026-10-30T02:58:46.384066+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "196d30c0-e63d-4f73-a073-fd0f49e5401d",
+          "close_generation": 1,
+          "owner_revision": 69,
+          "closed_at": "2026-10-29T05:42:45.809438+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+          "close_generation": 2,
+          "owner_revision": 22,
+          "closed_at": "2026-11-01T02:11:55.723087+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "1d8e112d-3612-4080-8dab-a24c383da879",
+          "close_generation": 2,
+          "owner_revision": 50,
+          "closed_at": "2026-10-29T11:16:54.916825+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "2454cb50-d7f6-4efb-a1fd-f8d289631ba2",
+          "close_generation": 1,
+          "owner_revision": 148,
+          "closed_at": "2026-10-29T04:58:55.252009+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+          "close_generation": 1,
+          "owner_revision": 3,
+          "closed_at": "2026-11-01T02:37:44.885086+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "2a7b1169-7466-4561-85bf-faceee50b027",
+          "close_generation": 1,
+          "owner_revision": 30,
+          "closed_at": "2026-10-30T09:34:33.829968+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "2ab49378-9784-4ea9-a06a-b84ad255f238",
+          "close_generation": 1,
+          "owner_revision": 32,
+          "closed_at": "2026-10-30T10:28:45.029984+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "2abb5610-1bb7-4ca1-8bb1-29a691add6f3",
+          "close_generation": 2,
+          "owner_revision": 49,
+          "closed_at": "2026-10-29T11:15:53.122612+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "34b225da-9028-4793-84db-4501c708076e",
+          "close_generation": 1,
+          "owner_revision": 7,
+          "closed_at": "2026-10-29T14:35:15.030635+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "3aca77ad-0de5-482d-bb9a-2427a19ce60e",
+          "close_generation": 1,
+          "owner_revision": 36,
+          "closed_at": "2026-10-29T03:20:54.665137+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "3f91e6cb-0348-4808-af67-b86c96806116",
+          "close_generation": 1,
+          "owner_revision": 62,
+          "closed_at": "2026-10-29T04:27:49.677937+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "43d9a893-ff56-41ca-b36c-ea77ef546d0c",
+          "close_generation": 1,
+          "owner_revision": 34,
+          "closed_at": "2026-10-30T07:17:10.342241+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "4534a7de-480c-4a8f-ae76-e647cf7c158c",
+          "close_generation": 1,
+          "owner_revision": 13,
+          "closed_at": "2026-10-28T23:11:15.545652+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "486a9036-7dc9-477d-af9b-06e00920c6ef",
+          "close_generation": 1,
+          "owner_revision": 33,
+          "closed_at": "2026-10-30T00:18:44.130265+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+          "close_generation": 2,
+          "owner_revision": 22,
+          "closed_at": "2026-11-01T02:12:04.676492+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "4c06e7ed-6f0c-46b8-adbf-c060f0233dae",
+          "close_generation": 2,
+          "owner_revision": 31,
+          "closed_at": "2026-10-30T02:55:03.869424+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "4de6d08d-b41e-4940-b777-a7b9d6d0370b",
+          "close_generation": 1,
+          "owner_revision": 47,
+          "closed_at": "2026-10-30T07:09:58.620346+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "500063f2-2f5d-4e82-9208-1e3ad92dfee5",
+          "close_generation": 1,
+          "owner_revision": 45,
+          "closed_at": "2026-10-30T08:35:40.653988+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "5953c2e1-107e-4d46-af6d-4c718c7fb10c",
+          "close_generation": 1,
+          "owner_revision": 12,
+          "closed_at": "2026-10-29T00:04:53.937262+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "5f0b866e-31d1-4b44-8a7c-5cc900767e00",
+          "close_generation": 1,
+          "owner_revision": 16,
+          "closed_at": "2026-10-29T01:28:26.695694+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "6c603151-edf3-4785-a3b0-00aaa6607c1d",
+          "close_generation": 1,
+          "owner_revision": 30,
+          "closed_at": "2026-10-30T02:19:29.269603+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "6df02902-13bf-4b35-9f74-93dae719888c",
+          "close_generation": 1,
+          "owner_revision": 46,
+          "closed_at": "2026-10-30T08:37:39.278964+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "6ea21854-9dbd-44e1-92a0-ee9e0613a3a5",
+          "close_generation": 1,
+          "owner_revision": 45,
+          "closed_at": "2026-10-30T08:23:04.244302+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "7646dbe7-bcbb-4760-926a-580c9ca6934a",
+          "close_generation": 1,
+          "owner_revision": 31,
+          "closed_at": "2026-10-30T04:08:32.810007+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "78ef7040-bd1c-4bff-b974-b9c4fa379dda",
+          "close_generation": 1,
+          "owner_revision": 22,
+          "closed_at": "2026-10-29T02:08:52.918569+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "8540d576-fe69-4937-a703-6d9e67fb093d",
+          "close_generation": 1,
+          "owner_revision": 28,
+          "closed_at": "2026-10-29T16:10:15.991781+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "87181865-8f35-4983-94d7-92b9afc9b9cf",
+          "close_generation": 1,
+          "owner_revision": 22,
+          "closed_at": "2026-10-29T02:08:51.125592+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+          "close_generation": 1,
+          "owner_revision": 3,
+          "closed_at": "2026-11-01T02:40:21.951747+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "97f2f3d1-c20e-4f35-91d4-2e860a333962",
+          "close_generation": 1,
+          "owner_revision": 13,
+          "closed_at": "2026-10-30T07:19:14.801555+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "abe39ad8-c017-416b-8041-6f097e8fd50a",
+          "close_generation": 2,
+          "owner_revision": 614,
+          "closed_at": "2026-10-30T03:51:30.616861+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "b857f693-8c61-4c7e-bc11-805679f06b26",
+          "close_generation": 1,
+          "owner_revision": 22,
+          "closed_at": "2026-10-30T01:14:58.750352+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "b911aeeb-6a40-4738-aab5-78c7fdfdf21f",
+          "close_generation": 2,
+          "owner_revision": 23,
+          "closed_at": "2026-10-29T11:09:53.963137+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "b95620b8-9d13-416a-aeab-8576833a7e8c",
+          "close_generation": 1,
+          "owner_revision": 47,
+          "closed_at": "2026-10-30T08:04:39.024142+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "ba7440e0-2f4e-49fa-8b90-ce25bc73474c",
+          "close_generation": 1,
+          "owner_revision": 45,
+          "closed_at": "2026-10-30T04:01:35.019526+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "bbc8e3ac-b712-4507-8846-9b09e13717de",
+          "close_generation": 1,
+          "owner_revision": 46,
+          "closed_at": "2026-10-30T05:46:31.851938+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "bc870703-9ffd-47e8-871c-893e676c5ce1",
+          "close_generation": 1,
+          "owner_revision": 54,
+          "closed_at": "2026-10-29T02:13:34.281231+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "c01f0bd0-32d8-411e-bb0c-a52d51833ce1",
+          "close_generation": 1,
+          "owner_revision": 37,
+          "closed_at": "2026-10-29T11:05:14.171095+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "c0fa3739-d279-4bb3-85be-0f74b8d4773a",
+          "close_generation": 1,
+          "owner_revision": 27,
+          "closed_at": "2026-10-29T02:06:33.624428+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "c436b386-b875-4365-be8c-39398228e137",
+          "close_generation": 1,
+          "owner_revision": 27,
+          "closed_at": "2026-10-30T02:27:48.070497+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "c8b9dada-caaf-451b-8aeb-809396f0c075",
+          "close_generation": 1,
+          "owner_revision": 64,
+          "closed_at": "2026-10-30T00:36:47.931414+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+          "close_generation": 1,
+          "owner_revision": 3,
+          "closed_at": "2026-11-01T02:40:16.953002+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "cb9b2b16-ebbe-4690-a1f4-0bbc6651174b",
+          "close_generation": 1,
+          "owner_revision": 42,
+          "closed_at": "2026-10-30T08:24:15.020029+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "ce31c3da-f948-4dcf-b01c-8943b0f36d7f",
+          "close_generation": 1,
+          "owner_revision": 30,
+          "closed_at": "2026-10-30T09:44:49.230611+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "dc612759-06fc-4b4a-b79c-b812f4b5ee5b",
+          "close_generation": 1,
+          "owner_revision": 34,
+          "closed_at": "2026-10-30T00:52:15.466865+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "e94344af-a825-4ba2-9fa1-838638cc4d5f",
+          "close_generation": 1,
+          "owner_revision": 45,
+          "closed_at": "2026-10-29T11:03:07.412102+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "ec57bafc-56bd-4f7e-8f65-45527aa4d0e3",
+          "close_generation": 1,
+          "owner_revision": 16,
+          "closed_at": "2026-10-29T01:57:13.806486+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+          "close_generation": 1,
+          "owner_revision": 13,
+          "closed_at": "2026-11-01T02:12:14.238116+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+          "close_generation": 1,
+          "owner_revision": 3,
+          "closed_at": "2026-11-01T02:40:25.968273+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "f2168fbf-d7c9-4e96-8cc6-784bb1546083",
+          "close_generation": 1,
+          "owner_revision": 7,
+          "closed_at": "2026-10-30T06:31:38.08282+00:00",
+          "close_review_reason": ""
+        },
+        {
+          "execution_id": "fd413b1b-58f5-440c-b95c-20be5062d272",
+          "close_generation": 1,
+          "owner_revision": 57,
+          "closed_at": "2026-10-29T03:25:59.177701+00:00",
+          "close_review_reason": ""
+        }
+      ]
+    },
+    "governance_after": {
+      "observed_at": "2026-11-01T02:43:13.346913+00:00",
+      "transaction_read_only": "on",
+      "database_user": "gov_runtime",
+      "acceptance_count": 54,
+      "active_create_leases": 0,
+      "active_close_leases": 0,
+      "dispatch_states": {
+        "ACKED": 54
+      },
+      "close_dispatch_states": {
+        "ACKED": 18,
+        "IDLE": 36
+      },
+      "unresolved_create_ids": []
+    },
+    "other_owner_deployments_after": [
+      {
+        "name": "ani-governance",
+        "uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+        "replicas": 1,
+        "spec_sha256": "bb08a9638ab86128f4697c008da29f00e262be8877c28025b757c9845218fc22"
+      },
+      {
+        "name": "ani-resource",
+        "not_found_or_read_error": true,
+        "exit": 1
+      },
+      {
+        "name": "ani-inference",
+        "not_found_or_read_error": true,
+        "exit": 1
+      }
+    ],
+    "other_owner_specs_unchanged": true,
+    "old_namespace_pod_count": 19,
+    "old_namespace_active_pods": [],
+    "permissions_revoked": false,
+    "new_policies_installed": false,
+    "credentials_saved": false,
+    "stopped_worker_gate_pass": true
+  }
+}

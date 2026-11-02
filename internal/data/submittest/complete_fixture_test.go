@@ -28,7 +28,9 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
+	envfixture "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/tenantenvironment"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/util/flowcontrol"
 )
 
 const completeRunID = "55555555-6666-4777-8888-999999999999"
@@ -67,11 +69,17 @@ type completeFixture struct {
 	runTasks             []any
 	facts                *lifecycle.Repository
 	computeDeletes       []string
+	environment          *envfixture.Fixture
+	createPVCNode        map[string]any
+	kubeRequests         int
+	kubeRateLimiter      flowcontrol.RateLimiter
 }
 
 func newCompleteFixture(t *testing.T) *completeFixture {
 	t.Helper()
 	f := &completeFixture{t: t, root: t.TempDir(), objects: map[string]map[string]any{}, blobs: map[string][]byte{}, versions: map[string]string{}, trainingDone: make(chan struct{}), trainingContainer: "cpu-p01-mainflow-" + uuid.NewString()}
+	// Match the one finite aggregate Kubernetes budget in the composition root.
+	f.kubeRateLimiter = flowcontrol.NewTokenBucketRateLimiter(20, 40)
 	f.image = os.Getenv("CPU_P01_MLP_IMAGE")
 	if f.image == "" {
 		t.Fatal("CPU_MAINFLOW_PREFLIGHT: real CPU image missing; behavior NOT_RUN")
@@ -92,6 +100,9 @@ func newCompleteFixture(t *testing.T) *completeFixture {
 	// Freeze the actual locally qualified image manifest used by Podman. The
 	// external TrainJob substitute may not replace it with a synthetic digest.
 	snapshot.Program.ImageDigest = f.image
+	snapshot.TrainingImage.RegistryAuthority = cpup01.NormalizeRegistryAuthority(f.image)
+	snapshot.TrainingImage.PullSecretRef, _ = cpup01.PullSecretName(f.request.Admission.TenantID, snapshot.Environment.ClusterID, snapshot.Environment.NamespaceName, snapshot.TrainingImage.RegistryAuthority)
+	snapshot.ManagedImageAccess.PullBindings = []cpup01.ManagedImagePullBinding{{RegistryAuthority: snapshot.TrainingImage.RegistryAuthority, SecretName: snapshot.TrainingImage.PullSecretRef}}
 	snapshot.Program.Command = []string{"/opt/venv/bin/python", "-I", "/opt/ani-modeldev/training/train_mlp.py"}
 	snapshot.Input.Object.SizeBytes = int64(len(data))
 	snapshot.Input.Object.SHA256 = completeHash(data)
@@ -168,6 +179,7 @@ func completeStepUID(step string) string {
 func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	f.kubeRequests++
 	if f.traceTrainingCreate {
 		f.t.Logf("MAIN_FLOW_TRAIN_CREATE: %s %s", r.Method, r.URL.Path)
 	}
@@ -196,7 +208,7 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 		if len(input.Spec.Audiences) != 1 || input.Spec.Audiences[0] != "ani-modeldev-managed-step" {
 			valid = false
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{"apiVersion": "authentication.k8s.io/v1", "kind": "TokenReview", "status": map[string]any{"authenticated": valid, "audiences": []string{"ani-modeldev-managed-step"}, "user": map[string]any{"username": "system:serviceaccount:" + ns + ":" + f.request.Admission.Snapshot.Environment.Identities.KFPStepServiceAccount, "uid": "99999999-aaaa-4bbb-8ccc-666666666666", "extra": map[string]any{"authentication.kubernetes.io/pod-name": []string{"main-" + step}, "authentication.kubernetes.io/pod-uid": []string{completeStepUID(step)}}}}})
+		_ = json.NewEncoder(w).Encode(map[string]any{"apiVersion": "authentication.k8s.io/v1", "kind": "TokenReview", "status": map[string]any{"authenticated": valid, "audiences": []string{"ani-modeldev-managed-step"}, "user": map[string]any{"username": "system:serviceaccount:" + ns + ":" + f.request.Admission.Snapshot.Environment.Identities.KFPStepServiceAccount, "uid": f.request.Admission.Snapshot.Environment.Identities.KFPStepServiceAccountUID, "extra": map[string]any{"authentication.kubernetes.io/pod-name": []string{"main-" + step}, "authentication.kubernetes.io/pod-uid": []string{completeStepUID(step)}}}}})
 		return
 	}
 	runtimePath := "/apis/trainer.kubeflow.org/v1alpha1/namespaces/" + ns + "/trainingruntimes"
@@ -268,6 +280,7 @@ func (f *completeFixture) kubeRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	collections := map[string]bool{
 		"/api/v1/namespaces/" + ns + "/pods":                                         true,
+		"/api/v1/namespaces/" + ns + "/persistentvolumeclaims":                       true,
 		"/apis/batch/v1/namespaces/" + ns + "/jobs":                                  true,
 		"/apis/jobset.x-k8s.io/v1alpha2/namespaces/" + ns + "/jobsets":               true,
 		"/apis/scheduling.volcano.sh/v1beta1/namespaces/" + ns + "/podgroups":        true,
@@ -637,7 +650,7 @@ func (f *completeFixture) kfpRequest(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-	run := map[string]any{"run_id": completeRunID, "experiment_id": s.Environment.ExperimentID, "display_name": "md-" + f.request.Admission.ExecutionID, "pipeline_version_reference": map[string]string{"pipeline_id": s.Implementation.PipelineID, "pipeline_version_id": s.Implementation.PipelineVersionID}, "runtime_config": map[string]any{"parameters": map[string]string{"execution_id": f.request.Admission.ExecutionID, "spec_hash": f.request.Admission.SpecHash}, "pipeline_root": f.request.Owner.PipelineRoot}, "service_account": s.Environment.Identities.KFPStepServiceAccount, "state": "RUNNING", "run_details": map[string]any{"task_details": tasks}}
+	run := map[string]any{"run_id": completeRunID, "experiment_id": s.Environment.ExperimentID, "display_name": "md-" + f.request.Admission.ExecutionID, "pipeline_version_reference": map[string]string{"pipeline_id": s.Implementation.PipelineID, "pipeline_version_id": s.Implementation.PipelineVersionID}, "runtime_config": map[string]any{"parameters": map[string]string{"execution_id": f.request.Admission.ExecutionID, "spec_hash": f.request.Admission.SpecHash, "environment_binding_id": s.Environment.BindingID, "namespace_uid": s.Environment.NamespaceUID}, "pipeline_root": f.request.Owner.PipelineRoot}, "service_account": s.Environment.Identities.KFPStepServiceAccount, "state": "RUNNING", "run_details": map[string]any{"task_details": tasks}}
 	if f.runStoppedAt != "" {
 		run["state"], run["finished_at"] = "CANCELED", f.runStoppedAt
 	} else if f.runSucceededAt != "" {
@@ -687,7 +700,17 @@ func (f *completeFixture) currentRunTasksLocked() []any {
 			node["finishedAt"] = finished
 		}
 		nodes[nodeID] = node
+		if step == "prepare" && f.createPVCNode != nil {
+			input, _ := json.Marshal(map[string]any{"inputs": map[string]any{"parameterValues": map[string]string{"execution_id": f.request.Admission.ExecutionID, "spec_hash": f.request.Admission.SpecHash, "run_id": completeRunID, "pvc_name": f.workspace.PVCName}}})
+			patch, _ := json.Marshal(map[string]any{"volumes": []any{map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": f.workspace.PVCName}}}, "containers": []any{map[string]any{"name": "main", "command": []string{"launcher", "--executor_input", string(input)}}}})
+			node["inputs"] = map[string]any{"parameters": []any{map[string]any{"name": "pod-spec-patch", "value": string(patch)}}}
+			nodes[controller].(map[string]any)["inputs"] = node["inputs"]
+		}
 		tasks = append(tasks, map[string]any{"run_id": completeRunID, "task_id": step + "-task", "display_name": step, "state": state, "child_tasks": []any{map[string]any{"pod_name": nodeID}}})
+	}
+	if f.createPVCNode != nil {
+		nodes["main-createpvc"] = f.createPVCNode
+		tasks = append(tasks, map[string]any{"run_id": completeRunID, "task_id": completeStepUID("createpvc-task"), "display_name": "createpvc", "state": "SUCCEEDED"})
 	}
 	if os.Getenv("ANI_MODELDEV_WEBHOOK_MAINFLOW") != "" {
 		phase, finished := "Running", f.archivedStepFinishes["driver"]

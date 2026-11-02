@@ -1,0 +1,132 @@
+{
+  "schema": "ani.modeldev.publisher-temporary-input-cleanup.v1",
+  "observed_at": "2026-11-01T03:37:17.347299+00:00",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "removed_files": [
+    {
+      "name": "publication-journal.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "__pycache__/publisher.cpython-312.pyc",
+      "bytes": 22263,
+      "sha256": "d10ffb546e13a0974a510d4b42ddba77c2e797e6d16970064dade07b97c3d48a"
+    }
+  ],
+  "removed_in_prior_bounded_cleanup": [
+    {
+      "name": "identity.json",
+      "bytes": 288,
+      "sha256": "57365d054e59b7faec8c4a720b81cbaa41535b450988bc6f3e2adc50b33c4784",
+      "now_absent": true
+    },
+    {
+      "name": "kfp-ca.crt",
+      "bytes": 713,
+      "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+      "now_absent": true
+    },
+    {
+      "name": "modeldev-mlp-cpu.yaml",
+      "bytes": 29212,
+      "sha256": "58919bf761ddf0a2747e1766afe93584d23523d25c47e4974be48f0547d58ee7",
+      "now_absent": true
+    },
+    {
+      "name": "modeldev-mlp-gpu.yaml",
+      "bytes": 29212,
+      "sha256": "31208542cf6d7bf658c2214141b1409ea1445a2ec05379f24fb5c9ee33ec8281",
+      "now_absent": true
+    },
+    {
+      "name": "modeldev-sft-lora-cpu.yaml",
+      "bytes": 43388,
+      "sha256": "147852502bc1abb5adfcabb8faad36a98141143b279780cb53b403cdd652150f",
+      "now_absent": true
+    },
+    {
+      "name": "modeldev-sft-lora-gpu.yaml",
+      "bytes": 43388,
+      "sha256": "753c0aed8e18ba13c13b8a470cd6a4cfcb4b5c1765dd3c26215144b7cfde77b7",
+      "now_absent": true
+    },
+    {
+      "name": "node-prepared.json",
+      "bytes": 3451,
+      "sha256": "60182ca59d5a89a8bdcd4c80b5cb4780f2a49933f957e1544ae3881e841a3de2",
+      "now_absent": true
+    },
+    {
+      "name": "prepared.json",
+      "bytes": 3483,
+      "sha256": "deac8d8b951ef0e604e209bc8ec8831842a6bfbb4d3d922d05e1863019b740f1",
+      "now_absent": true
+    },
+    {
+      "name": "prewrite-live-receipt.json",
+      "bytes": 674,
+      "sha256": "ff4700f267de58ee27423947207cfe8793bb06da2dcb7e395e06b9ef2b27769a",
+      "now_absent": true
+    },
+    {
+      "name": "proposed-publisher-rbac.json",
+      "bytes": 2244,
+      "sha256": "b3a411cdf4b2583e08dd1d1d679665ab8da09883db3ae66fe85a35b8f45f9b31",
+      "now_absent": true
+    },
+    {
+      "name": "proposed-publisher-token-job.json",
+      "bytes": 2961,
+      "sha256": "4a91e39805b40178b2e084e15ec26eef6b617041d9c7798ccd0cfa4e9818ce9d",
+      "now_absent": true
+    },
+    {
+      "name": "publisher-identity-conflict-and-minimal-correction.md",
+      "bytes": 5153,
+      "sha256": "98421dd7497ec7d9562d478c8a5ac41f2a30d7121e141bfa4fcd7f5d5c72a248",
+      "now_absent": true
+    },
+    {
+      "name": "publisher-identity-user-approval.json",
+      "bytes": 2052,
+      "sha256": "56e26e1f3db9c788dbae23fe36dd27836d4a692cdef977561d82d4c839a26685",
+      "now_absent": true
+    },
+    {
+      "name": "publisher-sar-contract.json",
+      "bytes": 1940,
+      "sha256": "70b47437d69fda7791067b5eda2a7843bab54731879b863b2bf6c0865f475b13",
+      "now_absent": true
+    },
+    {
+      "name": "publisher.py",
+      "bytes": 13116,
+      "sha256": "c1f986936d42d1372fdbe7d6b49a000bbd835b38d14ffb469d84fcde5c2cd355",
+      "now_absent": true
+    }
+  ],
+  "removed_total_count": 17,
+  "removed_total_bytes": 203538,
+  "remaining_durable_public_files": [
+    "live-receipt.json",
+    "publication-journal.json",
+    "published.json"
+  ],
+  "all_temporary_RBAC_Job_Pod_absent": true,
+  "projected_token_source_absent": true,
+  "token_copies_created": false,
+  "no_global_tool_installed": true,
+  "delivered_pipeline_versions_and_image_cache_retained": true,
+  "guarded_cleanup_corrections": [
+    "Included own Python __pycache__ exact pyc SHA after initial directory guard",
+    "Public publication lock was0664 under original node umask; exact root0700/regularowner/hash guard retained, not a secret file"
+  ]
+}

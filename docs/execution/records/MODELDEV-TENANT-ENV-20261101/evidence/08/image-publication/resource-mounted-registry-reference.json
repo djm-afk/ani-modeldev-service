@@ -1,0 +1,67 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "deployment_name": "ani-resource-service",
+  "deployment_uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+  "resource_version": "20340742",
+  "containers": [
+    {
+      "name": "resource",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:71c04b8948728d8d0299320f148afa3fee3eabdbea87051c2b99c300abe730d1",
+      "volume_mounts": [
+        {
+          "name": "storage-private",
+          "mountPath": "/storage-private",
+          "subPath": null,
+          "readOnly": true
+        },
+        {
+          "name": "storage-ca",
+          "mountPath": "/storage-ca",
+          "subPath": null,
+          "readOnly": true
+        },
+        {
+          "name": "private",
+          "mountPath": "/private",
+          "subPath": null,
+          "readOnly": true
+        },
+        {
+          "name": "image-runtime-tls",
+          "mountPath": "/image-runtime-tls",
+          "subPath": null,
+          "readOnly": true
+        }
+      ]
+    }
+  ],
+  "secret_volume_refs": [
+    {
+      "name": "storage-private",
+      "secret_name": "ani-storage-service-credentials",
+      "items": null
+    },
+    {
+      "name": "storage-ca",
+      "secret_name": "ani-storage-upstream-ca",
+      "items": null
+    },
+    {
+      "name": "vm-input",
+      "secret_name": "ani-vm-resource-runtime-20261025",
+      "items": null
+    },
+    {
+      "name": "sandbox-token-signing",
+      "secret_name": "ani-sandbox-token-signing-177cb984f080",
+      "items": null
+    }
+  ]
+}

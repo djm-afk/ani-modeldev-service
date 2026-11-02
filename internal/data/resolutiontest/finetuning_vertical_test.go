@@ -14,7 +14,6 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	contractpb "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
@@ -60,8 +59,7 @@ func prepareFinetuningVertical(t *testing.T, rows int) finetuningVerticalFixture
 	f := prepareResolution(t)
 	intent := conformance.FinetuningIntentV1()
 	intent.DatasetVersionID = uuid.NewString()
-	material := conformance.FinetuningMaterialV21()
-	writeMaterial(t, f.directory, material, "cpu")
+
 	f.request.Intent = intent
 	f.request.IdentityRef.OperationID = uuid.NewString()
 	f.request.IdentityRef.ExecutionID = uuid.NewString()
@@ -80,12 +78,7 @@ func prepareFinetuningVertical(t *testing.T, rows int) finetuningVerticalFixture
 	}))
 	t.Cleanup(storage.Close)
 	client := s3.New(s3.Options{Region: "test", BaseEndpoint: aws.String(storage.URL), UsePathStyle: true, HTTPClient: storage.Client(), Credentials: aws.AnonymousCredentials{}, RetryMaxAttempts: 1})
-	f.facts.InputFilePath = "/workspace/inputs/data/finetune_data.jsonl"
-	f.facts.OutputDirectoryPath = "/workspace/training"
-	reader, e := admissionfacts.Load(f.ctx, []admissionfacts.FileSource{writeManagedFactsFixture(t, f)})
-	if e != nil {
-		t.Fatal(e)
-	}
+	reader := f.factReader.reader
 	repository := input.New(f.openPool())
 	importer := biz.NewInputImporter(repository, objectstore.NewVerifier(client, request.Object.StorageConnectionID), cpup01.ContentLimits{MaxContentBytes: 17179869184}, 1800*time.Second)
 	management := service.NewManagement(biz.NewManagedMaterials(catalogue.NewReader(f.directory), reader, repository, importer))

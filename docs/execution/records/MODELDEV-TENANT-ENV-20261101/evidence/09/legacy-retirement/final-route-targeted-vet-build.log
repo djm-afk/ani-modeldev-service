@@ -1,0 +1,6 @@
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-legacy-retirement	0.015s
+c1b0f2ad9845b89cd6da7cda29a31584d3eabd27f1ed0e4140f26afe18e222ac  cmd/ani-modeldev-legacy-retirement/main.go
+7e145cfab64b3b859cc65754e0e5e39cb3316eb2396b6736bf1cf20bde570537  cmd/ani-modeldev-legacy-retirement/readers.go
+7c12e1e408bd1113f1e243ac2539e670267de9f1f1eb907744166f2ad2609118  cmd/ani-modeldev-legacy-retirement/kube_route.go
+bfeabbbbf0ef07987cb2102ac5b1564d10aaac7b2e9d9b5da8bcabae0f20ea36  cmd/ani-modeldev-legacy-retirement/kube_route_test.go
+92e6b0c378ce3054b47aed7f30eaa4c544181be31f18fffa8753dceaf8ac8671  /home/chabking/tenantenv-20261101/legacy-retirement-route-linux-amd64

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -46,6 +47,8 @@ func operationsCall(ctx context.Context, admission biz.Admission, method string)
 func TestOperationsInspectRequiresCurrentAuthorizationAndProjectsDurableFacts(t *testing.T) {
 	pool := postgres.Prepare(t)()
 	request := dispatchRequest(t)
+	request.Admission = admissionfixture.EnsureEnvironment(t, pool, request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 	repository := execution.New(pool)
 	if _, err := repository.Accept(context.Background(), request.Admission); err != nil {
 		t.Fatal(err)
@@ -76,6 +79,8 @@ func TestOperationsInspectRequiresCurrentAuthorizationAndProjectsDurableFacts(t 
 func TestOperationsMTLSRequiresExactMethodAndTenantScope(t *testing.T) {
 	pool := postgres.Prepare(t)()
 	request := dispatchRequest(t)
+	request.Admission = admissionfixture.EnsureEnvironment(t, pool, request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 	repository := execution.New(pool)
 	if _, err := repository.Accept(context.Background(), request.Admission); err != nil {
 		t.Fatal(err)
@@ -198,6 +203,8 @@ func TestOperationsCleanupDurablyAuditsAndBlocksUnresolvedReplay(t *testing.T) {
 	open := postgres.Prepare(t)
 	pool := open()
 	request := dispatchRequest(t)
+	request.Admission = admissionfixture.EnsureEnvironment(t, open(), request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 	repository := execution.New(pool)
 	ctx := context.Background()
 	if _, err := repository.Accept(ctx, request.Admission); err != nil {

@@ -1,0 +1,98 @@
+{
+  "schema": "ani.modeldev.tenant-environment.validation-results.v1",
+  "scope": "source and isolated external-boundary integration; specified-cluster cutover and A/B live not completed",
+  "modeldev": {
+    "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+    "required_command": "GOTOOLCHAIN=auto GOFLAGS=-p=2 python3 scripts/with-test-postgres.py make verify",
+    "execution_host": "ssh fedora",
+    "status": "PASS",
+    "exit_code": 0,
+    "evidence": "modeldev-final-make-verify.log",
+    "generated_evidence": "modeldev-final-generation.log",
+    "source_identity": "modeldev-tested-source-identity.json",
+    "source_files": 845,
+    "external_boundary_cpu_mainflow": {
+      "status": "PASS",
+      "execution": "real PostgreSQL/business/CPU process/files; Kubernetes,KFP,Resource,S3 boundary stubs",
+      "success_evidence": "04/modeldev-cpu-mainflow-final-shared-budget.log",
+      "failure_evidence": "04/modeldev-cpu-mainflow-rejected-final.log"
+    },
+    "earlier_failures": [
+      "api-release-verify.log",
+      "api-release-verify-attempt2.log",
+      "modeldev-make-verify-before-vet-fix.log"
+    ],
+    "test_only_supplement": {
+      "commit": "e4067444498394d0c5247bc927fa5476bc198015",
+      "status": "PASS",
+      "test": "CL03 independent VM/launcher/PVC remain after original cleanup",
+      "evidence": "10-cl03-coexistence.log",
+      "runtime_api_source_unchanged": true
+    },
+    "budget_recovery_followup": {
+      "status": "PASS",
+      "test_only_commit": "6b0b952478081034baee8ab27fd8216b26742700",
+      "evidence": "03-environment-budget-recovery-record.json",
+      "output": "03-environment-budget-recovery.log",
+      "runtime_api_source_unchanged": true,
+      "fixed_ensure_budget_observed": "25.001233984s",
+      "resumed_original_identity_to_sealed_ready": true
+    }
+  },
+  "resource": {
+    "source_commit": "71b3ad7a2a88ae531e5e7b80abde2f494ff28d9d",
+    "required_command": "GOTOOLCHAIN=auto GOMAXPROCS=2 GOFLAGS=-p=2 make verify",
+    "execution_host": "ssh fedora",
+    "status": "PASS",
+    "exit_code": 0,
+    "evidence": "resource/verify.log",
+    "real_pg_evidence": "resource/namespace-pg.log",
+    "live_backfill_status": "NOT_RUN"
+  },
+  "governance": {
+    "status": "BLOCKED_REQUIRED_VALIDATION",
+    "source_commit": "fa80f886d022177173d7e9cf81ec51e54c2df4c8",
+    "formal_modeldev_pin": "v0.0.0-20261031195825-d807cbdbd5dd",
+    "formal_resource_pin": "v0.0.0-20261031180451-71b3ad7a2a88",
+    "pin_status": "PASS",
+    "real_pg_six": "PASS",
+    "final_default_race": "PASS / original session exit0",
+    "final_make_check": "FAIL / original session exit2; baseline active VM logs route missing authoritative capability mapping",
+    "final_audit": "FAIL / continuation exit1; 0 affected calls, baseline unchanged fixture Gitleaks finding",
+    "final_remote_source_identity": "PASS / 44 changed files, 0 mismatch",
+    "replace_or_copied_pb": false,
+    "evidence": "gov-final/result.json",
+    "http_integration_followup": {
+      "status": "PASS",
+      "test_only_commit": "5cfa9065190b9585b799e428537a0019ca70e41a",
+      "evidence": "gov-final/environment-http-integration-final-receipt.json",
+      "external_boundary": "mTLS ModelDev peer only; actual JWT/Redis/Casbin/PG authorization and service/client",
+      "exit_code": 0,
+      "runtime_api_source_unchanged": true
+    }
+  },
+  "governance_old_api_maintenance": {
+    "source_commit": "6a7c721ea113d51497421d7975122ec7ca8105c2",
+    "required_gate": "FAIL",
+    "audit": "FAIL",
+    "targeted_and_pg": "PASS",
+    "evidence": "gov-maintenance/result.json",
+    "deployed": false
+  },
+  "specified_cluster": {
+    "identity": "PASS",
+    "mutation": "none persisted",
+    "native_schema_dryrun": {
+      "status": "PASS",
+      "objects_accepted": 21,
+      "evidence": "06-native-server-dryrun.fixed.json",
+      "installed_policy_typechecking": "NOT_RUN",
+      "installed_policy_behavior": "NOT_RUN"
+    },
+    "legacy_cleanup": "BLOCKED",
+    "legacy_open_executions": 3,
+    "blocker": "09/open-execution-blockers.md",
+    "new_rollout": "NOT_RUN",
+    "ab_live": "NOT_RUN"
+  }
+}

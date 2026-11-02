@@ -1,0 +1,93 @@
+{
+  "observed_at": "2026-11-01T02:08:11.975905+00:00",
+  "source_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "plan_observed_at": "2026-11-01T02:07:11.51379848Z",
+  "plan_sha256": "765b60dc82720999f4dc8712b729004c49f0fdcf326256d550ac4bba8b1ca9b9",
+  "plan_ready": true,
+  "read_only": true,
+  "all_three_open": true,
+  "qualifications": [
+    {
+      "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "owner_revision": 16,
+      "close_generation": 2,
+      "command_fence": 2,
+      "original_stop_fence": {
+        "Source": "ORIGINAL_PERSISTED_RUNTIME_CLOSE",
+        "Generation": 1,
+        "Reason": "STEP_FAILED",
+        "RequestedAt": "2026-10-30T00:57:45.356467Z"
+      },
+      "training_outcome": "UNKNOWN",
+      "training_exit_kind": "ORIGINAL_SUSPENDED_EXIT_143",
+      "training_writers_absent": true,
+      "step_pods": 11,
+      "training_resources": 5,
+      "log_dispositions": [
+        "TRAINING_LOGS_UNRECOVERABLE"
+      ],
+      "proof_sha256": "2d16b79d4c9f25af69cff3f07fc9c416a48c02d0a6bde7b39cd805904173ac2a",
+      "blocker": ""
+    },
+    {
+      "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "owner_revision": 16,
+      "close_generation": 2,
+      "command_fence": 2,
+      "original_stop_fence": {
+        "Source": "ORIGINAL_PERSISTED_RUNTIME_CLOSE",
+        "Generation": 1,
+        "Reason": "STEP_FAILED",
+        "RequestedAt": "2026-10-29T16:00:01.066939Z"
+      },
+      "training_outcome": "UNKNOWN",
+      "training_exit_kind": "ORIGINAL_SUSPENDED_EXIT_143",
+      "training_writers_absent": true,
+      "step_pods": 11,
+      "training_resources": 5,
+      "log_dispositions": [
+        "TRAINING_LOGS_UNRECOVERABLE"
+      ],
+      "proof_sha256": "41beaf48eed27d24a311c38ccaebfb0fdad62102b5dc144059d58bd539c21bad",
+      "blocker": ""
+    },
+    {
+      "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+      "owner_revision": 6,
+      "close_generation": 1,
+      "command_fence": 1,
+      "original_stop_fence": {
+        "Source": "ORIGINAL_PERSISTED_RUNTIME_CLOSE",
+        "Generation": 1,
+        "Reason": "DEADLINE",
+        "RequestedAt": "2026-10-30T12:21:14.37758Z"
+      },
+      "training_outcome": null,
+      "training_exit_kind": null,
+      "training_writers_absent": null,
+      "step_pods": 4,
+      "training_resources": 0,
+      "log_dispositions": [],
+      "proof_sha256": "1767444042ee57b83e4d511f72bfb3ffc8a45083baf18daf2086d4a18b27b156",
+      "blocker": ""
+    }
+  ],
+  "third_original_gpu_release": {
+    "receipt_id": "23600748-d80d-5ceb-be35-664a995bb7db",
+    "payload_sha256": "3e63b8ddc427e1228169804c6a6d28c34899318224257119b0c788b522ca7cad",
+    "active_create_leases": 0,
+    "charges_fully_released": true,
+    "account_equalities": true,
+    "live_mtls_replay": "NOT_RUN; ALREADY_APPLIED must be actually obtained only after original close+cleanup"
+  },
+  "scope_and_identity": "Matches three compiled original executions, original cluster/namespace/Run/Workflow UIDs and fixed raw v1 archive SHAs",
+  "training_truth": "Two UNKNOWN original suspended exits143 remain UNKNOWN; no captured log facts; raw gen1STEP_FAILED epoch differs from later CAS gen2USER_STOP and both are preserved",
+  "current_source_blockers": [],
+  "remaining_apply_prerequisites": [
+    "Parent review exact plan SHA",
+    "Fresh actual Gov503/zero lease/source-bound gate with root_apply_authorized=true",
+    "Tool repeats full identity and all original qualifications before first write"
+  ],
+  "last_required_full_gate": "Previous fixed old-base required makeverify actually FAIL; current affected realPG/vet/build PASS; no unrelated fixture or dependency changes",
+  "apply": "NOT_RUN"
+}

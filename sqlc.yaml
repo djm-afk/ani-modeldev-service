@@ -1,7 +1,7 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    schema: "migrations/0001_current_baseline.up.sql"
+    schema: ["migrations/0001_current_baseline.up.sql", "migrations/0002_tenant_execution_environments.up.sql", "migrations/0003_execution_environment_projection.up.sql"]
     queries: "internal/data/execution/queries.sql"
     gen:
       go:
@@ -9,7 +9,7 @@ sql:
         out: "internal/data/execution/sqlc"
         sql_package: "pgx/v5"
   - engine: "postgresql"
-    schema: "migrations/0001_current_baseline.up.sql"
+    schema: ["migrations/0001_current_baseline.up.sql", "migrations/0002_tenant_execution_environments.up.sql", "migrations/0003_execution_environment_projection.up.sql"]
     queries: "internal/data/input/queries.sql"
     gen:
       go:
@@ -17,7 +17,7 @@ sql:
         out: "internal/data/input/sqlc"
         sql_package: "pgx/v5"
   - engine: "postgresql"
-    schema: "migrations/0001_current_baseline.up.sql"
+    schema: ["migrations/0001_current_baseline.up.sql", "migrations/0002_tenant_execution_environments.up.sql", "migrations/0003_execution_environment_projection.up.sql"]
     queries: "internal/data/submission/queries.sql"
     gen:
       go:
@@ -25,7 +25,7 @@ sql:
         out: "internal/data/submission/sqlc"
         sql_package: "pgx/v5"
   - engine: "postgresql"
-    schema: "migrations/0001_current_baseline.up.sql"
+    schema: ["migrations/0001_current_baseline.up.sql", "migrations/0002_tenant_execution_environments.up.sql", "migrations/0003_execution_environment_projection.up.sql"]
     queries: "internal/data/lifecycle/queries.sql"
     gen:
       go:

@@ -1,0 +1,78 @@
+{
+  "fixed_scope_identity_hash_match": true,
+  "native_21bf_counts": {
+    "MD": {
+      "total": 50,
+      "pass": 43,
+      "fail": 7
+    },
+    "GOV": {
+      "total": 54,
+      "pass": 47,
+      "fail": 7
+    }
+  },
+  "seven_original_c99_full_envelope_exact_bytes": "PASS",
+  "seven_21bf_first_actual_guard": "INVALID_ARGUMENT: snapshot training image",
+  "failures": [
+    {
+      "execution_id": "111952ee-9d72-46d9-9981-c2a1ead73289",
+      "operation_id": "8cb22cc3-04cf-4be8-b781-6c4781ef445f",
+      "snapshot_sha256": "d0a5d82fc032f3d6b5571a0c13817611efdb8f361520684bce98d93f33c01fbf",
+      "accepted_at": "2026-10-29T13:25:10.21727+00:00",
+      "native_validate_reason": "INVALID_ARGUMENT: snapshot training image"
+    },
+    {
+      "execution_id": "4534a7de-480c-4a8f-ae76-e647cf7c158c",
+      "operation_id": "644dfe94-5311-4cc5-9a33-c6296de0fecb",
+      "snapshot_sha256": "637373fc4213532e0724392564d9c2fb437575b5593eb88760f60b303ba93624",
+      "accepted_at": "2026-10-28T22:22:05.345546+00:00",
+      "native_validate_reason": "INVALID_ARGUMENT: snapshot training image"
+    },
+    {
+      "execution_id": "5953c2e1-107e-4d46-af6d-4c718c7fb10c",
+      "operation_id": "badf5481-6202-4619-8173-ece940ff972c",
+      "snapshot_sha256": "0208188cf2da722447cf84fbaa1459142a1fc4300f57360700971ec4c1d31208",
+      "accepted_at": "2026-10-28T23:14:23.964625+00:00",
+      "native_validate_reason": "INVALID_ARGUMENT: snapshot training image"
+    },
+    {
+      "execution_id": "5f0b866e-31d1-4b44-8a7c-5cc900767e00",
+      "operation_id": "52ab36df-8e61-41cf-9519-b76aee82ebbd",
+      "snapshot_sha256": "bd1fe7a7524ca89f61702eeb28a4ed3b74a8e39b0da30512dfeb3b80013eb12c",
+      "accepted_at": "2026-10-29T00:28:25.422202+00:00",
+      "native_validate_reason": "INVALID_ARGUMENT: snapshot training image"
+    },
+    {
+      "execution_id": "c0fa3739-d279-4bb3-85be-0f74b8d4773a",
+      "operation_id": "fda33eaa-0997-4655-b53c-c32d6652a44e",
+      "snapshot_sha256": "9251e87631c02b1b0f33803644240f1a0c5c3bdcf8e50602e0df3ed82cad5906",
+      "accepted_at": "2026-10-29T01:59:27.869116+00:00",
+      "native_validate_reason": "INVALID_ARGUMENT: snapshot training image"
+    },
+    {
+      "execution_id": "e94344af-a825-4ba2-9fa1-838638cc4d5f",
+      "operation_id": "8c42a0b2-e603-4e85-bdd1-30f649d7c6cc",
+      "snapshot_sha256": "a7706257d2a8afca898447799b7ac35ba6db1bb6bb1f8ceb9c81dbbd7e641639",
+      "accepted_at": "2026-10-29T10:58:10.742766+00:00",
+      "native_validate_reason": "INVALID_ARGUMENT: snapshot training image"
+    },
+    {
+      "execution_id": "ec57bafc-56bd-4f7e-8f65-45527aa4d0e3",
+      "operation_id": "b448bc04-fe3f-4322-9c16-f08e7c8090db",
+      "snapshot_sha256": "2472153d80484cd6ee777afa9aebdc5f1b5275d861ef294b6e1fca3bb822938d",
+      "accepted_at": "2026-10-29T01:07:51.743213+00:00",
+      "native_validate_reason": "INVALID_ARGUMENT: snapshot training image"
+    }
+  ],
+  "affected_clauses": [
+    "spec13.4 original data deletion qualification",
+    "no compatibility/current single codec boundary"
+  ],
+  "impact": {
+    "Gov_persisted_reader": "source + exact pure codec: rejected by current native mapper",
+    "DB_cleanup": "source: admitted(er) invokes current strict snapshot decode before close/ACK qualification, so same seven are also deletion BLOCKED; not only Gov GET",
+    "four_original_command_tool": "unaffected; original four strict native original21bf bytes PASS"
+  },
+  "minimum_candidate_for_root_review": "Keep production/current readers unchanged. A finite historical deletion qualification may use each of these seven original PK+rowSHA and exact original c99 codec evidence alongside unchanged original closed/cleanup/ACK facts. This is a proposed fact-conflict correction only, not implemented or silently allowed. No new runtime reader/format fallback."
+}

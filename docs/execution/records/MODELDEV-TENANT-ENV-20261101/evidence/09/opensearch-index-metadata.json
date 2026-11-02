@@ -1,0 +1,101 @@
+{
+  "read_only": true,
+  "observed_at": "2026-10-31T19:08:59.835326+00:00",
+  "auth_source": "existing ani-opensearch-admin Secret; credentials not emitted",
+  "tls_verified": true,
+  "http_status": 200,
+  "response_bytes": 1426,
+  "response_sha256": "921210afa2f98ebbe6224b3d91806ff466ae4c6a049a6fd7f05bb9c2303814c8",
+  "indices": [
+    {
+      "index": "top_queries-2026.10.24-59525",
+      "docs.count": "748",
+      "store.size": "238.3kb",
+      "status": "open"
+    },
+    {
+      "index": "top_queries-2026.10.29-59530",
+      "docs.count": "381",
+      "store.size": "143.1kb",
+      "status": "open"
+    },
+    {
+      "index": "top_queries-2026.10.26-59527",
+      "docs.count": "816",
+      "store.size": "299.8kb",
+      "status": "open"
+    },
+    {
+      "index": "ani-logs-2026.10.30",
+      "docs.count": "20308798",
+      "store.size": "7gb",
+      "status": "open"
+    },
+    {
+      "index": ".opendistro_security",
+      "docs.count": "8",
+      "store.size": "52.5kb",
+      "status": "open"
+    },
+    {
+      "index": "ani-logs-2026.10.31",
+      "docs.count": "6848669",
+      "store.size": "2.2gb",
+      "status": "open"
+    },
+    {
+      "index": "top_queries-2026.10.27-59528",
+      "docs.count": "741",
+      "store.size": "428.3kb",
+      "status": "open"
+    },
+    {
+      "index": ".plugins-ml-config",
+      "docs.count": "1",
+      "store.size": "4.6kb",
+      "status": "open"
+    },
+    {
+      "index": "top_queries-2026.10.30-59552",
+      "docs.count": "910",
+      "store.size": "286.9kb",
+      "status": "open"
+    },
+    {
+      "index": "ani-logs-2026.10.29",
+      "docs.count": "26127879",
+      "store.size": "8.2gb",
+      "status": "open"
+    },
+    {
+      "index": "top_queries-2026.10.31-59553",
+      "docs.count": "2",
+      "store.size": "259.5kb",
+      "status": "open"
+    },
+    {
+      "index": "top_queries-2026.10.25-59526",
+      "docs.count": "819",
+      "store.size": "302.7kb",
+      "status": "open"
+    },
+    {
+      "index": "ani-logs-write-test",
+      "docs.count": "1",
+      "store.size": "4.2kb",
+      "status": "open"
+    },
+    {
+      "index": ".opendistro-job-scheduler-lock",
+      "docs.count": "4",
+      "store.size": "281.3kb",
+      "status": "open"
+    },
+    {
+      "index": "top_queries-2026.10.28-59529",
+      "docs.count": "1007",
+      "store.size": "475.9kb",
+      "status": "open"
+    }
+  ]
+}

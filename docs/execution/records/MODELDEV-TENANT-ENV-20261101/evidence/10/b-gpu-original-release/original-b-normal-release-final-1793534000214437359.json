@@ -1,0 +1,138 @@
+{
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T11:53:17.764482+00:00"
+  },
+  "source_deployed_commit": "9ca79d283d68ed37ffd3f7428c065da26d0dd9f2",
+  "persistent_mutations": false,
+  "scope": "only original B execution/operation/charge and its account",
+  "modeldev": {
+    "closed_at": "2026-11-01T10:59:55.654805+00:00",
+    "gpu_release": {
+      "scope": {
+        "ref": {
+          "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "resource_id": "d7a956ca-0e56-483e-96c9-868d1d36adde",
+          "owner_service": "ani-modeldev-service",
+          "create_operation_id": "f7dec5f2-4307-4524-bd35-5119946cf2c5"
+        },
+        "pods": [],
+        "sealed_at": "2026-11-01T11:52:36.0629Z",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "close_operation_id": "170c2ae7-2e9c-4978-9f04-bc9b06c908d2"
+      },
+      "outbox": {
+        "ack": {
+          "status": "APPLIED",
+          "resource_id": "d7a956ca-0e56-483e-96c9-868d1d36adde",
+          "release_event_id": "beaf1fc0-f0ee-4026-8704-4ae6f901e779",
+          "create_operation_id": "f7dec5f2-4307-4524-bd35-5119946cf2c5"
+        },
+        "event": {
+          "reason": "RESOURCE_RELEASED",
+          "resource_id": "d7a956ca-0e56-483e-96c9-868d1d36adde",
+          "release_event_id": "beaf1fc0-f0ee-4026-8704-4ae6f901e779",
+          "create_operation_id": "f7dec5f2-4307-4524-bd35-5119946cf2c5"
+        },
+        "created_at": "2026-11-01T11:52:36.0629Z",
+        "delivered_at": "2026-11-01T11:52:36.138047Z"
+      },
+      "no_dispatch": false,
+      "scope_sha256": "30821d832513eb92de25fff08980cd55ee523ee657cea9e298335b69f9bfee95"
+    },
+    "observed_at": "2026-11-01T11:53:18.001955+00:00",
+    "database_user": "postgres",
+    "owner_revision": 19,
+    "compute_cleanup": {
+      "logs": [],
+      "actor": "modeldev:compute-cleanup",
+      "phase": "APPLIED",
+      "targets": [
+        {
+          "UID": "a7a7580c-e888-441e-8899-349255e702d7",
+          "Kind": "Workflow",
+          "Name": "ft-bq2qg",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "argoproj.io/v1alpha1",
+          "APIObjectPresent": true,
+          "CreationDisabled": true
+        }
+      ],
+      "attempts": 3,
+      "requested": [
+        {
+          "UID": "a7a7580c-e888-441e-8899-349255e702d7",
+          "Kind": "Workflow",
+          "Name": "ft-bq2qg",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "argoproj.io/v1alpha1",
+          "APIObjectPresent": true,
+          "CreationDisabled": true
+        }
+      ],
+      "logs_ready": true,
+      "started_at": "2026-11-01T11:47:06.610763Z",
+      "plan_sha256": "765773cbe894ce98ae89e28d3e72b5024dbc9c9c2ac94447c493488cd6e399cb",
+      "completed_at": "2026-11-01T11:52:36.025818Z",
+      "execution_id": "d7a956ca-0e56-483e-96c9-868d1d36adde",
+      "reconciled_at": "0001-01-01T00:00:00Z",
+      "close_generation": 1,
+      "confirmed_absent": [
+        {
+          "UID": "a7a7580c-e888-441e-8899-349255e702d7",
+          "Kind": "Workflow",
+          "Name": "ft-bq2qg",
+          "ExitCode": null,
+          "OwnerUID": "",
+          "Terminal": true,
+          "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "APIVersion": "argoproj.io/v1alpha1",
+          "APIObjectPresent": false,
+          "CreationDisabled": true
+        }
+      ]
+    },
+    "step_cleanup_completed_at": "2026-11-01T11:47:06.577179Z"
+  },
+  "governance": {
+    "charge": {
+      "charge_id": "870b6b83-9fd5-4733-b88b-2a2c1be09635",
+      "quota_code": "gpu.shared_memory_mib",
+      "updated_at": "2026-11-01T11:52:36.100015+00:00",
+      "operation_id": "f7dec5f2-4307-4524-bd35-5119946cf2c5",
+      "original_units": 24570,
+      "released_units": 24570,
+      "remaining_units": 0
+    },
+    "account": {
+      "id": 44,
+      "version": 2,
+      "occupied_units": 0,
+      "remaining_charge_sum": 0
+    },
+    "receipts": [
+      {
+        "created_at": "2026-11-01T11:52:36.100015+00:00",
+        "receipt_id": "b62d65c0-1259-5a35-90cf-f6ccf03a284b",
+        "payload_hash": "b48203b3c99a1d06432e6c9e90beaba0cf4109211858a2f31a641251648b21fd",
+        "owner_service": "ani-modeldev-service",
+        "release_event_id": "beaf1fc0-f0ee-4026-8704-4ae6f901e779"
+      }
+    ],
+    "read_only": "on",
+    "observed_at": "2026-11-01T11:53:18.152127+00:00",
+    "database_user": "postgres"
+  },
+  "finished_at": "2026-11-01T11:53:18.162106+00:00"
+}

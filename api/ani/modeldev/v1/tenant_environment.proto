@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package ani.modeldev.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1;modeldevv1";
+
+enum TenantExecutionEnvironmentState {
+  TENANT_EXECUTION_ENVIRONMENT_STATE_UNSPECIFIED = 0;
+  TENANT_EXECUTION_ENVIRONMENT_STATE_PROVISIONING = 1;
+  TENANT_EXECUTION_ENVIRONMENT_STATE_READY = 2;
+  TENANT_EXECUTION_ENVIRONMENT_STATE_BLOCKED = 3;
+  TENANT_EXECUTION_ENVIRONMENT_STATE_NEEDS_REVIEW = 4;
+}
+
+enum TenantExecutionEnvironmentPhase {
+  TENANT_EXECUTION_ENVIRONMENT_PHASE_UNSPECIFIED = 0;
+  TENANT_EXECUTION_ENVIRONMENT_PHASE_NAMESPACE = 1;
+  TENANT_EXECUTION_ENVIRONMENT_PHASE_RESOURCES = 2;
+  TENANT_EXECUTION_ENVIRONMENT_PHASE_EXPERIMENT = 3;
+  TENANT_EXECUTION_ENVIRONMENT_PHASE_VERIFY = 4;
+  TENANT_EXECUTION_ENVIRONMENT_PHASE_PUBLISH = 5;
+  TENANT_EXECUTION_ENVIRONMENT_PHASE_COMPLETE = 6;
+}
+
+// Persistent observation only; Get does not probe or provision resources.
+message TenantExecutionEnvironmentView {
+  string environment_id = 1;
+  string cluster_id = 2;
+  string namespace_name = 3;
+  optional string namespace_uid = 4;
+  TenantExecutionEnvironmentState state = 5;
+  TenantExecutionEnvironmentPhase phase = 6;
+  string reason_code = 7;
+  bool retryable = 8;
+  uint32 retry_after_seconds = 9;
+  optional string binding_digest = 10;
+  optional string experiment_id = 11;
+  google.protobuf.Timestamp updated_at = 12;
+  google.protobuf.Timestamp last_verified_at = 13;
+}
+
+message EnsureTenantExecutionEnvironmentRequest {
+  string operation_id = 1;
+}
+
+message GetTenantExecutionEnvironmentRequest {}
+
+message EnsureTenantExecutionEnvironmentResponse {
+  TenantExecutionEnvironmentView environment = 1;
+}
+
+message GetTenantExecutionEnvironmentResponse {
+  TenantExecutionEnvironmentView environment = 1;
+}
+
+// Only authenticated Governance may request current-tenant provisioning.
+service ModelDevTenantEnvironmentService {
+  rpc EnsureTenantExecutionEnvironment(EnsureTenantExecutionEnvironmentRequest) returns (EnsureTenantExecutionEnvironmentResponse);
+  rpc GetTenantExecutionEnvironment(GetTenantExecutionEnvironmentRequest) returns (GetTenantExecutionEnvironmentResponse);
+}

@@ -1,0 +1,1392 @@
+{
+  "started_at": "2026-11-01T12:10:39.104910+00:00",
+  "mode": "readback",
+  "tenant": "A",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/2d9bcccd-78e7-47ab-9922-dcee85021099",
+      "http_status": 200,
+      "response": {
+        "operation_id": "0af911b1-c5a4-464d-8da1-87b3e4949dd3",
+        "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+        "name": "tenantenv-a_cpu-935c3148-a3",
+        "kind": "GENERAL_TRAINING",
+        "implementation_id": "builtin.mlp",
+        "compute_preset_id": "84547768-be1b-45dd-bdb9-be824f58d583",
+        "input_version_id": "56676789-5fbc-4a13-b566-a2dcbb1b7f76",
+        "image_id": "img_3af6f494c02c493dbbdff11099290d72",
+        "image_version": "1",
+        "image_scope": "platform",
+        "compute_state": "SUCCEEDED",
+        "delivery_state": "PUBLISHED",
+        "close_state": "CLOSED",
+        "resource_state": "NOT_APPLICABLE",
+        "current_step": "CLOSE",
+        "stop_requested": false,
+        "close_generation": "1",
+        "accepted_at": "2026-11-01T12:06:30.781608Z",
+        "deadline_at": "2026-11-01T12:36:30.781608Z",
+        "observed_at": "2026-11-01T12:10:27.682065Z",
+        "parameter_contract_version": "ani.mlp.parameters.v3",
+        "resolved_configuration_sha256": "",
+        "compute": {
+          "compute_preset_id": "84547768-be1b-45dd-bdb9-be824f58d583",
+          "selection_digest": "cb5e1e771551411e51fa235b72c5d0faeaad00cb7b84577619e34d42bb124032",
+          "cpu_millis": "2000",
+          "memory_mib": "4096",
+          "device_mode": "cpu"
+        },
+        "timing": {
+          "execution_timeout_seconds": "1800",
+          "execution_timeout_max_seconds": "14400",
+          "step_timeout_seconds": "14400"
+        },
+        "history": {
+          "run_id": "4ae96c9a-8b9a-45b9-9abd-827c050a1865",
+          "workflow_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+          "observed_at": "2026-11-01T12:10:27.679046641Z",
+          "run_state": "SUCCEEDED",
+          "run_finished_at": "2026-11-01T12:10:25Z",
+          "workflow_phase": "SUCCEEDED",
+          "workflow_finished_at": "2026-11-01T12:10:25Z",
+          "workflow_resource_version": "21253042",
+          "workflow_nodes_sha256": "f9468746897e2d75be59279a6867b0b2dba7adb560cf532efad416884b1d497c"
+        },
+        "steps": [
+          {
+            "role": "prepare",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:07:40.956218Z",
+            "finished_at": "2026-11-01T12:08:10.325631Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T12:36:30.781608Z"
+          },
+          {
+            "role": "train-wait",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:08:10.325631Z",
+            "finished_at": "2026-11-01T12:08:49.625113Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T12:36:30.781608Z"
+          },
+          {
+            "role": "collect",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:08:49.625113Z",
+            "finished_at": "2026-11-01T12:09:24.81376Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T12:36:30.781608Z"
+          },
+          {
+            "role": "publish",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:09:24.81376Z",
+            "finished_at": "2026-11-01T12:09:27Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T12:36:30.781608Z"
+          },
+          {
+            "role": "close",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T12:10:27.679046641Z",
+            "finished_at": "2026-11-01T12:10:27.682065Z",
+            "exit_code": 0,
+            "deadline_at": ""
+          }
+        ],
+        "metrics": [
+          {
+            "name": "train.loss",
+            "decimal_value": "0.9185541272163391",
+            "step": "1"
+          },
+          {
+            "name": "train.loss",
+            "decimal_value": "0.6795239448547363",
+            "step": "2"
+          },
+          {
+            "name": "train.loss",
+            "decimal_value": "0.44855910539627075",
+            "step": "3"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/2d9bcccd-78e7-47ab-9922-dcee85021099/pods?includeRecycled=true",
+      "http_status": 200,
+      "response": {
+        "pods": [
+          {
+            "pod_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0-0-jhllq",
+            "pod_uid": "c5f68ad7-48a9-49c0-9852-1caa97f530fe",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T12:08:10Z",
+            "start_time": "2026-11-01T12:08:10Z",
+            "deletion_timestamp": "",
+            "layer": "TRAINER",
+            "availability": "LIVE",
+            "step_name": "",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "477f571d-c90e-5e9b-a78b-19d71519159d",
+            "log_available": true,
+            "api_present": true,
+            "exit_code": 0,
+            "metric_instance_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+            "containers": [
+              {
+                "name": "node",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:08:14Z",
+                "finished_at": "2026-11-01T12:08:16Z"
+              }
+            ],
+            "init_containers": [],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "md-jsslg-1642295328",
+            "pod_uid": "ec53f25a-1447-45d1-b32c-b522115b45bd",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T12:06:41Z",
+            "start_time": "2026-11-01T12:06:41Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "md-jsslg.root.exit-handler-1-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "06fe4fa3-4241-5e13-9419-96e2812b691b",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:06:44Z",
+                "finished_at": "2026-11-01T12:06:46Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:06:44Z",
+                "finished_at": "2026-11-01T12:06:45Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:06:42Z",
+                "finished_at": "2026-11-01T12:06:42Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "md-jsslg-3553341002",
+            "pod_uid": "e3465a21-0bad-4c3f-823d-143bbfcda938",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T12:09:35Z",
+            "start_time": "2026-11-01T12:09:35Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "md-jsslg.root.exit-handler-1.close-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "5b1d647f-5550-5e71-949c-51cc663c86c5",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:09:37Z",
+                "finished_at": "2026-11-01T12:09:39Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:09:37Z",
+                "finished_at": "2026-11-01T12:09:38Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:09:35Z",
+                "finished_at": "2026-11-01T12:09:35Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "md-jsslg-2703326368",
+            "pod_uid": "d5e32ca6-7452-40a2-bea2-a60dcbb5d5ab",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T12:08:33Z",
+            "start_time": "2026-11-01T12:08:33Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "md-jsslg.root.exit-handler-1.collect-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "12a58e75-8ad9-50b3-b636-14495db47880",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:08:35Z",
+                "finished_at": "2026-11-01T12:08:37Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:08:35Z",
+                "finished_at": "2026-11-01T12:08:36Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:08:34Z",
+                "finished_at": "2026-11-01T12:08:34Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "md-jsslg-3557594322",
+            "pod_uid": "d47979bb-90a3-4346-824a-6d6ca4cd3dd3",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T12:07:11Z",
+            "start_time": "2026-11-01T12:07:12Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "md-jsslg.root.exit-handler-1.createpvc",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "8cad71db-c2cc-5723-83d1-814da9195cac",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:07:14Z",
+                "finished_at": "2026-11-01T12:07:16Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:07:14Z",
+                "finished_at": "2026-11-01T12:07:16Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:07:12Z",
+                "finished_at": "2026-11-01T12:07:13Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "md-jsslg-3583311329",
+            "pod_uid": "d57ea70a-aec0-4ab5-a044-7e905b45e3d5",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T12:10:15Z",
+            "start_time": "2026-11-01T12:10:15Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "md-jsslg.root.exit-handler-1.onExit.finalize-close.executor(0)",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "d879e0ea-68b3-5424-80e7-b54df7063090",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "4ae96c9a-8b9a-45b9-9abd-827c050a1865",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:10:19Z",
+                "finished_at": "2026-11-01T12:10:21Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:10:19Z",
+                "finished_at": "2026-11-01T12:10:21Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:10:16Z",
+                "finished_at": "2026-11-01T12:10:16Z"
+              },
+              {
+                "name": "kfp-launcher",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:10:17Z",
+                "finished_at": "2026-11-01T12:10:18Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "md-jsslg-2946403211",
+            "pod_uid": "c9c10053-2817-404f-bb4e-29e4d0484c73",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T12:07:22Z",
+            "start_time": "2026-11-01T12:07:22Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "md-jsslg.root.exit-handler-1.prepare-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "c015417c-9d11-5979-bc2b-14a17b78e090",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:07:24Z",
+                "finished_at": "2026-11-01T12:07:26Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:07:24Z",
+                "finished_at": "2026-11-01T12:07:26Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:07:22Z",
+                "finished_at": "2026-11-01T12:07:22Z"
+              }
+            ],
+            "ephemeral_containers": []
+          },
+          {
+            "pod_name": "md-jsslg-741119519",
+            "pod_uid": "df6ce49c-4955-48d4-a0be-52af931b37f9",
+            "phase": "Succeeded",
+            "ready": false,
+            "node_name": "node3",
+            "restarts": 0,
+            "created_at": "2026-11-01T12:09:04Z",
+            "start_time": "2026-11-01T12:09:04Z",
+            "deletion_timestamp": "",
+            "layer": "PIPELINE",
+            "availability": "LIVE",
+            "step_name": "md-jsslg.root.exit-handler-1.publish-driver",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "84729d6a-d978-56df-a192-628e0b376139",
+            "log_available": true,
+            "api_present": true,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "wait",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:09:06Z",
+                "finished_at": "2026-11-01T12:09:08Z"
+              },
+              {
+                "name": "main",
+                "type": "container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:09:06Z",
+                "finished_at": "2026-11-01T12:09:07Z"
+              }
+            ],
+            "init_containers": [
+              {
+                "name": "init",
+                "type": "init_container",
+                "state": "terminated",
+                "reason": "Completed",
+                "restart_count": 0,
+                "exit_code": 0,
+                "started_at": "2026-11-01T12:09:04Z",
+                "finished_at": "2026-11-01T12:09:04Z"
+              }
+            ],
+            "ephemeral_containers": []
+          }
+        ],
+        "observed_at": "2026-11-01T12:10:39.407452372Z",
+        "availability": "LIVE",
+        "projection_truncated": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/2d9bcccd-78e7-47ab-9922-dcee85021099/artifacts?page=1&pageSize=100",
+      "http_status": 200,
+      "response": {
+        "items": [
+          {
+            "artifact_id": "21d99ea5-85a7-5898-8834-6e505e9afe68",
+            "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+            "filename": "model.pt",
+            "role": "CHECKPOINT",
+            "size_bytes": "4504",
+            "sha256": "b6e3f91f5268e929caf3ea95ff9fe356cb62fdabb07e04b64b1ed1c5e71b302a",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T12:09:51.754492959Z"
+          },
+          {
+            "artifact_id": "8ecb0abd-dce0-5ad5-a0d2-87b7955a30c4",
+            "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+            "filename": "summary.json",
+            "role": "SUMMARY",
+            "size_bytes": "722",
+            "sha256": "4d3214f1d0cf87c7784d11bcf2b30e49e3eee89a0b6f3c5481a15a04fc45c2a9",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T12:09:51.754492959Z"
+          },
+          {
+            "artifact_id": "9a981a67-99e6-5701-884d-5dfca9bdb06e",
+            "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+            "filename": "model_config.json",
+            "role": "MODEL_CONFIG",
+            "size_bytes": "116",
+            "sha256": "1286ff35c25ffa51845b19862d348f3178557383c883fee7f003ceb4e3b1e0f9",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T12:09:51.754492959Z"
+          },
+          {
+            "artifact_id": "b8517ea6-f114-515b-aa0a-27b1ae3abcf6",
+            "execution_id": "2d9bcccd-78e7-47ab-9922-dcee85021099",
+            "filename": "metrics.jsonl",
+            "role": "METRICS",
+            "size_bytes": "451",
+            "sha256": "e98d1029a9d477a376b622cfa188a5a1983a0d6f68881c8d0e8260224bf7db07",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T12:09:51.754492959Z"
+          }
+        ],
+        "total": "4"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/2d9bcccd-78e7-47ab-9922-dcee85021099/events?scope=all",
+      "http_status": 200,
+      "response": {
+        "events": [
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeRunning",
+            "first_timestamp": "2026-11-01T12:07:22Z",
+            "last_timestamp": "2026-11-01T12:10:25Z",
+            "count": 26,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T12:07:54Z",
+            "last_timestamp": "2026-11-01T12:10:25Z",
+            "count": 26,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowSucceeded",
+            "first_timestamp": "2026-11-01T12:10:25Z",
+            "last_timestamp": "2026-11-01T12:10:25Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:10:16Z",
+            "last_timestamp": "2026-11-01T12:10:19Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3583311329",
+            "involved_uid": "d57ea70a-aec0-4ab5-a044-7e905b45e3d5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T12:10:16Z",
+            "last_timestamp": "2026-11-01T12:10:19Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3583311329",
+            "involved_uid": "d57ea70a-aec0-4ab5-a044-7e905b45e3d5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T12:10:16Z",
+            "last_timestamp": "2026-11-01T12:10:19Z",
+            "count": 4,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3583311329",
+            "involved_uid": "d57ea70a-aec0-4ab5-a044-7e905b45e3d5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:10:19Z",
+            "last_timestamp": "2026-11-01T12:10:19Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3583311329",
+            "involved_uid": "d57ea70a-aec0-4ab5-a044-7e905b45e3d5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:10:17Z",
+            "last_timestamp": "2026-11-01T12:10:17Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3583311329",
+            "involved_uid": "d57ea70a-aec0-4ab5-a044-7e905b45e3d5",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T12:10:16Z",
+            "last_timestamp": "2026-11-01T12:10:16Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3583311329",
+            "involved_uid": "d57ea70a-aec0-4ab5-a044-7e905b45e3d5",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T12:10:15Z",
+            "last_timestamp": "2026-11-01T12:10:15Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3583311329",
+            "involved_uid": "d57ea70a-aec0-4ab5-a044-7e905b45e3d5",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:09:35Z",
+            "last_timestamp": "2026-11-01T12:09:37Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3553341002",
+            "involved_uid": "e3465a21-0bad-4c3f-823d-143bbfcda938",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T12:09:35Z",
+            "last_timestamp": "2026-11-01T12:09:37Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3553341002",
+            "involved_uid": "e3465a21-0bad-4c3f-823d-143bbfcda938",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T12:09:35Z",
+            "last_timestamp": "2026-11-01T12:09:37Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3553341002",
+            "involved_uid": "e3465a21-0bad-4c3f-823d-143bbfcda938",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:09:37Z",
+            "last_timestamp": "2026-11-01T12:09:37Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3553341002",
+            "involved_uid": "e3465a21-0bad-4c3f-823d-143bbfcda938",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T12:09:35Z",
+            "last_timestamp": "2026-11-01T12:09:35Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3553341002",
+            "involved_uid": "e3465a21-0bad-4c3f-823d-143bbfcda938",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T12:09:35Z",
+            "last_timestamp": "2026-11-01T12:09:35Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3553341002",
+            "involved_uid": "e3465a21-0bad-4c3f-823d-143bbfcda938",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T12:09:04Z",
+            "last_timestamp": "2026-11-01T12:09:06Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-741119519",
+            "involved_uid": "df6ce49c-4955-48d4-a0be-52af931b37f9",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T12:09:04Z",
+            "last_timestamp": "2026-11-01T12:09:06Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-741119519",
+            "involved_uid": "df6ce49c-4955-48d4-a0be-52af931b37f9",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:09:06Z",
+            "last_timestamp": "2026-11-01T12:09:06Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-741119519",
+            "involved_uid": "df6ce49c-4955-48d4-a0be-52af931b37f9",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:09:04Z",
+            "last_timestamp": "2026-11-01T12:09:05Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-741119519",
+            "involved_uid": "df6ce49c-4955-48d4-a0be-52af931b37f9",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T12:09:04Z",
+            "last_timestamp": "2026-11-01T12:09:04Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-741119519",
+            "involved_uid": "df6ce49c-4955-48d4-a0be-52af931b37f9",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T12:09:04Z",
+            "last_timestamp": "2026-11-01T12:09:04Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-741119519",
+            "involved_uid": "df6ce49c-4955-48d4-a0be-52af931b37f9",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:08:34Z",
+            "last_timestamp": "2026-11-01T12:08:35Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2703326368",
+            "involved_uid": "d5e32ca6-7452-40a2-bea2-a60dcbb5d5ab",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T12:08:34Z",
+            "last_timestamp": "2026-11-01T12:08:35Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2703326368",
+            "involved_uid": "d5e32ca6-7452-40a2-bea2-a60dcbb5d5ab",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T12:08:34Z",
+            "last_timestamp": "2026-11-01T12:08:35Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2703326368",
+            "involved_uid": "d5e32ca6-7452-40a2-bea2-a60dcbb5d5ab",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:08:35Z",
+            "last_timestamp": "2026-11-01T12:08:35Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2703326368",
+            "involved_uid": "d5e32ca6-7452-40a2-bea2-a60dcbb5d5ab",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T12:08:33Z",
+            "last_timestamp": "2026-11-01T12:08:33Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2703326368",
+            "involved_uid": "d5e32ca6-7452-40a2-bea2-a60dcbb5d5ab",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T12:08:33Z",
+            "last_timestamp": "2026-11-01T12:08:33Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2703326368",
+            "involved_uid": "d5e32ca6-7452-40a2-bea2-a60dcbb5d5ab",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Completed",
+            "first_timestamp": "2026-11-01T12:08:19Z",
+            "last_timestamp": "2026-11-01T12:08:19Z",
+            "count": 1,
+            "source": "job-controller",
+            "involved_kind": "Job",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0",
+            "involved_uid": "59475c59-97ae-4c11-bf6c-7ea5a3cc67e1",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T12:08:12Z",
+            "last_timestamp": "2026-11-01T12:08:19Z",
+            "count": 3,
+            "source": "volcano",
+            "involved_kind": "PodGroup",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099",
+            "involved_uid": "246bbd49-fd16-4cc8-b714-b6d4d7e6eb24",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AllJobsCompleted",
+            "first_timestamp": "2026-11-01T12:08:19Z",
+            "last_timestamp": "2026-11-01T12:08:19Z",
+            "count": 1,
+            "source": "jobset",
+            "involved_kind": "JobSet",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099",
+            "involved_uid": "3a2e4baa-996a-41a0-b6a9-87e714c64cf4",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:08:14Z",
+            "last_timestamp": "2026-11-01T12:08:14Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0-0-jhllq",
+            "involved_uid": "c5f68ad7-48a9-49c0-9852-1caa97f530fe",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T12:08:14Z",
+            "last_timestamp": "2026-11-01T12:08:14Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0-0-jhllq",
+            "involved_uid": "c5f68ad7-48a9-49c0-9852-1caa97f530fe",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T12:08:14Z",
+            "last_timestamp": "2026-11-01T12:08:14Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0-0-jhllq",
+            "involved_uid": "c5f68ad7-48a9-49c0-9852-1caa97f530fe",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T12:08:13Z",
+            "last_timestamp": "2026-11-01T12:08:13Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0-0-jhllq",
+            "involved_uid": "c5f68ad7-48a9-49c0-9852-1caa97f530fe",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulling",
+            "first_timestamp": "2026-11-01T12:08:13Z",
+            "last_timestamp": "2026-11-01T12:08:13Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0-0-jhllq",
+            "involved_uid": "c5f68ad7-48a9-49c0-9852-1caa97f530fe",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "SuccessfulAttachVolume",
+            "first_timestamp": "2026-11-01T12:08:11Z",
+            "last_timestamp": "2026-11-01T12:08:11Z",
+            "count": 1,
+            "source": "attachdetach-controller",
+            "involved_kind": "Pod",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0-0-jhllq",
+            "involved_uid": "c5f68ad7-48a9-49c0-9852-1caa97f530fe",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T12:08:10Z",
+            "last_timestamp": "2026-11-01T12:08:10Z",
+            "count": 1,
+            "source": "volcano",
+            "involved_kind": "Pod",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0-0-jhllq",
+            "involved_uid": "c5f68ad7-48a9-49c0-9852-1caa97f530fe",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "SuccessfulCreate",
+            "first_timestamp": "2026-11-01T12:08:10Z",
+            "last_timestamp": "2026-11-01T12:08:10Z",
+            "count": 1,
+            "source": "job-controller",
+            "involved_kind": "Job",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099-node-0",
+            "involved_uid": "59475c59-97ae-4c11-bf6c-7ea5a3cc67e1",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Warning",
+            "reason": "Unschedulable",
+            "first_timestamp": "2026-11-01T12:08:10Z",
+            "last_timestamp": "2026-11-01T12:08:10Z",
+            "count": 1,
+            "source": "volcano",
+            "involved_kind": "PodGroup",
+            "involved_name": "md-2d9bcccd-78e7-47ab-9922-dcee85021099",
+            "involved_uid": "246bbd49-fd16-4cc8-b714-b6d4d7e6eb24",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T12:07:54Z",
+            "last_timestamp": "2026-11-01T12:07:54Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T12:07:32Z",
+            "last_timestamp": "2026-11-01T12:07:32Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:07:22Z",
+            "last_timestamp": "2026-11-01T12:07:24Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2946403211",
+            "involved_uid": "c9c10053-2817-404f-bb4e-29e4d0484c73",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T12:07:22Z",
+            "last_timestamp": "2026-11-01T12:07:24Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2946403211",
+            "involved_uid": "c9c10053-2817-404f-bb4e-29e4d0484c73",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T12:07:22Z",
+            "last_timestamp": "2026-11-01T12:07:24Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2946403211",
+            "involved_uid": "c9c10053-2817-404f-bb4e-29e4d0484c73",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:07:24Z",
+            "last_timestamp": "2026-11-01T12:07:24Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2946403211",
+            "involved_uid": "c9c10053-2817-404f-bb4e-29e4d0484c73",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T12:07:22Z",
+            "last_timestamp": "2026-11-01T12:07:22Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2946403211",
+            "involved_uid": "c9c10053-2817-404f-bb4e-29e4d0484c73",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T12:07:22Z",
+            "last_timestamp": "2026-11-01T12:07:22Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-2946403211",
+            "involved_uid": "c9c10053-2817-404f-bb4e-29e4d0484c73",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T12:07:22Z",
+            "last_timestamp": "2026-11-01T12:07:22Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:14Z",
+            "count": 2,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3557594322",
+            "involved_uid": "d47979bb-90a3-4346-824a-6d6ca4cd3dd3",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Created",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:14Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3557594322",
+            "involved_uid": "d47979bb-90a3-4346-824a-6d6ca4cd3dd3",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Started",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:14Z",
+            "count": 3,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3557594322",
+            "involved_uid": "d47979bb-90a3-4346-824a-6d6ca4cd3dd3",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Pulled",
+            "first_timestamp": "2026-11-01T12:07:14Z",
+            "last_timestamp": "2026-11-01T12:07:14Z",
+            "count": 1,
+            "source": "kubelet",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3557594322",
+            "involved_uid": "d47979bb-90a3-4346-824a-6d6ca4cd3dd3",
+            "reporting_instance": "node3"
+          },
+          {
+            "type": "Normal",
+            "reason": "Scheduled",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:12Z",
+            "count": 1,
+            "source": "default-scheduler",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3557594322",
+            "involved_uid": "d47979bb-90a3-4346-824a-6d6ca4cd3dd3",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "AddedInterface",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:12Z",
+            "count": 1,
+            "source": "multus",
+            "involved_kind": "Pod",
+            "involved_name": "md-jsslg-3557594322",
+            "involved_uid": "d47979bb-90a3-4346-824a-6d6ca4cd3dd3",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeRunning",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:12Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:12Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:12Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T12:07:12Z",
+            "last_timestamp": "2026-11-01T12:07:12Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeRunning",
+            "first_timestamp": "2026-11-01T12:07:01Z",
+            "last_timestamp": "2026-11-01T12:07:01Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeRunning",
+            "first_timestamp": "2026-11-01T12:07:01Z",
+            "last_timestamp": "2026-11-01T12:07:01Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeSucceeded",
+            "first_timestamp": "2026-11-01T12:07:01Z",
+            "last_timestamp": "2026-11-01T12:07:01Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeRunning",
+            "first_timestamp": "2026-11-01T12:07:01Z",
+            "last_timestamp": "2026-11-01T12:07:01Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          },
+          {
+            "type": "Normal",
+            "reason": "WorkflowNodeRunning",
+            "first_timestamp": "2026-11-01T12:06:51Z",
+            "last_timestamp": "2026-11-01T12:06:51Z",
+            "count": 1,
+            "source": "workflow-controller",
+            "involved_kind": "Workflow",
+            "involved_name": "md-jsslg",
+            "involved_uid": "e27bdde1-fd33-44cc-b00f-54dde960cd59",
+            "reporting_instance": ""
+          }
+        ],
+        "observed_at": "2026-11-01T12:10:39.821897937Z",
+        "retention_hint": "1h",
+        "truncated": false
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T12:10:39.849795+00:00",
+  "transport_exit_code": 0
+}

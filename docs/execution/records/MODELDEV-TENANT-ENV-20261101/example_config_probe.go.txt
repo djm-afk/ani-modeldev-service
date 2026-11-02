@@ -1,0 +1,35 @@
+package main
+
+import (
+ "encoding/json"
+ "fmt"
+ "os"
+ "strings"
+
+ conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
+ "google.golang.org/protobuf/encoding/protojson"
+ "sigs.k8s.io/yaml"
+)
+
+func main() {
+ raw,err:=os.ReadFile("configs/examples/managed-runtime.yaml");if err!=nil {panic("example missing")}
+ explicit:=map[string]string{
+  "COMMAND_LISTEN_ADDRESS":"0.0.0.0:9090","ADMIN_LISTEN_ADDRESS":"0.0.0.0:9091","MANAGED_STEP_LISTEN_ADDRESS":"0.0.0.0:9092",
+  "MODELDEV_MAX_CONTENT_BYTES":"1073741824","TENANT_ENVIRONMENT_SHA256":strings.Repeat("a",64),
+  "GOVERNANCE_DNS_NAME":"ani-governance.ani-system.svc","KUBERNETES_API_ENDPOINT":"https://kubernetes.default.svc",
+  "KFP_ENDPOINT":"https://ml-pipeline.kubeflow.svc","S3_ENDPOINT":"https://storage.ani-system.svc","S3_REGION":"us-east-1",
+  "PUBLICATION_STORAGE_CONNECTION_ID":"managed-storage","MANAGED_STEP_TOKEN_AUDIENCE":"ani-modeldev-step",
+  "RESOURCE_IMAGE_RUNTIME_ENDPOINT":"ani-resource-runtime.ani-system.svc:443","RESOURCE_IMAGE_RUNTIME_SERVER_NAME":"ani-resource-runtime.ani-system.svc",
+ }
+ expanded:=os.Expand(string(raw),func(name string)string{if v,ok:=explicit[name];ok{return v};if strings.HasSuffix(name,"_FILE")||strings.HasSuffix(name,"_DIRECTORY"){return "/configured/"+strings.ToLower(name)};panic("unknown example substitution")})
+ encoded,err:=yaml.YAMLToJSONStrict([]byte(expanded));if err!=nil {panic("example YAML invalid")}
+ var c conf.Bootstrap
+ if err=protojson.Unmarshal(encoded,&c);err!=nil {panic("example strict protobuf decode failed")}
+ if err=c.Validate();err!=nil {panic("example Bootstrap.Validate failed: "+err.Error())}
+ var document map[string]any;_ = json.Unmarshal(encoded,&document)
+ document["runtime"].(map[string]any)["binding_file"]="/retired/binding.json"
+ invalid,_:=json.Marshal(document)
+ if protojson.Unmarshal(invalid,new(conf.Bootstrap))==nil {panic("retired binding_file accepted")}
+ fmt.Println("PASS managed-runtime.yaml: explicit placeholder substitutions, strict protobuf decode, Bootstrap.Validate, retired binding_file rejected")
+ fmt.Println("NOT_RUN platform file/credentials loading, upstream adapters, cluster writes, deployment and business acceptance")
+}

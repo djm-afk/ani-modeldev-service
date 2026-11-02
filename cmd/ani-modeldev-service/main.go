@@ -13,8 +13,6 @@ import (
 	"github.com/go-kratos/kratos/v3/config/file"
 	"github.com/go-kratos/kratos/v3/log"
 	"go.uber.org/automaxprocs/maxprocs"
-
-	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 )
 
 // Name and Version can be overridden with -ldflags at build time.
@@ -57,11 +55,11 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	var bc conf.Bootstrap
-	if err := c.Scan(&bc); err != nil {
+	bc, err := scanBootstrapConfig(c)
+	if err != nil {
 		return fmt.Errorf("scan config: %w", err)
 	}
-	app, err := buildApp(&bc, logger)
+	app, err := buildApp(bc, logger)
 	if err != nil {
 		return fmt.Errorf("build app: %w", err)
 	}

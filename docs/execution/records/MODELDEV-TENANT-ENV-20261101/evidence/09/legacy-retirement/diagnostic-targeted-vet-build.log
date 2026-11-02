@@ -1,0 +1,6 @@
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-legacy-retirement	0.013s
+96c54f32abfbd2e1e8aa4b4485739d6c5e39cb87a90cbf99ea8932fdccefce35  cmd/ani-modeldev-legacy-retirement/main.go
+3c750be8055817c378ce85dbcc01e2797c0507c83bfab8c767b1657b2d30f744  cmd/ani-modeldev-legacy-retirement/plan.go
+3f70a2b2f971b6c525e9ad132329cdbb631737dd2791068c3b90d6f4e3c87af4  cmd/ani-modeldev-legacy-retirement/plan_test.go
+f487f84b64a0f48a033f3d646392f71f5fa08bbb205d5b7f3b995fa96c1e9df2  cmd/ani-modeldev-legacy-retirement/kube_list_test.go
+8763031ca85ed8155887b4c0d9654d1aa6941262325703d912f5f2099cbc8f54  /home/chabking/tenantenv-20261101/legacy-retirement-diagnostic-linux-amd64

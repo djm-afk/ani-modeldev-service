@@ -1,0 +1,239 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "execution_id": "629cc704-028f-420b-af07-a68128fa0da8",
+  "actions": [
+    {
+      "method": "PATCH",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-1282542045",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.541021+00:00",
+      "http_status": 200,
+      "response_sha256": "d6464b7b16f68af0a0f5ebd273d6d67a47d0599ac338901dae6f7aa8aea33767"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-1282542045",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.565147+00:00",
+      "http_status": 200,
+      "response_sha256": "6985d6e005486785f57793b37dc73bd9cd0c237dc4d0b85028c8f6856655c011"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-2026429762",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.585208+00:00",
+      "http_status": 200,
+      "response_sha256": "3b3b2ff18d0315f644be9eaf4367e7f46fac3cbcfb44ed65b6194c4609e8f698"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-2026429762",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.606761+00:00",
+      "http_status": 200,
+      "response_sha256": "7ceff1b3d9f4f204863b6b1adfd36944ba28b07d5b8cdffb6d035bf8ec0f4fec"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-3140005358",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.626490+00:00",
+      "http_status": 200,
+      "response_sha256": "1705bae2463f1c0c8c39bfe6b37f1974413c92b39b0a3943c2885ab816ca20fa"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-3140005358",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.647721+00:00",
+      "http_status": 200,
+      "response_sha256": "ebf65860f6a00ceef963ea348551a7acee56845d3ad5323facc862da94a00ecc"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-3799624831",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.663388+00:00",
+      "http_status": 200,
+      "response_sha256": "4fa11ee7fd813b1d424c88d8e300f88e4752131e953ddda6e648d36430c4e024"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-3799624831",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.684422+00:00",
+      "http_status": 200,
+      "response_sha256": "e40e163b468ecc60d83b5538d6b5c01359b148bb766486658ffb2ff7b61e824b"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-3922998971",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.702338+00:00",
+      "http_status": 200,
+      "response_sha256": "0a1befcc5bcb05c30586ae357877fed22feb8520ec588e0f9d5bfc1b5424ff9e"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-3922998971",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.731147+00:00",
+      "http_status": 200,
+      "response_sha256": "cc216ad18b7bcfaf167a374ed4a703962b2f042f1823667633973df0641feef7"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-637256416",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.750082+00:00",
+      "http_status": 200,
+      "response_sha256": "2deaedf5cbe57fe50d275acf0cdebe1508ad5616ae3735689f9145eb08163b36"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-637256416",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.773452+00:00",
+      "http_status": 200,
+      "response_sha256": "20fd906c1ef92ce49f2d3c4067924d4c4afb816784bfe13a692fcd46d7e6eecc"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-815957928",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.792640+00:00",
+      "http_status": 200,
+      "response_sha256": "36070f6f4fc1dc4297bcd357da627abb17300e7b97a4cd754a0718cc98409ee2"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-kbvhj-815957928",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.820535+00:00",
+      "http_status": 200,
+      "response_sha256": "42819324ff4d62e19eab4ebd1a117c18e502610dc485537d9917fdfa83e92931"
+    },
+    {
+      "method": "DELETE",
+      "path": "/apis/argoproj.io/v1alpha1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/workflows/md-kbvhj",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.889881+00:00",
+      "http_status": 200,
+      "response_sha256": "fc29ccc125fa36cbbb8473ad8a4f1ec905a7d1579620e9c24aa0e7be7d16f4b7"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/persistentvolumeclaims/ani-kfp-workspace-629cc704-028f-420b-af07-a68128fa0da8",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:23:00.909594+00:00",
+      "http_status": 200,
+      "response_sha256": "28dcd6f233aa9e402ac450d0b41a64a7a4a98db588e5a3f299f53c62ae985a9f"
+    }
+  ],
+  "status": "EXACT_A2_PHYSICAL_RESOURCES_RELEASED",
+  "maintenance_exec_calls": 8,
+  "new_identity_or_token_request": false,
+  "tokens_saved": false,
+  "control_runtime": {
+    "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "pod_name": "ani-modeldev-84789f6c7f-xcrmc",
+    "pod_uid": "3c63533e-55c9-4017-9917-5d5768d302a3",
+    "node": "node3",
+    "replicaset_uid": "d880127b-45eb-4a18-ae27-1500d071dda5",
+    "container_id": "containerd://5f60a9c1b21d277bae7090c94881c89464a73d7ea7dd32c39cc7b8931e100d3a",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:dab40ab06be571d88e30490cb385b9435d004cf7fb1fedc5dbe7315e7de185ee",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:dab40ab06be571d88e30490cb385b9435d004cf7fb1fedc5dbe7315e7de185ee",
+    "started_at": "2026-11-01T11:19:14Z",
+    "restart_count": 0
+  },
+  "api_sample": {
+    "claims": {
+      "iat": 1793531950,
+      "exp": 1793535550,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "https://kubernetes.default.svc.cluster.local"
+      ],
+      "jti_present": true,
+      "pod_uid": "3c63533e-55c9-4017-9917-5d5768d302a3",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 3600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 5,
+      "size_bytes": 1177,
+      "mtime_epoch": 1793531950,
+      "resolved_generation": "..2026_11_01_11_19_11.236301865",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "kfp_sample": {
+    "claims": {
+      "iat": 1793531950,
+      "exp": 1793532550,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "pipelines.kubeflow.org"
+      ],
+      "jti_present": true,
+      "pod_uid": "3c63533e-55c9-4017-9917-5d5768d302a3",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 3,
+      "size_bytes": 1148,
+      "mtime_epoch": 1793531950,
+      "resolved_generation": "..2026_11_01_11_19_10.337474639",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "kfp_before": {
+    "http_status": 200,
+    "state": "FAILED",
+    "finished_at": "2026-11-01T10:52:49Z",
+    "original_binding_matches": true,
+    "response_sha256": "3c792a7bd34caea8e73bff895827273236b24fe4c02e5c1e0b4a48cc4256795e"
+  },
+  "prewrite_identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "original_pods_absent": true,
+  "pvc_and_native_reclaimed_pv_absent": true,
+  "workflow_absent": true,
+  "pre_kfp_delete_identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "kfp_delete": {
+    "phase": "ATTEMPTED",
+    "at": "2026-11-01T11:23:03.349451+00:00",
+    "http_status": 200,
+    "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "kfp_original_run_get_after": 404,
+  "finished_at": "2026-11-01T11:23:03.382968+00:00",
+  "transport_exit": 0,
+  "transport_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

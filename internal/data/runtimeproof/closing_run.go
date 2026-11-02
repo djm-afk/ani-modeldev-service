@@ -47,7 +47,7 @@ func (verifier *Verifier) VerifyClosingRun(ctx context.Context, execution biz.Ex
 	}
 	env := plan.Environment
 	namespace, err := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, env.NamespaceName, metav1.GetOptions{})
-	if err != nil || !sameObject(namespace, "v1", "Namespace", "", env.NamespaceName, env.NamespaceUID) || namespace.GetDeletionTimestamp() != nil {
+	if err != nil || !sameObject(namespace, "v1", "Namespace", "", env.NamespaceName, env.NamespaceUID) || namespace.GetLabels()["network.ani.io/managed-by"] != "ani-network-service" || namespace.GetLabels()["network.ani.io/tenant-id"] != execution.TenantID {
 		return biz.RunAuthorityCandidate{}, biz.ErrRuntimeNotReady
 	}
 	candidate := biz.RunAuthorityCandidate{TenantID: execution.TenantID, ExecutionID: execution.ExecutionID, OperationID: execution.OperationID, SpecHash: execution.SpecHash, AttemptID: dispatch.AttemptID, PlanHash: dispatch.PlanHash, RunID: runID, NamespaceName: env.NamespaceName, NamespaceUID: env.NamespaceUID}

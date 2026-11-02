@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-func TestMountedStorageOwnerRotatesWithExplicitSTSBindingsWithoutAmbientCredentials(t *testing.T) {
+func TestMountedStorageOwnerRotatesWithoutAmbientCredentials(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "restricted-storage-owner.json")
 	write := func(key string) {
 		t.Helper()
-		data := []byte(`{"access_key_id":"` + key + `","secret_access_key":"synthetic-restricted-owner","sts_bindings":[{"tenant_id":"11111111-2222-4333-8444-555555555555","purpose":"publish","connection_id":"artifact-store-v1","bucket":"cpu-artifacts","prefix":"tenant-fixed/executions"}]}`)
+		data := []byte(`{"access_key_id":"` + key + `","secret_access_key":"synthetic-restricted-owner"}`)
 		if err := os.WriteFile(file, data, 0600); err != nil {
 			t.Fatal(err)
 		}

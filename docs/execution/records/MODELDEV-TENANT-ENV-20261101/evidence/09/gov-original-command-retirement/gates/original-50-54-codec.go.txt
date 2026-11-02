@@ -1,0 +1,45 @@
+package main
+
+import (
+ "bytes"
+ "crypto/sha256"
+ "encoding/hex"
+ "encoding/json"
+ "fmt"
+ "os"
+ "strings"
+ "time"
+ "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+)
+func flag(err error) string {if err==nil{return "PASS"};return "FAIL"}
+func hash(raw []byte)string{sum:=sha256.Sum256(raw);return hex.EncodeToString(sum[:])}
+func text(r map[string]json.RawMessage,key string)string{var out string;_ =json.Unmarshal(r[key],&out);return out}
+func raw(r map[string]json.RawMessage,key string)[]byte{value,err:=hex.DecodeString(strings.TrimPrefix(text(r,key),"\\x"));if err!=nil{panic("PRIVATE_CANONICAL_HEX_INVALID")};return value}
+func main(){
+ input,err:=os.ReadFile(os.Args[1]);if err!=nil{panic("PRIVATE_INPUT_UNAVAILABLE")}
+ var envelope struct{ModelDev map[string]json.RawMessage `json:"modeldev"`;Governance map[string]json.RawMessage `json:"governance"`};if json.Unmarshal(input,&envelope)!=nil{panic("PRIVATE_INPUT_INVALID")}
+ var output []map[string]any
+ for _,source:=range []struct{name string;data json.RawMessage}{{"MD",envelope.ModelDev["modeldev_executions"]},{"GOV",envelope.Governance["acceptances"]}}{
+  var rows []map[string]json.RawMessage;_ =json.Unmarshal(source.data,&rows)
+  for _,r:=range rows{
+   intentRaw,snapshotRaw:=raw(r,"intent_canonical"),raw(r,"snapshot_canonical")
+   intent,intentErr:=cpup01.DecodeCanonicalIntent(intentRaw);snapshot,snapshotErr:=cpup01.DecodeCanonicalSnapshot(snapshotRaw)
+   result:=map[string]any{"source":source.name,"execution_id":text(r,"execution_id"),"native_intent_decode":flag(intentErr),"native_snapshot_decode":flag(snapshotErr),"snapshot_sha256":hash(snapshotRaw)}
+   var parsed cpup01.Snapshot
+   decoder:=json.NewDecoder(bytes.NewReader(snapshotRaw));decoder.DisallowUnknownFields();strictErr:=decoder.Decode(&parsed)
+   result["strict_snapshot_json_shape"]=flag(strictErr)
+   if strictErr!=nil{result["strict_shape_reason"]=strictErr.Error()}
+   validateErr:=parsed.Validate();result["native_snapshot_validate"]=flag(validateErr)
+   if validateErr!=nil{result["native_validate_reason"]="SNAPSHOT_VALIDATE_REJECTED"}
+   canon,canonicalErr:=parsed.Canonical();result["native_snapshot_canonical"]=flag(canonicalErr);result["canonical_byte_equal"]=canonicalErr==nil&&bytes.Equal(canon,snapshotRaw)
+   if intentErr==nil&&snapshotErr==nil{
+    tenant,spec:=text(r,"tenant_id"),text(r,"spec_hash");if source.name=="GOV"{tenant,spec=text(r,"resource_tenant_id"),text(r,"execution_spec_hash")}
+    accepted,parseErr:=time.Parse(time.RFC3339Nano,text(r,"accepted_at"));if parseErr!=nil{panic("PRIVATE_ACCEPTED_TIME_INVALID")}
+    a:=cpup01.AdmissionEnvelope{TenantID:tenant,Actor:text(r,"actor"),OperationID:text(r,"operation_id"),ExecutionID:text(r,"execution_id"),Intent:intent,IntentHash:text(r,"intent_hash"),Snapshot:snapshot,SpecHash:spec,AcceptedAt:accepted}
+    ir,sr,err:=a.CanonicalPayloads();result["native_admission_envelope"]=flag(err);result["envelope_exact_bytes_equal"]=err==nil&&bytes.Equal(ir,intentRaw)&&bytes.Equal(sr,snapshotRaw)
+   }
+   output=append(output,result)
+  }
+ }
+ encoded,err:=json.MarshalIndent(output,"","  ");if err!=nil{panic("SAFE_RESULT_ENCODING_FAILED")};fmt.Println(string(encoded))
+}

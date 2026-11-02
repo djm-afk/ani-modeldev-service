@@ -1,0 +1,1 @@
+{"observed_at": "2026-11-01T02:31:39.571704+00:00", "node_plan_path": "/tmp/gov-original-command-retirement-ca01cabf-20261101/plan-post-normal-stop.json", "sha256": "30763cf7446e876277c7bd78bf23083186b64741b59f5c0e695c724176053321", "mode": "0600", "four_original_stop_acks": "CLOSING", "apply": "NOT_RUN"}

@@ -1,0 +1,139 @@
+{
+  "schema": "ani.modeldev.additional-image-publication.v1",
+  "observed_at": "2026-11-01T00:48:26.309416+00:00",
+  "status": "BLOCKED_FEDORA_TO_VERIFIED_HARBOR_TLS_HANDSHAKE_EOF",
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "build_inputs_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+  "approved_route": "evidence/08/update-entry-scope-approval-20261101.json route1",
+  "authority": "10.10.1.66:30003",
+  "project": "ani-resource-factor10-20261022",
+  "source_identity_verified": true,
+  "harbor_ca_sha256": "65f1a1d14d21fed31b89f25b143e78b16605b82d32c56ef6bf8167fe78bab871",
+  "tls_verification_required": true,
+  "skip_tls_used": false,
+  "images": {
+    "step": {
+      "status": "BUILT_LOCAL_VERIFIED_PUBLICATION_BLOCKED",
+      "source_image_id": "102a17fcca37414302ee9703e310bae554905349d8f3b6556ac323ea1408a2a9",
+      "local_digest": "sha256:ff66486ba63d6edfaa7c227fe0fc2db3d897b1ab99db863752502f8089230815",
+      "local_size_bytes": 36725738,
+      "binary_sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e",
+      "labels": {
+        "io.ani.build-inputs-sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "io.ani.source-tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "io.buildah.version": "1.43.2",
+        "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "registry_digest": null,
+      "registry_compressed_layer_bytes": null,
+      "target": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step:tenantenv-d807cbdbd5dd-cymq2rk8"
+    },
+    "webhook": {
+      "status": "BUILT_LOCAL_VERIFIED_PUBLICATION_BLOCKED",
+      "source_image_id": "c1eb9355492835c7cb4897e01fb5b7c400fad91235e0910024c2ded76725e252",
+      "local_digest": "sha256:49a2a74db318db0b627209738c4dc48d1d9f73ee80c8680cb1c25f0638cac317",
+      "local_size_bytes": 67703675,
+      "binary_sha256": "6deb8d923a5e3f93afba7672ba8133e07c2f9066d810e275bc50e43743cf571f",
+      "labels": {
+        "io.ani.build-inputs-sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "io.ani.source-tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "io.buildah.version": "1.43.2",
+        "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "registry_digest": null,
+      "registry_compressed_layer_bytes": null,
+      "target": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-cymq2rk8"
+    },
+    "training_cpu": {
+      "status": "BLOCKED_PINNED_BASE_NOT_CACHED_AND_TLS_TRANSPORT_UNAVAILABLE",
+      "base_digest": "sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b",
+      "build": "NOT_RUN",
+      "registry_digest": null,
+      "profiles": "Two cpu/gpu training images are shared by all four profiles; no A/B duplicate builds."
+    },
+    "training_gpu": {
+      "status": "BLOCKED_PINNED_BASE_NOT_CACHED_AND_TLS_TRANSPORT_UNAVAILABLE",
+      "base_digest": "sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b",
+      "build": "NOT_RUN",
+      "registry_digest": null,
+      "profiles": "Two cpu/gpu training images are shared by all four profiles; no A/B duplicate builds."
+    }
+  },
+  "training_base": {
+    "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b",
+    "manifest_layer_count": 29,
+    "manifest_layer_bytes": 9352641406,
+    "missing_layer_count": 27,
+    "missing_compressed_layer_bytes": 9352641342,
+    "default_store_image_count": 215,
+    "default_store_exact_manifest_digest_matches": 0,
+    "exact_cached_compressed_layer_occurrences": 2,
+    "cached_compressed_bytes": 64,
+    "pull_status": "NOT_STARTED_TLS_PREFLIGHT_FAILED",
+    "new_base_download_bytes": 0,
+    "observed_download_rate_bytes_per_second": null,
+    "eta_seconds": null,
+    "rate_limitation": "No registry HTTP response was reached; a bandwidth or ETA claim would be fabricated."
+  },
+  "readback": {
+    "registry_http_reached": false,
+    "skopeo_error": "Get https://10.10.1.66:30003/v2/: EOF",
+    "direct_python_https_v2_and_project": "TLS handshake error; no HTTP status",
+    "tcp_connectivity_is_not_tls_proof": true
+  },
+  "temporary_auth_and_ca_removed": true,
+  "deployment_changes": 0,
+  "registry_push_issued": false,
+  "image_archives_created_or_transferred": false,
+  "credentials_emitted": false,
+  "blocker_scope": "Fedora direct transport to the fixed Harbor authority. No credential validity, Harbor project visibility, actual upload digest or pull throughput has been established. Do not replace base, authority, project, identity, or CA.",
+  "evidence": [
+    {
+      "path": "cache-preflight.json",
+      "sha256": "0ce4fecdae10d641b688f4662b462c18eebaff311295afa4978da2d396ed49ef"
+    },
+    {
+      "path": "registry-source-preflight.json",
+      "sha256": "3fba49eb01e857ae513f679729405b93265067d24cff9eb2edb1bfa94173896f"
+    },
+    {
+      "path": "resource-mounted-registry-reference.json",
+      "sha256": "824f6918ab0daa39fa37534a1c2d6eb14df5d39355110eb5d06d5a224796c005"
+    },
+    {
+      "path": "private-volume-reference.json",
+      "sha256": "e52eba9f5f4b4f11ad9f91e667c04faf9ef7696766a1ec101314c7f00ff433d0"
+    },
+    {
+      "path": "credential-read-failure.json",
+      "sha256": "7860c2c60b798cd8ff43b8b8996290b350aefb0f56c26d245af8ad0f78b9a0cf"
+    },
+    {
+      "path": "credential-read-diagnostic.json",
+      "sha256": "3057a40d1c0b0e8b4e1810c7f5c7efc5dfc9b9251e27bb83942f0e224fb4289c"
+    },
+    {
+      "path": "small-images-publication.json",
+      "sha256": "220bdde76474f0c90fd334246184eef5f49ef5998c906ad79636ecac109e299b"
+    },
+    {
+      "path": "registry-preflight-diagnostic.json",
+      "sha256": "93f5d0115729012fa56355fca8582c44dfde3716bb845eec42e498509908ff24"
+    },
+    {
+      "path": "publish-images.py",
+      "sha256": "fddc6b78b6d9806bf741977bc16b5b12dfe9146bb4d789bfd0452b9f3525aba1"
+    },
+    {
+      "path": "credential-source-and-run.py",
+      "sha256": "5dd66ca233067c8628f16f7d4c06d52685abddc8372e122e802afe8876177a6a"
+    },
+    {
+      "path": "registry-preflight.py",
+      "sha256": "bd18ea8ba5a069673aef1cb3ebb54128cbe2fa9b3a3be36e8232a66b49977b30"
+    }
+  ]
+}

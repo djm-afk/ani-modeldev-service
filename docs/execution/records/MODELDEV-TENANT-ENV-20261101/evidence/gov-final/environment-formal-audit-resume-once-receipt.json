@@ -1,0 +1,9 @@
+{
+  "started_at": "2026-10-31T20:26:33.155741+00:00",
+  "reason": "one necessary continuation after original audit terminal exit1 from vulnerability database network timeout; network recovery observed",
+  "command": "PATH=/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/tools:$PATH GOTOOLCHAIN=auto GOMAXPROCS=2 GOFLAGS=-p=2 bash scripts/ci/audit.sh",
+  "cwd": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source",
+  "source_reference": "fa80f886d022177173d7e9cf81ec51e54c2df4c8; 44 changed files verified equal before continuation",
+  "finished_at": "2026-10-31T20:29:14.419111+00:00",
+  "exit_code": 1
+}

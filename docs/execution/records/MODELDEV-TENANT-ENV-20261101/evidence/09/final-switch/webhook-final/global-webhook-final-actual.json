@@ -1,0 +1,1625 @@
+{
+  "schema": "ani.modeldev.final-global-webhook-actual.v1",
+  "started_at": "2026-11-01T04:00:44.111033+00:00",
+  "native_receipt_sha256": "2623491c9443b24d61d8e0b3940befe393c4e3aa78ff5c100eb1e3e3a4bcb3f5",
+  "review": {
+    "schema": "ani.modeldev.final-global-webhook-review.v1",
+    "prepared_at": "2026-11-01T03:48:20.800907+00:00",
+    "source_commit": "f22fd4cef5f13cf1210eae504690206fbf922723",
+    "runtime_api_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+    "formal_renderer_and_go_check_config_exit": 0,
+    "renderer_receipt": "rendered/service.json; rendered/registration.json",
+    "compiled_binary_sha256": "6deb8d923a5e3f93afba7672ba8133e07c2f9066d810e275bc50e43743cf571f",
+    "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+    "bundle_sha256": "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6",
+    "current_deployment_uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea",
+    "current_deployment_rv": "18652694",
+    "current_deployment_spec_sha256": "7f477ab2eda3c0b72ae0b627db2d5f376ba526aa04fe51b87a0eff43288e285c",
+    "target_deployment_spec_sha256": "2b9f98dfc9ec1e9d058c7eb5cb7bfbd08b309e504079d39d03a4926721dd9e7c",
+    "current_mwc_uid": "c452d29d-89be-41af-ac95-eb467e1a89c2",
+    "current_mwc_rv": "682877",
+    "current_mwc_webhooks_sha256": "b9f333b44f80aa1c4359feca34911f9de6ca1b04d7c3304c281973f062b8cb31",
+    "target_mwc_webhooks_sha256": "11d1654206ce42e18aaa14e01b9f53eb9c4e5abb8f2a9fd63a25b5e89c2fa1e5",
+    "target_digest_note": "review canonical JSON SHA only; actual production BootstrapDigest is computed from actual readback by same Go function after registration apply, never pinned from this proposed hash",
+    "original_sa_uid": "eb28c30d-6d87-435e-a3cf-07e440dd5f93",
+    "original_service_uid": "882b642b-7efe-4c0f-9624-8ba9f2542f6b",
+    "original_service_vip": "10.96.59.191",
+    "original_tls_secret_uid": "e2b0ea91-5479-4eeb-a3de-656404120dd8",
+    "original_tls_certificate_sha256": "72f2f1868e46a85983a092f091c34ad2980567906596e48db810d9a8e5d40eeb",
+    "original_ca_sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+    "original_certificate_uid": "7ba4dad6-c9cc-441f-b0a3-4af221ab1db2",
+    "preserved_objects_without_update": [
+      "ServiceAccount",
+      "Service",
+      "Certificate",
+      "PodDisruptionBudget",
+      "NetworkPolicy",
+      "TLS Secret"
+    ],
+    "replicas": 2,
+    "strategy": {
+      "rollingUpdate": {
+        "maxSurge": 1,
+        "maxUnavailable": 0
+      },
+      "type": "RollingUpdate"
+    },
+    "source_original_product_resources_preserved": true,
+    "removed_reserved_platform_template_annotations": {
+      "ani.modeldev/config-sha256": "386d62f3677892120d077a07a983ddbefdc8f9d6f93ec7171339adb2c4940334"
+    },
+    "mandatory_old_entrypoint_removal": {
+      "old_command": [
+        "/ani-modeldev-webhook"
+      ],
+      "old_args": [
+        "-config",
+        "/etc/modeldev-webhook/config.json"
+      ],
+      "new_image_entrypoint": "/usr/local/bin/ani-modeldev-webhook",
+      "new_image_cmd": [
+        "--config",
+        "/etc/modeldev-webhook/config.json"
+      ],
+      "method": "replace entire exact-reviewed PodTemplate, so old /ani-modeldev-webhook command cannot survive merge"
+    },
+    "material_configmap_name": "modeldev-materials-a27e1669fd26",
+    "webhook_configmap_name": "ani-modeldev-webhook-c068f33012a7",
+    "material_items": 9,
+    "profiles": 4,
+    "startup_tenant_binding_array": false,
+    "platform_bootstrap_refs_needed_by_webhook": false,
+    "no_circular_dependency": "Webhook config needs only cluster/controller identities and sealed bundle; it never references final platform/Bootstrap12 config",
+    "apply_order": [
+      "root confirms old resource/DB cleanup green and native/read RBAC ready",
+      "fresh full cluster plus original Deployment/SA/Service/Certificate/TLS/MWC identities",
+      "create exact immutable material/config ConfigMaps or verify identical original objects",
+      "UID/RV/full-spec test JSONPatch original Deployment template; retain 2 replicas/strategy/SA UID/TLS Service",
+      "observe exactly two final-image Ready Pods, old PodUIDs gone, original TLS Service readyz with CA/SNI",
+      "UID/RV/full-webhooks test JSONPatch original MWC globally; exact OR matchConditions with Fail, no namespaceSelector narrowing",
+      "read back actual full public MWC object and deliver to snapshot for production BootstrapDigest12"
+    ],
+    "actual_apply": "NOT_RUN_WAIT_ROOT_GREEN",
+    "no_new_image_build": true,
+    "no_new_tests": true,
+    "files_sha256": {
+      "materials.configmap.json": "3042e9ef3016fbd51e675f5acba8e309144d43ecb8ab4644ab77493f35277a48",
+      "config.configmap.json": "ad1e2a2928f27cf7c3019d6732f9a280c1d96be45013f31b675e850b5f155ad4",
+      "deployment.target-spec.json": "78556071e02dabebd1e3582cdef773da6d3f85e43558895209a47e570a3f880a",
+      "deployment.jsonpatch.json": "e2cb88b05ef5ed28c8d4263cdd88054dc76b4eb5435143d0ba7c34b4161e3a4f",
+      "registration.target.json": "c2ad7bb1bd8cf5ccfc9207fc7865e7d642f49af426b93d7175e4c77153db4aa1",
+      "registration.jsonpatch.json": "b16cc9b0051804e1f7f78d629523b642f9722e00f7d52d653110b8701d0ff4e3"
+    }
+  },
+  "actions": [
+    {
+      "stage": "create immutable CM/modeldev-materials-a27e1669fd26",
+      "intent_at": "2026-11-01T04:00:46.718184+00:00",
+      "outcome": "READBACK_CONFIRMED",
+      "readback_at": "2026-11-01T04:00:46.883230+00:00",
+      "result": {
+        "name": "modeldev-materials-a27e1669fd26",
+        "uid": "163d4186-ba4a-4dc1-803f-5497b1ca0468",
+        "resource_version": "20957352",
+        "public_data_sha256": "7081426d906eb2e3dfceac3557f4d0e2b95a719cb822bac4f678f1c3830fc9c3"
+      }
+    },
+    {
+      "stage": "create immutable CM/ani-modeldev-webhook-c068f33012a7",
+      "intent_at": "2026-11-01T04:00:46.963598+00:00",
+      "outcome": "READBACK_CONFIRMED",
+      "readback_at": "2026-11-01T04:00:47.079524+00:00",
+      "result": {
+        "name": "ani-modeldev-webhook-c068f33012a7",
+        "uid": "d3b45014-2369-42d8-b51f-5c5b68cbc2a3",
+        "resource_version": "20957356",
+        "public_data_sha256": "c068f33012a79f568dcec33443c40a7b06ef9392182f9438211f332f41b32ff1"
+      }
+    },
+    {
+      "stage": "guarded Deployment PodTemplate replacement",
+      "intent_at": "2026-11-01T04:00:47.980509+00:00",
+      "outcome": "READBACK_CONFIRMED",
+      "readback_at": "2026-11-01T04:00:48.063873+00:00",
+      "result": {
+        "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea",
+        "resource_version": "20957368",
+        "generation": 22,
+        "actual_spec_sha256": "c983eca1e0f7e35f17c402868538b7568c3486f17e76de3f97a7bb22b177b881"
+      }
+    },
+    {
+      "stage": "guarded same-content public platform image alias only",
+      "intent_at": "2026-11-01T04:52:26.227209+00:00",
+      "outcome": "READBACK_CONFIRMED",
+      "readback_at": "2026-11-01T04:52:26.312013+00:00",
+      "result": {
+        "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea",
+        "resource_version": "20988049",
+        "generation": 23,
+        "actual_spec_sha256": "e2b3ed691c3532c7e8c04c2a284875390323ee7cbfff85360e0b37c6037fa1b7",
+        "only_changed_fields": [
+          "spec.template.spec.containers[name=webhook].image",
+          "spec.template.spec.initContainers[name=install-modeldev-materials].image"
+        ]
+      }
+    },
+    {
+      "stage": "guarded global MutatingWebhookConfiguration replacement",
+      "intent_at": "2026-11-01T04:56:21.468754+00:00",
+      "outcome": "READBACK_CONFIRMED",
+      "readback_at": "2026-11-01T04:56:21.557660+00:00",
+      "result": {
+        "uid": "c452d29d-89be-41af-ac95-eb467e1a89c2",
+        "resource_version": "20990648",
+        "generation": 2,
+        "webhooks_sha256": "11d1654206ce42e18aaa14e01b9f53eb9c4e5abb8f2a9fd63a25b5e89c2fa1e5"
+      }
+    }
+  ],
+  "cluster_mutation": true,
+  "status": "GLOBAL_WEBHOOK_INSTALLED_TWO_READY_TLS_VERIFIED_ACTUAL_MWC_READBACK",
+  "identity": {
+    "observed_at": "2026-11-01T04:00:44.398969+00:00",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "api_service_uid": "bfbd6463-67e2-471c-8d49-a84b853bd4e0"
+  },
+  "rv_rebase": {
+    "deployment": {
+      "reviewed": "18652694",
+      "fresh": "18652694",
+      "same_uid_full_spec": true
+    },
+    "mwc": {
+      "reviewed": "682877",
+      "fresh": "682877",
+      "same_uid_full_webhooks": true
+    }
+  },
+  "stage": "guarded global MutatingWebhookConfiguration replacement",
+  "predeployment_identity": {
+    "observed_at": "2026-11-01T04:00:47.366665+00:00",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "api_service_uid": "bfbd6463-67e2-471c-8d49-a84b853bd4e0"
+  },
+  "rollout_observation": {
+    "deployment_status": {
+      "availableReplicas": 2,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-22T10:18:27Z",
+          "lastUpdateTime": "2026-10-22T10:18:27Z",
+          "message": "Deployment has minimum availability.",
+          "reason": "MinimumReplicasAvailable",
+          "status": "True",
+          "type": "Available"
+        },
+        {
+          "lastTransitionTime": "2026-10-22T10:18:25Z",
+          "lastUpdateTime": "2026-11-01T04:00:48Z",
+          "message": "ReplicaSet \"ani-modeldev-webhook-6564477c64\" is progressing.",
+          "reason": "ReplicaSetUpdated",
+          "status": "True",
+          "type": "Progressing"
+        }
+      ],
+      "observedGeneration": 22,
+      "readyReplicas": 2,
+      "replicas": 3,
+      "terminatingReplicas": 0,
+      "unavailableReplicas": 1,
+      "updatedReplicas": 1
+    },
+    "pods": [
+      {
+        "name": "ani-modeldev-webhook-5d4cccd55-5mg74",
+        "uid": "a7f5ce44-f6c0-401f-9bfa-93949735c578",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-5d4cccd55",
+            "uid": "5fe5b408-3be5-4885-8a76-bfcfffe633b5"
+          }
+        ],
+        "node": "node3",
+        "start_time": "2026-10-30T09:28:12Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": true,
+            "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-10-30T09:28:12Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": []
+      },
+      {
+        "name": "ani-modeldev-webhook-5d4cccd55-rvgk2",
+        "uid": "2a575fe5-3e17-4c68-9216-00fa95a99306",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-5d4cccd55",
+            "uid": "5fe5b408-3be5-4885-8a76-bfcfffe633b5"
+          }
+        ],
+        "node": "node2",
+        "start_time": "2026-10-30T09:28:13Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": true,
+            "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-10-30T09:28:14Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": []
+      },
+      {
+        "name": "ani-modeldev-webhook-6564477c64-mxmlz",
+        "uid": "71fcc73c-2dec-4607-af7e-98004d15ddd0",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-6564477c64",
+            "uid": "9f92ceca-f764-41de-a09b-f0157fc163c4"
+          }
+        ],
+        "node": "node1",
+        "start_time": "2026-11-01T04:00:48Z",
+        "phase": "Pending",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": false,
+            "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "image_id": "",
+            "restart_count": 0,
+            "state": {
+              "waiting": {
+                "reason": "PodInitializing"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "install-modeldev-materials",
+            "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "image_id": "",
+            "state": {
+              "waiting": {
+                "message": "Back-off pulling image \"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4\": ErrImagePull: failed to pull and unpack image \"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4\": failed to resolve reference \"10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4\": pull access denied, repository does not exist or may require authorization: authorization failed: no basic auth credentials",
+                "reason": "ImagePullBackOff"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "finished_at": "2026-11-01T04:56:21.641060+00:00",
+  "resume_identity": {
+    "observed_at": "2026-11-01T04:52:25.908101+00:00",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "api_service_uid": "bfbd6463-67e2-471c-8d49-a84b853bd4e0"
+  },
+  "public_deployment_image_alias": {
+    "source_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+    "deployment_image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+    "content_digest": "sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+    "canonical_sealed_bundle_changed": false,
+    "copy_receipt_sha256": "fe6fc99930cbc4947fb9188ea2f673c386c0287b295723cdca143d72a9ce45c6",
+    "new_robot_or_secret": false
+  },
+  "resume_started_at": "2026-11-01T04:52:26.225885+00:00",
+  "resume_rollout_observation": {
+    "observed_at": "2026-11-01T04:55:37.844270+00:00",
+    "deployment_status": {
+      "availableReplicas": 2,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-22T10:18:27Z",
+          "lastUpdateTime": "2026-10-22T10:18:27Z",
+          "message": "Deployment has minimum availability.",
+          "reason": "MinimumReplicasAvailable",
+          "status": "True",
+          "type": "Available"
+        },
+        {
+          "lastTransitionTime": "2026-11-01T04:52:26Z",
+          "lastUpdateTime": "2026-11-01T04:52:32Z",
+          "message": "ReplicaSet \"ani-modeldev-webhook-5dd8d97876\" has successfully progressed.",
+          "reason": "NewReplicaSetAvailable",
+          "status": "True",
+          "type": "Progressing"
+        }
+      ],
+      "observedGeneration": 23,
+      "readyReplicas": 2,
+      "replicas": 2,
+      "terminatingReplicas": 2,
+      "updatedReplicas": 2
+    },
+    "pods": [
+      {
+        "name": "ani-modeldev-webhook-5d4cccd55-5mg74",
+        "uid": "a7f5ce44-f6c0-401f-9bfa-93949735c578",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-5d4cccd55",
+            "uid": "5fe5b408-3be5-4885-8a76-bfcfffe633b5"
+          }
+        ],
+        "node": "node3",
+        "start_time": "2026-10-30T09:28:12Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": true,
+            "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-10-30T09:28:12Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": []
+      },
+      {
+        "name": "ani-modeldev-webhook-5d4cccd55-rvgk2",
+        "uid": "2a575fe5-3e17-4c68-9216-00fa95a99306",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-5d4cccd55",
+            "uid": "5fe5b408-3be5-4885-8a76-bfcfffe633b5"
+          }
+        ],
+        "node": "node2",
+        "start_time": "2026-10-30T09:28:13Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": true,
+            "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-10-30T09:28:14Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": []
+      },
+      {
+        "name": "ani-modeldev-webhook-5dd8d97876-l8k6s",
+        "uid": "f41575ab-434f-47b3-a240-ea87b92d4edf",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-5dd8d97876",
+            "uid": "89b1ef10-94e4-48fd-9e99-9b16fb74f416"
+          }
+        ],
+        "node": "node2",
+        "start_time": "2026-11-01T04:52:28Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": true,
+            "image": "sha256:2ba53153d1afbad603e380d2b703d234f77ecfbf63b83f7fbf649d56c801dfd7",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-01T04:52:31Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "install-modeldev-materials",
+            "image": "sha256:2ba53153d1afbad603e380d2b703d234f77ecfbf63b83f7fbf649d56c801dfd7",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "state": {
+              "terminated": {
+                "containerID": "containerd://b0e4f6f9d7e5f9c08552e42acedbf57d785545988ff124f5eb270cfb5c4832f7",
+                "exitCode": 0,
+                "finishedAt": "2026-11-01T04:52:30Z",
+                "reason": "Completed",
+                "startedAt": "2026-11-01T04:52:29Z"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "ani-modeldev-webhook-5dd8d97876-lvj8d",
+        "uid": "5e3b01d9-ed08-4d07-8d2c-53f8ec94a906",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-5dd8d97876",
+            "uid": "89b1ef10-94e4-48fd-9e99-9b16fb74f416"
+          }
+        ],
+        "node": "node1",
+        "start_time": "2026-11-01T04:52:26Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": true,
+            "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-01T04:52:27Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "install-modeldev-materials",
+            "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "state": {
+              "terminated": {
+                "containerID": "containerd://47314d1c0faba77c6228cc6a5496f4bdf397ce1f82afc820d84689199df7ae9d",
+                "exitCode": 0,
+                "finishedAt": "2026-11-01T04:52:27Z",
+                "reason": "Completed",
+                "startedAt": "2026-11-01T04:52:27Z"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "completion_identity": {
+    "observed_at": "2026-11-01T04:56:20.337287+00:00",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "api_service_uid": "bfbd6463-67e2-471c-8d49-a84b853bd4e0"
+  },
+  "ready": {
+    "observed_at": "2026-11-01T04:56:21.058503+00:00",
+    "deployment": {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "annotations": {
+          "deployment.kubernetes.io/revision": "22",
+          "kubernetes.io/change-cause": "validate: metric labels for training target"
+        },
+        "creationTimestamp": "2026-10-22T10:18:25Z",
+        "generation": 23,
+        "labels": {
+          "ani.io/managed-by": "modeldev-execution-v21",
+          "ani.io/task-id": "01a15f47",
+          "app.kubernetes.io/name": "ani-modeldev-webhook",
+          "app.kubernetes.io/part-of": "ani-modeldev"
+        },
+        "name": "ani-modeldev-webhook",
+        "namespace": "ani-system",
+        "resourceVersion": "20988260",
+        "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea"
+      },
+      "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 2,
+        "revisionHistoryLimit": 3,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "ani-modeldev-webhook",
+            "app.kubernetes.io/part-of": "ani-modeldev"
+          }
+        },
+        "strategy": {
+          "rollingUpdate": {
+            "maxSurge": 1,
+            "maxUnavailable": 0
+          },
+          "type": "RollingUpdate"
+        },
+        "template": {
+          "metadata": {
+            "annotations": {
+              "ani.io/service-mtls-material-sha256": "5166a10fcecd442cdae0b4f079ecd4595c34843fa1ccff474464dd40e890ca48",
+              "app.kubernetes.io/config-sha256": "c068f33012a79f568dcec33443c40a7b06ef9392182f9438211f332f41b32ff1",
+              "app.kubernetes.io/material-bundle-sha256": "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6"
+            },
+            "labels": {
+              "app.kubernetes.io/name": "ani-modeldev-webhook",
+              "app.kubernetes.io/part-of": "ani-modeldev"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": true,
+            "containers": [
+              {
+                "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/livez",
+                    "port": 8443,
+                    "scheme": "HTTPS"
+                  },
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 2
+                },
+                "name": "webhook",
+                "ports": [
+                  {
+                    "containerPort": 8443,
+                    "name": "https",
+                    "protocol": "TCP"
+                  }
+                ],
+                "readinessProbe": {
+                  "failureThreshold": 3,
+                  "httpGet": {
+                    "path": "/readyz",
+                    "port": 8443,
+                    "scheme": "HTTPS"
+                  },
+                  "periodSeconds": 5,
+                  "successThreshold": 1,
+                  "timeoutSeconds": 3
+                },
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "512Mi"
+                  },
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  },
+                  "readOnlyRootFilesystem": true,
+                  "runAsGroup": 10001,
+                  "runAsNonRoot": true,
+                  "runAsUser": 10001
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/etc/modeldev-webhook",
+                    "name": "config",
+                    "readOnly": true
+                  },
+                  {
+                    "mountPath": "/tls",
+                    "name": "tls",
+                    "readOnly": true
+                  },
+                  {
+                    "mountPath": "/etc/modeldev-materials",
+                    "name": "materials",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "initContainers": [
+              {
+                "command": [
+                  "/usr/local/bin/ani-modeldev-webhook",
+                  "--copy-materials-from",
+                  "/source",
+                  "--copy-materials-to",
+                  "/materials",
+                  "--copy-materials-manifest-sha256",
+                  "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6"
+                ],
+                "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "install-modeldev-materials",
+                "resources": {},
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  },
+                  "readOnlyRootFilesystem": true,
+                  "runAsGroup": 10001,
+                  "runAsNonRoot": true,
+                  "runAsUser": 10001
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                  {
+                    "mountPath": "/source",
+                    "name": "material-source",
+                    "readOnly": true
+                  },
+                  {
+                    "mountPath": "/materials",
+                    "name": "materials"
+                  }
+                ]
+              }
+            ],
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {
+              "fsGroup": 10001,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "serviceAccount": "ani-modeldev-webhook",
+            "serviceAccountName": "ani-modeldev-webhook",
+            "terminationGracePeriodSeconds": 15,
+            "topologySpreadConstraints": [
+              {
+                "labelSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/name": "ani-modeldev-webhook",
+                    "app.kubernetes.io/part-of": "ani-modeldev"
+                  }
+                },
+                "maxSkew": 1,
+                "topologyKey": "kubernetes.io/hostname",
+                "whenUnsatisfiable": "DoNotSchedule"
+              }
+            ],
+            "volumes": [
+              {
+                "configMap": {
+                  "defaultMode": 292,
+                  "items": [
+                    {
+                      "key": "config.json",
+                      "path": "config.json"
+                    }
+                  ],
+                  "name": "ani-modeldev-webhook-c068f33012a7"
+                },
+                "name": "config"
+              },
+              {
+                "name": "tls",
+                "secret": {
+                  "defaultMode": 288,
+                  "secretName": "ani-modeldev-webhook-tls"
+                }
+              },
+              {
+                "configMap": {
+                  "defaultMode": 292,
+                  "name": "modeldev-materials-a27e1669fd26"
+                },
+                "name": "material-source"
+              },
+              {
+                "emptyDir": {},
+                "name": "materials"
+              }
+            ]
+          }
+        }
+      },
+      "status": {
+        "availableReplicas": 2,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-10-22T10:18:27Z",
+            "lastUpdateTime": "2026-10-22T10:18:27Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-11-01T04:52:26Z",
+            "lastUpdateTime": "2026-11-01T04:52:32Z",
+            "message": "ReplicaSet \"ani-modeldev-webhook-5dd8d97876\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 23,
+        "readyReplicas": 2,
+        "replicas": 2,
+        "terminatingReplicas": 2,
+        "updatedReplicas": 2
+      }
+    },
+    "pods": [
+      {
+        "name": "ani-modeldev-webhook-5dd8d97876-l8k6s",
+        "uid": "f41575ab-434f-47b3-a240-ea87b92d4edf",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-5dd8d97876",
+            "uid": "89b1ef10-94e4-48fd-9e99-9b16fb74f416"
+          }
+        ],
+        "node": "node2",
+        "start_time": "2026-11-01T04:52:28Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": true,
+            "image": "sha256:2ba53153d1afbad603e380d2b703d234f77ecfbf63b83f7fbf649d56c801dfd7",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-01T04:52:31Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "install-modeldev-materials",
+            "image": "sha256:2ba53153d1afbad603e380d2b703d234f77ecfbf63b83f7fbf649d56c801dfd7",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "state": {
+              "terminated": {
+                "containerID": "containerd://b0e4f6f9d7e5f9c08552e42acedbf57d785545988ff124f5eb270cfb5c4832f7",
+                "exitCode": 0,
+                "finishedAt": "2026-11-01T04:52:30Z",
+                "reason": "Completed",
+                "startedAt": "2026-11-01T04:52:29Z"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "ani-modeldev-webhook-5dd8d97876-lvj8d",
+        "uid": "5e3b01d9-ed08-4d07-8d2c-53f8ec94a906",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-modeldev-webhook-5dd8d97876",
+            "uid": "89b1ef10-94e4-48fd-9e99-9b16fb74f416"
+          }
+        ],
+        "node": "node1",
+        "start_time": "2026-11-01T04:52:26Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "webhook",
+            "ready": true,
+            "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-01T04:52:27Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "install-modeldev-materials",
+            "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+            "state": {
+              "terminated": {
+                "containerID": "containerd://47314d1c0faba77c6228cc6a5496f4bdf397ce1f82afc820d84689199df7ae9d",
+                "exitCode": 0,
+                "finishedAt": "2026-11-01T04:52:27Z",
+                "reason": "Completed",
+                "startedAt": "2026-11-01T04:52:27Z"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "replicasets": [
+      {
+        "apiVersion": "apps/v1",
+        "kind": "ReplicaSet",
+        "metadata": {
+          "annotations": {
+            "deployment.kubernetes.io/desired-replicas": "2",
+            "deployment.kubernetes.io/max-replicas": "3",
+            "deployment.kubernetes.io/revision": "22",
+            "kubernetes.io/change-cause": "validate: metric labels for training target"
+          },
+          "creationTimestamp": "2026-11-01T04:52:26Z",
+          "generation": 3,
+          "labels": {
+            "app.kubernetes.io/name": "ani-modeldev-webhook",
+            "app.kubernetes.io/part-of": "ani-modeldev",
+            "pod-template-hash": "5dd8d97876"
+          },
+          "name": "ani-modeldev-webhook-5dd8d97876",
+          "namespace": "ani-system",
+          "ownerReferences": [
+            {
+              "apiVersion": "apps/v1",
+              "blockOwnerDeletion": true,
+              "controller": true,
+              "kind": "Deployment",
+              "name": "ani-modeldev-webhook",
+              "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea"
+            }
+          ],
+          "resourceVersion": "20988248",
+          "uid": "89b1ef10-94e4-48fd-9e99-9b16fb74f416"
+        },
+        "spec": {
+          "replicas": 2,
+          "selector": {
+            "matchLabels": {
+              "app.kubernetes.io/name": "ani-modeldev-webhook",
+              "app.kubernetes.io/part-of": "ani-modeldev",
+              "pod-template-hash": "5dd8d97876"
+            }
+          },
+          "template": {
+            "metadata": {
+              "annotations": {
+                "ani.io/service-mtls-material-sha256": "5166a10fcecd442cdae0b4f079ecd4595c34843fa1ccff474464dd40e890ca48",
+                "app.kubernetes.io/config-sha256": "c068f33012a79f568dcec33443c40a7b06ef9392182f9438211f332f41b32ff1",
+                "app.kubernetes.io/material-bundle-sha256": "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6"
+              },
+              "labels": {
+                "app.kubernetes.io/name": "ani-modeldev-webhook",
+                "app.kubernetes.io/part-of": "ani-modeldev",
+                "pod-template-hash": "5dd8d97876"
+              }
+            },
+            "spec": {
+              "automountServiceAccountToken": true,
+              "containers": [
+                {
+                  "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+                  "imagePullPolicy": "IfNotPresent",
+                  "livenessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                      "path": "/livez",
+                      "port": 8443,
+                      "scheme": "HTTPS"
+                    },
+                    "periodSeconds": 10,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 2
+                  },
+                  "name": "webhook",
+                  "ports": [
+                    {
+                      "containerPort": 8443,
+                      "name": "https",
+                      "protocol": "TCP"
+                    }
+                  ],
+                  "readinessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                      "path": "/readyz",
+                      "port": 8443,
+                      "scheme": "HTTPS"
+                    },
+                    "periodSeconds": 5,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 3
+                  },
+                  "resources": {
+                    "limits": {
+                      "cpu": "1",
+                      "memory": "512Mi"
+                    },
+                    "requests": {
+                      "cpu": "100m",
+                      "memory": "128Mi"
+                    }
+                  },
+                  "securityContext": {
+                    "allowPrivilegeEscalation": false,
+                    "capabilities": {
+                      "drop": [
+                        "ALL"
+                      ]
+                    },
+                    "readOnlyRootFilesystem": true,
+                    "runAsGroup": 10001,
+                    "runAsNonRoot": true,
+                    "runAsUser": 10001
+                  },
+                  "terminationMessagePath": "/dev/termination-log",
+                  "terminationMessagePolicy": "File",
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/etc/modeldev-webhook",
+                      "name": "config",
+                      "readOnly": true
+                    },
+                    {
+                      "mountPath": "/tls",
+                      "name": "tls",
+                      "readOnly": true
+                    },
+                    {
+                      "mountPath": "/etc/modeldev-materials",
+                      "name": "materials",
+                      "readOnly": true
+                    }
+                  ]
+                }
+              ],
+              "dnsPolicy": "ClusterFirst",
+              "initContainers": [
+                {
+                  "command": [
+                    "/usr/local/bin/ani-modeldev-webhook",
+                    "--copy-materials-from",
+                    "/source",
+                    "--copy-materials-to",
+                    "/materials",
+                    "--copy-materials-manifest-sha256",
+                    "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6"
+                  ],
+                  "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+                  "imagePullPolicy": "IfNotPresent",
+                  "name": "install-modeldev-materials",
+                  "resources": {},
+                  "securityContext": {
+                    "allowPrivilegeEscalation": false,
+                    "capabilities": {
+                      "drop": [
+                        "ALL"
+                      ]
+                    },
+                    "readOnlyRootFilesystem": true,
+                    "runAsGroup": 10001,
+                    "runAsNonRoot": true,
+                    "runAsUser": 10001
+                  },
+                  "terminationMessagePath": "/dev/termination-log",
+                  "terminationMessagePolicy": "File",
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/source",
+                      "name": "material-source",
+                      "readOnly": true
+                    },
+                    {
+                      "mountPath": "/materials",
+                      "name": "materials"
+                    }
+                  ]
+                }
+              ],
+              "restartPolicy": "Always",
+              "schedulerName": "default-scheduler",
+              "securityContext": {
+                "fsGroup": 10001,
+                "seccompProfile": {
+                  "type": "RuntimeDefault"
+                }
+              },
+              "serviceAccount": "ani-modeldev-webhook",
+              "serviceAccountName": "ani-modeldev-webhook",
+              "terminationGracePeriodSeconds": 15,
+              "topologySpreadConstraints": [
+                {
+                  "labelSelector": {
+                    "matchLabels": {
+                      "app.kubernetes.io/name": "ani-modeldev-webhook",
+                      "app.kubernetes.io/part-of": "ani-modeldev"
+                    }
+                  },
+                  "maxSkew": 1,
+                  "topologyKey": "kubernetes.io/hostname",
+                  "whenUnsatisfiable": "DoNotSchedule"
+                }
+              ],
+              "volumes": [
+                {
+                  "configMap": {
+                    "defaultMode": 292,
+                    "items": [
+                      {
+                        "key": "config.json",
+                        "path": "config.json"
+                      }
+                    ],
+                    "name": "ani-modeldev-webhook-c068f33012a7"
+                  },
+                  "name": "config"
+                },
+                {
+                  "name": "tls",
+                  "secret": {
+                    "defaultMode": 288,
+                    "secretName": "ani-modeldev-webhook-tls"
+                  }
+                },
+                {
+                  "configMap": {
+                    "defaultMode": 292,
+                    "name": "modeldev-materials-a27e1669fd26"
+                  },
+                  "name": "material-source"
+                },
+                {
+                  "emptyDir": {},
+                  "name": "materials"
+                }
+              ]
+            }
+          }
+        },
+        "status": {
+          "availableReplicas": 2,
+          "fullyLabeledReplicas": 2,
+          "observedGeneration": 3,
+          "readyReplicas": 2,
+          "replicas": 2,
+          "terminatingReplicas": 0
+        }
+      },
+      {
+        "apiVersion": "apps/v1",
+        "kind": "ReplicaSet",
+        "metadata": {
+          "annotations": {
+            "deployment.kubernetes.io/desired-replicas": "2",
+            "deployment.kubernetes.io/max-replicas": "3",
+            "deployment.kubernetes.io/revision": "22",
+            "kubernetes.io/change-cause": "validate: metric labels for training target"
+          },
+          "creationTimestamp": "2026-11-01T04:52:26Z",
+          "generation": 3,
+          "labels": {
+            "app.kubernetes.io/name": "ani-modeldev-webhook",
+            "app.kubernetes.io/part-of": "ani-modeldev",
+            "pod-template-hash": "5dd8d97876"
+          },
+          "name": "ani-modeldev-webhook-5dd8d97876",
+          "namespace": "ani-system",
+          "ownerReferences": [
+            {
+              "apiVersion": "apps/v1",
+              "blockOwnerDeletion": true,
+              "controller": true,
+              "kind": "Deployment",
+              "name": "ani-modeldev-webhook",
+              "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea"
+            }
+          ],
+          "resourceVersion": "20988248",
+          "uid": "89b1ef10-94e4-48fd-9e99-9b16fb74f416"
+        },
+        "spec": {
+          "replicas": 2,
+          "selector": {
+            "matchLabels": {
+              "app.kubernetes.io/name": "ani-modeldev-webhook",
+              "app.kubernetes.io/part-of": "ani-modeldev",
+              "pod-template-hash": "5dd8d97876"
+            }
+          },
+          "template": {
+            "metadata": {
+              "annotations": {
+                "ani.io/service-mtls-material-sha256": "5166a10fcecd442cdae0b4f079ecd4595c34843fa1ccff474464dd40e890ca48",
+                "app.kubernetes.io/config-sha256": "c068f33012a79f568dcec33443c40a7b06ef9392182f9438211f332f41b32ff1",
+                "app.kubernetes.io/material-bundle-sha256": "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6"
+              },
+              "labels": {
+                "app.kubernetes.io/name": "ani-modeldev-webhook",
+                "app.kubernetes.io/part-of": "ani-modeldev",
+                "pod-template-hash": "5dd8d97876"
+              }
+            },
+            "spec": {
+              "automountServiceAccountToken": true,
+              "containers": [
+                {
+                  "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+                  "imagePullPolicy": "IfNotPresent",
+                  "livenessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                      "path": "/livez",
+                      "port": 8443,
+                      "scheme": "HTTPS"
+                    },
+                    "periodSeconds": 10,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 2
+                  },
+                  "name": "webhook",
+                  "ports": [
+                    {
+                      "containerPort": 8443,
+                      "name": "https",
+                      "protocol": "TCP"
+                    }
+                  ],
+                  "readinessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                      "path": "/readyz",
+                      "port": 8443,
+                      "scheme": "HTTPS"
+                    },
+                    "periodSeconds": 5,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 3
+                  },
+                  "resources": {
+                    "limits": {
+                      "cpu": "1",
+                      "memory": "512Mi"
+                    },
+                    "requests": {
+                      "cpu": "100m",
+                      "memory": "128Mi"
+                    }
+                  },
+                  "securityContext": {
+                    "allowPrivilegeEscalation": false,
+                    "capabilities": {
+                      "drop": [
+                        "ALL"
+                      ]
+                    },
+                    "readOnlyRootFilesystem": true,
+                    "runAsGroup": 10001,
+                    "runAsNonRoot": true,
+                    "runAsUser": 10001
+                  },
+                  "terminationMessagePath": "/dev/termination-log",
+                  "terminationMessagePolicy": "File",
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/etc/modeldev-webhook",
+                      "name": "config",
+                      "readOnly": true
+                    },
+                    {
+                      "mountPath": "/tls",
+                      "name": "tls",
+                      "readOnly": true
+                    },
+                    {
+                      "mountPath": "/etc/modeldev-materials",
+                      "name": "materials",
+                      "readOnly": true
+                    }
+                  ]
+                }
+              ],
+              "dnsPolicy": "ClusterFirst",
+              "initContainers": [
+                {
+                  "command": [
+                    "/usr/local/bin/ani-modeldev-webhook",
+                    "--copy-materials-from",
+                    "/source",
+                    "--copy-materials-to",
+                    "/materials",
+                    "--copy-materials-manifest-sha256",
+                    "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6"
+                  ],
+                  "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+                  "imagePullPolicy": "IfNotPresent",
+                  "name": "install-modeldev-materials",
+                  "resources": {},
+                  "securityContext": {
+                    "allowPrivilegeEscalation": false,
+                    "capabilities": {
+                      "drop": [
+                        "ALL"
+                      ]
+                    },
+                    "readOnlyRootFilesystem": true,
+                    "runAsGroup": 10001,
+                    "runAsNonRoot": true,
+                    "runAsUser": 10001
+                  },
+                  "terminationMessagePath": "/dev/termination-log",
+                  "terminationMessagePolicy": "File",
+                  "volumeMounts": [
+                    {
+                      "mountPath": "/source",
+                      "name": "material-source",
+                      "readOnly": true
+                    },
+                    {
+                      "mountPath": "/materials",
+                      "name": "materials"
+                    }
+                  ]
+                }
+              ],
+              "restartPolicy": "Always",
+              "schedulerName": "default-scheduler",
+              "securityContext": {
+                "fsGroup": 10001,
+                "seccompProfile": {
+                  "type": "RuntimeDefault"
+                }
+              },
+              "serviceAccount": "ani-modeldev-webhook",
+              "serviceAccountName": "ani-modeldev-webhook",
+              "terminationGracePeriodSeconds": 15,
+              "topologySpreadConstraints": [
+                {
+                  "labelSelector": {
+                    "matchLabels": {
+                      "app.kubernetes.io/name": "ani-modeldev-webhook",
+                      "app.kubernetes.io/part-of": "ani-modeldev"
+                    }
+                  },
+                  "maxSkew": 1,
+                  "topologyKey": "kubernetes.io/hostname",
+                  "whenUnsatisfiable": "DoNotSchedule"
+                }
+              ],
+              "volumes": [
+                {
+                  "configMap": {
+                    "defaultMode": 292,
+                    "items": [
+                      {
+                        "key": "config.json",
+                        "path": "config.json"
+                      }
+                    ],
+                    "name": "ani-modeldev-webhook-c068f33012a7"
+                  },
+                  "name": "config"
+                },
+                {
+                  "name": "tls",
+                  "secret": {
+                    "defaultMode": 288,
+                    "secretName": "ani-modeldev-webhook-tls"
+                  }
+                },
+                {
+                  "configMap": {
+                    "defaultMode": 292,
+                    "name": "modeldev-materials-a27e1669fd26"
+                  },
+                  "name": "material-source"
+                },
+                {
+                  "emptyDir": {},
+                  "name": "materials"
+                }
+              ]
+            }
+          }
+        },
+        "status": {
+          "availableReplicas": 2,
+          "fullyLabeledReplicas": 2,
+          "observedGeneration": 3,
+          "readyReplicas": 2,
+          "replicas": 2,
+          "terminatingReplicas": 0
+        }
+      }
+    ],
+    "service_ready_nonterminating_endpoint_uids": [
+      "5e3b01d9-ed08-4d07-8d2c-53f8ec94a906",
+      "f41575ab-434f-47b3-a240-ea87b92d4edf"
+    ],
+    "endpoint_slices_metadata": [
+      {
+        "slice_uid": "05e417e0-d130-412c-b7c2-44d0e48a66e5",
+        "addresses": [
+          "10.16.6.188"
+        ],
+        "conditions": {
+          "ready": false,
+          "serving": true,
+          "terminating": true
+        },
+        "target_ref": {
+          "kind": "Pod",
+          "namespace": "ani-system",
+          "name": "ani-modeldev-webhook-5d4cccd55-5mg74",
+          "uid": "a7f5ce44-f6c0-401f-9bfa-93949735c578"
+        }
+      },
+      {
+        "slice_uid": "05e417e0-d130-412c-b7c2-44d0e48a66e5",
+        "addresses": [
+          "10.16.6.189"
+        ],
+        "conditions": {
+          "ready": false,
+          "serving": true,
+          "terminating": true
+        },
+        "target_ref": {
+          "kind": "Pod",
+          "namespace": "ani-system",
+          "name": "ani-modeldev-webhook-5d4cccd55-rvgk2",
+          "uid": "2a575fe5-3e17-4c68-9216-00fa95a99306"
+        }
+      },
+      {
+        "slice_uid": "05e417e0-d130-412c-b7c2-44d0e48a66e5",
+        "addresses": [
+          "10.16.12.80"
+        ],
+        "conditions": {
+          "ready": true,
+          "serving": true,
+          "terminating": false
+        },
+        "target_ref": {
+          "kind": "Pod",
+          "namespace": "ani-system",
+          "name": "ani-modeldev-webhook-5dd8d97876-lvj8d",
+          "uid": "5e3b01d9-ed08-4d07-8d2c-53f8ec94a906"
+        }
+      },
+      {
+        "slice_uid": "05e417e0-d130-412c-b7c2-44d0e48a66e5",
+        "addresses": [
+          "10.16.12.81"
+        ],
+        "conditions": {
+          "ready": true,
+          "serving": true,
+          "terminating": false
+        },
+        "target_ref": {
+          "kind": "Pod",
+          "namespace": "ani-system",
+          "name": "ani-modeldev-webhook-5dd8d97876-l8k6s",
+          "uid": "f41575ab-434f-47b3-a240-ea87b92d4edf"
+        }
+      }
+    ]
+  },
+  "old_terminating_platform_pods_separate_cleanup": [
+    {
+      "name": "ani-modeldev-webhook-5d4cccd55-5mg74",
+      "uid": "a7f5ce44-f6c0-401f-9bfa-93949735c578",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "ani-modeldev-webhook-5d4cccd55",
+          "uid": "5fe5b408-3be5-4885-8a76-bfcfffe633b5"
+        }
+      ],
+      "node": "node3",
+      "start_time": "2026-10-30T09:28:12Z",
+      "phase": "Running",
+      "container_statuses": [
+        {
+          "name": "webhook",
+          "ready": true,
+          "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+          "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+          "restart_count": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-10-30T09:28:12Z"
+            }
+          }
+        }
+      ],
+      "init_statuses": []
+    },
+    {
+      "name": "ani-modeldev-webhook-5d4cccd55-rvgk2",
+      "uid": "2a575fe5-3e17-4c68-9216-00fa95a99306",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "ani-modeldev-webhook-5d4cccd55",
+          "uid": "5fe5b408-3be5-4885-8a76-bfcfffe633b5"
+        }
+      ],
+      "node": "node2",
+      "start_time": "2026-10-30T09:28:13Z",
+      "phase": "Running",
+      "container_statuses": [
+        {
+          "name": "webhook",
+          "ready": true,
+          "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+          "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+          "restart_count": 0,
+          "state": {
+            "running": {
+              "startedAt": "2026-10-30T09:28:14Z"
+            }
+          }
+        }
+      ],
+      "init_statuses": []
+    }
+  ],
+  "old_pod_absence_is_not_MWC_prerequisite": "root directed exact2newReady+onlynewReadyEndpoints+TLS; old UID cleanup separately observed; no force delete or policy exception",
+  "tls_readyz": {
+    "observed_at": "2026-11-01T04:56:21.108030+00:00",
+    "service_uid": "882b642b-7efe-4c0f-9624-8ba9f2542f6b",
+    "vip": "10.96.59.191",
+    "port": 443,
+    "server_name": "ani-modeldev-webhook.ani-system.svc",
+    "verified_original_ca_sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+    "http_status": 200,
+    "limited_response_sha256": "cdf6b59993c5a6e15156ceb0b0eb44149e48672384cd48ed2684ba337bce7b73",
+    "tls_version": "TLSv1.3"
+  },
+  "premwc_identity": {
+    "observed_at": "2026-11-01T04:56:21.390347+00:00",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "api_service_uid": "bfbd6463-67e2-471c-8d49-a84b853bd4e0"
+  },
+  "actual_mwc_full_public_object": {
+    "apiVersion": "admissionregistration.k8s.io/v1",
+    "kind": "MutatingWebhookConfiguration",
+    "metadata": {
+      "annotations": {
+        "cert-manager.io/inject-ca-from": "ani-system/ani-modeldev-webhook-serving"
+      },
+      "creationTimestamp": "2026-10-22T10:22:53Z",
+      "generation": 2,
+      "labels": {
+        "ani.io/managed-by": "modeldev-execution-v21",
+        "ani.io/task-id": "01a15f47",
+        "app.kubernetes.io/name": "ani-modeldev-webhook",
+        "app.kubernetes.io/part-of": "ani-modeldev"
+      },
+      "name": "ani-modeldev-webhook",
+      "resourceVersion": "20990649",
+      "uid": "c452d29d-89be-41af-ac95-eb467e1a89c2"
+    },
+    "webhooks": [
+      {
+        "admissionReviewVersions": [
+          "v1"
+        ],
+        "clientConfig": {
+          "caBundle": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI0VENDQVlhZ0F3SUJBZ0lVV2QxcWIrU25pQXZSZUVCWnN6QXdHRFVzMllnd0NnWUlLb1pJemowRUF3SXcKVGpFV01CUUdBMVVFQ2hNTllXNXBMV2x1YzNSaGJHeGxjakVlTUJ3R0ExVUVDeE1WWm05MWJtUmhkR2x2YmkxagpiMjF3YjI1bGJuUnpNUlF3RWdZRFZRUURFd3RoYm1rdGNtOXZkQzFqWVRBZUZ3MHlOakV3TWpFeE5EQXlOVFphCkZ3MHpOakV3TVRneE5EQXlOVFphTUU0eEZqQVVCZ05WQkFvVERXRnVhUzFwYm5OMFlXeHNaWEl4SGpBY0JnTlYKQkFzVEZXWnZkVzVrWVhScGIyNHRZMjl0Y0c5dVpXNTBjekVVTUJJR0ExVUVBeE1MWVc1cExYSnZiM1F0WTJFdwpXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CQndOQ0FBVG5Wc1Rkd3hxdG1tekhWUmp5dmVJQnlnZlhNalY1CmlPTVgzZXlLQ3Rsei90Wk1wbWFoakE0Sy90cGFjdUF2MEQyU3d3RWM0MjJ0Wm5SaURPYW5sWFBQbzBJd1FEQU8KQmdOVkhROEJBZjhFQkFNQ0FxUXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QWRCZ05WSFE0RUZnUVUwdE5pVUpWeQppQnIraytiRG9KZm1NcWxyWFVvd0NnWUlLb1pJemowRUF3SURTUUF3UmdJaEFPTTh4WVNDVDBKUmNkcENPSFc1ClNGVWxBMmJUbjhlNjhTWTVRQzg1bmxSTUFpRUFrUm5wNnlSdi9zclZyUXdZZFc0Q1VxeFU3YUJ1R0N0bXVuc3cKd2FsdU1Ccz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
+          "service": {
+            "name": "ani-modeldev-webhook",
+            "namespace": "ani-system",
+            "path": "/mutate",
+            "port": 443
+          }
+        },
+        "failurePolicy": "Fail",
+        "matchConditions": [
+          {
+            "expression": "(has(object.spec.serviceAccountName) && object.spec.serviceAccountName in [\"modeldev-step\", \"trainer-workload\", \"verifier\"]) || (has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))) || (has(object.spec.volumes) && object.spec.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(s,has(s.secret) && s.secret.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.containers) && object.spec.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.initContainers) && object.spec.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.ephemeralContainers) && object.spec.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))",
+            "name": "modeldev-reserved-identity-or-reference"
+          }
+        ],
+        "matchPolicy": "Exact",
+        "name": "dynamic.modeldev.ani.io",
+        "namespaceSelector": {},
+        "objectSelector": {},
+        "reinvocationPolicy": "Never",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "apiVersions": [
+              "v1"
+            ],
+            "operations": [
+              "CREATE"
+            ],
+            "resources": [
+              "pods"
+            ],
+            "scope": "Namespaced"
+          }
+        ],
+        "sideEffects": "None",
+        "timeoutSeconds": 8
+      }
+    ]
+  },
+  "actual_mwc_public_object_sha256": "70e7fb93ebb8cfdc0793d90260c08e77a593bcf533e0db84fe8119b7354f959b",
+  "ssh_exit": 0,
+  "runner_sha256": "b1dd62009395ccca883f47002c728c902930203e9e7ccae01a077220686e4c9d"
+}

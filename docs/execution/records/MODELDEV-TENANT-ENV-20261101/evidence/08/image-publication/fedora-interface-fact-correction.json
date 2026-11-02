@@ -1,0 +1,21 @@
+{
+  "observed_fedora_interfaces": [
+    {
+      "interface": "lo",
+      "address": "127.0.0.1"
+    },
+    {
+      "interface": "ens160",
+      "address": "172.16.101.31"
+    },
+    {
+      "interface": "Meta",
+      "address": "28.0.0.1"
+    }
+  ],
+  "tailscale_cli_exists": false,
+  "tailscaled_pids": [],
+  "fedora_tailnet_address_exists": false,
+  "minimal_transport_correction": "Existing 172.16.101.31 bind; exact measured client IP; fixed public binary/source files, nonce and TTL; HTTP is not claimed encrypted",
+  "root_authorized_existing_transport": true
+}

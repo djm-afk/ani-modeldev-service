@@ -1,0 +1,19 @@
+{
+  "status": "CHUNKS_TRANSFERRED_PENDING_FULL_SHA",
+  "socket": "/home/chabking/workspace/.evidence/modeldev-node-control-20261101-v2/node.sock",
+  "root_owns_socket": true,
+  "file_count": 56,
+  "batch_count": 1,
+  "total_raw_bytes": 370485,
+  "chunks": 56,
+  "batches": [
+    {
+      "batch": 0,
+      "payload_bytes": 155700,
+      "records": 56,
+      "exit": 0,
+      "seconds": 0.682
+    }
+  ],
+  "elapsed_seconds": 0.682
+}

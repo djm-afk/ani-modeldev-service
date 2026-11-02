@@ -1,0 +1,33 @@
+{
+  "observed_at": "2026-11-01T02:40:28.080489+00:00",
+  "delivered_this_run": [
+    57,
+    59,
+    60
+  ],
+  "previously_delivered": [
+    55
+  ],
+  "per_target": [
+    {
+      "target_id": 57,
+      "receipt": "local-deliver57-20261101T024015Z-37dcc077-receipt.json",
+      "fresh_plan": "local-deliver57-20261101T024015Z-37dcc077-fresh-plan.json",
+      "fresh_plan_sha256": "95c149d4908087763b7e83e202076ac1ff70f4f2f2358edb76a730dcf0718cf5"
+    },
+    {
+      "target_id": 59,
+      "receipt": "local-deliver59-20261101T024019Z-f380eed6-receipt.json",
+      "fresh_plan": "local-deliver59-20261101T024019Z-f380eed6-fresh-plan.json",
+      "fresh_plan_sha256": "1f4169bc89cfac97b7d17e0991297d519193c8e079211d88acc8edbd735ef222"
+    },
+    {
+      "target_id": 60,
+      "receipt": "local-deliver60-20261101T024023Z-67025847-receipt.json",
+      "fresh_plan": "local-deliver60-20261101T024023Z-67025847-fresh-plan.json",
+      "fresh_plan_sha256": "9ea2d15fc1996b0bcdeffbf6d97096c6f5e0835c12b2e68332fc89c681775a49"
+    }
+  ],
+  "automatic_retries": 0,
+  "fresh_plan_sha256": "9ea2d15fc1996b0bcdeffbf6d97096c6f5e0835c12b2e68332fc89c681775a49"
+}

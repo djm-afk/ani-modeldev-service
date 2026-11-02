@@ -1,0 +1,317 @@
+{
+  "schema": "ani.governance.final-normal-workbench-actual.v1",
+  "started_at": "2026-11-01T05:42:40.454069+00:00",
+  "job_id": "55a371a2bf484a8c8e7f5ca740cb73f3",
+  "source_commit": "244780ffe6b9a7deb1c3f6f162e474e76a73a566",
+  "status": "NORMAL_WORKBENCH_GOVERNANCE_SUCCEEDED_ORIGINAL_DEPLOYMENT_ONLY_IMAGE_CHANGED_READY_ZERO_RESTARTS",
+  "actions": [],
+  "cluster_mutation": false,
+  "identity": {
+    "observed_at": "2026-11-01T05:42:40.779090+00:00",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "api_service_uid": "bfbd6463-67e2-471c-8d49-a84b853bd4e0"
+  },
+  "before": {
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "resource_version": "20881498",
+    "generation": 198,
+    "spec_sha256": "bb08a9638ab86128f4697c008da29f00e262be8877c28025b757c9845218fc22",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "replicas": 1,
+    "service_account": "ani-governance",
+    "explicit_create_paused_env_present": false,
+    "old_pods": [
+      {
+        "name": "ani-governance-7ddc444f78-nt5vc",
+        "uid": "7e3c6bd5-4d76-4b44-92bf-6e3b89d48a6f",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-governance-7ddc444f78",
+            "uid": "7ddb9496-543e-466d-81f6-5c7866e0301c"
+          }
+        ],
+        "node": "node3",
+        "start_time": "2026-11-01T01:54:06Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "governance",
+            "ready": true,
+            "image": "sha256:13dbf07066cd35873551fc53dc746b94c6812460c1e3314ac540b176d4f4dcf9",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-01T01:54:09Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "private-config",
+            "image": "10.10.1.66:5001/library/busybox:1.37.0",
+            "image_id": "10.10.1.66:30003/ani-b07-test/busybox@sha256:7a3ebe5bfd1a4a19797d20b0c0bb39d44393e9a03fd852c0865b0f540d868df0",
+            "state": {
+              "terminated": {
+                "containerID": "containerd://c932d9ab5b8f98d3c92b75875f88339ded0bcb64462f9986c5be4f767cbfa722",
+                "exitCode": 0,
+                "finishedAt": "2026-11-01T01:54:06Z",
+                "reason": "Completed",
+                "startedAt": "2026-11-01T01:54:06Z"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "job": {
+    "id": "55a371a2bf484a8c8e7f5ca740cb73f3",
+    "status": "succeeded",
+    "source_commit": "244780ffe6b9a7deb1c3f6f162e474e76a73a566",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:493f472161824989be406f3cdeebd365e10a4e7d3baa469ac06090dbecb68540",
+    "steps": [
+      {
+        "id": "fetch",
+        "status": "succeeded"
+      },
+      {
+        "id": "verify",
+        "status": "skipped"
+      },
+      {
+        "id": "build",
+        "status": "succeeded"
+      },
+      {
+        "id": "push",
+        "status": "succeeded"
+      },
+      {
+        "id": "deploy",
+        "status": "succeeded"
+      },
+      {
+        "id": "ready",
+        "status": "succeeded"
+      }
+    ],
+    "error": null,
+    "rollback": null
+  },
+  "stage": "same Gov job succeeded fetch:succeeded,verify:skipped,build:succeeded,push:succeeded,deploy:succeeded,ready:succeeded",
+  "source_consumed": {
+    "observed_at": "2026-11-01T05:42:40.946618+00:00",
+    "job_id": "55a371a2bf484a8c8e7f5ca740cb73f3",
+    "source_commit": "244780ffe6b9a7deb1c3f6f162e474e76a73a566",
+    "actual_fetch_step_succeeded": true
+  },
+  "new_pod_observation": {
+    "observed_at": "2026-11-01T05:47:44.891500+00:00",
+    "pods": [
+      {
+        "name": "ani-governance-5785c564cc-v9fdg",
+        "uid": "392032ea-5fa7-4693-b51b-41df0c8e1bca",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-governance-5785c564cc",
+            "uid": "ae3c6032-9ef9-4c33-95a3-51fb7ddc9a48"
+          }
+        ],
+        "node": "node3",
+        "start_time": "2026-11-01T05:47:36Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "governance",
+            "ready": true,
+            "image": "sha256:6a77254568ef291bab3da57e7d6550310d53bfdd7ca3a432d0fd0e078e7b2025",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:493f472161824989be406f3cdeebd365e10a4e7d3baa469ac06090dbecb68540",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-01T05:47:39Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "private-config",
+            "image": "10.10.1.66:5001/library/busybox:1.37.0",
+            "image_id": "10.10.1.66:30003/ani-b07-test/busybox@sha256:7a3ebe5bfd1a4a19797d20b0c0bb39d44393e9a03fd852c0865b0f540d868df0",
+            "state": {
+              "terminated": {
+                "containerID": "containerd://1fbcecf7d8a57a606e0d9ab28bf3419f76cb92ca009d8000a27842a200df4649",
+                "exitCode": 0,
+                "finishedAt": "2026-11-01T05:47:37Z",
+                "reason": "Completed",
+                "startedAt": "2026-11-01T05:47:37Z"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "final_rollout_observation": {
+    "observed_at": "2026-11-01T05:47:57.791020+00:00",
+    "status": {
+      "availableReplicas": 1,
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-10-31T11:24:17Z",
+          "lastUpdateTime": "2026-10-31T11:24:17Z",
+          "message": "Deployment has minimum availability.",
+          "reason": "MinimumReplicasAvailable",
+          "status": "True",
+          "type": "Available"
+        },
+        {
+          "lastTransitionTime": "2026-10-22T04:03:03Z",
+          "lastUpdateTime": "2026-11-01T05:47:42Z",
+          "message": "ReplicaSet \"ani-governance-5785c564cc\" has successfully progressed.",
+          "reason": "NewReplicaSetAvailable",
+          "status": "True",
+          "type": "Progressing"
+        }
+      ],
+      "observedGeneration": 199,
+      "readyReplicas": 1,
+      "replicas": 1,
+      "terminatingReplicas": 0,
+      "updatedReplicas": 1
+    },
+    "pods": [
+      {
+        "name": "ani-governance-5785c564cc-v9fdg",
+        "uid": "392032ea-5fa7-4693-b51b-41df0c8e1bca",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-governance-5785c564cc",
+            "uid": "ae3c6032-9ef9-4c33-95a3-51fb7ddc9a48"
+          }
+        ],
+        "node": "node3",
+        "start_time": "2026-11-01T05:47:36Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "governance",
+            "ready": true,
+            "image": "sha256:6a77254568ef291bab3da57e7d6550310d53bfdd7ca3a432d0fd0e078e7b2025",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:493f472161824989be406f3cdeebd365e10a4e7d3baa469ac06090dbecb68540",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-01T05:47:39Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "private-config",
+            "image": "10.10.1.66:5001/library/busybox:1.37.0",
+            "image_id": "10.10.1.66:30003/ani-b07-test/busybox@sha256:7a3ebe5bfd1a4a19797d20b0c0bb39d44393e9a03fd852c0865b0f540d868df0",
+            "state": {
+              "terminated": {
+                "containerID": "containerd://1fbcecf7d8a57a606e0d9ab28bf3419f76cb92ca009d8000a27842a200df4649",
+                "exitCode": 0,
+                "finishedAt": "2026-11-01T05:47:37Z",
+                "reason": "Completed",
+                "startedAt": "2026-11-01T05:47:37Z"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "final": {
+    "observed_at": "2026-11-01T05:47:57.871568+00:00",
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "resource_version": "21021549",
+    "generation": 199,
+    "spec_sha256": "e45378a750836a4b1c8260061c93d43c979726c8a7553e88d13e4d971154990c",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:493f472161824989be406f3cdeebd365e10a4e7d3baa469ac06090dbecb68540",
+    "only_spec_delta": "containers[name=governance].image",
+    "replicas": 1,
+    "explicit_create_paused_env_present": false,
+    "normal_source_default_create_paused": false,
+    "pods": [
+      {
+        "name": "ani-governance-5785c564cc-v9fdg",
+        "uid": "392032ea-5fa7-4693-b51b-41df0c8e1bca",
+        "owners": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "ani-governance-5785c564cc",
+            "uid": "ae3c6032-9ef9-4c33-95a3-51fb7ddc9a48"
+          }
+        ],
+        "node": "node3",
+        "start_time": "2026-11-01T05:47:36Z",
+        "phase": "Running",
+        "container_statuses": [
+          {
+            "name": "governance",
+            "ready": true,
+            "image": "sha256:6a77254568ef291bab3da57e7d6550310d53bfdd7ca3a432d0fd0e078e7b2025",
+            "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:493f472161824989be406f3cdeebd365e10a4e7d3baa469ac06090dbecb68540",
+            "restart_count": 0,
+            "state": {
+              "running": {
+                "startedAt": "2026-11-01T05:47:39Z"
+              }
+            }
+          }
+        ],
+        "init_statuses": [
+          {
+            "name": "private-config",
+            "image": "10.10.1.66:5001/library/busybox:1.37.0",
+            "image_id": "10.10.1.66:30003/ani-b07-test/busybox@sha256:7a3ebe5bfd1a4a19797d20b0c0bb39d44393e9a03fd852c0865b0f540d868df0",
+            "state": {
+              "terminated": {
+                "containerID": "containerd://1fbcecf7d8a57a606e0d9ab28bf3419f76cb92ca009d8000a27842a200df4649",
+                "exitCode": 0,
+                "finishedAt": "2026-11-01T05:47:37Z",
+                "reason": "Completed",
+                "startedAt": "2026-11-01T05:47:37Z"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "owner_chains": [
+      {
+        "pod_uid": "392032ea-5fa7-4693-b51b-41df0c8e1bca",
+        "replica_set_uid": "ae3c6032-9ef9-4c33-95a3-51fb7ddc9a48",
+        "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5"
+      }
+    ],
+    "actual_business_acceptance": "NOT_RUN_BY_THIS_WATCHER"
+  },
+  "finished_at": "2026-11-01T05:47:57.871835+00:00"
+}

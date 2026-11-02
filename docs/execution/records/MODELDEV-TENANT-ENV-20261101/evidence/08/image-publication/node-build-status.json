@@ -1,0 +1,11 @@
+{
+  "status": "FOUR_IMAGES_PUBLISHED_DIGEST_VERIFIED",
+  "receipt": "result.json",
+  "deployment": "NOT_RUN",
+  "cleanup": "Image build tools/private root333493615B and local transit/context files removed; private units MainPID0/inactive; auth absent; original BuildKit/tools/cache/tasks and delivered images retained. Required auxiliary CLI retained for parent/environment; parent owns shared CM cleanup.",
+  "cleanup_evidence": [
+    "node-private-build-cleanup.json",
+    "local-transit-cleanup.json",
+    "added-tools-cleanup-ledger.json"
+  ]
+}

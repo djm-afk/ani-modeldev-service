@@ -1,0 +1,26 @@
+{
+  "observed_at": "2026-10-31T17:44:33.093019+00:00",
+  "source_main": {
+    "modeldev": "21bf4bd6540d462a61c91b629f26250899583223",
+    "governance": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+    "resource": "23e25b33ca02890231cd273ef7246b0fc415476c"
+  },
+  "source_diff_from_spec": "none",
+  "cluster_identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "cluster_id_source": "ani-system/ani-resource-private config.yaml network.cluster_id; process-only decode, no secret retained",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "result": "PASS"
+  },
+  "namespace_samples": [
+    {"name":"tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420","uid":"a8d8a472-8a8a-43cf-abf0-0e805bbe67b0","phase":"Active","network_owner":"ani-network-service","network_tenant":"64c5c35a-f554-432c-b4bc-7b4f36f08420","deletion_timestamp":null},
+    {"name":"tenant-207328fc-f08d-4dc4-b403-16ec86396ce2","uid":"8698b0b5-f4c8-4770-85e5-10f25ad7b347","phase":"Active","network_owner":"ani-network-service","network_tenant":"207328fc-f08d-4dc4-b403-16ec86396ce2","deletion_timestamp":null}
+  ],
+  "deployment_update_entry": "http://192.168.25.40:9998/",
+  "update_entry_probe": "Fedora direct HTTP GET / and /api/health returned curl exit 52 empty reply; not yet diagnosed",
+  "writes_to_cluster": false
+}

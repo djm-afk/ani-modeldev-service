@@ -1,0 +1,126 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60",
+  "actions": [
+    {
+      "method": "PATCH",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods/md-q9bb7-2399679389",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:37:21.403207+00:00",
+      "http_status": 200,
+      "response_sha256": "fea4f82b5d9087f787c7a142a3391e7d71d2cbaa28ab028fc008dc04340b9455"
+    },
+    {
+      "method": "DELETE",
+      "path": "/apis/argoproj.io/v1alpha1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/workflows/md-q9bb7",
+      "phase": "ATTEMPTED",
+      "at": "2026-11-01T11:37:21.441660+00:00",
+      "http_status": 200,
+      "response_sha256": "81ddb3db8261735b90b527ef194f80922aa4ab159012b55ce5e313dab0abf67b"
+    }
+  ],
+  "status": "EXACT_A1_PHYSICAL_RESOURCES_RELEASED",
+  "maintenance_exec_calls": 8,
+  "new_identity_or_token_request": false,
+  "tokens_saved": false,
+  "control_runtime": {
+    "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "pod_name": "ani-modeldev-84789f6c7f-xcrmc",
+    "pod_uid": "3c63533e-55c9-4017-9917-5d5768d302a3",
+    "node": "node3",
+    "replicaset_uid": "d880127b-45eb-4a18-ae27-1500d071dda5",
+    "container_id": "containerd://5f60a9c1b21d277bae7090c94881c89464a73d7ea7dd32c39cc7b8931e100d3a",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:dab40ab06be571d88e30490cb385b9435d004cf7fb1fedc5dbe7315e7de185ee",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:dab40ab06be571d88e30490cb385b9435d004cf7fb1fedc5dbe7315e7de185ee",
+    "started_at": "2026-11-01T11:19:14Z",
+    "restart_count": 0
+  },
+  "api_sample": {
+    "claims": {
+      "iat": 1793531950,
+      "exp": 1793535550,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "https://kubernetes.default.svc.cluster.local"
+      ],
+      "jti_present": true,
+      "pod_uid": "3c63533e-55c9-4017-9917-5d5768d302a3",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 3600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 5,
+      "size_bytes": 1177,
+      "mtime_epoch": 1793531950,
+      "resolved_generation": "..2026_11_01_11_19_11.236301865",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "kfp_sample": {
+    "claims": {
+      "iat": 1793532946,
+      "exp": 1793533546,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "pipelines.kubeflow.org"
+      ],
+      "jti_present": true,
+      "pod_uid": "3c63533e-55c9-4017-9917-5d5768d302a3",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 10,
+      "size_bytes": 1148,
+      "mtime_epoch": 1793532946,
+      "resolved_generation": "..2026_11_01_11_35_46.3849428847",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "kfp_before": {
+    "http_status": 200,
+    "state": "FAILED",
+    "finished_at": "2026-11-01T10:36:19Z",
+    "original_binding_matches": true,
+    "response_sha256": "4d83656825062e201819ad1b1e09f289bffe841ad456dbb042a7c30ed7049ffa"
+  },
+  "prewrite_identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "preserved_namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+  "original_pods_absent": true,
+  "workflow_absent": true,
+  "workspace_pvc_deletes": 0,
+  "pre_kfp_delete_identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "kfp_delete": {
+    "phase": "ATTEMPTED",
+    "at": "2026-11-01T11:37:21.712165+00:00",
+    "http_status": 200,
+    "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "kfp_original_run_get_after": 404,
+  "finished_at": "2026-11-01T11:37:21.743010+00:00"
+}

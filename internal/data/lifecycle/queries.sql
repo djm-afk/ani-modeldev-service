@@ -75,57 +75,133 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid AND execution_id = sqlc.arg(executio
     AND close_generation < 18446744073709551615
 RETURNING close_generation;
 
--- Discovery only. Reconcile rereads the shared fence and original submission.
--- Include admission delivered after a stop tombstone, before any Run exists.
--- name: ListPendingBoundClosures :many
-SELECT admitted.execution_id
-FROM modeldev_executions AS admitted
-JOIN modeldev_execution_identities AS identity
-  ON identity.tenant_id = admitted.tenant_id
- AND identity.execution_id = admitted.execution_id
-LEFT JOIN modeldev_execution_runtimes AS runtime
-  ON runtime.tenant_id = admitted.tenant_id
- AND runtime.execution_id = admitted.execution_id
-WHERE admitted.tenant_id = sqlc.arg(tenant_id)::uuid
-  AND (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'environment') = sqlc.arg(environment)::jsonb
-  AND ((runtime.closed_at IS NULL AND
-        (identity.close_generation > 0 OR
-         (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz <= clock_timestamp()
-         OR ((runtime.facts -> 'TrainingWindow' ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
-             AND (COALESCE(runtime.facts -> 'Observation' ->> 'WritersAbsent', 'false') <> 'true'
-                  OR COALESCE(runtime.facts -> 'Observation' ->> 'Outcome', 'UNKNOWN') IN ('UNKNOWN', 'RUNNING')))
-         OR EXISTS (
-           SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS step
-           WHERE (step ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
-             AND CASE step -> 'Binding' ->> 'Role'
-               WHEN 'prepare' THEN runtime.facts -> 'TrainingWindow' IS NULL
-               WHEN 'collect' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'publish')
-               WHEN 'publish' THEN CASE WHEN convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'kind' = 'FINETUNING'
-                 THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'register')
-                 ELSE runtime.facts -> 'Publication' = 'null'::jsonb OR runtime.facts -> 'Publication' IS NULL END
-               WHEN 'register' THEN COALESCE(runtime.facts -> 'FinetuningRegistration' ->> 'State', 'PENDING') NOT IN ('READY', 'DEPENDENCY_UNAVAILABLE')
-               ELSE false END)
-         OR EXISTS (
-           SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'FinetuningSteps', '[]'::jsonb)) AS step
-           WHERE (step ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
-             AND CASE step -> 'Binding' ->> 'Role'
-               WHEN 'export' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'FinetuningSteps', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'verify')
-               WHEN 'verify' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'collect')
-               ELSE false END)))
-       OR (runtime.closed_at IS NOT NULL
-           AND COALESCE(runtime.facts -> 'CloseEvidence' ->> 'NoDispatch', 'false') <> 'true'
-           AND (runtime.facts -> 'StepExitCleanup' ->> 'CompletedAt' IS NULL
-                OR runtime.facts -> 'ComputeCleanup' IS NULL
-                OR (runtime.facts -> 'ComputeCleanup' ->> 'phase' <> 'APPLIED'
-                    AND (COALESCE((runtime.facts -> 'ComputeCleanup' ->> 'attempts')::integer, 0) < 3
-                         OR runtime.facts -> 'ComputeCleanup' ->> 'phase' = 'STARTED'))))
-       OR (runtime.closed_at IS NOT NULL
-           AND convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'gpu' IS NOT NULL
-           AND convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'gpu' <> 'null'::jsonb
-           AND runtime.facts -> 'GPURelease' -> 'outbox' ->> 'delivered_at' IS NULL))
-  AND (sqlc.narg(after_execution_id)::uuid IS NULL OR admitted.execution_id > sqlc.narg(after_execution_id)::uuid)
-ORDER BY admitted.execution_id
-LIMIT sqlc.arg(batch_size)::integer;
+-- name: CloseDiscoveryTime :one
+SELECT clock_timestamp()::timestamptz AS sweep_before;
+
+-- name: ListPendingCloseTenants :many
+SELECT DISTINCT a.tenant_id
+FROM modeldev_executions AS a
+JOIN modeldev_execution_identities AS i ON i.tenant_id=a.tenant_id AND i.execution_id=a.execution_id AND i.operation_id=a.operation_id AND i.spec_hash=a.spec_hash
+LEFT JOIN modeldev_execution_runtimes AS r ON r.tenant_id=a.tenant_id AND r.execution_id=a.execution_id
+WHERE a.cluster_id=sqlc.arg(cluster_id)::uuid AND (
+  -- U: 尚未 CLOSED。内部期限与 successor 的精确判断移到逐行 Go。
+  (
+    r.closed_at IS NULL
+    AND (
+      i.close_generation > 0
+      OR a.deadline_at <= statement_timestamp()
+      OR COALESCE(NULLIF(r.facts -> 'TrainingWindow', 'null'::jsonb),
+                  '{}'::jsonb) <> '{}'::jsonb
+      OR COALESCE(NULLIF(r.facts -> 'StepTimings', 'null'::jsonb),
+                  '[]'::jsonb) <> '[]'::jsonb
+      OR COALESCE(NULLIF(r.facts -> 'FinetuningSteps', 'null'::jsonb),
+                  '[]'::jsonb) <> '[]'::jsonb
+    )
+  )
+  OR
+  -- C: 已 CLOSED，仍可能需要原步骤/compute cleanup。
+  (
+    r.closed_at IS NOT NULL
+    AND (r.facts #> '{CloseEvidence,NoDispatch}')
+          IS DISTINCT FROM 'true'::jsonb
+    AND (
+      jsonb_typeof(r.facts #> '{StepExitCleanup,CompletedAt}')
+          IS DISTINCT FROM 'string'
+      OR (r.facts #>> '{StepExitCleanup,CompletedAt}') = ''
+      OR jsonb_typeof(r.facts -> 'ComputeCleanup')
+          IS DISTINCT FROM 'object'
+      OR (
+        (r.facts #>> '{ComputeCleanup,phase}') IS DISTINCT FROM 'APPLIED'
+        AND (
+          (r.facts #>> '{ComputeCleanup,phase}') = 'STARTED'
+          OR CASE
+               WHEN jsonb_typeof(r.facts #> '{ComputeCleanup,attempts}')
+                      = 'number'
+                 THEN (r.facts #> '{ComputeCleanup,attempts}') < '3'::jsonb
+               ELSE TRUE
+             END
+        )
+      )
+    )
+  )
+  OR
+  -- G: 已 CLOSED，GPU 尚未 seal/完整 ACK，或快照无法安全分类。
+  -- CASE 使完整 ACK 的正常闭合行无需再为此分支解析快照。
+  CASE
+    WHEN r.closed_at IS NULL THEN FALSE
+    WHEN jsonb_typeof(r.facts #> '{GPURelease,outbox,ack}') = 'object'
+     AND jsonb_typeof(r.facts #> '{GPURelease,outbox,delivered_at}') = 'string'
+      THEN FALSE
+    ELSE
+      (public.modeldev_scan_snapshot_jsonb(a.snapshot_canonical)
+         #>> '{compute_origin,device_mode}') IS DISTINCT FROM 'cpu'
+  END
+)
+ AND (sqlc.narg(after_tenant_id)::uuid IS NULL OR a.tenant_id>sqlc.narg(after_tenant_id)::uuid)
+ORDER BY a.tenant_id LIMIT sqlc.arg(batch_size)::integer;
+
+-- name: ListPendingClosures :many
+SELECT a.*,i.close_generation,r.closed_at,r.facts,r.gpu_release_sealed_at
+FROM modeldev_executions AS a
+JOIN modeldev_execution_identities AS i ON i.tenant_id=a.tenant_id AND i.execution_id=a.execution_id AND i.operation_id=a.operation_id AND i.spec_hash=a.spec_hash
+LEFT JOIN modeldev_execution_runtimes AS r ON r.tenant_id=a.tenant_id AND r.execution_id=a.execution_id
+WHERE a.cluster_id=sqlc.arg(cluster_id)::uuid AND (
+  -- U: 尚未 CLOSED。内部期限与 successor 的精确判断移到逐行 Go。
+  (
+    r.closed_at IS NULL
+    AND (
+      i.close_generation > 0
+      OR a.deadline_at <= statement_timestamp()
+      OR COALESCE(NULLIF(r.facts -> 'TrainingWindow', 'null'::jsonb),
+                  '{}'::jsonb) <> '{}'::jsonb
+      OR COALESCE(NULLIF(r.facts -> 'StepTimings', 'null'::jsonb),
+                  '[]'::jsonb) <> '[]'::jsonb
+      OR COALESCE(NULLIF(r.facts -> 'FinetuningSteps', 'null'::jsonb),
+                  '[]'::jsonb) <> '[]'::jsonb
+    )
+  )
+  OR
+  -- C: 已 CLOSED，仍可能需要原步骤/compute cleanup。
+  (
+    r.closed_at IS NOT NULL
+    AND (r.facts #> '{CloseEvidence,NoDispatch}')
+          IS DISTINCT FROM 'true'::jsonb
+    AND (
+      jsonb_typeof(r.facts #> '{StepExitCleanup,CompletedAt}')
+          IS DISTINCT FROM 'string'
+      OR (r.facts #>> '{StepExitCleanup,CompletedAt}') = ''
+      OR jsonb_typeof(r.facts -> 'ComputeCleanup')
+          IS DISTINCT FROM 'object'
+      OR (
+        (r.facts #>> '{ComputeCleanup,phase}') IS DISTINCT FROM 'APPLIED'
+        AND (
+          (r.facts #>> '{ComputeCleanup,phase}') = 'STARTED'
+          OR CASE
+               WHEN jsonb_typeof(r.facts #> '{ComputeCleanup,attempts}')
+                      = 'number'
+                 THEN (r.facts #> '{ComputeCleanup,attempts}') < '3'::jsonb
+               ELSE TRUE
+             END
+        )
+      )
+    )
+  )
+  OR
+  -- G: 已 CLOSED，GPU 尚未 seal/完整 ACK，或快照无法安全分类。
+  -- CASE 使完整 ACK 的正常闭合行无需再为此分支解析快照。
+  CASE
+    WHEN r.closed_at IS NULL THEN FALSE
+    WHEN jsonb_typeof(r.facts #> '{GPURelease,outbox,ack}') = 'object'
+     AND jsonb_typeof(r.facts #> '{GPURelease,outbox,delivered_at}') = 'string'
+      THEN FALSE
+    ELSE
+      (public.modeldev_scan_snapshot_jsonb(a.snapshot_canonical)
+         #>> '{compute_origin,device_mode}') IS DISTINCT FROM 'cpu'
+  END
+)
+ AND a.tenant_id=sqlc.arg(tenant_id)::uuid AND a.accepted_at<=sqlc.arg(sweep_before)::timestamptz
+ AND (sqlc.narg(after_execution_id)::uuid IS NULL OR (a.accepted_at,a.execution_id)>(sqlc.narg(after_accepted_at)::timestamptz,sqlc.narg(after_execution_id)::uuid))
+ORDER BY a.accepted_at,a.execution_id LIMIT sqlc.arg(batch_size)::integer;
 
 -- name: HasUnresolvedManualCleanup :one
 SELECT EXISTS (

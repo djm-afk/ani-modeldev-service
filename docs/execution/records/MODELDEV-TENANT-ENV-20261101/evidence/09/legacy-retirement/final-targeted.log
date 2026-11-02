@@ -1,0 +1,5 @@
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-legacy-retirement	0.013s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle	6.210s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof	0.971s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer	0.317s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/cleanup	0.013s

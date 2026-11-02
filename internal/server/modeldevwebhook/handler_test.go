@@ -17,8 +17,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
+	projection "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/tenantenvironment"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/modeldevwebhook"
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -28,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sort"
 )
 
 const namespaceUID = "8f79e7cc-769b-4b2d-87d3-a69c53c946f3"
@@ -38,12 +41,14 @@ const requestUID = "549b5d38-739c-4bb7-8eb6-e262b945b1ed"
 const supportImage = "example.invalid/support@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
 type identities struct {
-	namespace *corev1.Namespace
-	workflow  *unstructured.Unstructured
-	err       error
-	entered   chan struct{}
-	block     chan struct{}
-	once      sync.Once
+	namespace   *corev1.Namespace
+	environment *corev1.ConfigMap
+	accounts    map[string]*corev1.ServiceAccount
+	workflow    *unstructured.Unstructured
+	err         error
+	entered     chan struct{}
+	block       chan struct{}
+	once        sync.Once
 }
 
 func (reader *identities) Namespace(ctx context.Context, _ string) (*corev1.Namespace, error) {
@@ -68,6 +73,50 @@ func (reader *identities) Workflow(context.Context, string, string) (*unstructur
 	}
 	return reader.workflow.DeepCopy(), nil
 }
+func refreshProjection(t *testing.T, config *modeldevwebhook.Config, reader *identities) {
+	t.Helper()
+	binding, err := projection.Decode([]byte(reader.environment.Data["binding.json"]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := range binding.Profiles {
+		for _, p := range config.Profiles {
+			if p.ID == binding.Profiles[i].ID {
+				raw, _ := os.ReadFile(p.MaterialFile)
+				material, _, err := cpup01.ParseMaterial(raw)
+				if err != nil {
+					t.Fatal(err)
+				}
+				binding.Profiles[i].MaterialSHA256 = p.MaterialSHA256
+				binding.Profiles[i].IRSHA256 = material.Implementation.PipelineIRSHA256
+				binding.Profiles[i].PipelineID = material.Implementation.PipelineID
+				binding.Profiles[i].VersionID = material.Implementation.PipelineVersionID
+			}
+		}
+	}
+	raw, err := binding.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader.environment.Data["binding.json"] = string(raw)
+	reader.environment.Data["binding.sha256"] = projection.Digest(raw)
+}
+func (reader *identities) Environment(context.Context, string) (*corev1.ConfigMap, error) {
+	if reader.err != nil {
+		return nil, reader.err
+	}
+	return reader.environment.DeepCopy(), nil
+}
+func (reader *identities) ServiceAccount(_ context.Context, _ string, name string) (*corev1.ServiceAccount, error) {
+	if reader.err != nil {
+		return nil, reader.err
+	}
+	sa := reader.accounts[name]
+	if sa == nil {
+		return nil, errors.New("not found")
+	}
+	return sa.DeepCopy(), nil
+}
 
 func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 	t.Helper()
@@ -75,10 +124,10 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 	profiles := []modeldevwebhook.Profile{}
 	for _, kind := range []string{"GENERAL_TRAINING", "FINETUNING"} {
 		release := conformance.MaterialV21()
-		id := "cpu-v1"
+		id := "modeldev-mlp-cpu"
 		if kind == "FINETUNING" {
 			release = conformance.FinetuningMaterialV21()
-			id = "sft-v1"
+			id = "modeldev-sft-lora-cpu"
 		}
 		for role := range release.ComponentResources {
 			release.ComponentResources[role] = cpup01.ComponentResources{CPURequest: "2", CPULimit: "4", MemoryRequest: "6Gi", MemoryLimit: "8Gi", EphemeralStorageRequest: "10Gi", EphemeralStorageLimit: "12Gi"}
@@ -102,10 +151,68 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 		profiles = append(profiles, modeldevwebhook.Profile{ID: id, Kind: kind, MaterialFile: path, MaterialSHA256: hex.EncodeToString(digest[:]), ComponentImage: componentImage,
 			AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001})
 	}
-	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles,
-		Bindings: []modeldevwebhook.NamespaceBinding{{Namespace: "test-tenant", NamespaceUID: namespaceUID, OwnerLabel: modeldevwebhook.LabelBinding{Key: "ani.io/managed-by", Value: "modeldev-test"}, ArgoCreator: "system:serviceaccount:kubeflow:argo", StepServiceAccount: "modeldev-step", Profiles: []string{"cpu-v1", "sft-v1"}}}}
-	reader := &identities{namespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-tenant", UID: types.UID(namespaceUID), Labels: map[string]string{"ani.io/managed-by": "modeldev-test", modeldevwebhook.NamespaceTenantLabel: namespaceTenant}}},
-		workflow: &unstructured.Unstructured{Object: map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "metadata": map[string]any{"name": "main-flow", "namespace": "test-tenant", "uid": workflowUID, "labels": map[string]any{"pipeline/runid": runID}}}}}
+	profiles = append(profiles, profiles[0], profiles[1])
+	profiles[2].ID = "modeldev-mlp-gpu"
+	profiles[3].ID = "modeldev-sft-lora-gpu"
+	bundle := []byte(`{"schema":"test-immutable-bundle"}`)
+	bundleFile := filepath.Join(directory, "manifest.json")
+	if err := os.WriteFile(bundleFile, bundle, 0600); err != nil {
+		t.Fatal(err)
+	}
+	bundleHash := sha256.Sum256(bundle)
+	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles, ClusterID: "22222222-2222-4222-8222-222222222222", MaterialBundleFile: bundleFile, MaterialBundleDigest: hex.EncodeToString(bundleHash[:]), ArgoCreator: "system:serviceaccount:kubeflow:argo", Training: &modeldevwebhook.TrainingBinding{ServiceAccount: "trainer-workload", Creator: "system:serviceaccount:kube-system:job-controller"}, Driver: &modeldevwebhook.DriverBinding{Image: "example.invalid/driver@sha256:" + strings.Repeat("b", 64), Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}, ControllerPrincipals: []string{"system:serviceaccount:kube-system:job-controller", "system:serviceaccount:kubeflow:argo"}}
+	namespace := "tenant-" + namespaceTenant
+	reader := &identities{namespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace, UID: types.UID(namespaceUID), Labels: map[string]string{"network.ani.io/managed-by": "ani-network-service", modeldevwebhook.NamespaceTenantLabel: namespaceTenant}}, Status: corev1.NamespaceStatus{Phase: corev1.NamespaceActive}}, workflow: &unstructured.Unstructured{Object: map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "metadata": map[string]any{"name": "main-flow", "namespace": namespace, "uid": workflowUID, "labels": map[string]any{"pipeline/runid": runID}}}}}
+	snapshot := conformance.SnapshotV1()
+	input, _ := cpup01.TenantStorageScope(snapshot.PublicationScope, namespaceTenant, "input")
+	publish, _ := cpup01.TenantStorageScope(snapshot.PublicationScope, namespaceTenant, "publish")
+	model, _ := cpup01.TenantStorageScope(snapshot.PublicationScope, namespaceTenant, "base-model")
+	ids := snapshot.Environment.Identities
+	ids.KFPStepServiceAccount = "modeldev-step"
+	ids.TrainerServiceAccount = "trainer-workload"
+	ids.VerifierServiceAccount = "verifier"
+	b := projection.Binding{SchemaVersion: projection.Schema, TenantID: namespaceTenant, Environment: projection.Environment{BindingID: "11111111-1111-4111-8111-111111111111", ClusterID: config.ClusterID, NamespaceName: namespace, NamespaceUID: namespaceUID, KFPConnectionRef: "managed-kfp", ExperimentID: "44444444-4444-4444-8444-444444444444", Identities: ids}, InputScope: input, PublicationScope: publish, ModelScope: model, Workspace: snapshot.Workspace, Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 1800, ExecutionTimeoutMaxSeconds: 3600, StepTimeoutSeconds: 300}, InputFilePath: "/inputs/dataset-manifest.json", OutputDirectoryPath: "/workspace/training", TargetPlatform: cpup01.TrainingPlatform{OS: "linux", Architecture: "amd64"}, DispatchOwner: cpup01.DispatchOwnerSnapshot{Reference: "managed-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://test-artifacts/artifacts/" + namespaceTenant}, ManagedImageAccess: cpup01.ManagedImageAccessSnapshot{PullBindings: []cpup01.ManagedImagePullBinding{{RegistryAuthority: "registry.example.test", SecretName: "ani-pull-" + strings.Repeat("a", 32)}}}, MaterialBundleDigest: config.MaterialBundleDigest, ControllerPrincipals: config.ControllerPrincipals, Objects: []projection.ObjectRef{}}
+	for _, profile := range profiles {
+		raw, _ := os.ReadFile(profile.MaterialFile)
+		m, _, _ := cpup01.ParseMaterial(raw)
+		b.Profiles = append(b.Profiles, projection.Profile{ID: profile.ID, PipelineID: m.Implementation.PipelineID, VersionID: m.Implementation.PipelineVersionID, IRSHA256: m.Implementation.PipelineIRSHA256, MaterialSHA256: profile.MaterialSHA256})
+	}
+	sort.Slice(b.Profiles, func(i, j int) bool { return b.Profiles[i].ID < b.Profiles[j].ID })
+	for kind, names := range map[string][]string{"ServiceAccount": {"modeldev-step", "trainer-workload", "verifier"}, "RoleBinding": {"modeldev-runtime", "modeldev-step", "modeldev-webhook-read", "modeldev-kfp-api", "modeldev-kfp-access"}, "ConfigMap": {"modeldev-step-owner", "ani-kfp-ca", "kfp-launcher", "metadata-grpc-configmap"}} {
+		for _, name := range names {
+			uid := uuid.NewString()
+			if kind == "ServiceAccount" {
+				uid = map[string]string{"modeldev-step": ids.KFPStepServiceAccountUID, "trainer-workload": ids.TrainerServiceAccountUID, "verifier": ids.VerifierServiceAccountUID}[name]
+			}
+			b.Objects = append(b.Objects, projection.ObjectRef{Kind: kind, Name: name, UID: uid, SpecDigest: strings.Repeat("a", 64)})
+		}
+	}
+	sort.Slice(b.Objects, func(i, j int) bool {
+		return b.Objects[i].Kind+"/"+b.Objects[i].Name < b.Objects[j].Kind+"/"+b.Objects[j].Name
+	})
+	bindingRaw, err := b.Canonical()
+	if err != nil {
+		t.Fatal(err)
+	}
+	immutable := true
+	owner := metav1.ObjectMeta{Namespace: namespace, Name: "modeldev-execution-environment", UID: "88888888-8888-4888-8888-888888888888", Labels: map[string]string{"ani.io/managed-by": "ani-modeldev-service", "modeldev.ani.io/environment-id": b.Environment.BindingID, "modeldev.ani.io/tenant-id": namespaceTenant}, Annotations: map[string]string{"modeldev.ani.io/namespace-uid": namespaceUID}}
+	reader.environment = &corev1.ConfigMap{ObjectMeta: owner, Immutable: &immutable, Data: map[string]string{"binding.json": string(bindingRaw), "binding.sha256": projection.Digest(bindingRaw)}}
+	reader.accounts = map[string]*corev1.ServiceAccount{}
+	for _, entry := range []struct{ name, uid string }{{"modeldev-step", ids.KFPStepServiceAccountUID}, {"trainer-workload", ids.TrainerServiceAccountUID}, {"verifier", ids.VerifierServiceAccountUID}} {
+		metadata := *owner.DeepCopy()
+		metadata.Name = entry.name
+		metadata.UID = types.UID(entry.uid)
+		sa := &corev1.ServiceAccount{ObjectMeta: metadata, ImagePullSecrets: []corev1.LocalObjectReference{{Name: "ani-pull-" + strings.Repeat("a", 32)}}}
+		if entry.name == "trainer-workload" {
+			sa.ImagePullSecrets = nil
+			off := false
+			sa.AutomountServiceAccountToken = &off
+		}
+		reader.accounts[entry.name] = sa
+	}
+	runtimeConfig, _ := json.Marshal(map[string]any{"gcsOutputDirectory": b.DispatchOwner.PipelineRoot + "/22222222-2222-4222-8222-222222222222", "parameterValues": map[string]string{"execution_id": "22222222-2222-4222-8222-222222222222", "spec_hash": strings.Repeat("a", 64), "environment_binding_id": b.Environment.BindingID, "namespace_uid": namespaceUID}})
+	reader.workflow.Object["spec"] = map[string]any{"entrypoint": "entrypoint", "templates": []any{map[string]any{"name": "entrypoint", "dag": map[string]any{"tasks": []any{map[string]any{"name": "root-driver", "arguments": map[string]any{"parameters": []any{map[string]any{"name": "runtime-config", "value": string(runtimeConfig)}}}}}}}}}
+
 	return config, reader
 }
 
@@ -134,7 +241,7 @@ func request(t *testing.T, config modeldevwebhook.Config, profile, role string) 
 			}
 		}
 	}
-	if profile == "sft-v1" {
+	if profile == "modeldev-sft-lora-cpu" {
 		image = config.Profiles[1].ComponentImage
 	}
 	mounts := map[string]string{}
@@ -164,7 +271,7 @@ func request(t *testing.T, config modeldevwebhook.Config, profile, role string) 
 	if len(mounts) != 0 {
 		volumes = append(volumes, map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": "ani-kfp-workspace-test"}})
 	}
-	pod := map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"namespace": "test-tenant", "name": "step-test", "labels": map[string]string{"pipelines.kubeflow.org/v2_component": "true", modeldevwebhook.ProfileLabel: profile, modeldevwebhook.RoleLabel: role, "workflows.argoproj.io/workflow": "main-flow", "pipeline/runid": runID}, "ownerReferences": []map[string]any{{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": "main-flow", "uid": workflowUID, "controller": true}}, "finalizers": []string{"other.example.test/retain"}, "annotations": map[string]string{"other.example.test/config": "unchanged", "ani.modeldev/component-resources-sha256": resourceDigest}},
+	pod := map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"namespace": "tenant-9a1f3c62-4b7d-4e05-8c31-2d6f5b0e7a48", "name": "step-test", "labels": map[string]string{"pipelines.kubeflow.org/v2_component": "true", modeldevwebhook.ProfileLabel: profile, modeldevwebhook.RoleLabel: role, "workflows.argoproj.io/workflow": "main-flow", "pipeline/runid": runID}, "ownerReferences": []map[string]any{{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": "main-flow", "uid": workflowUID, "controller": true}}, "finalizers": []string{"other.example.test/retain"}, "annotations": map[string]string{"other.example.test/config": "unchanged", "ani.modeldev/component-resources-sha256": resourceDigest}},
 		"spec": map[string]any{"serviceAccountName": "modeldev-step", "containers": []map[string]any{{"name": "main", "image": image, "volumeMounts": volumeMounts, "resources": map[string]any{"requests": map[string]string{"cpu": "2", "memory": "6Gi"}, "limits": map[string]string{"cpu": "4", "memory": "8Gi"}}}, {"name": "wait", "image": supportImage}}, "initContainers": []map[string]any{{"name": "init", "image": supportImage}}, "volumes": volumes, "unknownFutureField": map[string]string{"marker": "preserved"}}}
 	if role == "prepare" || role == "export" || role == "verify" || role == "collect" || role == "publish" {
 		environment := []map[string]string{}
@@ -173,11 +280,12 @@ func request(t *testing.T, config modeldevwebhook.Config, profile, role string) 
 		}
 		pod["spec"].(map[string]any)["containers"].([]map[string]any)[0]["env"] = environment
 	}
+	pod["spec"].(map[string]any)["imagePullSecrets"] = []map[string]string{{"name": "ani-pull-" + strings.Repeat("a", 32)}}
 	raw, err := json.Marshal(pod)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return admissionv1.AdmissionReview{TypeMeta: metav1.TypeMeta{APIVersion: "admission.k8s.io/v1", Kind: "AdmissionReview"}, Request: &admissionv1.AdmissionRequest{UID: types.UID(requestUID), Kind: metav1.GroupVersionKind{Version: "v1", Kind: "Pod"}, Resource: metav1.GroupVersionResource{Version: "v1", Resource: "pods"}, Namespace: "test-tenant", Operation: admissionv1.Create, UserInfo: authenticationv1.UserInfo{Username: "system:serviceaccount:kubeflow:argo"}, Object: runtime.RawExtension{Raw: raw}}}
+	return admissionv1.AdmissionReview{TypeMeta: metav1.TypeMeta{APIVersion: "admission.k8s.io/v1", Kind: "AdmissionReview"}, Request: &admissionv1.AdmissionRequest{UID: types.UID(requestUID), Kind: metav1.GroupVersionKind{Version: "v1", Kind: "Pod"}, Resource: metav1.GroupVersionResource{Version: "v1", Resource: "pods"}, Namespace: "tenant-9a1f3c62-4b7d-4e05-8c31-2d6f5b0e7a48", Operation: admissionv1.Create, UserInfo: authenticationv1.UserInfo{Username: "system:serviceaccount:kubeflow:argo"}, Object: runtime.RawExtension{Raw: raw}}}
 }
 
 func call(t *testing.T, server *httptest.Server, body admissionv1.AdmissionReview) admissionv1.AdmissionResponse {
@@ -226,9 +334,9 @@ func TestHTTPSProfilesMountsPrecisePatchAndIdempotence(t *testing.T) {
 	}
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
-	for _, profile := range []string{"cpu-v1", "sft-v1"} {
+	for _, profile := range []string{"modeldev-mlp-cpu", "modeldev-sft-lora-cpu"} {
 		roles := []string{"workspace-name", "prepare", "train-wait", "collect", "publish", "close", "finalize-close"}
-		if profile == "sft-v1" {
+		if profile == "modeldev-sft-lora-cpu" {
 			roles = append(roles, "export", "verify", "register")
 		}
 		for _, role := range roles {
@@ -303,7 +411,7 @@ func TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay(t *t
 	}
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
-	body := request(t, config, "sft-v1", "verify")
+	body := request(t, config, "modeldev-sft-lora-cpu", "verify")
 	result := call(t, server, body)
 	if !result.Allowed {
 		t.Fatalf("six original verify subpaths were refused: %+v", result)
@@ -370,7 +478,7 @@ func TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay(t *t
 	for _, path := range []string{"training", "reports/train"} {
 		for _, mode := range []string{"missing", "wrong subpath"} {
 			t.Run(mode+" "+path, func(t *testing.T) {
-				rejected := request(t, config, "sft-v1", "verify")
+				rejected := request(t, config, "modeldev-sft-lora-cpu", "verify")
 				changePod(t, &rejected, func(pod *corev1.Pod) {
 					mounts := pod.Spec.Containers[0].VolumeMounts
 					for i := range mounts {
@@ -392,7 +500,7 @@ func TestFineVerifyOriginalAdapterMountsRemainReadOnlyAcrossAdmissionReplay(t *t
 		}
 	}
 	t.Run("extra writable subtree", func(t *testing.T) {
-		rejected := request(t, config, "sft-v1", "verify")
+		rejected := request(t, config, "modeldev-sft-lora-cpu", "verify")
 		changePod(t, &rejected, func(pod *corev1.Pod) {
 			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{Name: "workspace", MountPath: "/workspace/another", SubPath: "another"})
 		})
@@ -409,7 +517,7 @@ func TestRefuseUntrustedScopeOwnerProfileImagesAndMounts(t *testing.T) {
 	}{
 		{"namespace UID", func(_ *admissionv1.AdmissionReview, r *identities) { r.namespace.UID = types.UID(workflowUID) }},
 		{"namespace owner", func(_ *admissionv1.AdmissionReview, r *identities) {
-			r.namespace.Labels["ani.io/managed-by"] = "other-owner"
+			r.namespace.Labels["network.ani.io/managed-by"] = "other-owner"
 		}},
 		{"workflow UID", func(_ *admissionv1.AdmissionReview, r *identities) { r.workflow.SetUID(types.UID(namespaceUID)) }},
 		{"workflow run", func(_ *admissionv1.AdmissionReview, r *identities) {
@@ -476,7 +584,7 @@ func TestRefuseUntrustedScopeOwnerProfileImagesAndMounts(t *testing.T) {
 			}
 			server := httptest.NewTLSServer(handler)
 			defer server.Close()
-			body := request(t, config, "sft-v1", "export")
+			body := request(t, config, "modeldev-sft-lora-cpu", "export")
 			test.mutate(&body, reader)
 			result := call(t, server, body)
 			wantCode, wantReason := int32(403), metav1.StatusReasonForbidden
@@ -503,19 +611,27 @@ func TestOutsideScopeDoesNotReadDependenciesOrMutate(t *testing.T) {
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
 	for _, change := range []func(*admissionv1.AdmissionReview){
-		func(b *admissionv1.AdmissionReview) { b.Request.Namespace = "unbound-tenant" },
+
 		func(b *admissionv1.AdmissionReview) { b.Request.Operation = admissionv1.Update },
 		func(b *admissionv1.AdmissionReview) { b.Request.Resource.Resource = "secrets" },
-		func(b *admissionv1.AdmissionReview) { changePod(t, b, func(p *corev1.Pod) { p.Labels = nil }) },
+		func(b *admissionv1.AdmissionReview) {
+			changePod(t, b, func(p *corev1.Pod) {
+				p.Spec.ServiceAccountName = "default"
+				p.Labels = nil
+				p.Annotations = nil
+				p.Finalizers = nil
+				p.Spec.Volumes = nil
+			})
+		},
 	} {
-		body := request(t, config, "cpu-v1", "prepare")
+		body := request(t, config, "modeldev-mlp-cpu", "prepare")
 		change(&body)
 		result := call(t, server, body)
 		if !result.Allowed || len(result.Patch) != 0 {
 			t.Fatal("outside scope changed")
 		}
 	}
-	if result := call(t, server, request(t, config, "cpu-v1", "export")); result.Allowed {
+	if result := call(t, server, request(t, config, "modeldev-mlp-cpu", "export")); result.Allowed {
 		t.Fatal("CPU profile accepted FINETUNING role")
 	}
 }
@@ -530,7 +646,7 @@ func TestBoundedConcurrencyBodyDeadlineAndReadiness(t *testing.T) {
 	}
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
-	body := request(t, config, "cpu-v1", "prepare")
+	body := request(t, config, "modeldev-mlp-cpu", "prepare")
 	raw, _ := json.Marshal(body)
 	finished := make(chan error, 1)
 	go func() {
@@ -575,8 +691,8 @@ func TestBoundedConcurrencyBodyDeadlineAndReadiness(t *testing.T) {
 		t.Fatal(err)
 	}
 	_ = response.Body.Close()
-	if response.StatusCode != 503 {
-		t.Fatal("readiness ignored dependency")
+	if response.StatusCode != 200 {
+		t.Fatal("global readiness depends on a tenant")
 	}
 	config.RequestTimeoutMilliseconds, config.DependencyTimeoutMilliseconds = 200, 50
 	reader.block = make(chan struct{})
@@ -589,7 +705,7 @@ func TestBoundedConcurrencyBodyDeadlineAndReadiness(t *testing.T) {
 	second := httptest.NewTLSServer(handler)
 	defer second.Close()
 	started := time.Now()
-	result := call(t, second, request(t, config, "cpu-v1", "prepare"))
+	result := call(t, second, request(t, config, "modeldev-mlp-cpu", "prepare"))
 	if result.Allowed || time.Since(started) > time.Second {
 		t.Fatal("dependency deadline not enforced")
 	}
@@ -604,20 +720,20 @@ func TestConfigFreezesReleaseAndOptionalLivePipelineVersion(t *testing.T) {
 	}
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
-	if call(t, server, request(t, config, "cpu-v1", "prepare")).Allowed {
+	if call(t, server, request(t, config, "modeldev-mlp-cpu", "prepare")).Allowed {
 		t.Fatal("missing frozen version metadata accepted")
 	}
 	labels := reader.workflow.GetLabels()
 	labels[config.Profiles[0].PipelineVersionLabel] = conformance.MaterialV21().Implementation.PipelineVersionID
 	reader.workflow.SetLabels(labels)
-	if !call(t, server, request(t, config, "cpu-v1", "prepare")).Allowed {
+	if !call(t, server, request(t, config, "modeldev-mlp-cpu", "prepare")).Allowed {
 		t.Fatal("original frozen version refused")
 	}
 	for _, change := range []func(*modeldevwebhook.Config){
 		func(c *modeldevwebhook.Config) { c.Profiles[0].MaterialSHA256 = strings.Repeat("0", 64) },
 		func(c *modeldevwebhook.Config) { c.Profiles[0].ComponentImage = "mutable:tag" },
 		func(c *modeldevwebhook.Config) { c.Profiles[0].RunAsUser = 0 },
-		func(c *modeldevwebhook.Config) { c.Bindings[0].Profiles = []string{"unknown"} },
+		func(c *modeldevwebhook.Config) { c.ClusterID = "invalid" },
 		func(c *modeldevwebhook.Config) { c.Profiles[1].MaterialFile = "" },
 	} {
 		fresh, _ := fixtureConfig(t)
@@ -634,7 +750,7 @@ func TestConfigFreezesReleaseAndOptionalLivePipelineVersion(t *testing.T) {
 	if _, err := modeldevwebhook.LoadConfig(path); err != nil {
 		t.Fatal(err)
 	}
-	for _, bad := range []string{strings.Replace(string(raw), `"schema_version":`, `"schema_version":"ani.modeldev.webhook.v1","schema_version":`, 1), strings.Replace(string(raw), `"namespace_uid":`, `"namespace_uid":"`+namespaceUID+`","namespace_uid":`, 1), strings.TrimSuffix(string(raw), "}") + `,"untrusted_policy":true}`} {
+	for _, bad := range []string{strings.Replace(string(raw), `"schema_version":`, `"schema_version":"ani.modeldev.webhook.v1","schema_version":`, 1), strings.Replace(string(raw), `"cluster_id":`, `"cluster_id":"invalid","cluster_id":`, 1), strings.TrimSuffix(string(raw), "}") + `,"untrusted_policy":true}`} {
 		if err := os.WriteFile(path, []byte(bad), 0600); err != nil {
 			t.Fatal(err)
 		}
@@ -647,7 +763,7 @@ func TestConfigFreezesReleaseAndOptionalLivePipelineVersion(t *testing.T) {
 func TestPinnedBackendDriversRetainOnlyOriginalExitEvidence(t *testing.T) {
 	config, reader := fixtureConfig(t)
 	driverImage := "example.invalid/kfp-driver@sha256:" + strings.Repeat("b", 64)
-	config.Bindings[0].Driver = &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}
+	config.Driver = &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}
 	handler, err := modeldevwebhook.New(config, reader, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -655,7 +771,7 @@ func TestPinnedBackendDriversRetainOnlyOriginalExitEvidence(t *testing.T) {
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
 	for _, kind := range []string{"ROOT_DAG", "DAG", "CONTAINER"} {
-		body := request(t, config, "cpu-v1", "workspace-name")
+		body := request(t, config, "modeldev-mlp-cpu", "workspace-name")
 		changePod(t, &body, func(p *corev1.Pod) {
 			delete(p.Labels, modeldevwebhook.ProfileLabel)
 			delete(p.Labels, modeldevwebhook.RoleLabel)
@@ -704,7 +820,7 @@ func TestPinnedBackendDriversRetainOnlyOriginalExitEvidence(t *testing.T) {
 				p.Spec.Containers[0].Args = append(p.Spec.Containers[0].Args, "--run_id", namespaceUID)
 			},
 			func(p *corev1.Pod) { p.Spec.Containers[0].Args = []string{"--type", "OTHER", "--run_id", runID} },
-			func(p *corev1.Pod) { p.Labels[modeldevwebhook.ProfileLabel] = "cpu-v1" },
+			func(p *corev1.Pod) { p.Labels[modeldevwebhook.ProfileLabel] = "modeldev-mlp-cpu" },
 			func(p *corev1.Pod) {
 				p.Spec.Volumes = append(p.Spec.Volumes, corev1.Volume{Name: "workspace", VolumeSource: corev1.VolumeSource{PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{ClaimName: "ani-kfp-workspace-test"}}})
 			},
@@ -722,7 +838,7 @@ func TestPinnedBackendDriversRetainOnlyOriginalExitEvidence(t *testing.T) {
 func TestPinnedBackendDriverArgoEmissaryCommand(t *testing.T) {
 	config, reader := fixtureConfig(t)
 	driverImage := "example.invalid/kfp-driver@sha256:" + strings.Repeat("b", 64)
-	config.Bindings[0].Driver = &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}
+	config.Driver = &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}
 	handler, err := modeldevwebhook.New(config, reader, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -734,7 +850,7 @@ func TestPinnedBackendDriverArgoEmissaryCommand(t *testing.T) {
 	command := []string{"/var/run/argo/argoexec", "emissary", "--loglevel", "info", "--log-format", "text", "--gloglevel", "0", "--", "driver"}
 	for _, kind := range []string{"ROOT_DAG", "DAG", "CONTAINER"} {
 		t.Run(kind, func(t *testing.T) {
-			body := request(t, config, "cpu-v1", "workspace-name")
+			body := request(t, config, "modeldev-mlp-cpu", "workspace-name")
 			changePod(t, &body, func(p *corev1.Pod) {
 				delete(p.Labels, modeldevwebhook.ProfileLabel)
 				delete(p.Labels, modeldevwebhook.RoleLabel)
@@ -816,9 +932,9 @@ func TestPinnedBackendDriverArgoEmissaryCommand(t *testing.T) {
 func TestNewFreezesCallerOwnedProfileAndDriverSlices(t *testing.T) {
 	config, reader := fixtureConfig(t)
 	driverImage := "example.invalid/kfp-driver@sha256:" + strings.Repeat("b", 64)
-	config.Bindings[0].Driver = &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}
-	body := request(t, config, "cpu-v1", "prepare")
-	driverBody := request(t, config, "cpu-v1", "workspace-name")
+	config.Driver = &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}
+	body := request(t, config, "modeldev-mlp-cpu", "prepare")
+	driverBody := request(t, config, "modeldev-mlp-cpu", "workspace-name")
 	changePod(t, &driverBody, func(p *corev1.Pod) {
 		delete(p.Labels, modeldevwebhook.ProfileLabel)
 		delete(p.Labels, modeldevwebhook.RoleLabel)
@@ -832,10 +948,10 @@ func TestNewFreezesCallerOwnedProfileAndDriverSlices(t *testing.T) {
 	}
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
-	config.Bindings[0].Profiles[0] = "other"
-	config.Bindings[0].Driver.Command[0] = "sh"
-	config.Bindings[0].Driver.AllowedSupportImages[0] = "other:tag"
-	config.Bindings[0].Driver.Image = "other:tag"
+	config.ControllerPrincipals[0] = "other"
+	config.Driver.Command[0] = "sh"
+	config.Driver.AllowedSupportImages[0] = "other:tag"
+	config.Driver.Image = "other:tag"
 	config.Profiles[0].AllowedSupportImages[0] = "other:tag"
 	config.Profiles[0].ComponentImage = "other:tag"
 	if !call(t, server, body).Allowed || !call(t, server, driverBody).Allowed {
@@ -851,7 +967,7 @@ func TestContainerSeccompCannotOverrideFrozenDefault(t *testing.T) {
 	}
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
-	for _, profile := range []string{"cpu-v1", "sft-v1"} {
+	for _, profile := range []string{"modeldev-mlp-cpu", "modeldev-sft-lora-cpu"} {
 		body := request(t, config, profile, "prepare")
 		changePod(t, &body, func(p *corev1.Pod) {
 			p.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeUnconfined}}

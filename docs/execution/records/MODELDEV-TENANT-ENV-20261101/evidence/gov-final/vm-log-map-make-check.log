@@ -1,0 +1,884 @@
+bash scripts/ci/checks.sh
+quota Ent boundary: pass
+layout and formal dependency graph: pass
+.........................................ssss
+----------------------------------------------------------------------
+Ran 45 tests in 6.832s
+
+OK (skipped=4)
+make[1]: 进入目录“/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source”
+python3 scripts/tests/check-repo-entrypoints.py --repo "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source"
+CHECK root-api
+CHECK root-build
+CHECK root-build-only
+CHECK root-gen
+CHECK root-ent
+CHECK root-all
+CHECK root-openapi
+CHECK service-api
+CHECK service-build
+CHECK service-build-only
+CHECK service-run
+CHECK service-gen
+CHECK service-ent
+CHECK service-app
+CHECK service-openapi
+CHECK root-parallel-build
+CHECK root-parallel-all
+CHECK service-parallel-app
+CHECK verify-ci-parallel
+CHECK reject-API
+CHECK reject-ENT
+CHECK reject-COMPILE
+CHECK reject-CHECK
+CHECK reject-INTEGRATION
+{
+  "scope": "mock Make delegation and retired entrypoints ONLY",
+  "pass": true,
+  "cases": [
+    {
+      "case": "root-api",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "root-build",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "root-build-only",
+      "pass": true,
+      "events": {
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "root-gen",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "SQL_EXPORT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "root-ent",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "ENT": 1,
+        "SQL_EXPORT": 1
+      }
+    },
+    {
+      "case": "root-all",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "SQL_EXPORT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "root-openapi",
+      "pass": true,
+      "events": {
+        "OPENAPI_RAW": 1,
+        "FINALIZE": 1
+      }
+    },
+    {
+      "case": "service-api",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "service-build",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "service-build-only",
+      "pass": true,
+      "events": {
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "service-run",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "RUN": 1
+      }
+    },
+    {
+      "case": "service-gen",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "service-ent",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "ENT": 1
+      }
+    },
+    {
+      "case": "service-app",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "service-openapi",
+      "pass": true,
+      "events": {
+        "OPENAPI_RAW": 1,
+        "FINALIZE": 1
+      }
+    },
+    {
+      "case": "root-parallel-build",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "root-parallel-all",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "SQL_EXPORT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "service-parallel-app",
+      "pass": true,
+      "events": {
+        "BUILD_GOW": 2,
+        "ENT": 1,
+        "BUILD_REDACT": 1,
+        "API": 1,
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "verify-ci-parallel",
+      "pass": true,
+      "events": {
+        "CHECK": 1,
+        "INTEGRATION": 1,
+        "GENERATION": 1
+      }
+    },
+    {
+      "case": "reject-API",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "BUILD_GOW": 1,
+        "BUILD_REDACT": 1,
+        "API": 1
+      }
+    },
+    {
+      "case": "reject-ENT",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "BUILD_GOW": 1,
+        "ENT": 1
+      }
+    },
+    {
+      "case": "reject-COMPILE",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "COMPILE": 1
+      }
+    },
+    {
+      "case": "reject-CHECK",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "CHECK": 1
+      }
+    },
+    {
+      "case": "reject-INTEGRATION",
+      "pass": true,
+      "actual_exit": 2,
+      "events": {
+        "CHECK": 1,
+        "INTEGRATION": 1
+      }
+    },
+    {
+      "case": "retired-install-dev",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-install-prod",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-install-golang",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-pm2-deploy",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-test-unit",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-verify-gpu",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-verify-gpu-regressions",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-verify-gpu-audit",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    },
+    {
+      "case": "retired-verify-quota-ent",
+      "pass": true,
+      "actual_exit": 2,
+      "external_commands": 0
+    }
+  ],
+  "real_generation": "NOT_RUN",
+  "database": "NOT_RUN",
+  "deployment": "NOT_RUN"
+}
+make[1]: 离开目录“/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source”
+ok  	go-wind-admin/pkg/audit	0.006s
+ok  	go-wind-admin/pkg/authorizer	0.010s
+ok  	go-wind-admin/pkg/constants	0.009s
+ok  	go-wind-admin/pkg/crypto	0.006s
+ok  	go-wind-admin/pkg/entgo/viewer	0.010s
+ok  	go-wind-admin/pkg/fieldperm	0.008s
+ok  	go-wind-admin/pkg/jwt	0.008s
+?   	go-wind-admin/pkg/localdeps/go-crud/api/gen/go/pagination/v1	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/audit	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-crud/cache	0.119s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo	0.020s
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/enttest	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/hook	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/menu	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/migrate	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/predicate	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/privacy	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/runtime	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/schema	[no test files]
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/ent/user	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/field	0.007s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/filter	0.011s
+?   	go-wind-admin/pkg/localdeps/go-crud/entgo/interceptor	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/mixin	0.005s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/pagination	0.010s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/rule	0.018s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/sorting	0.008s
+ok  	go-wind-admin/pkg/localdeps/go-crud/entgo/update	0.004s
+ok  	go-wind-admin/pkg/localdeps/go-crud/pagination	0.011s
+ok  	go-wind-admin/pkg/localdeps/go-crud/pagination/filter	0.010s
+ok  	go-wind-admin/pkg/localdeps/go-crud/pagination/paginator	0.005s
+ok  	go-wind-admin/pkg/localdeps/go-crud/pagination/sorting	0.005s
+?   	go-wind-admin/pkg/localdeps/go-crud/viewer	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-utils/aggregator	0.099s
+ok  	go-wind-admin/pkg/localdeps/go-utils/captcha	4.151s
+ok  	go-wind-admin/pkg/localdeps/go-utils/copierutil	0.004s
+ok  	go-wind-admin/pkg/localdeps/go-utils/crypto	0.186s
+ok  	go-wind-admin/pkg/localdeps/go-utils/fieldmaskutil	0.003s
+ok  	go-wind-admin/pkg/localdeps/go-utils/id	13.262s
+ok  	go-wind-admin/pkg/localdeps/go-utils/id/machineid	0.014s
+ok  	go-wind-admin/pkg/localdeps/go-utils/jwtutil	0.020s
+ok  	go-wind-admin/pkg/localdeps/go-utils/mapper	0.005s
+ok  	go-wind-admin/pkg/localdeps/go-utils/password	3.385s
+ok  	go-wind-admin/pkg/localdeps/go-utils/sliceutil	0.004s
+ok  	go-wind-admin/pkg/localdeps/go-utils/stringcase	0.003s
+ok  	go-wind-admin/pkg/localdeps/go-utils/timeutil	0.005s
+?   	go-wind-admin/pkg/localdeps/go-utils/tls	[no test files]
+ok  	go-wind-admin/pkg/localdeps/go-utils/trans	0.005s
+ok  	go-wind-admin/pkg/localdeps/go-wind/log	0.003s
+ok  	go-wind-admin/pkg/localdeps/go-wind-plugins/encoding	0.002s
+ok  	go-wind-admin/pkg/localdeps/go-wind-plugins/encoding/json	0.002s
+ok  	go-wind-admin/pkg/localdeps/go-wind-toolkit/protoc-gen-go-redact	0.035s
+ok  	go-wind-admin/pkg/localdeps/go-wind-toolkit/protoc-gen-go-redact/redact/v1	0.006s
+ok  	go-wind-admin/pkg/localdeps/kratos-authn/engine	0.006s
+ok  	go-wind-admin/pkg/localdeps/kratos-authn/engine/jwt	0.346s
+?   	go-wind-admin/pkg/localdeps/kratos-authz/engine	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-authz/engine/casbin	0.008s
+?   	go-wind-admin/pkg/localdeps/kratos-authz/engine/casbin/assets	[no test files]
+?   	go-wind-admin/pkg/localdeps/kratos-authz/engine/noop	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-authz/middleware	0.005s
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/api/gen/go/conf/v1	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/bootstrap	0.016s
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/cache/redis	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/config	0.003s [no tests to run]
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/database/ent	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/logger	0.003s
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/registry	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc	0.574s
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc/middleware/requestid	0.004s
+ok  	go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc/middleware/validate	0.007s [no tests to run]
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/tracer	[no test files]
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/transport/asynq	[no test files]
+?   	go-wind-admin/pkg/localdeps/kratos-bootstrap/transport/sse	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-swagger-ui	0.047s
+?   	go-wind-admin/pkg/localdeps/kratos-swagger-ui/internal/swagger	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/broker	0.189s
+?   	go-wind-admin/pkg/localdeps/kratos-transport/tracing	[no test files]
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/transport	0.007s
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/transport/asynq	34.669s
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/transport/keepalive	0.110s
+ok  	go-wind-admin/pkg/localdeps/kratos-transport/transport/sse	14.844s
+ok  	go-wind-admin/pkg/mailer	0.108s
+ok  	go-wind-admin/pkg/metadata	0.007s
+ok  	go-wind-admin/pkg/middleware/auth	0.026s
+ok  	go-wind-admin/pkg/middleware/ent	0.007s
+ok  	go-wind-admin/pkg/middleware/logging	0.067s
+ok  	go-wind-admin/pkg/middleware/requestid	0.006s
+ok  	go-wind-admin/pkg/netutil	0.155s
+ok  	go-wind-admin/pkg/password	0.003s
+ok  	go-wind-admin/pkg/permcode	0.004s
+ok  	go-wind-admin/pkg/quotaerrors	0.005s
+ok  	go-wind-admin/pkg/serviceid	0.004s
+?   	go-wind-admin/pkg/task	[no test files]
+ok  	go-wind-admin/pkg/utils	0.004s
+ok  	go-wind-admin/pkg/utils/converter	0.011s
+ok  	go-wind-admin/sql/bootstrap	0.681s
+Scanner: govulncheck@v1.7.0
+	mod	github.com/zricethezav/gitleaks/v8	v8.30.1	h1:PmEvCfVI7ti9dV3s5aMZUY7sS2GxRvG3yzih7E+cS3w=
+cc939c9c2174c420e7c41f08d9e5d821ada9521a83988ddac9e5dc55c0b62a9e  /home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/tools/govulncheck
+301bf2649b8d93f0db33df6bfcb0aeb9b03783a13a3bcba34c8fffe42aed6a3b  /home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/tools/gitleaks
+app/admin/service/configs/auth.yaml: 成功
+app/admin/service/internal/data/authenticator_test.go: 成功
+Go: go1.26.10
+Scanner: govulncheck@v1.7.0
+DB: https://vuln.go.dev
+DB updated: 2026-10-27 21:16:18 +0000 UTC
+
+Fetching vulnerabilities from the database...
+
+Checking the code against the vulnerabilities...
+
+The package pattern matched the following 169 root packages:
+  go-wind-admin/pkg/localdeps/go-crud/api/gen/go/pagination/v1
+  go-wind-admin/pkg/localdeps/go-wind-toolkit/protoc-gen-go-redact/redact/v1
+  go-wind-admin/app/admin/service/cmd/server/assets
+  go-wind-admin/pkg/crypto
+  go-wind-admin/app/admin/service/internal/commandcontract
+  go-wind-admin/app/admin/service/internal/data/ent/predicate
+  go-wind-admin/app/admin/service/internal/data/ent/accesskey
+  go-wind-admin/app/admin/service/internal/data/ent/accesskeyidempotency
+  go-wind-admin/app/admin/service/internal/data/ent/api
+  go-wind-admin/app/admin/service/internal/data/ent/apiauditlog
+  go-wind-admin/app/admin/service/internal/data/ent/dataaccessauditlog
+  go-wind-admin/app/admin/service/internal/data/ent/dictentry
+  go-wind-admin/app/admin/service/internal/data/ent/dictentryi18n
+  go-wind-admin/app/admin/service/internal/data/ent/dicttype
+  go-wind-admin/app/admin/service/internal/data/ent/gpudeleteacceptance
+  go-wind-admin/app/admin/service/internal/data/ent/gpuusagesync
+  go-wind-admin/app/admin/service/internal/data/ent/internalmessage
+  go-wind-admin/app/admin/service/internal/data/ent/internalmessagecategory
+  go-wind-admin/app/admin/service/internal/data/ent/internalmessagerecipient
+  go-wind-admin/app/admin/service/internal/data/ent/language
+  go-wind-admin/app/admin/service/internal/data/ent/loginauditlog
+  go-wind-admin/app/admin/service/internal/data/ent/loginpolicy
+  go-wind-admin/app/admin/service/internal/data/ent/membership
+  go-wind-admin/app/admin/service/internal/data/ent/membershiporgunit
+  go-wind-admin/app/admin/service/internal/data/ent/membershipposition
+  go-wind-admin/app/admin/service/internal/data/ent/membershiprole
+  go-wind-admin/app/admin/service/internal/data/ent/menu
+  go-wind-admin/app/admin/service/internal/data/ent/migrate
+  go-wind-admin/app/admin/service/internal/data/ent/modeldevacceptance
+  go-wind-admin/app/admin/service/internal/data/ent/notificationchannel
+  go-wind-admin/app/admin/service/internal/data/ent/operationauditlog
+  go-wind-admin/app/admin/service/internal/data/ent/orgunit
+  go-wind-admin/app/admin/service/internal/data/ent/permission
+  go-wind-admin/app/admin/service/internal/data/ent/permissionapi
+  go-wind-admin/app/admin/service/internal/data/ent/permissionauditlog
+  go-wind-admin/app/admin/service/internal/data/ent/permissiongroup
+  go-wind-admin/app/admin/service/internal/data/ent/permissionmenu
+  go-wind-admin/app/admin/service/internal/data/ent/permissionpolicy
+  go-wind-admin/app/admin/service/internal/data/ent/plan
+  go-wind-admin/app/admin/service/internal/data/ent/planmodule
+  go-wind-admin/app/admin/service/internal/data/ent/planquota
+  go-wind-admin/app/admin/service/internal/data/ent/policyevaluationlog
+  go-wind-admin/app/admin/service/internal/data/ent/position
+  go-wind-admin/app/admin/service/internal/data/ent/quotaaccount
+  go-wind-admin/app/admin/service/internal/data/ent/quotacharge
+  go-wind-admin/app/admin/service/internal/data/ent/quotadefinition
+  go-wind-admin/app/admin/service/internal/data/ent/quotaoperation
+  go-wind-admin/app/admin/service/internal/data/ent/quotareleasereceipt
+  go-wind-admin/app/admin/service/internal/data/ent/role
+  go-wind-admin/app/admin/service/internal/data/ent/rolefieldpermission
+  go-wind-admin/app/admin/service/internal/data/ent/rolemetadata
+  go-wind-admin/app/admin/service/internal/data/ent/roleorgunit
+  go-wind-admin/app/admin/service/internal/data/ent/rolepermission
+  go-wind-admin/app/admin/service/internal/data/ent/sysconfig
+  go-wind-admin/app/admin/service/internal/data/ent/task
+  go-wind-admin/app/admin/service/internal/data/ent/tenant
+  go-wind-admin/app/admin/service/internal/data/ent/user
+  go-wind-admin/app/admin/service/internal/data/ent/usercredential
+  go-wind-admin/app/admin/service/internal/data/ent/usermfafactor
+  go-wind-admin/app/admin/service/internal/data/ent/userorgunit
+  go-wind-admin/app/admin/service/internal/data/ent/userposition
+  go-wind-admin/app/admin/service/internal/data/ent/userrole
+  go-wind-admin/app/admin/service/internal/data/ent
+  go-wind-admin/app/admin/service/internal/data/ent/privacy
+  go-wind-admin/pkg/localdeps/go-crud/audit
+  go-wind-admin/pkg/localdeps/go-crud/viewer
+  go-wind-admin/pkg/localdeps/go-crud/entgo/interceptor
+  go-wind-admin/pkg/localdeps/go-crud/entgo/rule
+  go-wind-admin/pkg/localdeps/go-utils/id/machineid
+  go-wind-admin/pkg/localdeps/go-utils/trans
+  go-wind-admin/pkg/localdeps/go-utils/id
+  go-wind-admin/pkg/localdeps/go-crud/entgo/mixin
+  go-wind-admin/app/admin/service/internal/data/ent/schema
+  go-wind-admin/app/admin/service/internal/data/ent/runtime
+  go-wind-admin/pkg/audit
+  go-wind-admin/pkg/localdeps/kratos-authz/engine
+  go-wind-admin/pkg/localdeps/kratos-authz/engine/casbin/assets
+  go-wind-admin/pkg/localdeps/kratos-authz/engine/casbin
+  go-wind-admin/pkg/localdeps/kratos-authz/engine/noop
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/api/gen/go/conf/v1
+  go-wind-admin/pkg/localdeps/go-utils/stringcase
+  go-wind-admin/pkg/localdeps/go-utils/timeutil
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/config
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/logger
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/registry
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/tracer
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/bootstrap
+  go-wind-admin/pkg/authorizer
+  go-wind-admin/pkg/password
+  go-wind-admin/pkg/constants
+  go-wind-admin/pkg/entgo/viewer
+  go-wind-admin/pkg/localdeps/kratos-authn/engine
+  go-wind-admin/pkg/jwt
+  go-wind-admin/pkg/localdeps/go-crud/cache
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/predicate
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/menu
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/migrate
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/user
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent
+  go-wind-admin/pkg/localdeps/go-crud/entgo/field
+  go-wind-admin/pkg/localdeps/go-crud/pagination
+  go-wind-admin/pkg/localdeps/go-wind-plugins/encoding
+  go-wind-admin/pkg/localdeps/go-wind-plugins/encoding/json
+  go-wind-admin/pkg/localdeps/go-crud/pagination/filter
+  go-wind-admin/pkg/localdeps/go-wind/log
+  go-wind-admin/pkg/localdeps/go-crud/entgo/filter
+  go-wind-admin/pkg/localdeps/go-crud/pagination/paginator
+  go-wind-admin/pkg/localdeps/go-crud/entgo/pagination
+  go-wind-admin/pkg/localdeps/go-crud/entgo/sorting
+  go-wind-admin/pkg/localdeps/go-utils/fieldmaskutil
+  go-wind-admin/pkg/localdeps/go-crud/entgo/update
+  go-wind-admin/pkg/localdeps/go-crud/pagination/sorting
+  go-wind-admin/pkg/localdeps/go-utils/mapper
+  go-wind-admin/pkg/localdeps/go-crud/entgo
+  go-wind-admin/pkg/localdeps/go-utils/captcha
+  go-wind-admin/pkg/localdeps/go-utils/copierutil
+  go-wind-admin/pkg/localdeps/go-utils/crypto
+  go-wind-admin/pkg/localdeps/go-utils/jwtutil
+  go-wind-admin/pkg/localdeps/go-utils/password
+  go-wind-admin/pkg/localdeps/go-utils/sliceutil
+  go-wind-admin/pkg/localdeps/kratos-authn/engine/jwt
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/cache/redis
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/database/ent
+  go-wind-admin/pkg/localdeps/kratos-authz/middleware
+  go-wind-admin/pkg/metadata
+  go-wind-admin/pkg/permcode
+  go-wind-admin/pkg/middleware/auth
+  go-wind-admin/pkg/middleware/requestid
+  go-wind-admin/pkg/quotaerrors
+  go-wind-admin/pkg/serviceid
+  go-wind-admin/pkg/utils
+  go-wind-admin/app/admin/service/internal/data
+  go-wind-admin/app/admin/service/cmd/admin
+  go-wind-admin/app/admin/service/cmd/schema
+  go-wind-admin/app/admin/service/internal/modeldevbudget
+  go-wind-admin/pkg/fieldperm
+  go-wind-admin/pkg/localdeps/go-utils/aggregator
+  go-wind-admin/pkg/localdeps/kratos-transport/tracing
+  go-wind-admin/pkg/localdeps/kratos-transport/broker
+  go-wind-admin/pkg/localdeps/kratos-transport/transport
+  go-wind-admin/pkg/localdeps/kratos-transport/transport/sse
+  go-wind-admin/pkg/mailer
+  go-wind-admin/pkg/netutil
+  go-wind-admin/pkg/task
+  go-wind-admin/pkg/utils/converter
+  go-wind-admin/app/admin/service/internal/service
+  go-wind-admin/pkg/localdeps/go-utils/tls
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc/middleware/validate
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc
+  go-wind-admin/pkg/localdeps/kratos-transport/transport/keepalive
+  go-wind-admin/pkg/localdeps/kratos-transport/transport/asynq
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/transport/asynq
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/transport/sse
+  go-wind-admin/pkg/localdeps/kratos-swagger-ui/internal/swagger
+  go-wind-admin/pkg/localdeps/kratos-swagger-ui
+  go-wind-admin/pkg/middleware/logging
+  go-wind-admin/app/admin/service/internal/server
+  go-wind-admin/app/admin/service/cmd/server
+  go-wind-admin/app/admin/service/internal/data/ent/enttest
+  go-wind-admin/app/admin/service/internal/data/ent/hook
+  go-wind-admin/app/admin/service/tests/testutil
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/schema
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/runtime
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/enttest
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/hook
+  go-wind-admin/pkg/localdeps/go-crud/entgo/ent/privacy
+  go-wind-admin/pkg/localdeps/go-wind-toolkit/protoc-gen-go-redact
+  go-wind-admin/pkg/localdeps/kratos-bootstrap/rpc/middleware/requestid
+  go-wind-admin/pkg/middleware/ent
+Govulncheck scanned the following 179 modules and the go1.26.10 standard library:
+  go-wind-admin
+  ariga.io/atlas@v1.3.0
+  buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go@v1.36.12-20260825204119-511051f7f437.2
+  buf.build/go/protovalidate@v1.4.0
+  cel.dev/cel-go@v0.32.0
+  cel.dev/expr@v0.25.3
+  dario.cat/mergo@v1.0.2
+  entgo.io/ent@v0.14.6
+  filippo.io/edwards25519@v1.2.0
+  github.com/XSAM/otelsql@v0.44.0
+  github.com/agext/levenshtein@v1.2.3
+  github.com/antlr4-go/antlr/v4@v4.13.1
+  github.com/apparentlymart/go-textseg/v15@v15.0.0
+  github.com/bmatcuk/doublestar@v1.3.4
+  github.com/bmatcuk/doublestar/v4@v4.10.0
+  github.com/boombuler/barcode@v1.0.1-0.20190219062509-6c824513bacc
+  github.com/bwmarrin/snowflake@v0.3.0
+  github.com/casbin/casbin/v2@v2.135.0
+  github.com/casbin/govaluate@v1.10.0
+  github.com/cenkalti/backoff/v5@v5.0.3
+  github.com/cespare/xxhash/v2@v2.3.0
+  github.com/clipperhouse/displaywidth@v0.11.0
+  github.com/clipperhouse/uax29/v2@v2.7.0
+  github.com/davecgh/go-spew@v1.1.2-0.20180830191138-d8f796af33cc
+  github.com/dustin/go-humanize@v1.0.1
+  github.com/emicklei/go-restful/v3@v3.13.0
+  github.com/envoyproxy/protoc-gen-validate@v1.3.3
+  github.com/fatih/color@v1.19.0
+  github.com/felixge/httpsnoop@v1.1.0
+  github.com/fsnotify/fsnotify@v1.10.1
+  github.com/fxamacker/cbor/v2@v2.9.0
+  github.com/getkin/kin-openapi@v0.149.0
+  github.com/go-kratos/aegis@v0.2.0
+  github.com/go-kratos/kratos/v2@v2.9.2
+  github.com/go-logr/logr@v1.4.4
+  github.com/go-logr/stdr@v1.2.2
+  github.com/go-openapi/inflect@v1.0.0
+  github.com/go-openapi/jsonpointer@v1.0.0
+  github.com/go-openapi/jsonreference@v1.0.0
+  github.com/go-openapi/swag@v0.28.0
+  github.com/go-openapi/swag/cmdutils@v0.28.0
+  github.com/go-openapi/swag/conv@v0.28.0
+  github.com/go-openapi/swag/fileutils@v0.28.0
+  github.com/go-openapi/swag/jsonutils@v0.28.0
+  github.com/go-openapi/swag/loading@v0.28.0
+  github.com/go-openapi/swag/mangling@v0.28.0
+  github.com/go-openapi/swag/netutils@v0.28.0
+  github.com/go-openapi/swag/pools@v0.28.0
+  github.com/go-openapi/swag/stringutils@v0.28.0
+  github.com/go-openapi/swag/typeutils@v0.28.0
+  github.com/go-openapi/swag/yamlutils@v0.28.0
+  github.com/go-playground/form/v4@v4.3.1
+  github.com/go-sql-driver/mysql@v1.10.1
+  github.com/goccy/go-json@v0.10.6
+  github.com/golang-jwt/jwt/v5@v5.3.1
+  github.com/golang/freetype@v0.0.0-20170609003504-e2365dfdc4a0
+  github.com/google/gnostic@v0.7.1
+  github.com/google/gnostic-models@v0.7.1
+  github.com/google/go-cmp@v0.7.0
+  github.com/google/subcommands@v1.2.0
+  github.com/google/uuid@v1.6.0
+  github.com/gorilla/handlers@v1.5.2
+  github.com/gorilla/mux@v1.8.1
+  github.com/graph-gophers/dataloader/v7@v7.1.3
+  github.com/grpc-ecosystem/go-grpc-middleware@v1.4.0
+  github.com/grpc-ecosystem/grpc-gateway/v2@v2.30.0
+  github.com/hashicorp/hcl/v2@v2.24.0
+  github.com/hibiken/asynq@v0.26.0
+  github.com/jackc/pgpassfile@v1.0.0
+  github.com/jackc/pgservicefile@v0.0.0-20240606120523-5a60cdf6a761
+  github.com/jackc/pgx/v5@v5.11.0
+  github.com/jackc/puddle/v2@v2.2.2
+  github.com/jinzhu/copier@v0.4.0
+  github.com/jinzhu/inflection@v1.0.0
+  github.com/json-iterator/go@v1.1.12
+  github.com/liangzai006/ani-inference-service/api@v0.1.2-image-registry.2.0.20261029033104-a8b505b9e2ea
+  github.com/liangzai006/ani-model-service/api@v0.0.0-20261028165608-620bcb1503a6
+  github.com/lib/pq@v1.12.3
+  github.com/lithammer/shortuuid/v4@v4.3.0
+  github.com/lyft/protoc-gen-star/v2@v2.0.4
+  github.com/mattn/go-colorable@v0.1.15
+  github.com/mattn/go-isatty@v0.0.24
+  github.com/mattn/go-runewidth@v0.0.28
+  github.com/mileusna/useragent@v1.3.5
+  github.com/mitchellh/go-wordwrap@v1.0.1
+  github.com/modern-go/concurrent@v0.0.0-20180306012644-bacd9c7ef1dd
+  github.com/modern-go/reflect2@v1.0.3-0.20250322232337-35a7c28c31ee
+  github.com/mojocn/base64Captcha@v1.3.8
+  github.com/munnerz/goautoneg@v0.0.0-20191010083416-a7dc8b61c822
+  github.com/oasdiff/yaml@v0.1.1
+  github.com/oasdiff/yaml3@v0.0.14
+  github.com/olekukonko/cat@v0.0.0-20250911104152-50322a0618f6
+  github.com/olekukonko/errors@v1.3.0
+  github.com/olekukonko/ll@v0.1.8
+  github.com/olekukonko/tablewriter@v1.1.4
+  github.com/openzipkin/zipkin-go@v0.4.3
+  github.com/pquerna/otp@v1.5.0
+  github.com/redis/go-redis/extra/rediscmd/v9@v9.22.0
+  github.com/redis/go-redis/extra/redisotel/v9@v9.22.0
+  github.com/redis/go-redis/v9@v9.22.0
+  github.com/remyoudompheng/bigfft@v0.0.0-20230129092748-24d4a6f8daec
+  github.com/robfig/cron/v3@v3.0.1
+  github.com/rs/xid@v1.6.0
+  github.com/santhosh-tekuri/jsonschema/v6@v6.0.3
+  github.com/segmentio/ksuid@v1.0.4
+  github.com/shirou/gopsutil/v3@v3.24.5
+  github.com/sony/sonyflake@v1.3.0
+  github.com/spf13/afero@v1.15.0
+  github.com/spf13/cast@v1.10.0
+  github.com/spf13/cobra@v1.10.2
+  github.com/spf13/pflag@v1.0.10
+  github.com/stretchr/testify@v1.12.1
+  github.com/swaggest/swgui@v1.8.5
+  github.com/tjfoc/gmsm@v1.4.1
+  github.com/tklauser/go-sysconf@v0.4.0
+  github.com/tklauser/numcpus@v0.12.0
+  github.com/vearutop/statigz@v1.5.0
+  github.com/wenlng/go-captcha/v2@v2.0.5
+  github.com/x448/float16@v0.8.4
+  github.com/zclconf/go-cty@v1.19.0
+  github.com/zclconf/go-cty-yaml@v1.2.0
+  github.com/zhangzhe-ctrl/ani-accelerator-service@v0.0.0-20261027163656-86ce81af852a
+  github.com/zhangzhe-ctrl/ani-governance/api/quota@v0.0.0-20261017184327-1c605c793b88
+  github.com/zhangzhe-ctrl/ani-modeldev-service@v0.0.0-20261031195825-d807cbdbd5dd
+  github.com/zhangzhe-ctrl/ani-observability-service/api@v0.1.3-0.20261028072444-5377d534eac6
+  github.com/zhangzhe-ctrl/ani-resource-service@v0.0.0-20261031180451-71b3ad7a2a88
+  github.com/zhangzhe-ctrl/ani-resource-service/api/instance/terminal@v0.0.0-20261013075021-0937f5aa9c6c
+  github.com/zhangzhe-ctrl/ani-resource-service/api/vm/console@v0.0.0-20261023185414-0a53b99c8d9f
+  github.com/zhangzhe-ctrl/ani-session-gateway/api@v0.1.1-0.20261024051540-811cc3839244
+  go.einride.tech/aip@v0.86.3
+  go.mongodb.org/mongo-driver/v2@v2.9.0
+  go.opentelemetry.io/auto/sdk@v1.2.1
+  go.opentelemetry.io/otel@v1.46.0
+  go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.46.0
+  go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@v1.46.0
+  go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@v1.46.0
+  go.opentelemetry.io/otel/exporters/stdout/stdouttrace@v1.46.0
+  go.opentelemetry.io/otel/exporters/zipkin@v1.45.0
+  go.opentelemetry.io/otel/metric@v1.46.0
+  go.opentelemetry.io/otel/sdk@v1.46.0
+  go.opentelemetry.io/otel/trace@v1.46.0
+  go.opentelemetry.io/proto/otlp@v1.11.0
+  go.uber.org/atomic@v1.11.0
+  go.yaml.in/yaml/v2@v2.4.4
+  go.yaml.in/yaml/v3@v3.0.5
+  golang.org/x/crypto@v0.57.0
+  golang.org/x/exp@v0.0.0-20260824195058-e88cd73687aa
+  golang.org/x/image@v0.40.0
+  golang.org/x/mod@v0.41.0
+  golang.org/x/net@v0.60.0
+  golang.org/x/oauth2@v0.36.0
+  golang.org/x/sync@v0.23.0
+  golang.org/x/sys@v0.48.0
+  golang.org/x/term@v0.46.0
+  golang.org/x/text@v0.42.0
+  golang.org/x/time@v0.15.0
+  golang.org/x/tools@v0.49.0
+  google.golang.org/genproto/googleapis/api@v0.0.0-20260908043556-f8649ddbbfe6
+  google.golang.org/genproto/googleapis/rpc@v0.0.0-20260908043556-f8649ddbbfe6
+  google.golang.org/grpc@v1.83.2
+  google.golang.org/protobuf@v1.36.12
+  gopkg.in/cenkalti/backoff.v1@v1.1.0
+  gopkg.in/evanphx/json-patch.v4@v4.13.0
+  gopkg.in/inf.v0@v0.9.1
+  gopkg.in/yaml.v3@v3.0.1
+  k8s.io/api@v0.36.3
+  k8s.io/apimachinery@v0.36.3
+  k8s.io/client-go@v0.36.3
+  k8s.io/klog/v2@v2.140.0
+  k8s.io/kube-openapi@v0.0.0-20260317180543-43fb72c5454a
+  k8s.io/utils@v0.0.0-20260210185600-b8788abfbbc2
+  modernc.org/libc@v1.75.7
+  modernc.org/mathutil@v1.7.1
+  modernc.org/memory@v1.12.1
+  modernc.org/sqlite@v1.58.0
+  sigs.k8s.io/json@v0.0.0-20250730193827-2d320260d730
+  sigs.k8s.io/randfill@v1.0.0
+  sigs.k8s.io/structured-merge-diff/v6@v6.4.2
+  sigs.k8s.io/yaml@v1.6.0
+
+=== Symbol Results ===
+
+No vulnerabilities found.
+
+=== Package Results ===
+
+Vulnerability #1: GO-2026-5471
+    Kratos has a Confused Deputy issue in github.com/go-kratos/kratos
+  More info: https://pkg.go.dev/vuln/GO-2026-5471
+  Module: github.com/go-kratos/kratos/v2
+    Found in: github.com/go-kratos/kratos/v2@v2.9.2
+    Fixed in: N/A
+
+=== Module Results ===
+
+Vulnerability #1: GO-2026-6866
+    Check all ancestor namespace transitions when rendering raw text in html in
+    golang.org/x/net
+  More info: https://pkg.go.dev/vuln/GO-2026-6866
+  Module: golang.org/x/net
+    Found in: golang.org/x/net@v0.60.0
+    Fixed in: golang.org/x/net@v0.62.0
+
+Vulnerability #2: GO-2026-6860
+    Avoid quadratic complexity when coalescing text nodes in html in
+    golang.org/x/net
+  More info: https://pkg.go.dev/vuln/GO-2026-6860
+  Module: golang.org/x/net
+    Found in: golang.org/x/net@v0.60.0
+    Fixed in: golang.org/x/net@v0.62.0
+
+Vulnerability #3: GO-2026-6222
+    Excessive memory allocation during VP8L decoding in golang.org/x/image
+  More info: https://pkg.go.dev/vuln/GO-2026-6222
+  Module: golang.org/x/image
+    Found in: golang.org/x/image@v0.40.0
+    Fixed in: golang.org/x/image@v0.45.0
+
+Vulnerability #4: GO-2026-5932
+    The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design,
+    and has known security issues
+  More info: https://pkg.go.dev/vuln/GO-2026-5932
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.57.0
+    Fixed in: N/A
+
+Vulnerability #5: GO-2026-5066
+    Panic decoding image with out-of-bounds strip offset in x/image/tiff in
+    golang.org/x/image
+  More info: https://pkg.go.dev/vuln/GO-2026-5066
+  Module: golang.org/x/image
+    Found in: golang.org/x/image@v0.40.0
+    Fixed in: golang.org/x/image@v0.43.0
+
+Vulnerability #6: GO-2026-5062
+    Lack of limit on tile sizes in x/image/tiff in golang.org/x/image
+  More info: https://pkg.go.dev/vuln/GO-2026-5062
+  Module: golang.org/x/image
+    Found in: golang.org/x/image@v0.40.0
+    Fixed in: golang.org/x/image@v0.43.0
+
+Vulnerability #7: GO-2026-5061
+    Panic on VP8 alpha channel size mismatch in x/image/webp in
+    golang.org/x/image
+  More info: https://pkg.go.dev/vuln/GO-2026-5061
+  Module: golang.org/x/image
+    Found in: golang.org/x/image@v0.40.0
+    Fixed in: golang.org/x/image@v0.43.0
+
+Vulnerability #8: GO-2026-5032
+    Excessive resource consumption in PackBits decompression in
+    golang.org/x/image/tiff
+  More info: https://pkg.go.dev/vuln/GO-2026-5032
+  Module: golang.org/x/image
+    Found in: golang.org/x/image@v0.40.0
+    Fixed in: golang.org/x/image@v0.41.0
+
+Vulnerability #9: GO-2026-5031
+    Panic when reading out of bound palette index in golang.org/x/image/bmp
+  More info: https://pkg.go.dev/vuln/GO-2026-5031
+  Module: golang.org/x/image
+    Found in: golang.org/x/image@v0.40.0
+    Fixed in: golang.org/x/image@v0.41.0
+
+Vulnerability #10: GO-2026-4961
+    Panic when decoding large WEBP image on 32-bit platforms in
+    golang.org/x/image
+  More info: https://pkg.go.dev/vuln/GO-2026-4961
+  Module: golang.org/x/image
+    Found in: golang.org/x/image@v0.40.0
+    Fixed in: golang.org/x/image@v0.42.0
+
+Your code is affected by 0 vulnerabilities.
+This scan also found 1 vulnerability in packages you import and 10
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+5:13AM INF scanned ~35310357 bytes (35.31 MB) in 19.9s
+5:13AM INF no leaks found

@@ -3,6 +3,7 @@ package modeldevwebhook
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -24,6 +25,8 @@ import (
 type IdentityReader interface {
 	Namespace(context.Context, string) (*corev1.Namespace, error)
 	Workflow(context.Context, string, string) (*unstructured.Unstructured, error)
+	Environment(context.Context, string) (*corev1.ConfigMap, error)
+	ServiceAccount(context.Context, string, string) (*corev1.ServiceAccount, error)
 }
 
 type mountRule struct {
@@ -201,8 +204,7 @@ func unavailable(request *admissionv1.AdmissionRequest) (*admissionv1.AdmissionR
 
 func (handler *Handler) admit(ctx context.Context, request *admissionv1.AdmissionRequest, failure *admissionFailure) (*admissionv1.AdmissionResponse, string) {
 	allowed := &admissionv1.AdmissionResponse{UID: request.UID, Allowed: true}
-	binding, found := handler.bindings[request.Namespace]
-	if !found || request.Operation != admissionv1.Create || request.Resource != (metav1.GroupVersionResource{Version: "v1", Resource: "pods"}) || request.SubResource != "" {
+	if request.Operation != admissionv1.Create || request.Resource != (metav1.GroupVersionResource{Version: "v1", Resource: "pods"}) || request.SubResource != "" {
 		return allowed, "outside_scope"
 	}
 	var pod corev1.Pod
@@ -210,15 +212,22 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 	if json.Unmarshal(request.Object.Raw, &pod) != nil || json.Unmarshal(request.Object.Raw, &raw) != nil || raw["metadata"] == nil || raw["spec"] == nil {
 		return denied(request, "invalid_pod")
 	}
+	if !protectedPod(&pod) {
+		return allowed, "outside_scope"
+	}
+	binding, err := handler.environment(ctx, request.Namespace, &pod, failure)
+	if err != nil {
+		if errors.Is(err, errEnvironmentUnavailable) {
+			return unavailable(request)
+		}
+		return denied(request, "environment_identity")
+	}
 	labels := pod.Labels
 	if binding.Training != nil && pod.Spec.ServiceAccountName == binding.Training.ServiceAccount {
 		return handler.admitTraining(ctx, request, &pod, raw, binding, failure)
 	}
 	if labels["pipelines.kubeflow.org/v2_component"] != "true" {
-		if labels[ProfileLabel] != "" || labels[RoleLabel] != "" {
-			return denied(request, "invalid_target")
-		}
-		return allowed, "outside_scope"
+		return denied(request, "invalid_target")
 	}
 	if request.UserInfo.Username != binding.ArgoCreator || request.Kind != (metav1.GroupVersionKind{Version: "v1", Kind: "Pod"}) || pod.APIVersion != "v1" || pod.Kind != "Pod" || pod.Namespace != binding.Namespace || pod.Spec.ServiceAccountName != binding.StepServiceAccount || len(pod.OwnerReferences) != 1 {
 		return denied(request, "workload_identity")
@@ -252,6 +261,9 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 	}
 	if workflow.GetAPIVersion() != owner.APIVersion || workflow.GetKind() != owner.Kind || workflow.GetName() != owner.Name || workflow.GetNamespace() != binding.Namespace || workflow.GetUID() != owner.UID || workflow.GetDeletionTimestamp() != nil || workflow.GetLabels()["pipeline/runid"] != labels["pipeline/runid"] {
 		return denied(request, "workflow_identity")
+	}
+	if !workflowEnvironment(workflow, binding) {
+		return denied(request, "workflow_environment")
 	}
 	// KFP 2.16's workflow-level v2 label covers backend driver Pods as well.
 	// Recognize only the separately frozen backend executable after live owner

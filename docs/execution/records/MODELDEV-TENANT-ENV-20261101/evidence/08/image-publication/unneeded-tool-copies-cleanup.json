@@ -1,0 +1,56 @@
+{
+  "time": "2026-11-01T01:29:23.090489+00:00",
+  "reason": "node original official binaries fully verified, unused Fedora and local transfer copies no longer needed",
+  "fedora": {
+    "fuser_exit": 1,
+    "files": [
+      {
+        "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildkit-v0.25.1.linux-amd64.tar.gz",
+        "sha256": "85aa27c480fc9159705d21a3e66abe305f8dc708b8aeecd1e87bbc5c3de98642",
+        "absent_after": true
+      },
+      {
+        "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildkitd",
+        "sha256": "2419e6e46c363c5553424edd1155e7706b973b743de42eebaf8749b09342d78c",
+        "absent_after": true
+      },
+      {
+        "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildctl",
+        "sha256": "a026a3f74160367325bbccc948603699e4bc5e05c7f956a3ec49c730f753acc2",
+        "absent_after": true
+      },
+      {
+        "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildkitd.stripped",
+        "sha256": "6084ad03ce2c5912aeeaf5a3a3135623d6af20e523ead1d8d37c3cf7bcaf7344",
+        "absent_after": true
+      },
+      {
+        "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildctl.stripped",
+        "sha256": "a13f657a6590bce4e75832921bfb714e1c74972548698fe2a43c9b2cb25ddeab",
+        "absent_after": true
+      }
+    ],
+    "tools_directory_absent": true,
+    "receipt_json_also_removed": true
+  },
+  "local": {
+    "fuser_exit": 1,
+    "files": [
+      {
+        "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-image-tools-d807/buildkitd",
+        "size": 65278558,
+        "sha256": "2419e6e46c363c5553424edd1155e7706b973b743de42eebaf8749b09342d78c",
+        "absent_after": true
+      },
+      {
+        "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-image-tools-d807/buildctl",
+        "size": 32910671,
+        "sha256": "a026a3f74160367325bbccc948603699e4bc5e05c7f956a3ec49c730f753acc2",
+        "absent_after": true
+      }
+    ],
+    "tools_directory_absent": true
+  },
+  "node_needed_tools": "RETAIN_UNTIL_BUILD_AND_PRIVATE_DAEMON_CLEANUP",
+  "shared_root_control_socket": "DO_NOT_CLOSE"
+}

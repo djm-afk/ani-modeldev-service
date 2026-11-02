@@ -1,0 +1,43 @@
+[
+  {
+    "label": "native-gofmt-v2",
+    "command": [
+      "gofmt",
+      "-w",
+      "main.go",
+      "main_test.go"
+    ],
+    "start": "2026-11-01T02:22:47Z",
+    "end": "2026-11-01T02:22:47Z",
+    "exit": 0
+  },
+  {
+    "label": "native-pg-v2",
+    "command": [
+      "go",
+      "test",
+      "-count=1",
+      "-tags=original_c99_pg",
+      "-run",
+      "^TestOriginalSevenNativeC99QualificationAndMissingCloseEvidence$",
+      "-v",
+      "."
+    ],
+    "start": "2026-11-01T02:22:47Z",
+    "end": "2026-11-01T02:22:50Z",
+    "exit": 0
+  },
+  {
+    "label": "native-build-v2",
+    "command": [
+      "go",
+      "build",
+      "-o",
+      "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99-evidence/original-c99-qualifier",
+      "."
+    ],
+    "start": "2026-11-01T02:22:50Z",
+    "end": "2026-11-01T02:22:51Z",
+    "exit": 0
+  }
+]

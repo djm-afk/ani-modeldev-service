@@ -1,0 +1,131 @@
+{
+  "schema": "ani.modeldev.LIVE10-real-argo-controlled-failure.v1",
+  "started_at": "2026-11-01T17:00:41.956448+00:00",
+  "window_opened": true,
+  "restored": true,
+  "calls": [
+    {
+      "case": "ordinary-baseline",
+      "at": "2026-11-01T17:02:19.971620+00:00",
+      "http_status": 201,
+      "reason": null,
+      "message": null,
+      "request_sha256": "9dd254b7232eefb19f2ad4499a6562b66de2cc7280e2d7552278503cabdf81ad",
+      "response_sha256": "52cde03e88e4cb87a9fdbfbc2958afbd8d5f3d36788108aa9058adfe8a6e3016",
+      "dry_run_generated_name": "md-live10-ordinary-fwq2v"
+    },
+    {
+      "case": "md-baseline-real-argo",
+      "at": "2026-11-01T17:02:20.031709+00:00",
+      "http_status": 201,
+      "reason": null,
+      "message": null,
+      "request_sha256": "e4da3bdbdb3ba4016c5ddfecc376ef7640d1586aa29beccf7f33721838205cd2",
+      "response_sha256": "545f49682e8a4b2c6e7dae14948a8ce4a060870f5e0c65d2cbf9bb1e46e45934",
+      "dry_run_generated_name": "md-live10-step-fggrg"
+    },
+    {
+      "case": "ordinary-during-md-unreachable",
+      "at": "2026-11-01T17:02:20.474634+00:00",
+      "http_status": 201,
+      "reason": null,
+      "message": null,
+      "request_sha256": "9dd254b7232eefb19f2ad4499a6562b66de2cc7280e2d7552278503cabdf81ad",
+      "response_sha256": "f8bd3b8fb3433f53da6014299b25ef06ca13e2742db68d8113320180f4ce655d",
+      "dry_run_generated_name": "md-live10-ordinary-6gsnl"
+    },
+    {
+      "case": "md-during-webhook-unreachable-real-argo",
+      "at": "2026-11-01T17:02:20.491663+00:00",
+      "http_status": 500,
+      "reason": "InternalError",
+      "message": "Internal error occurred: failed calling webhook \"dynamic.modeldev.ani.io\": failed to call webhook: Post \"https://ani-modeldev-webhook.ani-system.svc:1/mutate?timeout=8s\": no service port 1 found for service \"ani-modeldev-webhook\"",
+      "request_sha256": "e4da3bdbdb3ba4016c5ddfecc376ef7640d1586aa29beccf7f33721838205cd2",
+      "response_sha256": "7dd1921b98aea77b129d6f2a106efc77321ec6825bdad00d2aaee2bfa3c94f40",
+      "dry_run_generated_name": null
+    },
+    {
+      "case": "md-restored-real-argo",
+      "at": "2026-11-01T17:02:21.001083+00:00",
+      "http_status": 201,
+      "reason": null,
+      "message": null,
+      "request_sha256": "e4da3bdbdb3ba4016c5ddfecc376ef7640d1586aa29beccf7f33721838205cd2",
+      "response_sha256": "9639d2da0693a52654d0574e766f6ea825a1b246db1a995ac5d0941ca3b03c3d",
+      "dry_run_generated_name": "md-live10-step-cbnch"
+    }
+  ],
+  "persisted_pods_created": 0,
+  "new_identity_RBAC_TokenRequest": false,
+  "temporary_tls": {
+    "temporary_original_admin_tls_copy_absent": true,
+    "new_identity": false
+  },
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "argo_source": {
+    "pod_name": "workflow-controller-65f677577c-rxk9t",
+    "pod_uid": "e91979c6-b012-4fff-a555-aa85db4c9e7c",
+    "node": "node1",
+    "volume": "kube-api-access-9j6gp",
+    "aud": [
+      "https://kubernetes.default.svc.cluster.local"
+    ],
+    "iat": 1793551903,
+    "exp": 1825087903,
+    "principal": {
+      "http_status": 201,
+      "username": "system:serviceaccount:kubeflow:argo",
+      "uid": "fad3d394-d7ef-4be1-a1d8-a864a3497c58",
+      "groups": [
+        "system:serviceaccounts",
+        "system:serviceaccounts:kubeflow",
+        "system:authenticated"
+      ],
+      "response_sha256": "ef7d6db228c8ad2a44c45ee4aad85580dd62ba88a760481acd5139eb2283c550",
+      "authentication": "actual existing projected token; no impersonation or TokenRequest"
+    },
+    "maintenance": {
+      "namespace": "rook-ceph",
+      "pod_name": "rook-ceph.cephfs.csi.ceph.com-nodeplugin-mqzqj",
+      "pod_uid": "3bbfe46d-cabf-4fb6-85b3-d2e47e8c55e5",
+      "node": "node1",
+      "container": "csi-cephfsplugin",
+      "container_id": "containerd://2b2f2d4289c7d3e4dc9378eca3e5744406370b3ccc45012139558dba789cf496",
+      "daemonset_uid": "e2476dc4-0d61-4591-9334-cfb5550e7fd8",
+      "host_path": "/var/lib/kubelet/pods",
+      "mount_path": "/var/lib/kubelet/pods",
+      "existing_image": "10.10.1.66:5001/cephcsi/cephcsi:v3.17.1"
+    }
+  },
+  "md_original_source": {
+    "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "name": "md-k2hqk-136888522",
+    "uid": "8d4a7d5e-b286-45f3-afc8-20dc400a1102"
+  },
+  "run_id": "95ea672f-b010-476c-9e52-07e5e0a68920",
+  "step_spec_hash": "f4ce60e7e75092e60c4191a92146acc7db1c03b01d802fd13737d39538e27362",
+  "identity_before_port_write": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "opened_at": "2026-11-01T17:02:20.459649+00:00",
+  "temporary_generation": 4,
+  "restored_at": "2026-11-01T17:02:20.900094+00:00",
+  "restored_generation": 5,
+  "recovery_readyz_http_status": 200,
+  "status": "PASS_ACTUAL_REAL_ARGO_MD_FAIL_CLOSED_ORDINARY_ISOLATION_AND_RECOVERY",
+  "bootstrap_public_spec_unchanged_after_restore": true,
+  "restore_required": false,
+  "finished_at": "2026-11-01T17:02:21.009675+00:00"
+}

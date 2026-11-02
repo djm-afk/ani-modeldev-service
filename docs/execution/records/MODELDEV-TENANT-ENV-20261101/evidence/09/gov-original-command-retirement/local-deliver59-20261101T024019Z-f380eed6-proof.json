@@ -1,0 +1,19 @@
+{
+  "Schema": "ani.modeldev.original-command-retirement-proof.v1",
+  "PlanSHA256": "95c149d4908087763b7e83e202076ac1ff70f4f2f2358edb76a730dcf0718cf5",
+  "SourceProofSHA256": "12a79da23b9762afef6df278caa6336fbd98a93b3d6b3cb5c781b29a7b1a0745",
+  "ConfigurationSHA256": "440023513db759fbe31875618b32ee22301df420e56b841a14aec5c05752c108",
+  "GovernanceSource": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+  "ObservedAt": "2026-11-01T02:40:20.420176+00:00",
+  "Entry": "kubercloud@100.64.128.12",
+  "Context": "kubernetes-admin@ani-kcn-full",
+  "APIServer": "https://lb.kubesphere.local:6443",
+  "ClusterID": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+  "KubeSystemUID": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+  "HTTPMethod": "POST",
+  "HTTPPath": "/api/v1/modeldev/executions",
+  "HTTPStatus": 503,
+  "HTTPReason": "MODELDEV_CREATE_MAINTENANCE",
+  "HTTPResponseSHA256": "c376d17e4c7d851163eae2af046a0d73331e4090bcdddb3f7d3a68b6ec9e2420",
+  "StopActor": "governance:user:3"
+}

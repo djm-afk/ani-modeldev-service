@@ -1,0 +1,11 @@
+# github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest_test [github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest.test]
+internal/data/submittest/business_admission_fixture_test.go:104:31: undefined: admissionfacts.Load
+internal/data/submittest/business_admission_fixture_test.go:104:58: undefined: admissionfacts.FileSource
+internal/data/submittest/storage_credentials_flow_test.go:50:3: unknown field Bindings in struct literal of type storagecredentials.Config
+internal/data/submittest/storage_credentials_flow_test.go:50:34: undefined: storagecredentials.Binding
+internal/data/submittest/webhook_flow_test.go:77:3: unknown field Bindings in struct literal of type modeldevwebhook.Config
+internal/data/submittest/webhook_flow_test.go:83:46: cannot use flowIdentityReader{…} (value of struct type flowIdentityReader) as modeldevwebhook.IdentityReader value in argument to modeldevwebhook.New: flowIdentityReader does not implement modeldevwebhook.IdentityReader (missing method Environment)
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest [build failed]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle	0.013s [no tests to run]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof	0.020s [no tests to run]
+FAIL

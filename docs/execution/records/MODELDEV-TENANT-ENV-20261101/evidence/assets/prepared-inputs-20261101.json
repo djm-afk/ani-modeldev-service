@@ -1,0 +1,329 @@
+{
+  "observed_at_utc": "2026-10-31T22:27:55.846214+00:00",
+  "status": "BLOCKED_CURRENT_READS_UNAVAILABLE; historical candidates identified, no current asset acceptance",
+  "scope": {
+    "source_ref": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+    "business_writes": 0,
+    "cluster_writes": 0,
+    "new_workbench_jobs": 0,
+    "downloads_or_S3_import_uploads": 0,
+    "primary_source_modified": false,
+    "existing_job_left_alone": "eda85e66a4f24c3895b7be87a5211500"
+  },
+  "fresh_read_results": {
+    "platform_catalog": "catalog-selected-20261101.json: A/platform login each ConnectionError via supplied socks5h://127.0.0.1:7897; no token retained or catalog data obtained",
+    "sole_ssh": "sole-entry-readonly-20261101.json: one attempt exit255 Connection closed; no remote metadata read completed",
+    "no_retries": true
+  },
+  "tenants": {
+    "A": {
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "governance_tenant_id": 2,
+      "historical_user_id": 3
+    },
+    "B": {
+      "resource_tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "source": "../preserved-assets.json namespace sample, not proof of model/dataset access",
+      "legitimate_model_input_source": "NOT_VERIFIED: no B-owned READY InputVersion/ModelVersion or formal allowed source was found in the bounded local receipts; A asset IDs must not be reused as B authorization",
+      "B_authentication": "NOT_ATTEMPTED; no guessed credentials or impersonation"
+    }
+  },
+  "prepared_official_runtime_20261028": {
+    "source": {
+      "path": "/home/chabking/workspace/ani-modeldev-service/.scratch/finetuning-base-models/material-preparation.md",
+      "sha256": "3869145bb4aca6bcc6918287a3c83cbc5a6f690a62f386640b76051c14ff5ad8"
+    },
+    "raw_receipts_locations": [
+      "Fedora /home/chabking/workspace/finetuning-materials-20261028/target-receipts/",
+      "target /home/kubercloud/finetuning-materials-20261028/"
+    ],
+    "image_id": "img_72a769640ebe4abb8b4c19e482d4a50e",
+    "version": 1,
+    "scope": "platform",
+    "purpose": "finetuning",
+    "space_id": "6f91947d-28d0-4b59-9d29-e9df29b2e989",
+    "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b",
+    "platform": "linux/amd64",
+    "historical_full_copy": "document records regctl exit0, digest equality and actual metadata Pod pull; raw full manifest/receipt unavailable locally in this check",
+    "compressed_layers": 29,
+    "compressed_bytes": 9352641406,
+    "packages": {
+      "python": "3.11.11",
+      "llamafactory": "0.9.6.dev0",
+      "transformers": "5.8.0",
+      "torch": "2.6.0+cu124",
+      "peft": "0.18.1",
+      "accelerate": "1.11.0",
+      "trl": "0.24.0"
+    },
+    "d807_use": "Exact FROM already fixed in training/finetuning.Dockerfile. This base alone does not contain d807 platform programs/step binary or establish final CPU/GPU runtime qualification."
+  },
+  "prepared_model_versions": [
+    {
+      "name": "Qwen2.5-0.5B-Instruct",
+      "model_id": "771e7fad-99b4-4474-8a3e-afa2957564ae",
+      "version_id": "31634140-7262-4cfc-8b1b-a597a7136a50",
+      "historical_state": "ready",
+      "bytes": 999613952,
+      "sha256": "b6fafd5489714c040e4a3024ef9f127466a2f66bfa8201d71e85771e13c3f464",
+      "historical_object_version_id": "10ee5e67-9962-41a6-9716-7179d5b78c6d",
+      "source": {
+        "path": "/home/chabking/workspace/ani-modeldev-service/.scratch/modeldev-execution-v2.1/new-env-setup/assembly/fine-model-wiring/resume-20261023/qualified-fine/base-ready-state.json",
+        "sha256": "8207e9a634e27534acd4d5ff9d3f6fe0bf60edbc0ed5f003ab8747aa37c5d88e"
+      },
+      "full_files_evidence": "Original pinned HF source inventory below is complete; it is not asserted to be the current formal Model-owner file projection of this separately imported archive.",
+      "historical_metadata_storage_path": "imports/f0cbd8ef-2083-4365-96d5-24b3e50551c2/model.tar",
+      "formal_current_object_key": "NOT_OBTAINED: public storage_path alone is not proof of the resolved physical key/prefix"
+    },
+    {
+      "name": "Qwen3-0.6B",
+      "model_id": "161790ac-b52e-4674-88bb-20d1835d0ba5",
+      "version_id": "6e7e942f-a1c1-4194-a5c7-d778bc8c6bae",
+      "historical_state": "READY in 20261028 normal tenant material-preparation.md",
+      "bytes": 1519220224,
+      "sha256": "4804e0c158bb5666b66660120ca556a9b8d5d28c172c815cfb7e3efaff42350b",
+      "object_version_and_complete_files": "NOT_OBTAINED in bounded local receipts; formal current Model facts required"
+    },
+    {
+      "name": "SmolLM2-135M",
+      "model_id": "c3eda29a-999e-4099-a505-971e5fd7fa09",
+      "version_id": "be16e927-4fb9-40f4-9c7f-29dd7781604a",
+      "historical_state": "READY, original task9f8fb939-684f-4369-bc77-53085f243ff4 completed attempt6 on20261028",
+      "bytes": 272454144,
+      "sha256": "a45f6b84cd7f465f518c5074ac6f1b9950d5a8ec14c78f24203470ec1cb64b0c",
+      "object_version_and_complete_files": "NOT_OBTAINED in bounded local receipts; formal current Model facts required"
+    }
+  ],
+  "complete_original_Qwen25_source_inventory": {
+    "source": {
+      "path": "/home/chabking/workspace/ani-modeldev-service/.scratch/modeldev-execution-v2.1/new-env-setup/assembly/fine-model-wiring/resume-20261023/remote-import/internal-cache/source-provenance.json",
+      "sha256": "c01075dd300e89997d103de017a3cb17818ea0ed8a7c3cd1810158287f85e959"
+    },
+    "repository": "Qwen/Qwen2.5-0.5B-Instruct",
+    "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+    "file_count": 10,
+    "total_file_bytes": 999604126,
+    "files": [
+      {
+        "path": ".gitattributes",
+        "bytes": 1519,
+        "sha256": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361"
+      },
+      {
+        "path": "LICENSE",
+        "bytes": 11343,
+        "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
+      },
+      {
+        "path": "README.md",
+        "bytes": 4917,
+        "sha256": "b19c806a904db6dc878a0462e70b551f6b7ac78dfbb88c2eb966ca2b9109ae15"
+      },
+      {
+        "path": "config.json",
+        "bytes": 659,
+        "sha256": "18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45"
+      },
+      {
+        "path": "generation_config.json",
+        "bytes": 242,
+        "sha256": "e558847a8b4402616f1273797b015104dc266fe4b520056fca88823ba8f8ebe6"
+      },
+      {
+        "path": "merges.txt",
+        "bytes": 1671839,
+        "sha256": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3"
+      },
+      {
+        "path": "model.safetensors",
+        "bytes": 988097824,
+        "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe"
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 7031645,
+        "sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539"
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 7305,
+        "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583"
+      },
+      {
+        "path": "vocab.json",
+        "bytes": 2776833,
+        "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+      }
+    ],
+    "verification_this_task": "Read existing non-sensitive manifest only; no weight download, tar scan or re-hash of large model files."
+  },
+  "prepared_A_inputs_20261023": {
+    "csv": {
+      "input_version_id": "04790fcc-dcd6-46e1-869e-84da77a975a8",
+      "state": "READY",
+      "format": "CSV",
+      "size_bytes": "211325",
+      "sha256": "2faa51063bb4aaf10d0e7848b547ab63cd8557cd4372d16c5666f90d083c3f27",
+      "row_count": 1379,
+      "feature_count": 16,
+      "created_at": "2026-10-22T10:14:31.288028Z"
+    },
+    "alpaca": {
+      "input_version_id": "ff6145e1-ab98-4959-9edb-89aa2dff994b",
+      "format": "JSON",
+      "records": 64,
+      "object": {
+        "storage_connection_id": "modeldev-newenv-rustfs-20261022",
+        "bucket": "ani-md-v21-input-01a15f47",
+        "key": "inputs/fixed/fine-alpaca-64-ff6145e1-ab98-4959-9edb-89aa2dff994b.json",
+        "size_bytes": "5879",
+        "sha256": "38897377fb58781f72c45e5be42b4ec6b93a118668b9cbc585f563e31a676bbd",
+        "version_id": "9439a08a-95d5-4131-9f7a-f2232c3b6749"
+      },
+      "later_use_evidence": {
+        "path": "/home/chabking/workspace/ani-modeldev-service/.scratch/modeldev-execution-v2.1/new-env-setup/workloads/fine-cpu-02/completion/normal-execution-final.json",
+        "sha256": "e5a3603834fe4f86ca0b6b6e77ed3076da7a791de8d3db992708759d79e60602"
+      },
+      "state_caveat": "initial receipt was STAGED; later completed real flow used this ID. Neither proves current READY after retirement."
+    },
+    "current_files_and_object_heads": "NOT_RUN: network unavailable"
+  },
+  "prepared_compute_presets_20261023": {
+    "cpu": [
+      {
+        "id": "1a832105-c69e-47ba-a423-915e436c2fb4",
+        "code": "modeldev-v21-fine-cpu-8c-16g",
+        "cpu_millis": "8000",
+        "memory_mib": "16384",
+        "enabled": true,
+        "selectable": true
+      },
+      {
+        "id": "21aea531-8645-4076-b451-8f81c6cf8b71",
+        "code": "modeldev-v21-fine-cpu-4c-8g",
+        "cpu_millis": "4000",
+        "memory_mib": "8192",
+        "enabled": true,
+        "selectable": true
+      },
+      {
+        "id": "84547768-be1b-45dd-bdb9-be824f58d583",
+        "code": "modeldev-v21-cpu-2c-4g",
+        "cpu_millis": "2000",
+        "memory_mib": "4096",
+        "enabled": true,
+        "selectable": true
+      },
+      {
+        "id": "9f5a0625-1eab-4a65-95af-68962138ef86",
+        "code": "modeldev-v21-cpu-1c-2g",
+        "cpu_millis": "1000",
+        "memory_mib": "2048",
+        "enabled": true,
+        "selectable": true
+      }
+    ],
+    "whole_gpu": [
+      {
+        "id": "c6694bbc-3dea-4ece-9476-89ae0c49e71d",
+        "code": "modeldev-v21-whole4090-1gpu-2c-4g-20261023",
+        "cpu_millis": "2000",
+        "memory_mib": "4096",
+        "gpu": {
+          "profile_id": "67960b01-19bd-460b-b9f0-fb4d533318e9",
+          "profile_version": "1",
+          "mode": "WHOLE_EXCLUSIVE",
+          "model_key": "nvidia-nvidia-geforce-rtx-4090",
+          "devices_per_instance": 1,
+          "memory_mib_per_device": "49140",
+          "memory_mib_total": "49140",
+          "core_limit_percent": 100
+        },
+        "enabled": true,
+        "selectable": true
+      },
+      {
+        "id": "ae045cfc-d078-42bc-be4e-c88125404eab",
+        "code": "ani-factor10-e2e-whole-1",
+        "cpu_millis": "1000",
+        "memory_mib": "2048",
+        "gpu": {
+          "profile_id": "67960b01-19bd-460b-b9f0-fb4d533318e9",
+          "profile_version": "1",
+          "mode": "WHOLE_EXCLUSIVE",
+          "model_key": "nvidia-nvidia-geforce-rtx-4090",
+          "devices_per_instance": 1,
+          "memory_mib_per_device": "49140",
+          "memory_mib_total": "49140",
+          "core_limit_percent": 100
+        },
+        "enabled": true,
+        "selectable": true
+      }
+    ],
+    "sources": [
+      {
+        "path": "/home/chabking/workspace/ani-modeldev-service/.scratch/modeldev-execution-v2.1/new-env-setup/workloads/general-cpu-05/cpu-compute-catalogue-current.json",
+        "sha256": "22c1b1002ec323b9a77463604cbc0f2654060d996ae180460d5fac61d92c91c3"
+      },
+      {
+        "path": "/home/chabking/workspace/ani-modeldev-service/.scratch/modeldev-execution-v2.1/new-env-setup/workloads/general-whole-gpu-01/gpu-compute-catalogue-current.json",
+        "sha256": "0704d68b9311fb2eabc075915ae115713819c1989488f15eb43683316e0f828d"
+      }
+    ],
+    "current_A_B_selectability_and_capacity": "NOT_VERIFIED; no new Reserve/hold/lease or workload was issued"
+  },
+  "d807_scope_gap": {
+    "source_files": [
+      "spec.md:532-537",
+      "contract/cpup01/dispatch_owner.go:69-85",
+      "internal/data/finetuningmodel/live.go:71-81"
+    ],
+    "required_input_prefix": "inputs/<tenant_uuid>/",
+    "required_base_prefix": "<tenant_uuid>/",
+    "known_legacy_input_prefix": "inputs/fixed/",
+    "conclusion": "Known legacy Alpaca exact input object key does not satisfy final input scope as-is. Formal current base-model ObjectKey is unknown; public storage_path alone does not prove a base scope mismatch. Find already-scoped legal owner records; only a demonstrated mismatch requires owner migration. Do not widen scope or fabricate READY/ownership/version facts.",
+    "legacy_base_metadata_storage_path": "imports/f0cbd8ef-2083-4365-96d5-24b3e50551c2/model.tar"
+  },
+  "workbench_targets_and_recipe": {
+    "source_receipt": "../08-workbench-build-only-readonly-20261101.json",
+    "fresh_check": "NOT_RUN in this task; network unavailable. Earlier observed catalog/identical frontend is the stated source.",
+    "main_service": {
+      "project": "modeldev",
+      "environment": "ani-kcn-full",
+      "harbor": "intranet",
+      "namespace": "ani-system",
+      "deployment": "ani-modeldev",
+      "container": "modeldev",
+      "registry_repository": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service",
+      "recipe": "ani-deploy/recipes/modeldev/{Dockerfile,build-image.py}; overrides source Dockerfile and builds /app/bin/server",
+      "expected_source": "new exact d807 branch HEAD, not an old runtime image"
+    },
+    "webhook": {
+      "observed_deployment": "ani-system/ani-modeldev-webhook",
+      "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea",
+      "source": "../native-principals.json",
+      "workbench_project_or_recipe": "NOT_EXPOSED by observed catalog; modeldev job explicitly does not update webhook"
+    },
+    "step_training": {
+      "runtime_targets": "Fixed shared pipeline component/driver/workload image references; not independent Workbench Deployments",
+      "workbench_project_or_recipe": "NOT_EXPOSED; existing modeldev job does not build/push step or CPU/GPU training images",
+      "source_recipes": [
+        "pipelines/step.Dockerfile",
+        "pipelines/finetuning-step.Dockerfile",
+        "training/finetuning.Dockerfile"
+      ],
+      "final_digests": "NOT_BUILT/NOT_PUBLISHED for d807",
+      "WORKLOAD_IMAGE": "Must be an explicitly selected immutable final workload digest; no default in wrapper Dockerfile"
+    }
+  },
+  "minimum_remaining_inputs": [
+    "Restore the sole SSH/platform read path, then obtain current formal A/B owner facts and exact versioned object HEADs/file manifests; do not redownload/reimport the already prepared original bytes.",
+    "Find B-owned READY input and legal base-model source using B trusted identity/formal owner. Existing A IDs and an upstream public license do not grant B access to A records.",
+    "Resolve the demonstrated legacy input prefix mismatch through existing legal scoped assets or owner migration; obtain formal current base-model ObjectKey before deciding whether it needs migration. No compatibility or wider STS scope.",
+    "Build/publish d807 step, shared webhook/copy binary, CPU/GPU derived training images and capture final binary/image/runtime-capability digests; register actual Resource ImageID/numeric version/scope. Old UUID image_version_id materials are retired and not reusable as v4 identity.",
+    "Provide an authorized existing Workbench recipe/target for webhook update and step/CPU/GPU image publication, or explicitly resolve the designated-entry capability gap. Current main-service-only recipe cannot supply them.",
+    "Bind final fixed business images to one verified registry authority/platform_project with A/B robot read rights; verify any external support image anonymous pull evidence, then compile/publish the four new shared definitions/materials using final digests/IDs. Official base metadata is not this completed mapping."
+  ],
+  "boundaries": "Historical documentation/results are labeled by date and not promoted to present PASS. No primary source, cluster, configuration, image, S3, tenant or Secret mutation. No duplicate network probes or new Workbench job."
+}

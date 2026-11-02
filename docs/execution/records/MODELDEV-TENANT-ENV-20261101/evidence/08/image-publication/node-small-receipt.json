@@ -1,0 +1,944 @@
+{
+  "schema": "ani.modeldev.node-image-build.v1",
+  "status": "PASS",
+  "registry_push_issued": true,
+  "resource_limits": "USER_REMOVED",
+  "images": {
+    "step": {
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+      "exit": 0,
+      "elapsed_seconds": 2.816,
+      "log_bytes": 1630,
+      "log_sha256": "9d40f48879ee7d6cb5a061744c91ae392a2ddcfcd54e653f70376c5027fe1c19",
+      "command": [
+        "sudo",
+        "-n",
+        "env",
+        "DOCKER_CONFIG=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-auth",
+        "SSL_CERT_FILE=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/ca.crt",
+        "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/tools/buildctl",
+        "--addr",
+        "unix:///home/kubercloud/tenantenv-20261101/images-d807-build-20261101/buildkitd.sock",
+        "build",
+        "--frontend",
+        "dockerfile.v0",
+        "--local",
+        "context=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-context/step",
+        "--local",
+        "dockerfile=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-context/step",
+        "--opt",
+        "filename=Dockerfile",
+        "--opt",
+        "platform=linux/amd64",
+        "--opt",
+        "image-resolve-mode=local",
+        "--opt",
+        "force-network-mode=none",
+        "--opt",
+        "build-arg:SOURCE_REVISION=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "--opt",
+        "build-arg:SOURCE_TREE=141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "--opt",
+        "label:org.opencontainers.image.revision=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "--opt",
+        "label:ani.modeldev.source_tree=141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "--opt",
+        "label:ani.modeldev.build_inputs_sha256=dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "--output",
+        "type=image,name=10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4,push=true,store=true,unpack=true,oci-mediatypes=true",
+        "--metadata-file",
+        "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-step-metadata.json",
+        "--progress",
+        "plain"
+      ],
+      "metadata": {
+        "containerimage.config.digest": "sha256:eb2605bf068f905643431ffe81c1ee6aeb0c6b5217e71930b2cac765730deda4",
+        "containerimage.descriptor": {
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "digest": "sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+          "size": 482,
+          "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+          }
+        },
+        "containerimage.digest": "sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+        "image.name": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4"
+      },
+      "registry": {
+        "digest": "sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+        "immutable_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+        "manifest": {
+          "schemaVersion": 2,
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "config": {
+            "mediaType": "application/vnd.oci.image.config.v1+json",
+            "digest": "sha256:eb2605bf068f905643431ffe81c1ee6aeb0c6b5217e71930b2cac765730deda4",
+            "size": 1946
+          },
+          "layers": [
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:ef14bc5cde0a0594758dd4b9842c763b666bbc8f18b7ae904c0eec7dfd7305b7",
+              "size": 16909525
+            }
+          ]
+        },
+        "config": {
+          "architecture": "amd64",
+          "config": {
+            "User": "10001:10001",
+            "Env": [
+              "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Entrypoint": [
+              "/ani-modeldev-step"
+            ],
+            "WorkingDir": "/",
+            "Labels": {
+              "ani.modeldev.build_inputs_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+              "ani.modeldev.source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "io.ani.source-tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+              "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+            }
+          },
+          "created": "2026-11-01T10:23:34.998937725+08:00",
+          "history": [
+            {
+              "created": "2026-11-01T10:23:34.998937725+08:00",
+              "created_by": "ARG SOURCE_REVISION=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:34.998937725+08:00",
+              "created_by": "ARG SOURCE_TREE=141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:34.998937725+08:00",
+              "created_by": "LABEL org.opencontainers.image.source=https://github.com/zhangzhe-ctrl/ani-modeldev-service org.opencontainers.image.revision=d807cbdbd5dd6664d61480acedc752e19cfca48a io.ani.source-tree=141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:34.998937725+08:00",
+              "created_by": "COPY --chmod=755 ani-modeldev-step /ani-modeldev-step # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:23:34.998937725+08:00",
+              "created_by": "USER 10001:10001",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:34.998937725+08:00",
+              "created_by": "ENTRYPOINT [\"/ani-modeldev-step\"]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            }
+          ],
+          "os": "linux",
+          "rootfs": {
+            "type": "layers",
+            "diff_ids": [
+              "sha256:bccab4f73d9d4cf0746e0ee33c9db53df01432c93db76cb43b1352457232f783"
+            ]
+          }
+        },
+        "config_digest": "sha256:eb2605bf068f905643431ffe81c1ee6aeb0c6b5217e71930b2cac765730deda4",
+        "config_source": "local content-addressed blob hash equals live registry manifest config descriptor",
+        "compressed_layer_bytes": 16909525,
+        "config_bytes": 1946,
+        "manifest_bytes": 482,
+        "consumer": "step",
+        "harbor_artifact": {
+          "digest": "sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+          "size": 16911953,
+          "type": "IMAGE",
+          "manifest_media_type": "application/vnd.oci.image.manifest.v1+json",
+          "media_type": "application/vnd.oci.image.config.v1+json",
+          "push_time": "2026-11-01T02:23:37.382Z"
+        }
+      },
+      "missing_configuration_startup": {
+        "exit": 1,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "b801df48b7c24263215fe589dc90cb96017e231bbb5221c321cac36442b90d30",
+        "configuration_rejected": true
+      }
+    },
+    "webhook": {
+      "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4",
+      "exit": 0,
+      "elapsed_seconds": 4.187,
+      "log_bytes": 1676,
+      "log_sha256": "96580c917e815861fe77e561ea88a5fb5f2690ed6544994ce9d5ddf9b223c406",
+      "command": [
+        "sudo",
+        "-n",
+        "env",
+        "DOCKER_CONFIG=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-auth",
+        "SSL_CERT_FILE=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/ca.crt",
+        "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/tools/buildctl",
+        "--addr",
+        "unix:///home/kubercloud/tenantenv-20261101/images-d807-build-20261101/buildkitd.sock",
+        "build",
+        "--frontend",
+        "dockerfile.v0",
+        "--local",
+        "context=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-context/webhook",
+        "--local",
+        "dockerfile=/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-context/webhook",
+        "--opt",
+        "filename=Dockerfile",
+        "--opt",
+        "platform=linux/amd64",
+        "--opt",
+        "image-resolve-mode=local",
+        "--opt",
+        "force-network-mode=none",
+        "--opt",
+        "build-arg:SOURCE_REVISION=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "--opt",
+        "build-arg:SOURCE_TREE=141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "--opt",
+        "label:org.opencontainers.image.revision=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+        "--opt",
+        "label:ani.modeldev.source_tree=141053367fa4be9a6fb9c764b2d7900b5282be20",
+        "--opt",
+        "label:ani.modeldev.build_inputs_sha256=dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+        "--output",
+        "type=image,name=10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4,push=true,store=true,unpack=true,oci-mediatypes=true",
+        "--metadata-file",
+        "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-webhook-metadata.json",
+        "--progress",
+        "plain"
+      ],
+      "metadata": {
+        "containerimage.config.digest": "sha256:2ba53153d1afbad603e380d2b703d234f77ecfbf63b83f7fbf649d56c801dfd7",
+        "containerimage.descriptor": {
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "digest": "sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+          "size": 482,
+          "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+          }
+        },
+        "containerimage.digest": "sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+        "image.name": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4"
+      },
+      "registry": {
+        "digest": "sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+        "immutable_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+        "manifest": {
+          "schemaVersion": 2,
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "config": {
+            "mediaType": "application/vnd.oci.image.config.v1+json",
+            "digest": "sha256:2ba53153d1afbad603e380d2b703d234f77ecfbf63b83f7fbf649d56c801dfd7",
+            "size": 2426
+          },
+          "layers": [
+            {
+              "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+              "digest": "sha256:f327364bf88f45e4cb1b28e5157cf665e872263210dca5f739c635caac50893f",
+              "size": 27602030
+            }
+          ]
+        },
+        "config": {
+          "architecture": "amd64",
+          "config": {
+            "User": "10001:10001",
+            "ExposedPorts": {
+              "8443/tcp": {}
+            },
+            "Env": [
+              "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Entrypoint": [
+              "/usr/local/bin/ani-modeldev-webhook"
+            ],
+            "Cmd": [
+              "--config",
+              "/etc/modeldev-webhook/config.json"
+            ],
+            "WorkingDir": "/",
+            "Labels": {
+              "ani.modeldev.build_inputs_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+              "ani.modeldev.source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "io.ani.source-tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "org.opencontainers.image.revision": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+              "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+            },
+            "ArgsEscaped": true
+          },
+          "created": "2026-11-01T10:23:35.115130419+08:00",
+          "history": [
+            {
+              "created": "2026-11-01T10:23:35.115130419+08:00",
+              "created_by": "ARG SOURCE_REVISION=d807cbdbd5dd6664d61480acedc752e19cfca48a",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:35.115130419+08:00",
+              "created_by": "ARG SOURCE_TREE=141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:35.115130419+08:00",
+              "created_by": "LABEL org.opencontainers.image.source=https://github.com/zhangzhe-ctrl/ani-modeldev-service org.opencontainers.image.revision=d807cbdbd5dd6664d61480acedc752e19cfca48a io.ani.source-tree=141053367fa4be9a6fb9c764b2d7900b5282be20",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:35.115130419+08:00",
+              "created_by": "COPY --chown=10001:10001 ani-modeldev-webhook /usr/local/bin/ani-modeldev-webhook # buildkit",
+              "comment": "buildkit.dockerfile.v0"
+            },
+            {
+              "created": "2026-11-01T10:23:35.115130419+08:00",
+              "created_by": "USER 10001:10001",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:35.115130419+08:00",
+              "created_by": "EXPOSE [8443/tcp]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:35.115130419+08:00",
+              "created_by": "ENTRYPOINT [\"/usr/local/bin/ani-modeldev-webhook\"]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            },
+            {
+              "created": "2026-11-01T10:23:35.115130419+08:00",
+              "created_by": "CMD [\"--config\" \"/etc/modeldev-webhook/config.json\"]",
+              "comment": "buildkit.dockerfile.v0",
+              "empty_layer": true
+            }
+          ],
+          "os": "linux",
+          "rootfs": {
+            "type": "layers",
+            "diff_ids": [
+              "sha256:af75083e4eaa8f3d8a66a33601e319678aae8ec97cb252b673bc681fd2796e14"
+            ]
+          }
+        },
+        "config_digest": "sha256:2ba53153d1afbad603e380d2b703d234f77ecfbf63b83f7fbf649d56c801dfd7",
+        "config_source": "local content-addressed blob hash equals live registry manifest config descriptor",
+        "compressed_layer_bytes": 27602030,
+        "config_bytes": 2426,
+        "manifest_bytes": 482,
+        "consumer": "webhook",
+        "harbor_artifact": {
+          "digest": "sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+          "size": 27604938,
+          "type": "IMAGE",
+          "manifest_media_type": "application/vnd.oci.image.manifest.v1+json",
+          "media_type": "application/vnd.oci.image.config.v1+json",
+          "push_time": "2026-11-01T02:23:38.757Z"
+        }
+      },
+      "missing_configuration_startup": {
+        "exit": 1,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "7f8db59866393ab5b14e0f41b23b6089aad143894344d0f61251f87105e1072e",
+        "configuration_rejected": true
+      }
+    }
+  },
+  "cleanup": {
+    "daemon_stop_exit": 0,
+    "auth_absent": true
+  },
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "source": {
+    "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+    "source_git_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+    "input_files_canonical_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+    "binary_source": "Existing fixed source Fedora CGO_ENABLED=0 linux amd64 original build; no recompilation",
+    "files": {
+      "step/Dockerfile": {
+        "size": 428,
+        "sha256": "5dfa10fe1692d8e7bd4a0c25250cb5d28a90f8ca1081f47588dd617bcbdb208c"
+      },
+      "webhook/Dockerfile": {
+        "size": 541,
+        "sha256": "ce7df200aa9baf1391b7631fde751c6ab68b5d0987564614fe612ccb29dae652"
+      },
+      "step/ani-modeldev-step": {
+        "size": 36720665,
+        "sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e"
+      },
+      "webhook/ani-modeldev-webhook": {
+        "size": 67696833,
+        "sha256": "6deb8d923a5e3f93afba7672ba8133e07c2f9066d810e275bc50e43743cf571f"
+      }
+    }
+  },
+  "tools": {
+    "release": "v0.25.1",
+    "source": "https://github.com/moby/buildkit/releases/download/v0.25.1/buildkit-v0.25.1.linux-amd64.tar.gz",
+    "official_api_asset_sha256": "85aa27c480fc9159705d21a3e66abe305f8dc708b8aeecd1e87bbc5c3de98642",
+    "download_sha256": "85aa27c480fc9159705d21a3e66abe305f8dc708b8aeecd1e87bbc5c3de98642",
+    "download_size": 85705330,
+    "elapsed_seconds": 7.482,
+    "files": [
+      {
+        "name": "buildkitd",
+        "size": 65278558,
+        "sha256": "2419e6e46c363c5553424edd1155e7706b973b743de42eebaf8749b09342d78c"
+      },
+      {
+        "name": "buildctl",
+        "size": 32910671,
+        "sha256": "a026a3f74160367325bbccc948603699e4bc5e05c7f956a3ec49c730f753acc2"
+      }
+    ]
+  },
+  "tasks_before": [
+    "7ec78853437b7df301361867fe8598674fcb8d9bf1474bcbdd0174c8b1ab9bd7",
+    "017b12f84c64ea9f1228a78037a8036d36a6ff5af12cc964247474cf39533fc8",
+    "b80591eddbd20383927c41af6629bd7b9b225dc46d74daee8efc4cb91ad994cf",
+    "1a9f50d9f5ededcd4f483634bc70d8062817ef14cab05f2b767f288e37ebfc35",
+    "f12fbc5a14e413b1e9e0491451e35176035c7e298aa65d54de4a0132312bbcc7",
+    "3de4b8284251d8381e389aa012b923a9c1c84a3d1dd898aab20e6400a8af0775",
+    "20a549d5b3c9eeac0019ef8125a0a3441f8a316808b348373e6098b92895f23b",
+    "7cad8c9e768519d848ce90bfef471e93318a60d3a4effefcb2cc10dd0eba2782",
+    "7b2efdb565618706837994fd3421896ac6d4454656e65a4ba0d18df5750bb2df",
+    "244fdbec26d00126171b9d41860ce16b2d3f83f615c454c1344d6219c374cc51",
+    "d909c2e1b059328892edac9c26bd5ad2fbd0ac49266b24f41d73407ad3239392",
+    "d90162977858d0f20802814d036572c4af2990539462b91c3a3a070cb45c4744",
+    "a9a2e2be363f4f6ea8fd1f76788673bf5b93932c495d54dba731d29e46fe94b9",
+    "ca371f9e3caea47c15d15452f9eb9a947d5ae2f638046dc56ebb0fed35829fbd",
+    "85b440efde3cb1b60d4efa87baa533a8f257cdc94c210be991368eb58c825417",
+    "0230a01d481f98e1abb6bb138d6f7813474c549b5d81342be474fdef8c2f0722",
+    "95c76b2416a8211fa074910637b4101dc8bdd83571e4feba8ca5ccfd266dce8f",
+    "7a4ddf5dad01675e8145a76e0ca73b54885e4dd4ae1cc1421a3cecbfea2c759c",
+    "2558476cc3536ee3ad0d753efc00976e99b7de5b8c954c3fd1b38e767286f010",
+    "f26e525b7660e5af5af68457dd269400b4c04f8063bdd99668da3e42575cdc7f",
+    "5dce0846125c087321e5afde241d7f62f8b4113fe0e32f87f8b014bd264cd12b",
+    "16d41be3f127b3649a71c88221ef8f58c7ad8cdee55eb40df6261a4d626c8feb",
+    "3172bf7c256c2df23762f136c62a4bee16a3aa03648abdb2bce2af22f3a811f4",
+    "db0f22736cfc1aa16507cd744a8c4b2cde54d92b03a87fe7563db3a9eaef7457",
+    "b18456b7fcc03071494b2441148baa38a3191278840105786ca426ba3b8305e7",
+    "8f069c2cd73ec7926ce9f03234f6dfeee5f45860898c65da0aaf3c0a6a022027",
+    "dd6d6f7c5c5e718acb7bd470910616a44cf3f0702840e42c0883b9cdb81ec7de",
+    "5e79ecccc5e4d5680918815854e51d8a23b81ee2644658a3b6c1fcdc7bb2ecf0",
+    "4976d6b5269b031cd591bf279217db06c1b9a7d2f0a104497cd4f493adc6d38b",
+    "dfe8de8bc0cfb0a366d8c08fbca90f212a1f07e313823aff0dea2eae9a3b893e",
+    "eba8c5e997bc17ccb917dcc039725527656d2aa1f298a2994f16bca7b155c4fe",
+    "ab7f3bec2c3180adb0cf0bcf1eae7f665dd64d26ca97a95775a0407522c91241",
+    "dfee4078c1515f1d0031b8f6ed5ff954c97a0e0e799f026336a2caf4669181d3",
+    "19d8449ff9dba6362093525ad36fe551e86794ee4e4629ff2d924435bd58ad70",
+    "51627bc022f4633ab84233c1b3fc275aea7046c59870c47fab53078b0532fae1",
+    "346cae4a7d0ab03ece83888cd04e70ce49d6e9c8aef0b054d2e84a2ca06a5b95",
+    "28c5301a37f908283fbbcb604a0a39df8f7bf1ec8f921c7478646fab172fec64",
+    "fd457660cf889b62b49abf26dd24ec740861538e9e753a57889b4a1c1d84d1b4",
+    "6596926852df2e90096d5f7b8612d0b777be31d29e151fb394a4b00dfe29352c",
+    "542f123cffd317cb043b2429b54d26aa1c0a53962bf02d8fb62b03b8669333c1",
+    "7240d09c4bcf35cfe214ce008a77a280622ba143cf6ad7f7c8b65927435d67c0",
+    "725bd0d58aa683a59cd3c8702e9d4a3fa57d0796ca4e0d1bf75d284570ae649f",
+    "3345719bba2325b18e1ec361a5aa76d196256daf89544cadc697499e786dda95",
+    "aa2ef9f711615ea422f4aeddccbc1cf5b460ecd6ee9bd209edadfcb84e71ce1d",
+    "3d2fc67a93cf03c3c1e4b53fb59f99828812dd63e5ef06ed06e39b3108dd5d79",
+    "51f7c27334ddd677828aca4e4c7db37cb8e23721b50e6265fefd7c32d0c67f98",
+    "b16bd95c0408bca54d8ccb32c3347cf91da90b125c5a89adb370e7184f007237",
+    "221af607af6c9118b28b1ac41aad86052f660e65df31067698aaa62fc4b8de4f",
+    "4a5c8ac0381a9a97a5c5d4422c6acb3a81d6e01c0626951835124634602c1d56",
+    "513671dfa41bf8fbf1e2b41b68becf0080a84d54411bc7b4e9d76744d4f025cc",
+    "486b540cb1ad0e2de82e2724ee0f29a4dd10688df82dd5eb5a427182d35f6529",
+    "66362e8b603d2bcf8d5d44da03c6c4c39ecbeaa6a3c40abe7f00635f50e3b731",
+    "cf6ebaaaf0826d21796d5173871a97585b1e98eee5e0949a2cac200848c3cb73",
+    "1a7c3b726d1e63cc392e6611beea41440a9da68d9a3acb8348af50a08fed32d9",
+    "0248d30a7785747d966bbc68f3f3ea344df98ea96fe82c66812a11764775a031",
+    "48e49a186bfb26bb0c1107ed9674ec202088d646a122664048c45eb2398682a8",
+    "24098a57aa4ac47098f0002df8c36d7bcd2e9c3ac1f645097161f841ca3c909f",
+    "3f4ef6e426e6b15028988335e438c75d22cd381a2b8dc6721f1850ce2f057c5b",
+    "3b4a004386564036b84ffb43e095701514fd3412423970f879ba57043ea6ba65",
+    "93a422409ba9e1408c12f280965378a74233f780222c29570903fb500afa18b2",
+    "252dea300933c041272887d51d757e7b66935884159eac0f0ba6e6a873d49ff9",
+    "74ca4eb1ae4f60c07f4b13ac13c9572f3ba5f584026c2f5d2ed909c5dd77bde8",
+    "47ccca46dd7e8bf2a234fe8573ddc9e10fa714077bc95f087759c49b4f359e5b",
+    "1391ac05c2bb6527741c4b0199b0940c98aed6bf19e9756aa1e9a7a00c038416",
+    "3e6ff7d1f6797c808e27efa06c8d94d1157f83e2728c6f7806228b4b5ece11d3",
+    "1050ad5012979db061a46ff587894f34a823ece4892479c49aac6b65d4dd669b",
+    "0a1691e8aa6c7ed75acc332f7ffe3dca2086a83839fbf3577331305fa0887a83",
+    "e274c7adc549c0d50208ea3535a52120be0e991c9417fab2e719c9fd55a5103a",
+    "40cf80caa2036d7f4eead8cd28eab22e8e0ff9198b02cca33f31a2029db4703b",
+    "68288b1b5a1db852dd18bec1356ef2304a82975f45129c5aeea679999be23c22",
+    "3b21803c309e6e45e981abca4103413d28e81352160612f34de9f69c3daa182b",
+    "16eebdeab6584c2f330b303994ddbabadb3dcd785b9bc836f436006ba98cd066",
+    "45afe54e665652ff5c82468ccbfc4dcbf291b77d3569d4bec4f5eb9fdfe5e722",
+    "2dcc9d915ed20aed62c5680827441eb92228594a80811036eda523ac320c9399",
+    "13baa7f480669b7f80a5c27f63569d9cc156ffc96263c77e872c4235631f2b5a",
+    "2c57418a73d093bbb0516ffb44610a19a8b434d586076685410cfb07a1343dde",
+    "35bb526f2936b206dbbc99d2688acfbdef6885c2e1ec69fe1ec334211335495e",
+    "9d1cf3923247722ca011fc37ff25850daa38bc6467dd5a7c058ddcb7d336d7a1",
+    "359fe997863676347b2e207b6e2e42c9d073bd59866303e745883b9489c9f3e3",
+    "ddd644744354125c89a5ad1f71c7fe3fa7aabe3cdb5a049673d54ef3c02fc6f9",
+    "7e8cac80d421b9fecc236a52ea8a9306be44858783b10d20c39ab260917388d2",
+    "dffb1ecc0c64c7248a65713a0d22614dfecf6dc124ed40ae4457c41c3b8d9e6b",
+    "b2fb37874f3966175bda0f5d4d74886e6c3f8b135fb57101a50b70ee65b3897c",
+    "777d4893391b0ce26c52f94d7e72ed88aabc455e1b669c1809381d851995612d",
+    "f2318aceb6277017d0caf6e3ba53a7fe1d3ffa3f2f36828c7d5d867c0aa2ff59",
+    "3838181a71417481533ebfa78af67eb65ffe9849dda6881980a4166cb6751e9a",
+    "52c75b99eace85760af8f97adf86aec3f249fb81d5a89c933f2b62bb1bc4b9fe",
+    "f91c561bcc476164f581bc03ad61bc2f8761ebb6dc14e8b6c401d0ec7eb9dc42",
+    "0e30f1040f958650aa17b07ae6b72d2a3c3800597191d532ad415bd229b35431",
+    "5a101a6e4e59d166bf272e89b87a908983e269b96ea04265dd7db5b793c27f2c",
+    "bf97e93fbba5b03fa7f4688f0299b527acc7500136e8021b1b184b34c63a54ee",
+    "788079655973baeee40e238aa8a842337837f5d07d2ce5757f9c3d3493752554",
+    "c7cae75727857316894651b2ac2388f5aa69fec8e29a973c731631c199b643ef",
+    "4b09a831263b41af77122513922edbf360ac1f4a5e7de14bf97bca4cfa0e88d7",
+    "aad7650434dc15b7da7046b370c75afe687f1833fb38732d514f626d7dc7bcee",
+    "eb771ab2521d53ee4bbdb08060c68f49b765577b0fb6b628f32910a1aa972ca6",
+    "a236b66172e23c320c07c6fcd7f6a1df14d7d086019150e39ea2b3d0853e55b1",
+    "4f0f16bfce743e4a389d57a9f30615f2b2177cbaa79d2d6d30d1739072301b5d",
+    "dd8e466345860771c654b37c49aa10e2b85057b56f7a61b40a4b6475a787a8a7",
+    "1e4635d7fdd0261e70b95cc6aee334a10770861f403b9f9077afeec0716dac90",
+    "25e5ccef9102f8014f70ad1a975caa786c6e878406ab8927e4ee38efcfc6aad7",
+    "2b2f2d4289c7d3e4dc9378eca3e5744406370b3ccc45012139558dba789cf496",
+    "cce2831e4a7cbad342b753fb7456ccdf88008baaec7edd1e591c3d23206f1d3e",
+    "ce0cbceca04ded064bd1f73507764a586ba54d6cfa4d30e8f57cf2cd9219c1c6",
+    "010ac532d2a07981614d9387ba965a3bbf300428f1e14d19d6c07ebc9864ddea",
+    "1282a7610a6729117a30a4a1e3c11d3df6458772519700931dc838af4f012d23",
+    "a9b7879428dfe7c8f8fbb663370f4e9e2327cd663fc5702310e099af752a66cf",
+    "cd574513a8a41d9db54de45d29108fbf7b7e744b412db1a92d44b77489deb775",
+    "a314161b373e6045bd9e728d75b3bc1396a942aa4351714895a809d9a10ad147",
+    "9d690b4d51cd6d5b9f018be0b09a726be64a08c404e88cd88cfa9187d1572665",
+    "28d5331de8878c02805d8de4f630280b44d5f026fb510d4fc7382cb491b4be0c",
+    "f05d646dd34be73b95236ede6f708284675e1b3d70ad7e55bbb8ae7957f87eab",
+    "25d5fe35d2ef04db18420e861ab7883a39a7a96629c8362b074e121a90614a02",
+    "b217538ab5eaeb0484c35b162c9f8f543b312706e59d4974a362eec0c0407e53",
+    "d9ed68cf2d7aee8f493d485ff8a2480fc3e8386007cae5af0b5c19b8126d24ff",
+    "b4363221646efa8cfc18e063900d433e2670b22ad700529ee41f74b64f178de1",
+    "2e40b09f1e9115e35fb1038af61309fc0b3af0de56babc3f4718c3ea3385eec4",
+    "e9205f63a7a6fcfde5eba488fac4a62bb01172538c4fd2ad6962948be64c6aa0",
+    "7923f6e71a8cc322ea866f4c473c7dd2a9720d465aa5515b10e08004c2ba0446",
+    "4392c894dcbf03a8e3a4acf2c011d2b5d7be1c07b901bb482b82eb815b9d3106",
+    "95a3869e055541a10b35938a2d6ec458536ab145828e51407bdbd45c30169899",
+    "1acde065d0cc88742017bb3dc84d3c4d1b04466d4f03e1aae09bc821caeff568",
+    "0f79b68ecac833c40ea9b6686ca20069295f9940ebe518bfe5d9ba065e06e4b5",
+    "dff22fd0c46e70f498607777a5bb0a5e683ecb298e0c4328e2461a2765b9cb97",
+    "a5e8ad2fa610dfababc1dd56d504d5b3af49ce4ce48c139b347a5fabf7054cd9",
+    "f11da9c335b923ed0cd4b8b45f133e329818c122ae8af122349f84037f3efa1d",
+    "cae95d27a011aa0634cb247d3e28b02999ac9b2f59d441e92e32add3c1339a29",
+    "48d649aeeb5404565c3d7b16895e451f616f6e2efdaa2d6dce232b4c2da43700",
+    "ea681abe8eea8281fe04473d1a5355561e96fcc3f1a732891cca07612a66e714",
+    "550497c2fb6cce27e5cc2b3c941649157770a95f1e74afbe3cfbfdd3e56867e7",
+    "ae2c40096071f6f2aa81c775bacb642185dee0f89ef71cb8c5b1b6b651d9287d",
+    "5369f89f9e8f825301346ae21aba98206d472918328b4078a61b27206ca3ae2c",
+    "88f25ecb3732aa9bfa22d85631403469563a57d8fd8beabaab9febf45e95cf49",
+    "0a16892b3124e19f0d2d1bac3ca181f2ba9b0e99b57266e9ed2901d531af634d",
+    "5d8fca29509694d7052af02a63df106cc9b5bd0d8ea618518cc35d8e2f789276",
+    "b09c189c6e0fd1e81bcccbdb011014ea9b68471e871cb7f3061cf6ae8b168370",
+    "a8a2b8ee6dc96126e6ff3c833835f6d9089c2a74c6c92d09a210ac581ae84975",
+    "7d75d3b17502208df59003c4e846d5fafb1e40d94ee5afea375b2730d58d6a8f"
+  ],
+  "nodes_before": [
+    {
+      "name": "node1",
+      "uid": "b8c6525d-6d03-4ab9-a2ea-97753f0fca67",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    },
+    {
+      "name": "node2",
+      "uid": "b9f72348-e7e9-4a60-bdb4-2d2410845ce9",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    },
+    {
+      "name": "node3",
+      "uid": "5e736bcd-c06d-4713-a831-be9adc567e97",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    }
+  ],
+  "disk_before": {
+    "total": 844362571776,
+    "used": 293722828800,
+    "free": 507673292800
+  },
+  "base": {
+    "reference": "scratch",
+    "new_base_download_bytes": 0
+  },
+  "registry_source": {
+    "identity": {
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+    },
+    "deployment_uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+    "deployment_resource_version": "20340742",
+    "config_secret_uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+    "password_source": "ani-system/ani-resource-private:harbor.password",
+    "ca_source": "ani-system/ani-resource-private:harbor-ca.crt",
+    "ca_sha256": "65f1a1d14d21fed31b89f25b143e78b16605b82d32c56ef6bf8167fe78bab871",
+    "init_container": "private-regular-files",
+    "projected_mount": "input:/input readonly -> private:/private",
+    "credentials_emitted": false
+  },
+  "registry_preflight": {
+    "step": {
+      "tag_absent_http": 404
+    },
+    "webhook": {
+      "tag_absent_http": 404
+    }
+  },
+  "daemon_started": true,
+  "workers": [
+    {
+      "id": "ph653hqm1g9zl1wug3rgaefqp",
+      "labels": {
+        "org.mobyproject.buildkit.worker.containerd.namespace": "k8s.io",
+        "org.mobyproject.buildkit.worker.containerd.uuid": "51006f10-4d29-4eaf-a311-9acfb4085e40",
+        "org.mobyproject.buildkit.worker.executor": "containerd",
+        "org.mobyproject.buildkit.worker.hostname": "node1",
+        "org.mobyproject.buildkit.worker.network": "host",
+        "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+        "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+      },
+      "platforms": [
+        {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        {
+          "architecture": "amd64",
+          "os": "linux",
+          "variant": "v2"
+        },
+        {
+          "architecture": "amd64",
+          "os": "linux",
+          "variant": "v3"
+        },
+        {
+          "architecture": "amd64",
+          "os": "linux",
+          "variant": "v4"
+        }
+      ],
+      "gcPolicy": [],
+      "buildkitVersion": {
+        "package": "github.com/moby/buildkit",
+        "version": "v0.25.1",
+        "revision": "1d4469a951d329d6815394b21084aeca512fcb0d"
+      },
+      "cdiDevices": null
+    }
+  ],
+  "unit_limits": "MainPID=2444325\nControlGroup=/system.slice/ani-modeldev-d807-small-build.service\nCPUQuotaPerSecUSec=infinity\nMemoryMax=infinity\n",
+  "tasks_after": [
+    "6596926852df2e90096d5f7b8612d0b777be31d29e151fb394a4b00dfe29352c",
+    "542f123cffd317cb043b2429b54d26aa1c0a53962bf02d8fb62b03b8669333c1",
+    "7240d09c4bcf35cfe214ce008a77a280622ba143cf6ad7f7c8b65927435d67c0",
+    "725bd0d58aa683a59cd3c8702e9d4a3fa57d0796ca4e0d1bf75d284570ae649f",
+    "3345719bba2325b18e1ec361a5aa76d196256daf89544cadc697499e786dda95",
+    "aa2ef9f711615ea422f4aeddccbc1cf5b460ecd6ee9bd209edadfcb84e71ce1d",
+    "3d2fc67a93cf03c3c1e4b53fb59f99828812dd63e5ef06ed06e39b3108dd5d79",
+    "51f7c27334ddd677828aca4e4c7db37cb8e23721b50e6265fefd7c32d0c67f98",
+    "b16bd95c0408bca54d8ccb32c3347cf91da90b125c5a89adb370e7184f007237",
+    "221af607af6c9118b28b1ac41aad86052f660e65df31067698aaa62fc4b8de4f",
+    "4a5c8ac0381a9a97a5c5d4422c6acb3a81d6e01c0626951835124634602c1d56",
+    "513671dfa41bf8fbf1e2b41b68becf0080a84d54411bc7b4e9d76744d4f025cc",
+    "486b540cb1ad0e2de82e2724ee0f29a4dd10688df82dd5eb5a427182d35f6529",
+    "66362e8b603d2bcf8d5d44da03c6c4c39ecbeaa6a3c40abe7f00635f50e3b731",
+    "cf6ebaaaf0826d21796d5173871a97585b1e98eee5e0949a2cac200848c3cb73",
+    "1a7c3b726d1e63cc392e6611beea41440a9da68d9a3acb8348af50a08fed32d9",
+    "0248d30a7785747d966bbc68f3f3ea344df98ea96fe82c66812a11764775a031",
+    "48e49a186bfb26bb0c1107ed9674ec202088d646a122664048c45eb2398682a8",
+    "24098a57aa4ac47098f0002df8c36d7bcd2e9c3ac1f645097161f841ca3c909f",
+    "3f4ef6e426e6b15028988335e438c75d22cd381a2b8dc6721f1850ce2f057c5b",
+    "3b4a004386564036b84ffb43e095701514fd3412423970f879ba57043ea6ba65",
+    "93a422409ba9e1408c12f280965378a74233f780222c29570903fb500afa18b2",
+    "252dea300933c041272887d51d757e7b66935884159eac0f0ba6e6a873d49ff9",
+    "74ca4eb1ae4f60c07f4b13ac13c9572f3ba5f584026c2f5d2ed909c5dd77bde8",
+    "47ccca46dd7e8bf2a234fe8573ddc9e10fa714077bc95f087759c49b4f359e5b",
+    "1391ac05c2bb6527741c4b0199b0940c98aed6bf19e9756aa1e9a7a00c038416",
+    "3e6ff7d1f6797c808e27efa06c8d94d1157f83e2728c6f7806228b4b5ece11d3",
+    "1050ad5012979db061a46ff587894f34a823ece4892479c49aac6b65d4dd669b",
+    "0a1691e8aa6c7ed75acc332f7ffe3dca2086a83839fbf3577331305fa0887a83",
+    "e274c7adc549c0d50208ea3535a52120be0e991c9417fab2e719c9fd55a5103a",
+    "40cf80caa2036d7f4eead8cd28eab22e8e0ff9198b02cca33f31a2029db4703b",
+    "68288b1b5a1db852dd18bec1356ef2304a82975f45129c5aeea679999be23c22",
+    "3b21803c309e6e45e981abca4103413d28e81352160612f34de9f69c3daa182b",
+    "16eebdeab6584c2f330b303994ddbabadb3dcd785b9bc836f436006ba98cd066",
+    "45afe54e665652ff5c82468ccbfc4dcbf291b77d3569d4bec4f5eb9fdfe5e722",
+    "2dcc9d915ed20aed62c5680827441eb92228594a80811036eda523ac320c9399",
+    "13baa7f480669b7f80a5c27f63569d9cc156ffc96263c77e872c4235631f2b5a",
+    "2c57418a73d093bbb0516ffb44610a19a8b434d586076685410cfb07a1343dde",
+    "35bb526f2936b206dbbc99d2688acfbdef6885c2e1ec69fe1ec334211335495e",
+    "9d1cf3923247722ca011fc37ff25850daa38bc6467dd5a7c058ddcb7d336d7a1",
+    "359fe997863676347b2e207b6e2e42c9d073bd59866303e745883b9489c9f3e3",
+    "ddd644744354125c89a5ad1f71c7fe3fa7aabe3cdb5a049673d54ef3c02fc6f9",
+    "7e8cac80d421b9fecc236a52ea8a9306be44858783b10d20c39ab260917388d2",
+    "dffb1ecc0c64c7248a65713a0d22614dfecf6dc124ed40ae4457c41c3b8d9e6b",
+    "b2fb37874f3966175bda0f5d4d74886e6c3f8b135fb57101a50b70ee65b3897c",
+    "777d4893391b0ce26c52f94d7e72ed88aabc455e1b669c1809381d851995612d",
+    "f2318aceb6277017d0caf6e3ba53a7fe1d3ffa3f2f36828c7d5d867c0aa2ff59",
+    "3838181a71417481533ebfa78af67eb65ffe9849dda6881980a4166cb6751e9a",
+    "52c75b99eace85760af8f97adf86aec3f249fb81d5a89c933f2b62bb1bc4b9fe",
+    "f91c561bcc476164f581bc03ad61bc2f8761ebb6dc14e8b6c401d0ec7eb9dc42",
+    "0e30f1040f958650aa17b07ae6b72d2a3c3800597191d532ad415bd229b35431",
+    "5a101a6e4e59d166bf272e89b87a908983e269b96ea04265dd7db5b793c27f2c",
+    "bf97e93fbba5b03fa7f4688f0299b527acc7500136e8021b1b184b34c63a54ee",
+    "788079655973baeee40e238aa8a842337837f5d07d2ce5757f9c3d3493752554",
+    "c7cae75727857316894651b2ac2388f5aa69fec8e29a973c731631c199b643ef",
+    "4b09a831263b41af77122513922edbf360ac1f4a5e7de14bf97bca4cfa0e88d7",
+    "aad7650434dc15b7da7046b370c75afe687f1833fb38732d514f626d7dc7bcee",
+    "eb771ab2521d53ee4bbdb08060c68f49b765577b0fb6b628f32910a1aa972ca6",
+    "a236b66172e23c320c07c6fcd7f6a1df14d7d086019150e39ea2b3d0853e55b1",
+    "4f0f16bfce743e4a389d57a9f30615f2b2177cbaa79d2d6d30d1739072301b5d",
+    "dd8e466345860771c654b37c49aa10e2b85057b56f7a61b40a4b6475a787a8a7",
+    "1e4635d7fdd0261e70b95cc6aee334a10770861f403b9f9077afeec0716dac90",
+    "25e5ccef9102f8014f70ad1a975caa786c6e878406ab8927e4ee38efcfc6aad7",
+    "2b2f2d4289c7d3e4dc9378eca3e5744406370b3ccc45012139558dba789cf496",
+    "cce2831e4a7cbad342b753fb7456ccdf88008baaec7edd1e591c3d23206f1d3e",
+    "ce0cbceca04ded064bd1f73507764a586ba54d6cfa4d30e8f57cf2cd9219c1c6",
+    "010ac532d2a07981614d9387ba965a3bbf300428f1e14d19d6c07ebc9864ddea",
+    "1282a7610a6729117a30a4a1e3c11d3df6458772519700931dc838af4f012d23",
+    "a9b7879428dfe7c8f8fbb663370f4e9e2327cd663fc5702310e099af752a66cf",
+    "cd574513a8a41d9db54de45d29108fbf7b7e744b412db1a92d44b77489deb775",
+    "a314161b373e6045bd9e728d75b3bc1396a942aa4351714895a809d9a10ad147",
+    "9d690b4d51cd6d5b9f018be0b09a726be64a08c404e88cd88cfa9187d1572665",
+    "28d5331de8878c02805d8de4f630280b44d5f026fb510d4fc7382cb491b4be0c",
+    "f05d646dd34be73b95236ede6f708284675e1b3d70ad7e55bbb8ae7957f87eab",
+    "25d5fe35d2ef04db18420e861ab7883a39a7a96629c8362b074e121a90614a02",
+    "b217538ab5eaeb0484c35b162c9f8f543b312706e59d4974a362eec0c0407e53",
+    "d9ed68cf2d7aee8f493d485ff8a2480fc3e8386007cae5af0b5c19b8126d24ff",
+    "b4363221646efa8cfc18e063900d433e2670b22ad700529ee41f74b64f178de1",
+    "2e40b09f1e9115e35fb1038af61309fc0b3af0de56babc3f4718c3ea3385eec4",
+    "e9205f63a7a6fcfde5eba488fac4a62bb01172538c4fd2ad6962948be64c6aa0",
+    "7923f6e71a8cc322ea866f4c473c7dd2a9720d465aa5515b10e08004c2ba0446",
+    "4392c894dcbf03a8e3a4acf2c011d2b5d7be1c07b901bb482b82eb815b9d3106",
+    "95a3869e055541a10b35938a2d6ec458536ab145828e51407bdbd45c30169899",
+    "1acde065d0cc88742017bb3dc84d3c4d1b04466d4f03e1aae09bc821caeff568",
+    "0f79b68ecac833c40ea9b6686ca20069295f9940ebe518bfe5d9ba065e06e4b5",
+    "dff22fd0c46e70f498607777a5bb0a5e683ecb298e0c4328e2461a2765b9cb97",
+    "a5e8ad2fa610dfababc1dd56d504d5b3af49ce4ce48c139b347a5fabf7054cd9",
+    "f11da9c335b923ed0cd4b8b45f133e329818c122ae8af122349f84037f3efa1d",
+    "cae95d27a011aa0634cb247d3e28b02999ac9b2f59d441e92e32add3c1339a29",
+    "48d649aeeb5404565c3d7b16895e451f616f6e2efdaa2d6dce232b4c2da43700",
+    "ea681abe8eea8281fe04473d1a5355561e96fcc3f1a732891cca07612a66e714",
+    "550497c2fb6cce27e5cc2b3c941649157770a95f1e74afbe3cfbfdd3e56867e7",
+    "ae2c40096071f6f2aa81c775bacb642185dee0f89ef71cb8c5b1b6b651d9287d",
+    "5369f89f9e8f825301346ae21aba98206d472918328b4078a61b27206ca3ae2c",
+    "88f25ecb3732aa9bfa22d85631403469563a57d8fd8beabaab9febf45e95cf49",
+    "0a16892b3124e19f0d2d1bac3ca181f2ba9b0e99b57266e9ed2901d531af634d",
+    "5d8fca29509694d7052af02a63df106cc9b5bd0d8ea618518cc35d8e2f789276",
+    "b09c189c6e0fd1e81bcccbdb011014ea9b68471e871cb7f3061cf6ae8b168370",
+    "a8a2b8ee6dc96126e6ff3c833835f6d9089c2a74c6c92d09a210ac581ae84975",
+    "7d75d3b17502208df59003c4e846d5fafb1e40d94ee5afea375b2730d58d6a8f",
+    "7ec78853437b7df301361867fe8598674fcb8d9bf1474bcbdd0174c8b1ab9bd7",
+    "017b12f84c64ea9f1228a78037a8036d36a6ff5af12cc964247474cf39533fc8",
+    "b80591eddbd20383927c41af6629bd7b9b225dc46d74daee8efc4cb91ad994cf",
+    "1a9f50d9f5ededcd4f483634bc70d8062817ef14cab05f2b767f288e37ebfc35",
+    "f12fbc5a14e413b1e9e0491451e35176035c7e298aa65d54de4a0132312bbcc7",
+    "3de4b8284251d8381e389aa012b923a9c1c84a3d1dd898aab20e6400a8af0775",
+    "20a549d5b3c9eeac0019ef8125a0a3441f8a316808b348373e6098b92895f23b",
+    "7cad8c9e768519d848ce90bfef471e93318a60d3a4effefcb2cc10dd0eba2782",
+    "7b2efdb565618706837994fd3421896ac6d4454656e65a4ba0d18df5750bb2df",
+    "244fdbec26d00126171b9d41860ce16b2d3f83f615c454c1344d6219c374cc51",
+    "d909c2e1b059328892edac9c26bd5ad2fbd0ac49266b24f41d73407ad3239392",
+    "d90162977858d0f20802814d036572c4af2990539462b91c3a3a070cb45c4744",
+    "a9a2e2be363f4f6ea8fd1f76788673bf5b93932c495d54dba731d29e46fe94b9",
+    "ca371f9e3caea47c15d15452f9eb9a947d5ae2f638046dc56ebb0fed35829fbd",
+    "85b440efde3cb1b60d4efa87baa533a8f257cdc94c210be991368eb58c825417",
+    "0230a01d481f98e1abb6bb138d6f7813474c549b5d81342be474fdef8c2f0722",
+    "95c76b2416a8211fa074910637b4101dc8bdd83571e4feba8ca5ccfd266dce8f",
+    "7a4ddf5dad01675e8145a76e0ca73b54885e4dd4ae1cc1421a3cecbfea2c759c",
+    "2558476cc3536ee3ad0d753efc00976e99b7de5b8c954c3fd1b38e767286f010",
+    "f26e525b7660e5af5af68457dd269400b4c04f8063bdd99668da3e42575cdc7f",
+    "5dce0846125c087321e5afde241d7f62f8b4113fe0e32f87f8b014bd264cd12b",
+    "16d41be3f127b3649a71c88221ef8f58c7ad8cdee55eb40df6261a4d626c8feb",
+    "3172bf7c256c2df23762f136c62a4bee16a3aa03648abdb2bce2af22f3a811f4",
+    "db0f22736cfc1aa16507cd744a8c4b2cde54d92b03a87fe7563db3a9eaef7457",
+    "b18456b7fcc03071494b2441148baa38a3191278840105786ca426ba3b8305e7",
+    "8f069c2cd73ec7926ce9f03234f6dfeee5f45860898c65da0aaf3c0a6a022027",
+    "dd6d6f7c5c5e718acb7bd470910616a44cf3f0702840e42c0883b9cdb81ec7de",
+    "5e79ecccc5e4d5680918815854e51d8a23b81ee2644658a3b6c1fcdc7bb2ecf0",
+    "4976d6b5269b031cd591bf279217db06c1b9a7d2f0a104497cd4f493adc6d38b",
+    "dfe8de8bc0cfb0a366d8c08fbca90f212a1f07e313823aff0dea2eae9a3b893e",
+    "eba8c5e997bc17ccb917dcc039725527656d2aa1f298a2994f16bca7b155c4fe",
+    "ab7f3bec2c3180adb0cf0bcf1eae7f665dd64d26ca97a95775a0407522c91241",
+    "dfee4078c1515f1d0031b8f6ed5ff954c97a0e0e799f026336a2caf4669181d3",
+    "19d8449ff9dba6362093525ad36fe551e86794ee4e4629ff2d924435bd58ad70",
+    "51627bc022f4633ab84233c1b3fc275aea7046c59870c47fab53078b0532fae1",
+    "346cae4a7d0ab03ece83888cd04e70ce49d6e9c8aef0b054d2e84a2ca06a5b95",
+    "28c5301a37f908283fbbcb604a0a39df8f7bf1ec8f921c7478646fab172fec64",
+    "fd457660cf889b62b49abf26dd24ec740861538e9e753a57889b4a1c1d84d1b4"
+  ],
+  "original_tasks_missing": [],
+  "nodes_after": [
+    {
+      "name": "node1",
+      "uid": "b8c6525d-6d03-4ab9-a2ea-97753f0fca67",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    },
+    {
+      "name": "node2",
+      "uid": "b9f72348-e7e9-4a60-bdb4-2d2410845ce9",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    },
+    {
+      "name": "node3",
+      "uid": "5e736bcd-c06d-4713-a831-be9adc567e97",
+      "conditions": [
+        {
+          "type": "MemoryPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientMemory"
+        },
+        {
+          "type": "DiskPressure",
+          "status": "False",
+          "reason": "KubeletHasNoDiskPressure"
+        },
+        {
+          "type": "PIDPressure",
+          "status": "False",
+          "reason": "KubeletHasSufficientPID"
+        },
+        {
+          "type": "Ready",
+          "status": "True",
+          "reason": "KubeletReady"
+        }
+      ]
+    }
+  ],
+  "disk_after": {
+    "total": 844362571776,
+    "used": 294007382016,
+    "free": 507388739584
+  }
+}

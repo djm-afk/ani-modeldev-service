@@ -1,0 +1,26 @@
+--- FAIL: TestSubmitCancellationAfterRealHTTPObservationStillPersistsOriginalOutcome (0.85s)
+    --- FAIL: TestSubmitCancellationAfterRealHTTPObservationStillPersistsOriginalOutcome/complete_HTTP_response_retains_confirmed_Run (0.49s)
+        cancellation_test.go:34: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        cancellation_test.go:102: submitter lost the original actual-client observation or repeated the call
+    --- FAIL: TestSubmitCancellationAfterRealHTTPObservationStillPersistsOriginalOutcome/incomplete_HTTP_response_remains_uncertain (0.36s)
+        cancellation_test.go:34: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        cancellation_test.go:102: submitter lost the original actual-client observation or repeated the call
+2026/11/01 02:51:26 INFO [gRPC] server listening addr=127.0.0.1:33337
+2026/11/01 02:51:26 INFO [gRPC] server stopping
+2026/11/01 02:51:26 INFO [gRPC] server listening addr=127.0.0.1:36325
+2026/11/01 02:51:26 INFO [gRPC] server stopping
+--- FAIL: TestMainFlowManagedBeginAuthenticatesAndRecovers (0.71s)
+    --- FAIL: TestMainFlowManagedBeginAuthenticatesAndRecovers/confirmed_submission (0.36s)
+        managed_begin_test.go:58: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        managed_begin_test.go:132: MAIN_FLOW: real admission and one CreateRun attempt persisted
+        managed_begin_test.go:169: main flow did not bind authenticated Begin: rpc error: code = Unauthenticated desc = managed workload authentication failed
+    --- FAIL: TestMainFlowManagedBeginAuthenticatesAndRecovers/lost_CreateRun_response (0.35s)
+        managed_begin_test.go:58: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        managed_begin_test.go:132: MAIN_FLOW: real admission and one CreateRun attempt persisted
+        managed_begin_test.go:169: main flow did not bind authenticated Begin: rpc error: code = Unauthenticated desc = managed workload authentication failed
+2026/11/01 02:51:27 INFO [gRPC] server listening addr=127.0.0.1:43243
+2026/11/01 02:51:28 INFO [gRPC] server stopping
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	24.388s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle	66.245s
+FAIL

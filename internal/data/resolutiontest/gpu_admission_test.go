@@ -17,7 +17,7 @@ import (
 
 // ACC/Res are the external boundaries represented by their actual released
 // protocol helpers. Tenant facts, READY input, compilation and mTLS are real.
-func TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads(t *testing.T) {
+func TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment(t *testing.T) {
 	for _, mode := range []accpb.SupplyMode{accpb.SupplyMode_WHOLE_EXCLUSIVE, accpb.SupplyMode_SHARED_FIXED} {
 		for _, factor10 := range []bool{false, true} {
 			t.Run(mode.String()+"/factor10="+strconv.FormatBool(factor10), func(t *testing.T) {
@@ -43,7 +43,6 @@ func TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads(t *tes
 				if err != nil {
 					t.Fatal(err)
 				}
-				writeMaterial(t, f.directory, f.material, "gpu")
 				client := startAdmissionClient(t, f, f.resolver)
 				ctx := admissionRPCContext(f.ctx, f.facts.TenantID)
 				prepared, err := client.PrepareAdmission(ctx, admissionRPCRequest(t, f))
@@ -100,8 +99,8 @@ func TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads(t *tes
 					}
 				}
 				again, err := client.FinalizeAdmission(ctx, request)
-				if err != nil || again.ExecutionSpecHash != finalized.ExecutionSpecHash || f.factReader.reads != before {
-					t.Fatal("Finalize changed candidate or reread facts", err)
+				if err != nil || again.ExecutionSpecHash != finalized.ExecutionSpecHash || f.factReader.reads != before+2 {
+					t.Fatal("Finalize changed original GPU plan or skipped current environment checks", err)
 				}
 				display.ProfileVersion++
 				request.GpuExecutionCanonical, request.GpuDisplayCanonical, err = contractpb.EncodeGPUPlanCanonical(exec, display)

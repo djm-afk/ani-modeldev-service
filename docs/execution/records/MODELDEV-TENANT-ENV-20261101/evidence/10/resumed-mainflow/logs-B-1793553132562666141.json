@@ -1,0 +1,27 @@
+{
+  "started_at": "2026-11-01T17:12:10.168006+00:00",
+  "mode": "logs",
+  "tenant": "B",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3/logs?pod_uid=4016d559-fbb0-4850-aaa9-8bd1e3da04d6&tail_lines=200&max_bytes=65536",
+      "http_status": 200,
+      "response": {
+        "log_id": "781af019-42f2-5cc1-b907-6d25c2f5d467",
+        "truncated": true,
+        "observed_at": "2026-11-01T17:06:23.176253145Z",
+        "source_kind": "TRAINER",
+        "container_name": "node",
+        "previous": false,
+        "available": true,
+        "pod_uid": "4016d559-fbb0-4850-aaa9-8bd1e3da04d6",
+        "training_metrics_only": [],
+        "raw_log_text_persisted": false,
+        "line_count": 200
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T17:12:10.498077+00:00",
+  "transport_exit_code": 0
+}

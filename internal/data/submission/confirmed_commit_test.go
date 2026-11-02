@@ -22,7 +22,7 @@ import (
 func TestConfirmedRunCommitFailureReturnsNoReceiptOrPartialFacts(t *testing.T) {
 	openPool := postgres.Prepare(t)
 	fixturePool := openPool()
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	first := reserveUncertaintyAttempt(t, ctx, fixturePool, request)

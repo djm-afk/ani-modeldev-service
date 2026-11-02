@@ -41,6 +41,9 @@ func (client *Client) StopManagedRun(ctx context.Context, plan biz.PipelineDispa
 	default:
 		return ErrManagedRunUnverified
 	}
+	if err := client.verifyMutationWorkflow(ctx, plan, authority); err != nil {
+		return err
+	}
 	token, err := client.tokens.BearerToken(ctx, plan.TenantID, plan.Environment)
 	if err != nil || len(token) > 16384 || !bearerTokenPattern.MatchString(token) || ctx.Err() != nil {
 		return ErrManagedRunUnverified

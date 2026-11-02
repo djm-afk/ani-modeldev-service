@@ -56,7 +56,7 @@ func TestClosingRootAdmissionRejectsUnprovedIdentityOrWriters(t *testing.T) {
 			case "tenant":
 				f.execution.TenantID = "99999999-2222-4333-8444-555555555555"
 			case "workflow-execution", "workflow-spec", "pipeline-root":
-				value := map[string]any{"gcsOutputDirectory": f.dispatch.Plan.Owner.PipelineRoot, "parameterValues": map[string]any{"execution_id": f.execution.ExecutionID, "spec_hash": f.execution.SpecHash}}
+				value := map[string]any{"gcsOutputDirectory": f.dispatch.Plan.Owner.PipelineRoot, "parameterValues": map[string]any{"execution_id": f.execution.ExecutionID, "spec_hash": f.execution.SpecHash, "environment_binding_id": f.dispatch.Plan.Environment.BindingID, "namespace_uid": f.dispatch.Plan.Environment.NamespaceUID}}
 				switch attack {
 				case "workflow-execution":
 					value["parameterValues"].(map[string]any)["execution_id"] = "99999999-2222-4333-8444-555555555555"
@@ -175,11 +175,11 @@ func capturedRootAdmissionFixture(t *testing.T) *ownerCloseFixture {
 	f.dispatch.ConfirmedRuns = []biz.PipelineConfirmedRun{{RunID: f.runID}}
 	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = plan.Environment.ExperimentID, plan.DisplayName, plan.Environment.Identities.KFPStepServiceAccount
 	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": plan.PipelineID, "pipeline_version_id": plan.PipelineVersionID}
-	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}, "pipeline_root": plan.Owner.PipelineRoot}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID}, "pipeline_root": plan.Owner.PipelineRoot}
 	oldNamespace := f.workflow.GetNamespace()
 	f.workflow.SetNamespace(plan.Environment.NamespaceName)
 	f.workflow.Object["spec"].(map[string]any)["serviceAccountName"] = plan.Environment.Identities.KFPStepServiceAccount
-	nativeConfig, err := json.Marshal(map[string]any{"gcsOutputDirectory": plan.Owner.PipelineRoot, "parameterValues": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}})
+	nativeConfig, err := json.Marshal(map[string]any{"gcsOutputDirectory": plan.Owner.PipelineRoot, "parameterValues": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -222,7 +222,7 @@ func setRootRuntimeConfig(value any, config string) {
 }
 
 func rootAdmissionVerifier(f *ownerCloseFixture, extra ...*unstructured.Unstructured) *runtimeproof.Verifier {
-	namespace := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": f.execution.Snapshot.Environment.NamespaceName, "uid": f.execution.Snapshot.Environment.NamespaceUID}}}
+	namespace := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": f.execution.Snapshot.Environment.NamespaceName, "uid": f.execution.Snapshot.Environment.NamespaceUID, "labels": map[string]any{"network.ani.io/tenant-id": f.execution.TenantID, "network.ani.io/managed-by": "ani-network-service"}}}}
 	objects := []runtime.Object{namespace, f.workflow}
 	for i := range f.pods {
 		objects = append(objects, &f.pods[i])

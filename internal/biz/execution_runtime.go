@@ -80,6 +80,9 @@ type RuntimeResource struct {
 	// SandboxTermination is an owner-only kubelet post-termination marker.
 	// It preserves missing process status without inventing an actual exit.
 	SandboxTermination *PodSandboxTermination `json:",omitempty"`
+	// AdmissionAbort retains an exact kubelet admission failure before the
+	// sole training container existed. It is neither an exit nor a log.
+	AdmissionAbort *PodAdmissionAbort `json:",omitempty"`
 }
 
 // TrainingControllerSuspension is a controller acknowledgement, distinct from
@@ -114,6 +117,40 @@ type InitializationContainerNotCreated struct {
 	RestartCount                                int64
 }
 
+func (marker *InitializationContainerNotCreated) Valid() bool {
+	return marker != nil && marker.Name != "" && marker.Reason == "ContainerStatusUnknown" && marker.Message == SandboxMissingMessage && marker.ReportedExitCode == 137 && marker.ContainerID == "" && marker.ImageID == "" && marker.StartedAt == nil && marker.FinishedAt == nil && !marker.Started && !marker.Ready && marker.RestartCount == 0 && marker.LastStateEmpty
+}
+
+// PodAdmissionAbort is restricted to the original single-node trainer with no
+// init or ephemeral containers. The observed stopped sandbox and the exact
+// never-created marker prove writer absence without inventing process output.
+type PodAdmissionAbort struct {
+	NodeName, Phase, Reason, RestartPolicy                                  string
+	PodGeneration, StatusObservedGeneration                                 int64
+	Conditions                                                              []SandboxTerminationCondition
+	DeclaredInitContainers, DeclaredContainers, DeclaredEphemeralContainers []string
+	UncreatedContainer                                                      InitializationContainerNotCreated
+}
+
+func (proof *PodAdmissionAbort) ValidAt(observedAt time.Time) bool {
+	if proof == nil || proof.NodeName == "" || proof.Phase != "Failed" || proof.Reason != "UnexpectedAdmissionError" || proof.RestartPolicy != "Never" || proof.PodGeneration <= 0 || proof.StatusObservedGeneration != proof.PodGeneration || observedAt.IsZero() || len(proof.DeclaredInitContainers) != 0 || len(proof.DeclaredEphemeralContainers) != 0 || len(proof.DeclaredContainers) != 1 || proof.DeclaredContainers[0] != "node" || proof.UncreatedContainer.Name != "node" || !proof.UncreatedContainer.Valid() {
+		return false
+	}
+	expected := map[string]string{"Initialized": "True", "PodReadyToStartContainers": "False", "Ready": "False", "ContainersReady": "False", "PodScheduled": "True"}
+	for _, condition := range proof.Conditions {
+		status, found := expected[condition.Type]
+		if !found || status != condition.Status || condition.ObservedGeneration != proof.PodGeneration || condition.TransitionAt.IsZero() || condition.TransitionAt.After(observedAt) {
+			return false
+		}
+		delete(expected, condition.Type)
+	}
+	return len(expected) == 0
+}
+
+func (resource RuntimeResource) TrainingAdmissionAbortedAt(observedAt time.Time) bool {
+	return resource.APIVersion == "v1" && resource.Kind == "Pod" && resource.Namespace != "" && resource.Name != "" && resource.UID != "" && resource.OwnerUID != "" && resource.Terminal && resource.ExitCode == nil && resource.TrainingLog == nil && resource.InitializationAbort == nil && resource.SandboxTermination == nil && resource.AdmissionAbort.ValidAt(observedAt)
+}
+
 type InitializationContainerExit struct {
 	Name, ContainerID, ImageID string
 	ExitCode                   int32
@@ -122,14 +159,16 @@ type InitializationContainerExit struct {
 
 // ValidAt validates the persisted abort facts independently of the Kubernetes
 // adapter. A completed owner Run/Workflow is additionally required by close.
+// A missing first init can be the only declared init; it then has no waiting
+// init suffix. The exact marker and complete declared-name checks still apply.
 func (proof *PodInitializationAbort) ValidAt(observedAt time.Time) bool {
-	if proof == nil || proof.PodResourceVersion == "" || proof.NodeName == "" || proof.Phase != "Failed" || proof.RestartPolicy != "Never" || proof.PodGeneration <= 0 || observedAt.IsZero() || proof.DeletedAt.IsZero() || proof.NotInitializedAt.IsZero() || proof.SandboxStoppedAt.IsZero() || proof.DeletedAt.After(observedAt) || proof.SandboxStoppedAt.After(observedAt) || proof.NotInitializedAt.After(proof.SandboxStoppedAt) || len(proof.UnstartedInitContainers) == 0 || len(proof.UnstartedContainers) == 0 || len(proof.DeclaredContainers) != len(proof.UnstartedContainers) {
+	if proof == nil || proof.PodResourceVersion == "" || proof.NodeName == "" || proof.Phase != "Failed" || proof.RestartPolicy != "Never" || proof.PodGeneration <= 0 || observedAt.IsZero() || proof.DeletedAt.IsZero() || proof.NotInitializedAt.IsZero() || proof.SandboxStoppedAt.IsZero() || proof.DeletedAt.After(observedAt) || proof.SandboxStoppedAt.After(observedAt) || proof.NotInitializedAt.After(proof.SandboxStoppedAt) || len(proof.UnstartedInitContainers) == 0 && proof.UncreatedInitContainer == nil || len(proof.UnstartedContainers) == 0 || len(proof.DeclaredContainers) != len(proof.UnstartedContainers) {
 		return false
 	}
 	seen := make(map[string]bool)
 	initPrefix := len(proof.InitContainerExits)
 	if marker := proof.UncreatedInitContainer; marker != nil {
-		if initPrefix != 0 || marker.Name == "" || marker.Reason != "ContainerStatusUnknown" || marker.Message != "The container could not be located when the pod was terminated" || marker.ReportedExitCode != 137 || marker.ContainerID != "" || marker.ImageID != "" || marker.StartedAt != nil || marker.FinishedAt != nil || marker.Started || marker.Ready || marker.RestartCount != 0 || !marker.LastStateEmpty || len(proof.DeclaredInitContainers) == 0 || proof.DeclaredInitContainers[0] != marker.Name {
+		if initPrefix != 0 || !marker.Valid() || len(proof.DeclaredInitContainers) == 0 || proof.DeclaredInitContainers[0] != marker.Name {
 			return false
 		}
 		seen[marker.Name], initPrefix = true, 1

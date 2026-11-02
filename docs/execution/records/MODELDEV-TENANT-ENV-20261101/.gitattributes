@@ -1,0 +1,8 @@
+# Preserve captured evidence and TSV empty columns byte-for-byte. These scoped
+# records are data; source files retain the repository's normal whitespace rules.
+evidence/** -text -whitespace
+verification/** -text -whitespace
+*.tsv -text -whitespace
+templates/** -text -whitespace
+# The supplied authoritative spec is an immutable input copy.
+spec.md -text -whitespace

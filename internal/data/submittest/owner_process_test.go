@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -114,7 +115,7 @@ func TestOwnerRecoveryProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	worker, err := biz.NewCloseWorker(lifecycle.New(pool), closer, biz.PipelineDispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: config.Request.Owner}, 10, 100*time.Millisecond)
+	worker, err := biz.NewCloseWorker(lifecycle.New(pool), closer, (admissionfixture.DispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: config.Request.Owner}).Environment.ClusterID, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}

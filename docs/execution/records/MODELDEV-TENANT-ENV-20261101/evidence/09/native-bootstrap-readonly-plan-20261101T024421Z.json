@@ -1,0 +1,1100 @@
+{
+  "observed_at": "2026-11-01T02:44:19.324725+00:00",
+  "read_only": true,
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "old_worker_replicas": 0,
+  "old_control_pods": [],
+  "desired_manifest_sha256": "c0c0b90750be1817aa84c70636b77843d2296df018260b7233e87843903adbbe",
+  "desired_objects": [
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-bootstrap-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-bootstrap-v1-binding",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-environment-config-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-environment-config-v1-binding",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-workload-guard-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-workload-guard-v1-binding",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-runtime-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-step-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-webhook-read-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-api-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-access-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-environment-control-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-environment-control",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-webhook-namespace-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-webhook-namespace",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-rbac-inventory-global-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-rbac-inventory-global",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-platform-read-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-kfp-platform-read",
+      "namespace": "ani-system",
+      "present": false
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-token-review-v1",
+      "namespace": null,
+      "present": false
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-token-review",
+      "namespace": null,
+      "present": false
+    }
+  ],
+  "effective_binding_edges": [
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "ani-modeldev-newenv-auth-delegator",
+      "namespace": null,
+      "uid": "4524d263-7533-47e8-a842-f81800d355b9",
+      "resource_version": "682854",
+      "labels": {
+        "ani.io/managed-by": "modeldev-execution-v21",
+        "ani.io/task-id": "01a15f47"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:auth-delegator"
+      },
+      "direct_platform_subject": true,
+      "inherited_group_subject": false,
+      "modeldev_named_or_owned": false,
+      "role_uid": "d04a16b5-5eba-4338-a73d-6413d2c77dd3",
+      "rules": [
+        {
+          "apiGroups": [
+            "authentication.k8s.io"
+          ],
+          "resources": [
+            "tokenreviews"
+          ],
+          "verbs": [
+            "create"
+          ]
+        },
+        {
+          "apiGroups": [
+            "authorization.k8s.io"
+          ],
+          "resources": [
+            "subjectaccessreviews"
+          ],
+          "verbs": [
+            "create"
+          ]
+        }
+      ],
+      "rules_sha256": "8d385969a084f1ae26d1b2a178bca990b0b1602ed50ee8ca07008a3d11074623"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "ani-modeldev-v21-namespace",
+      "namespace": null,
+      "uid": "97b180a1-01a3-41a3-80d3-20541ebd2db8",
+      "resource_version": "682828",
+      "labels": {
+        "ani.io/kubeflow-tenant": "true",
+        "ani.io/managed-by": "modeldev-execution-v21",
+        "ani.io/resource-tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "ani.io/task-id": "01a15f47"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        },
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-step",
+          "namespace": "ani-modeldev-tenant-a-v21"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "ani-modeldev-v21-namespace"
+      },
+      "direct_platform_subject": true,
+      "inherited_group_subject": false,
+      "modeldev_named_or_owned": false,
+      "role_uid": "a47ae082-c10c-43de-9337-3d54b47f407a",
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resourceNames": [
+            "ani-modeldev-tenant-a-v21"
+          ],
+          "resources": [
+            "namespaces"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "rules_sha256": "cf8575867296fde4f1e843219f3b670a7dd7797f3296659c84436afc1b95f16f"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "ani-modeldev-webhook",
+      "namespace": null,
+      "uid": "a972d50e-50f5-4d6d-aa6f-48c1bb73cea1",
+      "resource_version": "680042",
+      "labels": {
+        "ani.io/managed-by": "modeldev-execution-v21",
+        "ani.io/task-id": "01a15f47",
+        "app.kubernetes.io/name": "ani-modeldev-webhook",
+        "app.kubernetes.io/part-of": "ani-modeldev"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "ani-modeldev-webhook",
+          "namespace": "ani-system"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "ani-modeldev-webhook"
+      },
+      "direct_platform_subject": true,
+      "inherited_group_subject": false,
+      "modeldev_named_or_owned": false,
+      "role_uid": "d91af19a-f60c-4d44-ad1b-aaaf45cb9eef",
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resourceNames": [
+            "ani-modeldev-tenant-a-v21"
+          ],
+          "resources": [
+            "namespaces"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "rules_sha256": "cf8575867296fde4f1e843219f3b670a7dd7797f3296659c84436afc1b95f16f"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "cdi.kubevirt.io:config-reader",
+      "namespace": null,
+      "uid": "7d8c224f-4c46-4275-af02-d90a2e7e2a5a",
+      "resource_version": "15130",
+      "labels": {
+        "app": "containerized-data-importer",
+        "app.kubernetes.io/component": "storage",
+        "app.kubernetes.io/managed-by": "cdi-operator",
+        "cdi.kubevirt.io": "",
+        "operator.cdi.kubevirt.io/createVersion": "v1.66.1"
+      },
+      "subjects": [
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:authenticated"
+        },
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:serviceaccount"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "cdi.kubevirt.io:config-reader"
+      },
+      "direct_platform_subject": false,
+      "inherited_group_subject": true,
+      "modeldev_named_or_owned": false,
+      "role_uid": "59589595-0024-447b-a248-853b7c7b423c",
+      "rules": [
+        {
+          "apiGroups": [
+            "cdi.kubevirt.io"
+          ],
+          "resources": [
+            "cdiconfigs",
+            "storageprofiles"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch"
+          ]
+        }
+      ],
+      "rules_sha256": "157b8666bc8ea5bafb06c6ad0ce1d375b3824a78736f68c14035d026d7526866"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "instancetype.kubevirt.io:view",
+      "namespace": null,
+      "uid": "30bc0fe8-6305-436e-a05b-b4a4bffe503d",
+      "resource_version": "13938",
+      "labels": {
+        "app.kubernetes.io/component": "kubevirt",
+        "app.kubernetes.io/managed-by": "virt-operator",
+        "kubevirt.io": ""
+      },
+      "subjects": [
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:authenticated"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "instancetype.kubevirt.io:view"
+      },
+      "direct_platform_subject": false,
+      "inherited_group_subject": true,
+      "modeldev_named_or_owned": false,
+      "role_uid": "ad39fa9c-ee57-4875-b078-dd5c127642d6",
+      "rules": [
+        {
+          "apiGroups": [
+            "instancetype.kubevirt.io"
+          ],
+          "resources": [
+            "virtualmachineclusterinstancetypes",
+            "virtualmachineclusterpreferences"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch"
+          ]
+        }
+      ],
+      "rules_sha256": "0e60aa5b0a949d01db038142b368c6c6d85802908aed2ccc999de12fd56a4126"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "kubevirt.io:default",
+      "namespace": null,
+      "uid": "d0752b0d-1e08-459a-b231-0dfdc3b9fb95",
+      "resource_version": "13937",
+      "labels": {
+        "app.kubernetes.io/component": "kubevirt",
+        "app.kubernetes.io/managed-by": "virt-operator",
+        "kubevirt.io": ""
+      },
+      "subjects": [
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:authenticated"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "kubevirt.io:default"
+      },
+      "direct_platform_subject": false,
+      "inherited_group_subject": true,
+      "modeldev_named_or_owned": false,
+      "role_uid": "697baa70-b3f2-40cc-ab1b-08e771161747",
+      "rules": [
+        {
+          "apiGroups": [
+            "kubevirt.io"
+          ],
+          "resources": [
+            "kubevirts"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "subresources.kubevirt.io"
+          ],
+          "resources": [
+            "version",
+            "guestfs"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        }
+      ],
+      "rules_sha256": "506f4a7ac89da1e40cf7d28b8e82df15c7fdf427e19c90ddb8fca4a5fab57026"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-v21-accelerator-runtimeclass-nvidia",
+      "namespace": null,
+      "uid": "107346be-91ed-419c-a822-9ab3387f9ba6",
+      "resource_version": "725373",
+      "labels": {
+        "ani.io/task": "modeldev-v21-20261022",
+        "app.kubernetes.io/part-of": "ani"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "ani-accelerator-service",
+          "namespace": "ani-system"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "modeldev-v21-accelerator-runtimeclass-nvidia"
+      },
+      "direct_platform_subject": false,
+      "inherited_group_subject": false,
+      "modeldev_named_or_owned": true,
+      "role_uid": "f175a70f-8ba6-4f8a-bd46-679873c96b96",
+      "rules": [
+        {
+          "apiGroups": [
+            "node.k8s.io"
+          ],
+          "resourceNames": [
+            "nvidia"
+          ],
+          "resources": [
+            "runtimeclasses"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "rules_sha256": "0b55273fd88584c38c7a8d5740c683f4ba04106419ea5d100137fd80ecd8feb0"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "system:basic-user",
+      "namespace": null,
+      "uid": "4d228cac-5041-4702-8d4d-94347e5bab64",
+      "resource_version": "142",
+      "labels": {
+        "kubernetes.io/bootstrapping": "rbac-defaults"
+      },
+      "subjects": [
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:authenticated"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:basic-user"
+      },
+      "direct_platform_subject": false,
+      "inherited_group_subject": true,
+      "modeldev_named_or_owned": false,
+      "role_uid": "6169cc0c-2baa-4c85-918c-3d184d411c1c",
+      "rules": [
+        {
+          "apiGroups": [
+            "authorization.k8s.io"
+          ],
+          "resources": [
+            "selfsubjectaccessreviews",
+            "selfsubjectrulesreviews"
+          ],
+          "verbs": [
+            "create"
+          ]
+        },
+        {
+          "apiGroups": [
+            "authentication.k8s.io"
+          ],
+          "resources": [
+            "selfsubjectreviews"
+          ],
+          "verbs": [
+            "create"
+          ]
+        }
+      ],
+      "rules_sha256": "9621676aedd50bb5231df8cc6465d35a2a768cfa9e6914fc5c063dfb8e4fd402"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "system:discovery",
+      "namespace": null,
+      "uid": "b02bec36-1d3a-493b-84c1-14fd99997169",
+      "resource_version": "141",
+      "labels": {
+        "kubernetes.io/bootstrapping": "rbac-defaults"
+      },
+      "subjects": [
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:authenticated"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:discovery"
+      },
+      "direct_platform_subject": false,
+      "inherited_group_subject": true,
+      "modeldev_named_or_owned": false,
+      "role_uid": "4afe71b3-1686-46df-9068-896c46b8fb38",
+      "rules": [
+        {
+          "nonResourceURLs": [
+            "/api",
+            "/api/*",
+            "/apis",
+            "/apis/*",
+            "/healthz",
+            "/livez",
+            "/openapi",
+            "/openapi/*",
+            "/readyz",
+            "/version",
+            "/version/"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "rules_sha256": "7826789ce51f186fa08fe9b1dade1f2c70affcbea87d3b1ba8e9b3338b9a257d"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "system:public-info-viewer",
+      "namespace": null,
+      "uid": "eb96151b-da19-46db-9250-60b37aad7a05",
+      "resource_version": "143",
+      "labels": {
+        "kubernetes.io/bootstrapping": "rbac-defaults"
+      },
+      "subjects": [
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:authenticated"
+        },
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:unauthenticated"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:public-info-viewer"
+      },
+      "direct_platform_subject": false,
+      "inherited_group_subject": true,
+      "modeldev_named_or_owned": false,
+      "role_uid": "c3d137c2-8719-48d8-9674-6547a33d934d",
+      "rules": [
+        {
+          "nonResourceURLs": [
+            "/healthz",
+            "/livez",
+            "/readyz",
+            "/version",
+            "/version/"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "rules_sha256": "88045ff94e7d52904124014ba59dcd06fbdfa22d56bf9bed0b8dd79ef27429d0"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "system:service-account-issuer-discovery",
+      "namespace": null,
+      "uid": "74a2b02e-5bc6-43e6-a111-c0999bd5857c",
+      "resource_version": "150",
+      "labels": {
+        "kubernetes.io/bootstrapping": "rbac-defaults"
+      },
+      "subjects": [
+        {
+          "apiGroup": "rbac.authorization.k8s.io",
+          "kind": "Group",
+          "name": "system:serviceaccounts"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "system:service-account-issuer-discovery"
+      },
+      "direct_platform_subject": false,
+      "inherited_group_subject": true,
+      "modeldev_named_or_owned": false,
+      "role_uid": "58e133b9-c117-44b0-bdce-32e8dabfe0f0",
+      "rules": [
+        {
+          "nonResourceURLs": [
+            "/.well-known/openid-configuration",
+            "/.well-known/openid-configuration/",
+            "/openid/v1/jwks",
+            "/openid/v1/jwks/"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "rules_sha256": "b44149b903db66a65154c26b971af9bf378ab00791e5a1d6495d9af3f00a2fc8"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "ani-modeldev-v21-control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "uid": "3807e1e1-5667-461c-96f9-541528c674a3",
+      "resource_version": "652604",
+      "labels": {
+        "ani.io/kubeflow-tenant": "true",
+        "ani.io/managed-by": "modeldev-execution-v21",
+        "ani.io/resource-tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "ani.io/task-id": "01a15f47"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "ani-modeldev-v21-control"
+      },
+      "direct_platform_subject": true,
+      "inherited_group_subject": false,
+      "modeldev_named_or_owned": false,
+      "role_uid": "d89e4320-91a3-43b9-ba0f-d7899de2cfc5",
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods",
+            "persistentvolumeclaims"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods/log"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflows"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "trainer.kubeflow.org"
+          ],
+          "resources": [
+            "trainjobs"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "create",
+            "patch",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "trainer.kubeflow.org"
+          ],
+          "resources": [
+            "trainingruntimes"
+          ],
+          "verbs": [
+            "get",
+            "create",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "jobset.x-k8s.io"
+          ],
+          "resources": [
+            "jobsets"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "batch"
+          ],
+          "resources": [
+            "jobs"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "scheduling.volcano.sh"
+          ],
+          "resources": [
+            "podgroups"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resourceNames": [
+            "modeldev-step"
+          ],
+          "resources": [
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflows"
+          ],
+          "verbs": [
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "events"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        }
+      ],
+      "rules_sha256": "09536ef256f68a8fca5b724339b5b18ea681dba948292d080c544b8974482550"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "ani-modeldev-v21-kfp",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "uid": "6691e713-c877-4411-bd92-243cdbefffee",
+      "resource_version": "652625",
+      "labels": {
+        "ani.io/kubeflow-tenant": "true",
+        "ani.io/managed-by": "modeldev-execution-v21",
+        "ani.io/resource-tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "ani.io/task-id": "01a15f47"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "ani-modeldev-v21-kfp"
+      },
+      "direct_platform_subject": true,
+      "inherited_group_subject": false,
+      "modeldev_named_or_owned": false,
+      "role_uid": "5153a916-eecd-441e-ad99-ea26414a3cd3",
+      "rules": [
+        {
+          "apiGroups": [
+            "pipelines.kubeflow.org"
+          ],
+          "resources": [
+            "pipelines",
+            "pipelines/versions",
+            "experiments",
+            "runs",
+            "jobs",
+            "recurringruns",
+            "artifacts",
+            "tasks"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "pipelines.kubeflow.org"
+          ],
+          "resources": [
+            "runs"
+          ],
+          "verbs": [
+            "terminate"
+          ]
+        }
+      ],
+      "rules_sha256": "7a8a39f6381dfd0f6869c74509f80226c54530504c7a1aa7f610e8e12687410c"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "ani-modeldev-webhook",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "uid": "15d47209-c063-46b3-b7c1-c2f9a0944034",
+      "resource_version": "680095",
+      "labels": {
+        "ani.io/managed-by": "modeldev-execution-v21",
+        "ani.io/task-id": "01a15f47",
+        "app.kubernetes.io/name": "ani-modeldev-webhook",
+        "app.kubernetes.io/part-of": "ani-modeldev"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "ani-modeldev-webhook",
+          "namespace": "ani-system"
+        }
+      ],
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "ani-modeldev-webhook"
+      },
+      "direct_platform_subject": true,
+      "inherited_group_subject": false,
+      "modeldev_named_or_owned": false,
+      "role_uid": "0a490b2b-2859-47f6-af9c-32c7c01d3818",
+      "rules": [
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflows"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "batch"
+          ],
+          "resources": [
+            "jobs"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "jobset.x-k8s.io"
+          ],
+          "resources": [
+            "jobsets"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "trainer.kubeflow.org"
+          ],
+          "resources": [
+            "trainjobs",
+            "trainingruntimes"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ],
+      "rules_sha256": "b926952b80bdbc723cf5232fc4920a360435a3f56f54d0434f8516159717bc28"
+    }
+  ],
+  "principal_revalidation": [
+    {
+      "role": "control",
+      "username": "system:serviceaccount:ani-system:modeldev-control",
+      "expected_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "actual_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "uid_match": true,
+      "deleting": false,
+      "deployment_uid_match": true,
+      "replicas": 0,
+      "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3"
+    },
+    {
+      "role": "webhook",
+      "username": "system:serviceaccount:ani-system:ani-modeldev-webhook",
+      "expected_uid": "eb28c30d-6d87-435e-a3cf-07e440dd5f93",
+      "actual_uid": "eb28c30d-6d87-435e-a3cf-07e440dd5f93",
+      "uid_match": true,
+      "deleting": false,
+      "deployment_uid_match": true,
+      "replicas": 2,
+      "deployment_uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea"
+    },
+    {
+      "role": "kfp_api",
+      "username": "system:serviceaccount:kubeflow:ml-pipeline",
+      "expected_uid": "a9a9487e-4cde-4821-9c86-cf0c67a2d635",
+      "actual_uid": "a9a9487e-4cde-4821-9c86-cf0c67a2d635",
+      "uid_match": true,
+      "deleting": false,
+      "deployment_uid_match": true,
+      "replicas": 1,
+      "deployment_uid": "56189e37-8874-4f2d-90bb-19846a332b64"
+    },
+    {
+      "role": "argo",
+      "username": "system:serviceaccount:kubeflow:argo",
+      "expected_uid": "fad3d394-d7ef-4be1-a1d8-a864a3497c58",
+      "actual_uid": "fad3d394-d7ef-4be1-a1d8-a864a3497c58",
+      "uid_match": true,
+      "deleting": false,
+      "deployment_uid_match": true,
+      "replicas": 1,
+      "deployment_uid": "441104f5-3647-430e-a020-911dd99c0aca"
+    },
+    {
+      "role": "trainer",
+      "username": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+      "expected_uid": "781dc0e1-3eb1-4732-a3fd-ea5f28594cdf",
+      "actual_uid": "781dc0e1-3eb1-4732-a3fd-ea5f28594cdf",
+      "uid_match": true,
+      "deleting": false,
+      "deployment_uid_match": true,
+      "replicas": 1,
+      "deployment_uid": "3f58bec1-34ef-4378-ab3c-396489748da9"
+    },
+    {
+      "role": "jobset",
+      "username": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+      "expected_uid": "c7a11510-9a94-4030-9f4f-aefde6912cc4",
+      "actual_uid": "c7a11510-9a94-4030-9f4f-aefde6912cc4",
+      "uid_match": true,
+      "deleting": false,
+      "deployment_uid_match": true,
+      "replicas": 1,
+      "deployment_uid": "3647f135-ce0c-46b1-9c00-76f77b8f994c"
+    },
+    {
+      "role": "persistence_agent",
+      "username": "system:serviceaccount:kubeflow:ml-pipeline-persistenceagent",
+      "expected_uid": "09efd5d9-4c52-47e0-9ba1-e3e7c758bacc",
+      "actual_uid": "09efd5d9-4c52-47e0-9ba1-e3e7c758bacc",
+      "uid_match": true,
+      "deleting": false,
+      "deployment_uid_match": true,
+      "replicas": 1,
+      "deployment_uid": "ecdd6857-98e6-487e-8628-b92011967229"
+    },
+    {
+      "role": "job_controller",
+      "username": "system:serviceaccount:kube-system:job-controller",
+      "expected_uid": "acfc8104-f943-43c9-b60a-f130d6e03895",
+      "actual_uid": "acfc8104-f943-43c9-b60a-f130d6e03895",
+      "uid_match": true,
+      "deleting": false
+    }
+  ],
+  "modeldev_admission_objects": [],
+  "mutations": false
+}

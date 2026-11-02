@@ -1,32 +1,52 @@
-The renderer emits a native TrainJob safety policy for one immutable namespace
-scope. Supply the actual namespace name/UID and installed CPU/GPU image
-digests. It does not approve executions or replace the production stored
-Snapshot/Runtime/Pod verifier. There is no per-execution ConfigMap or resource
-combination list.
+# ModelDev native protection
 
-Create the policy only after server dry-run; require its observed generation
-and zero CEL type warnings, then create/read back its Deny binding. Validate
-native admission using real TokenRequest credentials, never impersonation.
-Only then exclude this namespace's immutable `kubernetes.io/metadata.name`
-from the original legacy TrainJob binding using UID/resourceVersion JSON Patch
-tests. Preserve every original selector, parameter reference and policy byte.
+`render.py` emits the fixed `modeldev-bootstrap-v1`,
+`modeldev-environment-config-v1`, and `modeldev-workload-guard-v1` policies,
+their `-binding` bindings, and the finite platform bootstrap roles. It performs
+no cluster operation and accepts no tenant list or Namespace UID label.
 
-Before switching, save the complete original binding and native policy facts.
-Recovery restores the saved legacy namespace selector with current UID/RV
-tests before removing the task policy/binding; it must never expose an
-unprotected interval. Retain the task policy while active task workloads
-still depend on it.
+Input has exactly `principals`, `node_principals`, `kfp_ca_key`,
+`network_metadata_writer`, `network_status_writer`, `gc_finalizer_writer`,
+`scheduler_writer`, and `device_plugin_writer`.
+The principals map contains the verified control, webhook, kfp_api, argo,
+trainer, jobset, job_controller, persistence_agent, and maintenance usernames.
+Node usernames are exact `system:node:NAME` identities; the renderer adds no
+prefix or group exemption. `kfp_ca_key` is the actual CABUNDLE_KEY_NAME.
+Existing KCN, Multus, generic garbage collector, Volcano scheduler and device
+plugin, the explicit node usernames, Kubeflow Trainer and JobSet controllers are
+trusted platform actors. Their requests skip the workload guard as a whole via
+one matchCondition. There are no annotation, status-field, finalizer,
+ownerReference or ServiceAccount UID restrictions for those actors. The native
+input retains live UID receipts as deployment evidence, not admission locks.
+Persistence-agent UPDATE of status or metadata (unchanged spec) also skips the
+guard. Other actors retain the existing business checks.
 
-Native CEL `namespaceObject.metadata` does not expose UID. Deployment verifies
-the actual namespace UID before and after installing the controlled
-`modeldev.ani.io/namespace-uid` label; the policy requires that marker as a
-validation, never a match condition that could skip admission. The marker
-defines scope. It cannot independently defeat an administrator copying an old
-label onto a replacement namespace. Physical UID binding remains enforced by
-the original stored Snapshot and Runtime/Pod verifier's independent namespace
-GET; those checks and their replacement-UID negative cases remain required.
+This trust scope follows the user's explicit 2026-11-01 instructions and replaces
+the earlier per-field exceptions. It grants no RBAC permission or new identity.
+Argo, KFP API and Kubernetes Job controller CREATE still use the business Pod
+webhook, including its required configuration and retention injection.
 
-The formal owner may stop its original spec with `suspend=true`; it cannot
-resume or change it. Trainer status/finalizer maintenance preserves spec and
-identity metadata. Garbage collection may only remove the original `orphan`
-finalizer after deletion. None of these branches permits a new workload.
+Install and verify the native policies before granting bootstrap CREATE/bind.
+Do not replace an old running environment's policies before its ordered close,
+resource cleanup, and original GPU release ACK have completed. Namespace
+ownership is read through the two network labels; live UID is verified by the
+ModelDev owner and webhook, because native namespaceObject has no UID.
+
+`modeldev-step-v1` includes namespaced `pods get`: the pinned KFP driver reads
+its own Pod when publishing its result, and the managed step CLI reads its own
+Pod during bootstrap. This adds no Pod list/watch/write, exec, TokenRequest or
+cluster-wide Namespace access. Each environment's existing RoleBinding limits
+the ClusterRole to that tenant Namespace. This is the actual step call required
+by `contracts/kfp-rbac.md` §4; the original spec §10.3 verb list omitted this read.
+
+The workload guard protects original templates/parameters and Pod specs, permits
+the exact KFP API terminate deadline of zero, and preserves status updates by
+verified controllers/nodes. Legacy token Secrets for all three reserved SAs are
+denied in every Namespace, including annotation-removal UPDATE attempts.
+
+`native_probe.py` consumes explicit audited CREATE/UPDATE cases and an existing
+real principal kubeconfig. It verifies the username and complete original groups
+and only runs server dry-run. It issues no TokenRequest and uses no impersonation.
+An RBAC denial cannot satisfy a ModelDev admission-denial assertion. Rendering
+and component tests do not establish API-server enforcement or LIVE acceptance.
+

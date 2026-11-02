@@ -1,0 +1,293 @@
+Real PostgreSQL test dependency ready; restricted runtime role; loopback only.
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+test "$(/home/chabking/tenantenv-20261101/modeldev-api-release/.tools/bin/buf --version)" = "1.60.0"
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+test "$(go version -m /home/chabking/tenantenv-20261101/modeldev-api-release/.tools/bin/buf | awk '$1 == "mod" {print $2 "@" $3; exit}')" = "github.com/bufbuild/buf@v1.60.0"
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+test "$(/home/chabking/tenantenv-20261101/modeldev-api-release/.tools/bin/sqlc version)" = "v1.31.1"
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+test "$(go version -m /home/chabking/tenantenv-20261101/modeldev-api-release/.tools/bin/sqlc | awk '$1 == "mod" {print $2 "@" $3; exit}')" = "github.com/sqlc-dev/sqlc@v1.31.1"
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+./scripts/verify-source /home/chabking/tenantenv-20261101/modeldev-api-release/.tools/bin/buf /home/chabking/tenantenv-20261101/modeldev-api-release/.tools/bin/sqlc
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+1cd325e4ed737dc878dba20d1dde1eae8746af66876ee9cc6067a6f2aa560782  intent-input-v3.json
+b337b5e1f8025d381086bd4e157b32740746752b54ee457fde2d6f342715f2f0  intent-canonical-v3.json
+2f9c688ca06e67e69a8c4481865dbc4dae6d2e2b6fe673caf69d84490c036a35  snapshot-v3.json
+b1fa30faa90fcf78b183f43112b190cbadf16c56cd1f85d7e823fb14b0f2389b  vectors.go
+go mod tidy -diff
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+go test -count=1 ./...
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1	[no test files]
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1	[no test files]
+--- FAIL: TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak (0.53s)
+    --- FAIL: TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak/missing_facts_file (0.17s)
+        admission_materials_test.go:95: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        admission_materials_test.go:95: ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed INVALID_MANAGED_ADMISSION_FACTS
+    --- FAIL: TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak/wrong_facts_byte_pin (0.20s)
+        admission_materials_test.go:95: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        admission_materials_test.go:95: ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed INVALID_MANAGED_ADMISSION_FACTS
+    --- FAIL: TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak/unavailable_catalogue_directory (0.17s)
+        admission_materials_test.go:95: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        admission_materials_test.go:95: ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAdmissionMaterialsEmptyDirectoryStartsButCannotPrepareImplementation (0.16s)
+    admission_materials_test.go:134: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_materials_test.go:134: ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestConfiguredAdmissionProcessLoadsPrivateConfigAndStopsOnSIGTERM (0.18s)
+    admission_process_test.go:30: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_process_test.go:30: ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestConfiguredAdmissionResolvesPinnedFilesAndDurableReadyInput (0.20s)
+    admission_test.go:42: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_test.go:42: ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestProductionInputQueryUsesCurrentDelegation (0.54s)
+    materials_test.go:18: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    materials_test.go:18: ADMISSION_STARTUP_PREFLIGHT: actual pinned facts load failed INVALID_MANAGED_ADMISSION_FACTS
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-service	30.211s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-step	32.616s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-webhook	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01	0.317s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf	0.114s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz	0.286s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component	15.567s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1	0.021s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/accelerator	0.048s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue	0.152s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/cleanup	2.135s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution	25.393s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/finetuningmodel	0.069s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/imageruntime	0.006s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input	26.542s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp	0.763s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle	88.667s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/modelclient	2.088s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore	7.280s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/pgvalue	0.004s
+--- FAIL: TestPrepareFinalizeFreezeCompleteCandidateWithoutWritesOrSecondReads (0.33s)
+    admission_resolution_test.go:163: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_resolution_test.go:163: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareRPCRejectsAmbiguousReservedAndInconsistentWireFields (0.31s)
+    admission_rpc_boundaries_test.go:47: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:47: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestFinalizeRPCKeepsCandidateHashScopeAndNoReads (0.32s)
+    admission_rpc_boundaries_test.go:62: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:62: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAdmissionRPCUntrustedMetadataAndListenerCapabilityBoundaries (0.30s)
+    admission_rpc_boundaries_test.go:84: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:84: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAdmissionRPCMapsDependencyFailureWithoutUnsafeDetails (0.37s)
+    admission_rpc_boundaries_test.go:120: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:120: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAdmissionRPCCancellationReachesActualFactsRead (0.42s)
+    admission_rpc_boundaries_test.go:158: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:158: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestTwoPhaseRPCPreservesCandidateReadyInputAndFullPlanOverMTLS (0.37s)
+    admission_rpc_test.go:26: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_test.go:26: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming (0.22s)
+    facts_time_test.go:14: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    facts_time_test.go:14: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareFixedMicrosecondTimeAndContextCancellation (0.41s)
+    facts_time_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    facts_time_test.go:55: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay (0.29s)
+    finetuning_vertical_test.go:107: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_vertical_test.go:107: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestFinetuningModelScopeAndCutoffRejectBeforeAccept (0.23s)
+    finetuning_vertical_test.go:152: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_vertical_test.go:152: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestFinetuningImportRejectsUnverifiedCallerAndWrongImplementation (0.26s)
+    finetuning_vertical_test.go:168: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_vertical_test.go:168: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads (1.21s)
+    --- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads/WHOLE_EXCLUSIVE/factor10=false (0.38s)
+        gpu_admission_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        gpu_admission_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+    --- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads/WHOLE_EXCLUSIVE/factor10=true (0.31s)
+        gpu_admission_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        gpu_admission_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+    --- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads/SHARED_FIXED/factor10=false (0.31s)
+        gpu_admission_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        gpu_admission_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+    --- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads/SHARED_FIXED/factor10=true (0.21s)
+        gpu_admission_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        gpu_admission_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareScopesSameInputUUIDByAuthenticatedTenant (0.27s)
+    input_scope_test.go:15: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    input_scope_test.go:15: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareRejectsPersistedNonReadyProofStates (0.33s)
+    input_scope_test.go:54: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    input_scope_test.go:54: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPreparePresenceOriginalIdentityAndFinalizeMismatchBoundaries (0.29s)
+    intent_selection_test.go:10: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    intent_selection_test.go:10: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsRequireAllFiniteTenantImplementationFields (0.26s)
+    managed_facts_boundaries_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsRejectAmbiguousUntypedAndRetiredFields (0.27s)
+    managed_facts_boundaries_test.go:34: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:34: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsPinsExactBytesBoundsSourcesAndRejectsDuplicateKeys (0.28s)
+    managed_facts_boundaries_test.go:70: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:70: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsRejectUnsafeActualFileKindsAndPaths (0.40s)
+    managed_facts_boundaries_test.go:99: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:99: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsUsesExactTenantImplementationKeysAndIndependentCopies (0.40s)
+    managed_facts_boundaries_test.go:131: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:131: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsCancellationReturnsNoPartialReaderFactsOrCandidate (0.23s)
+    managed_facts_boundaries_test.go:161: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:161: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsRejectDifferentGlobalTimingByTenantOrImplementation (0.18s)
+    managed_facts_boundaries_test.go:247: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:247: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareUsesPinnedTenantImplementationFactsAndOwnsCopies (0.37s)
+    managed_facts_test.go:16: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_test.go:16: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAcceptedTimingSurvivesConfigurationRevisionAndOnlyNewCandidateUsesIt (0.30s)
+    timing_configuration_revision_test.go:26: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    timing_configuration_revision_test.go:26: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/resolutiontest	8.647s
+--- FAIL: TestAutomaticComputeCleanupAfterOriginalStopAndDeadline (3.75s)
+    --- FAIL: TestAutomaticComputeCleanupAfterOriginalStopAndDeadline/USER_STOP (3.72s)
+        compute_cleanup_test.go:569: CPU04_DB_PREFLIGHT: migration commit failed; behavior NOT_RUN
+        postgres.go:94: CPU04_DB_CLEANUP: isolated schema cleanup failed
+    --- FAIL: TestAutomaticComputeCleanupAfterOriginalStopAndDeadline/DEADLINE (0.03s)
+        compute_cleanup_test.go:569: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter (0.12s)
+    --- FAIL: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/unobserved-suspend (0.02s)
+        compute_cleanup_test.go:599: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/unreported-suspend (0.01s)
+        compute_cleanup_test.go:599: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stale-suspend-report (0.02s)
+        compute_cleanup_test.go:599: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/changed-suspend-generation (0.01s)
+        compute_cleanup_test.go:599: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/protected-pvc-owner (0.02s)
+        compute_cleanup_test.go:599: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stopped-unknown-writer (0.01s)
+        compute_cleanup_test.go:599: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestAutomaticComputeCleanupRetainsUnobservedSuspendAndStoppedUnknownWriter/stopped-replacement (0.02s)
+        compute_cleanup_test.go:599: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter (0.04s)
+    --- FAIL: TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/replace-at-delete (0.01s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/foreign-finalizer (0.01s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestAutomaticComputeCleanupKeepsReplacementAndUnknownWriter/unknown-writer (0.01s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestAutomaticComputeCleanupRejectsCorruptDurableTargetBeforeFurtherDelete (0.02s)
+    compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestAutomaticComputeCleanupBoundsBlockedAttemptsAndRetainsForeignFinalizer (0.01s)
+    compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestComputeCleanupPreservesConfiguredTrainingObserver (0.03s)
+    --- FAIL: TestComputeCleanupPreservesConfiguredTrainingObserver/configured_owner_capability (0.02s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestComputeCleanupPreservesConfiguredTrainingObserver/configured_owner_refuses_observation (0.01s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery (0.04s)
+    --- FAIL: TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery/ordinary-owner-attempt (0.02s)
+        compute_retained_gc_test.go:18: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestOriginalStoppedPodGCAfterClosePreservesCleanupAndOperatorRecovery/exhausted-original-operator-retry (0.02s)
+        compute_retained_gc_test.go:18: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestPreDeletePodGCCaptureRejectsMissingOriginalEvidence (0.07s)
+    --- FAIL: TestPreDeletePodGCCaptureRejectsMissingOriginalEvidence/missing-log (0.02s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestPreDeletePodGCCaptureRejectsMissingOriginalEvidence/missing-exit (0.01s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestPreDeletePodGCCaptureRejectsMissingOriginalEvidence/missing-controller (0.02s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestPreDeletePodGCCaptureRejectsMissingOriginalEvidence/another-original-pod-log (0.03s)
+        compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestExplicitComputeCleanupRetryPreservesFailedAttemptsAndOriginalScope (0.01s)
+    compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestExplicitComputeCleanupRetryDoesNotAuthorizeReplacementUID (0.01s)
+    compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestExplicitComputeCleanupRetryRequiresClosedUntouchedOriginalReceipt (0.01s)
+    compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestExplicitComputeCleanupRetryDeadlineBlocksFurtherDeletes (0.01s)
+    compute_cleanup_test.go:54: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestAuthenticatedFailureFinalizerDurablyHandsOffCloseWithoutNormalAuthority (0.06s)
+    finalizer_close_handoff_test.go:44: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestCapturedEvictedSandboxPersistsCloseStepCleanupAndComputeGCAcrossReopen (0.03s)
+    owner_sandbox_termination_test.go:241: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestSandboxTerminationRejectsExistingWorkspaceAtCloseWrite (0.06s)
+    owner_sandbox_termination_test.go:287: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestSandboxTerminationRejectsExistingWorkspaceOnCommittedReopen (0.02s)
+    step_retention_test.go:53: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestOwnerNativeTerminateUncreatedInitPersistsThroughIndependentDatabaseAndCleanup (0.02s)
+    owner_termination_test.go:326: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestRunningTrainingTailPersistsThroughStopKubeletLossAndGC (0.01s)
+    running_log_retention_test.go:16: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestStepExitCleanupHTTPSLostPatchResponseResumesFromRealDatabase (0.01s)
+    step_retention_test.go:53: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestStepExitCleanupHTTPSRejectsReplacedCASForeignFinalizerAndNewPVCWriter (0.05s)
+    --- FAIL: TestStepExitCleanupHTTPSRejectsReplacedCASForeignFinalizerAndNewPVCWriter/replace-at-cas (0.02s)
+        step_retention_test.go:53: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestStepExitCleanupHTTPSRejectsReplacedCASForeignFinalizerAndNewPVCWriter/foreign-finalizer (0.01s)
+        step_retention_test.go:53: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+    --- FAIL: TestStepExitCleanupHTTPSRejectsReplacedCASForeignFinalizerAndNewPVCWriter/new-pvc-writer (0.02s)
+        step_retention_test.go:53: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestStepExitCleanupHTTPSRetainsInitializationAbortFactsAfterFinalizerRelease (0.01s)
+    step_retention_test.go:53: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestStepExitCleanupHTTPSRejectsChangedAbortAfterLostReleaseReply (0.02s)
+    step_retention_test.go:53: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestFinetuningWorkspaceOwnerProofDoesNotCreateTrainingBudget (0.03s)
+    step_retention_test.go:53: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestStoppedTrainingLogsSurviveOriginalPodGarbageCollection (0.01s)
+    stop_log_retention_test.go:60: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestRetainedTrainingLogRejectsMutationBeforeCleanup (0.02s)
+    stop_log_retention_test.go:84: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+--- FAIL: TestPrepareLauncherFailureBeforeBeginClosesAndReclaimsExactPVC (0.06s)
+    unprepared_workspace_test.go:97: CPU04_DB_PREFLIGHT: migration database connection failed; behavior NOT_RUN
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof	101.537s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity	0.122s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/storagecredentials	0.169s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission	58.997s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	47.583s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer	96.525s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/traininglogs	0.462s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workloadview	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace	20.809s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server	0.956s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/commandtest	9.320s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/modeldevwebhook	2.377s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service	0.925s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture	[no test files]
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/finetuningmodel	0.122s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/imageruntimefixture	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres	0.572s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/acceptance-pipelinepatch	[no test files]
+--- FAIL: TestFiniteCPULoRAMaterialsUseActualSourcesAndOneDefaultDefinition (0.01s)
+    --- FAIL: TestFiniteCPULoRAMaterialsUseActualSourcesAndOneDefaultDefinition/builtin.mlp/cpu (0.01s)
+panic: runtime error: invalid memory address or nil pointer dereference [recovered, repanicked]
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x50 pc=0x913505]
+
+goroutine 22 [running]:
+testing.tRunner.func1.2({0x9ffa20, 0x1020570})
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/testing/testing.go:1974 +0x232
+testing.tRunner.func1()
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/testing/testing.go:1977 +0x349
+panic({0x9ffa20?, 0x1020570?})
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/runtime/panic.go:860 +0x13a
+github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/modeldev-execution-materials.TestFiniteCPULoRAMaterialsUseActualSourcesAndOneDefaultDefinition.func1(0x381f4618cd88)
+	/home/chabking/tenantenv-20261101/modeldev-api-release/scripts/modeldev-execution-materials/main_test.go:68 +0x865
+testing.tRunner(0x381f4618cd88, 0x381f460b59a0)
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 21
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/testing/testing.go:2101 +0x4c5
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/modeldev-execution-materials	0.020s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/tests/runtime	0.067s
+FAIL
+make: *** [Makefile:105：verify] 错误 1

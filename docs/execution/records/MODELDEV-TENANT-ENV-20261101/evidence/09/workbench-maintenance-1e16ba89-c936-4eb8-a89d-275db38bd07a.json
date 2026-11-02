@@ -1,0 +1,73 @@
+{
+  "status": "SUBMITTED",
+  "selection": {
+    "project": "governance",
+    "branch": "codex/modeldev-create-maintenance",
+    "commit": "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+    "environment": "ani-kcn-full",
+    "harbor": "intranet",
+    "run_verify": true,
+    "request_id": "1e16ba89-c936-4eb8-a89d-275db38bd07a"
+  },
+  "preflight": {
+    "identity": {
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+    },
+    "pause_env": {
+      "source": "unset",
+      "effective": "unset"
+    },
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "target": {
+      "id": "ani-kcn-full",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "namespace": "ani-system",
+      "deployment": "ani-governance",
+      "container": "governance"
+    }
+  },
+  "job": {
+    "id": "8d8b448e1a8846c0ba96bb391d323a7e",
+    "request_id": "1e16ba89-c936-4eb8-a89d-275db38bd07a",
+    "project": "governance",
+    "branch": "codex/modeldev-create-maintenance",
+    "source_commit": "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+    "run_verify": true,
+    "status": "queued",
+    "created_at": "2026-10-31T23:40:01.138246+00:00",
+    "error_present": false,
+    "steps": [
+      {
+        "id": "fetch",
+        "status": "pending"
+      },
+      {
+        "id": "verify",
+        "status": "pending"
+      },
+      {
+        "id": "build",
+        "status": "pending"
+      },
+      {
+        "id": "push",
+        "status": "pending"
+      },
+      {
+        "id": "deploy",
+        "status": "pending"
+      },
+      {
+        "id": "ready",
+        "status": "pending"
+      }
+    ],
+    "recipe_sha256": {},
+    "build": {}
+  }
+}

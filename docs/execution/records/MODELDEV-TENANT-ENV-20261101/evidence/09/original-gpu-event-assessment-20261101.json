@@ -1,0 +1,34 @@
+{
+  "schema": "ani.modeldev.original-release-maintenance-assessment.v1",
+  "recorded_at": "2026-10-31T22:23:34.281988+00:00",
+  "evidence_layer": "source and previous read-only inventory; not a new live ACK",
+  "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+  "original_receipt": {
+    "tenant_id": 2,
+    "receipt_id": "23600748-d80d-5ceb-be35-664a995bb7db",
+    "owner_service": "ani-modeldev-service",
+    "release_event_id": "54c1fb78-da48-4586-990e-333ed8090aef",
+    "payload_hash": "3e63b8ddc427e1228169804c6a6d28c34899318224257119b0c788b522ca7cad",
+    "payload_json": "{\"schema\":\"resource-release-v1\",\"owner_service\":\"ani-modeldev-service\",\"release_event_id\":\"54c1fb78-da48-4586-990e-333ed8090aef\",\"create_operation_id\":\"1bc185ad-0977-4b3f-bb1c-404bc37e94fa\",\"resource_id\":\"eca4d47b-5911-4f0f-8b45-89c1be775925\",\"reason\":\"RESOURCE_RELEASED\"}"
+  },
+  "canonical_payload_sha256_verified": true,
+  "original_modeldev_gpu_scope_anchor": "NULL",
+  "original_modeldev_gpu_outbox": "NULL",
+  "normal_seal_would_create_new_event": true,
+  "normal_deadline_reason": "ABORTED_CLEANED",
+  "required_maintenance_reason": "RESOURCE_RELEASED",
+  "decision": "Do not invoke ordinary SealGPURelease for this retired legacy execution. After all original close and cleanup qualifications, freeze and replay the exact existing four-field event through the existing authenticated owner RPC; record actual ALREADY_APPLIED and full original charge/account invariant in the independent cutover journal before deletion. Do not fabricate an aggregate scope/outbox or ACK.",
+  "live_replay_status": "NOT_RUN",
+  "affected_spec": [
+    "13.3.7",
+    "13.3.8",
+    "ADR0002"
+  ],
+  "sources": {
+    "gov_commit": "45ed49fe91608960cab89797c06dab2705a65740",
+    "gov_rpc": "app/admin/service/internal/server/quota_internal_server.go:332",
+    "gov_ledger": "app/admin/service/internal/data/quota_ledger_repo.go:329",
+    "modeldev_base": "21bf4bd6540d462a61c91b629f26250899583223",
+    "modeldev_adr": "docs/adr/0002-owner-decides-quota-release.md"
+  }
+}

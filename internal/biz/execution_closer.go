@@ -94,14 +94,17 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 	authority, err := runtime.steps.repository.GetRunAuthority(ctx, tenant, execution)
 	if errors.Is(err, ErrExecutionNotFound) {
 		// Early owner recovery intentionally never grants normal step authority.
-		// Its already-committed close and complete exit receipt remain usable
-		// after step Pods disappear; rediscovering that owner would lose liveness.
+		// Its committed close remains usable while step cleanup is incomplete:
+		// rediscovering the owner after its Pods disappear would lose liveness.
 		recorded, readErr := runtime.repository.GetRuntime(ctx, tenant, execution)
 		if readErr != nil && !errors.Is(readErr, ErrExecutionNotFound) {
 			return ManagedRuntimeResult{}, readErr
 		}
 		if readErr == nil && recorded.CloseAuthority != nil {
-			if _, _, proofErr := ComputeCleanupTargets(admitted, *recorded.CloseAuthority, recorded); proofErr == nil {
+			evidence := recorded.CloseEvidence
+			if recorded.ClosedAt != nil && recorded.CloseGeneration > 0 && recorded.CloseReviewReason == "" &&
+				evidence != nil && !evidence.NoDispatch && evidence.OwnerTermination != nil &&
+				evidence.RunID == recorded.CloseAuthority.RunID && evidence.WorkflowUID == recorded.CloseAuthority.WorkflowUID {
 				authority = RunAuthority{RunAuthorityCandidate: *recorded.CloseAuthority, OwnerRevision: recorded.OwnerRevision}
 				err = nil
 			}

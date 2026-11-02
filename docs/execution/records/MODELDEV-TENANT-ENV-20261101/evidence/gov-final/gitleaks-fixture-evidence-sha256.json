@@ -1,0 +1,14 @@
+{
+  "gitleaks-fixture-grouping-source.json": "a86ff3eba08e704102bf7a09788c117151e199fad31f79b9bea3efcf375f7dcb",
+  "gitleaks-fixture-required-audit-receipt.json": "23e419c5b6bd8ed1a160c9041ef2de2fa4500e1454062b78da8328329054ced0",
+  "gitleaks-fixture-required-audit.log": "2240155502066be57e1fc63bdb6ea1d6f98be2eba3c0abf92cc24f31d91b6c31",
+  "gitleaks-fixture-run.py": "c975eb3e718adfaa1b31aa6a54986decd8917797d955dc586f0586da838c8283",
+  "gitleaks-fixture-scanner-identity-receipt.json": "583b0d078440cbc3b4047ce4e7d33d7b4e43fc4426fa6608cce8029bae426e9e",
+  "gitleaks-fixture-scanner-identity.log": "6eaee5cbb888a2efd23c4a94afa424efed74ce4cbdf5418f97b69db6c12543f9",
+  "gitleaks-fixture-scanner-sha256-receipt.json": "65f18f707258e750a8bb43cf3e67ed8a1ded5f8134e70f2e0bac0cfea12d8b28",
+  "gitleaks-fixture-scanner-sha256.log": "ceb2fe3aa3b828e5f880eb0dc14db2406c9f735d483973a70e286ed0f027c4bf",
+  "gitleaks-fixture-target-scan-receipt.json": "b682fdda558a0d32218a5475e6dc0908a176c15d6f2c1f8b806f3cca2bfe8cb9",
+  "gitleaks-fixture-target-scan.log": "b3aada997220dce3c22ad7f161fa4ecada3f48efefd8c58dd7722bd7a366734e",
+  "gitleaks-fixture-target-test-receipt.json": "37dee0f984814789d863fe86f9a11de1fc15834d17f32b523e6e67efa42d3b84",
+  "gitleaks-fixture-target-test.log": "065a3bdca52b7d2a68104b965208e176c326cb6e6aec53eab79d7fb5a725f6a6"
+}

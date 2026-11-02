@@ -1,0 +1,68 @@
+[
+  {
+    "kind": "ClusterRole",
+    "name": "modeldev-kfp-access-v1",
+    "uid": "93bf2900-ced6-4e77-b91e-b0100955e9ba",
+    "sha256": "026597cc2c5da60319ab7ef31c3a6d6a1d3c6eddeb792ff0ff7c3f7ed460f235"
+  },
+  {
+    "kind": "ClusterRole",
+    "name": "modeldev-kfp-api-v1",
+    "uid": "c07e4a4f-aff6-4e44-9422-360fe2e7aeba",
+    "sha256": "2be8c45a54068fa769fb270e58243452ff5c3a0add33b02d9133a9650f6ab49d"
+  },
+  {
+    "kind": "ClusterRole",
+    "name": "modeldev-runtime-v1",
+    "uid": "9d141850-ae2b-4586-afed-cb9ac8c3a45a",
+    "sha256": "cacb98d54bde1bff0cc3742b17222a226fe819ca500fd5631538f4f40a631212"
+  },
+  {
+    "kind": "ClusterRole",
+    "name": "modeldev-step-v1",
+    "uid": "7f81a827-bdfc-4c63-a1fb-2a4dd64a0f08",
+    "sha256": "39d56645802ec5151693f599458562718a64b986c0a0195f95963c7d507f4f50"
+  },
+  {
+    "kind": "ClusterRole",
+    "name": "modeldev-webhook-read-v1",
+    "uid": "26f81d81-9b56-44af-b170-78a09dbc7e3a",
+    "sha256": "538aefe966e0818ceeaacef2eec38d73039e857b8e3c31b34a446e5f89b1eef8"
+  },
+  {
+    "kind": "ValidatingAdmissionPolicy",
+    "name": "modeldev-bootstrap-v1",
+    "uid": "57ccd6cb-882a-47ec-83c0-a6cf2ca2bbbe",
+    "sha256": "b53aa5f81d41114dd72238f2336590ad94399db7f32be619091d6a519a1f87c2"
+  },
+  {
+    "kind": "ValidatingAdmissionPolicy",
+    "name": "modeldev-environment-config-v1",
+    "uid": "0bb85730-57be-40d7-84a5-13862e71d951",
+    "sha256": "bd3cd6e1e91219adb9d6f03271086e7c4292ed44a8d83e5cbde0317c8efb7475"
+  },
+  {
+    "kind": "ValidatingAdmissionPolicy",
+    "name": "modeldev-workload-guard-v1",
+    "uid": "72edb341-581f-4630-b10f-43ac0eeffa13",
+    "sha256": "ac9aad33a5daa90cd38115c4d7b43e125dffa8daba122041315138dc2ff1986e"
+  },
+  {
+    "kind": "ValidatingAdmissionPolicyBinding",
+    "name": "modeldev-bootstrap-v1-binding",
+    "uid": "c85543d2-fe50-4205-8f09-12f9df668ae5",
+    "sha256": "e5fdfeadf332bdbd19988c06bd974cce1633ada6010653cf50714149d1680065"
+  },
+  {
+    "kind": "ValidatingAdmissionPolicyBinding",
+    "name": "modeldev-environment-config-v1-binding",
+    "uid": "160e30ce-bc34-49fc-8527-12499c500e4d",
+    "sha256": "9f3e7a7a930d7131a67f4b22b9cee865e7c469cc73a37e5c58395086c67d2dea"
+  },
+  {
+    "kind": "ValidatingAdmissionPolicyBinding",
+    "name": "modeldev-workload-guard-v1-binding",
+    "uid": "d3e51d93-9d07-4c77-b6c7-3ae744069d3f",
+    "sha256": "737185a8493425ee4a2cd4367c2d7ef35163a4fdb04e7a9e901a6665c9a436dc"
+  }
+]

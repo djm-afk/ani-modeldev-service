@@ -23,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"k8s.io/client-go/dynamic"
 )
 
 var (
@@ -61,6 +62,7 @@ type Client struct {
 	endpoint      string
 	tokens        TokenProvider
 	http          *http.Client
+	identity      dynamic.Interface
 }
 
 func New(config Config, tokens TokenProvider) (*Client, error) {
@@ -109,6 +111,9 @@ func (client *Client) CreateRun(ctx context.Context, input biz.PipelineCreateReq
 	}
 	plan := input.Plan
 	environment := plan.Environment
+	if client.verifyMutationNamespace(ctx, plan, true) != nil {
+		return notSent, ErrNotSent
+	}
 	token, err := client.tokens.BearerToken(ctx, plan.TenantID, environment)
 	if err != nil || len(token) > 16384 || !bearerTokenPattern.MatchString(token) || ctx.Err() != nil {
 		return notSent, ErrNotSent
@@ -121,7 +126,7 @@ func (client *Client) CreateRun(ctx context.Context, input biz.PipelineCreateReq
 			PipelineVersionID: strings.ToLower(plan.PipelineVersionID),
 		},
 		RuntimeConfig: runtimeConfig{
-			Parameters:   map[string]string{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash},
+			Parameters:   map[string]string{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID},
 			PipelineRoot: plan.Owner.PipelineRoot,
 		},
 		ServiceAccount: environment.Identities.KFPStepServiceAccount,

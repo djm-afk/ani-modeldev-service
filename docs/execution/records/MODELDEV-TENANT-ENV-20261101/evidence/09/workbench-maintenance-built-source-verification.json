@@ -1,0 +1,22 @@
+{
+  "observed_at_utc": "2026-11-01T02:02:35.863227+00:00",
+  "read_only": true,
+  "head": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+  "changed_paths": [
+    ".dockerignore",
+    "Dockerfile"
+  ],
+  "source_hashes": {
+    "go.mod": "75a5b61c2236236d7041d392692939fd9cc380808f992fc021fecb87a4a6b8f9",
+    "go.sum": "f8b4d6aa240f18baf91f11f97a462a5ab3c76ba5fa22e31206d27978ae164d6e",
+    "app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go": "c747bad55e3504e7ac835168531f930600db84fb26e3c6472048de8bd7994d45"
+  },
+  "ssh_exit": 0,
+  "untracked_count": 1655,
+  "untracked_paths_sha256": "f0af4b868c295041cc85d456889f42504e4586d7df07e310603dfd9458c60235",
+  "untracked_outside_build_artifacts": [
+    "scripts/build-image.py"
+  ],
+  "tested_source_hashes_match": true,
+  "only_reviewed_recipe_overrides": true
+}

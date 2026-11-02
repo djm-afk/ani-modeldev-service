@@ -1,0 +1,405 @@
+{
+  "schema": "ani.modeldev.tenant-environment.deployment-inputs.v1",
+  "source_baseline": {
+    "modeldev": "21bf4bd6540d462a61c91b629f26250899583223",
+    "governance": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+    "resource": "23e25b33ca02890231cd273ef7246b0fc415476c",
+    "refetched_main": {
+      "modeldev": "21bf4bd6540d462a61c91b629f26250899583223",
+      "governance": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+      "resource": "23e25b33ca02890231cd273ef7246b0fc415476c"
+    },
+    "related_diff_evidence": "evidence/contract-freeze.md"
+  },
+  "api_pins": {
+    "modeldev": "v0.0.0-20261031195825-d807cbdbd5dd",
+    "resource": "v0.0.0-20261031180451-71b3ad7a2a88",
+    "governance_pin_evidence": "evidence/gov-final/formal-module-pin-captured.log; no replace, official immutable module"
+  },
+  "secrets_must_not_be_included": true,
+  "status": "GOAL_AND_CURRENT_MULTI_TENANT_REGRESSION_ACCEPTED",
+  "updated_at": "2026-11-01T17:15:00.577153+00:00",
+  "instructions": "Current target remains kubercloud@100.64.128.12/ani-kcn-full. Final main1df/fe944, platform2d759/runtime5c138 and bundle4a655 unchanged. Mandatory acceptance and new current-version A4 CPU/B5 GPU_SHARED complete flow PASS; both original owner cleanups APPLIED, B5 original24570 fully released/ACK APPLIED. Same single ModelDev process, no tenant array or per-tenant deployment. LIVE10 restored original MWC fullspec/UID; current generation5 is metadata excluded from BootstrapDigest, no pins/spec mutation. Gov Create stays enabled. Exact added STS/observer tools removed; reusable service binaries/OCI retained.",
+  "target": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:32:11.368747+00:00",
+    "evidence": "evidence/10/final-policy-maintenance/gov-unpause-actual.json"
+  },
+  "status_reason": {
+    "status": "PASS",
+    "current_runtime_and_environment_blocker": null,
+    "training_acceptance": "Current A4 CPU and B5 GPU_SHARED SUCCEEDED/PUBLISHED/CLOSED; normal logs/download verified, B Model parent/version READY, original close/cleanup/release complete.",
+    "fresh_ensure_revalidation": "A/B Get404->explicitEnsure/GetREADY same shared process; concurrent busy returns persisted view per source and actual receipts.",
+    "evidence": [
+      "evidence/10/completion-multitenant-regression/result.json",
+      "evidence/10/completion-live03/persisted-view-resolution.json",
+      "evidence/10/completion-admission/result.json",
+      "evidence/10/completion-live11/result.json"
+    ]
+  },
+  "kfp": {
+    "endpoint": "https://ani-kfp-entry.kubeflow.svc:8443",
+    "connection_ref": "modeldev-newenv-kfp-01a15f47",
+    "pipeline_namespace": "ani-system",
+    "audience": "pipelines.kubeflow.org",
+    "projected_token_expiration_seconds": 600,
+    "published_parents": 4,
+    "published_versions": 4,
+    "profiles": [
+      {
+        "id": "modeldev-mlp-cpu",
+        "pipeline_id": "dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+        "version_id": "3df2416f-642a-4c4f-a78c-75c228f9b844",
+        "ir_sha256": "35577aa27932f75c76e2829fb099f7c77924c85f1ce67f3cfde3d2684c246fc7",
+        "material_sha256": "a98d99efbde37e9e9d7a7baa377c641961509f9d3f8742f37ff956f25ae9c504"
+      },
+      {
+        "id": "modeldev-mlp-gpu",
+        "pipeline_id": "9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+        "version_id": "f7c84a7b-33a8-4c64-b3b0-cc5b41d0d25e",
+        "ir_sha256": "fe24eea47f177daaa64c6599056b0b046805414375c04e21c3947e919caeab49",
+        "material_sha256": "bcb9d87ff106391b1d82f8197b5ebb8a9cb1a572fe4422c1aa0b555fc025fbe3"
+      },
+      {
+        "id": "modeldev-sft-lora-cpu",
+        "pipeline_id": "4d042c5b-fc25-4819-9a28-80ca7903c863",
+        "version_id": "7f3e6ae3-66e5-4f1d-aaec-9b64d0165a64",
+        "ir_sha256": "abf50d2acf4611497391824d53a20dec69880ff20c81d429bb808bfe074eb5c5",
+        "material_sha256": "236211c4bad796471b1fc6ffb35fe328d1abc9be93d5929514158b3b0862e84e"
+      },
+      {
+        "id": "modeldev-sft-lora-gpu",
+        "pipeline_id": "a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+        "version_id": "aa58f5c6-c80f-4ba0-b526-6e455ecec9c5",
+        "ir_sha256": "e7bf8f33984cf5274a90e2b0d3dc0c7ef408a9fb5e347c01bca3b5b38b197c31",
+        "material_sha256": "3a8b8fa0ceaebe1b0bed327d156f70b52fafbd1d625eef49087b0998bd98e17f"
+      }
+    ],
+    "evidence": "evidence/10/finetuning-ir-correction-20261101/publisher/final-step67/actual-publication-window.json",
+    "canonical_bundle_status": "SEALED_AND_DEPLOYED"
+  },
+  "principals": {
+    "control_service_account": {
+      "kind": "ServiceAccount",
+      "namespace": "ani-system",
+      "name": "modeldev-control",
+      "uid": "7100a777-b770-4f77-9509-631c8b39f1ec"
+    },
+    "webhook_service_account": {
+      "kind": "ServiceAccount",
+      "namespace": "ani-system",
+      "name": "ani-modeldev-webhook",
+      "uid": "eb28c30d-6d87-435e-a3cf-07e440dd5f93"
+    },
+    "controller_principals": [
+      "system:serviceaccount:kube-system:job-controller",
+      "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+      "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+      "system:serviceaccount:kubeflow:argo",
+      "system:serviceaccount:kubeflow:ml-pipeline",
+      "system:serviceaccount:kubeflow:ml-pipeline-persistenceagent"
+    ],
+    "evidence": "evidence/10/final-material-maintenance/final/current-public-inputs.json"
+  },
+  "platform_materials": {
+    "status": "SEALED_AND_DEPLOYED",
+    "bundle_manifest_sha256": "4a655afda6f4d1b6b798f30359c7ccfd0ce4271836b3bbba7f187b02c3f011e4",
+    "platform_sha256": "2d75921aa497aca3b603c5f8483e3bfb4825eaee678b404766c45756dee7c4e5",
+    "configmap_names": {
+      "material": "modeldev-materials-4a655afda6f4",
+      "platform": "modeldev-platform-2d75921aa497",
+      "runtime": "modeldev-runtime-5c13854685b2",
+      "webhook": "ani-modeldev-webhook-d772c9002431"
+    },
+    "bundle_directory": "evidence/10/finetuning-ir-correction-20261101/final/materials/sealed",
+    "seal_evidence": "evidence/10/finetuning-ir-correction-20261101/final/materials/seal-receipt.json",
+    "image_catalog_actual": {
+      "cpu": {
+        "image_id": "img_3af6f494c02c493dbbdff11099290d72",
+        "version": 1,
+        "digest": "sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+        "owner_scope": "platform",
+        "repository": "ani-modeldev-training-cpu",
+        "source_reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+        "purposes": [
+          "finetuning",
+          "training"
+        ],
+        "accelerator": "none",
+        "platforms": [
+          {
+            "OS": "linux",
+            "Variant": "",
+            "Architecture": "amd64"
+          }
+        ],
+        "row_sha256": "b2ac06a372a730e4b8749a5e24eb510362e503133e934439b383e76dc494b680"
+      },
+      "gpu": {
+        "image_id": "img_4e77202d4e3c49daac15d995366f2e8b",
+        "version": 1,
+        "digest": "sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+        "owner_scope": "platform",
+        "repository": "ani-modeldev-training-gpu",
+        "source_reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+        "purposes": [
+          "finetuning",
+          "training"
+        ],
+        "accelerator": "nvidia",
+        "platforms": [
+          {
+            "OS": "linux",
+            "Variant": "",
+            "Architecture": "amd64"
+          }
+        ],
+        "row_sha256": "97a4c3db6be2a292d0a376962997f49031724dc9a5eb24c9b282af616e3af042"
+      }
+    },
+    "evidence": "evidence/10/final-policy-maintenance/final-config-switch-actual.json"
+  },
+  "storage": {
+    "artifact_endpoint": "https://ani-rustfs-svc.ani-platform.svc.cluster.local:9000",
+    "artifact_region": "us-east-1",
+    "artifact_bucket": "ani-md-tenantenv-kfp-20261101",
+    "artifact_bucket_isolation_evidence_sha256": "e228c2d430a012e8807186b3b9465c201108317800b3cbf69d5445203888ca1e",
+    "input_scope": {
+      "bucket": "ani-md-v21-input-01a15f47",
+      "credential_reference": "modeldev:newenv-owner-01a15f47",
+      "storage_connection_id": "modeldev-newenv-rustfs-20261022"
+    },
+    "model_scope": {
+      "bucket": "ani-models-v21-01a15f47",
+      "credential_reference": "modeldev:newenv-owner-01a15f47",
+      "storage_connection_id": "modeldev-newenv-rustfs-20261022"
+    },
+    "publication_scope": {
+      "bucket": "ani-md-v21-output-01a15f47",
+      "credential_reference": "modeldev:newenv-owner-01a15f47",
+      "storage_connection_id": "modeldev-newenv-rustfs-20261022"
+    },
+    "credential_values_included": false,
+    "same_owner_dynamic_policy_evidence": "evidence/10/storage-issuer-policy-fix/"
+  },
+  "namespace_samples": {
+    "status": "ACTUAL_A_B_READY_STANDARD_NAMESPACE_UIDS_PRESERVED",
+    "A": {
+      "environment_id": "fa7f113c-58c1-4692-a9e2-e9687e8dd162",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "namespace_name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+      "state": "READY",
+      "phase": "COMPLETE",
+      "reason_code": "",
+      "retryable": false,
+      "retry_after_seconds": 0,
+      "binding_digest": "08232bdc365360ff601fbce828aaf510519dee0848e2d1487018a37f0021c893",
+      "experiment_id": "e8308780-256f-43b8-88c8-a88c044d1c56",
+      "updated_at": "2026-11-01T16:31:44.930660Z",
+      "last_verified_at": "2026-11-01T16:31:44.930021Z"
+    },
+    "B": {
+      "environment_id": "0c3f466c-2455-4a41-9a47-4581d303e789",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "namespace_name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "namespace_uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347",
+      "state": "READY",
+      "phase": "COMPLETE",
+      "reason_code": "",
+      "retryable": false,
+      "retry_after_seconds": 0,
+      "binding_digest": "9ca0d8783334e88cc05a2639875bae926e90014a6d358b0a26aa6d9d04843005",
+      "experiment_id": "5c97a534-b971-4ee2-8597-7d4b8ca1cd23",
+      "updated_at": "2026-11-01T16:31:51.382068Z",
+      "last_verified_at": "2026-11-01T16:31:51.381259Z"
+    },
+    "evidence": "evidence/10/final-policy-maintenance/new-A-B-Ensure-actual.json"
+  },
+  "policies": {
+    "installed_native_objects": 19,
+    "actual_bootstrap_references": 12,
+    "workload_guard_generation": 10,
+    "global_mwc_created": true,
+    "step_role_pods_get_installed": true,
+    "existing_role_uid": "7f81a827-bdfc-4c63-a1fb-2a4dd64a0f08",
+    "step_role_actual_evidence": "evidence/10/final-material-maintenance/step-role-pods-get-actual.json",
+    "sealed_platform_workload_guard_generation": 10,
+    "mutating_webhook_generation": 3,
+    "sealed_bootstrap_refs": [
+      {
+        "kind": "ClusterRole",
+        "name": "modeldev-kfp-access-v1",
+        "sha256": "026597cc2c5da60319ab7ef31c3a6d6a1d3c6eddeb792ff0ff7c3f7ed460f235",
+        "uid": "93bf2900-ced6-4e77-b91e-b0100955e9ba"
+      },
+      {
+        "kind": "ClusterRole",
+        "name": "modeldev-kfp-api-v1",
+        "sha256": "2be8c45a54068fa769fb270e58243452ff5c3a0add33b02d9133a9650f6ab49d",
+        "uid": "c07e4a4f-aff6-4e44-9422-360fe2e7aeba"
+      },
+      {
+        "kind": "ClusterRole",
+        "name": "modeldev-runtime-v1",
+        "sha256": "cacb98d54bde1bff0cc3742b17222a226fe819ca500fd5631538f4f40a631212",
+        "uid": "9d141850-ae2b-4586-afed-cb9ac8c3a45a"
+      },
+      {
+        "kind": "ClusterRole",
+        "name": "modeldev-step-v1",
+        "sha256": "12b9e74a7c21a096260f243361eef9f8b87888a012f920cd53aa51839b66aa4e",
+        "uid": "7f81a827-bdfc-4c63-a1fb-2a4dd64a0f08"
+      },
+      {
+        "kind": "ClusterRole",
+        "name": "modeldev-webhook-read-v1",
+        "sha256": "538aefe966e0818ceeaacef2eec38d73039e857b8e3c31b34a446e5f89b1eef8",
+        "uid": "26f81d81-9b56-44af-b170-78a09dbc7e3a"
+      },
+      {
+        "kind": "MutatingWebhookConfiguration",
+        "name": "ani-modeldev-webhook",
+        "sha256": "c794d33fd1236f1d3f15c524a3c14591189174f358bb9ff3bad45763c4bb9d65",
+        "uid": "c452d29d-89be-41af-ac95-eb467e1a89c2"
+      },
+      {
+        "kind": "ValidatingAdmissionPolicy",
+        "name": "modeldev-bootstrap-v1",
+        "sha256": "b53aa5f81d41114dd72238f2336590ad94399db7f32be619091d6a519a1f87c2",
+        "uid": "57ccd6cb-882a-47ec-83c0-a6cf2ca2bbbe"
+      },
+      {
+        "kind": "ValidatingAdmissionPolicy",
+        "name": "modeldev-environment-config-v1",
+        "sha256": "bd3cd6e1e91219adb9d6f03271086e7c4292ed44a8d83e5cbde0317c8efb7475",
+        "uid": "0bb85730-57be-40d7-84a5-13862e71d951"
+      },
+      {
+        "kind": "ValidatingAdmissionPolicy",
+        "name": "modeldev-workload-guard-v1",
+        "sha256": "5ffa26bb4032916f9896d63f015c15ec954bb38655d2dea80548c2b9c2ccd652",
+        "uid": "72edb341-581f-4630-b10f-43ac0eeffa13"
+      },
+      {
+        "kind": "ValidatingAdmissionPolicyBinding",
+        "name": "modeldev-bootstrap-v1-binding",
+        "sha256": "e5fdfeadf332bdbd19988c06bd974cce1633ada6010653cf50714149d1680065",
+        "uid": "c85543d2-fe50-4205-8f09-12f9df668ae5"
+      },
+      {
+        "kind": "ValidatingAdmissionPolicyBinding",
+        "name": "modeldev-environment-config-v1-binding",
+        "sha256": "9f3e7a7a930d7131a67f4b22b9cee865e7c469cc73a37e5c58395086c67d2dea",
+        "uid": "160e30ce-bc34-49fc-8527-12499c500e4d"
+      },
+      {
+        "kind": "ValidatingAdmissionPolicyBinding",
+        "name": "modeldev-workload-guard-v1-binding",
+        "sha256": "737185a8493425ee4a2cd4367c2d7ef35163a4fdb04e7a9e901a6665c9a436dc",
+        "uid": "d3e51d93-9d07-4c77-b6c7-3ae744069d3f"
+      }
+    ],
+    "sealed_bootstrap_evidence": "evidence/10/final-policy-maintenance/actual-twelve-bootstrap-objects.json",
+    "actual_policy_evidence": "evidence/10/trusted-platform-native-final/actual.json",
+    "bootstrap_pin_reconciliation": "COMPLETED_SPEC54_REVOKE_RESEAL_EXPLICIT_ENSURE_NO_FROZEN_SPEC_MUTATION"
+  },
+  "cleanup": {
+    "status": "SPEC54_EXACT_ORIGINAL_ENVIRONMENTS_REVOKED_AFTER_RESOURCE_RELEASE",
+    "owned_access_objects_deleted": 28,
+    "original_KFP_experiment_metadata_deleted": 2,
+    "original_MD_environment_rows_deleted": 2,
+    "old_KFP_experiments_GET404": true,
+    "shared_artifact_IAM_and_bucket_preserved": true,
+    "standard_namespaces_external_inputs_models_and_Res_pull_secrets_preserved": true,
+    "B_release_account_occupied_units_after": 0,
+    "backup_created": false,
+    "evidence": "evidence/10/final-policy-maintenance/revoke-actual.json",
+    "release_evidence": "evidence/10/resumed-mainflow/b4-original-close-and-release-final-1793549008812487147.json",
+    "superseded_new10_cleanup_evidence": "evidence/new10-manual-cleanup/cleanup-complete.json",
+    "original_completed_KFP_runs_normal_deleted": 5
+  },
+  "delivered_builds": {
+    "modeldev": {
+      "commit": "1dfd6941e5780eca0d55dc4e5fbbd2f58e0710ab",
+      "tree": "8f15d37c37ab77c64dd1e7643f3b00c88981ed74",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+      "evidence": "evidence/10/main-verify-time-1dfd6941-19240-release/rollout-actual.json"
+    },
+    "resource": {
+      "commit": "67dceef03f01215c294a55f11464e3e3a52cb783",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:67b0751b46c9c8f1d888b0910b12498ea3ab9f7ffd7fea9311d9dcb3d1ecfad2",
+      "evidence": "evidence/09/res-recovery-v3-final-window-actual.json"
+    },
+    "governance": {
+      "commit": "244780ffe6b9a7deb1c3f6f162e474e76a73a566",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:493f472161824989be406f3cdeebd365e10a4e7d3baa469ac06090dbecb68540",
+      "evidence": "evidence/09/final-switch/governance-final-workbench-actual.json"
+    },
+    "step_and_training_images": {
+      "commit": "67b86699cb15e7ecdba5cc30f22c3be45b367726",
+      "tree": "3ffe6a4dcd103eb8ea3d9c6ad37d48898a91b05a",
+      "evidence": "evidence/10/step-67b86699-19240-release/publication.json"
+    },
+    "webhook": {
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4",
+      "image_unchanged": true,
+      "configuration_updated_to_final_bundle": true,
+      "evidence": "evidence/10/final-material-maintenance/final-config-switch-actual.json"
+    },
+    "new_tests_and_make_verify": "NOT_RUN_USER_DIRECTION"
+  },
+  "maintenance_build": {
+    "create_pause_env": "UNSET",
+    "default_create_paused": false,
+    "governance_ready": true,
+    "modeldev_replicas": 1,
+    "same_shared_main_for_A_B": true,
+    "evidence": "evidence/10/final-policy-maintenance/gov-unpause-actual.json",
+    "ensure_process_pod_uid": "6f29950c-625e-4b2f-98a0-bc7309016d7e",
+    "current_ready_pod_uid": "6f29950c-625e-4b2f-98a0-bc7309016d7e",
+    "ensure_process_evidence": "evidence/10/final-policy-maintenance/new-A-B-Ensure-actual.json",
+    "current_ready_evidence": "evidence/10/final-policy-maintenance/final-config-switch-actual.json"
+  },
+  "current_checkpoint": "evidence/10/completion-multitenant-regression/result.json",
+  "current_sources": {
+    "modeldev": {
+      "commit": "1dfd6941e5780eca0d55dc4e5fbbd2f58e0710ab",
+      "tree": "8f15d37c37ab77c64dd1e7643f3b00c88981ed74",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+      "evidence": "evidence/10/main-verify-time-1dfd6941-19240-release/rollout-actual.json",
+      "runtime_config_evidence": "evidence/10/final-policy-maintenance/final-config-switch-actual.json"
+    },
+    "resource": {
+      "commit": "67dceef03f01215c294a55f11464e3e3a52cb783",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:67b0751b46c9c8f1d888b0910b12498ea3ab9f7ffd7fea9311d9dcb3d1ecfad2",
+      "evidence": "evidence/09/res-recovery-v3-final-window-actual.json"
+    },
+    "governance": {
+      "commit": "244780ffe6b9a7deb1c3f6f162e474e76a73a566",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:493f472161824989be406f3cdeebd365e10a4e7d3baa469ac06090dbecb68540",
+      "evidence": "evidence/09/final-switch/governance-final-workbench-actual.json"
+    },
+    "step_and_training_images": {
+      "commit": "67b86699cb15e7ecdba5cc30f22c3be45b367726",
+      "tree": "3ffe6a4dcd103eb8ea3d9c6ad37d48898a91b05a",
+      "evidence": "evidence/10/step-67b86699-19240-release/publication.json"
+    },
+    "admission_renderers": {
+      "commit": "4d6013c5b13cf150268ebbf63544ad16e1672d13",
+      "evidence": "evidence/10/trusted-platform-native-final/actual.json"
+    }
+  },
+  "current_create_enabled_evidence": "evidence/10/final-policy-maintenance/gov-unpause-actual.json",
+  "final_mwc_observation": {
+    "uid": "c452d29d-89be-41af-ac95-eb467e1a89c2",
+    "generation": 5,
+    "original_full_webhooks_restored": true,
+    "evidence": "evidence/10/completion-admission/final-original-restore-public.json"
+  }
+}

@@ -1,0 +1,594 @@
+{
+  "schema": "ani.modeldev.original-owner-live-qualification.v1",
+  "started_at": "2026-11-01T00:48:34.172515+00:00",
+  "read_only": true,
+  "fixed_execution_ids": [
+    "f2168fbf-d7c9-4e96-8cc6-784bb1546083",
+    "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+    "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+    "91e351e7-102e-4807-b0d2-9236c1426da9",
+    "f148135c-640f-47ed-b9b1-4b039d4709d1"
+  ],
+  "canonical_public_contents_retained": false,
+  "cluster_mutations": 0,
+  "native_reader_experiment": "PASS_ORIGINAL_TYPED_ROWS_IN_ISOLATED_REAL_POSTGRES",
+  "sole_ssh_exit": 0,
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "ssh_user": "kubercloud",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+  },
+  "readback_private_envelope_sha256": "3c50fa5dbf43a1fae162d39fe691b538cbda1c4be53fdba94f616e5938afb994",
+  "database_observations": {
+    "modeldev": {
+      "database": "ani_modeldev_v21",
+      "database_user": "postgres",
+      "transaction_read_only": "on",
+      "observed_at": "2026-11-01T00:48:34.166545+00:00"
+    },
+    "governance": {
+      "database": "ani_governance",
+      "database_user": "postgres",
+      "transaction_read_only": "on",
+      "observed_at": "2026-11-01T00:48:34.33004+00:00"
+    }
+  },
+  "modeldev_table_counts": {
+    "modeldev_executions": 1,
+    "modeldev_execution_identities": 1,
+    "modeldev_execution_runtimes": 1,
+    "modeldev_pipeline_dispatches": 1,
+    "modeldev_pipeline_confirmed_runs": 1,
+    "modeldev_run_authorities": 1,
+    "modeldev_close_intents": 0,
+    "modeldev_execution_cleanup_audits": 0
+  },
+  "modeldev_executions": [
+    {
+      "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "execution_id": "f2168fbf-d7c9-4e96-8cc6-784bb1546083",
+      "operation_id": "49a62211-703b-4adf-abae-70cf2af78e7e",
+      "spec_hash": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+      "intent_hash": "32e027af306165aca3b6a2ded52d6f7748c56118c16e87cb7302a51c69f7bdd8",
+      "intent": {
+        "sha256": "32e027af306165aca3b6a2ded52d6f7748c56118c16e87cb7302a51c69f7bdd8",
+        "bytes": 320,
+        "schema": "ani.modeldev.intent.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_preset_id",
+          "dataset_version_id",
+          "implementation_id",
+          "kind",
+          "name",
+          "parameters",
+          "schema"
+        ],
+        "training_image_present": false,
+        "runtime_plan_present": false
+      },
+      "snapshot": {
+        "sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+        "bytes": 10039,
+        "schema": "ani.modeldev.execution-spec.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_origin",
+          "deadline_at",
+          "delivery_mode",
+          "environment",
+          "gpu",
+          "identity_ref",
+          "implementation",
+          "input",
+          "kind",
+          "limits",
+          "output_contract",
+          "program",
+          "publication_scope",
+          "resources",
+          "runtime_plan",
+          "schema_version",
+          "timing",
+          "training_image",
+          "workspace"
+        ],
+        "training_image_present": true,
+        "runtime_plan_present": true
+      }
+    }
+  ],
+  "governance_acceptances": [
+    {
+      "id": 55,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "13bd316b-0b85-4c8e-a005-698eb9ffdd5e",
+      "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+      "execution_spec_hash": "cb9831ca80e7df95cf1ca3746db4ff53b623b51671efcf34230275235e0c1690",
+      "intent_hash": "451f319fadcf72f4be5641971f8c930d7fedab27c4af70f529e801e8844cf0ce",
+      "dispatch_state": "UNKNOWN",
+      "retry_blocked": true,
+      "last_error_code": "INVALID_COMMAND",
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "close_retry_blocked": false,
+      "close_last_error_code": null,
+      "intent": {
+        "sha256": "451f319fadcf72f4be5641971f8c930d7fedab27c4af70f529e801e8844cf0ce",
+        "bytes": 254,
+        "schema": "ani.modeldev.intent.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_preset_id",
+          "dataset_version_id",
+          "implementation_id",
+          "kind",
+          "name",
+          "parameters",
+          "schema"
+        ],
+        "training_image_present": false,
+        "runtime_plan_present": false
+      },
+      "snapshot": {
+        "sha256": "cb9831ca80e7df95cf1ca3746db4ff53b623b51671efcf34230275235e0c1690",
+        "bytes": 8210,
+        "schema": "ani.modeldev.execution-spec.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_origin",
+          "deadline_at",
+          "delivery_mode",
+          "environment",
+          "identity_ref",
+          "implementation",
+          "input",
+          "kind",
+          "limits",
+          "output_contract",
+          "program",
+          "publication_scope",
+          "resources",
+          "runtime_plan",
+          "schema_version",
+          "timing",
+          "training_image",
+          "workspace"
+        ],
+        "training_image_present": true,
+        "runtime_plan_present": true
+      }
+    },
+    {
+      "id": 59,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "ff5fc1f4-d9a8-4c6a-8c47-5b1d4ef06f05",
+      "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+      "execution_spec_hash": "e75a332cef7521f278df8fc78df0b3f869d8499f96d188fd3b8a915fe02ec829",
+      "intent_hash": "732ea6ba966201699f3ad707f50dbb9151bcf568c23d856beeb6902f3166eb6f",
+      "dispatch_state": "UNKNOWN",
+      "retry_blocked": true,
+      "last_error_code": "INVALID_COMMAND",
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "close_retry_blocked": false,
+      "close_last_error_code": null,
+      "intent": {
+        "sha256": "732ea6ba966201699f3ad707f50dbb9151bcf568c23d856beeb6902f3166eb6f",
+        "bytes": 254,
+        "schema": "ani.modeldev.intent.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_preset_id",
+          "dataset_version_id",
+          "implementation_id",
+          "kind",
+          "name",
+          "parameters",
+          "schema"
+        ],
+        "training_image_present": false,
+        "runtime_plan_present": false
+      },
+      "snapshot": {
+        "sha256": "e75a332cef7521f278df8fc78df0b3f869d8499f96d188fd3b8a915fe02ec829",
+        "bytes": 8210,
+        "schema": "ani.modeldev.execution-spec.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_origin",
+          "deadline_at",
+          "delivery_mode",
+          "environment",
+          "identity_ref",
+          "implementation",
+          "input",
+          "kind",
+          "limits",
+          "output_contract",
+          "program",
+          "publication_scope",
+          "resources",
+          "runtime_plan",
+          "schema_version",
+          "timing",
+          "training_image",
+          "workspace"
+        ],
+        "training_image_present": true,
+        "runtime_plan_present": true
+      }
+    },
+    {
+      "id": 60,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "25b88cf7-bccb-4fac-8c9a-6b3ff91477ee",
+      "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+      "execution_spec_hash": "85fa8793e5ff44c8c611316129f344a36124e027f03cc71bf797d89fa1d40a45",
+      "intent_hash": "d0f78b8d1ef87c029313b06b0c0d193bddb3b968198744e05d37ed79d63e47c7",
+      "dispatch_state": "UNKNOWN",
+      "retry_blocked": true,
+      "last_error_code": "INVALID_COMMAND",
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "close_retry_blocked": false,
+      "close_last_error_code": null,
+      "intent": {
+        "sha256": "d0f78b8d1ef87c029313b06b0c0d193bddb3b968198744e05d37ed79d63e47c7",
+        "bytes": 255,
+        "schema": "ani.modeldev.intent.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_preset_id",
+          "dataset_version_id",
+          "implementation_id",
+          "kind",
+          "name",
+          "parameters",
+          "schema"
+        ],
+        "training_image_present": false,
+        "runtime_plan_present": false
+      },
+      "snapshot": {
+        "sha256": "85fa8793e5ff44c8c611316129f344a36124e027f03cc71bf797d89fa1d40a45",
+        "bytes": 8207,
+        "schema": "ani.modeldev.execution-spec.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_origin",
+          "deadline_at",
+          "delivery_mode",
+          "environment",
+          "identity_ref",
+          "implementation",
+          "input",
+          "kind",
+          "limits",
+          "output_contract",
+          "program",
+          "publication_scope",
+          "resources",
+          "runtime_plan",
+          "schema_version",
+          "timing",
+          "training_image",
+          "workspace"
+        ],
+        "training_image_present": true,
+        "runtime_plan_present": true
+      }
+    },
+    {
+      "id": 57,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "cd2ee5e3-e4fb-4515-99f8-33b3da892a8f",
+      "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+      "execution_spec_hash": "9883ac49d909b2809e78002db7d47d564caa88f84bd29ba14d6248a34e8bb096",
+      "intent_hash": "fda56fe14be954c582addb294805dc0c0afe639c085defdd45aa4428dcc621f0",
+      "dispatch_state": "UNKNOWN",
+      "retry_blocked": true,
+      "last_error_code": "INVALID_COMMAND",
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "close_retry_blocked": false,
+      "close_last_error_code": null,
+      "intent": {
+        "sha256": "fda56fe14be954c582addb294805dc0c0afe639c085defdd45aa4428dcc621f0",
+        "bytes": 254,
+        "schema": "ani.modeldev.intent.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_preset_id",
+          "dataset_version_id",
+          "implementation_id",
+          "kind",
+          "name",
+          "parameters",
+          "schema"
+        ],
+        "training_image_present": false,
+        "runtime_plan_present": false
+      },
+      "snapshot": {
+        "sha256": "9883ac49d909b2809e78002db7d47d564caa88f84bd29ba14d6248a34e8bb096",
+        "bytes": 8210,
+        "schema": "ani.modeldev.execution-spec.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_origin",
+          "deadline_at",
+          "delivery_mode",
+          "environment",
+          "identity_ref",
+          "implementation",
+          "input",
+          "kind",
+          "limits",
+          "output_contract",
+          "program",
+          "publication_scope",
+          "resources",
+          "runtime_plan",
+          "schema_version",
+          "timing",
+          "training_image",
+          "workspace"
+        ],
+        "training_image_present": true,
+        "runtime_plan_present": true
+      }
+    },
+    {
+      "id": 74,
+      "tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "operation_id": "49a62211-703b-4adf-abae-70cf2af78e7e",
+      "execution_id": "f2168fbf-d7c9-4e96-8cc6-784bb1546083",
+      "execution_spec_hash": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+      "intent_hash": "32e027af306165aca3b6a2ded52d6f7748c56118c16e87cb7302a51c69f7bdd8",
+      "dispatch_state": "ACKED",
+      "retry_blocked": false,
+      "last_error_code": null,
+      "stop_intent_generation": 0,
+      "close_dispatch_state": "IDLE",
+      "close_retry_blocked": false,
+      "close_last_error_code": null,
+      "intent": {
+        "sha256": "32e027af306165aca3b6a2ded52d6f7748c56118c16e87cb7302a51c69f7bdd8",
+        "bytes": 320,
+        "schema": "ani.modeldev.intent.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_preset_id",
+          "dataset_version_id",
+          "implementation_id",
+          "kind",
+          "name",
+          "parameters",
+          "schema"
+        ],
+        "training_image_present": false,
+        "runtime_plan_present": false
+      },
+      "snapshot": {
+        "sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+        "bytes": 10039,
+        "schema": "ani.modeldev.execution-spec.v3",
+        "kind": "GENERAL_TRAINING",
+        "top_level_fields": [
+          "compute_origin",
+          "deadline_at",
+          "delivery_mode",
+          "environment",
+          "gpu",
+          "identity_ref",
+          "implementation",
+          "input",
+          "kind",
+          "limits",
+          "output_contract",
+          "program",
+          "publication_scope",
+          "resources",
+          "runtime_plan",
+          "schema_version",
+          "timing",
+          "training_image",
+          "workspace"
+        ],
+        "training_image_present": true,
+        "runtime_plan_present": true
+      }
+    }
+  ],
+  "fedora_private_input_transfer_exit": 0,
+  "fedora_private_input": "/home/chabking/tenantenv-20261101/owner-qualification-private-20261101T004834.json",
+  "result": "QUALIFIED_CANONICAL_CODEC_CONFLICT_AND_NATIVE_OWNER_READER_PASS",
+  "completed_at": "2026-11-01T00:48:37.127922+00:00",
+  "reader_source_match": {
+    "Ref": "ae42fb08f5a091ad8bdaac9418dc7925bf993532",
+    "CheckedProductionReaderFiles": 121,
+    "Differences": [],
+    "AllMatched": true
+  },
+  "codec_c99": {
+    "MD:f2168fbf-d7c9-4e96-8cc6-784bb1546083": {
+      "canonical_byte_equal": false,
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "FAIL",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+      "strict_shape_reason": "json: unknown field \"training_image\"",
+      "strict_snapshot_json_shape": "FAIL"
+    },
+    "GOV:27cf73a3-4107-4c07-86f7-862ce9fb413d": {
+      "canonical_byte_equal": false,
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "FAIL",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "cb9831ca80e7df95cf1ca3746db4ff53b623b51671efcf34230275235e0c1690",
+      "strict_shape_reason": "json: unknown field \"training_image\"",
+      "strict_snapshot_json_shape": "FAIL"
+    },
+    "GOV:91e351e7-102e-4807-b0d2-9236c1426da9": {
+      "canonical_byte_equal": false,
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "FAIL",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "e75a332cef7521f278df8fc78df0b3f869d8499f96d188fd3b8a915fe02ec829",
+      "strict_shape_reason": "json: unknown field \"training_image\"",
+      "strict_snapshot_json_shape": "FAIL"
+    },
+    "GOV:f148135c-640f-47ed-b9b1-4b039d4709d1": {
+      "canonical_byte_equal": false,
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "FAIL",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "85fa8793e5ff44c8c611316129f344a36124e027f03cc71bf797d89fa1d40a45",
+      "strict_shape_reason": "json: unknown field \"training_image\"",
+      "strict_snapshot_json_shape": "FAIL"
+    },
+    "GOV:c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9": {
+      "canonical_byte_equal": false,
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "FAIL",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "9883ac49d909b2809e78002db7d47d564caa88f84bd29ba14d6248a34e8bb096",
+      "strict_shape_reason": "json: unknown field \"training_image\"",
+      "strict_snapshot_json_shape": "FAIL"
+    },
+    "GOV:f2168fbf-d7c9-4e96-8cc6-784bb1546083": {
+      "canonical_byte_equal": false,
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "FAIL",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+      "strict_shape_reason": "json: unknown field \"training_image\"",
+      "strict_snapshot_json_shape": "FAIL"
+    }
+  },
+  "codec_md21bf": {
+    "MD:f2168fbf-d7c9-4e96-8cc6-784bb1546083": {
+      "canonical_byte_equal": true,
+      "envelope_exact_bytes_equal": true,
+      "native_admission_envelope": "PASS",
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "PASS",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+      "strict_snapshot_json_shape": "PASS"
+    },
+    "GOV:27cf73a3-4107-4c07-86f7-862ce9fb413d": {
+      "canonical_byte_equal": true,
+      "envelope_exact_bytes_equal": true,
+      "native_admission_envelope": "PASS",
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "PASS",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "cb9831ca80e7df95cf1ca3746db4ff53b623b51671efcf34230275235e0c1690",
+      "strict_snapshot_json_shape": "PASS"
+    },
+    "GOV:91e351e7-102e-4807-b0d2-9236c1426da9": {
+      "canonical_byte_equal": true,
+      "envelope_exact_bytes_equal": true,
+      "native_admission_envelope": "PASS",
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "PASS",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "e75a332cef7521f278df8fc78df0b3f869d8499f96d188fd3b8a915fe02ec829",
+      "strict_snapshot_json_shape": "PASS"
+    },
+    "GOV:f148135c-640f-47ed-b9b1-4b039d4709d1": {
+      "canonical_byte_equal": true,
+      "envelope_exact_bytes_equal": true,
+      "native_admission_envelope": "PASS",
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "PASS",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "85fa8793e5ff44c8c611316129f344a36124e027f03cc71bf797d89fa1d40a45",
+      "strict_snapshot_json_shape": "PASS"
+    },
+    "GOV:c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9": {
+      "canonical_byte_equal": true,
+      "envelope_exact_bytes_equal": true,
+      "native_admission_envelope": "PASS",
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "PASS",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "9883ac49d909b2809e78002db7d47d564caa88f84bd29ba14d6248a34e8bb096",
+      "strict_snapshot_json_shape": "PASS"
+    },
+    "GOV:f2168fbf-d7c9-4e96-8cc6-784bb1546083": {
+      "canonical_byte_equal": true,
+      "envelope_exact_bytes_equal": true,
+      "native_admission_envelope": "PASS",
+      "native_intent_decode": "PASS",
+      "native_snapshot_canonical": "PASS",
+      "native_snapshot_decode": "PASS",
+      "native_snapshot_validate": "PASS",
+      "snapshot_sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+      "strict_snapshot_json_shape": "PASS"
+    }
+  },
+  "f216_native_reader": {
+    "reader_result": "PASS",
+    "first_rejecting_guard": "NONE_OBSERVED_IN_NATIVE_READER",
+    "entrypoints": [
+      "execution.Get",
+      "execution.GetQueryRecord",
+      "lifecycle.ReadInTransaction",
+      "submission.ReadInTransaction",
+      "submission.ReadAuthorityInTransaction"
+    ],
+    "owner_revision": 7,
+    "source_identity": "121 production reader files equal ae42 Git blobs",
+    "does_not_establish_live_BFF_503_repair": true,
+    "setup_failure_preserved": "original-owner-live-qualification.f216-setup-fail.log"
+  },
+  "minimum_correction_candidate": "Old-API maintenance Gov alone may align c99 module pin to exact original MD21bf v3 codec/API; no compatibility/drop/reencode, requires API/MVS and checks before delivery",
+  "private_input_status": {
+    "status": "DELETED",
+    "receipt": "original-owner-live-qualification.private-input-deletion-receipt.json",
+    "receipt_details": {
+      "ObservedAt": "2026-11-01T01:08:45.214162+00:00",
+      "PrivateInputSHA256": "3c50fa5dbf43a1fae162d39fe691b538cbda1c4be53fdba94f616e5938afb994",
+      "PrivateInputMode": "0o600",
+      "CanonicalPublicContentsRetained": false,
+      "PrivateInputAbsent": true,
+      "PrivateDiagnosticSourceRemoved": true
+    }
+  },
+  "qualified_at": "2026-11-01T00:57:32.379899+00:00",
+  "safe_evidence_sha256": {
+    "original-owner-live-qualification.reader-source-expected.json": "84f673c25a624e565946654834fa348f1448868f1809b9ad13b5906591790e29",
+    "original-owner-live-qualification.reader-source-match.json": "913989ccbfa77773d7d582a827d40e4c99f05f308e5006a738d517472da37d54",
+    "original-owner-live-qualification.native-codec-receipt.json": "8f3f5bfba02584ce0f774e098fa4ffcd323a953f80fd5d3b439a0c30ffdb565d",
+    "original-owner-live-qualification.c99-codec.json": "8fd02f1d21a93d026ca1b204c2946b380eedf32354afea58e2ca466cd442d56a",
+    "original-owner-live-qualification.md21bf-codec.json": "18c64363291ff0b70b58d2720ae1d9327300fb2d737c271e14ccbdfa2ba05861",
+    "original-owner-live-qualification.f216-native-reader.log": "c7cde2fb742ddebd2c86cdfb37185a685d54aeca07a4fde45a2eec43727d706f",
+    "original-owner-live-qualification.f216-native-reader-receipt.json": "b13ef4dd75354b5de05e35135a3e2adfb95ebc308a5ef3f99a6eeb56465035f4",
+    "original-owner-live-qualification.f216-setup-fail.log": "4b1cace3c48939332a12a757cf5e85610a0ea05fb1c56112d287500a1a589d64",
+    "original-owner-live-qualification.f216-setup-fail-receipt.json": "ad09a2ddd59282d92c62798046fa7790c52ae43c5d2d6318a4bfefb999b187e6"
+  },
+  "intent_schema_correction": "Explicit private Fedora reread verified ani.modeldev.intent.v3 for every original intent; previous schema:null was extractor using schema_version instead of schema, not a stored-payload defect."
+}

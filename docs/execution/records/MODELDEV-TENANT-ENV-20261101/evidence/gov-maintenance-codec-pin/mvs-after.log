@@ -1,0 +1,16 @@
+go: github.com/go-ole/go-ole@v1.3.0: Get "https://proxy.golang.org/github.com/go-ole/go-ole/@v/v1.3.0.info": EOF
+go: github.com/go-openapi/swag/jsonname@v0.25.5: Get "https://proxy.golang.org/github.com/go-openapi/swag/jsonname/@v/v0.25.5.info": EOF
+go: github.com/go-openapi/swag/jsonutils/fixtures_test@v0.28.0: Get "https://proxy.golang.org/github.com/go-openapi/swag/jsonutils/fixtures_test/@v/v0.28.0.info": EOF
+go: github.com/go-task/slim-sprig@v0.0.0-20230315185526-52ccab3ef572: Get "https://proxy.golang.org/github.com/go-task/slim-sprig/@v/v0.0.0-20230315185526-52ccab3ef572.info": EOF
+go: github.com/hashicorp/go-uuid@v1.0.3: Get "https://proxy.golang.org/github.com/hashicorp/go-uuid/@v/v1.0.3.info": EOF
+go: github.com/hashicorp/golang-lru@v0.5.4: Get "https://proxy.golang.org/github.com/hashicorp/golang-lru/@v/v0.5.4.info": EOF
+go: github.com/jessevdk/go-flags@v1.5.0: Get "https://proxy.golang.org/github.com/jessevdk/go-flags/@v/v1.5.0.info": EOF
+go: github.com/lufia/plan9stats@v0.0.0-20260802145828-341c2f0c90b5: Get "https://proxy.golang.org/github.com/lufia/plan9stats/@v/v0.0.0-20260802145828-341c2f0c90b5.info": EOF
+go: github.com/mattn/go-sqlite3@v1.14.52: Get "https://proxy.golang.org/github.com/mattn/go-sqlite3/@v/v1.14.52.info": EOF
+go: github.com/olekukonko/ts@v0.0.0-20171002115256-78ecb04241c0: Get "https://proxy.golang.org/github.com/olekukonko/ts/@v/v0.0.0-20171002115256-78ecb04241c0.info": EOF
+go: github.com/onsi/ginkgo/v2@v2.11.0: Get "https://proxy.golang.org/github.com/onsi/ginkgo/v2/@v/v2.11.0.info": EOF
+go: github.com/power-devops/perfstat@v0.0.0-20260805114148-88456608a4f6: Get "https://proxy.golang.org/github.com/power-devops/perfstat/@v/v0.0.0-20260805114148-88456608a4f6.info": EOF
+go: github.com/shoenig/go-m1cpu@v0.2.2: Get "https://proxy.golang.org/github.com/shoenig/go-m1cpu/@v/v0.2.2.info": EOF
+go: github.com/shoenig/test@v1.7.0: Get "https://proxy.golang.org/github.com/shoenig/test/@v/v1.7.0.info": EOF
+go: github.com/zclconf/go-cty-debug@v0.0.0-20240509010212-0d6042c53940: Get "https://proxy.golang.org/github.com/zclconf/go-cty-debug/@v/v0.0.0-20240509010212-0d6042c53940.info": EOF
+go: k8s.io/gengo/v2@v2.0.0-20250604051438-85fd79dbfd9f: Get "https://proxy.golang.org/k8s.io/gengo/v2/@v/v2.0.0-20250604051438-85fd79dbfd9f.info": EOF

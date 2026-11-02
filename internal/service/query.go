@@ -115,6 +115,9 @@ func validExecutionNameFilter(value string) bool {
 }
 
 func queryError(err error, requestID string) error {
+	if mapped, ok := admissionEnvironmentError(err, requestID); ok {
+		return mapped
+	}
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return status.FromContextError(err).Err()
 	}

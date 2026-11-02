@@ -11,7 +11,10 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
+	envrepo "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
+	envfixture "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/tenantenvironment"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -20,18 +23,19 @@ import (
 )
 
 type resolutionFixture struct {
-	ctx        context.Context
-	openPool   func() *pgxpool.Pool
-	directory  string
-	material   cpup01.ImplementationMaterial
-	imported   biz.InputImport
-	ready      biz.InputVersion
-	request    biz.PrepareAdmissionInput
-	facts      biz.TenantAdmissionFacts
-	resolver   *biz.AdmissionResolver
-	materials  *countedMaterials
-	inputs     *countedInputs
-	factReader *countedFacts
+	ctx         context.Context
+	openPool    func() *pgxpool.Pool
+	directory   string
+	material    cpup01.ImplementationMaterial
+	imported    biz.InputImport
+	ready       biz.InputVersion
+	request     biz.PrepareAdmissionInput
+	facts       biz.TenantAdmissionFacts
+	resolver    *biz.AdmissionResolver
+	materials   *countedMaterials
+	inputs      *countedInputs
+	factReader  *countedFacts
+	environment *envfixture.Fixture
 }
 type countedMaterials struct {
 	reader biz.AdmissionMaterialReader
@@ -93,10 +97,25 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	identity := snapshot.IdentityRef
 	identity.Actor = "governance:user:42"
 	identity.IntentHash = hash
-	directory := t.TempDir()
-	material := conformance.MaterialV21()
-	writeMaterial(t, directory, material, "cpu")
-	imported := biz.InputImport{Format: "CSV", TenantID: identity.TenantID, RequestID: "12345678-1234-4234-8234-123456789abc", InputVersionID: intent.DatasetVersionID, Actor: identity.Actor, RequestedAt: snapshot.Timing.AcceptedAt.Add(-time.Minute), Scope: cpup01.StorageScope{StorageConnectionID: snapshot.Input.Object.StorageConnectionID, Bucket: snapshot.Input.Object.Bucket, ApprovedPrefix: "fixed/input"}, Object: snapshot.Input.Object}
+	admission := admissionfixture.Bind(t, biz.Admission{TenantID: identity.TenantID, Actor: identity.Actor, OperationID: identity.OperationID, ExecutionID: identity.ExecutionID, Intent: intent, AcceptedAt: snapshot.Timing.AcceptedAt, Snapshot: snapshot})
+	environment := envfixture.NewFixture(t, admission)
+	admission = environment.Ensure(t, openPool(), admission)
+	snapshot = admission.Snapshot
+	directory := environment.MaterialsDirectory
+	materials := catalogue.NewReader(directory)
+	material, err := materials.ReadImplementationMaterial(ctx, intent.ImplementationID, "cpu")
+	if err != nil {
+		t.Fatal("published material preflight", err)
+	}
+	reader, err := admissionfacts.New(envrepo.NewRepository(openPool()), environment.Platform, materials, snapshot.Environment.ClusterID)
+	if err != nil {
+		t.Fatal("dynamic facts preflight", err)
+	}
+	facts, err := reader.ReadAdmissionFacts(ctx, identity.TenantID, intent.ImplementationID)
+	if err != nil {
+		t.Fatal("READY environment preflight", err)
+	}
+	imported := biz.InputImport{Format: "CSV", TenantID: identity.TenantID, RequestID: "12345678-1234-4234-8234-123456789abc", InputVersionID: intent.DatasetVersionID, Actor: identity.Actor, RequestedAt: snapshot.Timing.AcceptedAt.Add(-time.Minute), Scope: facts.InputScope, Object: snapshot.Input.Object}
 	repository := input.New(openPool())
 	if _, err := repository.FreezeImport(ctx, imported); err != nil {
 		t.Fatal("READY preflight freeze failed", err)
@@ -105,12 +124,7 @@ func prepareResolution(t *testing.T) resolutionFixture {
 	if err != nil {
 		t.Fatal("READY preflight proof failed", err)
 	}
-	facts := biz.TenantAdmissionFacts{TenantID: identity.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: imported.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}, TargetPlatform: cpup01.TrainingPlatform{OS: "linux", Architecture: "amd64"}}
-	f := resolutionFixture{ctx: ctx, openPool: openPool, directory: directory, material: material, imported: imported, ready: ready, facts: facts, request: biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: time.Now().UTC().Truncate(time.Microsecond)}}
-	reader, err := admissionfacts.Load(ctx, []admissionfacts.FileSource{writeManagedFactsFixture(t, f)})
-	if err != nil {
-		t.Fatal("facts preflight", err)
-	}
+	f := resolutionFixture{ctx: ctx, openPool: openPool, directory: directory, material: material, imported: imported, ready: ready, facts: facts, environment: environment, request: biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: time.Now().UTC().Truncate(time.Microsecond)}}
 	f.materials = &countedMaterials{reader: catalogue.NewReader(directory)}
 	f.inputs = &countedInputs{reader: input.New(openPool())}
 	f.factReader = &countedFacts{reader: reader}
@@ -159,7 +173,7 @@ func cloneCandidate(t *testing.T, c cpup01.PreparedCandidate) cpup01.PreparedCan
 func rehashRequest(r *biz.PrepareAdmissionInput) {
 	_, r.IdentityRef.IntentHash, _ = cpup01.CanonicalIntent(r.Intent)
 }
-func TestPrepareFinalizeFreezeCompleteCandidateWithoutWritesOrSecondReads(t *testing.T) {
+func TestPrepareFinalizeFreezesInputsAndReverifiesCurrentEnvironmentWithoutWrites(t *testing.T) {
 	f := prepareResolution(t)
 	before, originalHash, _ := cpup01.CanonicalIntent(f.request.Intent)
 	candidate, err := f.resolver.Prepare(f.ctx, f.request)
@@ -169,15 +183,15 @@ func TestPrepareFinalizeFreezeCompleteCandidateWithoutWritesOrSecondReads(t *tes
 	if f.materials.reads != 1 || f.inputs.reads != 1 || f.factReader.reads != 1 || candidate.Snapshot.RuntimePlan.Name != "" {
 		t.Fatal("Prepare did not make exactly one observation")
 	}
-	// All provider/configuration changes after Prepare must be irrelevant.
+	// Finalize freezes material/input/image observations but rechecks the current
+	// published binding and original Namespace/ServiceAccount UIDs.
 	f.materials.err = biz.ErrPersistence
-	f.factReader.err = biz.ErrPersistence
 	resolved, err := f.resolver.Finalize(f.ctx, candidate, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if f.materials.reads != 1 || f.inputs.reads != 1 || f.factReader.reads != 1 {
-		t.Fatal("Finalize read new defaults/facts")
+	if f.materials.reads != 1 || f.inputs.reads != 1 || f.factReader.reads != 2 {
+		t.Fatal("Finalize renewed input/material observations or skipped environment revalidation")
 	}
 	s := resolved.Snapshot
 	if s.RuntimePlan.Name != cpup01.RuntimeName(s.Environment.NamespaceUID, s.IdentityRef.ExecutionID) || s.Timing.StepTimeoutSeconds != 900 || !s.DeadlineAt.Equal(f.request.AcceptedAt.Add(time.Hour)) || len(s.Program.ResolvedParameters) != 4 || s.Input.RowCount != 1027 {

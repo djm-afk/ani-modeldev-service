@@ -20,7 +20,7 @@ import (
 
 func newMainFlowTrainingLogReader(t *testing.T, f *completeFixture) biz.TrainingLogReader {
 	t.Helper()
-	client, err := coreclient.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
+	client, err := coreclient.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", RateLimiter: f.kubeRateLimiter, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
 	if err != nil {
 		t.Fatal(err)
 	}

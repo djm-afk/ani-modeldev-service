@@ -7,6 +7,7 @@ import (
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/cleanup"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -37,6 +38,9 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 	}
 	for _, pod := range state.Observation.Resources {
 		if pod.Kind == "Pod" {
+			if pod.TrainingAdmissionAbortedAt(state.Observation.ObservedAt) {
+				continue
+			}
 			if pod.TrainingLog == nil {
 				return nil, biz.ErrTrainingLogsUnavailable
 			}
@@ -61,6 +65,9 @@ func (verifier *Verifier) CaptureComputeCleanupLogs(ctx context.Context, executi
 // Normal GC may remove an original worker after CLOSED was persisted. Its
 // durable exit and validated original log survive; other facts cannot drift.
 func retainedTerminalPod(execution biz.Execution, state biz.ExecutionRuntime, pod biz.RuntimeResource) bool {
+	if state.Observation != nil && pod.TrainingAdmissionAbortedAt(state.Observation.ObservedAt) {
+		return true
+	}
 	return pod.Kind == "Pod" && pod.APIVersion == "v1" && pod.Terminal && pod.ExitCode != nil && pod.TrainingLog != nil &&
 		pod.TrainingLog.Source.PodUID == pod.UID && pod.TrainingLog.Source.PodName == pod.Name && pod.TrainingLog.Source.Namespace == pod.Namespace &&
 		biz.ValidateRecordedTrainingLogs(biz.QueryRecord{Execution: execution, Runtime: state}, []biz.RecordedTrainingLog{*pod.TrainingLog}) == nil
@@ -101,7 +108,7 @@ func (verifier *Verifier) ObserveComputeCleanupAbsence(ctx context.Context, exec
 	if err != nil {
 		return nil, biz.ErrCleanupUncertain
 	}
-	if !sameObject(namespace, "v1", "Namespace", "", owner.NamespaceName, owner.NamespaceUID) || namespace.GetDeletionTimestamp() != nil {
+	if !sameObject(namespace, "v1", "Namespace", "", owner.NamespaceName, owner.NamespaceUID) || namespace.GetLabels()["network.ani.io/managed-by"] != "ani-network-service" || namespace.GetLabels()["network.ani.io/tenant-id"] != owner.TenantID {
 		return nil, biz.ErrCleanupConflict
 	}
 	if state.Workspace != nil {
@@ -309,8 +316,11 @@ func (verifier *Verifier) verifyComputeCleanupGraph(ctx context.Context, executi
 			}
 		}
 		if ownerUID != target.OwnerUID {
-			if !removalIntent || ownerUID != "" || target.OwnerUID == "" || verifier.computeParentsAbsent(ctx, targets, target) != nil {
+			if !removalIntent || ownerUID != "" || target.OwnerUID == "" {
 				return biz.ErrCleanupConflict
+			}
+			if err := verifier.computeParentsAbsent(ctx, targets, target); err != nil {
+				return err
 			}
 		}
 		if target.Kind == "Pod" {
@@ -399,6 +409,9 @@ func (verifier *Verifier) computeParentsAbsent(ctx context.Context, targets []bi
 			return biz.ErrCleanupConflict
 		}
 		if _, err := verifier.kube.Resource(resource).Namespace(parent.Namespace).Get(ctx, parent.Name, metav1.GetOptions{}); !apierrors.IsNotFound(err) {
+			if err != nil {
+				return biz.ErrCleanupUncertain
+			}
 			return biz.ErrCleanupConflict
 		}
 		child = parent
@@ -407,6 +420,9 @@ func (verifier *Verifier) computeParentsAbsent(ctx context.Context, targets []bi
 }
 
 func recordedTrainingTerminated(pod *unstructured.Unstructured, expected biz.RuntimeResource, now time.Time) bool {
+	if expected.AdmissionAbort != nil {
+		return expected.TrainingAdmissionAbortedAt(now) && sameObject(pod, expected.APIVersion, expected.Kind, expected.Namespace, expected.Name, expected.UID) && reflect.DeepEqual(trainer.ObservePodAdmissionAbort(pod, now), expected.AdmissionAbort)
+	}
 	terminal, _, _, _ := terminatedPod(pod)
 	if !terminal || expected.ExitCode == nil {
 		return false

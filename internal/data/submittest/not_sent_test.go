@@ -3,6 +3,7 @@ package submittest_test
 import (
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -20,6 +21,8 @@ import (
 func TestSubmitProviderDenialPersistsNotSentWithoutRetryAfterReconnect(t *testing.T) {
 	openPool := postgres.Prepare(t)
 	request := dispatchRequest(t)
+	request.Admission = admissionfixture.EnsureEnvironment(t, openPool(), request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	readerPool, writerPool := openPool(), openPool()

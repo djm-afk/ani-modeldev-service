@@ -1,0 +1,228 @@
+{
+  "schema": "ani.modeldev.final-step67-canonical-material-seal.v1",
+  "status": "FOUR_ACTUAL_PUBLISHED_CANONICAL_MATERIALS_AND_IMMUTABLE_BUNDLE_SEALED",
+  "observed_at": "2026-11-01T11:20:22.311129+00:00",
+  "canonical_generation_host": "Fedora",
+  "source_commit": "67b86699cb15e7ecdba5cc30f22c3be45b367726",
+  "source_tree": "3ffe6a4dcd103eb8ea3d9c6ad37d48898a91b05a",
+  "renderer_sha256": "e4fb94044a470de18758e883cda00ef9c056645788508ed50208eddeea954097",
+  "renderer_records": [
+    {
+      "id": "modeldev-mlp-cpu",
+      "command": [
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+        "--facts",
+        "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/facts/modeldev-mlp-cpu.json",
+        "--entry",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/train_mlp.py",
+        "--mapping",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/configuration.py",
+        "--output",
+        "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/canonical-materials/builtin.mlp.cpu.json"
+      ],
+      "exit": 0,
+      "facts_sha256": "d23d8c3c81c04a710227551800fb9881ea41ebf95de8f0b92b88aa89e980d60d",
+      "material_sha256": "a98d99efbde37e9e9d7a7baa377c641961509f9d3f8742f37ff956f25ae9c504",
+      "training_image_id": "img_3af6f494c02c493dbbdff11099290d72",
+      "training_image_version": "1",
+      "training_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:439aa9c7541debe9d6b68ae73eacbb7ad0c08660a961b770fe06f805c3b4515d",
+      "entry_sha256": "4a732add0a4457b21c15df2ae5250ca262e80397e737e8ee62b37375c17f9a2f"
+    },
+    {
+      "id": "modeldev-mlp-gpu",
+      "command": [
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+        "--facts",
+        "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/facts/modeldev-mlp-gpu.json",
+        "--entry",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/train_mlp.py",
+        "--mapping",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/configuration.py",
+        "--output",
+        "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/canonical-materials/builtin.mlp.gpu.json"
+      ],
+      "exit": 0,
+      "facts_sha256": "1a8f8c8af94d63013120a7cb1fb553719aff4194797878202ac369ef646eb957",
+      "material_sha256": "bcb9d87ff106391b1d82f8197b5ebb8a9cb1a572fe4422c1aa0b555fc025fbe3",
+      "training_image_id": "img_4e77202d4e3c49daac15d995366f2e8b",
+      "training_image_version": "1",
+      "training_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:439aa9c7541debe9d6b68ae73eacbb7ad0c08660a961b770fe06f805c3b4515d",
+      "entry_sha256": "4a732add0a4457b21c15df2ae5250ca262e80397e737e8ee62b37375c17f9a2f"
+    },
+    {
+      "id": "modeldev-sft-lora-cpu",
+      "command": [
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+        "--facts",
+        "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/facts/modeldev-sft-lora-cpu.json",
+        "--entry",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/finetune_entry.py",
+        "--mapping",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/configuration.py",
+        "--output",
+        "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/canonical-materials/builtin.sft_lora.cpu.json"
+      ],
+      "exit": 0,
+      "facts_sha256": "8a7526fd6a3f8830b9d148559da1470877bed1a7bc1b1bee5eb73b2f123ec589",
+      "material_sha256": "236211c4bad796471b1fc6ffb35fe328d1abc9be93d5929514158b3b0862e84e",
+      "training_image_id": "img_3af6f494c02c493dbbdff11099290d72",
+      "training_image_version": "1",
+      "training_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+      "entry_sha256": "291ad123bcbe39ac1c335e5b3d1efcc497062b36fa782b51a80daa814c16b7ac"
+    },
+    {
+      "id": "modeldev-sft-lora-gpu",
+      "command": [
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+        "--facts",
+        "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/facts/modeldev-sft-lora-gpu.json",
+        "--entry",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/finetune_entry.py",
+        "--mapping",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/configuration.py",
+        "--output",
+        "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/canonical-materials/builtin.sft_lora.gpu.json"
+      ],
+      "exit": 0,
+      "facts_sha256": "151a59552c1fa59f9c08c7cdfa91bc02a4e18d486564671a211362cea292e7f1",
+      "material_sha256": "3a8b8fa0ceaebe1b0bed327d156f70b52fafbd1d625eef49087b0998bd98e17f",
+      "training_image_id": "img_4e77202d4e3c49daac15d995366f2e8b",
+      "training_image_version": "1",
+      "training_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+      "entry_sha256": "291ad123bcbe39ac1c335e5b3d1efcc497062b36fa782b51a80daa814c16b7ac"
+    }
+  ],
+  "publication_receipt_sha256": "cf4071e649e0bdffe5010226020a7ce513bcc16d5f78ec4501d00dfcb3f8eb3a",
+  "catalog_actual_readback_cleanup_sha256": "52f4229c37b9395358512a1cade2efe70491f4a730afbfb2d9edeb3f4a46e507",
+  "image_publication_receipt_sha256": "aba2ea0ddad62ab7704fd1f659bb5e9790396d97849061f22c04a1a47722b459",
+  "capabilities_inheritance": [
+    {
+      "id": "modeldev-sft-lora-cpu",
+      "original_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+      "new_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+      "original_capabilities_canonical_sha256": "242cab26de4c3653c565edfdb2c8dab12b51ffedf5b64c0cfb5fdc0bb0b4b6ef",
+      "inherited_capabilities_canonical_sha256": "5fb3a97c232321e929372cd10beab0d83f2a72768c456249933a1ebe5b6d00ec",
+      "changed_capability_fields": [
+        "image_digest"
+      ],
+      "basis": "Exact original 36 layer descriptors and all runtime config except provenance labels retained; sole appended layer replaces /ani-modeldev-step. Python, model entrypoint, mapping and packages inherited unchanged. This is composition evidence, not a fresh runtime measurement.",
+      "image_publication_receipt_sha256": "aba2ea0ddad62ab7704fd1f659bb5e9790396d97849061f22c04a1a47722b459"
+    },
+    {
+      "id": "modeldev-sft-lora-gpu",
+      "original_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+      "new_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+      "original_capabilities_canonical_sha256": "3958bfdeed0aefa98c5a6502bf6117d22d4c57f6ae8ca250be6af6099945fe45",
+      "inherited_capabilities_canonical_sha256": "39c8d94677c914c369041bd5f26fe0d28ae77d8601a64855a1912e2ad8f8a3c4",
+      "changed_capability_fields": [
+        "image_digest"
+      ],
+      "basis": "Exact original 36 layer descriptors and all runtime config except provenance labels retained; sole appended layer replaces /ani-modeldev-step. Python, model entrypoint, mapping and packages inherited unchanged. This is composition evidence, not a fresh runtime measurement.",
+      "image_publication_receipt_sha256": "aba2ea0ddad62ab7704fd1f659bb5e9790396d97849061f22c04a1a47722b459"
+    }
+  ],
+  "bundle_manifest_sha256": "4a655afda6f4d1b6b798f30359c7ccfd0ce4271836b3bbba7f187b02c3f011e4",
+  "bundle_manifest_bytes": 5304,
+  "bundle_directory": "/home/chabking/tenantenv-20261101/modeldev-final-step67-materials-20261101/sealed",
+  "files": {
+    "ir/modeldev-mlp-cpu.yaml": "35577aa27932f75c76e2829fb099f7c77924c85f1ce67f3cfde3d2684c246fc7",
+    "builtin.mlp.cpu.json": "a98d99efbde37e9e9d7a7baa377c641961509f9d3f8742f37ff956f25ae9c504",
+    "ir/modeldev-mlp-gpu.yaml": "fe24eea47f177daaa64c6599056b0b046805414375c04e21c3947e919caeab49",
+    "builtin.mlp.gpu.json": "bcb9d87ff106391b1d82f8197b5ebb8a9cb1a572fe4422c1aa0b555fc025fbe3",
+    "ir/modeldev-sft-lora-cpu.yaml": "abf50d2acf4611497391824d53a20dec69880ff20c81d429bb808bfe074eb5c5",
+    "builtin.sft_lora.cpu.json": "236211c4bad796471b1fc6ffb35fe328d1abc9be93d5929514158b3b0862e84e",
+    "ir/modeldev-sft-lora-gpu.yaml": "e7bf8f33984cf5274a90e2b0d3dc0c7ef408a9fb5e347c01bca3b5b38b197c31",
+    "builtin.sft_lora.gpu.json": "3a8b8fa0ceaebe1b0bed327d156f70b52fafbd1d625eef49087b0998bd98e17f"
+  },
+  "profiles": [
+    {
+      "compile_config_sha256": "a49666b2f78feabc54b4d24c78597c14845d8d4c1a633fb978137fa1faf38140",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:439aa9c7541debe9d6b68ae73eacbb7ad0c08660a961b770fe06f805c3b4515d",
+      "device_mode": "cpu",
+      "id": "modeldev-mlp-cpu",
+      "implementation_id": "builtin.mlp",
+      "ir_sha256": "35577aa27932f75c76e2829fb099f7c77924c85f1ce67f3cfde3d2684c246fc7",
+      "namespace": "ani-system",
+      "phase": "CONFIRMED",
+      "pipeline_id": "dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+      "version_id": "3df2416f-642a-4c4f-a78c-75c228f9b844",
+      "version_name": "ir-35577aa27932f75c",
+      "ir_file": "/etc/modeldev-materials/ir/modeldev-mlp-cpu.yaml",
+      "material_file": "/etc/modeldev-materials/builtin.mlp.cpu.json",
+      "material_sha256": "a98d99efbde37e9e9d7a7baa377c641961509f9d3f8742f37ff956f25ae9c504"
+    },
+    {
+      "compile_config_sha256": "44a63db8c65d7a53ef1f35e8d3e13256ed424ad41aeb2ff5bc977b0c334f7af6",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:439aa9c7541debe9d6b68ae73eacbb7ad0c08660a961b770fe06f805c3b4515d",
+      "device_mode": "gpu",
+      "id": "modeldev-mlp-gpu",
+      "implementation_id": "builtin.mlp",
+      "ir_sha256": "fe24eea47f177daaa64c6599056b0b046805414375c04e21c3947e919caeab49",
+      "namespace": "ani-system",
+      "phase": "CONFIRMED",
+      "pipeline_id": "9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+      "version_id": "f7c84a7b-33a8-4c64-b3b0-cc5b41d0d25e",
+      "version_name": "ir-fe24eea47f177daa",
+      "ir_file": "/etc/modeldev-materials/ir/modeldev-mlp-gpu.yaml",
+      "material_file": "/etc/modeldev-materials/builtin.mlp.gpu.json",
+      "material_sha256": "bcb9d87ff106391b1d82f8197b5ebb8a9cb1a572fe4422c1aa0b555fc025fbe3"
+    },
+    {
+      "compile_config_sha256": "a67438a85557dcd684f8e0e902719629877fd856869953cadfb6017896a04787",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+      "device_mode": "cpu",
+      "id": "modeldev-sft-lora-cpu",
+      "implementation_id": "builtin.sft_lora",
+      "ir_sha256": "abf50d2acf4611497391824d53a20dec69880ff20c81d429bb808bfe074eb5c5",
+      "namespace": "ani-system",
+      "phase": "CONFIRMED",
+      "pipeline_id": "4d042c5b-fc25-4819-9a28-80ca7903c863",
+      "version_id": "7f3e6ae3-66e5-4f1d-aaec-9b64d0165a64",
+      "version_name": "ir-abf50d2acf461149",
+      "ir_file": "/etc/modeldev-materials/ir/modeldev-sft-lora-cpu.yaml",
+      "material_file": "/etc/modeldev-materials/builtin.sft_lora.cpu.json",
+      "material_sha256": "236211c4bad796471b1fc6ffb35fe328d1abc9be93d5929514158b3b0862e84e"
+    },
+    {
+      "compile_config_sha256": "b520fe3befbd9a7defe6226c8b3e493cd414f19e01b5b922f29e72899d0170ea",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+      "device_mode": "gpu",
+      "id": "modeldev-sft-lora-gpu",
+      "implementation_id": "builtin.sft_lora",
+      "ir_sha256": "e7bf8f33984cf5274a90e2b0d3dc0c7ef408a9fb5e347c01bca3b5b38b197c31",
+      "namespace": "ani-system",
+      "phase": "CONFIRMED",
+      "pipeline_id": "a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+      "version_id": "aa58f5c6-c80f-4ba0-b526-6e455ecec9c5",
+      "version_name": "ir-e7bf8f33984cf527",
+      "ir_file": "/etc/modeldev-materials/ir/modeldev-sft-lora-gpu.yaml",
+      "material_file": "/etc/modeldev-materials/builtin.sft_lora.gpu.json",
+      "material_sha256": "3a8b8fa0ceaebe1b0bed327d156f70b52fafbd1d625eef49087b0998bd98e17f"
+    }
+  ],
+  "support_images": {
+    "driver": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+    "launcher": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29",
+    "material_copy": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4"
+  },
+  "anonymous_images": [
+    {
+      "evidence_sha256": "ac6f98acd6f263f6c32a1a8eea1662b732190f0efd04088cd77f894fdf18befd",
+      "reference": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd"
+    },
+    {
+      "evidence_sha256": "ac6f98acd6f263f6c32a1a8eea1662b732190f0efd04088cd77f894fdf18befd",
+      "reference": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+    }
+  ],
+  "registry_authority": "10.10.1.66:30003",
+  "platform_project": "ani-resource-factor10-20261022",
+  "cluster_writes": 0,
+  "training_created": false,
+  "new_tests_or_verify_run": false,
+  "deployment": "NOT_RUN; await original executions/release convergence and spec5.4 maintenance window"
+}

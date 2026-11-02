@@ -1,0 +1,1235 @@
+{
+  "schema": "ani.modeldev.final-preserved-assets.v1",
+  "observed_at": "2026-11-01T17:12:23.347172+00:00",
+  "read_only": true,
+  "identity": {
+    "ssh_host": "100.64.128.12",
+    "ssh_user": "kubercloud",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "identity_match": true,
+  "baseline_observed_at": "2026-10-31T18:51:29.937015+00:00",
+  "assets": [
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "ani-harbor-jobservice",
+        "uid": "0fe703db-54f8-4785-b311-82ae4283b555",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-0fe703db-54f8-4785-b311-82ae4283b555"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "ani-harbor-jobservice",
+        "uid": "0fe703db-54f8-4785-b311-82ae4283b555",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-0fe703db-54f8-4785-b311-82ae4283b555"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "ani-harbor-registry",
+        "uid": "740375a5-5af2-487a-9418-cf14d0eb3179",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-740375a5-5af2-487a-9418-cf14d0eb3179"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "ani-harbor-registry",
+        "uid": "740375a5-5af2-487a-9418-cf14d0eb3179",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-740375a5-5af2-487a-9418-cf14d0eb3179"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "ani-harbor-trivy-cache",
+        "uid": "77c523a8-a5a1-4a51-acd6-45db7e5f86b8",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-77c523a8-a5a1-4a51-acd6-45db7e5f86b8"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "ani-harbor-trivy-cache",
+        "uid": "77c523a8-a5a1-4a51-acd6-45db7e5f86b8",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-77c523a8-a5a1-4a51-acd6-45db7e5f86b8"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "data-ani-harbor-redis-0",
+        "uid": "84b57476-e652-4add-a03f-24a850b80bdd",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-84b57476-e652-4add-a03f-24a850b80bdd"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "data-ani-harbor-redis-0",
+        "uid": "84b57476-e652-4add-a03f-24a850b80bdd",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-84b57476-e652-4add-a03f-24a850b80bdd"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "database-data-ani-harbor-database-0",
+        "uid": "a58e0562-1a3e-4bc0-a952-41418e81fdbd",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-a58e0562-1a3e-4bc0-a952-41418e81fdbd"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-harbor",
+        "name": "database-data-ani-harbor-database-0",
+        "uid": "a58e0562-1a3e-4bc0-a952-41418e81fdbd",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-a58e0562-1a3e-4bc0-a952-41418e81fdbd"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-observability",
+        "name": "alertmanager-ani-metrics-alertmanager-db-alertmanager-ani-metrics-alertmanager-0",
+        "uid": "b89c770a-17c7-4512-8691-ce967f63dfba",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-b89c770a-17c7-4512-8691-ce967f63dfba"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-observability",
+        "name": "alertmanager-ani-metrics-alertmanager-db-alertmanager-ani-metrics-alertmanager-0",
+        "uid": "b89c770a-17c7-4512-8691-ce967f63dfba",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-b89c770a-17c7-4512-8691-ce967f63dfba"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-observability",
+        "name": "ani-opensearch-master-ani-opensearch-master-0",
+        "uid": "de6c5010-ebfc-493b-9ca1-2b2580135936",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-de6c5010-ebfc-493b-9ca1-2b2580135936"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-observability",
+        "name": "ani-opensearch-master-ani-opensearch-master-0",
+        "uid": "de6c5010-ebfc-493b-9ca1-2b2580135936",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-de6c5010-ebfc-493b-9ca1-2b2580135936"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-observability",
+        "name": "prometheus-ani-metrics-prometheus-db-prometheus-ani-metrics-prometheus-0",
+        "uid": "6c2d92ec-df62-4c3f-8746-ec289cfc19dd",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-6c2d92ec-df62-4c3f-8746-ec289cfc19dd"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-observability",
+        "name": "prometheus-ani-metrics-prometheus-db-prometheus-ani-metrics-prometheus-0",
+        "uid": "6c2d92ec-df62-4c3f-8746-ec289cfc19dd",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-6c2d92ec-df62-4c3f-8746-ec289cfc19dd"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "ani-milvus",
+        "uid": "8ada4f94-9a80-4a6a-9318-bfa82846b8a0",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-8ada4f94-9a80-4a6a-9318-bfa82846b8a0"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "ani-milvus",
+        "uid": "8ada4f94-9a80-4a6a-9318-bfa82846b8a0",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-8ada4f94-9a80-4a6a-9318-bfa82846b8a0"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "ani-rustfs-data",
+        "uid": "7fb4d37a-c9a5-4192-bee7-717de311b7b1",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-7fb4d37a-c9a5-4192-bee7-717de311b7b1"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "ani-rustfs-data",
+        "uid": "7fb4d37a-c9a5-4192-bee7-717de311b7b1",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-7fb4d37a-c9a5-4192-bee7-717de311b7b1"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "data-ani-milvus-etcd-0",
+        "uid": "808f479c-45fc-4b81-a3a8-c5b3bbf2e273",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-808f479c-45fc-4b81-a3a8-c5b3bbf2e273"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "data-ani-milvus-etcd-0",
+        "uid": "808f479c-45fc-4b81-a3a8-c5b3bbf2e273",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-808f479c-45fc-4b81-a3a8-c5b3bbf2e273"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "data-postgresql-0",
+        "uid": "de4fe6af-59ff-4615-a564-fd22717f855c",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-de4fe6af-59ff-4615-a564-fd22717f855c"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "data-postgresql-0",
+        "uid": "de4fe6af-59ff-4615-a564-fd22717f855c",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-de4fe6af-59ff-4615-a564-fd22717f855c"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "data-valkey-0",
+        "uid": "cc759aa0-b0d9-429e-b4a5-fce843422d9d",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-cc759aa0-b0d9-429e-b4a5-fce843422d9d"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "data-valkey-0",
+        "uid": "cc759aa0-b0d9-429e-b4a5-fce843422d9d",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-cc759aa0-b0d9-429e-b4a5-fce843422d9d"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "nats-js-nats-0",
+        "uid": "9215e1e0-333b-4f08-9f1e-2d89f55a4cec",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-9215e1e0-333b-4f08-9f1e-2d89f55a4cec"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-platform",
+        "name": "nats-js-nats-0",
+        "uid": "9215e1e0-333b-4f08-9f1e-2d89f55a4cec",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-9215e1e0-333b-4f08-9f1e-2d89f55a4cec"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-system",
+        "name": "ani-model-03c9d34253c9eb8e777d0a83",
+        "uid": "a83dd569-c33f-4434-ace0-6aa9da725018",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-a83dd569-c33f-4434-ace0-6aa9da725018"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-system",
+        "name": "ani-model-03c9d34253c9eb8e777d0a83",
+        "uid": "a83dd569-c33f-4434-ace0-6aa9da725018",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-a83dd569-c33f-4434-ace0-6aa9da725018"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-system",
+        "name": "ani-model-85cb985f5a6348f3d60a89bd",
+        "uid": "077c16cb-4862-426f-b34e-e45c6e1974b8",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-077c16cb-4862-426f-b34e-e45c6e1974b8"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-system",
+        "name": "ani-model-85cb985f5a6348f3d60a89bd",
+        "uid": "077c16cb-4862-426f-b34e-e45c6e1974b8",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-077c16cb-4862-426f-b34e-e45c6e1974b8"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-system",
+        "name": "ani-model-a9bcee227e06aefed9cbc35d",
+        "uid": "0b2804ba-6093-4d0d-9a05-d0578f61b804",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-0b2804ba-6093-4d0d-9a05-d0578f61b804"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-system",
+        "name": "ani-model-a9bcee227e06aefed9cbc35d",
+        "uid": "0b2804ba-6093-4d0d-9a05-d0578f61b804",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-0b2804ba-6093-4d0d-9a05-d0578f61b804"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-vm-media-linux-20261025",
+        "name": "fedora-44-kde-install-source",
+        "uid": "f6438eb6-ddf9-44fd-958d-163a4e3ccf4c",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-a9962716-3984-4647-89d9-c93dd1e0366a"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-vm-media-linux-20261025",
+        "name": "fedora-44-kde-install-source",
+        "uid": "f6438eb6-ddf9-44fd-958d-163a4e3ccf4c",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-a9962716-3984-4647-89d9-c93dd1e0366a"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-vm-media-linux-20261025",
+        "name": "ubuntu-2404-cloud-disk-source",
+        "uid": "0371dc09-ba09-4cfd-8181-f3ab57270598",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-64ec5f64-3845-471e-85e3-af5ff7ccfe3f"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-vm-media-linux-20261025",
+        "name": "ubuntu-2404-cloud-disk-source",
+        "uid": "0371dc09-ba09-4cfd-8181-f3ab57270598",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-64ec5f64-3845-471e-85e3-af5ff7ccfe3f"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-vm-media-win-20261025",
+        "name": "virtio-win-01271-iso-source",
+        "uid": "1b755940-87db-4cfe-a57b-48bc2b4be250",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-650dcabf-c24b-49ff-af4c-3d06e73e3858"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-vm-media-win-20261025",
+        "name": "virtio-win-01271-iso-source",
+        "uid": "1b755940-87db-4cfe-a57b-48bc2b4be250",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-650dcabf-c24b-49ff-af4c-3d06e73e3858"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-vm-media-win-20261025",
+        "name": "windows-server-2025-iso-source",
+        "uid": "00a4d704-9e14-4fef-b450-731323fe6830",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-91cd6708-76de-48bc-8b7b-0bbd915802a0"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "ani-vm-media-win-20261025",
+        "name": "windows-server-2025-iso-source",
+        "uid": "00a4d704-9e14-4fef-b450-731323fe6830",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-91cd6708-76de-48bc-8b7b-0bbd915802a0"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "kubeflow",
+        "name": "mysql-pv-claim",
+        "uid": "5811f19d-f6fe-40fb-962a-257c6a900ac1",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-5811f19d-f6fe-40fb-962a-257c6a900ac1"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "kubeflow",
+        "name": "mysql-pv-claim",
+        "uid": "5811f19d-f6fe-40fb-962a-257c6a900ac1",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-5811f19d-f6fe-40fb-962a-257c6a900ac1"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "ani-vol-168d2c1c17684c3f9b1eab83d963327d",
+        "uid": "fa56c965-5a9a-4bb1-b271-3960a7309e96",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-fa56c965-5a9a-4bb1-b271-3960a7309e96"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "ani-vol-168d2c1c17684c3f9b1eab83d963327d",
+        "uid": "fa56c965-5a9a-4bb1-b271-3960a7309e96",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-fa56c965-5a9a-4bb1-b271-3960a7309e96"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "ani-vol-1d848450a3894049a4aeb6255a4a2144",
+        "uid": "d9d79bc3-3c5e-4f3e-98f7-81e5938f615d",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-d9d79bc3-3c5e-4f3e-98f7-81e5938f615d"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "ani-vol-1d848450a3894049a4aeb6255a4a2144",
+        "uid": "d9d79bc3-3c5e-4f3e-98f7-81e5938f615d",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-d9d79bc3-3c5e-4f3e-98f7-81e5938f615d"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "restore-70733ddb-dce5-4c91-b387-051116e3ec87-disk-3777ccb7b5965ecf9bd88e3cfc8158c8",
+        "uid": "734bf717-1538-4f44-92e6-a754c4a6c922",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-734bf717-1538-4f44-92e6-a754c4a6c922"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "restore-70733ddb-dce5-4c91-b387-051116e3ec87-disk-3777ccb7b5965ecf9bd88e3cfc8158c8",
+        "uid": "734bf717-1538-4f44-92e6-a754c4a6c922",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-734bf717-1538-4f44-92e6-a754c4a6c922"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "restore-70733ddb-dce5-4c91-b387-051116e3ec87-disk-8970a77845d756a7bf7dba6deabd6fb5",
+        "uid": "496e1587-bdaa-4f60-92d7-2739540d3105",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-496e1587-bdaa-4f60-92d7-2739540d3105"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "restore-70733ddb-dce5-4c91-b387-051116e3ec87-disk-8970a77845d756a7bf7dba6deabd6fb5",
+        "uid": "496e1587-bdaa-4f60-92d7-2739540d3105",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-496e1587-bdaa-4f60-92d7-2739540d3105"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vd-12ef0736-fa2a-5abb-8116-66451d63bde5",
+        "uid": "3a013f0a-170f-491f-8cf3-281aed0ec795",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-cf63a3ac-2c1f-411f-bcd5-be326b42f46f"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vd-12ef0736-fa2a-5abb-8116-66451d63bde5",
+        "uid": "3a013f0a-170f-491f-8cf3-281aed0ec795",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-cf63a3ac-2c1f-411f-bcd5-be326b42f46f"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vd-5ac8534a-96fb-5ee7-9212-cab4cb75f97c",
+        "uid": "d9f0f98a-12e0-414d-8da8-a1727c50ea9b",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-51e8bfac-87ef-4cc8-9234-b3361f6a2f01"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vd-5ac8534a-96fb-5ee7-9212-cab4cb75f97c",
+        "uid": "d9f0f98a-12e0-414d-8da8-a1727c50ea9b",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-51e8bfac-87ef-4cc8-9234-b3361f6a2f01"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vd-c274d718-f284-59d3-849a-c65ca1e519ae",
+        "uid": "08cb161f-4d90-4d9b-87ea-92fdd1b78529",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-64d18f09-d7f0-49cd-a595-4ff7283956b4"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vd-c274d718-f284-59d3-849a-c65ca1e519ae",
+        "uid": "08cb161f-4d90-4d9b-87ea-92fdd1b78529",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-64d18f09-d7f0-49cd-a595-4ff7283956b4"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vd-e5938b7d-081e-5b92-8c10-d0cec78c9012",
+        "uid": "37f44924-9f10-43ef-8213-d54f37fb226f",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-a9e14c03-5bee-4021-9e92-317ea048b24e"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vd-e5938b7d-081e-5b92-8c10-d0cec78c9012",
+        "uid": "37f44924-9f10-43ef-8213-d54f37fb226f",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-a9e14c03-5bee-4021-9e92-317ea048b24e"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-media-20ac90b9-88c8-5e6c-b286-d493ab3efabf",
+        "uid": "dceac893-4d30-4779-80d8-dcb5b772804f",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-bf645e1c-76c9-4e47-920e-b9b832a7e2d9"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-media-20ac90b9-88c8-5e6c-b286-d493ab3efabf",
+        "uid": "dceac893-4d30-4779-80d8-dcb5b772804f",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-bf645e1c-76c9-4e47-920e-b9b832a7e2d9"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-media-2c5419a9-ad05-5385-95ff-00fc1547d00c",
+        "uid": "0d2a91f5-e5e1-4405-a778-c5c57eadd036",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-0650c07a-9d38-40d7-b427-20461bb729b7"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-media-2c5419a9-ad05-5385-95ff-00fc1547d00c",
+        "uid": "0d2a91f5-e5e1-4405-a778-c5c57eadd036",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-0650c07a-9d38-40d7-b427-20461bb729b7"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-media-e01c0fe0-64fa-5d86-99af-565f3f76a84d",
+        "uid": "2851b0c9-0040-4ee2-a8f8-3d94d5537048",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-d1e4c671-a50e-4a33-b3f3-91cb380fc264"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-media-e01c0fe0-64fa-5d86-99af-565f3f76a84d",
+        "uid": "2851b0c9-0040-4ee2-a8f8-3d94d5537048",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-d1e4c671-a50e-4a33-b3f3-91cb380fc264"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "workspace-0e421d69-4853-5f9b-b0e4-e2cf4b3a8bb1",
+        "uid": "ba6d1829-e610-4c3e-a0ab-1d050fac1f8e",
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-ba6d1829-e610-4c3e-a0ab-1d050fac1f8e"
+      },
+      "after": {
+        "kind": "PersistentVolumeClaim",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "workspace-0e421d69-4853-5f9b-b0e4-e2cf4b3a8bb1",
+        "uid": "ba6d1829-e610-4c3e-a0ab-1d050fac1f8e",
+        "deleting": false,
+        "phase": "Bound",
+        "ready": null,
+        "volume_name": "pvc-ba6d1829-e610-4c3e-a0ab-1d050fac1f8e"
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "VirtualMachine",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-3be21c33-31be-4e7c-93b5-b8e91bd9b855",
+        "uid": "381da33f-ad0e-4daf-99ae-4cec69fff582",
+        "phase": null,
+        "ready": true,
+        "volume_name": null
+      },
+      "after": {
+        "kind": "VirtualMachine",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-3be21c33-31be-4e7c-93b5-b8e91bd9b855",
+        "uid": "381da33f-ad0e-4daf-99ae-4cec69fff582",
+        "deleting": false,
+        "phase": null,
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "VirtualMachine",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-6f8ee0cf-cada-4224-9ac0-bb1394408a25",
+        "uid": "2544a077-817c-4d11-ac48-12d1aaf6bbd0",
+        "phase": null,
+        "ready": true,
+        "volume_name": null
+      },
+      "after": {
+        "kind": "VirtualMachine",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-6f8ee0cf-cada-4224-9ac0-bb1394408a25",
+        "uid": "2544a077-817c-4d11-ac48-12d1aaf6bbd0",
+        "deleting": false,
+        "phase": null,
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "VirtualMachine",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-bf320c9b-018f-4dfa-afd8-007142159805",
+        "uid": "8a2fd567-d9d6-45ac-9a23-20e5371d4b3d",
+        "phase": null,
+        "ready": true,
+        "volume_name": null
+      },
+      "after": {
+        "kind": "VirtualMachine",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-bf320c9b-018f-4dfa-afd8-007142159805",
+        "uid": "8a2fd567-d9d6-45ac-9a23-20e5371d4b3d",
+        "deleting": false,
+        "phase": null,
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "VirtualMachine",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-e739fb1a-4921-472d-baa3-743616aa7c42",
+        "uid": "d07c79d7-741c-4b03-a3d5-cea7a98873e8",
+        "phase": null,
+        "ready": "False",
+        "volume_name": null
+      },
+      "after": {
+        "kind": "VirtualMachine",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-e739fb1a-4921-472d-baa3-743616aa7c42",
+        "uid": "d07c79d7-741c-4b03-a3d5-cea7a98873e8",
+        "deleting": false,
+        "phase": null,
+        "ready": "false",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "VirtualMachineInstance",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-3be21c33-31be-4e7c-93b5-b8e91bd9b855",
+        "uid": "04ced5f3-b766-404c-b829-8b55be4589d7",
+        "phase": "Running",
+        "ready": "True",
+        "volume_name": null
+      },
+      "after": {
+        "kind": "VirtualMachineInstance",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-3be21c33-31be-4e7c-93b5-b8e91bd9b855",
+        "uid": "04ced5f3-b766-404c-b829-8b55be4589d7",
+        "deleting": false,
+        "phase": "Running",
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "VirtualMachineInstance",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-6f8ee0cf-cada-4224-9ac0-bb1394408a25",
+        "uid": "e0c24364-5d0b-47e7-94bc-a885f46ea625",
+        "phase": "Running",
+        "ready": "True",
+        "volume_name": null
+      },
+      "after": {
+        "kind": "VirtualMachineInstance",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-6f8ee0cf-cada-4224-9ac0-bb1394408a25",
+        "uid": "e0c24364-5d0b-47e7-94bc-a885f46ea625",
+        "deleting": false,
+        "phase": "Running",
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "kind": "VirtualMachineInstance",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-bf320c9b-018f-4dfa-afd8-007142159805",
+        "uid": "d9385c87-a035-4d89-bf0c-31c60d0f117e",
+        "phase": "Running",
+        "ready": "True",
+        "volume_name": null
+      },
+      "after": {
+        "kind": "VirtualMachineInstance",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "vm-bf320c9b-018f-4dfa-afd8-007142159805",
+        "uid": "d9385c87-a035-4d89-bf0c-31c60d0f117e",
+        "deleting": false,
+        "phase": "Running",
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    }
+  ],
+  "namespace_samples": [
+    {
+      "name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+      "same_uid": true,
+      "phase": "Active",
+      "not_deleting": true,
+      "same_network_labels": true
+    },
+    {
+      "name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347",
+      "same_uid": true,
+      "phase": "Active",
+      "not_deleting": true,
+      "same_network_labels": true
+    }
+  ],
+  "unrelated_pods": [
+    {
+      "before": {
+        "namespace_sample": "A",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "hp-volume-9tvb5",
+        "uid": "81ac92e1-d863-4ac1-abcf-5bf6a3df8711",
+        "phase": "Running",
+        "ready": "True",
+        "node": "node2",
+        "deleting": false,
+        "owner_labels": {},
+        "owner_references": [
+          {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "name": "virt-launcher-vm-3be21c33-31be-4e7c-93b5-b8e91bd9b855-7x84p",
+            "uid": "cb1640fb-35eb-45d1-99a8-019d6548e1e8",
+            "controller": true
+          }
+        ],
+        "pvc_names": [
+          "restore-70733ddb-dce5-4c91-b387-051116e3ec87-disk-8970a77845d756a7bf7dba6deabd6fb5"
+        ],
+        "classification": "other unrelated workload Pod"
+      },
+      "after": {
+        "kind": "Pod",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "hp-volume-9tvb5",
+        "uid": "81ac92e1-d863-4ac1-abcf-5bf6a3df8711",
+        "deleting": false,
+        "phase": "Running",
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "namespace_sample": "A",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "sandbox-0e421d69-4853-5f9b-b0e4-e2cf4b3a8bb1",
+        "uid": "889b0eb5-4980-49c7-8eec-f0b694df0b15",
+        "phase": "Running",
+        "ready": "True",
+        "node": "node2",
+        "deleting": false,
+        "owner_labels": {
+          "ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        },
+        "owner_references": [],
+        "pvc_names": [
+          "workspace-0e421d69-4853-5f9b-b0e4-e2cf4b3a8bb1"
+        ],
+        "classification": "Sandbox/Instance Pod"
+      },
+      "after": {
+        "kind": "Pod",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "sandbox-0e421d69-4853-5f9b-b0e4-e2cf4b3a8bb1",
+        "uid": "889b0eb5-4980-49c7-8eec-f0b694df0b15",
+        "deleting": false,
+        "phase": "Running",
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "namespace_sample": "A",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "virt-launcher-vm-3be21c33-31be-4e7c-93b5-b8e91bd9b855-7x84p",
+        "uid": "cb1640fb-35eb-45d1-99a8-019d6548e1e8",
+        "phase": "Running",
+        "ready": "True",
+        "node": "node2",
+        "deleting": false,
+        "owner_labels": {
+          "ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        },
+        "owner_references": [
+          {
+            "apiVersion": "kubevirt.io/v1",
+            "kind": "VirtualMachineInstance",
+            "name": "vm-3be21c33-31be-4e7c-93b5-b8e91bd9b855",
+            "uid": "04ced5f3-b766-404c-b829-8b55be4589d7",
+            "controller": true
+          }
+        ],
+        "pvc_names": [
+          "restore-70733ddb-dce5-4c91-b387-051116e3ec87-disk-3777ccb7b5965ecf9bd88e3cfc8158c8"
+        ],
+        "classification": "other unrelated workload Pod"
+      },
+      "after": {
+        "kind": "Pod",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "virt-launcher-vm-3be21c33-31be-4e7c-93b5-b8e91bd9b855-7x84p",
+        "uid": "cb1640fb-35eb-45d1-99a8-019d6548e1e8",
+        "deleting": false,
+        "phase": "Running",
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "namespace_sample": "A",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "virt-launcher-vm-6f8ee0cf-cada-4224-9ac0-bb1394408a25-86pdm",
+        "uid": "5cbb2222-91d0-46a6-a3e5-fe892fa9549b",
+        "phase": "Running",
+        "ready": "True",
+        "node": "node3",
+        "deleting": false,
+        "owner_labels": {
+          "ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        },
+        "owner_references": [
+          {
+            "apiVersion": "kubevirt.io/v1",
+            "kind": "VirtualMachineInstance",
+            "name": "vm-6f8ee0cf-cada-4224-9ac0-bb1394408a25",
+            "uid": "e0c24364-5d0b-47e7-94bc-a885f46ea625",
+            "controller": true
+          }
+        ],
+        "pvc_names": [
+          "vd-5ac8534a-96fb-5ee7-9212-cab4cb75f97c",
+          "vm-media-20ac90b9-88c8-5e6c-b286-d493ab3efabf"
+        ],
+        "classification": "other unrelated workload Pod"
+      },
+      "after": {
+        "kind": "Pod",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "virt-launcher-vm-6f8ee0cf-cada-4224-9ac0-bb1394408a25-86pdm",
+        "uid": "5cbb2222-91d0-46a6-a3e5-fe892fa9549b",
+        "deleting": false,
+        "phase": "Running",
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    },
+    {
+      "before": {
+        "namespace_sample": "A",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "virt-launcher-vm-bf320c9b-018f-4dfa-afd8-007142159805-9tk7t",
+        "uid": "5957a2cb-a992-4bfc-9ab1-b8f792ccbc57",
+        "phase": "Running",
+        "ready": "True",
+        "node": "node2",
+        "deleting": false,
+        "owner_labels": {
+          "ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        },
+        "owner_references": [
+          {
+            "apiVersion": "kubevirt.io/v1",
+            "kind": "VirtualMachineInstance",
+            "name": "vm-bf320c9b-018f-4dfa-afd8-007142159805",
+            "uid": "d9385c87-a035-4d89-bf0c-31c60d0f117e",
+            "controller": true
+          }
+        ],
+        "pvc_names": [
+          "vd-12ef0736-fa2a-5abb-8116-66451d63bde5",
+          "vm-media-e01c0fe0-64fa-5d86-99af-565f3f76a84d"
+        ],
+        "classification": "other unrelated workload Pod"
+      },
+      "after": {
+        "kind": "Pod",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "name": "virt-launcher-vm-bf320c9b-018f-4dfa-afd8-007142159805-9tk7t",
+        "uid": "5957a2cb-a992-4bfc-9ab1-b8f792ccbc57",
+        "deleting": false,
+        "phase": "Running",
+        "ready": "true",
+        "volume_name": null
+      },
+      "same_uid": true,
+      "same_health": true
+    }
+  ],
+  "mutations": 0,
+  "all_original_assets_unchanged": true,
+  "all_original_namespaces_unchanged": true,
+  "all_original_unrelated_pods_unchanged": true,
+  "shared_services": {
+    "ani-modeldev": {
+      "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+      "replicas": 1,
+      "ready_replicas": 1,
+      "pods": [
+        {
+          "uid": "6f29950c-625e-4b2f-98a0-bc7309016d7e",
+          "name": "ani-modeldev-d859b667b-x4q2j",
+          "deleting": false,
+          "containers": [
+            {
+              "name": "modeldev",
+              "restart_count": 0,
+              "container_id": "containerd://24bd26551784dacf1dbe39d298e996ea0d74555d97854d060903ea06310bc4b4",
+              "ready": true,
+              "started_at": "2026-11-01T16:30:58Z"
+            }
+          ]
+        }
+      ]
+    },
+    "ani-modeldev-webhook": {
+      "deployment_uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea",
+      "replicas": 2,
+      "ready_replicas": 2,
+      "pods": [
+        {
+          "uid": "4d1ee98d-bb43-4eb7-9d9e-b0bac59699c0",
+          "name": "ani-modeldev-webhook-f79cc986f-2kgfj",
+          "deleting": false,
+          "containers": [
+            {
+              "name": "webhook",
+              "restart_count": 0,
+              "container_id": "containerd://819ffa7c9454659e413a15b5f51325c7dd8b1b3dadf8b9f3b83cb84efd31c42c",
+              "ready": true,
+              "started_at": "2026-11-01T11:56:51Z"
+            }
+          ]
+        },
+        {
+          "uid": "e4460b6a-7886-4ea8-a686-6e0655904226",
+          "name": "ani-modeldev-webhook-f79cc986f-ww4kg",
+          "deleting": false,
+          "containers": [
+            {
+              "name": "webhook",
+              "restart_count": 0,
+              "container_id": "containerd://84933c226cbdb5f00b92d3c6b2bf196e4d96fd83cd94377b8a6d70584fa19f98",
+              "ready": true,
+              "started_at": "2026-11-01T11:56:54Z"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "same_single_modeldev_process": true
+}

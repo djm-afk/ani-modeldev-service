@@ -1,0 +1,8 @@
+{
+  "stage": "NODE_CGROUP_PREFLIGHT",
+  "ssh_exit": 255,
+  "reason": "Connection closed by 100.64.128.12 port 22",
+  "node_write_started": false,
+  "registry_push_issued": false,
+  "base_pull_issued": false
+}

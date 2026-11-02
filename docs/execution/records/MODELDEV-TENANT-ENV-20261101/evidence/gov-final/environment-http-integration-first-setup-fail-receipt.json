@@ -1,0 +1,7 @@
+{
+  "started_at": "2026-10-31T20:37:16.170576+00:00",
+  "command": "bash /home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/run-environment-http.sh",
+  "scope": "one new environment HTTP integration test; no default/makecheck/audit rerun",
+  "exit_code": 1,
+  "finished_at": "2026-10-31T20:37:33.243210+00:00"
+}

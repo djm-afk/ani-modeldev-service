@@ -1,0 +1,42 @@
+{
+  "observed_at": "2026-10-31T23:46:04.017624+00:00",
+  "original_control_identity": true,
+  "token_request_count": 0,
+  "runs": [
+    {
+      "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+      "http_status": 200,
+      "state": "FAILED",
+      "finished_at": "2026-10-30T00:58:28Z",
+      "task_count": 35
+    },
+    {
+      "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+      "http_status": 200,
+      "state": "FAILED",
+      "finished_at": "2026-10-29T16:00:43Z",
+      "task_count": 35
+    },
+    {
+      "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+      "http_status": 200,
+      "state": "FAILED",
+      "finished_at": "2026-10-30T09:21:45Z",
+      "task_count": 25
+    }
+  ],
+  "pod_list_shape": {
+    "list_kind": "PodList",
+    "list_api_version": "v1",
+    "continue_present": false,
+    "item_count": 47,
+    "item_type_shapes": [
+      {
+        "api_version": "<absent>",
+        "kind": "<absent>",
+        "count": 47
+      }
+    ]
+  },
+  "raw_manifest_or_logs_saved": false
+}

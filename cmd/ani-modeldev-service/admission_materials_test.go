@@ -60,34 +60,34 @@ func TestAdmissionMaterialsOmittedKeepsDurableCommandsWithoutAdmission(t *testin
 func TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak(t *testing.T) {
 	tests := []struct {
 		name    string
-		change  func(*testing.T, *conf.AdmissionResolution)
+		change  func(*testing.T, *conf.Bootstrap)
 		message string
 	}{
 		{
-			name: "missing facts file",
-			change: func(t *testing.T, config *conf.AdmissionResolution) {
-				config.FactsFiles[0].Path = filepath.Join(t.TempDir(), "private-missing-facts.json")
+			name: "missing platform file",
+			change: func(t *testing.T, config *conf.Bootstrap) {
+				config.Runtime.TenantEnvironmentFile = filepath.Join(t.TempDir(), "private-missing-facts.json")
 			},
-			message: "managed command listener configuration invalid",
+			message: "managed runtime materials unavailable or invalid",
 		},
 		{
-			name: "wrong facts byte pin",
-			change: func(_ *testing.T, config *conf.AdmissionResolution) {
-				pin := config.FactsFiles[0].Sha256
+			name: "wrong platform byte pin",
+			change: func(_ *testing.T, config *conf.Bootstrap) {
+				pin := config.Runtime.TenantEnvironmentSha256
 				first := "0"
 				if pin[0] == '0' {
 					first = "1"
 				}
-				config.FactsFiles[0].Sha256 = first + pin[1:]
+				config.Runtime.TenantEnvironmentSha256 = first + pin[1:]
 			},
-			message: "managed command listener configuration invalid",
+			message: "managed runtime materials unavailable or invalid",
 		},
 		{
 			name: "unavailable catalogue directory",
-			change: func(t *testing.T, config *conf.AdmissionResolution) {
-				config.CatalogueDirectory = filepath.Join(t.TempDir(), "private-missing-catalogue")
+			change: func(t *testing.T, config *conf.Bootstrap) {
+				config.Command.AdmissionResolution.CatalogueDirectory = filepath.Join(t.TempDir(), "private-missing-catalogue")
 			},
-			message: "managed command listener configuration invalid",
+			message: "managed command listener configuration invalid: command admission catalogue unavailable or invalid",
 		},
 	}
 	for _, test := range tests {
@@ -110,7 +110,7 @@ func TestAdmissionMaterialsFailStartupWithoutFallbackOrPoolLeak(t *testing.T) {
 			_ = connection.Close()
 			stop()
 			requireAdmissionMaterialPoolReleased(t, observer, fixture.applicationName)
-			test.change(t, fixture.config.Command.AdmissionResolution)
+			test.change(t, fixture.config)
 			if err := fixture.config.Validate(); err != nil {
 				t.Fatal("ADMISSION_MATERIAL_PREFLIGHT: bad material must retain valid reference shape; loading behavior NOT_RUN")
 			}

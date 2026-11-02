@@ -1,5 +1,9 @@
 # CPU 受管微调：后续工作交接
 
+历史迭代记录：下文的固定Release、静态环境或受控facts配置只描述原revision，
+不作为当前启动或切换入口。当前v4快照、显式Ensure/Get、单平台spec与退役字段见
+[动态租户执行环境](modeldev-tenant-environments.md)。本文原“唯一规范”仅指原迭代。
+
 交接基准：2026-10-15，`codex/finetuning-cpu-m3a`，HEAD `848d50bd5878454ea0d69096dcaa2778365460b9`。
 本文交接 M3-A 之后的工作。上述 SHA 是原验收基线；后续合入 main 的代码验证与集群已运行材料分别记录，不将 Git 发布视为新增集成或部署验收。
 

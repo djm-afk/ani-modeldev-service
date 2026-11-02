@@ -54,7 +54,7 @@ func TestConfirmationRejectsInvalidOrMismatchedObservationWithoutMutation(t *tes
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -84,7 +84,7 @@ func TestConfirmationCannotCreateAMissingReservation(t *testing.T) {
 	for _, setup := range []string{"no identity", "admission only", "close tombstone only"} {
 		t.Run(setup, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			admissions := execution.New(openPool())
@@ -120,9 +120,9 @@ func TestConfirmationAliasesAndLateUncertaintyPreserveOriginalObservations(t *te
 		}
 		t.Run(name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			request.Admission.TenantID = "aaaaaaaa-2222-4333-8444-555555555555"
-			refreshDispatchHashes(t, &request.Admission)
+			refreshDispatchHashes(t, openPool(), &request)
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -170,7 +170,7 @@ func TestConcurrentConfirmationsRetainSameOrConflictingRuns(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -263,7 +263,7 @@ func TestConcurrentConfirmationsRetainSameOrConflictingRuns(t *testing.T) {
 
 func TestConcurrentCloseAndConfirmedRunBothRemainDurable(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -325,12 +325,12 @@ func TestConcurrentCloseAndConfirmedRunBothRemainDurable(t *testing.T) {
 
 func TestConfirmedRunObservationsKeepOriginalTenantScope(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	other := request
 	other.Admission.TenantID = otherDispatchTenant
 	other.Admission.ExecutionID = "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"
 	other.Admission.OperationID = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"
-	refreshDispatchHashes(t, &other.Admission)
+	refreshDispatchHashes(t, openPool(), &other)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -373,10 +373,10 @@ func TestConfirmedRunAfterDatabaseDeadlineRetainsOriginalAttempt(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	now := databaseTime(t, ctx, observer)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	request.Admission.AcceptedAt = now.Add(-time.Minute)
 	request.Admission.Snapshot.DeadlineAt = now.Add(3 * time.Second)
-	refreshDispatchHashes(t, &request.Admission)
+	refreshDispatchHashes(t, openPool(), &request)
 	first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
 	waitForDatabaseDeadline(t, ctx, observer, request.Admission.Snapshot.DeadlineAt)
 	observedAt := databaseTime(t, ctx, observer)

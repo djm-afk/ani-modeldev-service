@@ -1,0 +1,8 @@
+{
+  "Schema": "ani.modeldev.original-c99-qualifier-build.v1",
+  "CodecCommit": "c99c9f1081c754f7e38ceccd056db9a032ca3c27",
+  "BinarySHA256": "a1891a0e388e8fe4a6280e4803c9b2d068a8317908739dabeb2e0036689eb78d",
+  "SourceSHA256": "15b0477fa0775a982dfc2c7bfaf5231d745d22f240dbf461520a0aa88cccc2eb",
+  "GoVersion": "go1.26.10",
+  "ExitCode": 0
+}

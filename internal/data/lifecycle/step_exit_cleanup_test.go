@@ -3,6 +3,7 @@ package lifecycle_test
 import (
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"reflect"
 	"strings"
 	"testing"
@@ -29,7 +30,7 @@ func TestStepExitCleanupPersistsBeforeReleaseAndResumesClosedScan(t *testing.T) 
 	ctx := context.Background()
 	repository := lifecycle.New(open())
 	closed := naturalClosedFixture(t, repository, admission, authority, workspace)
-	ids, err := repository.ListPendingClosures(ctx, biz.PipelineDispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}}, "", 10)
+	ids, err := testPendingCloseIDs(ctx, repository, admissionfixture.DispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}})
 	if err != nil || len(ids) != 1 || ids[0] != admission.ExecutionID {
 		t.Fatalf("CLOSED with unreleased exits vanished from restart scan: %v %v", ids, err)
 	}
@@ -63,7 +64,7 @@ func TestStepExitCleanupPersistsBeforeReleaseAndResumesClosedScan(t *testing.T) 
 	if err != nil || repeated.OwnerRevision != completed.OwnerRevision || !repeated.StepExitCleanup.CompletedAt.Equal(*completed.StepExitCleanup.CompletedAt) {
 		t.Fatal("cleanup replay renewed its original database receipt", err)
 	}
-	ids, err = repository.ListPendingClosures(ctx, biz.PipelineDispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}}, "", 10)
+	ids, err = testPendingCloseIDs(ctx, repository, admissionfixture.DispatchBinding{TenantID: admission.TenantID, Environment: admission.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}})
 	if err != nil || len(ids) != 1 || ids[0] != admission.ExecutionID {
 		t.Fatal("step cleanup hid the still-pending terminal compute cleanup", ids, err)
 	}

@@ -1,0 +1,19 @@
+{
+  "observed_at": "2026-11-01T02:40:27.127581+00:00",
+  "apply_started_at": "2026-11-01T02:40:26.729526+00:00",
+  "target_id": 60,
+  "phase": "deliver",
+  "apply_exit_code": 0,
+  "proof_observed_at": "2026-11-01T02:40:24.703751+00:00",
+  "source_sha256": "d6b066f7e835c9b19026de5b3f1c56b182b488730d191258bfb4fb856d0e3675",
+  "proof_sha256": "65556d9ce4d8766fdd853f808b63938a90ef9c67c7409341a10b98bd9bd6e9ee",
+  "plan_sha256": "1f4169bc89cfac97b7d17e0991297d519193c8e079211d88acc8edbd735ef222",
+  "configuration_sha256": "440023513db759fbe31875618b32ee22301df420e56b841a14aec5c05752c108",
+  "node_plan": "/tmp/gov-original-command-retirement-ca01cabf-20261101/local-deliver60-20261101T024023Z-67025847-plan.json",
+  "node_source": "/tmp/gov-original-command-retirement-ca01cabf-20261101/local-deliver60-20261101T024023Z-67025847-source.json",
+  "node_proof": "/tmp/gov-original-command-retirement-ca01cabf-20261101/local-deliver60-20261101T024023Z-67025847-proof.json",
+  "apply_stdout_sha256": "c52d6df1317300ef93b0b372e263e5a3a584b39c34c2612ab47bdd26b1d94d4f",
+  "apply_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "automatic_retries": 0,
+  "prefix": "local-deliver60-20261101T024023Z-67025847"
+}

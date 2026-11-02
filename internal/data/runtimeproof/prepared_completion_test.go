@@ -98,7 +98,7 @@ func TestPreparedCompletionChecksOriginalTaskPodAndFrozenWorkspace(t *testing.T)
 			}
 			f.run["state"] = "RUNNING"
 			f.run["run_details"] = map[string]any{"task_details": []any{task}}
-			namespace := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": association.NamespaceName, "uid": association.NamespaceUID}}}
+			namespace := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": association.NamespaceName, "uid": association.NamespaceUID, "labels": map[string]any{"network.ani.io/tenant-id": snapshot.IdentityRef.TenantID, "network.ani.io/managed-by": "ani-network-service"}}}}
 			kube := dynamicfake.NewSimpleDynamicClientWithCustomListKinds(runtime.NewScheme(), map[schema.GroupVersionResource]string{{Version: "v1", Resource: "pods"}: "PodList"}, namespace, f.workflow, prepare, pvc)
 			proof := runtimeproof.New(kube, f.runs, nil, ownerClosePlans{f.dispatch})
 			err = proof.VerifyPreparedCompletion(context.Background(), f.execution, association, workspace)

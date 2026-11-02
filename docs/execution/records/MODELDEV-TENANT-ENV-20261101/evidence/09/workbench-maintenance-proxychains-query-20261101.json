@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-01T00:33:37.610636+00:00",
+  "transport": "local socks5h://192.168.2.197:1080 from actual /etc/proxychains.conf",
+  "method": "GET only",
+  "job_id": "8d8b448e1a8846c0ba96bb391d323a7e",
+  "secrets_emitted": false,
+  "status": "QUERY_FAILED",
+  "error_type": "ConnectionError"
+}

@@ -1,0 +1,60 @@
+{
+  "recorded_at": "2026-10-31T20:44:01.497629+00:00",
+  "source_commit": "5cfa9065190b9585b799e428537a0019ca70e41a",
+  "source_base": "fa80f886d022177173d7e9cf81ec51e54c2df4c8",
+  "changed_source_files": [
+    "app/admin/service/internal/server/modeldev_environment_integration_test.go"
+  ],
+  "source_sha256": "f084a4d2e3a124e8e08c862704a2fba858e2bf5f3151c8f55f35c160b93534e5",
+  "remote_gofmt_source_sha256": "f084a4d2e3a124e8e08c862704a2fba858e2bf5f3151c8f55f35c160b93534e5",
+  "source_identity_match": true,
+  "command": "GOTOOLCHAIN=auto GOMAXPROCS=2 GOFLAGS=-p=2 go test -race -count=1 -v -timeout=3m -tags=modeldev_pg,modeldev_registration_pg -run ^TestModelDevEnvironmentHTTPCurrentAuthorizationAndNoAcceptance$ ./app/admin/service/internal/server",
+  "execution_host": "ssh fedora",
+  "raw_receipt": "environment-http-integration-final-receipt.json",
+  "raw_log": "environment-http-integration-final.log",
+  "result": "PASS",
+  "test_seconds": 0.27,
+  "package_seconds": 1.96,
+  "boundary_substitutes": [
+    "external ModelDev mTLS server replies",
+    "existing external Resource TRAINING compute selection fixture"
+  ],
+  "real_components": [
+    "exclusive PostgreSQL schema and separate non-DDL runtime identity",
+    "loopback task-owned Redis",
+    "signed JWT and token cache/checker",
+    "TenantAccessChecker",
+    "Casbin policy engine loaded from DB",
+    "current ModelDev authorization repository",
+    "persisted resource tenant UUID mapping",
+    "ModelDevService",
+    "ModelDevClient mTLS/typed error validation",
+    "registered public HTTP adapter",
+    "acceptance and quota persistence observations"
+  ],
+  "covered": [
+    "Ensure POST PROVISIONING 202 and Retry-After=2",
+    "same-key Ensure READY 200",
+    "Get READY 200 with mapped standard Namespace",
+    "Get no registration 404 from ErrorReason38 with remote text suppressed",
+    "Create actual Prepare ENVIRONMENT_NOT_READY 503 with exact environment_reason=TENANT_NAMESPACE_NOT_FOUND metadata and no Finalize",
+    "same JWT and idempotency key after current manage grant OFF gives Ensure403 without any Ensure/Get/Prepare/Finalize RPC increase",
+    "independent view grant still allows Get after manage revoked",
+    "acceptance=0 and charge=0 after every HTTP request",
+    "poisoned public tenant/actor/data-scope/authorized-method headers do not replace trusted delegation"
+  ],
+  "not_claimed": [
+    "real deployed A/B Kubernetes/KFP acceptance",
+    "all 22 causes across HTTP; all22 coverage belongs to existing data converter unit test",
+    "Governance ownership of Namespace resolver or full vectors corpus",
+    "new changes repair existing VM catalog required-check failure",
+    "audit security readiness"
+  ],
+  "earlier_failures_preserved": [
+    "environment-http-integration-first-setup-fail.log",
+    "environment-http-integration-first-setup-fail-receipt.json",
+    "environment-http-integration-first-behavior-fail.log",
+    "environment-http-integration-first-behavior-fail-receipt.json"
+  ],
+  "evidence_level": "component integration with external service boundary doubles"
+}

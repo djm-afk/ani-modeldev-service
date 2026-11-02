@@ -48,12 +48,14 @@ func TestTrainingActual422PersistsAndClosesWithoutSecondPost(t *testing.T) {
 	snapshot, specHash = admission.Snapshot, admission.SpecHash
 	open := postgres.Prepare(t)
 	pool := open()
+	admission = admissionfixture.EnsureEnvironment(t, pool, admission)
+	snapshot, specHash = admission.Snapshot, admission.SpecHash
 	ctx := context.Background()
 	if _, err := execution.New(pool).Accept(ctx, admission); err != nil {
 		t.Fatal("real admission", err)
 	}
 	dispatches := submission.New(pool)
-	dispatch, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: admission, Owner: biz.PipelineOwnerConfiguration{Reference: "422-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}})
+	dispatch, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: admission, Owner: admission.Snapshot.DispatchOwner})
 	if err != nil || dispatch.SendPermit == nil {
 		t.Fatal("real dispatch", err)
 	}

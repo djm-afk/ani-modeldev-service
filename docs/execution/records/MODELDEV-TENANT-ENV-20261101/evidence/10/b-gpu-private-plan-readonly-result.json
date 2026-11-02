@@ -1,0 +1,99 @@
+{
+  "schema": "ani.modeldev.b-private-plan.v1",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "runtime": {
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "generation": 198,
+    "pod_uid": "7e3c6bd5-4d76-4b44-92bf-6e3b89d48a6f",
+    "pod_name": "ani-governance-7ddc444f78-nt5vc",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "pause_value": "default"
+  },
+  "observed_at": "2026-11-01T02:43:00.644407+00:00",
+  "status": "READ_ONLY_PLAN",
+  "source_plan": {
+    "id": 2,
+    "name": "ani-factor10-e2e",
+    "version": "STANDARD",
+    "expiryPolicy": "READONLY",
+    "createdBy": 1,
+    "createdAt": "2026-10-22T04:09:05.070644Z"
+  },
+  "source_modules": [
+    "ACCELERATOR",
+    "DASHBOARD",
+    "IMAGE",
+    "INFERENCE",
+    "INSTANCE",
+    "MODEL",
+    "NETWORK",
+    "OPM",
+    "STORAGE",
+    "SYSTEM",
+    "TENANT",
+    "VIRTUAL_MACHINE"
+  ],
+  "source_quotas": {
+    "gpu.physical.count": "1"
+  },
+  "new_plan_data": {
+    "version": "STANDARD",
+    "expiryPolicy": "READONLY",
+    "name": "modeldev-live-b-20261101"
+  },
+  "only_added_quota": {
+    "gpu.shared_memory_mib": "49140"
+  },
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/platform/password/login",
+      "status": 200,
+      "response_sha256": "01cc6cba1dfd007d67440961d19fd408d18e480a4a8ea8304871cd2f6c11ddb7"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tenants/40",
+      "status": 200,
+      "response_sha256": "46182af27f09166cc2ac0993be762c2bc268cf0672d6089edefd27b7d2d3087c"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/roles/26",
+      "status": 200,
+      "response_sha256": "f0775212542a2e3889fdbc2930ef95e403416203a03016ac15463370eaa6eeb6"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plans/2",
+      "status": 200,
+      "response_sha256": "e273e329269206bd07b87cb991ce9cc7f70bbf2832e7c90f0945ac33eae93230"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "a490c7b391f075c60349eb36214bdac76fd66f1eb81fc9dc0cd19064562bfe13"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-quotas",
+      "status": 200,
+      "response_sha256": "08ad223e0c72cf027409d4b94cec8c364a5c2e1df1e5cb245e040a391b0fda8e"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plans",
+      "status": 200,
+      "response_sha256": "d143ad2745c0cca549895d28cf2471e90655dafa906ef64d8cc5a0edffb7bab6"
+    }
+  ],
+  "ssh_exit": 0
+}

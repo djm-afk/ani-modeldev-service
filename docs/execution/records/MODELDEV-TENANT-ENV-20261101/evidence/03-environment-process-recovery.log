@@ -1,0 +1,14 @@
+=== RUN   TestEnvironmentEnsureRecoveryChild
+--- PASS: TestEnvironmentEnsureRecoveryChild (0.00s)
+=== RUN   TestEnvironmentPostgresSIGKILLRecoversOriginalExternalObjects
+=== RUN   TestEnvironmentPostgresSIGKILLRecoversOriginalExternalObjects/serviceaccount-create
+    process_recovery_test.go:69: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    process_recovery_test.go:281: SIGKILL_RECOVERY PASS stage=serviceaccount-create same_environment=true same_namespace_uid=true original_external_identity=true experiment_posts=1
+=== RUN   TestEnvironmentPostgresSIGKILLRecoversOriginalExternalObjects/experiment-post
+    process_recovery_test.go:69: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    process_recovery_test.go:281: SIGKILL_RECOVERY PASS stage=experiment-post same_environment=true same_namespace_uid=true original_external_identity=true experiment_posts=1
+--- PASS: TestEnvironmentPostgresSIGKILLRecoversOriginalExternalObjects (0.96s)
+    --- PASS: TestEnvironmentPostgresSIGKILLRecoversOriginalExternalObjects/serviceaccount-create (0.51s)
+    --- PASS: TestEnvironmentPostgresSIGKILLRecoversOriginalExternalObjects/experiment-post (0.45s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment	0.976s

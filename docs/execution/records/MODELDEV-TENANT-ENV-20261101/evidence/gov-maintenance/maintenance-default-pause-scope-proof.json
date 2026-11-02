@@ -1,0 +1,23 @@
+{
+  "stage": "targeted PASS; complete make check still running",
+  "source_base": "6a7c721ea113d51497421d7975122ec7ca8105c2",
+  "targeted_exit_code": 0,
+  "source_hashes_match_all10": true,
+  "original_module_pins_and_dependencies_unchanged": {
+    "go.mod": "eccba55c294e83ea62420f2ff5a424f754b688f6dec8bee95ba25d6770e6883b",
+    "go.sum": "898509f4d5b534b6d02c4220dc7fbf64bd3643433e9ffc6316cb8eca429dfa94"
+  },
+  "unchanged_lease_and_worker_business_files": {
+    "app/admin/service/internal/data/modeldev_maintenance_lease_test.go": "2b6985cabb768ca838e8782080914bf893dc637741611004406dc6892fc12081",
+    "app/admin/service/internal/data/modeldev_dispatch_repo.go": "477a38ff825546d20683f882339c5b217e1817e121ed371ba377c085cf34bc80",
+    "app/admin/service/internal/service/modeldev_create_maintenance.go": "5e7d5bae4d878319ad914bea2e37d8f3fdb27cc1a630e6ca0b2c745db8e2f189",
+    "app/admin/service/internal/service/modeldev_dispatch_worker.go": "fb681945fa10ce71fad1c2c48dbac0df97d5ecb743cdee97f8d5e878cca9d000",
+    "go.mod": "eccba55c294e83ea62420f2ff5a424f754b688f6dec8bee95ba25d6770e6883b",
+    "go.sum": "898509f4d5b534b6d02c4220dc7fbf64bd3643433e9ffc6316cb8eca429dfa94"
+  },
+  "original_pg_lease_result": "reused original PASS; no new PG run; raw original lease data package0.088s",
+  "original_pg_raw_log": "maintenance-original-lease-pg.log",
+  "final_dynamic_branch_head": "02f4f71e743b4ffe08ef04e880f1c431b62d7213",
+  "final_dynamic_branch_clean": true,
+  "final_dynamic_default_false": true
+}

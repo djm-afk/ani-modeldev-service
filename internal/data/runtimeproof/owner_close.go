@@ -56,7 +56,7 @@ func (verifier *Verifier) VerifyOwnerWritersAbsent(ctx context.Context, executio
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 	}
 	namespace, err := verifier.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, environment.NamespaceName, metav1.GetOptions{})
-	if err != nil || !sameObject(namespace, "v1", "Namespace", "", environment.NamespaceName, environment.NamespaceUID) || namespace.GetDeletionTimestamp() != nil {
+	if err != nil || !sameObject(namespace, "v1", "Namespace", "", environment.NamespaceName, environment.NamespaceUID) || namespace.GetLabels()["network.ani.io/managed-by"] != "ani-network-service" || namespace.GetLabels()["network.ani.io/tenant-id"] != authority.TenantID {
 		return biz.ManagedCloseEvidence{}, biz.ErrRuntimeNotReady
 	}
 	workflows := verifier.kube.Resource(schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}).Namespace(environment.NamespaceName)
@@ -391,7 +391,10 @@ func serverDeniedAdmissionNode(workflow *unstructured.Unstructured, node map[str
 		return serverWebhookAdmissionTimeout(workflow.GetNamespace(), strings.TrimPrefix(message, prefix))
 	}
 	executor := node["templateName"] == "metadata-0-2-retry-system-container-impl" || node["templateName"] == "metadata-1-2-retry-system-container-impl"
-	policyDenied := message == "admission webhook \""+workflow.GetNamespace()+".modeldev.ani.io\" denied the request: ModelDev Pod admission refused: work_environment"
+	// The dynamic hook rejects an image mismatch before storage Create. The
+	// complete zero-retry executor graph below must still prove no Pod ran.
+	policyDenied := message == "admission webhook \""+workflow.GetNamespace()+".modeldev.ani.io\" denied the request: ModelDev Pod admission refused: work_environment" ||
+		message == "admission webhook \"dynamic.modeldev.ani.io\" denied the request: ModelDev Pod admission refused: image_contract"
 	return executor && (serverWebhookAdmissionTimeout(workflow.GetNamespace(), message) || policyDenied) && rejectedExecutorHasZeroRetries(workflow, node)
 }
 

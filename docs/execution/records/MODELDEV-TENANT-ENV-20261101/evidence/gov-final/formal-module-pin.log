@@ -1,0 +1,3 @@
+go: downloading github.com/zhangzhe-ctrl/ani-modeldev-service v0.0.0-20261031195825-d807cbdbd5dd
+go: upgraded github.com/zhangzhe-ctrl/ani-modeldev-service v0.0.0-20261029062749-c99c9f1081c7 => v0.0.0-20261031195825-d807cbdbd5dd
+go: upgraded github.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261030162442-d09b4230ab65 => v0.0.0-20261031180451-71b3ad7a2a88

@@ -1,0 +1,97 @@
+{
+  "schema": "ani.modeldev.tenant-environment.reason-codes.v1",
+  "reason_codes": [
+    {
+      "code": "TENANT_NAMESPACE_NOT_FOUND",
+      "semantics": "BLOCKED；外部初始化提供 Namespace 后可重试"
+    },
+    {
+      "code": "TENANT_NAMESPACE_ACCESS_DENIED",
+      "semantics": "BLOCKED；精确 GET 被拒绝，修复已选连接权限；不按不存在重建"
+    },
+    {
+      "code": "ENVIRONMENT_NOT_REGISTERED",
+      "semantics": "仅业务受理错误；尚无登记行，不能替用户隐式 Ensure"
+    },
+    {
+      "code": "ENVIRONMENT_PROVISIONING",
+      "semantics": "仅业务受理错误；登记仍在有限开通流程"
+    },
+    {
+      "code": "COMPUTE_CLUSTER_MISMATCH",
+      "semantics": "仅本次 Prepare 失败；GPU Selection 与受管集群不符，不把正常环境状态改成 BLOCKED"
+    },
+    {
+      "code": "TENANT_NAMESPACE_OWNERSHIP_MISMATCH",
+      "semantics": "NEEDS_REVIEW；不补标签或收养"
+    },
+    {
+      "code": "TENANT_NAMESPACE_NOT_ACTIVE",
+      "semantics": "BLOCKED；不创建替代 Namespace"
+    },
+    {
+      "code": "TENANT_NAMESPACE_UID_CHANGED",
+      "semantics": "NEEDS_REVIEW；不更新绑定 UID"
+    },
+    {
+      "code": "ENVIRONMENT_OBJECT_CONFLICT",
+      "semantics": "NEEDS_REVIEW；固定名字被其他对象占用或原 UID 变化"
+    },
+    {
+      "code": "ENVIRONMENT_CONFIG_DRIFT",
+      "semantics": "NEEDS_REVIEW；当前配置与已经固定的 provision_spec 不同"
+    },
+    {
+      "code": "KFP_AUTHENTICATION_FAILED",
+      "semantics": "BLOCKED；修复已选身份路径"
+    },
+    {
+      "code": "KFP_PERMISSION_DENIED",
+      "semantics": "BLOCKED；补本方案固定权限"
+    },
+    {
+      "code": "KFP_EXPERIMENT_CONFLICT",
+      "semantics": "NEEDS_REVIEW；错误归属、多匹配、已确认对象消失"
+    },
+    {
+      "code": "KFP_EXPERIMENT_RESULT_UNCERTAIN",
+      "semantics": "PROVISIONING；只能按第 5 节查证"
+    },
+    {
+      "code": "KFP_ARTIFACT_CONFIGURATION_NOT_READY",
+      "semantics": "BLOCKED；内部制品配置/专用凭据未满足"
+    },
+    {
+      "code": "ENVIRONMENT_AUTHORIZATION_UNVERIFIED",
+      "semantics": "BLOCKED；授权边审查不完整、超限或存在未支持authorizer，不能先写artifact Secret"
+    },
+    {
+      "code": "KFP_ARTIFACT_ACCESS_NOT_ISOLATED",
+      "semantics": "BLOCKED；普通 tenant 仍能读取/挂载专用 Secret 或借用受管身份"
+    },
+    {
+      "code": "FIXED_PIPELINE_MATERIAL_MISMATCH",
+      "semantics": "BLOCKED；固定 ID、父 namespace 或摘要不一致"
+    },
+    {
+      "code": "TENANT_IMAGE_SPACE_NOT_READY",
+      "semantics": "BLOCKED；由现有镜像 owner 完成空间/凭据前置条件"
+    },
+    {
+      "code": "MANAGED_IMAGE_REGISTRY_MISMATCH",
+      "semantics": "BLOCKED；需认证固定镜像未在受管 registry 的平台项目"
+    },
+    {
+      "code": "INCOMPATIBLE_ADMISSION_POLICY",
+      "semantics": "BLOCKED；不静默更改共享策略"
+    },
+    {
+      "code": "ENVIRONMENT_DEPENDENCY_UNAVAILABLE",
+      "semantics": "BLOCKED 且 retryable=true；保留进度"
+    }
+  ],
+  "new_rpc_error_reason": {
+    "name": "ERROR_REASON_ENVIRONMENT_NOT_REGISTERED",
+    "number": 38
+  }
+}

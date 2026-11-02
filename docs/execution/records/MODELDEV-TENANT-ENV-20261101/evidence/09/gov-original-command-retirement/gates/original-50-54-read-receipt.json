@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-11-01T01:50:29.674358+00:00",
+  "scope": {
+    "md_original_executions": 50,
+    "gov_original_acceptances": 54
+  },
+  "read_only": true,
+  "canonical_public": false,
+  "status": "PRIVATE_FIXED_CAPTURE_READY",
+  "ssh_exit": 0,
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "ssh_user": "kubercloud",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+  },
+  "raw_sha256": "c5c786021e68ff48bb42c492faf8308cf10be640b6bbb8b49747b0d9d8580946",
+  "md_rows": 50,
+  "gov_rows": 54,
+  "transfer_exit": 0,
+  "private_path": "/home/chabking/tenantenv-20261101/original-command-retirement-private-20261101T015029.json",
+  "ended_at": "2026-11-01T01:51:04.289209+00:00"
+}

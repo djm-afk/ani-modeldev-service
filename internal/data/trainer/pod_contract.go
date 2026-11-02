@@ -1,8 +1,6 @@
 package trainer
 
 import (
-	"strings"
-
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -38,47 +36,25 @@ func ValidatePodTemplate(expected corev1.PodSpec, actual corev1.PodSpec) error {
 	return nil
 }
 
-// trainingPullSecretsCovered accepts the frozen references plus whatever the API
-// server copied from the Pod's ServiceAccount. A Pod that declares no
-// imagePullSecrets of its own inherits the ServiceAccount's registry credential
-// at admission, so an empty expectation must still accept that single
-// credential; the finetuning template deliberately carries none. Any reference
-// outside the expected set that is not a ServiceAccount inheritance is still a
-// real substitution and stays rejected. The adapter holds no ServiceAccount read
-// permission, so inheritance is recognised by its platform-prefixed name rather
-// than by reading the account.
+// Training Pods declare the complete frozen pull reference set. The reserved
+// trainer account has no pull references, so admission adds no authority.
 func trainingPullSecretsCovered(expected, actual []corev1.LocalObjectReference) bool {
-	if len(expected) == 0 {
-		for _, reference := range actual {
-			if !serviceAccountPullSecret(reference.Name) {
-				return false
-			}
-		}
-		return true
-	}
-	if len(actual) < len(expected) {
+	if len(expected) != len(actual) {
 		return false
 	}
-	for _, want := range expected {
-		matched := false
-		for _, got := range actual {
-			if got.Name == want.Name {
-				matched = true
-				break
-			}
+	seen := map[string]bool{}
+	for _, ref := range actual {
+		if ref.Name == "" || seen[ref.Name] {
+			return false
 		}
-		if !matched {
+		seen[ref.Name] = true
+	}
+	for _, ref := range expected {
+		if !seen[ref.Name] {
 			return false
 		}
 	}
 	return true
-}
-
-// serviceAccountPullSecret recognises the tenant registry credential a namespace
-// ServiceAccount carries for every managed workload. The shared tenant Secret the
-// plan freezes uses the ani-pull- prefix and is never mistaken for it.
-func serviceAccountPullSecret(name string) bool {
-	return name != "" && strings.HasPrefix(name, "ani-registry-pull")
 }
 
 func validateEffectiveTrainingPod(plan biz.TrainingPlan, pod *unstructured.Unstructured) error {

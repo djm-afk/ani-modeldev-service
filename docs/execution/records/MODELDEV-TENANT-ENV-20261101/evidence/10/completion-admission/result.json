@@ -1,0 +1,159 @@
+{
+  "schema": "ani.modeldev.completion-native-and-fault-summary.v1",
+  "status": "PASS_REQUIRED_NATIVE_AND_CONTROLLED_FAILURE_RECOVERY",
+  "finished_at": "2026-11-01T17:09:27.749165+00:00",
+  "LIVE02": {
+    "status": "PASS_FINITE_NATIVE_REQUIRED_NEGATIVES_AND_SAFE_UPDATE",
+    "principal": {
+      "http_status": 201,
+      "username": "system:serviceaccount:ani-system:modeldev-control",
+      "uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "groups": [
+        "system:serviceaccounts",
+        "system:serviceaccounts:ani-system",
+        "system:authenticated"
+      ],
+      "response_sha256": "00ff3fd75639780c20f56260ca6ec38a4ad6049a9dd99a0638389da8048dab7d",
+      "authentication": "actual existing projected token; no impersonation or TokenRequest"
+    },
+    "required_negative_cases": [
+      {
+        "id": "wrong-namespace-owner",
+        "http_status": 422,
+        "result": "PASS",
+        "native_policy_denial": true,
+        "existing_object_unchanged": true
+      },
+      {
+        "id": "wrong-role-reference-only",
+        "http_status": 422,
+        "result": "PASS",
+        "native_policy_denial": true,
+        "existing_object_unchanged": true
+      },
+      {
+        "id": "wrong-artifact-secret-type-only",
+        "http_status": 422,
+        "result": "PASS",
+        "native_policy_denial": true,
+        "existing_object_unchanged": true
+      },
+      {
+        "id": "wrong-artifact-secret-keys-only",
+        "http_status": 422,
+        "result": "PASS",
+        "native_policy_denial": true,
+        "existing_object_unchanged": true
+      },
+      {
+        "id": "safe-current-control-update",
+        "http_status": 200,
+        "result": "PASS",
+        "native_policy_denial": null,
+        "existing_object_unchanged": true
+      }
+    ],
+    "coverage_scope": "four required native negatives and one authorized safe UPDATE dry-run; not all AD01/AD02 clauses or ordinary-user authentication"
+  },
+  "LIVE10": {
+    "status": "PASS_ACTUAL_REAL_ARGO_MD_FAIL_CLOSED_ORDINARY_ISOLATION_AND_RECOVERY",
+    "principal": {
+      "http_status": 201,
+      "username": "system:serviceaccount:kubeflow:argo",
+      "uid": "fad3d394-d7ef-4be1-a1d8-a864a3497c58",
+      "groups": [
+        "system:serviceaccounts",
+        "system:serviceaccounts:kubeflow",
+        "system:authenticated"
+      ],
+      "response_sha256": "ef7d6db228c8ad2a44c45ee4aad85580dd62ba88a760481acd5139eb2283c550",
+      "authentication": "actual existing projected token; no impersonation or TokenRequest"
+    },
+    "original_source_pod": {
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "name": "md-k2hqk-136888522",
+      "uid": "8d4a7d5e-b286-45f3-afc8-20dc400a1102"
+    },
+    "run_id": "95ea672f-b010-476c-9e52-07e5e0a68920",
+    "spec_hash": "f4ce60e7e75092e60c4191a92146acc7db1c03b01d802fd13737d39538e27362",
+    "opened_at": "2026-11-01T17:02:20.459649+00:00",
+    "restored_at": "2026-11-01T17:02:20.900094+00:00",
+    "calls": [
+      {
+        "case": "ordinary-baseline",
+        "at": "2026-11-01T17:02:19.971620+00:00",
+        "http_status": 201,
+        "reason": null,
+        "message": null,
+        "request_sha256": "9dd254b7232eefb19f2ad4499a6562b66de2cc7280e2d7552278503cabdf81ad",
+        "response_sha256": "52cde03e88e4cb87a9fdbfbc2958afbd8d5f3d36788108aa9058adfe8a6e3016",
+        "dry_run_generated_name": "md-live10-ordinary-fwq2v"
+      },
+      {
+        "case": "md-baseline-real-argo",
+        "at": "2026-11-01T17:02:20.031709+00:00",
+        "http_status": 201,
+        "reason": null,
+        "message": null,
+        "request_sha256": "e4da3bdbdb3ba4016c5ddfecc376ef7640d1586aa29beccf7f33721838205cd2",
+        "response_sha256": "545f49682e8a4b2c6e7dae14948a8ce4a060870f5e0c65d2cbf9bb1e46e45934",
+        "dry_run_generated_name": "md-live10-step-fggrg"
+      },
+      {
+        "case": "ordinary-during-md-unreachable",
+        "at": "2026-11-01T17:02:20.474634+00:00",
+        "http_status": 201,
+        "reason": null,
+        "message": null,
+        "request_sha256": "9dd254b7232eefb19f2ad4499a6562b66de2cc7280e2d7552278503cabdf81ad",
+        "response_sha256": "f8bd3b8fb3433f53da6014299b25ef06ca13e2742db68d8113320180f4ce655d",
+        "dry_run_generated_name": "md-live10-ordinary-6gsnl"
+      },
+      {
+        "case": "md-during-webhook-unreachable-real-argo",
+        "at": "2026-11-01T17:02:20.491663+00:00",
+        "http_status": 500,
+        "reason": "InternalError",
+        "message": "Internal error occurred: failed calling webhook \"dynamic.modeldev.ani.io\": failed to call webhook: Post \"https://ani-modeldev-webhook.ani-system.svc:1/mutate?timeout=8s\": no service port 1 found for service \"ani-modeldev-webhook\"",
+        "request_sha256": "e4da3bdbdb3ba4016c5ddfecc376ef7640d1586aa29beccf7f33721838205cd2",
+        "response_sha256": "7dd1921b98aea77b129d6f2a106efc77321ec6825bdad00d2aaee2bfa3c94f40",
+        "dry_run_generated_name": null
+      },
+      {
+        "case": "md-restored-real-argo",
+        "at": "2026-11-01T17:02:21.001083+00:00",
+        "http_status": 201,
+        "reason": null,
+        "message": null,
+        "request_sha256": "e4da3bdbdb3ba4016c5ddfecc376ef7640d1586aa29beccf7f33721838205cd2",
+        "response_sha256": "9639d2da0693a52654d0574e766f6ea825a1b246db1a995ac5d0941ca3b03c3d",
+        "dry_run_generated_name": "md-live10-step-cbnch"
+      }
+    ],
+    "readyz": 200,
+    "persisted_pods_created": 0,
+    "new_identity_RBAC_TokenRequest": false,
+    "restore_required": false,
+    "same_original_full_webhook_spec_fresh_readback": true,
+    "restored_mwc_uid": "c452d29d-89be-41af-ac95-eb467e1a89c2",
+    "restored_mwc_generation": 5,
+    "restored_port": 443,
+    "generation_is_not_a_BootstrapDigest_field": true,
+    "service_or_deployment_changed": false,
+    "source_public_snapshot_scope": "Original namespace/name/UID/Run/specHash and real principal chain retained; full original Pod spec was memory-only; final source GET404 is normal owner cleanup. STS owner receipt additionally retains main CID/start/Workflow/Task."
+  },
+  "private_material_cleanup": {
+    "projected_tokens_persisted": false,
+    "original_admin_TLS_temporary_copies_absent": true,
+    "watcher_exit_code": 0,
+    "no_new_installed_binary_or_tool": true
+  },
+  "evidence": {
+    "native-actual.json": "aad6f4d8a311e77dd41057614303c280354a3e03b96fbf15e5bfc77bf3976a88",
+    "native-evaluated.json": "73bc7c3121c233374d442f68fed4ee6b06c52212f41a46457413dd8599074f99",
+    "prepare-window-actual.json": "c258a3efc2d66550b0147beee3acd6b3849f368cc1e78169323e819b7c1b4e58",
+    "window-actual.json": "5f96b75e3529ed16a0fe0bdd56beafa51b8bf33cd9407910372ea9a40fc51f2b",
+    "window-watch-events.jsonl": "7909de71f6e79c0a584274087191f9bcb3e60f1c151e696e886b71fa87e7aa85",
+    "final-original-restore-public.json": "d78c6d3ccae9caced629b1f29b3ca67fefff0d065641e79474585267612a9db0"
+  }
+}

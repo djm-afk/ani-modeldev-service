@@ -1,0 +1,7 @@
+{
+  "path": "/tmp/modeldev-legacy-retirement-20261101/root-resume-gate-20261101T021801Z.json",
+  "sha256": "4d997825f373bbb2d2c14cda5ae44628b5a57a2e9db2fc0152a3180e58b9bcbe",
+  "observed_at": "2026-11-01T02:18:01.544062+00:00",
+  "plan_sha256": "5cbe9d22437cefc8f1b82e09ac4972b6514bbd88281850972c643dd80d57e9ef",
+  "source_evidence_sha256": "1cb88a18fdff59e903a5ae305329b14a24f030cc6f17a95ff16c847f60011c5d"
+}

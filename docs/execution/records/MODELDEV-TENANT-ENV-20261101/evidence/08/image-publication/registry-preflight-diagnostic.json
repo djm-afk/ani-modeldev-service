@@ -1,0 +1,43 @@
+{
+  "read_only": true,
+  "public_source": {
+    "identity": {
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+    },
+    "deployment_uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+    "deployment_resource_version": "20340742",
+    "config_secret_uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+    "password_source": "ani-system/ani-resource-private:harbor.password",
+    "ca_source": "ani-system/ani-resource-private:harbor-ca.crt",
+    "ca_sha256": "65f1a1d14d21fed31b89f25b143e78b16605b82d32c56ef6bf8167fe78bab871",
+    "init_container": "private-regular-files",
+    "projected_mount": "input:/input readonly -> private:/private",
+    "credentials_emitted": false
+  },
+  "probes": [
+    {
+      "path": "/v2/",
+      "error_class": "URLError",
+      "tls_error": true
+    },
+    {
+      "path": "/api/v2.0/projects/ani-resource-factor10-20261022",
+      "error_class": "URLError",
+      "tls_error": true
+    }
+  ],
+  "skopeo": {
+    "exit": 1,
+    "stderr_sha256": "c3c39ea19221d456baf7b8d74b50388c503f5a23960503267b90b58f43057ffd",
+    "error_flags": [],
+    "redacted_error": "time=\"2026-11-01T08:46:53+08:00\" level=fatal msg=\"Error parsing image name \\\"docker://10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step:tenantenv-d807cbdbd5dd-cymq2rk8\\\": pinging container registry 10.10.1.66:30003: Get \\\"https://10.10.1.66:30003/v2/\\\": EOF\"\n",
+    "manifest_present": false
+  },
+  "temporary_auth_and_ca_removed": true,
+  "fedora_ssh_exit": 0
+}

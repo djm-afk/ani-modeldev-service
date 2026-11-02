@@ -1,0 +1,24 @@
+{
+  "stage": "gitleaks-fixture-target-scan",
+  "started_at": "2026-10-31T21:00:15.910711+00:00",
+  "completed_at": "2026-10-31T21:00:33.803900+00:00",
+  "command": [
+    "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/tools/gitleaks",
+    "dir",
+    "--no-banner",
+    "--no-color",
+    "--redact",
+    "."
+  ],
+  "cwd": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source",
+  "execution_host": "ssh fedora",
+  "exit_code": 0,
+  "source_base": "5cfa9065190b9585b799e428537a0019ca70e41a",
+  "source_file": "app/admin/service/internal/data/platform_component_log_scope_test.go",
+  "source_sha256": "09df6e331be2b29939448147ed37f3336b9f3cdf9901f96f1ecd3ae701c7880a",
+  "environment": {
+    "GOTOOLCHAIN": "auto",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2"
+  }
+}

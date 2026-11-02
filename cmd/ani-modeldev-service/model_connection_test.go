@@ -28,7 +28,7 @@ func modelConnectionTestConfig(t *testing.T) *conf.GovernanceCommand {
 	if os.WriteFile(certificatePath, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: client.Certificate[0]}), 0600) != nil || os.WriteFile(keyPath, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: key}), 0600) != nil {
 		t.Fatal("synthetic Model identity write failed")
 	}
-	return &conf.GovernanceCommand{Model: &conf.ModelConnection{Endpoint: "127.0.0.1:19090", CaFile: server.CAFile, ClientDnsName: "ani-modeldev-service", CertificateFile: certificatePath, PrivateKeyFile: keyPath, ServerName: "ani-model.ani.internal", Actor: "modeldev:service", Timeout: durationpb.New(time.Hour), BaseModelStorageScope: &conf.BaseModelStorageScope{ConnectionId: "model-store-v1", Bucket: "ani-models", ApprovedPrefix: "original/models", CredentialReference: "model-base-read"}}}
+	return &conf.GovernanceCommand{Model: &conf.ModelConnection{Endpoint: "127.0.0.1:19090", CaFile: server.CAFile, ClientDnsName: "ani-modeldev-service", CertificateFile: certificatePath, PrivateKeyFile: keyPath, ServerName: "ani-model.ani.internal", Actor: "modeldev:service", Timeout: durationpb.New(time.Hour), BaseModelStorageScope: &conf.BaseModelStorageScope{ConnectionId: "model-store-v1", Bucket: "ani-models", CredentialReference: "model-base-read"}}}
 }
 
 func TestModelResourceFactorySharesExplicitLiveReaderAndOwnedCleanup(t *testing.T) {
@@ -60,7 +60,7 @@ func TestModelResourceFactoryRejectsAmbiguousIncompleteAndBorrowedMaterials(t *t
 		change func(*conf.GovernanceCommand)
 	}{
 		{"missing scope", func(c *conf.GovernanceCommand) { c.Model.BaseModelStorageScope = nil }},
-		{"wrong scope", func(c *conf.GovernanceCommand) { c.Model.BaseModelStorageScope.ApprovedPrefix = "../model" }},
+		{"wrong scope", func(c *conf.GovernanceCommand) { c.Model.BaseModelStorageScope.Bucket = "../model" }},
 		{"borrowed identity", func(c *conf.GovernanceCommand) { c.Model.ClientDnsName = "ani-governance" }},
 	} {
 		t.Run(test.name, func(t *testing.T) {

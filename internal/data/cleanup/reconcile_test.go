@@ -249,7 +249,7 @@ func newCleanupResolutionFixture(t *testing.T) cleanupResolutionFixture {
 	execution := biz.Execution{Admission: biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:synthetic-fixture", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: conformance.SnapshotSHA256V1, AcceptedAt: snapshot.DeadlineAt.Add(-time.Hour).UTC()}, OwnerRevision: 9, States: biz.ExecutionStates{Close: biz.CloseStateClosed, Delivery: biz.DeliveryStatePublished}}
 	execution.Admission = admissionfixture.Bind(t, execution.Admission)
 	snapshot = execution.Snapshot
-	plan, err := (biz.PipelineDispatchRequest{Admission: execution.Admission, Owner: biz.PipelineOwnerConfiguration{Reference: "cleanup-fixture", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}}).Freeze()
+	plan, err := (biz.PipelineDispatchRequest{Admission: execution.Admission, Owner: execution.Snapshot.DispatchOwner}).Freeze()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,7 +273,7 @@ func newCleanupResolutionFixture(t *testing.T) cleanupResolutionFixture {
 	external.Run["finished_at"] = finished
 	external.Run["experiment_id"], external.Run["display_name"], external.Run["service_account"] = plan.Environment.ExperimentID, plan.DisplayName, plan.Environment.Identities.KFPStepServiceAccount
 	external.Run["pipeline_version_reference"] = map[string]any{"pipeline_id": plan.PipelineID, "pipeline_version_id": plan.PipelineVersionID}
-	external.Run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash}, "pipeline_root": plan.Owner.PipelineRoot}
+	external.Run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": plan.ExecutionID, "spec_hash": plan.SpecHash, "environment_binding_id": plan.Environment.BindingID, "namespace_uid": plan.Environment.NamespaceUID}, "pipeline_root": plan.Owner.PipelineRoot}
 	peer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet || r.URL.Path != "/apis/v2beta1/runs/"+runID || r.Header.Get("Authorization") != "Bearer synthetic-cleanup-token" {
 			t.Error("proof escaped frozen original Run")
@@ -300,6 +300,7 @@ func newCleanupResolutionFixture(t *testing.T) cleanupResolutionFixture {
 		t.Fatal(err)
 	}
 	ns := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": workspace.NamespaceName, "uid": workspace.NamespaceUID}}}
+	ns.SetLabels(map[string]string{"network.ani.io/managed-by": "ani-network-service", "network.ani.io/tenant-id": execution.TenantID})
 	pvc := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": map[string]any{"namespace": workspace.NamespaceName, "name": workspace.PVCName, "uid": workspace.PVCUID}, "status": map[string]any{"phase": "Bound"}}}
 	objects := []runtime.Object{ns, pvc, workflow}
 	for _, raw := range external.Pods {

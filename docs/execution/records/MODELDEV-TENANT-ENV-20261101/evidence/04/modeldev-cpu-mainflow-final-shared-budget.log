@@ -1,0 +1,41 @@
+=== RUN   TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed
+    complete_flow_test.go:67: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    complete_flow_test.go:70: WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary
+2026/11/01 03:36:23 INFO [gRPC] server listening addr=127.0.0.1:45257
+2026/11/01 03:36:23 INFO [gRPC] server stopping
+2026/11/01 03:36:23 INFO [gRPC] server listening addr=127.0.0.1:38575
+2026/11/01 03:36:23 INFO [gRPC] server listening addr=127.0.0.1:45131
+    complete_flow_test.go:193: MAIN_FLOW: Governance mTLS command -> durable inbox -> one KFP CreateRun -> authenticated Begin
+    complete_flow_test.go:272: MAIN_FLOW: fixed S3 CSV actual bytes verified and prepared workspace committed
+    complete_fixture_test.go:184: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555
+    complete_fixture_test.go:184: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555/persistentvolumeclaims/ani-kfp-workspace-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee
+    complete_fixture_test.go:184: MAIN_FLOW_TRAIN_CREATE: GET /api/v1/namespaces/tenant-11111111-2222-4333-8444-555555555555
+    complete_fixture_test.go:184: MAIN_FLOW_TRAIN_CREATE: GET /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainingruntimes/mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529
+    complete_fixture_test.go:184: MAIN_FLOW_TRAIN_CREATE: GET /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainjobs/md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee
+    complete_fixture_test.go:184: MAIN_FLOW_TRAIN_CREATE: POST /apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-2222-4333-8444-555555555555/trainjobs
+    complete_flow_test.go:522: MAIN_FLOW_TRAIN_CREATE_RESULT: error=<nil> timing=&{AdmittedAt:2026-10-31 19:36:34.080875 +0000 UTC DeadlineAt:2026-10-31 19:51:34.080875 +0000 UTC} binding={NamespaceUID:9aea935b-fd36-5eea-8aea-0cbe26371889 Name:mdrt-b0224577788f5b89a9a42d0009b25c74a8a6ad2e171e5529 UID:77777777-aaaa-4bbb-8ccc-111111111111 ObservedSpecSHA256:61f84be489e96c84144299dc101d5f2332aca2df563ee49587d8965f5ff2645a}
+    complete_fixture_test.go:490: MAIN_FLOW_ACTUAL_PROCESS: container=cpu-p01-mainflow-29d6c78f-eb61-4fe5-95b6-642268f34412 context_error=<nil> process_error=<nil> exit_proof_error=<nil>
+    complete_flow_test.go:319: MAIN_FLOW: exactly one TrainJob -> real CPU MLP completed 48 optimizer steps -> Pod exit observed
+    complete_flow_test.go:355: MAIN_FLOW: actual files + manifest + tar uploaded; completed uploader and remote bytes verified before publication
+    complete_flow_test.go:377: NATURAL_CLOSE_KUBE_REQUESTS: before=597 owner_reconcile=245 total=842
+2026/11/01 03:37:03 INFO [gRPC] server stopping
+    complete_flow_test.go:420: WEBHOOK_FLOW: real PostgreSQL CLOSED/exit cleanup survived reconnect; 6 original steps and all original compute targets removed only after durable logs; PVC and publication retained
+2026/11/01 03:37:03 INFO [gRPC] server listening addr=127.0.0.1:37561
+    complete_flow_test.go:442: MAIN_FLOW: actual 48-step MLP node stdout queried through mTLS after reconnect; bounded tail and current tenant authorization verified
+    complete_flow_test.go:477: QUERY_MAIN_FLOW: current delegated reader; durable CLOSED/PUBLISHED; bounded fixed-version signed GET; cross-tenant denied; no historical actor grant
+    complete_flow_test.go:484: MAIN_FLOW: CLOSED persisted; retained original workspace; independently downloaded checkpoint forward={"shape": [4, 2], "device": "cpu"}
+2026/11/01 03:37:07 INFO [gRPC] server stopping
+2026/11/01 03:37:07 INFO [gRPC] server stopping
+--- PASS: TestMainFlowCompleteActualMLPToVerifiedPublicationAndClosed (44.65s)
+=== RUN   TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication
+    complete_flow_test.go:67: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    complete_flow_test.go:70: WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary
+2026/11/01 03:37:07 INFO [gRPC] server listening addr=127.0.0.1:34087
+2026/11/01 03:37:07 INFO [gRPC] server stopping
+2026/11/01 03:37:07 INFO [gRPC] server listening addr=127.0.0.1:45351
+    complete_flow_test.go:193: MAIN_FLOW: Governance mTLS command -> durable inbox -> one KFP CreateRun -> authenticated Begin
+    complete_flow_test.go:256: MAIN_FLOW_FAILURE: actual bad CSV rejected; no training or publication; skipped tasks proven; STEP_FAILED CLOSED persisted
+2026/11/01 03:37:20 INFO [gRPC] server stopping
+--- PASS: TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication (13.00s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	57.679s

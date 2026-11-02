@@ -1,0 +1,26 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "fedora_route": {
+    "exit": 0,
+    "stdout": "[{\"dst\":\"172.16.101.31\",\"gateway\":\"10.10.3.254\",\"dev\":\"ens8f0np0\",\"prefsrc\":\"10.10.1.66\",\"flags\":[],\"uid\":1000,\"cache\":[]}]\n"
+  },
+  "original_buildkit_exe": {
+    "exit": 0,
+    "stdout": "/home/kubercloud/modeldev-open-limits-image-build-20261029/tools/buildkitd\n"
+  },
+  "original_buildkit_cgroup": {
+    "exit": 0,
+    "stdout": "0::/user.slice/user-1000.slice/session-26981.scope\n"
+  },
+  "original_buildkit_args": {
+    "exit": 0,
+    "stdout": "/home/kubercloud/modeldev-open-limits-image-build-20261029/tools/buildkitd --config /home/kubercloud/modeldev-open-limits-image-build-20261029/buildkitd.toml "
+  }
+}

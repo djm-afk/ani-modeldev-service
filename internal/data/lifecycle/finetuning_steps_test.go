@@ -41,13 +41,14 @@ func finetuningRuntimeFixture(t *testing.T, lifetime time.Duration, edits ...fun
 		edit(&admission)
 	}
 	admission = admissionfixture.Bind(t, admission)
+	admission = admissionfixture.EnsureEnvironment(t, open(), admission)
 	snapshot = admission.Snapshot
 	pool := open()
 	ctx := context.Background()
 	if _, err := execution.New(pool).Accept(ctx, admission); err != nil {
 		t.Fatal(err)
 	}
-	reserved, err := submission.New(pool).Reserve(ctx, biz.PipelineDispatchRequest{Admission: admission, Owner: biz.PipelineOwnerConfiguration{Reference: "finetuning-synthetic-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}})
+	reserved, err := submission.New(pool).Reserve(ctx, biz.PipelineDispatchRequest{Admission: admission, Owner: admission.Snapshot.DispatchOwner})
 	if err != nil || reserved.SendPermit == nil {
 		t.Fatal("dispatch", err)
 	}

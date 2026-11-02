@@ -1,0 +1,23 @@
+time="2026-11-01T10:14:32+08:00" level=info msg="found worker \"ph653hqm1g9zl1wug3rgaefqp\", labels=map[org.mobyproject.buildkit.worker.containerd.namespace:k8s.io org.mobyproject.buildkit.worker.containerd.uuid:51006f10-4d29-4eaf-a311-9acfb4085e40 org.mobyproject.buildkit.worker.executor:containerd org.mobyproject.buildkit.worker.hostname:node1 org.mobyproject.buildkit.worker.network:host org.mobyproject.buildkit.worker.selinux.enabled:false org.mobyproject.buildkit.worker.snapshotter:overlayfs], platforms=[linux/amd64]"
+time="2026-11-01T10:14:32+08:00" level=info msg="found 1 workers, default=\"ph653hqm1g9zl1wug3rgaefqp\""
+time="2026-11-01T10:14:32+08:00" level=warning msg="currently, only the default worker can be used."
+time="2026-11-01T10:14:32+08:00" level=info msg="running server on /home/kubercloud/tenantenv-20261101/images-d807-build-20261101/buildkitd.sock"
+time="2026-11-01T10:14:34+08:00" level=info msg="detected 127.0.0.53 nameserver, assuming systemd-resolved, so using resolv.conf: /run/systemd/resolve/resolv.conf"
+time="2026-11-01T10:14:34+08:00" level=info msg="detected 127.0.0.53 nameserver, assuming systemd-resolved, so using resolv.conf: /run/systemd/resolve/resolv.conf"
+time="2026-11-01T10:14:35+08:00" level=info msg="detected 127.0.0.53 nameserver, assuming systemd-resolved, so using resolv.conf: /run/systemd/resolve/resolv.conf"
+time="2026-11-01T10:14:35+08:00" level=info msg="detected 127.0.0.53 nameserver, assuming systemd-resolved, so using resolv.conf: /run/systemd/resolve/resolv.conf"
+time="2026-11-01T10:14:35+08:00" level=info msg="detected 127.0.0.53 nameserver, assuming systemd-resolved, so using resolv.conf: /run/systemd/resolve/resolv.conf"
+time="2026-11-01T10:14:35+08:00" level=info msg="detected 127.0.0.53 nameserver, assuming systemd-resolved, so using resolv.conf: /run/systemd/resolve/resolv.conf"
+time="2026-11-01T10:14:37+08:00" level=warning msg="extraction snapshot removal failed" error="calling snapshotter.Remove is forbidden" key="extract-76341370-PbfB sha256:5a6e3ad0d22eb649059f8aa32eef6e1e4f95b1130abe1ace1b247e39c085dba0" span="exporting to image" spanID=77dee16753279427 traceID=b3fa11faec4fd93bcac72b85dcb05fc9
+time="2026-11-01T10:14:37+08:00" level=warning msg="extraction snapshot removal failed" error="calling snapshotter.Remove is forbidden" key="extract-317488874-Y1GJ sha256:fb85aec287e42656bc86270759bf61b70fe89fb59521d49b560527b781a045af" span="exporting to image" spanID=77dee16753279427 traceID=b3fa11faec4fd93bcac72b85dcb05fc9
+time="2026-11-01T10:14:37+08:00" level=warning msg="extraction snapshot removal failed" error="calling snapshotter.Remove is forbidden" key="extract-321027800-WGOS sha256:749c6f8673874eadb9703931f86f4d428e8864284de875931518c618207cce54" span="exporting to image" spanID=f958cba3e4175c8c traceID=1b0e81de41f0d4e6d2741a0d574b6e22
+time="2026-11-01T10:14:37+08:00" level=warning msg="extraction snapshot removal failed" error="calling snapshotter.Remove is forbidden" key="extract-326108325-jUtk sha256:790edc9c197da7e7254fd211a648ca5a60b60c8cfea46daa6ebd6b8a9259c22d" span="exporting to image" spanID=f958cba3e4175c8c traceID=1b0e81de41f0d4e6d2741a0d574b6e22
+time="2026-11-01T10:14:37+08:00" level=warning msg="extraction snapshot removal failed" error="calling snapshotter.Remove is forbidden" key="extract-330124622-QB1A sha256:bfd615b8521261e0e7a7650bc57a0b7855c479a2338e38951142bd1cc3b48dc5" span="exporting to image" spanID=f958cba3e4175c8c traceID=1b0e81de41f0d4e6d2741a0d574b6e22
+time="2026-11-01T10:14:37+08:00" level=warning msg="extraction snapshot removal failed" error="calling snapshotter.Remove is forbidden" key="extract-334727298-UbON sha256:a4cda6a570fef5035c0a6d1620a4d7f8d2a5970a3afb0c60c7612b5120f114ea" span="exporting to image" spanID=f958cba3e4175c8c traceID=1b0e81de41f0d4e6d2741a0d574b6e22
+time="2026-11-01T10:14:37+08:00" level=warning msg="extraction snapshot removal failed" error="calling snapshotter.Remove is forbidden" key="extract-339255928-Ypot sha256:44dc260a2c1bceb524cca06e8160ed9abe6e9fdccf2c7cba881b497f7ce1b005" span="exporting to image" spanID=f958cba3e4175c8c traceID=1b0e81de41f0d4e6d2741a0d574b6e22
+time="2026-11-01T10:14:41+08:00" level=info msg="stopping server"
+buildkitd: got 1 SIGTERM/SIGINTs, forcing shutdown
+github.com/moby/buildkit/util/appcontext.Context.func1.1
+	/src/util/appcontext/appcontext.go:38
+runtime.goexit
+	/usr/local/go/src/runtime/asm_amd64.s:1693

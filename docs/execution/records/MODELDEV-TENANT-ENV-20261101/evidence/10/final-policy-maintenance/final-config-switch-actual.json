@@ -1,0 +1,61 @@
+{
+  "schema": "ani.modeldev.spec54-final-policy-config-switch.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:30:55.188523+00:00"
+  },
+  "started_at": "2026-11-01T16:30:55.188542+00:00",
+  "actions": [
+    {
+      "action": "IMMUTABLE_CONFIGMAP_CREATED",
+      "name": "modeldev-platform-2d75921aa497",
+      "uid": "8c031323-b928-4279-8dda-02d3d185fb18"
+    },
+    {
+      "action": "IMMUTABLE_CONFIGMAP_CREATED",
+      "name": "modeldev-runtime-5c13854685b2",
+      "uid": "aeffe75b-519d-40fd-8c03-2549396ca58e"
+    },
+    {
+      "action": "CURRENT_MAIN_CONFIG_ONLY_SWITCH_AND_RESTORE_ONE",
+      "uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+      "image_unchanged": true
+    }
+  ],
+  "bundle_sha256": "4a655afda6f4d1b6b798f30359c7ccfd0ce4271836b3bbba7f187b02c3f011e4",
+  "platform_sha256": "2d75921aa497aca3b603c5f8483e3bfb4825eaee678b404766c45756dee7c4e5",
+  "webhook_deployment_and_config_unchanged": true,
+  "identity_before_write": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:30:56.199867+00:00"
+  },
+  "modeldev_ready_pods": [
+    {
+      "name": "ani-modeldev-d859b667b-x4q2j",
+      "uid": "6f29950c-625e-4b2f-98a0-bc7309016d7e",
+      "node": "node3",
+      "phase": "Running",
+      "containers": [
+        {
+          "name": "modeldev",
+          "container_id": "containerd://24bd26551784dacf1dbe39d298e996ea0d74555d97854d060903ea06310bc4b4",
+          "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+          "restarts": 0,
+          "started_at": "2026-11-01T16:30:58Z"
+        }
+      ]
+    }
+  ],
+  "status": "FINAL_POLICY_CONFIG_AND_ONE_MD_READY_GOV_CREATE_PAUSED",
+  "finished_at": "2026-11-01T16:31:01.378330+00:00"
+}

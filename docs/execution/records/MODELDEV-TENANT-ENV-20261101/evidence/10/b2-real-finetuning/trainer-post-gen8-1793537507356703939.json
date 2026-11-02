@@ -1,0 +1,314 @@
+{
+  "schema": "ani.modeldev.B2-exact-trainer-live.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T12:51:44.631010+00:00"
+  },
+  "cluster_writes": 0,
+  "execution_id": "0b3a2880-790b-4af5-a0e4-07e8fc322719",
+  "trainer_pod": {
+    "name": "md-0b3a2880-790b-4af5-a0e4-07e8fc322719-node-0-0-bsq9v",
+    "uid": "b2b48664-991e-4de5-8ff9-f416b7a0e3fc",
+    "node": "node3",
+    "phase": "Failed",
+    "conditions": [
+      {
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-11-01T12:49:35Z",
+        "observedGeneration": 1,
+        "status": "False",
+        "type": "PodReadyToStartContainers"
+      },
+      {
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-11-01T12:49:35Z",
+        "observedGeneration": 1,
+        "status": "True",
+        "type": "Initialized"
+      },
+      {
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-11-01T12:49:35Z",
+        "observedGeneration": 1,
+        "reason": "PodFailed",
+        "status": "False",
+        "type": "Ready"
+      },
+      {
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-11-01T12:49:35Z",
+        "observedGeneration": 1,
+        "reason": "PodFailed",
+        "status": "False",
+        "type": "ContainersReady"
+      },
+      {
+        "lastProbeTime": null,
+        "lastTransitionTime": "2026-11-01T12:49:35Z",
+        "observedGeneration": 1,
+        "status": "True",
+        "type": "PodScheduled"
+      }
+    ],
+    "scheduler": "volcano",
+    "node_selector": {
+      "accelerator.ani.io/baseline-id": "28659a35-5f94-4e20-8f65-004f56c0fac9",
+      "accelerator.ani.io/model-key": "nvidia-nvidia-geforce-rtx-4090",
+      "accelerator.ani.io/supply-group": "e407886c-bc60-42d7-a81b-14de60ec8c31"
+    },
+    "scheduling_gates": null,
+    "containers": [
+      {
+        "name": "node",
+        "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+        "command": [
+          "/opt/conda/bin/python",
+          "-I",
+          "/opt/ani-modeldev/training/finetuning/finetune_entry.py"
+        ],
+        "args": [
+          "train",
+          "--configuration",
+          "/workspace/inputs/finetune_configuration.json",
+          "--workspace",
+          "/workspace",
+          "--dataset-manifest",
+          "/workspace/inputs/dataset-manifest.json",
+          "--expected-dataset-manifest-sha256",
+          "a769541279fc18159bb69049959988c164961202e4378bf9ae7d06190e2a9876",
+          "--expected-base-manifest-sha256",
+          "edd3c7232a3415debad061dcf2435501f302eb0db4682f0a165ee60dda8f89f0",
+          "--expected-template-plan-sha256",
+          "7f339a152f65658b153a8f709a9c641d1a845ed5a38ebc4da2629e459df5d613"
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "4",
+            "memory": "8Gi",
+            "volcano.sh/vgpu-cores": "50",
+            "volcano.sh/vgpu-memory": "2457",
+            "volcano.sh/vgpu-number": "1"
+          },
+          "requests": {
+            "cpu": "4",
+            "memory": "8Gi",
+            "volcano.sh/vgpu-cores": "50",
+            "volcano.sh/vgpu-memory": "2457",
+            "volcano.sh/vgpu-number": "1"
+          }
+        }
+      }
+    ],
+    "owner_references": [
+      {
+        "apiVersion": "batch/v1",
+        "blockOwnerDeletion": true,
+        "controller": true,
+        "kind": "Job",
+        "name": "md-0b3a2880-790b-4af5-a0e4-07e8fc322719-node-0",
+        "uid": "7dde6338-167f-4c6c-a4b2-052cbd157eaf"
+      }
+    ],
+    "annotations": {}
+  },
+  "owners": [
+    {
+      "kind": "Job",
+      "name": "md-0b3a2880-790b-4af5-a0e4-07e8fc322719-node-0",
+      "uid": "7dde6338-167f-4c6c-a4b2-052cbd157eaf",
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": "2026-11-01T12:49:37Z",
+            "lastTransitionTime": "2026-11-01T12:49:37Z",
+            "message": "Job has reached the specified backoff limit",
+            "reason": "BackoffLimitExceeded",
+            "status": "True",
+            "type": "FailureTarget"
+          },
+          {
+            "lastProbeTime": "2026-11-01T12:49:37Z",
+            "lastTransitionTime": "2026-11-01T12:49:37Z",
+            "message": "Job has reached the specified backoff limit",
+            "reason": "BackoffLimitExceeded",
+            "status": "True",
+            "type": "Failed"
+          }
+        ],
+        "failed": 1,
+        "ready": 0,
+        "startTime": "2026-11-01T12:08:14Z",
+        "terminating": 0,
+        "uncountedTerminatedPods": {}
+      }
+    },
+    {
+      "kind": "JobSet",
+      "name": "md-0b3a2880-790b-4af5-a0e4-07e8fc322719",
+      "uid": "9a3756e6-8147-48ab-a2ee-0e5b628f8e72",
+      "status": {
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-11-01T12:49:37Z",
+            "message": "jobset failed due to reaching max number of restarts (first failed job: md-0b3a2880-790b-4af5-a0e4-07e8fc322719-node-0)",
+            "reason": "ReachedMaxRestarts",
+            "status": "True",
+            "type": "Failed"
+          }
+        ],
+        "replicatedJobsStatus": [
+          {
+            "active": 0,
+            "failed": 1,
+            "name": "node",
+            "ready": 0,
+            "succeeded": 0,
+            "suspended": 0
+          }
+        ],
+        "restarts": 0,
+        "terminalState": "Failed"
+      }
+    },
+    {
+      "kind": "TrainJob",
+      "name": "md-0b3a2880-790b-4af5-a0e4-07e8fc322719",
+      "uid": "60fb51cf-039a-4092-8eaf-d774564748b2",
+      "status": {
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-11-01T12:49:37Z",
+            "message": "jobset failed due to reaching max number of restarts (first failed job: md-0b3a2880-790b-4af5-a0e4-07e8fc322719-node-0)",
+            "reason": "ReachedMaxRestarts",
+            "status": "True",
+            "type": "Failed"
+          }
+        ],
+        "jobsStatus": [
+          {
+            "active": 0,
+            "failed": 1,
+            "name": "node",
+            "ready": 0,
+            "succeeded": 0,
+            "suspended": 0
+          }
+        ]
+      },
+      "spec": {
+        "managedBy": "trainer.kubeflow.org/trainjob-controller",
+        "runtimeRef": {
+          "apiGroup": "trainer.kubeflow.org",
+          "kind": "TrainingRuntime",
+          "name": "mdrt-7e4aed5aebe4f06fbd124a4e0b9c383b58c6c3a49c029d97"
+        },
+        "suspend": false,
+        "trainer": {
+          "args": [
+            "train",
+            "--configuration",
+            "/workspace/inputs/finetune_configuration.json",
+            "--workspace",
+            "/workspace",
+            "--dataset-manifest",
+            "/workspace/inputs/dataset-manifest.json",
+            "--expected-dataset-manifest-sha256",
+            "a769541279fc18159bb69049959988c164961202e4378bf9ae7d06190e2a9876",
+            "--expected-base-manifest-sha256",
+            "edd3c7232a3415debad061dcf2435501f302eb0db4682f0a165ee60dda8f89f0",
+            "--expected-template-plan-sha256",
+            "7f339a152f65658b153a8f709a9c641d1a845ed5a38ebc4da2629e459df5d613"
+          ],
+          "command": [
+            "/opt/conda/bin/python",
+            "-I",
+            "/opt/ani-modeldev/training/finetuning/finetune_entry.py"
+          ],
+          "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+          "numNodes": 1,
+          "numProcPerNode": 1,
+          "resourcesPerNode": {
+            "limits": {
+              "cpu": "4",
+              "memory": "8Gi",
+              "volcano.sh/vgpu-cores": "50",
+              "volcano.sh/vgpu-memory": "2457",
+              "volcano.sh/vgpu-number": "1"
+            },
+            "requests": {
+              "cpu": "4",
+              "memory": "8Gi",
+              "volcano.sh/vgpu-cores": "50",
+              "volcano.sh/vgpu-memory": "2457",
+              "volcano.sh/vgpu-number": "1"
+            }
+          }
+        }
+      },
+      "annotations": {
+        "modeldev.ani.io/create-operation-id": "c71f4c3b-a7ef-44c0-bc80-045f1e06019e",
+        "modeldev.ani.io/execution-id": "0b3a2880-790b-4af5-a0e4-07e8fc322719",
+        "modeldev.ani.io/execution-spec-sha256": "51c867b205d9273da5bd2eb08575143fffaf80e2d110335fee84ed6818734254",
+        "modeldev.ani.io/runtime-spec-sha256": "e399c1164e7eb2803e3e1f63b055d12ccf0d05648f25c81bd5799eadeedfdbcb",
+        "modeldev.ani.io/runtime-uid": "1f5c6516-1868-4486-b314-bcab4d5d371e",
+        "modeldev.ani.io/tenant-id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "modeldev.ani.io/training-admitted-at": "2026-11-01T12:08:14.511547Z",
+        "modeldev.ani.io/training-deadline-at": "2026-11-01T13:06:37.252206Z",
+        "modeldev.ani.io/training-request-sha256": "b4d8afdb26ccc92668ec5548b5549ced2dc186cc090d7b6b764bfdc9ae1b0e7d",
+        "modeldev.ani.io/workspace-uid": "9fec87b1-822b-45b2-9960-78dfe40eab4e"
+      }
+    }
+  ],
+  "events": [
+    {
+      "type": "Warning",
+      "reason": "FailedScheduling",
+      "message": "pod group is not ready, 1 Pending, 1 minAvailable; Pending: 1 Unschedulable",
+      "count": 2328,
+      "firstTimestamp": "2026-11-01T12:08:15Z",
+      "lastTimestamp": "2026-11-01T12:48:15Z",
+      "source": {
+        "component": "volcano"
+      }
+    },
+    {
+      "type": "Normal",
+      "reason": "Scheduled",
+      "message": "Successfully assigned tenant-207328fc-f08d-4dc4-b403-16ec86396ce2/md-0b3a2880-790b-4af5-a0e4-07e8fc322719-node-0-0-bsq9v to node3",
+      "count": 1,
+      "firstTimestamp": "2026-11-01T12:49:35Z",
+      "lastTimestamp": "2026-11-01T12:49:35Z",
+      "source": {
+        "component": "volcano"
+      }
+    },
+    {
+      "type": "Warning",
+      "reason": "UnexpectedAdmissionError",
+      "message": "Allocate failed due to rpc error: code = Unknown desc = pods \"md-0b3a2880-790b-4af5-a0e4-07e8fc322719-node-0-0-bsq9v\" is forbidden: ValidatingAdmissionPolicy 'modeldev-workload-guard-v1' with binding 'modeldev-workload-guard-v1-binding' denied request: ModelDev: original templates, four parameters, owner identity and retained Pod spec cannot change, which is unexpected",
+      "count": 1,
+      "firstTimestamp": "2026-11-01T12:49:35Z",
+      "lastTimestamp": "2026-11-01T12:49:35Z",
+      "source": {
+        "component": "kubelet",
+        "host": "node3"
+      }
+    },
+    {
+      "type": "Normal",
+      "reason": "SuccessfulAttachVolume",
+      "message": "AttachVolume.Attach succeeded for volume \"pvc-9fec87b1-822b-45b2-9960-78dfe40eab4e\" ",
+      "count": 1,
+      "firstTimestamp": "2026-11-01T12:49:35Z",
+      "lastTimestamp": "2026-11-01T12:49:35Z",
+      "source": {
+        "component": "attachdetach-controller"
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-11-01T02:35:58Z",
+  "target_id": 55,
+  "phase": "deliver",
+  "proof_observed_at": "2026-11-01T02:33:18.502140+00:00",
+  "proof_max_age_seconds": 120,
+  "proof_expires_at": "2026-11-01T02:35:18.502140+00:00",
+  "status": "NOT_RUN",
+  "reason": "Explicit preflight UTC check found proof expired before any node SSH or CLI execution",
+  "proof_sha256": "d919018fc5918a02229abc1694625cd92bd074c6ffd1a0f58e86720c2a61197e",
+  "node_ssh_calls": 0,
+  "rpc_calls": 0,
+  "automatic_retries": 0
+}

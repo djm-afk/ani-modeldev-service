@@ -9,11 +9,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// The API server copies a ServiceAccount's imagePullSecrets onto any Pod that
-// declares none, so the finetuning worker always carries the tenant registry
-// credential its frozen template omits. That inheritance must not read as a
-// specification change, while a substituted or injected reference still must.
-func TestValidatePodTemplateAcceptsServiceAccountPullSecretInheritance(t *testing.T) {
+// Training Pods freeze their exact references; trainer-workload has none.
+func TestValidatePodTemplateRequiresExactFrozenPullReferences(t *testing.T) {
 	shared := corev1.LocalObjectReference{Name: "ani-pull-" + strings.Repeat("a", 32)}
 	inherited := corev1.LocalObjectReference{Name: "ani-registry-pull"}
 
@@ -25,8 +22,10 @@ func TestValidatePodTemplateAcceptsServiceAccountPullSecretInheritance(t *testin
 	}{
 		{"training references the frozen Secret", []corev1.LocalObjectReference{shared}, []corev1.LocalObjectReference{shared}, true},
 		{"training Secret replaced", []corev1.LocalObjectReference{shared}, []corev1.LocalObjectReference{{Name: "ani-pull-" + strings.Repeat("b", 32)}}, false},
+		{"extra secret rejected", []corev1.LocalObjectReference{shared}, []corev1.LocalObjectReference{shared, inherited}, false},
+		{"duplicate rejected", []corev1.LocalObjectReference{shared}, []corev1.LocalObjectReference{shared, shared}, false},
 		{"training Secret dropped", []corev1.LocalObjectReference{shared}, nil, false},
-		{"finetuning inherits the ServiceAccount credential", nil, []corev1.LocalObjectReference{inherited}, true},
+		{"prefix impostor cannot add authority", nil, []corev1.LocalObjectReference{inherited}, false},
 		{"finetuning inherits nothing", nil, nil, true},
 		{"finetuning gains a private registry credential", nil, []corev1.LocalObjectReference{{Name: "attacker-registry"}}, false},
 		{"finetuning inherits plus an injected credential", nil, []corev1.LocalObjectReference{inherited, {Name: "attacker-registry"}}, false},

@@ -1,0 +1,182 @@
+{
+  "captured_at_utc": "2026-10-31T20:35:49.996813+00:00",
+  "scope": "read-only supported build/push-only capability and image-input inspection; no POST, build, push, deployment, configuration or permission mutation",
+  "entry": "ssh kubercloud@100.64.128.12 -> http://192.168.25.40:9998",
+  "conclusion": "No supported build/push-only endpoint or no-rollout request field was found in the observed frontend/catalog and inspected backend contract. Do not submit /api/jobs while rollout is prohibited. This is not proof that unexposed backend capabilities do not exist.",
+  "live_http": {
+    "/api/me": {
+      "status": 200,
+      "auth_mode": "intranet",
+      "sensitive_session_fields_retained": false
+    },
+    "/app.js": {
+      "status": 200,
+      "bytes": 14555,
+      "sha256": "11c9c4d5cd525fac1bb47344228b51ad4e7963bcf63713786abd608ec82b9848",
+      "matches_local_app_js": true,
+      "submit_endpoint": "POST /api/jobs",
+      "request_fields": [
+        "project",
+        "branch",
+        "commit",
+        "environment",
+        "harbor",
+        "run_verify",
+        "request_id"
+      ],
+      "build_only_or_skip_deploy_field": false
+    },
+    "/api/catalog": {
+      "status": 200,
+      "sha256": "4fd14c045936e3c9a94f2ae46810952c8f09ccd164d68adea594b8ec1defd3ec",
+      "modeldev": {
+        "project": "modeldev",
+        "environment": "ani-kcn-full",
+        "namespace": "ani-system",
+        "deployment": "ani-modeldev",
+        "container": "modeldev",
+        "registry": "10.10.1.66:30003",
+        "repository": "ani-gpu-platform/ani-modeldev-service"
+      }
+    },
+    "/api/jobs": {
+      "status": 200,
+      "sha256": "fa17707edbfe6a45c002e69f727efb19b38dc0c30bbd697feadaf419119d7051",
+      "count": 17,
+      "modeldev_count": 0,
+      "observed_recent_project": "resource",
+      "observed_step_ids": [
+        "fetch",
+        "verify",
+        "build",
+        "push",
+        "deploy",
+        "ready"
+      ],
+      "observed_run_verify_false_still_deploy": true,
+      "business_logs_retained": false
+    },
+    "/openapi.json": {
+      "status": 404
+    }
+  },
+  "local_workbench_contract": {
+    "repository": "/home/chabking/workspace/ani-deploy",
+    "head": "9532a9f9837a12e4019ced803628ab67b36fc91a",
+    "worktree_dirty": true,
+    "files_sha256": {
+      "server.py": "ffc986969fb595659c6caeabdd0bcfed86ddcc09340376504537e7bce2fe6785",
+      "pipeline.py": "b907e7d6c22f1f8616e54d769062592422b9667405713463eec6fe4c86d3dc1c",
+      "web/app.js": "11c9c4d5cd525fac1bb47344228b51ad4e7963bcf63713786abd608ec82b9848",
+      "recipes/modeldev/Dockerfile": "76edf56b911f13522a230e9a00027450b05eed05fee736d72c3748ab4600af04",
+      "recipes/modeldev/build-image.py": "2bc2bb49be66d1b8fc086829a82d6adfba9467457767186bdbfcae5248950f56"
+    },
+    "source_evidence": [
+      {
+        "file": "server.py",
+        "lines": "146-178",
+        "fact": "Only login, logout, and /api/jobs POST handlers; jobs submits the pipeline."
+      },
+      {
+        "file": "pipeline.py",
+        "lines": "165-168",
+        "fact": "Request keys must equal exactly project/branch/commit/environment/harbor/run_verify/request_id; additional skip_deploy/build_only fields are rejected."
+      },
+      {
+        "file": "pipeline.py",
+        "lines": "467-471",
+        "fact": "run_verify=false only skips verification."
+      },
+      {
+        "file": "pipeline.py",
+        "lines": "497-535",
+        "fact": "Build -> push -> unconditional deploy remote patch -> readiness; no build-only branch."
+      },
+      {
+        "file": "README.md",
+        "lines": "76-82",
+        "fact": "ModelDev recipe builds main service only; independent step/training/webhook/materials are outside this project."
+      }
+    ],
+    "limit": "HTTP exposes neither server.py nor pipeline.py current hashes. Only frontend bytes were matched live to this local source. No backend-live-identity equivalence is asserted."
+  },
+  "modeldev_image_inputs": {
+    "head": "6b0b952478081034baee8ab27fd8216b26742700",
+    "formal_production_source": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+    "files_sha256": {
+      "deploy/service.Dockerfile": "d60eced13a7ed13b1d033623deb27bcfed79701e315df206106c00d71f759617",
+      "deploy/modeldev-webhook/Dockerfile": "ce7df200aa9baf1391b7631fde751c6ab68b5d0987564614fe612ccb29dae652",
+      "pipelines/step.Dockerfile": "5dfa10fe1692d8e7bd4a0c25250cb5d28a90f8ca1081f47588dd617bcbdb208c",
+      "pipelines/finetuning-step.Dockerfile": "c7bd35d1517d1a3f4419481deb0131067efc57eb4026c70ef973e677f3404a81",
+      "training/finetuning.Dockerfile": "db36755524f553e331682aa71f05037b7c822a9cf53fa7517a58f86e96020a1f",
+      "scripts/build-step-image": "84151fbc4129487dcaeae7539342844604434aeacc6146231980372f6d9cb950",
+      "training/build-image.sh": "8c351e9604ea7f12db61c995f5607009ff5534cb801d43a1224d6fdc78b75b24",
+      "go.mod": "e27713a373988182b536f7836d8679af3a7db1f8b8f5ae1111c5373eb2315136"
+    },
+    "service": {
+      "dockerfile": "deploy/service.Dockerfile",
+      "base": "scratch",
+      "binary": "ani-modeldev-service",
+      "labels_require": [
+        "SOURCE_REVISION",
+        "SOURCE_TREE"
+      ],
+      "build_receipt": "NOT_RUN",
+      "published_digest": null
+    },
+    "webhook_and_material_platform_copy": {
+      "dockerfile": "deploy/modeldev-webhook/Dockerfile",
+      "base": "scratch",
+      "binary": "ani-modeldev-webhook",
+      "labels_require": [
+        "SOURCE_REVISION",
+        "SOURCE_TREE"
+      ],
+      "build_receipt": "NOT_RUN",
+      "published_digest": null
+    },
+    "step": {
+      "dockerfile": "pipelines/step.Dockerfile",
+      "base": "scratch",
+      "binary": "ani-modeldev-step",
+      "labels_require": [
+        "SOURCE_REVISION",
+        "SOURCE_TREE"
+      ],
+      "build_receipt": "NOT_RUN",
+      "published_digest": null
+    },
+    "finetuning_step_wrapper": {
+      "dockerfile": "pipelines/finetuning-step.Dockerfile",
+      "base_argument": "WORKLOAD_IMAGE",
+      "base_default": null,
+      "selected_immutable_workload_digest": "NOT_FIXED_BY_THIS_DOCKERFILE",
+      "binary": "ani-modeldev-step",
+      "labels_require": [
+        "SOURCE_REVISION",
+        "SOURCE_TREE"
+      ]
+    },
+    "training_cpu_gpu": {
+      "dockerfile": "training/finetuning.Dockerfile",
+      "base": "10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b",
+      "device_mode_argument": [
+        "cpu",
+        "gpu"
+      ],
+      "source_inputs": [
+        "bin/ani-modeldev-step",
+        "training/train_mlp.py",
+        "training/implementation.py",
+        "training/implementations.json",
+        "training/dataset_manifest.py",
+        "training/structure_limits.json",
+        "training/finetuning/**"
+      ],
+      "build_receipt": "NOT_RUN",
+      "published_digest": null
+    },
+    "workbench_service_recipe_difference": "Workbench overwrites source Dockerfile with recipes/modeldev/Dockerfile and builds /app/bin/server with externally configured BUILDER_IMAGE/RUNTIME_IMAGE. Public catalog does not expose their actual resolved values. It does not use deploy/service.Dockerfile or build the other images.",
+    "freeze_status": "Source recipes can be pinned to the delivered commit; binary hashes, selected shared-image destination/digests, wrapper WORKLOAD_IMAGE, and live Workbench builder/runtime immutable refs are not established by this inspection. No image preparation was executed."
+  }
+}

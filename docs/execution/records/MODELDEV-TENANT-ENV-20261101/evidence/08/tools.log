@@ -1,0 +1,11 @@
+test_bad_roots_duplicate_yaml_and_same_short_name_wrong_digest_reject (test_materials.Publication.test_bad_roots_duplicate_yaml_and_same_short_name_wrong_digest_reject) ... ok
+test_exact_readback_and_idempotent_reuse (test_materials.Publication.test_exact_readback_and_idempotent_reuse) ... ok
+test_immutable_bundle_shared_by_service_webhook_and_split_audiences (test_materials.Publication.test_immutable_bundle_shared_by_service_webhook_and_split_audiences) ... ok
+test_lost_parent_and_version_resolve_original_without_repost (test_materials.Publication.test_lost_parent_and_version_resolve_original_without_repost) ... ok
+test_prepare_compiles_the_exact_four_fixed_profiles (test_materials.Publication.test_prepare_compiles_the_exact_four_fixed_profiles) ... ok
+test_unknown_zero_result_never_reposts_and_foreign_owner_conflicts (test_materials.Publication.test_unknown_zero_result_never_reposts_and_foreign_owner_conflicts) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 4.535s
+
+OK

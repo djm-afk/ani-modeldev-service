@@ -1,0 +1,10 @@
+{
+  "status": "FAILED",
+  "pid": 2381000,
+  "version": "go1.26.10",
+  "private_tool_root": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/go-tools",
+  "cached_original_tools_modified": false,
+  "cached_golang_images": [],
+  "error_class": "URLError",
+  "reason": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1000)>"
+}

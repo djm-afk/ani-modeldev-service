@@ -1,0 +1,6 @@
+{
+  "path": "/tmp/modeldev-legacy-retirement-20261101/root-apply-gate-20261101T021003Z.json",
+  "sha256": "caa8be3cda34aa6809173e0298296aeea1ea34b0c645ee0d6cf04093b801d05f",
+  "ssh_exit": 0,
+  "expected_sha256": "caa8be3cda34aa6809173e0298296aeea1ea34b0c645ee0d6cf04093b801d05f"
+}

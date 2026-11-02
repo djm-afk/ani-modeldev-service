@@ -1,0 +1,229 @@
+{
+  "schema": "ani.resource.workbench-exact-new-image-activation.v1",
+  "job_id": "3d9860e7bf9c4c72a4de541a2e5351a1",
+  "request_id": "cbe331ad-ec85-4b25-b164-e03b28e3774b",
+  "source_commit": "67dceef03f01215c294a55f11464e3e3a52cb783",
+  "started_at": "2026-11-01T04:50:07.131214+00:00",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api_server": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "ssh_user": "kubercloud",
+    "hostname": "node1"
+  },
+  "events": [
+    {
+      "phase": "job",
+      "status": "running",
+      "steps": [
+        {
+          "id": "fetch",
+          "status": "succeeded"
+        },
+        {
+          "id": "verify",
+          "status": "skipped"
+        },
+        {
+          "id": "build",
+          "status": "running"
+        },
+        {
+          "id": "push",
+          "status": "pending"
+        },
+        {
+          "id": "deploy",
+          "status": "pending"
+        },
+        {
+          "id": "ready",
+          "status": "pending"
+        }
+      ],
+      "observed_at": "2026-11-01T04:50:07.472294+00:00"
+    },
+    {
+      "phase": "job",
+      "status": "running",
+      "steps": [
+        {
+          "id": "fetch",
+          "status": "succeeded"
+        },
+        {
+          "id": "verify",
+          "status": "skipped"
+        },
+        {
+          "id": "build",
+          "status": "succeeded"
+        },
+        {
+          "id": "push",
+          "status": "running"
+        },
+        {
+          "id": "deploy",
+          "status": "pending"
+        },
+        {
+          "id": "ready",
+          "status": "pending"
+        }
+      ],
+      "observed_at": "2026-11-01T04:52:37.661090+00:00"
+    },
+    {
+      "phase": "job",
+      "status": "running",
+      "steps": [
+        {
+          "id": "fetch",
+          "status": "succeeded"
+        },
+        {
+          "id": "verify",
+          "status": "skipped"
+        },
+        {
+          "id": "build",
+          "status": "succeeded"
+        },
+        {
+          "id": "push",
+          "status": "succeeded"
+        },
+        {
+          "id": "deploy",
+          "status": "running"
+        },
+        {
+          "id": "ready",
+          "status": "pending"
+        }
+      ],
+      "observed_at": "2026-11-01T04:52:46.680191+00:00"
+    },
+    {
+      "phase": "job",
+      "status": "running",
+      "steps": [
+        {
+          "id": "fetch",
+          "status": "succeeded"
+        },
+        {
+          "id": "verify",
+          "status": "skipped"
+        },
+        {
+          "id": "build",
+          "status": "succeeded"
+        },
+        {
+          "id": "push",
+          "status": "succeeded"
+        },
+        {
+          "id": "deploy",
+          "status": "succeeded"
+        },
+        {
+          "id": "ready",
+          "status": "running"
+        }
+      ],
+      "observed_at": "2026-11-01T04:52:49.686526+00:00"
+    },
+    {
+      "phase": "activate",
+      "resource": "pod",
+      "name": "ani-resource-service-5478855f64-78g4c",
+      "proof": {
+        "deployment_uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+        "deployment_spec_sha256": "0f4387bc10f49d4fbc3d45c7c2fd575c22d79b265533d0a40e77a975fe17f526",
+        "job_id": "3d9860e7bf9c4c72a4de541a2e5351a1",
+        "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:ae1f2b9abcf1e9719b52d6b0e7fa31504a02fdf71504e9106883e8e3fac971bf",
+        "source_commit": "67dceef03f01215c294a55f11464e3e3a52cb783",
+        "replica_set_uid": "90a45e89-6b03-48cf-9aa8-269bed5f8dff",
+        "pod_uid": "2822da34-1f05-42dc-98b8-f9342b2b4153",
+        "pod_unstarted": true
+      },
+      "applied_uid": "2822da34-1f05-42dc-98b8-f9342b2b4153",
+      "resource_version": "20988472",
+      "observed_at": "2026-11-01T04:52:50.931452+00:00"
+    },
+    {
+      "phase": "job",
+      "status": "running",
+      "steps": [
+        {
+          "id": "fetch",
+          "status": "succeeded"
+        },
+        {
+          "id": "verify",
+          "status": "skipped"
+        },
+        {
+          "id": "build",
+          "status": "succeeded"
+        },
+        {
+          "id": "push",
+          "status": "succeeded"
+        },
+        {
+          "id": "deploy",
+          "status": "succeeded"
+        },
+        {
+          "id": "ready",
+          "status": "failed"
+        }
+      ],
+      "observed_at": "2026-11-01T04:55:18.199365+00:00"
+    },
+    {
+      "phase": "job",
+      "status": "failed",
+      "steps": [
+        {
+          "id": "fetch",
+          "status": "succeeded"
+        },
+        {
+          "id": "verify",
+          "status": "skipped"
+        },
+        {
+          "id": "build",
+          "status": "succeeded"
+        },
+        {
+          "id": "push",
+          "status": "succeeded"
+        },
+        {
+          "id": "deploy",
+          "status": "succeeded"
+        },
+        {
+          "id": "ready",
+          "status": "failed"
+        }
+      ],
+      "observed_at": "2026-11-01T04:57:51.459146+00:00"
+    }
+  ],
+  "status": "WORKBENCH_FAILED_NO_OLD_IMAGE_ACTIVATION",
+  "activation_executed": true,
+  "template_gate_removed": false,
+  "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:ae1f2b9abcf1e9719b52d6b0e7fa31504a02fdf71504e9106883e8e3fac971bf",
+  "image_digest": "sha256:ae1f2b9abcf1e9719b52d6b0e7fa31504a02fdf71504e9106883e8e3fac971bf",
+  "activated_pod": "2822da34-1f05-42dc-98b8-f9342b2b4153",
+  "finished_at": "2026-11-01T04:57:51.460061+00:00"
+}

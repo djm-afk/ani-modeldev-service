@@ -1,5 +1,9 @@
 # CPU-P01 最小领域合同
 
+历史 CPU-P01 v1 设计记录；当前执行快照为 `ani.modeldev.execution-spec.v4`，
+动态环境与有效部署入口见[当前合同](../modeldev-tenant-environments.md)。
+下文旧 Release/facts/快照形状不作为当前配置或兼容入口。
+
 来源：[执行索引](../../.scratch/cpu-p01/spec.md)；权威任务包为
 `/home/chabking/workspace/ANI-doc/02-issues/modeldev/cpu-p01` 的 CPU01、CPU04–CPU10
 及 `reference/v04/source/development.md` D03–D13。2026-09-30 Goal 对执行地点、

@@ -1,0 +1,191 @@
+{
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "fixed_python_sha256": {
+    "pipelines/cpu_p01.py": "391b5ce5b429df51a7d9d1b2a785a52d9d48c8e6f10bbf85ac51fce8b9513c6e",
+    "pipelines/requirements.txt": "21eb74cc60934d64a590d1b31ee6e969a30893875e4efa5be736f82eb2dddec2",
+    "deploy/modeldev-environment/bundle.py": "ec7a625acb5e998440ed5eb1c73bc6b6df21f69f9bc74672286141dcc7d72c35",
+    "deploy/modeldev-environment/publisher.py": "c1f986936d42d1372fdbe7d6b49a000bbd835b38d14ffb469d84fcde5c2cd355",
+    "training/train_mlp.py": "4a732add0a4457b21c15df2ae5250ca262e80397e737e8ee62b37375c17f9a2f",
+    "training/finetuning/finetune_entry.py": "291ad123bcbe39ac1c335e5b3d1efcc497062b36fa782b51a80daa814c16b7ac",
+    "training/finetuning/configuration.py": "05caa944998bb3142548afec183d3d7da4c7057175cb03441e763ad5bab3beda"
+  },
+  "fixed_go_renderer_inputs_sha256": {
+    "contract/cpup01/admission.go": "1802d8e22b7507434be178c2446bc7212ca1b524db2293ad637b7a130cca2b45",
+    "contract/cpup01/candidate.go": "20a8039e877d3a82444ff70f2eafca1c891b895cd874a12881898ffac0634d93",
+    "contract/cpup01/canonical.go": "e7bddb6b31d762cb12f0c90796f85d94084606847be9f5831161b09e2427fb43",
+    "contract/cpup01/component_resources.go": "b0452fa10be52f6de33f89f8af89a17fb29a60a38c413945c82a4374fe76bab3",
+    "contract/cpup01/content_limits.go": "c1536dbe62e2c7d629ee118765f8c2257ee1cb5acb90aa7503b135a77044ed2b",
+    "contract/cpup01/dataset_manifest.go": "fb916bcab016bb433021d6ca006cb012234d71578b00abcd07394d517d0e9603",
+    "contract/cpup01/dispatch_owner.go": "f73ce63fd177bcdcd4f143716252ed8d731306d59da92c6dd43960a0bd3d5d27",
+    "contract/cpup01/effective_template.go": "b610bf72236a60d6c26bc9a04209c05d4900e3a1eadbe0baae8df82a2976cc14",
+    "contract/cpup01/execution_plan.go": "42e01f4578890c5db278517ab14adb50495b0f453d5da82b6089043ec1b1f85a",
+    "contract/cpup01/finetuning_capabilities.go": "c9f46b3791dce748e374ecc212703e4bf40b919bf65f34a7bbe937f5c5f62a58",
+    "contract/cpup01/finetuning_snapshot.go": "ee9fa01f610a5b42155f621cd8bee01f9763a8c70257f07293e812ea118465e8",
+    "contract/cpup01/gpu.go": "46ea8e23b889e6ff8ee9cae19a788cf473c6d73cdb979bbb3ef2bb1d35d0d9ff",
+    "contract/cpup01/implementation.go": "7a3538ea130fcf94247522b39116fd557d6fa3d66874e567785bf35ff98adcf5",
+    "contract/cpup01/implementations.json": "25ae0f2358570046678a78710cd37e6ff75038f444030badedc8410b06374186",
+    "contract/cpup01/intent.go": "b469ee2e4c64da7f0380768c734d623e8af813e9b69c5d8e2f039a4d3a5caf73",
+    "contract/cpup01/material.go": "77dcd9156c1e9790fb53b579cee398d497b002ee8b6cd73cca2ea2b608ad9b3b",
+    "contract/cpup01/output_manifest.go": "8927753a58778a72e4dd4e472c0e98a0d396b1b149299e759bf99d40b91741ee",
+    "contract/cpup01/protobuf/codec.go": "0973f9044b6c6ba14772631cbe64cff9733175875fa78927806eecdf68ada596",
+    "contract/cpup01/protobuf/finetuning.go": "33a2df64081e1807d2790a65984bf8aa95cd0f5b3441801cc3ab5869e84b3e8a",
+    "contract/cpup01/protobuf/gpu.go": "876b312d62be4c39d79aa15be6f3e7ddb5c345c5f3d32ad9d37cfbcee22540db",
+    "contract/cpup01/protobuf/normalized.go": "672466154a1ee2483d5906a70f0c3c677f6081c96a11ce1e71b663ed89c106c6",
+    "contract/cpup01/protobuf/plan.go": "c6e54dbec9d3823b2369bc9517036491f7d776023d4c7adb940b1be4ab55be66",
+    "contract/cpup01/protobuf/rules.go": "916e54973188a850b88bb34fa04e073e55cb1c171535daa3ba313a0c10f9bb30",
+    "contract/cpup01/publication_ref.go": "085529c10129cd59b2f13d3af207a052b2da28e567e943911fe1cbdb81bcd31a",
+    "contract/cpup01/registered_image.go": "f8c56012a28467b48a79174eecea62663806ca711147b4a9bad5b75e786886ab",
+    "contract/cpup01/snapshot.go": "fe1bbf66251b2557c1a47e32f6e68a57b16e8c40afeeee1df44dcfd1d6cc4461",
+    "contract/cpup01/snapshot_parts.go": "e9de8d5aa1d3f8a79a7da4b5fd1f2a360525bc4ec1a8f9544143116846933988",
+    "contract/cpup01/training_image.go": "f371c8bc0126fc303df2e56be86db6c0cb60a972786cedcbf6676eb068d1b76c",
+    "go.mod": "e27713a373988182b536f7836d8679af3a7db1f8b8f5ae1111c5373eb2315136",
+    "go.sum": "bf5b7fff8b35dbcf64719038c5092233a028c9ea3d00978325b36024dee7b316"
+  },
+  "versions": {
+    "kfp": "2.16.0",
+    "kfp-kubernetes": "2.16.0",
+    "kfp-pipeline-spec": "2.16.0",
+    "kfp-server-api": "2.16.0"
+  },
+  "compile_command": [
+    "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/kfp-resource-venv/bin/python",
+    "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/deploy/modeldev-environment/bundle.py",
+    "compile",
+    "--config",
+    "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/bundle-input.json",
+    "--output",
+    "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/prepared",
+    "--compiler",
+    "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/pipelines/cpu_p01.py"
+  ],
+  "compile_exit": 0,
+  "compile_elapsed_seconds": 6.549,
+  "workspace": {
+    "storage_class": "ani-cephfs",
+    "capacity_bytes": 68719476736,
+    "size": "64Gi",
+    "access_mode": "ReadWriteMany",
+    "selection": "One platform value supports old MLP4Gi and SFT64Gi; live SC existing Bound64Gi/RWX observed; no legacy tenant binding copied"
+  },
+  "timing": {
+    "execution_timeout_default_seconds": 10800,
+    "execution_timeout_max_seconds": 14400,
+    "step_timeout_seconds": 14400
+  },
+  "timing_source": "Two original main ConfigMap facts; canonical material schema has no timing fields",
+  "pending_materials": [
+    {
+      "id": "modeldev-mlp-cpu",
+      "file": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/pending-material-inputs/modeldev-mlp-cpu.json",
+      "missing": [
+        "training_image.image_id",
+        "training_image.image_version",
+        "pipeline.phase=CONFIRMED",
+        "pipeline.pipeline_id",
+        "pipeline.pipeline_version_id",
+        "pipeline.pipeline_ir_sha256"
+      ]
+    },
+    {
+      "id": "modeldev-mlp-gpu",
+      "file": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/pending-material-inputs/modeldev-mlp-gpu.json",
+      "missing": [
+        "training_image.image_id",
+        "training_image.image_version",
+        "pipeline.phase=CONFIRMED",
+        "pipeline.pipeline_id",
+        "pipeline.pipeline_version_id",
+        "pipeline.pipeline_ir_sha256"
+      ]
+    },
+    {
+      "id": "modeldev-sft-lora-cpu",
+      "file": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/pending-material-inputs/modeldev-sft-lora-cpu.json",
+      "missing": [
+        "training_image.image_id",
+        "training_image.image_version",
+        "pipeline.phase=CONFIRMED",
+        "pipeline.pipeline_id",
+        "pipeline.pipeline_version_id",
+        "pipeline.pipeline_ir_sha256",
+        "finetuning.runtime_capabilities measured from final image",
+        "finetuning.export_image and verify_image original registered final image identity"
+      ]
+    },
+    {
+      "id": "modeldev-sft-lora-gpu",
+      "file": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/pending-material-inputs/modeldev-sft-lora-gpu.json",
+      "missing": [
+        "training_image.image_id",
+        "training_image.image_version",
+        "pipeline.phase=CONFIRMED",
+        "pipeline.pipeline_id",
+        "pipeline.pipeline_version_id",
+        "pipeline.pipeline_ir_sha256",
+        "finetuning.runtime_capabilities measured from final image",
+        "finetuning.export_image and verify_image original registered final image identity"
+      ]
+    }
+  ],
+  "publication": "BLOCKED_EXISTING_CONTROL_SAR_DENIED_NO_TOKEN_REQUEST_OR_POST",
+  "seal": "NOT_RUN_NO_CONFIRMED_PIPELINE_IDS_OR_REAL_NEW_IMAGE_IDS",
+  "profiles": [
+    {
+      "compile_config_sha256": "bee5b65f15e23987ec7d97c554cfbb9ae79551e395601ade9bef30fbc18efd57",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "device_mode": "cpu",
+      "id": "modeldev-mlp-cpu",
+      "implementation_id": "builtin.mlp",
+      "ir_file": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/prepared/ir/modeldev-mlp-cpu.yaml",
+      "ir_sha256": "58919bf761ddf0a2747e1766afe93584d23523d25c47e4974be48f0547d58ee7",
+      "namespace": "ani-system"
+    },
+    {
+      "compile_config_sha256": "2ab35845b3c9646087d6b970ec49241d125fe11b4504fe2866fb85771a58e21f",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "device_mode": "gpu",
+      "id": "modeldev-mlp-gpu",
+      "implementation_id": "builtin.mlp",
+      "ir_file": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/prepared/ir/modeldev-mlp-gpu.yaml",
+      "ir_sha256": "31208542cf6d7bf658c2214141b1409ea1445a2ec05379f24fb5c9ee33ec8281",
+      "namespace": "ani-system"
+    },
+    {
+      "compile_config_sha256": "e4f1e1cdc0478cbf835de8e75491528757bf4d529adc707c9f78e56379bba9b7",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "device_mode": "cpu",
+      "id": "modeldev-sft-lora-cpu",
+      "implementation_id": "builtin.sft_lora",
+      "ir_file": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/prepared/ir/modeldev-sft-lora-cpu.yaml",
+      "ir_sha256": "147852502bc1abb5adfcabb8faad36a98141143b279780cb53b403cdd652150f",
+      "namespace": "ani-system"
+    },
+    {
+      "compile_config_sha256": "cf45770ebc89121529d61530f63636d19136062b03cf035c65bf0da61dd51e77",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "device_mode": "gpu",
+      "id": "modeldev-sft-lora-gpu",
+      "implementation_id": "builtin.sft_lora",
+      "ir_file": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/prepared/ir/modeldev-sft-lora-gpu.yaml",
+      "ir_sha256": "753c0aed8e18ba13c13b8a470cd6a4cfcb4b5c1765dd3c26215144b7cfde77b7",
+      "namespace": "ani-system"
+    }
+  ],
+  "canonical_renderer": {
+    "command": [
+      "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+      "build",
+      "-mod=readonly",
+      "-buildvcs=false",
+      "-trimpath",
+      "-o",
+      "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+      "./scripts/modeldev-execution-materials"
+    ],
+    "exit": 1,
+    "seconds": 0.007,
+    "source_directory": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/source"
+  },
+  "status": "FOUR_FINAL_IR_COMPILED_PUBLICATION_AND_SEAL_BLOCKED"
+}

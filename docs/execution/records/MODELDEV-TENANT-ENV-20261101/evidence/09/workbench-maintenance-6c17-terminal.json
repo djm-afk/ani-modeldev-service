@@ -1,0 +1,117 @@
+{
+  "status": "QUERY",
+  "job": {
+    "id": "3b191f8ee306437ea5cdcbba6520399b",
+    "request_id": "19c157e0-f769-4291-a40e-e23fcbef9644",
+    "project": "governance",
+    "branch": "codex/modeldev-create-maintenance",
+    "source_commit": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+    "run_verify": false,
+    "status": "succeeded",
+    "created_at": "2026-11-01T01:42:47.553839+00:00",
+    "started_at": "2026-11-01T01:42:47.555700+00:00",
+    "finished_at": "2026-11-01T01:54:15.779125+00:00",
+    "error_present": false,
+    "steps": [
+      {
+        "id": "fetch",
+        "status": "succeeded",
+        "started_at": "2026-11-01T01:42:47.556530+00:00",
+        "finished_at": "2026-11-01T01:43:57.112189+00:00",
+        "elapsed": 69.56
+      },
+      {
+        "id": "verify",
+        "status": "skipped"
+      },
+      {
+        "id": "build",
+        "status": "succeeded",
+        "started_at": "2026-11-01T01:43:57.173539+00:00",
+        "finished_at": "2026-11-01T01:54:00.834187+00:00",
+        "elapsed": 603.66
+      },
+      {
+        "id": "push",
+        "status": "succeeded",
+        "started_at": "2026-11-01T01:54:00.835161+00:00",
+        "finished_at": "2026-11-01T01:54:07.359267+00:00",
+        "elapsed": 6.52
+      },
+      {
+        "id": "deploy",
+        "status": "succeeded",
+        "started_at": "2026-11-01T01:54:07.360153+00:00",
+        "finished_at": "2026-11-01T01:54:08.305092+00:00",
+        "elapsed": 0.94
+      },
+      {
+        "id": "ready",
+        "status": "succeeded",
+        "started_at": "2026-11-01T01:54:08.306455+00:00",
+        "finished_at": "2026-11-01T01:54:15.777840+00:00",
+        "elapsed": 7.47
+      }
+    ],
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "previous_image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:0518f2d3616c8a088113b0e604540565d4419ae1921446d17ca4b233c4090fc0",
+    "image_tag": "10.10.1.66:30003/ani-gpu-platform/ani-governance:6c17f0103994-3b191f8ee306",
+    "recipe_sha256": {
+      "Dockerfile": "8c1d6ae8f51f6b8102cf991c20a2cab94d55433d5c44e088f93fa6dda8102cfd",
+      ".dockerignore": "8323dfb4119c92c928199294d14ba2207b548967f9f3b2fb8b6c2a56d7acdd31",
+      "build-image.py": "4c086285805fe10ad5fc1ac8f2fa17d365439f457cc9a10a3dce66c97d175a0b"
+    },
+    "build": {
+      "source_revision": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+      "source_snapshot": "sha256:54f50b34a865e6de5c99121af337c6c2eaf2495bf8f6716ce829325c6743a56b",
+      "source_dirty": true,
+      "version": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+      "target": "service",
+      "platform": "linux/amd64",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance:6c17f0103994-3b191f8ee306",
+      "local_image_id": "sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+      "local_config_digest": null,
+      "local_descriptor_digest": "sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+      "registry_digest": null,
+      "pushed": false,
+      "builder_image": "m.daocloud.io/docker.io/library/golang@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb",
+      "runtime_image": "m.daocloud.io/gcr.io/distroless/static-debian12@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab"
+    },
+    "deployment_intent": {
+      "uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+      "time": "2026-11-01T01:54:07.834348+00:00"
+    },
+    "readiness": {
+      "replicas": 1,
+      "observed_generation": 198,
+      "pods": [
+        {
+          "name": "ani-governance-7ddc444f78-nt5vc",
+          "uid": "7e3c6bd5-4d76-4b44-92bf-6e3b89d48a6f",
+          "node": "node3",
+          "phase": "Running",
+          "terminating": false,
+          "containers": [
+            {
+              "name": "governance",
+              "ready": true,
+              "restarts": 0,
+              "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "log": {
+    "bytes": 9467,
+    "sha256": "83c8752bedf102cf10f80b6008f6990121ef34347e0ec1fcd77de5e22e1810dd",
+    "contents_omitted": true,
+    "safe_progress_lines": [],
+    "total_lines": 173,
+    "timeout_marker_present": false,
+    "test_failure_marker_present": false
+  },
+  "queried_at_utc": "2026-11-01T02:01:26.788521+00:00"
+}

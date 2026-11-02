@@ -1,0 +1,41 @@
+{
+  "recorded_at": "2026-10-31T20:15:24.669697+00:00",
+  "execution_host": "ssh fedora",
+  "remote_source": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source",
+  "sessions": [
+    {
+      "session_id": 44762,
+      "status": "RESULT_UNKNOWN",
+      "command": "gofmt -w app/admin/service/internal/server/modeldev_environment_http_test.go && GOTOOLCHAIN=auto GOMAXPROCS=2 GOFLAGS=-p=2 go test -race -count=1 -timeout=5m -run \"^TestModelDev\" ./app/admin/service/internal/data ./app/admin/service/internal/service ./app/admin/service/internal/server",
+      "remote_log": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/environment-formal-default-tests.log",
+      "last_observed_output": "empty log tail; no final exit code returned"
+    },
+    {
+      "session_id": 46554,
+      "status": "RESULT_UNKNOWN",
+      "command": "git add --pathspec-from-file=../final-files.txt && PATH=/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/tools:$PATH GOTOOLCHAIN=auto GOMAXPROCS=2 GOFLAGS=-p=2 make check",
+      "remote_log": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/environment-formal-make-check.log",
+      "last_observed_output": "bash scripts/ci/checks.sh\nquota Ent boundary: pass\nlayout and formal dependency graph: pass\napp/admin/service/internal/data/authenticator_test.go: 成功\n"
+    },
+    {
+      "session_id": 91298,
+      "status": "RESULT_UNKNOWN",
+      "command": "PATH=/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/tools:$PATH GOTOOLCHAIN=auto GOMAXPROCS=2 GOFLAGS=-p=2 bash scripts/ci/audit.sh",
+      "remote_log": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/environment-formal-audit.log",
+      "last_observed_output": "Go: go1.26.10\nScanner: govulncheck@v1.7.0\nDB: https://vuln.go.dev\nDB updated: 2026-10-27 21:16:18 +0000 UTC\n"
+    },
+    {
+      "session_id": 60970,
+      "status": "RESULT_UNKNOWN",
+      "command": "tail -n 18 /home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/environment-formal-default-tests.log && tail -n 12 /home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/environment-formal-make-check.log && tail -n 6 /home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/environment-formal-audit.log",
+      "last_observed_output": "none"
+    },
+    {
+      "session_id": 61100,
+      "status": "RESULT_UNKNOWN",
+      "command": "ps -eo pid,etime,comm,args | rg \"[g]o test.*TestModelDev|[/]data.test|[/]service.test|[/]server.test|[c]ompile.*ent\" | head -15",
+      "last_observed_output": "none"
+    }
+  ],
+  "no_further_probe_or_retry": true
+}

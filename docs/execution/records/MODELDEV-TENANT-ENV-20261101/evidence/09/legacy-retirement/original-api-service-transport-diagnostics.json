@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-11-01T00:32:57.207472+00:00",
+  "original_control_identity": true,
+  "api_service_uid": "bfbd6463-67e2-471c-8d49-a84b853bd4e0",
+  "api_service_ip": "10.96.0.1",
+  "proxy_environment_presence": {
+    "HTTP_PROXY": false,
+    "HTTPS_PROXY": false,
+    "ALL_PROXY": false,
+    "http_proxy": false,
+    "https_proxy": false,
+    "all_proxy": false,
+    "NO_PROXY": false,
+    "no_proxy": false
+  },
+  "token_request_count": 0,
+  "direct_original_api_service": {
+    "http_status": 200,
+    "kind": "Namespace",
+    "uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+    "error_reason": ""
+  }
+}

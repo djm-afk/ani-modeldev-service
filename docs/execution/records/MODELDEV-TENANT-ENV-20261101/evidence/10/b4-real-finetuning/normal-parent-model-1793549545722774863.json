@@ -1,0 +1,61 @@
+{
+  "schema": "ani.modeldev.b4-normal-parent-model-readback.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:12:23.441007+00:00"
+  },
+  "at": "2026-11-01T16:12:23.441025+00:00",
+  "persistent_mutations": false,
+  "method": "GET",
+  "path": "/api/v1/models/454cef60-ca01-4dae-a4e6-b8881026c688",
+  "http_status": 200,
+  "response_sha256": "167f73e3bdd22de68781e1a300b836f8ad077f7125c12c6cb0a2a6749e9eb278",
+  "response_keys": [
+    "id",
+    "name",
+    "display_name",
+    "description",
+    "source",
+    "source_repo_id",
+    "capabilities",
+    "status",
+    "error_message",
+    "total_size_bytes",
+    "versions",
+    "created_at",
+    "updated_at",
+    "model_id"
+  ],
+  "model": {
+    "id": "454cef60-ca01-4dae-a4e6-b8881026c688",
+    "model_id": "tenantenv-b-smollm2-935c3148-a4",
+    "name": "tenantenv-b-smollm2-935c3148-a4",
+    "status": "ready",
+    "created_at": "2026-11-01T16:00:50.137178Z",
+    "updated_at": "2026-11-01T16:00:50.139447Z",
+    "versions": [
+      {
+        "id": "6afb1f32-a0d4-4c92-8d82-7799e450f5ee",
+        "model_id": "tenantenv-b-smollm2-935c3148-a4",
+        "version": "exec-59f92b91-5e86-4dd1-90ec-cb1037756758",
+        "status": "ready",
+        "checksum_sha256": "3354c60b0177555b7712b13be7c23fab2e2b6b7a1df50f927e3947345bf8d63a",
+        "size_bytes": "541620736"
+      }
+    ]
+  },
+  "other_model_field_names": [
+    "display_name",
+    "description",
+    "source",
+    "source_repo_id",
+    "capabilities",
+    "error_message",
+    "total_size_bytes"
+  ]
+}

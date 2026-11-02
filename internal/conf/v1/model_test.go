@@ -37,7 +37,7 @@ func TestConfiguredModelConnectionRequiresExplicitTrustedMaterials(t *testing.T)
 		{"wrong registered client identity", func(c *ModelConnection) { c.ClientDnsName = "ani-modeldev.ani.internal" }},
 		{"borrowed audit actor", func(c *ModelConnection) { c.Actor = "governance:user:42" }},
 		{"missing base storage authority", func(c *ModelConnection) { c.BaseModelStorageScope = nil }},
-		{"unsafe base prefix", func(c *ModelConnection) { c.BaseModelStorageScope.ApprovedPrefix = "../models" }},
+		{"unsafe base bucket", func(c *ModelConnection) { c.BaseModelStorageScope.Bucket = "../models" }},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -82,7 +82,7 @@ func modelConnectionConfiguration() *ModelConnection {
 		ServerName:            "ani-model.ani.internal",
 		Actor:                 "modeldev:service",
 		Timeout:               durationpb.New(30 * time.Second),
-		BaseModelStorageScope: &BaseModelStorageScope{ConnectionId: "model-store-v1", Bucket: "ani-models", ApprovedPrefix: "tenant-models", CredentialReference: "model-base-read"},
+		BaseModelStorageScope: &BaseModelStorageScope{ConnectionId: "model-store-v1", Bucket: "ani-models", CredentialReference: "model-base-read"},
 	}
 }
 

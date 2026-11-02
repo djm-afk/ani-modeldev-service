@@ -1,0 +1,52 @@
+{
+  "schema": "ani.modeldev.b-test-principal.v1",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "runtime": {
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "generation": 198,
+    "pod_uid": "7e3c6bd5-4d76-4b44-92bf-6e3b89d48a6f",
+    "pod_name": "ani-governance-7ddc444f78-nt5vc",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "pause_value": "default"
+  },
+  "observed_at": "2026-11-01T02:40:10.326262+00:00",
+  "status": "ABSENT_READ_ONLY",
+  "user": null,
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/platform/password/login",
+      "status": 200,
+      "response_sha256": "9e78860fbbfbdba9e56a42176e0dfba489c10248b37a7615211a81b710fe0f78"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tenants/40",
+      "status": 200,
+      "response_sha256": "56d62b226487f2ac17409c591fd9b9a37524fc0850d115ecf0dc9eb7078c80ba"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/roles/26",
+      "status": 200,
+      "response_sha256": "f0775212542a2e3889fdbc2930ef95e403416203a03016ac15463370eaa6eeb6"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/users",
+      "status": 200,
+      "response_sha256": "f43cbf98d3f2679f53591d8347e059338124fb5cf47559c316508830d0738419"
+    }
+  ],
+  "new_role_or_grant": false,
+  "password_or_token_recorded": false,
+  "environment_permission_and_training_acceptance": "NOT_RUN",
+  "ssh_exit": 0
+}

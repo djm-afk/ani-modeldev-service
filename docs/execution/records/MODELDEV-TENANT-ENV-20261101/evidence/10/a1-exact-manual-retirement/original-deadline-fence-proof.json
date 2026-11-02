@@ -1,0 +1,30 @@
+{
+  "identity": {
+    "spec_hash": "d6ca2aaba887393428a569a87c9a6efa43c6f630df06ad1297fe84687a13fe2f",
+    "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60",
+    "operation_id": "136a3255-5c76-4c33-a8e8-79bb60968c11",
+    "close_generation": 1
+  },
+  "runtime_fence": {
+    "closed_at": null,
+    "close_reason": "DEADLINE",
+    "CloseAuthority": {
+      "RunID": "83e25294-500f-4d8b-8b02-9e3e3ae235d7",
+      "PlanHash": "be4dec0d7241d05ca8017b1f0a5ad74434f3752745b424c153bbf0a0b2b075a0",
+      "SpecHash": "d6ca2aaba887393428a569a87c9a6efa43c6f630df06ad1297fe84687a13fe2f",
+      "TenantID": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "AttemptID": "469a56e1-0587-4590-8fb4-715969f77d93",
+      "ExecutionID": "f5eb1008-4d77-4c99-874b-05c9e427da60",
+      "OperationID": "136a3255-5c76-4c33-a8e8-79bb60968c11",
+      "WorkflowUID": "f048c2d6-90e9-40b9-afdf-dff24195ccc7",
+      "NamespaceUID": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+      "WorkflowName": "md-q9bb7",
+      "NamespaceName": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420"
+    },
+    "CloseGeneration": 1,
+    "CloseRequestedAt": "2026-11-01T10:36:19.271212Z",
+    "close_generation": 1,
+    "close_operation_id": "9fc9b7be-62bb-4a1b-b176-c804d8ff0185"
+  }
+}

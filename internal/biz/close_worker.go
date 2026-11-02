@@ -2,110 +2,221 @@ package biz
 
 import (
 	"context"
-	"strings"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	"sync"
 	"time"
 )
 
+type CloseReasonSet uint8
+
+const (
+	NeedsClose CloseReasonSet = 1 << iota
+	NeedsStepOrComputeCleanup
+	PendingGPUOutbox
+	GPUReleaseNotSealed
+)
+
+type PendingCloseRow struct {
+	TenantID, ExecutionID string
+	AcceptedAt            time.Time
+	Reasons               CloseReasonSet
+	DecodeProblem         string
+}
+type PendingClosePage struct {
+	ExaminedCount int
+	Rows          []PendingCloseRow
+}
 type PendingCloseRepository interface {
-	ListPendingClosures(context.Context, PipelineDispatchBinding, string, int) ([]string, error)
+	ListPendingCloseTenants(context.Context, string, string, int) ([]string, error)
+	CloseDiscoveryTime(context.Context) (time.Time, error)
+	ListPendingClosures(context.Context, string, string, DiscoveryCursor, int) (PendingClosePage, error)
 }
-
-// CloseWorker discovers persisted fences and expired original deadlines. It
-// observes/stops resources only; no normal pipeline step is driven here.
 type CloseWorker struct {
-	repository PendingCloseRepository
-	closer     *ExecutionCloser
-	binding    PipelineDispatchBinding
-	batchSize  int
-	interval   time.Duration
-	gpuRelease *GPUReleaseReconciler
-	after      string
+	repository  PendingCloseRepository
+	closer      *ExecutionCloser
+	clusterID   string
+	interval    time.Duration
+	coordinator *WorkerCoordinator
+	gpuRelease  *GPUReleaseReconciler
+	afterTenant string
+	cursors     map[string]DiscoveryCursor
+	seenTenants map[string]bool
 }
-
 type CloseBatchResult struct {
 	Examined, Closed, Unresolved int
 	LastError                    error
 }
 
-func NewCloseWorker(repository PendingCloseRepository, closer *ExecutionCloser, binding PipelineDispatchBinding, batchSize int, interval time.Duration, gpuRelease ...*GPUReleaseReconciler) (*CloseWorker, error) {
-	if repository == nil || closer == nil || binding.Validate() != nil || batchSize < 1 || batchSize > 100 || interval < 100*time.Millisecond || interval > time.Minute || len(gpuRelease) > 1 {
+func NewCloseWorker(repository PendingCloseRepository, closer *ExecutionCloser, clusterID string, interval time.Duration, gpuRelease ...*GPUReleaseReconciler) (*CloseWorker, error) {
+	if repository == nil || closer == nil || !cpup01.CanonicalTenantID(clusterID) || interval < time.Second || interval > time.Minute || len(gpuRelease) > 1 {
 		return nil, ErrInvalidDispatchWorker
 	}
-	worker := &CloseWorker{repository: repository, closer: closer, binding: binding, batchSize: batchSize, interval: interval}
+	w := &CloseWorker{repository: repository, closer: closer, clusterID: clusterID, interval: interval, coordinator: NewWorkerCoordinator(), cursors: map[string]DiscoveryCursor{}, seenTenants: map[string]bool{}}
 	if len(gpuRelease) == 1 {
 		if gpuRelease[0] == nil {
 			return nil, ErrInvalidDispatchWorker
 		}
-		worker.gpuRelease = gpuRelease[0]
+		w.gpuRelease = gpuRelease[0]
 	}
-	return worker, nil
+	return w, nil
 }
-
-// ReconcileOnce is owned by one worker loop. A bounded cursor prevents an
-// unresolved early execution from starving later requests; restart scans from
-// the beginning and recovers entirely from durable facts.
-func (worker *CloseWorker) ReconcileOnce(ctx context.Context) (CloseBatchResult, error) {
+func (w *CloseWorker) ReconcileOnce(ctx context.Context) (CloseBatchResult, error) {
 	result := CloseBatchResult{}
-	if ctx == nil || worker == nil || worker.repository == nil || worker.closer == nil {
+	if ctx == nil || w == nil {
 		return result, ErrInvalidDispatchWorker
 	}
-	ids, err := worker.repository.ListPendingClosures(ctx, worker.binding, worker.after, worker.batchSize)
+	q, c := context.WithTimeout(ctx, 3*time.Second)
+	tenants, err := w.repository.ListPendingCloseTenants(q, w.clusterID, w.afterTenant, 16)
+	c()
 	if err != nil {
 		return result, err
 	}
-	if len(ids) > worker.batchSize {
+	if len(tenants) > 16 {
 		return result, ErrPersistence
 	}
-	for _, id := range ids {
-		if !validAdmissionID(id) || strings.ToLower(id) != id || id <= worker.after {
+	type tenantResult struct {
+		cursor DiscoveryCursor
+		end    bool
+		result CloseBatchResult
+		err    error
+	}
+	results := make([]tenantResult, len(tenants))
+	var tasks sync.WaitGroup
+	for index, tenant := range tenants {
+		if !cpup01.CanonicalTenantID(tenant) || (index > 0 && tenant <= tenants[index-1]) || tenant <= w.afterTenant {
 			return result, ErrPersistence
 		}
-		if err := ctx.Err(); err != nil {
-			return result, err
-		}
-		closed, err := worker.closer.Reconcile(ctx, worker.binding.TenantID, id)
-		if err == nil && closed.Runtime.ClosedAt != nil && closed.Execution.Snapshot.GPU != nil {
-			if worker.gpuRelease == nil {
-				err = ErrRuntimeNotReady
-			} else {
-				state, releaseErr := worker.gpuRelease.Reconcile(ctx, worker.binding.TenantID, id)
-				err = releaseErr
-				if err == nil && (state.GPURelease == nil || state.GPURelease.Outbox == nil || state.GPURelease.Outbox.ACK == nil || state.GPURelease.Outbox.DeliveredAt == nil) {
-					err = ErrRuntimeNotReady
+		cursor := w.cursors[tenant]
+		tasks.Add(1)
+		go func(index int, tenant string, cursor DiscoveryCursor) {
+			defer tasks.Done()
+			release, err := w.coordinator.acquire(ctx, tenant)
+			if err != nil {
+				results[index].err = err
+				return
+			}
+			defer release()
+			current := tenantResult{cursor: cursor}
+			defer func() { results[index] = current }()
+			query, cancel := context.WithTimeout(ctx, 3*time.Second)
+			defer cancel()
+			if cursor.SweepBefore.IsZero() {
+				cursor.SweepBefore, current.err = w.repository.CloseDiscoveryTime(query)
+				if current.err != nil {
+					return
 				}
 			}
-		}
-		result.Examined++
-		if err == nil && closed.Runtime.ClosedAt != nil {
-			result.Closed++
-		} else {
-			// Failed observation leaves the existing fence and CLOSING facts.
-			// One unavailable controller must not stop other executions closing.
-			result.Unresolved++
-			result.LastError = err
-		}
-		worker.after = id
+			page, e := w.repository.ListPendingClosures(query, w.clusterID, tenant, cursor, 4)
+			if e != nil {
+				current.err = e
+				return
+			}
+			if page.ExaminedCount != len(page.Rows) || len(page.Rows) > 4 {
+				current.err = ErrPersistence
+				return
+			}
+			current.end = len(page.Rows) < 4
+			for _, row := range page.Rows {
+				current.result.Examined++
+				cursor.AfterAcceptedAt = row.AcceptedAt
+				cursor.AfterExecutionID = row.ExecutionID
+				if row.DecodeProblem != "" {
+					current.result.Unresolved++
+					continue
+				}
+				if row.Reasons == 0 {
+					continue
+				}
+				completed := false
+				if row.Reasons&PendingGPUOutbox != 0 {
+					completed = true
+					if w.gpuRelease == nil {
+						e = ErrRuntimeNotReady
+					} else {
+						bounded, stop := context.WithTimeout(ctx, 10*time.Second)
+						_, e = w.gpuRelease.Reconcile(bounded, tenant, row.ExecutionID)
+						stop()
+					}
+				} else {
+					bounded, stop := context.WithTimeout(ctx, 30*time.Second)
+					closed, closeErr := w.closer.Reconcile(bounded, tenant, row.ExecutionID)
+					stop()
+					e = closeErr
+					completed = closed.Runtime.ClosedAt != nil
+					if e == nil && closed.Runtime.ClosedAt != nil && closed.Execution.Snapshot.GPU != nil {
+						if w.gpuRelease == nil {
+							e = ErrRuntimeNotReady
+						} else {
+							bounded, stop := context.WithTimeout(ctx, 10*time.Second)
+							_, e = w.gpuRelease.Reconcile(bounded, tenant, row.ExecutionID)
+							stop()
+						}
+					}
+				}
+				if e == nil && completed {
+					current.result.Closed++
+				} else {
+					current.result.Unresolved++
+					current.result.LastError = e
+				}
+			}
+			current.cursor = cursor
+		}(index, tenant, cursor)
 	}
-	if len(ids) < worker.batchSize {
-		worker.after = ""
+	tasks.Wait()
+	for index, tenant := range tenants {
+		r := results[index]
+		if r.err != nil {
+			return result, r.err
+		}
+		if r.end {
+			delete(w.cursors, tenant)
+		} else {
+			w.cursors[tenant] = r.cursor
+		}
+		result.Examined += r.result.Examined
+		result.Closed += r.result.Closed
+		result.Unresolved += r.result.Unresolved
+		if r.result.LastError != nil {
+			result.LastError = r.result.LastError
+		}
+		w.afterTenant = tenant
+		w.seenTenants[tenant] = true
+	}
+	if len(tenants) < 16 {
+		w.afterTenant = ""
+		for tenant := range w.cursors {
+			if !w.seenTenants[tenant] {
+				delete(w.cursors, tenant)
+			}
+		}
+		clear(w.seenTenants)
 	}
 	return result, nil
 }
-
-func (worker *CloseWorker) Run(ctx context.Context) error {
-	if ctx == nil || worker == nil || worker.interval <= 0 {
+func (w *CloseWorker) Run(ctx context.Context) error {
+	if ctx == nil || w == nil {
 		return ErrInvalidDispatchWorker
 	}
-	ticker := time.NewTicker(worker.interval)
-	defer ticker.Stop()
+	backoff := time.Second
 	for {
-		if _, err := worker.ReconcileOnce(ctx); err != nil && ctx.Err() == nil {
-			return err
+		_, err := w.ReconcileOnce(ctx)
+		if ctx.Err() != nil {
+			return nil
 		}
+		delay := w.interval
+		if err != nil {
+			delay = backoff
+			backoff = min(backoff*2, 30*time.Second)
+		} else {
+			backoff = time.Second
+		}
+		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			return nil
-		case <-ticker.C:
+		case <-timer.C:
 		}
 	}
 }

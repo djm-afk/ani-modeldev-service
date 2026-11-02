@@ -1,0 +1,8 @@
+{
+  "ObservedAt": "2026-11-01T01:08:45.214162+00:00",
+  "PrivateInputSHA256": "3c50fa5dbf43a1fae162d39fe691b538cbda1c4be53fdba94f616e5938afb994",
+  "PrivateInputMode": "0o600",
+  "CanonicalPublicContentsRetained": false,
+  "PrivateInputAbsent": true,
+  "PrivateDiagnosticSourceRemoved": true
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "ani.modeldev.AD01-AD02-existing-evidence-source-scope.v1",
+  "baseline": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "final_admission_source": "4d6013c5b13cf150268ebbf63544ad16e1672d13",
+  "component_log": "../../06-webhook-component-tests.log",
+  "production_go_webhook_unchanged_from_verified_baseline": true,
+  "native_common_function_ast_unchanged": {
+    "namespace_expression": true,
+    "owner_expression": true,
+    "bootstrap": true,
+    "configuration": true,
+    "marker": true,
+    "protected_pods": true,
+    "podspecs": true
+  },
+  "native_workload_protection_assignment_ast_unchanged": {
+    "metadata": true,
+    "workflow_templates": true,
+    "creators": true,
+    "create": true,
+    "deadline": true,
+    "workflow_equal": true,
+    "pod_identity": true,
+    "checks": true,
+    "rules": true
+  },
+  "platform_override": "Changed trusted platform matchConditions and removed prior actor-specific restrictions as explicitly directed; not retested as ordinary-tenant protection",
+  "new_network_or_tests_run": false
+}

@@ -1,0 +1,156 @@
+{
+  "schema": "ani.modeldev.LIVE02-required-native-actual-principal.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "started_at": "2026-11-01T16:57:31.444343+00:00",
+  "dry_run_only": true,
+  "new_identity_or_RBAC": false,
+  "results": [
+    {
+      "id": "wrong-namespace-owner",
+      "method": "POST",
+      "operation": "CREATE dryRun",
+      "http_status": 422,
+      "message": "serviceaccounts \"trainer-workload\" is forbidden: ValidatingAdmissionPolicy 'modeldev-bootstrap-v1' with binding 'modeldev-bootstrap-v1-binding' denied request: ModelDev: standard namespace and original owner identity required",
+      "reason": "Invalid",
+      "native_policy_denial": false,
+      "existing_object_unchanged": true,
+      "existing_uid": "48061b34-d063-406d-8e10-f919aeb6d9a9",
+      "request_sha256": "10f7b5b60c5fe6f0d20de04feadd1e9704d99d37631d6fb199a80c6ae893436c",
+      "response_sha256": "49f9b069a3052191cc0719c314770904cf3f731456c7550ae9394bcf1b7b54ab",
+      "identity_before_request": {
+        "ssh_user": "kubercloud",
+        "ssh_host": "100.64.128.12",
+        "context": "kubernetes-admin@ani-kcn-full",
+        "apiserver": "https://lb.kubesphere.local:6443",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+      },
+      "result": "BLOCKED_OR_FAIL_ACTUAL_RESPONSE"
+    },
+    {
+      "id": "wrong-role-reference-only",
+      "method": "POST",
+      "operation": "CREATE dryRun",
+      "http_status": 422,
+      "message": "rolebindings.rbac.authorization.k8s.io \"modeldev-step\" is forbidden: ValidatingAdmissionPolicy 'modeldev-bootstrap-v1' with binding 'modeldev-bootstrap-v1-binding' denied request: ModelDev: five exact role references and subjects required",
+      "reason": "Invalid",
+      "native_policy_denial": false,
+      "existing_object_unchanged": true,
+      "existing_uid": "cbeb000e-a106-4fb7-969d-5c858ecca253",
+      "request_sha256": "68525c23ee4f9c779d553f5ba0f0ec6aa64d21d927dc729be823bdf344d67d58",
+      "response_sha256": "bbcabdbb8f16f1961847490c9d534e11045e7a952659304644a9efe230dfa026",
+      "identity_before_request": {
+        "ssh_user": "kubercloud",
+        "ssh_host": "100.64.128.12",
+        "context": "kubernetes-admin@ani-kcn-full",
+        "apiserver": "https://lb.kubesphere.local:6443",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+      },
+      "result": "BLOCKED_OR_FAIL_ACTUAL_RESPONSE"
+    },
+    {
+      "id": "wrong-artifact-secret-type-only",
+      "method": "POST",
+      "operation": "CREATE dryRun",
+      "http_status": 422,
+      "message": "secrets \"modeldev-kfp-artifacts\" is forbidden: ValidatingAdmissionPolicy 'modeldev-bootstrap-v1' with binding 'modeldev-bootstrap-v1-binding' denied request: ModelDev: dedicated two-key artifact Secret and identity-only metadata required",
+      "reason": "Invalid",
+      "native_policy_denial": false,
+      "existing_object_unchanged": true,
+      "existing_uid": "c04e6522-ac6d-4f2a-8d98-e3bc528b4666",
+      "request_sha256": "c6c8d94181745c1e25c6c101318fea65928a0cf90316d9ff0dc8a62ca2443ccc",
+      "response_sha256": "9b53b9bebf52a73c299c9eadfa4505c5ce64e6539edbc641a736bb1efbe2dad0",
+      "identity_before_request": {
+        "ssh_user": "kubercloud",
+        "ssh_host": "100.64.128.12",
+        "context": "kubernetes-admin@ani-kcn-full",
+        "apiserver": "https://lb.kubesphere.local:6443",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+      },
+      "result": "BLOCKED_OR_FAIL_ACTUAL_RESPONSE"
+    },
+    {
+      "id": "wrong-artifact-secret-keys-only",
+      "method": "POST",
+      "operation": "CREATE dryRun",
+      "http_status": 422,
+      "message": "secrets \"modeldev-kfp-artifacts\" is forbidden: ValidatingAdmissionPolicy 'modeldev-bootstrap-v1' with binding 'modeldev-bootstrap-v1-binding' denied request: ModelDev: dedicated two-key artifact Secret and identity-only metadata required",
+      "reason": "Invalid",
+      "native_policy_denial": false,
+      "existing_object_unchanged": true,
+      "existing_uid": "c04e6522-ac6d-4f2a-8d98-e3bc528b4666",
+      "request_sha256": "fbdd5d233a412361ae8df75df5eec6408cb67ed940b358c27e9173013bff36d3",
+      "response_sha256": "9b53b9bebf52a73c299c9eadfa4505c5ce64e6539edbc641a736bb1efbe2dad0",
+      "identity_before_request": {
+        "ssh_user": "kubercloud",
+        "ssh_host": "100.64.128.12",
+        "context": "kubernetes-admin@ani-kcn-full",
+        "apiserver": "https://lb.kubesphere.local:6443",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+      },
+      "result": "BLOCKED_OR_FAIL_ACTUAL_RESPONSE"
+    },
+    {
+      "id": "safe-current-control-update",
+      "method": "PATCH",
+      "admission_operation": "UPDATE",
+      "http_status": 200,
+      "existing_object_unchanged": true,
+      "identity_before_request": {
+        "ssh_user": "kubercloud",
+        "ssh_host": "100.64.128.12",
+        "context": "kubernetes-admin@ani-kcn-full",
+        "apiserver": "https://lb.kubesphere.local:6443",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+      },
+      "response_sha256": "7dee608426d4df4bd2fb8517bc941410fcbccead491218995653f921afdfc56e",
+      "result": "PASS",
+      "message": null
+    }
+  ],
+  "temporary_tls": {
+    "temporary_original_admin_tls_copy_absent": true,
+    "new_identity": false
+  },
+  "actor": {
+    "pod_uid": "6f29950c-625e-4b2f-98a0-bc7309016d7e",
+    "principal": {
+      "http_status": 201,
+      "username": "system:serviceaccount:ani-system:modeldev-control",
+      "uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "groups": [
+        "system:serviceaccounts",
+        "system:serviceaccounts:ani-system",
+        "system:authenticated"
+      ],
+      "response_sha256": "00ff3fd75639780c20f56260ca6ec38a4ad6049a9dd99a0638389da8048dab7d",
+      "authentication": "actual existing projected token; no impersonation or TokenRequest"
+    },
+    "claims": {
+      "iat": 1793550656,
+      "exp": 1793554256,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "https://kubernetes.default.svc.cluster.local"
+      ],
+      "jti_present": true,
+      "pod_uid": "6f29950c-625e-4b2f-98a0-bc7309016d7e",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 3600,
+      "currently_unexpired": true
+    }
+  },
+  "status": "BLOCKED_OR_FAIL_ACTUAL_RESPONSE",
+  "finished_at": "2026-11-01T16:57:34.503405+00:00"
+}

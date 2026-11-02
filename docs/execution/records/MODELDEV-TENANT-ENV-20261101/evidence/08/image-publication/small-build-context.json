@@ -1,0 +1,24 @@
+{
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_git_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "input_files_canonical_sha256": "dd70433a47d201f2cb8343a6e643ef38223f90dd88a78c79ad590286f37678a9",
+  "binary_source": "Existing fixed source Fedora CGO_ENABLED=0 linux amd64 original build; no recompilation",
+  "files": {
+    "step/Dockerfile": {
+      "size": 428,
+      "sha256": "5dfa10fe1692d8e7bd4a0c25250cb5d28a90f8ca1081f47588dd617bcbdb208c"
+    },
+    "webhook/Dockerfile": {
+      "size": 541,
+      "sha256": "ce7df200aa9baf1391b7631fde751c6ab68b5d0987564614fe612ccb29dae652"
+    },
+    "step/ani-modeldev-step": {
+      "size": 36720665,
+      "sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e"
+    },
+    "webhook/ani-modeldev-webhook": {
+      "size": 67696833,
+      "sha256": "6deb8d923a5e3f93afba7672ba8133e07c2f9066d810e275bc50e43743cf571f"
+    }
+  }
+}

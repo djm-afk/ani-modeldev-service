@@ -40,7 +40,6 @@ func newClosedRecoveryCleanupFixture(t *testing.T, captured ...bool) (*computeCl
 	f.execution.AcceptedAt = time.Now().UTC().Truncate(time.Microsecond)
 	f.execution.Snapshot.DeadlineAt = f.execution.AcceptedAt.Add(time.Hour)
 	f.execution.Admission = admissionfixture.Bind(t, f.execution.Admission)
-	runtimeObject := computeRuntime(t, f)
 	var err error
 	f.execution.SpecHash, err = f.execution.Snapshot.Digest()
 	if err != nil {
@@ -48,12 +47,14 @@ func newClosedRecoveryCleanupFixture(t *testing.T, captured ...bool) (*computeCl
 	}
 	open := postgres.Prepare(t)
 	pool := open()
+	ensureOwnerCloseEnvironment(t, pool, f)
+	runtimeObject := computeRuntime(t, f)
 	ctx := context.Background()
 	commands, dispatches := execution.New(pool), submission.New(pool)
 	if _, err := commands.Accept(ctx, f.execution.Admission); err != nil {
 		t.Fatal(err)
 	}
-	reserved, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.execution.Admission, Owner: f.dispatch.Plan.Owner})
+	reserved, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.execution.Admission, Owner: f.execution.Snapshot.DispatchOwner})
 	if err != nil || reserved.SendPermit == nil {
 		t.Fatal("original dispatch permit", err)
 	}
@@ -68,7 +69,7 @@ func newClosedRecoveryCleanupFixture(t *testing.T, captured ...bool) (*computeCl
 	f.dispatch = confirmed.Dispatch
 	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = f.dispatch.Plan.Environment.ExperimentID, f.dispatch.Plan.DisplayName, f.dispatch.Plan.Environment.Identities.KFPStepServiceAccount
 	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": f.dispatch.Plan.PipelineID, "pipeline_version_id": f.dispatch.Plan.PipelineVersionID}
-	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": f.dispatch.Plan.ExecutionID, "spec_hash": f.dispatch.Plan.SpecHash}, "pipeline_root": f.dispatch.Plan.Owner.PipelineRoot}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": f.dispatch.Plan.ExecutionID, "spec_hash": f.dispatch.Plan.SpecHash, "environment_binding_id": f.dispatch.Plan.Environment.BindingID, "namespace_uid": f.dispatch.Plan.Environment.NamespaceUID}, "pipeline_root": f.dispatch.Plan.Owner.PipelineRoot}
 	if !useCaptured {
 		f.terminateExternalRecords(t)
 	}

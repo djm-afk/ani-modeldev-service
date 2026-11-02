@@ -1,0 +1,145 @@
+Real PostgreSQL test dependency ready; restricted runtime role; loopback only.
+=== RUN   TestPrepareFinalizeFreezesInputsAndReverifiesCurrentEnvironmentWithoutWrites
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestPrepareFinalizeFreezesInputsAndReverifiesCurrentEnvironmentWithoutWrites (0.40s)
+=== RUN   TestPrepareRPCRejectsAmbiguousReservedAndInconsistentWireFields
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:10 INFO [gRPC] server listening addr=127.0.0.1:40155
+2026/11/01 02:32:10 INFO [gRPC] server stopping
+--- PASS: TestPrepareRPCRejectsAmbiguousReservedAndInconsistentWireFields (0.38s)
+=== RUN   TestFinalizeRPCKeepsCandidateHashScopeAndNoReads
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:10 INFO [gRPC] server listening addr=127.0.0.1:41183
+2026/11/01 02:32:10 INFO [gRPC] server stopping
+--- PASS: TestFinalizeRPCKeepsCandidateHashScopeAndNoReads (0.36s)
+=== RUN   TestAdmissionRPCUntrustedMetadataAndListenerCapabilityBoundaries
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:34655
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:45699
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:40117
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+--- PASS: TestAdmissionRPCUntrustedMetadataAndListenerCapabilityBoundaries (0.34s)
+=== RUN   TestAdmissionRPCMapsDependencyFailureWithoutUnsafeDetails
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:38933
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:43873
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:41053
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:34987
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:43733
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+--- PASS: TestAdmissionRPCMapsDependencyFailureWithoutUnsafeDetails (0.40s)
+=== RUN   TestAdmissionRPCCancellationReachesActualFactsRead
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:11 INFO [gRPC] server listening addr=127.0.0.1:45249
+2026/11/01 02:32:11 INFO [gRPC] server stopping
+--- PASS: TestAdmissionRPCCancellationReachesActualFactsRead (0.31s)
+=== RUN   TestTwoPhaseRPCPreservesCandidateReadyInputAndFullPlanOverMTLS
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:12 INFO [gRPC] server listening addr=127.0.0.1:33345
+2026/11/01 02:32:12 INFO [gRPC] server stopping
+--- PASS: TestTwoPhaseRPCPreservesCandidateReadyInputAndFullPlanOverMTLS (0.37s)
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/workspace
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/input_connection
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/input_bucket
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/prefix_boundary
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/relative_path
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/path_traversal
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/same_output
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/nested_output
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/unknown_cluster
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/namespace_uid
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/shared_service_account
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/publication_authority
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/missing_timing
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/default_above_max
+=== RUN   TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/S_above_max
+--- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming (0.32s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/workspace (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/input_connection (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/input_bucket (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/prefix_boundary (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/relative_path (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/path_traversal (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/same_output (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/nested_output (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/unknown_cluster (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/namespace_uid (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/shared_service_account (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/publication_authority (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/missing_timing (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/default_above_max (0.00s)
+    --- PASS: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming/S_above_max (0.00s)
+=== RUN   TestPrepareFixedMicrosecondTimeAndContextCancellation
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestPrepareFixedMicrosecondTimeAndContextCancellation (0.32s)
+=== RUN   TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay
+    finetuning_vertical_test.go:100: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_vertical_test.go:108: ENVIRONMENT_NOT_READY
+--- FAIL: TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay (0.37s)
+=== RUN   TestFinetuningModelScopeAndCutoffRejectBeforeAccept
+    finetuning_vertical_test.go:145: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_vertical_test.go:156: Model authorization boundary bypassed ENVIRONMENT_NOT_READY
+--- FAIL: TestFinetuningModelScopeAndCutoffRejectBeforeAccept (0.49s)
+=== RUN   TestFinetuningImportRejectsUnverifiedCallerAndWrongImplementation
+    finetuning_vertical_test.go:161: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestFinetuningImportRejectsUnverifiedCallerAndWrongImplementation (0.44s)
+=== RUN   TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment
+=== RUN   TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment/WHOLE_EXCLUSIVE/factor10=false
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:14 INFO [gRPC] server listening addr=127.0.0.1:37255
+2026/11/01 02:32:14 INFO [gRPC] server stopping
+=== RUN   TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment/WHOLE_EXCLUSIVE/factor10=true
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:15 INFO [gRPC] server listening addr=127.0.0.1:32861
+2026/11/01 02:32:15 INFO [gRPC] server stopping
+=== RUN   TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment/SHARED_FIXED/factor10=false
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:15 INFO [gRPC] server listening addr=127.0.0.1:38485
+2026/11/01 02:32:15 INFO [gRPC] server stopping
+=== RUN   TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment/SHARED_FIXED/factor10=true
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:15 INFO [gRPC] server listening addr=127.0.0.1:37311
+2026/11/01 02:32:15 INFO [gRPC] server stopping
+--- PASS: TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment (1.72s)
+    --- PASS: TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment/WHOLE_EXCLUSIVE/factor10=false (0.49s)
+    --- PASS: TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment/WHOLE_EXCLUSIVE/factor10=true (0.44s)
+    --- PASS: TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment/SHARED_FIXED/factor10=false (0.41s)
+    --- PASS: TestGPUWholeAndSharedFinalizeOriginalCandidateWithCurrentEnvironment/SHARED_FIXED/factor10=true (0.38s)
+=== RUN   TestPrepareScopesSameInputUUIDByAuthenticatedTenant
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestPrepareScopesSameInputUUIDByAuthenticatedTenant (0.49s)
+=== RUN   TestPrepareRejectsPersistedNonReadyProofStates
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestPrepareRejectsPersistedNonReadyProofStates (0.39s)
+=== RUN   TestPreparePresenceOriginalIdentityAndFinalizeMismatchBoundaries
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestPreparePresenceOriginalIdentityAndFinalizeMismatchBoundaries (0.38s)
+=== RUN   TestDynamicFactsRequiresExactRegisteredTenantAndImplementation
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestDynamicFactsRequiresExactRegisteredTenantAndImplementation (0.34s)
+=== RUN   TestDynamicFactsAndFinalizeRejectRecreatedNamespace
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestDynamicFactsAndFinalizeRejectRecreatedNamespace (0.32s)
+=== RUN   TestDynamicFactsCancellationReturnsNoFactsOrCandidate
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestDynamicFactsCancellationReturnsNoFactsOrCandidate (0.31s)
+=== RUN   TestPrepareUsesPublishedTenantEnvironmentAndOwnsCopies
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestPrepareUsesPublishedTenantEnvironmentAndOwnsCopies (0.30s)
+=== RUN   TestAcceptedTimingSurvivesEnvironmentConfigDriftAndNewAdmissionStops
+    admission_resolution_test.go:82: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+2026/11/01 02:32:18 INFO [gRPC] server listening addr=127.0.0.1:42787
+    timing_configuration_revision_test.go:110: TM02 FEDORA: accepted T3600/M7200/S900 and original canonical bytes retained through config drift, replay and Get; READY binding was not rewritten; subsequent Prepare/Finalize refused NEEDS_REVIEW; no long-running live task inferred
+2026/11/01 02:32:18 INFO [gRPC] server stopping
+--- PASS: TestAcceptedTimingSurvivesEnvironmentConfigDriftAndNewAdmissionStops (0.51s)
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/resolutiontest	9.310s
+FAIL

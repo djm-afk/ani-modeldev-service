@@ -1,0 +1,10 @@
+{
+  "observed_at_utc": "2026-10-31T15:46:03.761196Z",
+  "host": "fedora",
+  "command": "sha256sum -c SHA256SUMS",
+  "exit_code": 0,
+  "output": "GOAL.md: OK\nREADME.md: OK\nspec.md: OK\ntemplates/commands.tsv: OK\ntemplates/evidence-index.tsv: OK\ntemplates/facts.json: OK\ntemplates/report.md: OK\n",
+  "package_version": "v1.1",
+  "archive_sha256": "201c6d010260ce178186510e346f2aa53b00af5fa359048f418172ba17bebc48",
+  "original_inputs_preserved": true
+}

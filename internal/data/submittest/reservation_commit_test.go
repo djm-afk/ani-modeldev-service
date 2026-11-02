@@ -3,6 +3,7 @@ package submittest_test
 import (
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -27,6 +28,8 @@ func TestSubmitReservationCommitFailureCannotSendOrReturnReceipt(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	request := dispatchRequest(t)
+	request.Admission = admissionfixture.EnsureEnvironment(t, openPool(), request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 	fixturePool := openPool()
 	if _, err := execution.New(fixturePool).Accept(ctx, request.Admission); err != nil {
 		t.Fatalf("CPU07_COMMIT_PREFLIGHT: real Admission unavailable; behavior NOT_RUN: %v", err)

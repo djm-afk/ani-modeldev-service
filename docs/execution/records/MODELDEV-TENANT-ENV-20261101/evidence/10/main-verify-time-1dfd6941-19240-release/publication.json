@@ -1,0 +1,161 @@
+{
+  "started_at": "2026-11-01T15:53:17.387977+00:00",
+  "source_commit": "1dfd6941e5780eca0d55dc4e5fbbd2f58e0710ab",
+  "source_tree": "8f15d37c37ab77c64dd1e7643f3b00c88981ed74",
+  "source_provenance": {
+    "base_git_archive": "df8dcfbfb0de02d4ebf61bea2e46897bd9bbd405",
+    "existing_base": "/var/lib/ani-deploy/jobs/5d522c953b6e4a9ba37708d2cd0096f3/source",
+    "delta_files": [
+      {
+        "path": "deploy/modeldev-tenant-policy/README.md",
+        "sha256": "6bed23ffd38982e86a5e18fd696ef68f3a8a71fc875987e5c1c718a42b6e1be8"
+      },
+      {
+        "path": "deploy/modeldev-tenant-policy/render.py",
+        "sha256": "dd0b1de1388869bc7da9b265126b97070fe1ced919ffcfa44c4b84acb3390730"
+      },
+      {
+        "path": "deploy/modeldev-tenant-policy/test_render.py",
+        "sha256": "a0b8e6d6dd2c431a6589ecb630760479107b636527cdee639a238157070331e7"
+      },
+      {
+        "path": "deploy/modeldev-webhook/README.md",
+        "sha256": "8721b7a5afc3e0079e1e2f4fb98721e97b053da0fe940f483ff8d8abcaa7682f"
+      },
+      {
+        "path": "deploy/modeldev-webhook/render.py",
+        "sha256": "4da97c330a5832f8e3d7dcc163849860863235d2727fe26f27c4a42115771c85"
+      },
+      {
+        "path": "deploy/modeldev-webhook/test_render.py",
+        "sha256": "d967c9406605bc85d82445868e4966d3d0c9d1f3105d9af10c5e8326a2c0f0e4"
+      },
+      {
+        "path": "internal/biz/compute_cleanup.go",
+        "sha256": "7a030e631ce1803b01e57f7b0ca5f06ce56d7dbcf605afad3300fbcbcf4eded0"
+      },
+      {
+        "path": "internal/biz/execution_closer.go",
+        "sha256": "017db539069dceea3962ca27b0bfbe668a3720709a450c8bd7ead6a41d1ddfef"
+      },
+      {
+        "path": "internal/biz/execution_runtime.go",
+        "sha256": "46c01aeffab80b1532be5c46971c6a1326bcc44446a87924120c7a4f9269e772"
+      },
+      {
+        "path": "internal/component/io.go",
+        "sha256": "8ab63ed0fc7599cbab3a8863db6fb1b287707187d750acaec0c680dc640d04da"
+      },
+      {
+        "path": "internal/data/lifecycle/gpu_release.go",
+        "sha256": "ac439da7e19380bf24efd6b36235ba6b22b47c56100f4d85f41b8e48995ea9f8"
+      },
+      {
+        "path": "internal/data/lifecycle/validation.go",
+        "sha256": "fc700756cc3294e240d27f126c75ef16743b9dacb5ebed32fb4860cb24c0ae86"
+      },
+      {
+        "path": "internal/data/runtimeproof/compute_cleanup.go",
+        "sha256": "834f1330c77e872fa34492d522a8d4187450be4bdbbc822a6b296e1fab4fb13a"
+      },
+      {
+        "path": "internal/data/runtimeproof/finetuning_steps.go",
+        "sha256": "5730ca54a9ab9e16b644eddaf7debfb477bad34b4f0bbaa8d09b6b9a607483e0"
+      },
+      {
+        "path": "internal/data/runtimeproof/owner_close.go",
+        "sha256": "e15db8ad212d29dd16ec1908e8b391223e8421b0189e4c7f930c6a61392145ca"
+      },
+      {
+        "path": "internal/data/tenantenvironment/kfp.go",
+        "sha256": "7c8132c9443a08f835c5be2b2f965e5cf76ceddd854ff54d91527a85a7cc2659"
+      },
+      {
+        "path": "internal/data/tenantenvironment/kfp_fixed_images_test.go",
+        "sha256": "e1719f33bdc68df7224a9a5cb7232ae84966e1d089b39982c2075fdb056475ac"
+      },
+      {
+        "path": "internal/data/trainer/retained_logs.go",
+        "sha256": "18ae90df84b0d3c32a43da4070793835ec7a3dbb853b458a02cf2d7d00cea646"
+      },
+      {
+        "path": "internal/data/trainer/retention.go",
+        "sha256": "ebc96f14d5c63ca7a00c7f7d2ee60cd619c5f261fdada12571a1a5717c187e57"
+      },
+      {
+        "path": "internal/data/trainer/runtime_observe.go",
+        "sha256": "78ae8f6b247d96dcad0b50fd50e398a5e6be086d8af9024f173ea6ca6d3f071b"
+      }
+    ]
+  },
+  "tests_run": false,
+  "make_verify_run": false,
+  "new_tools_installed": false,
+  "cluster_patch_count": 0,
+  "credential_values_emitted": false,
+  "identity": {
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "resource_cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "resource_secret_uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+    "md_deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "md_image_before_build": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:f440ce07e7a04939793ca5f86aabb09f50860bbf355a6acaafe98e82b930ed89",
+    "credential_source": "ani-system/ani-resource-private: image.harbor_username; harbor.password; harbor-ca.crt"
+  },
+  "build_command": [
+    "/var/lib/ani-deploy/cache/governance/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+    "build",
+    "-mod=readonly",
+    "-trimpath",
+    "-buildvcs=false",
+    "-ldflags=-s -w",
+    "-o",
+    "/root/ani-runs/modeldev-main-1dfd6941-20261101/ani-modeldev-service",
+    "./cmd/ani-modeldev-service"
+  ],
+  "build_exit": 0,
+  "build_seconds": 6.95,
+  "binary_path": "/root/ani-runs/modeldev-main-1dfd6941-20261101/ani-modeldev-service",
+  "binary_sha256": "493b6bc3d7b972dcb28319a9963da48ab3362a3579d6f9301c0538bddd8c20d8",
+  "binary_bytes": 58355874,
+  "tag_preflight_http": 404,
+  "status": "PUBLISHED_EXACT_DIGEST_GET200",
+  "finished_at": "2026-11-01T15:53:36.774463+00:00",
+  "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+  "image_digest": "sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+  "manifest_get_status": 200,
+  "manifest_readback_sha256": "fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+  "config_digest": "sha256:bb2990c19f0f0617ba77ddd99e2530e139db45e0a3f7c97c18ee4dacaa17dcf3",
+  "layer_digest": "sha256:e7dc8dcc6de65c03d179bbffe3c3b4e43cec33360c3396bdab831b58a56ede9d",
+  "layer_bytes": 17592016,
+  "uploads": [
+    {
+      "digest": "sha256:bb2990c19f0f0617ba77ddd99e2530e139db45e0a3f7c97c18ee4dacaa17dcf3",
+      "bytes": 633,
+      "state": "UPLOADED"
+    },
+    {
+      "digest": "sha256:e7dc8dcc6de65c03d179bbffe3c3b4e43cec33360c3396bdab831b58a56ede9d",
+      "bytes": 17592016,
+      "state": "UPLOADED"
+    }
+  ],
+  "oci_archive_path": "/root/ani-runs/modeldev-main-1dfd6941-20261101/image/image.oci.tar",
+  "oci_archive_sha256": "063d00d6dc1e4b382ff791c73daa512053a761939e9560156d3b215f423cb97e",
+  "runtime_config": {
+    "User": "10001:10001",
+    "Entrypoint": [
+      "/ani-modeldev-service"
+    ],
+    "Labels": {
+      "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service",
+      "org.opencontainers.image.revision": "1dfd6941e5780eca0d55dc4e5fbbd2f58e0710ab",
+      "io.ani.source-tree": "8f15d37c37ab77c64dd1e7643f3b00c88981ed74",
+      "io.ani.binary-sha256": "493b6bc3d7b972dcb28319a9963da48ab3362a3579d6f9301c0538bddd8c20d8"
+    }
+  },
+  "recipe": "deploy/service.Dockerfile scratch/User10001:10001/Entrypoint /ani-modeldev-service",
+  "private_source_and_unpacked_layers_removed": true,
+  "reusable_binary_and_oci_retained": true
+}

@@ -24,13 +24,13 @@ const (
 	audience           = "ani-modeldev-managed-step"
 	stepToken          = "managed-step-test-token"
 	controlToken       = "control-workload-test-token"
-	namespaceName      = "cpu-execution"
+	namespaceName      = "tenant-77777777-7777-4777-8777-777777777777"
 	namespaceUID       = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 	podName            = "cpu-main-prepare"
 	podUID             = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 	workflowName       = "cpu-main"
 	workflowUID        = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
-	serviceAccount     = "cpu-managed-step"
+	serviceAccount     = "modeldev-step"
 	serviceAccountUID  = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 	tokenReviewPath    = "/apis/authentication.k8s.io/v1/tokenreviews"
 	namespacePath      = "/api/v1/namespaces/" + namespaceName
@@ -75,6 +75,7 @@ func TestVerifyManagedStepRejectsUnboundOrSubstitutedIdentity(t *testing.T) {
 		{"recreated namespace", namespacePath, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", []string{"metadata", "uid"}},
 		{"recreated pod", podPath, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", []string{"metadata", "uid"}},
 		{"training pod", podPath, "cpu-training", []string{"spec", "serviceAccountName"}},
+		{"extra pull reference", podPath, []any{map[string]any{"name": "ani-pull-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, map[string]any{"name": "ani-registry-pull-impostor"}}, []string{"spec", "imagePullSecrets"}},
 		{"recreated service account", serviceAccountPath, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", []string{"metadata", "uid"}},
 		{"self-reported workflow only", podPath, []any{}, []string{"metadata", "ownerReferences"}},
 		{"recreated workflow", workflowPath, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", []string{"metadata", "uid"}},
@@ -117,9 +118,9 @@ func TestVerifyManagedStepRejectsDifferentFrozenNamespaceAndSanitizesAPIErrors(t
 }
 
 func managedStepInputs() (biz.PipelineDispatchPlan, biz.ManagedStepAssociation) {
-	return biz.PipelineDispatchPlan{Environment: cpup01.EnvironmentBindingSnapshot{
+	return biz.PipelineDispatchPlan{TenantID: "77777777-7777-4777-8777-777777777777", ManagedImageAccess: cpup01.ManagedImageAccessSnapshot{PullBindings: []cpup01.ManagedImagePullBinding{{RegistryAuthority: "registry.example.test", SecretName: "ani-pull-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}}, Environment: cpup01.EnvironmentBindingSnapshot{
 			NamespaceName: namespaceName, NamespaceUID: namespaceUID,
-			Identities: cpup01.RuntimeIdentityRefs{KFPStepServiceAccount: serviceAccount},
+			Identities: cpup01.RuntimeIdentityRefs{KFPStepServiceAccount: serviceAccount, KFPStepServiceAccountUID: serviceAccountUID},
 		}}, biz.ManagedStepAssociation{
 			RunID:         "11111111-1111-4111-8111-111111111111",
 			NamespaceName: namespaceName, NamespaceUID: namespaceUID,
@@ -139,11 +140,11 @@ func newIdentityFixture(t *testing.T) *identityFixture {
 	t.Helper()
 	fixture := &identityFixture{objects: make(map[string]map[string]any), calls: make(map[string]int)}
 	for path, source := range map[string]string{
-		tokenReviewPath:    `{"apiVersion":"authentication.k8s.io/v1","kind":"TokenReview","status":{"authenticated":true,"audiences":["ani-modeldev-managed-step"],"user":{"username":"system:serviceaccount:cpu-execution:cpu-managed-step","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","extra":{"authentication.kubernetes.io/pod-name":["cpu-main-prepare"],"authentication.kubernetes.io/pod-uid":["bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"]}}}}`,
-		namespacePath:      `{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"cpu-execution","uid":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"}}`,
-		podPath:            `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"cpu-execution","name":"cpu-main-prepare","uid":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","ownerReferences":[{"apiVersion":"argoproj.io/v1alpha1","kind":"Workflow","name":"cpu-main","uid":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","controller":true}]},"spec":{"serviceAccountName":"cpu-managed-step"}}`,
-		serviceAccountPath: `{"apiVersion":"v1","kind":"ServiceAccount","metadata":{"namespace":"cpu-execution","name":"cpu-managed-step","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd"}}`,
-		workflowPath:       `{"apiVersion":"argoproj.io/v1alpha1","kind":"Workflow","metadata":{"namespace":"cpu-execution","name":"cpu-main","uid":"cccccccc-cccc-4ccc-8ccc-cccccccccccc"}}`,
+		tokenReviewPath:    `{"apiVersion":"authentication.k8s.io/v1","kind":"TokenReview","status":{"authenticated":true,"audiences":["ani-modeldev-managed-step"],"user":{"username":"system:serviceaccount:tenant-77777777-7777-4777-8777-777777777777:modeldev-step","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","extra":{"authentication.kubernetes.io/pod-name":["cpu-main-prepare"],"authentication.kubernetes.io/pod-uid":["bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"]}}}}`,
+		namespacePath:      `{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"tenant-77777777-7777-4777-8777-777777777777","uid":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","labels":{"network.ani.io/tenant-id":"77777777-7777-4777-8777-777777777777","network.ani.io/managed-by":"ani-network-service"}}}`,
+		podPath:            `{"apiVersion":"v1","kind":"Pod","metadata":{"namespace":"tenant-77777777-7777-4777-8777-777777777777","name":"cpu-main-prepare","uid":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","ownerReferences":[{"apiVersion":"argoproj.io/v1alpha1","kind":"Workflow","name":"cpu-main","uid":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","controller":true}]},"spec":{"serviceAccountName":"modeldev-step","imagePullSecrets":[{"name":"ani-pull-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}}`,
+		serviceAccountPath: `{"apiVersion":"v1","kind":"ServiceAccount","metadata":{"namespace":"tenant-77777777-7777-4777-8777-777777777777","name":"modeldev-step","uid":"dddddddd-dddd-4ddd-8ddd-dddddddddddd"},"imagePullSecrets":[{"name":"ani-pull-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}`,
+		workflowPath:       `{"apiVersion":"argoproj.io/v1alpha1","kind":"Workflow","metadata":{"namespace":"tenant-77777777-7777-4777-8777-777777777777","name":"cpu-main","uid":"cccccccc-cccc-4ccc-8ccc-cccccccccccc"}}`,
 	} {
 		var object map[string]any
 		if err := json.Unmarshal([]byte(source), &object); err != nil {

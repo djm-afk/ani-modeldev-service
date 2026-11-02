@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/bin/go",
+    "test",
+    "-count=1",
+    "-run",
+    "^TestTimeDifferenceDays$",
+    "./pkg/localdeps/go-utils/timeutil"
+  ],
+  "TZ": "Europe/Berlin",
+  "seconds": 1.9238017679890618,
+  "exit_code": 1,
+  "test_file_sha256": "2c4cb7dcd7b507e888dc28fee9bb4cc80c78924f4db73c75e1e791405f8fe62e",
+  "production_diff_go_sha256": "5d646f6f948e5f41f4b7507c6fa27ae9d9e761875390e0eec9cbe3af278e3b54",
+  "stdout": "--- FAIL: TestTimeDifferenceDays (0.00s)\n    diff_test.go:39: \n        \tError Trace:\t/home/chabking/workspace/ani-governance-runs/modeldev-create-maintenance-20261101/source/pkg/localdeps/go-utils/timeutil/diff_test.go:39\n        \tError:      \tNot equal: \n        \t            \texpected: 192\n        \t            \tactual  : 191\n        \tTest:       \tTestTimeDifferenceDays\nFAIL\nFAIL\tgo-wind-admin/pkg/localdeps/go-utils/timeutil\t0.005s\nFAIL\n"
+}

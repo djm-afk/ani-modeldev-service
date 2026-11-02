@@ -1,0 +1,86 @@
+{
+  "schema": "ani.modeldev.original-c99-qualification.delivery.v1",
+  "source_commit": "1464b131185791f71990b1cf864e1468186c8bd4",
+  "branch": "codex/modeldev-legacy-retirement",
+  "base_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "scope": "Exactly seven fixed original c99 CPU aggregates; one-time read-only native qualification plus exact proof consumption by fixed DB deletion tool. No runtime reader/codec changes.",
+  "spec_clauses": [
+    "13.1",
+    "13.2",
+    "13.3.8",
+    "13.4",
+    "13.5",
+    "execution-spec-v4-only"
+  ],
+  "original_codec_commit": "c99c9f1081c754f7e38ceccd056db9a032ca3c27",
+  "tool_source_manifest_sha256": "1f103568fc0b1546962a73b1eb32adaa759161fc5a587158badb7d3b196fccbb",
+  "full_836_source_manifest_sha256": "bb81fe2edd0e83ce3d5f2df405d325fb3ed09b2c48b4994f1a97035413206e83",
+  "source_identity": "all 18 tool files and all 836 source files match local/Fedora; only documentation changed after executable gates",
+  "binaries": {
+    "native": {
+      "path": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99-evidence/original-c99-qualifier",
+      "sha256": "a1891a0e388e8fe4a6280e4803c9b2d068a8317908739dabeb2e0036689eb78d",
+      "native_source_sha256": "15b0477fa0775a982dfc2c7bfaf5231d745d22f240dbf461520a0aa88cccc2eb",
+      "build_receipt": "native-build-receipt.json",
+      "build_receipt_byte_sha256": "80b08807fac937863ed9802c410a213c101045a8b121b217ba5e8cf99abc02fa"
+    },
+    "consumer": {
+      "path": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99-evidence/ani-modeldev-legacy-data-cleanup",
+      "sha256": "ac69b711dac92e168988d65959aa87fa93204b004e21abbce2aae014aef0503c",
+      "linked_retirement_base": "651f5ea14f2fb79e8980102de1b6411eac999549"
+    }
+  },
+  "gates": {
+    "native_exact_seven_pg": "PASS exit0",
+    "consumer_pg_race_and_existing_noACK_unreleased_unclosed_revision_refusals": "PASS exit0",
+    "both_tools_vet_build": "PASS exit0",
+    "both_modules_modverify": "PASS exit0",
+    "full_old_service_makeverify": "NOT_RUN; prior unchanged old-base API/static-facts/material failures retained, parent explicitly required only necessary targeted tests",
+    "live_native_qualification": "NOT_RUN",
+    "live_apply": "NOT_RUN"
+  },
+  "native_readonly_plan": [
+    "original-c99-qualifier",
+    "-dsn-file",
+    "/private/md-owner-dsn"
+  ],
+  "root_proofs": [
+    "OriginalC99Qualification.Kind=ORIGINAL_C99_NATIVE_QUALIFICATION",
+    "OriginalC99Build.Kind=ORIGINAL_C99_BUILD_RECEIPT",
+    "Both paths must be absolute existing regular files with independently approved byte SHA256; root expiry no later than native five-minute expiry."
+  ],
+  "unchanged_requirements": [
+    "Original3 maintenance journals remain distinct",
+    "All other executions keep normal reader",
+    "Gov release ACK/fully-released charge/all-owner account sum",
+    "Full external cleanup/stop-source evidence",
+    "Current original-50/four-UNKNOWN manifest is not silently expanded when new rows appear",
+    "Fixed catalog/FK/trigger/external references/expected counts/row CAS and PARTIAL cross-DB boundary"
+  ],
+  "protected_raw_fixtures": "Deleted exact two temporary Fedora0600 captures after necessary tests; see private-fixture-deletion-receipt.json",
+  "gate_receipts": [
+    "qualification-component-receipt.json",
+    "build-final-receipt.json",
+    "native-build-receipt.json"
+  ],
+  "initial_fixture_failure": "native-initial-receipt.json/native-pg.log: behavior NOT_RUN because native test helper located nested module lacking migrations; corrected test working directory only after byte-identical baseline SHA verification",
+  "file_scope": [
+    "docs/legacy-modeldev-data-cleanup.md",
+    "scripts/legacy-modeldev-data-cleanup/command.go",
+    "scripts/legacy-modeldev-data-cleanup/evidence.go",
+    "scripts/legacy-modeldev-data-cleanup/original_c99.go",
+    "scripts/legacy-modeldev-data-cleanup/original_c99_pg_test.go",
+    "scripts/legacy-modeldev-data-cleanup/originalc99/go.mod",
+    "scripts/legacy-modeldev-data-cleanup/originalc99/go.sum",
+    "scripts/legacy-modeldev-data-cleanup/originalc99/main.go",
+    "scripts/legacy-modeldev-data-cleanup/originalc99/main_test.go",
+    "scripts/legacy-modeldev-data-cleanup/qualification.go"
+  ],
+  "ssh_push": {
+    "exit": 0,
+    "target": "ssh://git@ssh.github.com:443/zhangzhe-ctrl/ani-modeldev-service.git",
+    "ref": "refs/heads/codex/modeldev-legacy-retirement",
+    "source_commit": "1464b131185791f71990b1cf864e1468186c8bd4",
+    "output": "651f5ea1..1464b131 HEAD -> codex/modeldev-legacy-retirement"
+  }
+}

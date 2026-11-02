@@ -4,6 +4,8 @@ package modeldevwebhook
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 
 	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
@@ -18,7 +21,7 @@ import (
 )
 
 const (
-	ConfigSchemaVersion   = "ani.modeldev.webhook.v1"
+	ConfigSchemaVersion   = "ani.modeldev.webhook.v2"
 	ProfileLabel          = "ani.modeldev/admission-profile"
 	RoleLabel             = "ani.modeldev/step-role"
 	ExitEvidenceFinalizer = "modeldev.ani.io/step-exit-evidence"
@@ -36,7 +39,7 @@ const (
 	// NamespaceTenantLabel is set by the platform when it creates a tenant
 	// namespace. Step Pods have no tenant annotation, so the verified namespace
 	// label is their tenant source.
-	NamespaceTenantLabel = "ani.io/resource-tenant-id"
+	NamespaceTenantLabel = "network.ani.io/tenant-id"
 )
 
 var ErrConfiguration = errors.New("invalid modeldev webhook configuration")
@@ -55,6 +58,9 @@ type NamespaceBinding struct {
 	Profiles           []string         `json:"profiles"`
 	Driver             *DriverBinding   `json:"driver,omitempty"`
 	Training           *TrainingBinding `json:"training,omitempty"`
+	EnvironmentID      string
+	TenantID           string
+	PipelineRoot       string
 }
 
 // TrainingBinding scopes the existing admission endpoint to worker Pods from
@@ -91,16 +97,22 @@ type Profile struct {
 }
 
 type Config struct {
-	SchemaVersion                 string             `json:"schema_version"`
-	Bindings                      []NamespaceBinding `json:"bindings"`
-	Profiles                      []Profile          `json:"profiles"`
-	ListenAddress                 string             `json:"listen_address,omitempty"`
-	CertificateFile               string             `json:"certificate_file,omitempty"`
-	PrivateKeyFile                string             `json:"private_key_file,omitempty"`
-	MaxBodyBytes                  int64              `json:"max_body_bytes,omitempty"`
-	MaxConcurrentRequests         int                `json:"max_concurrent_requests,omitempty"`
-	RequestTimeoutMilliseconds    int                `json:"request_timeout_milliseconds,omitempty"`
-	DependencyTimeoutMilliseconds int                `json:"dependency_timeout_milliseconds,omitempty"`
+	SchemaVersion                 string           `json:"schema_version"`
+	ClusterID                     string           `json:"cluster_id"`
+	MaterialBundleDigest          string           `json:"material_bundle_digest"`
+	MaterialBundleFile            string           `json:"material_bundle_file"`
+	ArgoCreator                   string           `json:"argo_creator"`
+	Training                      *TrainingBinding `json:"training"`
+	Driver                        *DriverBinding   `json:"driver"`
+	ControllerPrincipals          []string         `json:"controller_principals"`
+	Profiles                      []Profile        `json:"profiles"`
+	ListenAddress                 string           `json:"listen_address,omitempty"`
+	CertificateFile               string           `json:"certificate_file,omitempty"`
+	PrivateKeyFile                string           `json:"private_key_file,omitempty"`
+	MaxBodyBytes                  int64            `json:"max_body_bytes,omitempty"`
+	MaxConcurrentRequests         int              `json:"max_concurrent_requests,omitempty"`
+	RequestTimeoutMilliseconds    int              `json:"request_timeout_milliseconds,omitempty"`
+	DependencyTimeoutMilliseconds int              `json:"dependency_timeout_milliseconds,omitempty"`
 }
 
 type frozenProfile struct {
@@ -161,12 +173,25 @@ func (config Config) Validate() error { _, err := config.freeze(); return err }
 
 func (config Config) freeze() (map[string]frozenProfile, error) {
 	config.defaults()
-	if config.SchemaVersion != ConfigSchemaVersion || len(config.Bindings) == 0 || len(config.Bindings) > 32 || len(config.Profiles) == 0 || len(config.Profiles) > 64 ||
+	if config.SchemaVersion != ConfigSchemaVersion || !canonicalUUID(config.ClusterID) || !sha256Pattern.MatchString(config.MaterialBundleDigest) || !creatorPattern.MatchString(config.ArgoCreator) || config.Training == nil || config.Training.ServiceAccount != "trainer-workload" || !creatorPattern.MatchString(config.Training.Creator) || config.Driver == nil || len(config.ControllerPrincipals) == 0 || len(config.Profiles) != 4 ||
 		config.MaxBodyBytes < 1024 || config.MaxBodyBytes > 1<<20 || config.MaxConcurrentRequests < 1 || config.MaxConcurrentRequests > 128 ||
 		config.RequestTimeoutMilliseconds < 100 || config.RequestTimeoutMilliseconds > 8000 || config.DependencyTimeoutMilliseconds < 50 || config.DependencyTimeoutMilliseconds > 3000 || config.DependencyTimeoutMilliseconds >= config.RequestTimeoutMilliseconds {
 		return nil, ErrConfiguration
 	}
 	frozen := make(map[string]frozenProfile, len(config.Profiles))
+	if !filepath.IsAbs(config.MaterialBundleFile) {
+		return nil, ErrConfiguration
+	}
+	bundleFile, err := os.OpenFile(config.MaterialBundleFile, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
+	if err != nil {
+		return nil, ErrConfiguration
+	}
+	bundle, err := io.ReadAll(io.LimitReader(bundleFile, cpup01.MaxMaterialBytes+1))
+	_ = bundleFile.Close()
+	hash := sha256.Sum256(bundle)
+	if err != nil || len(bundle) > cpup01.MaxMaterialBytes || hex.EncodeToString(hash[:]) != config.MaterialBundleDigest {
+		return nil, ErrConfiguration
+	}
 	for _, profile := range config.Profiles {
 		if len(validation.IsDNS1123Label(profile.ID)) != 0 || (profile.Kind != "GENERAL_TRAINING" && profile.Kind != "FINETUNING") || !filepath.IsAbs(profile.MaterialFile) || !sha256Pattern.MatchString(profile.MaterialSHA256) || !imagePattern.MatchString(profile.ComponentImage) || len(profile.AllowedSupportImages) == 0 || len(profile.AllowedSupportImages) > 8 ||
 			profile.RunAsUser != 10001 || profile.RunAsGroup != 10001 || profile.FSGroup != 10001 {
@@ -187,7 +212,7 @@ func (config Config) freeze() (map[string]frozenProfile, error) {
 				return nil, ErrConfiguration
 			}
 		}
-		file, err := os.Open(profile.MaterialFile)
+		file, err := os.OpenFile(profile.MaterialFile, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
 		if err != nil {
 			return nil, ErrConfiguration
 		}
@@ -206,40 +231,31 @@ func (config Config) freeze() (map[string]frozenProfile, error) {
 		profile.AllowedSupportImages = append([]string(nil), profile.AllowedSupportImages...)
 		frozen[profile.ID] = frozenProfile{Profile: profile, material: material}
 	}
-	seen := map[string]bool{}
-	for _, binding := range config.Bindings {
-		if len(validation.IsDNS1123Label(binding.Namespace)) != 0 || seen[binding.Namespace] || !canonicalUUID(binding.NamespaceUID) || len(validation.IsQualifiedName(binding.OwnerLabel.Key)) != 0 || len(validation.IsValidLabelValue(binding.OwnerLabel.Value)) != 0 || binding.OwnerLabel.Value == "" || len(validation.IsDNS1123Subdomain(binding.StepServiceAccount)) != 0 || !creatorPattern.MatchString(binding.ArgoCreator) || len(binding.Profiles) == 0 || len(binding.Profiles) > 64 {
+	driver := config.Driver
+	if !imagePattern.MatchString(driver.Image) || len(driver.Command) != 1 || (driver.Command[0] != "driver" && driver.Command[0] != "/bin/driver") || len(driver.AllowedSupportImages) == 0 || len(driver.AllowedSupportImages) > 8 {
+		return nil, ErrConfiguration
+	}
+	for _, image := range driver.AllowedSupportImages {
+		if !imagePattern.MatchString(image) {
 			return nil, ErrConfiguration
-		}
-		seen[binding.Namespace] = true
-		if binding.Training != nil && (len(validation.IsDNS1123Subdomain(binding.Training.ServiceAccount)) != 0 || binding.Training.ServiceAccount == binding.StepServiceAccount || !creatorPattern.MatchString(binding.Training.Creator)) {
-			return nil, ErrConfiguration
-		}
-		if binding.Driver != nil {
-			if !imagePattern.MatchString(binding.Driver.Image) || len(binding.Driver.Command) != 1 || (binding.Driver.Command[0] != "driver" && binding.Driver.Command[0] != "/bin/driver") || len(binding.Driver.AllowedSupportImages) == 0 || len(binding.Driver.AllowedSupportImages) > 8 {
-				return nil, ErrConfiguration
-			}
-			seenImages := map[string]bool{}
-			for _, image := range binding.Driver.AllowedSupportImages {
-				if !imagePattern.MatchString(image) || seenImages[image] {
-					return nil, ErrConfiguration
-				}
-				seenImages[image] = true
-			}
-			for _, id := range binding.Profiles {
-				if frozen[id].ComponentImage == binding.Driver.Image {
-					return nil, ErrConfiguration
-				}
-			}
-		}
-		ids := map[string]bool{}
-		for _, id := range binding.Profiles {
-			if _, ok := frozen[id]; !ok || ids[id] {
-				return nil, ErrConfiguration
-			}
-			ids[id] = true
 		}
 	}
+	wanted := map[string]bool{"modeldev-mlp-cpu": true, "modeldev-mlp-gpu": true, "modeldev-sft-lora-cpu": true, "modeldev-sft-lora-gpu": true}
+	for id := range frozen {
+		if !wanted[id] {
+			return nil, ErrConfiguration
+		}
+		delete(wanted, id)
+		if frozen[id].ComponentImage == driver.Image {
+			return nil, ErrConfiguration
+		}
+	}
+	for _, principal := range config.ControllerPrincipals {
+		if !creatorPattern.MatchString(principal) {
+			return nil, ErrConfiguration
+		}
+	}
+
 	return frozen, nil
 }
 

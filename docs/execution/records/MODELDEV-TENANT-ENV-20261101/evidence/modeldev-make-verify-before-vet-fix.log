@@ -1,0 +1,70 @@
+Real PostgreSQL test dependency ready; restricted runtime role; loopback only.
+test "$(/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf --version)" = "1.60.0"
+test "$(go version -m /home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf | awk '$1 == "mod" {print $2 "@" $3; exit}')" = "github.com/bufbuild/buf@v1.60.0"
+test "$(/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc version)" = "v1.31.1"
+test "$(go version -m /home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc | awk '$1 == "mod" {print $2 "@" $3; exit}')" = "github.com/sqlc-dev/sqlc@v1.31.1"
+./scripts/verify-source /home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf /home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc
+1cd325e4ed737dc878dba20d1dde1eae8746af66876ee9cc6067a6f2aa560782  intent-input-v3.json
+b337b5e1f8025d381086bd4e157b32740746752b54ee457fde2d6f342715f2f0  intent-canonical-v3.json
+60af08a1661223601c41174b123cfe967e1e8eb737844a6071281ad498f1b921  snapshot-v4.json
+5ffb2cb0a0a2001c303b6440ec219d2296af6ceb2bf80ffd9784ad7373d211f6  vectors.go
+go mod tidy -diff
+go test -count=1 ./...
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1	[no test files]
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-service	15.742s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-step	32.518s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-webhook	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01	0.172s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf	0.086s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/tenantenvironment	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz	0.240s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component	15.438s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1	0.011s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/accelerator	0.028s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts	0.920s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue	0.125s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/cleanup	1.737s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution	10.723s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/finetuningmodel	0.062s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/imageruntime	0.008s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input	12.035s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp	0.683s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle	66.731s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/modelclient	1.979s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore	5.781s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/pgvalue	0.006s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/resolutiontest	10.193s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof	133.656s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity	0.105s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/storagecredentials	0.153s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission	53.622s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	45.955s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment	1.142s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer	95.368s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/traininglogs	0.452s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workloadview	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace	4.461s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server	0.888s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/commandtest	9.322s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/modeldevwebhook	2.204s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service	0.438s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture	[no test files]
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/finetuningmodel	0.040s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/imageruntimefixture	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres	0.292s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/tenantenvironment	[no test files]
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/acceptance-pipelinepatch	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/modeldev-execution-materials	0.023s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/tests/runtime	0.047s
+go vet ./...
+internal/data/storagecredentials/issuer.go:225:2: unreachable code
+make: *** [Makefile:106：verify] 错误 1
+Test PostgreSQL diagnostic: running=true oom_killed=false exit=0

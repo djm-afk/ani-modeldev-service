@@ -1,0 +1,5 @@
+go: github.com/zhangzhe-ctrl/ani-resource-service@23e25b33ca02890231cd273ef7246b0fc415476c: invalid version: git ls-remote -q --end-of-options origin in /home/chabking/go/pkg/mod/cache/vcs/63a903e28ca002da1f01c53fb1b5a8732a9c0d403fd54f7a4996e2082c8d6d21: exit status 128:
+	Host key verification failed.
+	致命错误：无法读取远程仓库。
+	
+	请确认您有正确的访问权限并且仓库存在。

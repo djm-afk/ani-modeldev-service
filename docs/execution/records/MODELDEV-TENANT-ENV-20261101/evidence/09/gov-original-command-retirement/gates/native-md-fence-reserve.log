@@ -1,0 +1,18 @@
+=== RUN   TestAcceptReceiptAfterEarlierCloseIsFirstAndPreservesCloseOnReplay
+    accept_receipt_test.go:87: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestAcceptReceiptAfterEarlierCloseIsFirstAndPreservesCloseOnReplay (0.20s)
+=== RUN   TestUserStopBeforeAdmissionPersistsClosingTombstoneAcrossNewConnections
+    close_test.go:13: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestUserStopBeforeAdmissionPersistsClosingTombstoneAcrossNewConnections (0.12s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution	0.334s
+=== RUN   TestCloseBeforeReservationRejectsFirstSendPermit
+=== RUN   TestCloseBeforeReservationRejectsFirstSendPermit/admission_before_close
+    invariants_test.go:31: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestCloseBeforeReservationRejectsFirstSendPermit/close_tombstone_before_late_admission
+    invariants_test.go:31: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestCloseBeforeReservationRejectsFirstSendPermit (0.40s)
+    --- PASS: TestCloseBeforeReservationRejectsFirstSendPermit/admission_before_close (0.21s)
+    --- PASS: TestCloseBeforeReservationRejectsFirstSendPermit/close_tombstone_before_late_admission (0.19s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission	0.409s

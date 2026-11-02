@@ -1,0 +1,196 @@
+{
+  "observed_at_utc": "2026-10-31T15:29:13.115573Z",
+  "commands": [
+    {
+      "started_at_utc": "2026-10-31T15:29:13.115588Z",
+      "command": [
+        "kubectl",
+        "exec",
+        "-i",
+        "-n",
+        "ani-platform",
+        "postgresql-0",
+        "--",
+        "/bin/sh",
+        "-c",
+        "PGPASSWORD=\"$POSTGRES_PASSWORD\" PGOPTIONS=\"-c default_transaction_read_only=on -c statement_timeout=5000\" exec psql -U \"${POSTGRES_USER:-postgres}\" -d ani_modeldev_v21 -X -q -At -v ON_ERROR_STOP=1"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T15:29:13.304484Z",
+      "command": [
+        "kubectl",
+        "get",
+        "secret",
+        "modeldev-v21-runtime-issuer-01a15f47-r1",
+        "-n",
+        "ani-system",
+        "-o",
+        "jsonpath={.data.storage-credentials\\.json}"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "existing_execution_query": {
+    "sql": "SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT a.tenant_id,a.execution_id,a.run_id,a.namespace_name,a.namespace_uid,a.workflow_name,a.workflow_uid,a.bound_at,(convert_from(e.snapshot_canonical,'UTF8')::jsonb)->'environment' AS snapshot_environment,(convert_from(e.snapshot_canonical,'UTF8')::jsonb)->'implementation' AS snapshot_implementation FROM modeldev_run_authorities a JOIN modeldev_executions e USING(tenant_id,execution_id) WHERE a.tenant_id IN ('64c5c35a-f554-432c-b4bc-7b4f36f08420','207328fc-f08d-4dc4-b403-16ec86396ce2') ORDER BY a.bound_at DESC LIMIT 3) t;",
+    "exit_code": 0,
+    "rows": [
+      {
+        "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "execution_id": "2ab49378-9784-4ea9-a06a-b84ad255f238",
+        "run_id": "39e127f0-8b66-4748-8490-950fba5286da",
+        "namespace_name": "ani-modeldev-tenant-a-v21",
+        "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+        "workflow_name": "md-jdlgv",
+        "workflow_uid": "c4797422-f328-49e6-a378-d40f28bfce8a",
+        "bound_at": "2026-10-30T10:23:24.622164+00:00",
+        "snapshot_environment": {
+          "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+          "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+          "identities": {
+            "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+            "trainer_service_account": "trainer-workload",
+            "kfp_step_service_account": "modeldev-step",
+            "verifier_service_account": "verifier",
+            "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control"
+          },
+          "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+          "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+          "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+          "namespace_name": "ani-modeldev-tenant-a-v21",
+          "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47"
+        },
+        "snapshot_implementation": {
+          "version": "1",
+          "pipeline_id": "f069c4f6-961b-4978-9ba3-7957910ac942",
+          "implementation_id": "builtin.mlp",
+          "pipeline_ir_sha256": "f369f7a532f422a585e56551f23d489c6a50aa131c32722f8a53d781280488ce",
+          "pipeline_version_id": "ef17d352-9fdd-46e4-b259-b2c6adc5b5c8",
+          "parameter_contract_version": "ani.mlp.parameters.v3"
+        }
+      },
+      {
+        "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "execution_id": "ce31c3da-f948-4dcf-b01c-8943b0f36d7f",
+        "run_id": "bd72621d-216d-43a9-80a6-aaca3e95d175",
+        "namespace_name": "ani-modeldev-tenant-a-v21",
+        "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+        "workflow_name": "md-qtpb6",
+        "workflow_uid": "08a21c2c-d9f3-4869-875a-5d0248f0a95c",
+        "bound_at": "2026-10-30T09:39:39.621053+00:00",
+        "snapshot_environment": {
+          "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+          "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+          "identities": {
+            "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+            "trainer_service_account": "trainer-workload",
+            "kfp_step_service_account": "modeldev-step",
+            "verifier_service_account": "verifier",
+            "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control"
+          },
+          "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+          "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+          "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+          "namespace_name": "ani-modeldev-tenant-a-v21",
+          "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47"
+        },
+        "snapshot_implementation": {
+          "version": "1",
+          "pipeline_id": "f069c4f6-961b-4978-9ba3-7957910ac942",
+          "implementation_id": "builtin.mlp",
+          "pipeline_ir_sha256": "f369f7a532f422a585e56551f23d489c6a50aa131c32722f8a53d781280488ce",
+          "pipeline_version_id": "ef17d352-9fdd-46e4-b259-b2c6adc5b5c8",
+          "parameter_contract_version": "ani.mlp.parameters.v3"
+        }
+      },
+      {
+        "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "execution_id": "2a7b1169-7466-4561-85bf-faceee50b027",
+        "run_id": "dbb95879-7aa3-4465-82d1-c7bdfa313f2f",
+        "namespace_name": "ani-modeldev-tenant-a-v21",
+        "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+        "workflow_name": "md-ckq98",
+        "workflow_uid": "5f6d0722-a1f9-4e36-a640-4b22e373fc7e",
+        "bound_at": "2026-10-30T09:29:36.82295+00:00",
+        "snapshot_environment": {
+          "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+          "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+          "identities": {
+            "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+            "trainer_service_account": "trainer-workload",
+            "kfp_step_service_account": "modeldev-step",
+            "verifier_service_account": "verifier",
+            "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control"
+          },
+          "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+          "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+          "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+          "namespace_name": "ani-modeldev-tenant-a-v21",
+          "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47"
+        },
+        "snapshot_implementation": {
+          "version": "1",
+          "pipeline_id": "17249a75-95c0-4640-8b5a-7be345d25262",
+          "implementation_id": "builtin.mlp",
+          "pipeline_ir_sha256": "57144d0600446cc6995766eef50fa80d2660c8ad6bfcf41069f4c1de76398572",
+          "pipeline_version_id": "7ecdea6b-e05b-45b0-a5b1-b2d5eb252266",
+          "parameter_contract_version": "ani.mlp.parameters.v3"
+        }
+      }
+    ],
+    "error": null
+  },
+  "storage": {
+    "source_ref": "Secret ani-system/modeldev-v21-runtime-issuer-01a15f47-r1 key storage-credentials.json; process-only whitelist",
+    "exit_code": 0,
+    "top_level_keys": [
+      "access_key_id",
+      "secret_access_key",
+      "sts_bindings"
+    ],
+    "scopes": {
+      "sts_bindings": [
+        {
+          "bucket": "ani-md-v21-input-01a15f47",
+          "connection_id": "modeldev-newenv-rustfs-20261022",
+          "prefix": "inputs/fixed",
+          "purpose": "prepare",
+          "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        },
+        {
+          "bucket": "ani-models-v21-01a15f47",
+          "connection_id": "modeldev-newenv-rustfs-20261022",
+          "prefix": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+          "purpose": "prepare-base-model",
+          "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        },
+        {
+          "bucket": "ani-md-v21-output-01a15f47",
+          "connection_id": "modeldev-newenv-rustfs-20261022",
+          "prefix": "executions/64c5c35a-f554-432c-b4bc-7b4f36f08420/modeldev-v21-01a15f47",
+          "purpose": "publish",
+          "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        }
+      ]
+    }
+  },
+  "secret_metadata": [
+    {
+      "observed_at_utc": "2026-10-31T15:29:13.388758Z",
+      "method": "GET Accept PartialObjectMetadata",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "ani-image-pull",
+      "type": null,
+      "http_status": 404
+    },
+    {
+      "observed_at_utc": "2026-10-31T15:29:13.397897Z",
+      "method": "GET Accept PartialObjectMetadata",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "name": "modeldev-training-pull",
+      "type": null,
+      "http_status": 404
+    }
+  ]
+}

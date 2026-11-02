@@ -1,0 +1,196 @@
+{
+  "schema": "ani.modeldev.original-open3.recheck.transport.v1",
+  "started_at": "2026-10-31T20:23:19.498320+00:00",
+  "ssh": "kubercloud@100.64.128.12",
+  "remote_runner_sha256": "b11ee56da578846a0b4af2eebcb303a8ff1ff5c900bf489ee55b901a350210f4",
+  "read_only": true,
+  "source_or_existing_record_changes": false,
+  "ssh_exit_code": 0,
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "observation": {
+    "schema": "ani.modeldev.original-open3.recheck.v1",
+    "started_at": "2026-10-31T20:23:19.484890+00:00",
+    "ssh": "kubercloud@100.64.128.12",
+    "read_only": true,
+    "scope": "exact original three executions, three Workflows and two training Pods only; no list inventories, OpenSearch, new token or mutation",
+    "executions": [
+      {
+        "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "runtime_present": true,
+        "closed_at": null,
+        "close_review_reason": "TRAINING_LOGS_UNAVAILABLE",
+        "close_generation": 2,
+        "owner_revision": 16,
+        "still_open": true,
+        "reason_unchanged": true
+      },
+      {
+        "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "runtime_present": true,
+        "closed_at": null,
+        "close_review_reason": "TRAINING_LOGS_UNAVAILABLE",
+        "close_generation": 2,
+        "owner_revision": 16,
+        "still_open": true,
+        "reason_unchanged": true
+      },
+      {
+        "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+        "runtime_present": true,
+        "closed_at": null,
+        "close_review_reason": "KFP_CREATE_UNRESOLVED",
+        "close_generation": 1,
+        "owner_revision": 6,
+        "still_open": true,
+        "reason_unchanged": true
+      }
+    ],
+    "workflows": [
+      {
+        "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "name": "ft-sw2pr",
+        "original_uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f",
+        "exit_code": 1,
+        "response_bytes": 0,
+        "response_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_bytes": 73,
+        "stderr_sha256": "d84a84fdb2bcb9985da6809df937e1e03cca9e8e45ab34888b0668699eb3b71d",
+        "result": "NOT_FOUND"
+      },
+      {
+        "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "name": "ft-j4ncq",
+        "original_uid": "1e9521b7-fc75-41f2-a406-690a7c142b73",
+        "exit_code": 1,
+        "response_bytes": 0,
+        "response_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_bytes": 73,
+        "stderr_sha256": "ec6912e053ebbbbaf9751b93c451f75ce576b95f0cc9ebd3e21161a6ed10f613",
+        "result": "NOT_FOUND"
+      },
+      {
+        "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+        "name": "md-kpwkw",
+        "original_uid": "d2acb3df-3979-4d60-aed5-16db0ce440fb",
+        "exit_code": 1,
+        "response_bytes": 0,
+        "response_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_bytes": 73,
+        "stderr_sha256": "8db23571b3df193748acc6752bc32313f9411eac6e175ec73396d9f47db2e898",
+        "result": "NOT_FOUND"
+      }
+    ],
+    "pods": [
+      {
+        "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc",
+        "uid": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+        "original_uid_matches": true,
+        "resource_version": "17032495",
+        "phase": "Failed",
+        "deletion_timestamp": "2026-10-30T00:57:50Z",
+        "finalizers": [
+          "modeldev.ani.io/training-exit-evidence"
+        ],
+        "containers": [
+          {
+            "name": "node",
+            "container_id": "containerd://4cddb476920a21444eba72d93ba814e17fda84cae8714fda23cc42be3e7fb5ab",
+            "restart_count": 0,
+            "terminated": {
+              "containerID": "containerd://4cddb476920a21444eba72d93ba814e17fda84cae8714fda23cc42be3e7fb5ab",
+              "exitCode": 143,
+              "finishedAt": "2026-10-30T00:57:49Z",
+              "reason": "Error",
+              "startedAt": "2026-10-30T00:57:46Z"
+            }
+          }
+        ],
+        "original_container_matches": true,
+        "log_read": {
+          "exit_code": 0,
+          "bytes": 115,
+          "sha256": "224eade78cbd65470c1e776fdae13018619345eff1a3be65cfde0ef0c3f20ad0",
+          "stderr_bytes": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "classification": "ORIGINAL_CONTAINER_KUBELET_LOGS_UNAVAILABLE",
+          "timestamp_prefix": false,
+          "raw_log_omitted": true,
+          "limit_bytes": 65537,
+          "tail_lines": 1001
+        },
+        "uid_after_log_read": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+        "uid_stable_across_log_read": true
+      },
+      {
+        "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8",
+        "uid": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+        "original_uid_matches": true,
+        "resource_version": "15339137",
+        "phase": "Failed",
+        "deletion_timestamp": "2026-10-29T16:00:06Z",
+        "finalizers": [
+          "modeldev.ani.io/training-exit-evidence"
+        ],
+        "containers": [
+          {
+            "name": "node",
+            "container_id": "containerd://f76126a2196a82f34f390ae377728bfefed945de11b2c47735dfbfab1b6faf06",
+            "restart_count": 0,
+            "terminated": {
+              "containerID": "containerd://f76126a2196a82f34f390ae377728bfefed945de11b2c47735dfbfab1b6faf06",
+              "exitCode": 143,
+              "finishedAt": "2026-10-29T16:00:05Z",
+              "reason": "Error",
+              "startedAt": "2026-10-29T16:00:03Z"
+            }
+          }
+        ],
+        "original_container_matches": true,
+        "log_read": {
+          "exit_code": 0,
+          "bytes": 115,
+          "sha256": "9ce39f9afd60e2fad4686865e363b3978b52907559bf7bfa75aa34dcdeb6f7fc",
+          "stderr_bytes": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "classification": "ORIGINAL_CONTAINER_KUBELET_LOGS_UNAVAILABLE",
+          "timestamp_prefix": false,
+          "raw_log_omitted": true,
+          "limit_bytes": 65537,
+          "tail_lines": 1001
+        },
+        "uid_after_log_read": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+        "uid_stable_across_log_read": true
+      }
+    ],
+    "target": {
+      "ssh_user": "kubercloud",
+      "hostname": "node1",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+    },
+    "identity_verified": true,
+    "namespace": {
+      "name": "ani-modeldev-tenant-a-v21",
+      "uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+      "original_uid_matches": true
+    },
+    "readonly_sql": {
+      "exit_code": 0,
+      "stdout_bytes": 560,
+      "stdout_sha256": "22683181534342c31feb277a4b7a6810cd850467def42e35132f31e9296e278c",
+      "stderr_bytes": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "default_transaction_read_only": true,
+      "execution_filter_count": 3
+    },
+    "result": "UNCHANGED_BLOCKED_NO_NEW_ORIGINAL_CLOSE_EVIDENCE",
+    "new_actionable_original_close_evidence": false,
+    "completed_at": "2026-10-31T20:23:20.767155+00:00"
+  },
+  "completed_at": "2026-10-31T20:23:22.784634+00:00"
+}

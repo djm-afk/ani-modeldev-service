@@ -15,7 +15,7 @@ import (
 	"unicode/utf8"
 )
 
-const SnapshotSchemaVersion = "ani.modeldev.execution-spec.v3"
+const SnapshotSchemaVersion = "ani.modeldev.execution-spec.v4"
 
 // Snapshot freezes trusted candidate identity and the entire executable plan.
 // Every resource UID created after admission belongs to runtime facts only.
@@ -32,16 +32,18 @@ type Snapshot struct {
 	Program        ProgramRef             `json:"program"`
 	// TrainingImage carries the catalogue resolution facts of a general-training
 	// image. It is absent for finetuning, whose trusted image is material-fixed.
-	TrainingImage    *TrainingImageFacts        `json:"training_image,omitempty"`
-	Resources        CPUResources               `json:"resources"`
-	Environment      EnvironmentBindingSnapshot `json:"environment"`
-	Workspace        WorkspaceContract          `json:"workspace"`
-	PublicationScope StorageScope               `json:"publication_scope"`
-	OutputContract   OutputContract             `json:"output_contract"`
-	Limits           ContentLimits              `json:"limits"`
-	DeadlineAt       time.Time                  `json:"deadline_at"`
-	Finetuning       *FinetuningSnapshot        `json:"finetuning,omitempty"`
-	GPU              *GPUPlan                   `json:"gpu,omitempty"`
+	TrainingImage      *TrainingImageFacts        `json:"training_image,omitempty"`
+	Resources          CPUResources               `json:"resources"`
+	Environment        EnvironmentBindingSnapshot `json:"environment"`
+	DispatchOwner      DispatchOwnerSnapshot      `json:"dispatch_owner"`
+	ManagedImageAccess ManagedImageAccessSnapshot `json:"managed_image_access"`
+	Workspace          WorkspaceContract          `json:"workspace"`
+	PublicationScope   StorageScope               `json:"publication_scope"`
+	OutputContract     OutputContract             `json:"output_contract"`
+	Limits             ContentLimits              `json:"limits"`
+	DeadlineAt         time.Time                  `json:"deadline_at"`
+	Finetuning         *FinetuningSnapshot        `json:"finetuning,omitempty"`
+	GPU                *GPUPlan                   `json:"gpu,omitempty"`
 }
 
 type RuntimeRef struct {
@@ -97,6 +99,9 @@ type RuntimeIdentityRefs struct {
 	TrainerServiceAccount      string `json:"trainer_service_account"`
 	VerifierServiceAccount     string `json:"verifier_service_account"`
 	TenantProxyIdentity        string `json:"tenant_proxy_identity"`
+	KFPStepServiceAccountUID   string `json:"kfp_step_service_account_uid"`
+	TrainerServiceAccountUID   string `json:"trainer_service_account_uid"`
+	VerifierServiceAccountUID  string `json:"verifier_service_account_uid"`
 }
 
 type EnvironmentBindingSnapshot struct {
@@ -160,7 +165,6 @@ func (snapshot Snapshot) canonical(requireRuntime bool) ([]byte, error) {
 	if err := snapshot.validate(requireRuntime); err != nil {
 		return nil, err
 	}
-	snapshot.IdentityRef.TenantID = strings.ToLower(snapshot.IdentityRef.TenantID)
 	snapshot.IdentityRef.OperationID = strings.ToLower(snapshot.IdentityRef.OperationID)
 	snapshot.IdentityRef.ExecutionID = strings.ToLower(snapshot.IdentityRef.ExecutionID)
 	snapshot.Timing.AcceptedAt = snapshot.Timing.AcceptedAt.UTC()
@@ -171,6 +175,7 @@ func (snapshot Snapshot) canonical(requireRuntime bool) ([]byte, error) {
 	snapshot.Environment.BindingID = strings.ToLower(snapshot.Environment.BindingID)
 	snapshot.Environment.NamespaceUID = strings.ToLower(snapshot.Environment.NamespaceUID)
 	snapshot.Environment.ExperimentID = strings.ToLower(snapshot.Environment.ExperimentID)
+	snapshot.ManagedImageAccess = snapshot.ManagedImageAccess.Canonical()
 	snapshot.RuntimePlan.TargetJobs = append([]string{}, snapshot.RuntimePlan.TargetJobs...)
 	sort.Strings(snapshot.RuntimePlan.TargetJobs)
 	snapshot.Program.ResolvedArgs = append([]string{}, snapshot.Program.ResolvedArgs...)
@@ -257,7 +262,7 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 		}
 	}
 	identity := snapshot.IdentityRef
-	if !validUUID(identity.TenantID) || !validUUID(identity.OperationID) || !validUUID(identity.ExecutionID) || !ValidAuditActor(identity.Actor) || !snapshotSHA256Pattern.MatchString(identity.IntentHash) {
+	if !CanonicalTenantID(identity.TenantID) || !validUUID(identity.OperationID) || !validUUID(identity.ExecutionID) || !ValidAuditActor(identity.Actor) || !snapshotSHA256Pattern.MatchString(identity.IntentHash) {
 		return invalid("identity_ref")
 	}
 	definition, ok := Implementations()[snapshot.Implementation.ImplementationID]
@@ -297,7 +302,7 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 		return invalid("fixed CSV contract")
 	}
 	object := input.Object
-	if !validSnapshotReference(object.StorageConnectionID) || !validSnapshotDNSName(object.Bucket) || !validSnapshotPath(object.Key) || object.SizeBytes <= 0 {
+	if !validSnapshotReference(object.StorageConnectionID) || !validSnapshotDNSName(object.Bucket) || !validSnapshotPath(object.Key) || !strings.HasPrefix(object.Key, "inputs/"+identity.TenantID+"/") || object.SizeBytes <= 0 {
 		return invalid("fixed input object")
 	}
 	if (object.VersionID == nil) == (object.ImmutableCopy == nil) {
@@ -335,6 +340,9 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 		if snapshot.TrainingImage != nil {
 			return invalid("training image")
 		}
+		if snapshot.Finetuning == nil || snapshot.Finetuning.BaseModel.Scope.ApprovedPrefix != identity.TenantID {
+			return invalid("base model tenant scope")
+		}
 		if field := invalidFinetuningSnapshot(snapshot); field != "" {
 			return invalid(field)
 		}
@@ -347,12 +355,23 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 		return invalid(field)
 	}
 	environment := snapshot.Environment
-	if !validSnapshotReference(environment.ClusterID) || !validSnapshotDNSLabel(environment.NamespaceName) || !validSnapshotReference(environment.KFPConnectionRef) {
+	if !CanonicalTenantID(environment.ClusterID) || environment.NamespaceName != "tenant-"+identity.TenantID || !validSnapshotDNSLabel(environment.NamespaceName) || !validSnapshotReference(environment.KFPConnectionRef) {
 		return invalid("environment references")
 	}
 	identities := environment.Identities
 	if !validSnapshotReference(identities.ModeldevControlIdentityRef) || !validSnapshotReference(identities.TenantProxyIdentity) {
 		return invalid("control identity references")
+	}
+	if identities.KFPStepServiceAccount != "modeldev-step" || identities.TrainerServiceAccount != "trainer-workload" || identities.VerifierServiceAccount != "verifier" {
+		return invalid("fixed workload service accounts")
+	}
+	for _, uid := range []string{identities.KFPStepServiceAccountUID, identities.TrainerServiceAccountUID, identities.VerifierServiceAccountUID} {
+		if !CanonicalTenantID(uid) {
+			return invalid("workload service account UID")
+		}
+	}
+	if snapshot.DispatchOwner.ValidateFor(identity.TenantID, identity.ExecutionID) != nil || snapshot.ManagedImageAccess.Validate() != nil {
+		return invalid("frozen dispatch materials")
 	}
 	accounts := []string{identities.KFPStepServiceAccount, identities.TrainerServiceAccount, identities.VerifierServiceAccount}
 	seenAccounts := make(map[string]bool, len(accounts))
@@ -366,7 +385,7 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 		return invalid(field)
 	}
 	scope := snapshot.PublicationScope
-	if scope.Validate() != nil {
+	if scope.Validate() != nil || scope.ApprovedPrefix != "executions/"+identity.TenantID {
 		return invalid("publication scope")
 	}
 	if field := invalidOutputContractForKind(snapshot.Kind, snapshot.OutputContract); field != "" {

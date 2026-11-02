@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-10-31T23:25:52.882108+00:00",
+  "source_commit": "9c2c623edea2128a5898fdb7a18d399b73cebe15",
+  "base_commit": "21bf4bd6540d462a61c91b629f26250899583223",
+  "branch": "codex/modeldev-legacy-retirement",
+  "remote": "ssh://git@ssh.github.com:443/zhangzhe-ctrl/ani-modeldev-service.git",
+  "push_exit_code": 0,
+  "pushed_exact_commit": true,
+  "force": false,
+  "main_mutated": false,
+  "fedora_final_binary_sha256": "ef2a5e9c675b29a78ccb86965fb10ef9eed6720dfd1955402cc325092dd394d1",
+  "build_exit_code": 0,
+  "build_command": "CGO_ENABLED=0 GOTOOLCHAIN=auto go build -trimpath -buildvcs=false -ldflags=-s -w -o /home/chabking/tenantenv-20261101/legacy-retirement-9c2c623-linux-amd64 ./cmd/ani-modeldev-legacy-retirement",
+  "source_identity": "final-source-identity.json",
+  "full_make_verify": "FAIL (old baseline contracts/fixtures; evidence final-make-verify.log)",
+  "targeted_real_pg_and_affected_vet_build": "PASS",
+  "live_apply": "NOT_RUN"
+}

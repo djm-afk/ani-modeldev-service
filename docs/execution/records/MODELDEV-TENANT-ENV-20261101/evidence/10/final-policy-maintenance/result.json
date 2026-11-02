@@ -1,0 +1,161 @@
+{
+  "schema": "ani.modeldev.spec54-final-policy-maintenance-result.v1",
+  "status": "COMPLETED_EXPLICIT_NEW_A_B_READY_FINAL_PINS_CREATE_ENABLED",
+  "finished_at": "2026-11-01T16:32:18.037795+00:00",
+  "final_platform_sha256": "2d75921aa497aca3b603c5f8483e3bfb4825eaee678b404766c45756dee7c4e5",
+  "final_runtime_config_sha256": "5c13854685b2adf50bcb6926de79b12fcb311738b84330c0788560f849e51919",
+  "configmap_names": {
+    "platform": "modeldev-platform-2d75921aa497",
+    "runtime": "modeldev-runtime-5c13854685b2"
+  },
+  "main_image_unchanged": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+  "material_bundle_unchanged": "4a655afda6f4d1b6b798f30359c7ccfd0ce4271836b3bbba7f187b02c3f011e4",
+  "webhook_deployment_unchanged": true,
+  "sealed_actual_policy_generations": {
+    "workload_guard": 10,
+    "mutating_webhook": 3
+  },
+  "bootstrap_refs": [
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-access-v1",
+      "sha256": "026597cc2c5da60319ab7ef31c3a6d6a1d3c6eddeb792ff0ff7c3f7ed460f235",
+      "uid": "93bf2900-ced6-4e77-b91e-b0100955e9ba"
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-kfp-api-v1",
+      "sha256": "2be8c45a54068fa769fb270e58243452ff5c3a0add33b02d9133a9650f6ab49d",
+      "uid": "c07e4a4f-aff6-4e44-9422-360fe2e7aeba"
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-runtime-v1",
+      "sha256": "cacb98d54bde1bff0cc3742b17222a226fe819ca500fd5631538f4f40a631212",
+      "uid": "9d141850-ae2b-4586-afed-cb9ac8c3a45a"
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-step-v1",
+      "sha256": "12b9e74a7c21a096260f243361eef9f8b87888a012f920cd53aa51839b66aa4e",
+      "uid": "7f81a827-bdfc-4c63-a1fb-2a4dd64a0f08"
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-webhook-read-v1",
+      "sha256": "538aefe966e0818ceeaacef2eec38d73039e857b8e3c31b34a446e5f89b1eef8",
+      "uid": "26f81d81-9b56-44af-b170-78a09dbc7e3a"
+    },
+    {
+      "kind": "MutatingWebhookConfiguration",
+      "name": "ani-modeldev-webhook",
+      "sha256": "c794d33fd1236f1d3f15c524a3c14591189174f358bb9ff3bad45763c4bb9d65",
+      "uid": "c452d29d-89be-41af-ac95-eb467e1a89c2"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-bootstrap-v1",
+      "sha256": "b53aa5f81d41114dd72238f2336590ad94399db7f32be619091d6a519a1f87c2",
+      "uid": "57ccd6cb-882a-47ec-83c0-a6cf2ca2bbbe"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-environment-config-v1",
+      "sha256": "bd3cd6e1e91219adb9d6f03271086e7c4292ed44a8d83e5cbde0317c8efb7475",
+      "uid": "0bb85730-57be-40d7-84a5-13862e71d951"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "name": "modeldev-workload-guard-v1",
+      "sha256": "5ffa26bb4032916f9896d63f015c15ec954bb38655d2dea80548c2b9c2ccd652",
+      "uid": "72edb341-581f-4630-b10f-43ac0eeffa13"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-bootstrap-v1-binding",
+      "sha256": "e5fdfeadf332bdbd19988c06bd974cce1633ada6010653cf50714149d1680065",
+      "uid": "c85543d2-fe50-4205-8f09-12f9df668ae5"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-environment-config-v1-binding",
+      "sha256": "9f3e7a7a930d7131a67f4b22b9cee865e7c469cc73a37e5c58395086c67d2dea",
+      "uid": "160e30ce-bc34-49fc-8527-12499c500e4d"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "name": "modeldev-workload-guard-v1-binding",
+      "sha256": "737185a8493425ee4a2cd4367c2d7ef35163a4fdb04e7a9e901a6665c9a436dc",
+      "uid": "d3e51d93-9d07-4c77-b6c7-3ae744069d3f"
+    }
+  ],
+  "A": {
+    "environment_id": "fa7f113c-58c1-4692-a9e2-e9687e8dd162",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "namespace_name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+    "state": "READY",
+    "phase": "COMPLETE",
+    "reason_code": "",
+    "retryable": false,
+    "retry_after_seconds": 0,
+    "binding_digest": "08232bdc365360ff601fbce828aaf510519dee0848e2d1487018a37f0021c893",
+    "experiment_id": "e8308780-256f-43b8-88c8-a88c044d1c56",
+    "updated_at": "2026-11-01T16:31:44.930660Z",
+    "last_verified_at": "2026-11-01T16:31:44.930021Z"
+  },
+  "B": {
+    "environment_id": "0c3f466c-2455-4a41-9a47-4581d303e789",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "namespace_name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+    "namespace_uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347",
+    "state": "READY",
+    "phase": "COMPLETE",
+    "reason_code": "",
+    "retryable": false,
+    "retry_after_seconds": 0,
+    "binding_digest": "9ca0d8783334e88cc05a2639875bae926e90014a6d358b0a26aa6d9d04843005",
+    "experiment_id": "5c97a534-b971-4ee2-8597-7d4b8ca1cd23",
+    "updated_at": "2026-11-01T16:31:51.382068Z",
+    "last_verified_at": "2026-11-01T16:31:51.381259Z"
+  },
+  "same_single_main_process_for_A_B": true,
+  "runtime": {
+    "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "pod_name": "ani-modeldev-d859b667b-x4q2j",
+    "pod_uid": "6f29950c-625e-4b2f-98a0-bc7309016d7e",
+    "node": "node3",
+    "replicaset_uid": "01b790e9-28a2-4f17-91f6-2f977b587142",
+    "container_id": "containerd://24bd26551784dacf1dbe39d298e996ea0d74555d97854d060903ea06310bc4b4",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+    "started_at": "2026-11-01T16:30:58Z",
+    "restart_count": 0
+  },
+  "governance_create_pause_env": "UNSET/defaultfalse",
+  "five_original_completed_runs_normal_deleted": 5,
+  "original_28_access_objects_revoked": 28,
+  "original_experiment_metadata_db_deleted": 2,
+  "original_environment_rows_deleted": 2,
+  "preserved": [
+    "standard Namespaces",
+    "external input versions/objects",
+    "base models",
+    "coexisting VM/PVC",
+    "Res-managed image pull Secrets",
+    "shared dedicated artifact IAM and bucket",
+    "four platform parent Pipelines and all versions"
+  ],
+  "no_new_training_tests_or_verify": true,
+  "node_journal_root": "/home/kubercloud/tenantenv-20261101/final-policy-maintenance-20261101",
+  "journal_contains_only_public_intents_and_receipts": true,
+  "new_tools_identities_tokens_or_credential_files_created": false,
+  "receipts": {
+    "window-start-actual.json": "0d39cc6150c4761110f9fb5e35f2ee7d305097d4961e020729a87eb2596484a9",
+    "revoke-actual.json": "a200e45587fc7cdf70895d2acd314bb95d70d05d056adaef828d91fed0d027c2",
+    "final-config-switch-actual.json": "ed39b235605ca8ba6c53897307cd9bd85f4360bc7c5f44250340ac5f840369db",
+    "new-A-B-Ensure-actual.json": "a82075e4c720999507f60ff3c6364ab382cf7c74073dfdaa7416aeffbd620b7c",
+    "gov-unpause-actual.json": "d779b2025d1266202ab61005cd9e6913eea18f399260ffde419e49d6aed349b5",
+    "platform-loader-receipt.json": "2853b7cfd5c0e578af15681f53396a69cb43cf3755c438a7756838bc14e87faf"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "started_at": "2026-10-31T20:21:25.260507+00:00",
+  "purpose": "Goal round 2 single bounded Fedora recovery probe; no test restart",
+  "command": [
+    "ssh",
+    "-o",
+    "ControlMaster=no",
+    "-o",
+    "ControlPath=none",
+    "-o",
+    "ConnectTimeout=10",
+    "-o",
+    "ServerAliveInterval=5",
+    "-o",
+    "ServerAliveCountMax=2",
+    "fedora",
+    "printf FEDORA_READY"
+  ],
+  "exit_code": 0,
+  "stdout": "FEDORA_READY",
+  "stderr": "",
+  "finished_at": "2026-10-31T20:21:25.624196+00:00"
+}

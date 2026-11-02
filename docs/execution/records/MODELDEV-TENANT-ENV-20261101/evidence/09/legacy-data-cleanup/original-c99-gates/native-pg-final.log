@@ -1,0 +1,12 @@
+=== RUN   TestOriginalSevenNativeC99QualificationAndMissingCloseEvidence
+    main_test.go:99: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    main_test.go:111: original 111952ee-9d72-46d9-9981-c2a1ead73289: native c99 full admission/runtime/CLOSED/cleanup/ACK PASS
+    main_test.go:111: original 4534a7de-480c-4a8f-ae76-e647cf7c158c: native c99 full admission/runtime/CLOSED/cleanup/ACK PASS
+    main_test.go:111: original 5953c2e1-107e-4d46-af6d-4c718c7fb10c: native c99 full admission/runtime/CLOSED/cleanup/ACK PASS
+    main_test.go:111: original 5f0b866e-31d1-4b44-8a7c-5cc900767e00: native c99 full admission/runtime/CLOSED/cleanup/ACK PASS
+    main_test.go:111: original c0fa3739-d279-4bb3-85be-0f74b8d4773a: native c99 full admission/runtime/CLOSED/cleanup/ACK PASS
+    main_test.go:111: original e94344af-a825-4ba2-9fa1-838638cc4d5f: native c99 full admission/runtime/CLOSED/cleanup/ACK PASS
+    main_test.go:111: original ec57bafc-56bd-4f7e-8f65-45527aa4d0e3: native c99 full admission/runtime/CLOSED/cleanup/ACK PASS
+--- PASS: TestOriginalSevenNativeC99QualificationAndMissingCloseEvidence (0.94s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/legacy-modeldev-data-cleanup/originalc99	0.946s

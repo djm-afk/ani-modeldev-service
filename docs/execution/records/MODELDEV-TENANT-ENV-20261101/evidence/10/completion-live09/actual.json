@@ -1,0 +1,64 @@
+{
+  "schema": "ani.modeldev.completion-live09.actual.v1",
+  "started_at": "2026-11-01T16:59:24.202160+00:00",
+  "new_identity_RBAC_TokenRequest": false,
+  "credential_values_or_hashes_saved": false,
+  "cluster_mutations": 0,
+  "business_STS_requests": 1,
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "execution_id": "50dc7220-8001-463e-83f3-fe4d70f9af66",
+  "operation_id": "ddd455b5-e6be-4d2a-abfe-e8ec64b8457f",
+  "original_prepare": {
+    "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "name": "md-k2hqk-136888522",
+    "uid": "8d4a7d5e-b286-45f3-afc8-20dc400a1102",
+    "node": "node3",
+    "container_id": "containerd://685d7996f2ba690c9f2fddab7dcb806b1174172670aff32154a33914297ba4da",
+    "started_at": "2026-11-01T17:02:15Z",
+    "service_account_uid": "2a5ab005-8bbd-4ff8-85a4-f96fd6f1cf23",
+    "workflow_uid": "cbfc5c3a-79b1-4188-a529-ac4e75508ee9",
+    "run_id": "95ea672f-b010-476c-9e52-07e5e0a68920",
+    "spec_hash": "f4ce60e7e75092e60c4191a92146acc7db1c03b01d802fd13737d39538e27362",
+    "phase": "prepare",
+    "projected_token_only": true
+  },
+  "client_exit": 0,
+  "client_stderr_bytes": 0,
+  "business_result": {
+    "configuration_rpc": "OK",
+    "credential_values_or_hashes_saved": false,
+    "cross_scope_read": {
+      "bucket": "ani-md-v21-output-01a15f47",
+      "http_status": 403,
+      "key": "executions/207328fc-f08d-4dc4-b403-16ec86396ce2/59f92b91-5e86-4dd1-90ec-cb1037756758/training/adapter/adapter_model.safetensors",
+      "range": "bytes=0-0",
+      "storage_code": "AccessDenied",
+      "version_id": "dec3d751-6c3d-442f-8c21-8d921d9fa531"
+    },
+    "expires_at": "2026-11-01T17:17:19Z",
+    "issued_at": "2026-11-01T17:02:19.783526164Z",
+    "kfp_task_id": "237f7eef-7414-4e3f-8013-b83e5157d11f",
+    "new_identity_or_token_request": false,
+    "own_input_read": {
+      "bucket": "ani-md-v21-input-01a15f47",
+      "bytes_read": 1,
+      "http_status": 206,
+      "key": "inputs/64c5c35a-f554-432c-b4bc-7b4f36f08420/56676789-5fbc-4a13-b566-a2dcbb1b7f76/binary48.csv",
+      "range": "bytes=0-0",
+      "read_ok": true,
+      "storage_code": "",
+      "version_id": "ee4b8411-c464-48ce-9fc3-b1239580025f"
+    },
+    "status": "PASS_OWN_INPUT_READ_AND_CROSS_SCOPE_ACCESS_DENIED",
+    "storage_credentials_rpc": "OK"
+  },
+  "status": "PASS_OWN_INPUT_READ_AND_CROSS_SCOPE_ACCESS_DENIED",
+  "finished_at": "2026-11-01T17:02:19.797472+00:00"
+}

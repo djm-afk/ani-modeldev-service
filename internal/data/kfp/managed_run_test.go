@@ -23,7 +23,7 @@ func TestManagedRunRejectsTopLevelPodNameAndKeepsFrozenBinding(t *testing.T) {
 	association := biz.ManagedStepAssociation{RunID: "55555555-6666-4777-8888-999999999999", PodName: "managed-prepare"}
 	// Current responses expose native child-node references; a top-level Pod
 	// name is a retired identity format, tested only as a rejection.
-	valid := `{"run_id":"55555555-6666-4777-8888-999999999999","experiment_id":"44444444-4444-4444-8444-444444444444","display_name":"md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","pipeline_version_reference":{"pipeline_id":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","pipeline_version_id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd"},"runtime_config":{"parameters":{"execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","spec_hash":"972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9"},"pipeline_root":"s3://fixture-kfp-artifacts/managed-root"},"service_account":"cpu-managed-step","run_details":{"task_details":[{"run_id":"55555555-6666-4777-8888-999999999999","task_id":"managed-prepare-task","display_name":"prepare","pod_name":"managed-prepare"}]}}`
+	valid := `{"run_id":"55555555-6666-4777-8888-999999999999","experiment_id":"44444444-4444-4444-8444-444444444444","display_name":"md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","pipeline_version_reference":{"pipeline_id":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","pipeline_version_id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd"},"runtime_config":{"parameters":{"execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","environment_binding_id":"11111111-1111-4111-8111-111111111111","namespace_uid":"33333333-3333-4333-8333-333333333333","spec_hash":"972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9"},"pipeline_root":"s3://kfp-artifacts/artifacts/11111111-2222-4333-8444-555555555555/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"},"service_account":"modeldev-step","run_details":{"task_details":[{"run_id":"55555555-6666-4777-8888-999999999999","task_id":"managed-prepare-task","display_name":"prepare","pod_name":"managed-prepare"}]}}`
 	legacy := valid
 	valid = strings.Replace(valid, `"pod_name":"managed-prepare"`, `"child_tasks":[{"pod_name":"native-executor-node"}]`, 1)
 	valid = strings.ReplaceAll(valid, "972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9", input.Plan.SpecHash)
@@ -56,7 +56,7 @@ func TestManagedRunRejectsTopLevelPodNameAndKeepsFrozenBinding(t *testing.T) {
 		legacy,
 		strings.Replace(valid, `"task_id":"managed-prepare-task"`, `"task_id":"invalid task"`, 1),
 		strings.Replace(valid, input.Plan.SpecHash, strings.Repeat("f", 64), 1),
-		strings.Replace(valid, `"service_account":"cpu-managed-step"`, `"service_account":"ordinary-trainer"`, 1),
+		strings.Replace(valid, `"service_account":"modeldev-step"`, `"service_account":"ordinary-trainer"`, 1),
 		strings.TrimSuffix(valid, "}") + `,"run_details":{"task_details":[]}}`,
 	} {
 		body.Store(invalid)

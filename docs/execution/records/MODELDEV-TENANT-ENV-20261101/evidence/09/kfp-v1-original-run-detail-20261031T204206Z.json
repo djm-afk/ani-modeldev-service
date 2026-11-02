@@ -1,0 +1,547 @@
+{
+  "schema": "ani.modeldev.original-kfp-v1-detail.transport.v1",
+  "started_at": "2026-10-31T20:42:06.342012+00:00",
+  "ssh": "kubercloud@100.64.128.12",
+  "remote_runner_sha256": "6160252b84b13794052f32b08cd891c0e91a7f3b04ac33314b39b5a5a066c6f3",
+  "read_only": true,
+  "raw_manifest_log_secret_contents_retained": false,
+  "ssh_exit_code": 0,
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "observation": {
+    "schema": "ani.modeldev.original-kfp-v1-detail-probe.v1",
+    "started_at": "2026-10-31T20:42:06.980272+00:00",
+    "read_only": true,
+    "ssh": "kubercloud@100.64.128.12",
+    "fixed_kfp_source_commit": "85a38e0719870e5b2f97a74f5c966d79bcc7c960",
+    "official_sources": [
+      {
+        "url": "https://github.com/kubeflow/pipelines/blob/85a38e0719870e5b2f97a74f5c966d79bcc7c960/backend/api/v1beta1/run.proto#L69-L72",
+        "fact": "GetRunV1 GET /apis/v1beta1/runs/{run_id} returns RunDetail"
+      },
+      {
+        "url": "https://github.com/kubeflow/pipelines/blob/85a38e0719870e5b2f97a74f5c966d79bcc7c960/backend/api/v1beta1/run.proto#L244-L256",
+        "fact": "RunDetail.pipeline_runtime has pipeline_manifest and workflow_manifest; workflow_runtime_manifest is not a wire field"
+      },
+      {
+        "url": "https://github.com/kubeflow/pipelines/blob/85a38e0719870e5b2f97a74f5c966d79bcc7c960/backend/src/apiserver/server/api_converter.go#L1526-L1545",
+        "fact": "Converter returns persisted PipelineRuntimeManifest/WorkflowRuntimeManifest in v1 details"
+      },
+      {
+        "url": "https://github.com/kubeflow/pipelines/blob/85a38e0719870e5b2f97a74f5c966d79bcc7c960/backend/src/apiserver/server/run_server.go#L173-L196",
+        "fact": "v1 GET calls shared original-run authorization and GetRun"
+      },
+      {
+        "url": "https://github.com/kubeflow/pipelines/blob/85a38e0719870e5b2f97a74f5c966d79bcc7c960/backend/src/common/util/execution_spec.go#L178-L190",
+        "fact": "Stored JSON need not contain TypeMeta; NewExecutionSpecJSON explicitly selects Argo Workflow parsing"
+      },
+      {
+        "url": "https://github.com/kubeflow/pipelines/blob/85a38e0719870e5b2f97a74f5c966d79bcc7c960/backend/src/common/util/workflow.go#L580-L587",
+        "fact": "ToStringForStore directly marshals the existing Workflow"
+      }
+    ],
+    "bounds": {
+      "run_gets": 3,
+      "response_bytes_max_each": 4194304,
+      "http_timeout_seconds": 8,
+      "manifest_bytes_max_each": 3145728,
+      "nodes_max_each": 1024,
+      "archive_candidates_recorded_max_each": 16
+    },
+    "raw_manifest_log_secret_contents_retained": false,
+    "runs": [
+      {
+        "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "original_run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+        "original_workflow_name": "ft-sw2pr",
+        "original_workflow_uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f",
+        "original_training_pod_uid": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+        "existing_control_token_claims": {
+          "sub": "system:serviceaccount:ani-system:modeldev-control",
+          "aud": [
+            "pipelines.kubeflow.org"
+          ],
+          "exp": 1793480965
+        },
+        "http_status": 200,
+        "response_bytes": 347403,
+        "response_sha256": "94a22eb6b9682062a3ad22871faa7d32e54ca13f51488844eb84600363c75b3e",
+        "returned_run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+        "original_run_id_matches": true,
+        "run_state": "Failed",
+        "returned_namespace_references": [
+          "ani-modeldev-tenant-a-v21"
+        ],
+        "original_namespace_reference_matches": true,
+        "pipeline_runtime_object_present": true,
+        "manifests": [
+          {
+            "field": "pipeline_runtime.workflow_manifest",
+            "present": true,
+            "raw_contents_omitted": true,
+            "bytes": 181111,
+            "sha256": "098d33c48011dadc33f00a88a3037ba3d232cb96f85d1064b83d53d4b410041c",
+            "kind": null,
+            "api_version": null,
+            "name": "ft-sw2pr",
+            "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f",
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "original_workflow_uid_matches": true,
+            "original_workflow_name_matches": true,
+            "original_namespace_matches": true,
+            "type_meta_omitted": true,
+            "bound_original_workflow": true,
+            "workflow_status": {
+              "phase": "Failed",
+              "startedAt": "2026-10-30T00:54:46Z",
+              "finishedAt": "2026-10-30T00:58:28Z"
+            },
+            "status_nodes_count": 35,
+            "compressed_nodes_present": false,
+            "offload_node_status_version_present": false,
+            "phase_counts": {
+              "Failed": 10,
+              "Succeeded": 13,
+              "Omitted": 12
+            },
+            "direct_pod_uid_fields": [],
+            "explicit_numeric_exit_fields": [
+              {
+                "node_id": "ft-sw2pr-1601558171",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-1698643791",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-1948764010",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-202354017",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-2185172434",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-2481913331",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-2685537246",
+                "field": "exitCode",
+                "value": 1
+              },
+              {
+                "node_id": "ft-sw2pr-3306403124",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-3419239170",
+                "field": "exitCode",
+                "value": 1
+              },
+              {
+                "node_id": "ft-sw2pr-3760280205",
+                "field": "exitCode",
+                "value": 1
+              },
+              {
+                "node_id": "ft-sw2pr-4163451948",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-4168161749",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-623417368",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-811855208",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-sw2pr-966427769",
+                "field": "exitCode",
+                "value": 1
+              }
+            ],
+            "archive_log_artifact_candidates": [],
+            "inspection": "ORIGINAL_WORKFLOW_STATUS_INSPECTED",
+            "explicit_numeric_exit_fields_count_recorded": 15,
+            "direct_pod_uid_fields_count_recorded": 0,
+            "archive_candidates_count_recorded": 0
+          },
+          {
+            "field": "pipeline_runtime.pipeline_manifest",
+            "present": true,
+            "raw_contents_omitted": true,
+            "bytes": 75733,
+            "sha256": "17f0133c405db14dfe2f72e161da01034466f1b71369c39babf03a70c8a4a7b7",
+            "kind": null,
+            "api_version": null,
+            "name": "ft-sw2pr",
+            "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f",
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "original_workflow_uid_matches": true,
+            "original_workflow_name_matches": true,
+            "original_namespace_matches": true,
+            "type_meta_omitted": true,
+            "bound_original_workflow": true,
+            "workflow_status": {
+              "phase": null,
+              "startedAt": null,
+              "finishedAt": null
+            },
+            "status_nodes_count": 0,
+            "compressed_nodes_present": false,
+            "offload_node_status_version_present": false,
+            "phase_counts": {},
+            "direct_pod_uid_fields": [],
+            "explicit_numeric_exit_fields": [],
+            "archive_log_artifact_candidates": [],
+            "inspection": "ORIGINAL_WORKFLOW_STATUS_INSPECTED",
+            "explicit_numeric_exit_fields_count_recorded": 0,
+            "direct_pod_uid_fields_count_recorded": 0,
+            "archive_candidates_count_recorded": 0
+          }
+        ],
+        "result": "V1_RUNTIME_INSPECTED"
+      },
+      {
+        "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "original_run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+        "original_workflow_name": "ft-j4ncq",
+        "original_workflow_uid": "1e9521b7-fc75-41f2-a406-690a7c142b73",
+        "original_training_pod_uid": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+        "existing_control_token_claims": {
+          "sub": "system:serviceaccount:ani-system:modeldev-control",
+          "aud": [
+            "pipelines.kubeflow.org"
+          ],
+          "exp": 1793480965
+        },
+        "http_status": 200,
+        "response_bytes": 347433,
+        "response_sha256": "ab686d11b149c9ee5c24c1afb37ed798854738979fad650dd5e307a509bd58e4",
+        "returned_run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+        "original_run_id_matches": true,
+        "run_state": "Failed",
+        "returned_namespace_references": [
+          "ani-modeldev-tenant-a-v21"
+        ],
+        "original_namespace_reference_matches": true,
+        "pipeline_runtime_object_present": true,
+        "manifests": [
+          {
+            "field": "pipeline_runtime.workflow_manifest",
+            "present": true,
+            "raw_contents_omitted": true,
+            "bytes": 181141,
+            "sha256": "9b58e508fb0fca256acca7aafaa6e02876167fc8726b4ec45b9a9130fb1d0b7d",
+            "kind": null,
+            "api_version": null,
+            "name": "ft-j4ncq",
+            "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73",
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "original_workflow_uid_matches": true,
+            "original_workflow_name_matches": true,
+            "original_namespace_matches": true,
+            "type_meta_omitted": true,
+            "bound_original_workflow": true,
+            "workflow_status": {
+              "phase": "Failed",
+              "startedAt": "2026-10-29T15:57:11Z",
+              "finishedAt": "2026-10-29T16:00:43Z"
+            },
+            "status_nodes_count": 35,
+            "compressed_nodes_present": false,
+            "offload_node_status_version_present": false,
+            "phase_counts": {
+              "Failed": 10,
+              "Omitted": 12,
+              "Succeeded": 13
+            },
+            "direct_pod_uid_fields": [],
+            "explicit_numeric_exit_fields": [
+              {
+                "node_id": "ft-j4ncq-1277631073",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-140421023",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-2697945544",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-2781204608",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-2916972808",
+                "field": "exitCode",
+                "value": 1
+              },
+              {
+                "node_id": "ft-j4ncq-2999776335",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-3057988846",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-3828660465",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-3878424987",
+                "field": "exitCode",
+                "value": 1
+              },
+              {
+                "node_id": "ft-j4ncq-3925835598",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-3998358738",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-492590760",
+                "field": "exitCode",
+                "value": 1
+              },
+              {
+                "node_id": "ft-j4ncq-721423291",
+                "field": "exitCode",
+                "value": 1
+              },
+              {
+                "node_id": "ft-j4ncq-7761250",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "ft-j4ncq-83711101",
+                "field": "exitCode",
+                "value": 0
+              }
+            ],
+            "archive_log_artifact_candidates": [],
+            "inspection": "ORIGINAL_WORKFLOW_STATUS_INSPECTED",
+            "explicit_numeric_exit_fields_count_recorded": 15,
+            "direct_pod_uid_fields_count_recorded": 0,
+            "archive_candidates_count_recorded": 0
+          },
+          {
+            "field": "pipeline_runtime.pipeline_manifest",
+            "present": true,
+            "raw_contents_omitted": true,
+            "bytes": 75733,
+            "sha256": "8f0d2d12da5265552d5ca355b3e5c4d6b17dc9154f987d62a7f80f6ff74acfd8",
+            "kind": null,
+            "api_version": null,
+            "name": "ft-j4ncq",
+            "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73",
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "original_workflow_uid_matches": true,
+            "original_workflow_name_matches": true,
+            "original_namespace_matches": true,
+            "type_meta_omitted": true,
+            "bound_original_workflow": true,
+            "workflow_status": {
+              "phase": null,
+              "startedAt": null,
+              "finishedAt": null
+            },
+            "status_nodes_count": 0,
+            "compressed_nodes_present": false,
+            "offload_node_status_version_present": false,
+            "phase_counts": {},
+            "direct_pod_uid_fields": [],
+            "explicit_numeric_exit_fields": [],
+            "archive_log_artifact_candidates": [],
+            "inspection": "ORIGINAL_WORKFLOW_STATUS_INSPECTED",
+            "explicit_numeric_exit_fields_count_recorded": 0,
+            "direct_pod_uid_fields_count_recorded": 0,
+            "archive_candidates_count_recorded": 0
+          }
+        ],
+        "result": "V1_RUNTIME_INSPECTED"
+      },
+      {
+        "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+        "original_run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+        "original_workflow_name": "md-kpwkw",
+        "original_workflow_uid": "d2acb3df-3979-4d60-aed5-16db0ce440fb",
+        "original_training_pod_uid": null,
+        "existing_control_token_claims": {
+          "sub": "system:serviceaccount:ani-system:modeldev-control",
+          "aud": [
+            "pipelines.kubeflow.org"
+          ],
+          "exp": 1793480965
+        },
+        "http_status": 200,
+        "response_bytes": 225906,
+        "response_sha256": "314ad74a0a1f2f4ec7e44c4e98d9bafec1c57ee01b72afd1b4cfebcc18fad062",
+        "returned_run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+        "original_run_id_matches": true,
+        "run_state": "Failed",
+        "returned_namespace_references": [
+          "ani-modeldev-tenant-a-v21"
+        ],
+        "original_namespace_reference_matches": true,
+        "pipeline_runtime_object_present": true,
+        "manifests": [
+          {
+            "field": "pipeline_runtime.workflow_manifest",
+            "present": true,
+            "raw_contents_omitted": true,
+            "bytes": 110484,
+            "sha256": "c88268fdbb84fade76d2c488e5211fd697f6f852feb6c0a75b21ef67842142fb",
+            "kind": null,
+            "api_version": null,
+            "name": "md-kpwkw",
+            "uid": "d2acb3df-3979-4d60-aed5-16db0ce440fb",
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "original_workflow_uid_matches": true,
+            "original_workflow_name_matches": true,
+            "original_namespace_matches": true,
+            "type_meta_omitted": true,
+            "bound_original_workflow": true,
+            "workflow_status": {
+              "phase": "Error",
+              "startedAt": "2026-10-30T09:21:04Z",
+              "finishedAt": "2026-10-30T09:21:45Z"
+            },
+            "status_nodes_count": 25,
+            "compressed_nodes_present": false,
+            "offload_node_status_version_present": false,
+            "phase_counts": {
+              "Error": 10,
+              "Succeeded": 4,
+              "Omitted": 11
+            },
+            "direct_pod_uid_fields": [],
+            "explicit_numeric_exit_fields": [
+              {
+                "node_id": "md-kpwkw-1116544117",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "md-kpwkw-2664895950",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "md-kpwkw-292890369",
+                "field": "exitCode",
+                "value": 0
+              },
+              {
+                "node_id": "md-kpwkw-4002437296",
+                "field": "exitCode",
+                "value": 0
+              }
+            ],
+            "archive_log_artifact_candidates": [],
+            "inspection": "ORIGINAL_WORKFLOW_STATUS_INSPECTED",
+            "explicit_numeric_exit_fields_count_recorded": 4,
+            "direct_pod_uid_fields_count_recorded": 0,
+            "archive_candidates_count_recorded": 0
+          },
+          {
+            "field": "pipeline_runtime.pipeline_manifest",
+            "present": true,
+            "raw_contents_omitted": true,
+            "bytes": 56506,
+            "sha256": "42fd5eceb8724c16325ebd422b335bf93f044e45f555a22473484eab7c60fa13",
+            "kind": null,
+            "api_version": null,
+            "name": "md-kpwkw",
+            "uid": "d2acb3df-3979-4d60-aed5-16db0ce440fb",
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "original_workflow_uid_matches": true,
+            "original_workflow_name_matches": true,
+            "original_namespace_matches": true,
+            "type_meta_omitted": true,
+            "bound_original_workflow": true,
+            "workflow_status": {
+              "phase": null,
+              "startedAt": null,
+              "finishedAt": null
+            },
+            "status_nodes_count": 0,
+            "compressed_nodes_present": false,
+            "offload_node_status_version_present": false,
+            "phase_counts": {},
+            "direct_pod_uid_fields": [],
+            "explicit_numeric_exit_fields": [],
+            "archive_log_artifact_candidates": [],
+            "inspection": "ORIGINAL_WORKFLOW_STATUS_INSPECTED",
+            "explicit_numeric_exit_fields_count_recorded": 0,
+            "direct_pod_uid_fields_count_recorded": 0,
+            "archive_candidates_count_recorded": 0
+          }
+        ],
+        "result": "V1_RUNTIME_INSPECTED"
+      }
+    ],
+    "supersedes_classification_of": "evidence/09/kfp-v1-original-run-detail-20261031T204105Z.json",
+    "inspection_correction": "The first receipt required TypeMeta and therefore did not inspect status despite all original Workflow UIDs/names/namespaces matching. Fixed official JSON storage permits absent TypeMeta; exact original identities remain mandatory.",
+    "target": {
+      "ssh_user": "kubercloud",
+      "hostname": "node1",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+    },
+    "identity_verified": true,
+    "original_namespace_uid_matches": true,
+    "existing_control_pod": {
+      "namespace": "ani-system",
+      "name": "ani-modeldev-6995bd77c4-z2gxk",
+      "uid": "592bdd86-ab5b-4416-8a2c-07c21ee69f8d",
+      "service_account": "modeldev-control",
+      "node": "node1"
+    },
+    "original_uid_bound_manifests_count": 6,
+    "original_uid_bound_log_archive_candidates_count": 0,
+    "result": "ORIGINAL_UID_MANIFEST_FOUND_NO_LOG_ARCHIVE_LOCATOR",
+    "further_object_reads_or_close_mutations": false,
+    "completed_at": "2026-10-31T20:42:07.657096+00:00"
+  },
+  "completed_at": "2026-10-31T20:42:09.749513+00:00"
+}

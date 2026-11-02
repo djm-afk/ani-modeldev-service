@@ -1,0 +1,7 @@
+{
+  "time": "2026-10-31T22:22:12.120842+00:00",
+  "entry": "kubercloud@100.64.128.12",
+  "exit_code": 255,
+  "stdout": "",
+  "stderr": "Connection closed by 100.64.128.12 port 22\n"
+}

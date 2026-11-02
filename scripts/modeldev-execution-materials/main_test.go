@@ -64,13 +64,16 @@ func TestFiniteCPULoRAMaterialsUseActualSourcesAndOneDefaultDefinition(t *testin
 					}
 				}
 				if id == "builtin.mlp" {
+					if m.Training == nil || m.Program != nil || m.Training.DefaultImage.ImageID != f.TrainingImage.ImageID || m.Training.DefaultImage.Scope != f.TrainingImage.ImageScope {
+						t.Fatal("managed MLP training material missing")
+					}
 					found := false
-					for _, a := range m.Program.ArgsTemplate {
+					for _, a := range m.Training.ArgsTemplate {
 						if a.Source == "SEED" {
 							found = true
 						}
 					}
-					if !found || m.Program.Command[2] != "/opt/ani-modeldev/training/train_mlp.py" {
+					if !found || m.Training.Command[2] != "/opt/ani-modeldev/training/train_mlp.py" {
 						t.Fatal("real MLP entry/all parameters missing")
 					}
 				} else {

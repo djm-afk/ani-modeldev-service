@@ -1,0 +1,44 @@
+{
+  "read_only": true,
+  "observed_at": "2026-10-31T19:10:09.471378+00:00",
+  "indices": [
+    "ani-logs-2026.10.29",
+    "ani-logs-2026.10.30"
+  ],
+  "tls_verified": true,
+  "auth_source": "existing ani-opensearch-admin Secret; no credential output",
+  "queries": [],
+  "field_caps": {
+    "http_status": 200,
+    "response_bytes": 493,
+    "response_sha256": "60348fbc5ef57f7c272085e31c118a6ca6c4917cfdfdbfdfa3901cc80ca136e3",
+    "fields": {
+      "kubernetes": [
+        "object"
+      ],
+      "@timestamp": [
+        "date"
+      ],
+      "log": [
+        "text"
+      ],
+      "kubernetes.namespace_name.keyword": [
+        "keyword"
+      ],
+      "kubernetes.namespace_name": [
+        "text"
+      ]
+    }
+  },
+  "selected_fields": {
+    "pod_uid": null,
+    "namespace": "kubernetes.namespace_name.keyword",
+    "timestamp": "@timestamp"
+  },
+  "result": "BLOCKED_NO_EXACT_UID_MAPPING",
+  "workflow_archive_probe": {
+    "result": "NOTFOUND_ARCHIVE_INDEX_IN_OBSERVED_METADATA",
+    "scope": "index metadata has ani-logs/date and internal top_queries/security indices; no dedicated workflow/argo archive index observed",
+    "exact_uid_field_available": false
+  }
+}

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -56,6 +57,8 @@ func TestMainFlowManagedBeginAuthenticatesAndRecovers(t *testing.T) {
 func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 	openPool := postgres.Prepare(t)
 	request := dispatchRequest(t)
+	request.Admission = admissionfixture.EnsureEnvironment(t, openPool(), request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 	pool := openPool()
@@ -100,11 +103,11 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"run_id": association.RunID, "experiment_id": "44444444-4444-4444-8444-444444444444",
+			"run_id": association.RunID, "experiment_id": request.Admission.Snapshot.Environment.ExperimentID,
 			"display_name":               "md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
-			"pipeline_version_reference": map[string]string{"pipeline_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "pipeline_version_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd"},
-			"runtime_config":             map[string]any{"parameters": map[string]string{"execution_id": request.Admission.ExecutionID, "spec_hash": request.Admission.SpecHash}, "pipeline_root": "s3://fixture-kfp-artifacts/frozen-submit-root"},
-			"service_account":            "cpu-managed-step", "state": "RUNNING",
+			"pipeline_version_reference": map[string]string{"pipeline_id": request.Admission.Snapshot.Implementation.PipelineID, "pipeline_version_id": request.Admission.Snapshot.Implementation.PipelineVersionID},
+			"runtime_config":             map[string]any{"parameters": map[string]string{"execution_id": request.Admission.ExecutionID, "spec_hash": request.Admission.SpecHash, "environment_binding_id": request.Admission.Snapshot.Environment.BindingID, "namespace_uid": request.Admission.Snapshot.Environment.NamespaceUID}, "pipeline_root": request.Owner.PipelineRoot},
+			"service_account":            request.Admission.Snapshot.Environment.Identities.KFPStepServiceAccount, "state": "RUNNING",
 			"run_details": map[string]any{"task_details": []any{map[string]any{"run_id": association.RunID, "task_id": "synthetic-task-id", "display_name": "prepare", "child_tasks": []any{map[string]string{"pod_name": executorNodeID}}, "state": "RUNNING"}}},
 		})
 	}))
@@ -133,7 +136,7 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	workloads, kube := mainFlowWorkloadVerifier(t, request.Admission.Snapshot.Environment, association)
+	workloads, kube := mainFlowWorkloadVerifier(t, request.Admission.Snapshot.Environment, request.Admission.Snapshot.ManagedImageAccess, association)
 	proof := runtimeproof.New(kube, runs, nil, repository)
 	steps, err := biz.NewManagedSteps(repository, executions, workloads, proof)
 	if err != nil {
@@ -192,9 +195,13 @@ func runManagedBeginFlow(t *testing.T, lostResponse bool) {
 	t.Log("MAIN_FLOW: restarted RPC reauthenticated and replayed original authority without CreateRun")
 }
 
-func mainFlowWorkloadVerifier(t *testing.T, env cpup01.EnvironmentBindingSnapshot, association biz.ManagedStepAssociation) (*stepidentity.Verifier, dynamic.Interface) {
+func mainFlowWorkloadVerifier(t *testing.T, env cpup01.EnvironmentBindingSnapshot, access cpup01.ManagedImageAccessSnapshot, association biz.ManagedStepAssociation) (*stepidentity.Verifier, dynamic.Interface) {
 	t.Helper()
-	const saUID = "ffffffff-aaaa-4bbb-8ccc-444444444444"
+	saUID := env.Identities.KFPStepServiceAccountUID
+	pulls := []any{}
+	for _, ref := range access.PullBindings {
+		pulls = append(pulls, map[string]any{"name": ref.SecretName})
+	}
 	peer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Header.Get("Authorization") != "Bearer synthetic-kube-control" {
@@ -225,14 +232,16 @@ func mainFlowWorkloadVerifier(t *testing.T, env cpup01.EnvironmentBindingSnapsho
 			}
 			object = map[string]any{"apiVersion": "authentication.k8s.io/v1", "kind": "TokenReview", "status": map[string]any{"authenticated": request.Spec.Token == "synthetic-bound-step-token", "audiences": []string{"ani-modeldev-managed-step"}, "user": map[string]any{"username": "system:serviceaccount:" + env.NamespaceName + ":" + env.Identities.KFPStepServiceAccount, "uid": saUID, "extra": map[string]any{"authentication.kubernetes.io/pod-name": []string{association.PodName}, "authentication.kubernetes.io/pod-uid": []string{association.PodUID}}}}}
 		case "/api/v1/namespaces/" + env.NamespaceName:
-			object = map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": metadata(env.NamespaceName, env.NamespaceUID, false)}
+			m := metadata(env.NamespaceName, env.NamespaceUID, false)
+			m["labels"] = map[string]any{"network.ani.io/tenant-id": strings.TrimPrefix(env.NamespaceName, "tenant-"), "network.ani.io/managed-by": "ani-network-service"}
+			object = map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": m, "status": map[string]any{"phase": "Active"}}
 		case "/api/v1/namespaces/" + env.NamespaceName + "/serviceaccounts/" + env.Identities.KFPStepServiceAccount:
-			object = map[string]any{"apiVersion": "v1", "kind": "ServiceAccount", "metadata": metadata(env.Identities.KFPStepServiceAccount, saUID, true)}
+			object = map[string]any{"apiVersion": "v1", "kind": "ServiceAccount", "metadata": metadata(env.Identities.KFPStepServiceAccount, saUID, true), "imagePullSecrets": pulls}
 		case "/api/v1/namespaces/" + env.NamespaceName + "/pods/" + association.PodName, "/api/v1/namespaces/" + env.NamespaceName + "/pods":
 			m := metadata(association.PodName, association.PodUID, true)
 			m["annotations"] = map[string]any{"workflows.argoproj.io/node-id": "main-flow-prepare-node", "workflows.argoproj.io/node-name": association.WorkflowName + ".prepare.executor"}
 			m["ownerReferences"] = []any{map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": association.WorkflowName, "uid": association.WorkflowUID, "controller": true}}
-			object = map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": m, "spec": map[string]string{"serviceAccountName": env.Identities.KFPStepServiceAccount}}
+			object = map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": m, "spec": map[string]any{"serviceAccountName": env.Identities.KFPStepServiceAccount, "imagePullSecrets": pulls}}
 			if strings.HasSuffix(r.URL.Path, "/pods") {
 				object = map[string]any{"apiVersion": "v1", "kind": "PodList", "metadata": map[string]any{}, "items": []any{object}}
 			}

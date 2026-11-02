@@ -1,0 +1,1279 @@
+# PIPELINE DEFINITION
+# Name: ft
+# Inputs:
+#    environment_binding_id: str
+#    execution_id: str
+#    namespace_uid: str
+#    spec_hash: str
+components:
+  comp-close:
+    executorLabel: exec-close
+    inputDefinitions:
+      parameters:
+        candidate:
+          defaultValue: ''
+          isOptional: true
+          parameterType: STRING
+        execution_id:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+  comp-collect:
+    executorLabel: exec-collect
+    inputDefinitions:
+      parameters:
+        execution_id:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+  comp-createpvc:
+    executorLabel: exec-createpvc
+    inputDefinitions:
+      parameters:
+        access_modes:
+          description: 'AccessModes to request for the provisioned PVC. May
+
+            be one or more of ``''ReadWriteOnce''``, ``''ReadOnlyMany''``, ``''ReadWriteMany''``,
+            or
+
+            ``''ReadWriteOncePod''``. Corresponds to `PersistentVolumeClaim.spec.accessModes
+            <https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes>`_.'
+          parameterType: LIST
+        annotations:
+          description: Annotations for the PVC's metadata. Corresponds to `PersistentVolumeClaim.metadata.annotations
+            <https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaim>`_.
+          isOptional: true
+          parameterType: STRUCT
+        pvc_name:
+          description: 'Name of the PVC. Corresponds to `PersistentVolumeClaim.metadata.name
+            <https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaim>`_.
+            Only one of ``pvc_name`` and ``pvc_name_suffix`` can
+
+            be provided.'
+          isOptional: true
+          parameterType: STRING
+        pvc_name_suffix:
+          description: 'Prefix to use for a dynamically generated name, which
+
+            will take the form ``<argo-workflow-name>-<pvc_name_suffix>``. Only one
+
+            of ``pvc_name`` and ``pvc_name_suffix`` can be provided.'
+          isOptional: true
+          parameterType: STRING
+        size:
+          description: The size of storage requested by the PVC that will be provisioned.
+            For example, ``'5Gi'``. Corresponds to `PersistentVolumeClaim.spec.resources.requests.storage
+            <https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimSpec>`_.
+          parameterType: STRING
+        storage_class_name:
+          defaultValue: ''
+          description: 'Name of StorageClass from which to provision the PV
+
+            to back the PVC. ``None`` indicates to use the cluster''s default
+
+            storage_class_name. Set to ``''''`` for a statically specified PVC.'
+          isOptional: true
+          parameterType: STRING
+        volume_name:
+          description: 'Pre-existing PersistentVolume that should back the
+
+            provisioned PersistentVolumeClaim. Used for statically
+
+            specified PV only. Corresponds to `PersistentVolumeClaim.spec.volumeName
+            <https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimSpec>`_.'
+          isOptional: true
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        name:
+          parameterType: STRING
+  comp-exit-handler-1:
+    dag:
+      tasks:
+        close:
+          cachingOptions: {}
+          componentRef:
+            name: comp-close
+          dependentTasks:
+          - createpvc
+          - publish
+          - register
+          inputs:
+            parameters:
+              candidate:
+                taskOutputParameter:
+                  outputParameterKey: candidate
+                  producerTask: publish
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+              run_id:
+                runtimeValue:
+                  constant: '{{$.pipeline_job_uuid}}'
+              spec_hash:
+                componentInputParameter: pipelinechannel--spec_hash
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: close
+        collect:
+          cachingOptions: {}
+          componentRef:
+            name: comp-collect
+          dependentTasks:
+          - createpvc
+          - verify
+          inputs:
+            parameters:
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+              run_id:
+                runtimeValue:
+                  constant: '{{$.pipeline_job_uuid}}'
+              spec_hash:
+                componentInputParameter: pipelinechannel--spec_hash
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: collect
+        createpvc:
+          cachingOptions: {}
+          componentRef:
+            name: comp-createpvc
+          dependentTasks:
+          - workspace-name
+          inputs:
+            parameters:
+              access_modes:
+                runtimeValue:
+                  constant:
+                  - ReadWriteMany
+              pvc_name:
+                taskOutputParameter:
+                  outputParameterKey: name
+                  producerTask: workspace-name
+              size:
+                runtimeValue:
+                  constant: 64Gi
+              storage_class_name:
+                runtimeValue:
+                  constant: ani-cephfs
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: createpvc
+        export:
+          cachingOptions: {}
+          componentRef:
+            name: comp-export
+          dependentTasks:
+          - createpvc
+          - train-wait
+          inputs:
+            parameters:
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+              run_id:
+                runtimeValue:
+                  constant: '{{$.pipeline_job_uuid}}'
+              spec_hash:
+                componentInputParameter: pipelinechannel--spec_hash
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: export
+        prepare:
+          cachingOptions: {}
+          componentRef:
+            name: comp-prepare
+          dependentTasks:
+          - createpvc
+          inputs:
+            parameters:
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+              pvc_name:
+                taskOutputParameter:
+                  outputParameterKey: name
+                  producerTask: createpvc
+              run_id:
+                runtimeValue:
+                  constant: '{{$.pipeline_job_uuid}}'
+              spec_hash:
+                componentInputParameter: pipelinechannel--spec_hash
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: prepare
+        publish:
+          cachingOptions: {}
+          componentRef:
+            name: comp-publish
+          dependentTasks:
+          - collect
+          - createpvc
+          inputs:
+            parameters:
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+              run_id:
+                runtimeValue:
+                  constant: '{{$.pipeline_job_uuid}}'
+              spec_hash:
+                componentInputParameter: pipelinechannel--spec_hash
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: publish
+        register:
+          cachingOptions: {}
+          componentRef:
+            name: comp-register
+          dependentTasks:
+          - createpvc
+          - publish
+          inputs:
+            parameters:
+              candidate:
+                taskOutputParameter:
+                  outputParameterKey: candidate
+                  producerTask: publish
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+              run_id:
+                runtimeValue:
+                  constant: '{{$.pipeline_job_uuid}}'
+              spec_hash:
+                componentInputParameter: pipelinechannel--spec_hash
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: register
+        train-wait:
+          cachingOptions: {}
+          componentRef:
+            name: comp-train-wait
+          dependentTasks:
+          - prepare
+          inputs:
+            parameters:
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+              run_id:
+                runtimeValue:
+                  constant: '{{$.pipeline_job_uuid}}'
+              spec_hash:
+                componentInputParameter: pipelinechannel--spec_hash
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: train-wait
+        verify:
+          cachingOptions: {}
+          componentRef:
+            name: comp-verify
+          dependentTasks:
+          - createpvc
+          - export
+          inputs:
+            parameters:
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+              run_id:
+                runtimeValue:
+                  constant: '{{$.pipeline_job_uuid}}'
+              spec_hash:
+                componentInputParameter: pipelinechannel--spec_hash
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: verify
+        workspace-name:
+          cachingOptions: {}
+          componentRef:
+            name: comp-workspace-name
+          inputs:
+            parameters:
+              execution_id:
+                componentInputParameter: pipelinechannel--execution_id
+          retryPolicy:
+            backoffDuration: 0s
+            backoffFactor: 2.0
+            backoffMaxDuration: 3600s
+          taskInfo:
+            name: workspace-name
+    inputDefinitions:
+      parameters:
+        pipelinechannel--execution_id:
+          parameterType: STRING
+        pipelinechannel--spec_hash:
+          parameterType: STRING
+  comp-export:
+    executorLabel: exec-export
+    inputDefinitions:
+      parameters:
+        execution_id:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+  comp-finalize-close:
+    executorLabel: exec-finalize-close
+    inputDefinitions:
+      parameters:
+        execution_id:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+  comp-prepare:
+    executorLabel: exec-prepare
+    inputDefinitions:
+      parameters:
+        execution_id:
+          parameterType: STRING
+        pvc_name:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+  comp-publish:
+    executorLabel: exec-publish
+    inputDefinitions:
+      parameters:
+        execution_id:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        candidate:
+          parameterType: STRING
+  comp-register:
+    executorLabel: exec-register
+    inputDefinitions:
+      parameters:
+        candidate:
+          parameterType: STRING
+        execution_id:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+  comp-train-wait:
+    executorLabel: exec-train-wait
+    inputDefinitions:
+      parameters:
+        execution_id:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+  comp-verify:
+    executorLabel: exec-verify
+    inputDefinitions:
+      parameters:
+        execution_id:
+          parameterType: STRING
+        run_id:
+          parameterType: STRING
+        spec_hash:
+          parameterType: STRING
+  comp-workspace-name:
+    executorLabel: exec-workspace-name
+    inputDefinitions:
+      parameters:
+        execution_id:
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        name:
+          parameterType: STRING
+deploymentSpec:
+  executors:
+    exec-close:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        - --publication-ref
+        - '{{$.inputs.parameters[''candidate'']}}'
+        command:
+        - /ani-modeldev-step
+        - close
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 1.0
+          cpuRequest: 0.1
+          memoryLimit: 0.536870912
+          memoryRequest: 0.134217728
+          resourceCpuLimit: '1'
+          resourceCpuRequest: 100m
+          resourceMemoryLimit: 512Mi
+          resourceMemoryRequest: 128Mi
+    exec-collect:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        command:
+        - /ani-modeldev-step
+        - collect
+        env:
+        - name: TMPDIR
+          value: /workspace/work/collect/tmp
+        - name: HF_HOME
+          value: /workspace/work/collect/hf
+        - name: HF_DATASETS_CACHE
+          value: /workspace/work/collect/hf/datasets
+        - name: MPLCONFIGDIR
+          value: /workspace/work/collect/matplotlib
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 4.0
+          cpuRequest: 0.5
+          memoryLimit: 4.294967296
+          memoryRequest: 0.536870912
+          resourceCpuLimit: '4'
+          resourceCpuRequest: 500m
+          resourceMemoryLimit: 4Gi
+          resourceMemoryRequest: 512Mi
+    exec-createpvc:
+      container:
+        image: argostub/createpvc
+    exec-export:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        command:
+        - /ani-modeldev-step
+        - export
+        env:
+        - name: TMPDIR
+          value: /workspace/work/export/tmp
+        - name: HF_HOME
+          value: /workspace/work/export/hf
+        - name: HF_DATASETS_CACHE
+          value: /workspace/work/export/hf/datasets
+        - name: MPLCONFIGDIR
+          value: /workspace/work/export/matplotlib
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 16.0
+          cpuRequest: 8.0
+          memoryLimit: 68.719476736
+          memoryRequest: 17.179869184
+          resourceCpuLimit: '16'
+          resourceCpuRequest: '8'
+          resourceMemoryLimit: 64Gi
+          resourceMemoryRequest: 16Gi
+    exec-finalize-close:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        - --close-only
+        command:
+        - /ani-modeldev-step
+        - close
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 1.0
+          cpuRequest: 0.1
+          memoryLimit: 0.536870912
+          memoryRequest: 0.134217728
+          resourceCpuLimit: '1'
+          resourceCpuRequest: 100m
+          resourceMemoryLimit: 512Mi
+          resourceMemoryRequest: 128Mi
+    exec-prepare:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        - --pvc-name
+        - '{{$.inputs.parameters[''pvc_name'']}}'
+        command:
+        - /ani-modeldev-step
+        - prepare
+        env:
+        - name: TMPDIR
+          value: /workspace/work/prepare/tmp
+        - name: HF_HOME
+          value: /workspace/work/prepare/hf
+        - name: HF_DATASETS_CACHE
+          value: /workspace/work/prepare/hf/datasets
+        - name: MPLCONFIGDIR
+          value: /workspace/work/prepare/matplotlib
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 4.0
+          cpuRequest: 0.5
+          memoryLimit: 4.294967296
+          memoryRequest: 0.536870912
+          resourceCpuLimit: '4'
+          resourceCpuRequest: 500m
+          resourceMemoryLimit: 4Gi
+          resourceMemoryRequest: 512Mi
+    exec-publish:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        - --publication-ref-file
+        - '{{$.outputs.parameters[''candidate''].output_file}}'
+        command:
+        - /ani-modeldev-step
+        - publish
+        env:
+        - name: TMPDIR
+          value: /workspace/work/publish/tmp
+        - name: HF_HOME
+          value: /workspace/work/publish/hf
+        - name: HF_DATASETS_CACHE
+          value: /workspace/work/publish/hf/datasets
+        - name: MPLCONFIGDIR
+          value: /workspace/work/publish/matplotlib
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 4.0
+          cpuRequest: 0.5
+          memoryLimit: 4.294967296
+          memoryRequest: 0.536870912
+          resourceCpuLimit: '4'
+          resourceCpuRequest: 500m
+          resourceMemoryLimit: 4Gi
+          resourceMemoryRequest: 512Mi
+    exec-register:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        - --publication-ref
+        - '{{$.inputs.parameters[''candidate'']}}'
+        command:
+        - /ani-modeldev-step
+        - register
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 1.0
+          cpuRequest: 0.1
+          memoryLimit: 0.536870912
+          memoryRequest: 0.134217728
+          resourceCpuLimit: '1'
+          resourceCpuRequest: 100m
+          resourceMemoryLimit: 512Mi
+          resourceMemoryRequest: 128Mi
+    exec-train-wait:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        command:
+        - /ani-modeldev-step
+        - train-wait
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 1.0
+          cpuRequest: 0.1
+          memoryLimit: 0.536870912
+          memoryRequest: 0.134217728
+          resourceCpuLimit: '1'
+          resourceCpuRequest: 100m
+          resourceMemoryLimit: 512Mi
+          resourceMemoryRequest: 128Mi
+    exec-verify:
+      container:
+        args:
+        - --config
+        - /etc/modeldev-step/config.json
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --spec-hash
+        - '{{$.inputs.parameters[''spec_hash'']}}'
+        - --run-id
+        - '{{$.inputs.parameters[''run_id'']}}'
+        command:
+        - /ani-modeldev-step
+        - verify
+        env:
+        - name: TMPDIR
+          value: /workspace/work/verify/tmp
+        - name: HF_HOME
+          value: /workspace/work/verify/hf
+        - name: HF_DATASETS_CACHE
+          value: /workspace/work/verify/hf/datasets
+        - name: MPLCONFIGDIR
+          value: /workspace/work/verify/matplotlib
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 16.0
+          cpuRequest: 8.0
+          memoryLimit: 68.719476736
+          memoryRequest: 17.179869184
+          resourceCpuLimit: '16'
+          resourceCpuRequest: '8'
+          resourceMemoryLimit: 64Gi
+          resourceMemoryRequest: 16Gi
+    exec-workspace-name:
+      container:
+        args:
+        - --execution-id
+        - '{{$.inputs.parameters[''execution_id'']}}'
+        - --output
+        - '{{$.outputs.parameters[''name''].output_file}}'
+        command:
+        - /ani-modeldev-step
+        - workspace-name
+        image: 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51
+        resources:
+          cpuLimit: 0.5
+          cpuRequest: 0.1
+          memoryLimit: 0.268435456
+          memoryRequest: 0.067108864
+          resourceCpuLimit: 500m
+          resourceCpuRequest: 100m
+          resourceMemoryLimit: 256Mi
+          resourceMemoryRequest: 64Mi
+pipelineInfo:
+  name: ft
+root:
+  dag:
+    tasks:
+      exit-handler-1:
+        componentRef:
+          name: comp-exit-handler-1
+        inputs:
+          parameters:
+            pipelinechannel--execution_id:
+              componentInputParameter: execution_id
+            pipelinechannel--spec_hash:
+              componentInputParameter: spec_hash
+        taskInfo:
+          name: managed-execution
+      finalize-close:
+        cachingOptions: {}
+        componentRef:
+          name: comp-finalize-close
+        dependentTasks:
+        - exit-handler-1
+        inputs:
+          parameters:
+            execution_id:
+              componentInputParameter: execution_id
+            run_id:
+              runtimeValue:
+                constant: '{{$.pipeline_job_uuid}}'
+            spec_hash:
+              componentInputParameter: spec_hash
+        retryPolicy:
+          backoffDuration: 0s
+          backoffFactor: 2.0
+          backoffMaxDuration: 3600s
+        taskInfo:
+          name: close-finalizer
+        triggerPolicy:
+          strategy: ALL_UPSTREAM_TASKS_COMPLETED
+  inputDefinitions:
+    parameters:
+      environment_binding_id:
+        parameterType: STRING
+      execution_id:
+        parameterType: STRING
+      namespace_uid:
+        parameterType: STRING
+      spec_hash:
+        parameterType: STRING
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.16.0
+---
+platforms:
+  kubernetes:
+    deploymentSpec:
+      executors:
+        exec-close:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 1Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: 129b718a98ff93fe435bb78143bc1b9f6e7b9a2cc804389160fb54d1be5225f9
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: close
+          pvcMount:
+          - mountPath: /workspace
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-collect:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 2Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: 6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: collect
+          pvcMount:
+          - mountPath: /workspace
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/publication
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: publication
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/work/collect
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: work/collect
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-export:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 2Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: d81287087b175f60bc8418789349383cfb2df94fdd6190fa4ebdd00cf149c940
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: export
+          pvcMount:
+          - mountPath: /workspace/inputs
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: inputs
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/training
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: training
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/reports/train
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: reports/train
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/export
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: export
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/reports/export
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: reports/export
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/work/export
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: work/export
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-finalize-close:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 1Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: 129b718a98ff93fe435bb78143bc1b9f6e7b9a2cc804389160fb54d1be5225f9
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: finalize-close
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-prepare:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 2Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: 6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: prepare
+          pvcMount:
+          - mountPath: /workspace
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/work/prepare/tmp
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: work/prepare/tmp
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-publish:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 2Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: 6065c9f856893cbad0ee21ddd1efbb733152952e7b7a8d936eac6a45446581b8
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: publish
+          pvcMount:
+          - mountPath: /workspace
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/publication
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: publication
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/work/publish
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: work/publish
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-register:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 1Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: 129b718a98ff93fe435bb78143bc1b9f6e7b9a2cc804389160fb54d1be5225f9
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: register
+          pvcMount:
+          - mountPath: /workspace
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-train-wait:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 1Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: 129b718a98ff93fe435bb78143bc1b9f6e7b9a2cc804389160fb54d1be5225f9
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: train-wait
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-verify:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 2Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: d81287087b175f60bc8418789349383cfb2df94fdd6190fa4ebdd00cf149c940
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: verify
+          pvcMount:
+          - mountPath: /workspace/inputs
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: inputs
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/training
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: training
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/reports/train
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: reports/train
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/export
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: export
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/reports/export
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: reports/export
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/reports/verify
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: reports/verify
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          - mountPath: /workspace/work/verify
+            pvcNameParameter:
+              taskOutputParameter:
+                outputParameterKey: name
+                producerTask: createpvc
+            subPath: work/verify
+            taskOutputParameter:
+              outputParameterKey: name
+              producerTask: createpvc
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'
+        exec-workspace-name:
+          activeDeadlineSeconds: '14400'
+          configMapAsVolume:
+          - configMapName: modeldev-step-owner
+            configMapNameParameter:
+              runtimeValue:
+                constant: modeldev-step-owner
+            mountPath: /etc/modeldev-step
+            optional: false
+          emptyDirMounts:
+          - mountPath: /tmp
+            sizeLimit: 1Gi
+            volumeName: component-tmp
+          fieldPathAsEnv:
+          - fieldPath: metadata.name
+            name: ANI_POD_NAME
+          - fieldPath: metadata.uid
+            name: ANI_POD_UID
+          - fieldPath: metadata.namespace
+            name: ANI_POD_NAMESPACE
+          podMetadata:
+            annotations:
+              ani.modeldev/component-resources-sha256: 01a8baa5d70670b155a5ff7a9cebe19b81db6cc199dd44759f6c2c8e73ad9662
+            labels:
+              ani.modeldev/admission-profile: modeldev-sft-lora-cpu
+              ani.modeldev/step-role: workspace-name
+          securityContext:
+            runAsGroup: '10001'
+            runAsNonRoot: true
+            runAsUser: '10001'

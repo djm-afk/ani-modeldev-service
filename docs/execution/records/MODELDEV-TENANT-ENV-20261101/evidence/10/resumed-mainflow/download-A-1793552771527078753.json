@@ -1,0 +1,15 @@
+{
+  "started_at": "2026-11-01T17:06:09.218516+00:00",
+  "mode": "download",
+  "tenant": "A",
+  "calls": [],
+  "download": {
+    "http_status": 200,
+    "artifact_id": "6184c098-a8ff-54c5-bc38-70cc3abc142b",
+    "size_bytes": 4504,
+    "sha256": "b6e3f91f5268e929caf3ea95ff9fe356cb62fdabb07e04b64b1ed1c5e71b302a",
+    "retained_file": "/home/kubercloud/tenantenv-20261101/modeldev-live-training-20261101/downloads/6184c098-a8ff-54c5-bc38-70cc3abc142b"
+  },
+  "finished_at": "2026-11-01T17:06:09.462963+00:00",
+  "transport_exit_code": 0
+}

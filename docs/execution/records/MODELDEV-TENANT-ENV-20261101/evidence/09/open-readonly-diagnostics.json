@@ -1,0 +1,203 @@
+{
+  "observed_at": "2026-10-31T18:58:57.565530+00:00",
+  "read_only": true,
+  "hostname": "node1",
+  "log_endpoint_classification": [
+    {
+      "name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc",
+      "bytes": 115,
+      "sha256": "224eade78cbd65470c1e776fdae13018619345eff1a3be65cfde0ef0c3f20ad0",
+      "timestamp_prefix": false,
+      "kubelet_error_body": true
+    },
+    {
+      "name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8",
+      "bytes": 115,
+      "sha256": "9ce39f9afd60e2fad4686865e363b3978b52907559bf7bfa75aa34dcdeb6f7fc",
+      "timestamp_prefix": false,
+      "kubelet_error_body": true
+    }
+  ],
+  "modeldev_pods": [
+    {
+      "name": "ani-modeldev-6995bd77c4-z2gxk",
+      "uid": "592bdd86-ab5b-4416-8a2c-07c21ee69f8d",
+      "node": "node1",
+      "service_account": "modeldev-control"
+    }
+  ],
+  "modeldev_logs": {
+    "bytes": 65536,
+    "sha256": "b37ad3b4f63942616f56f568baefc6cd114755dcda53a2645b6809f2a76224ba",
+    "lines": 104,
+    "exit_code": 0,
+    "finite_error_counts": {}
+  },
+  "pipeline_public_config": null,
+  "kubeflow_resources": {
+    "deployments": [
+      {
+        "name": "metadata-envoy-deployment",
+        "containers": [
+          {
+            "name": "container",
+            "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-metadata-envoy:2.16.0@sha256:ae854892d51ac29bbab8a1cddd9a5beadd2e84b27b1a6bfbdf1871c9438e8763"
+          }
+        ]
+      },
+      {
+        "name": "metadata-grpc-deployment",
+        "containers": [
+          {
+            "name": "container",
+            "image": "10.10.1.66:5001/ani-kubeflow/tfx-oss-public/ml_metadata_store_server:1.14.0@sha256:51404ef4419c1426da80f3e14a83dcb55f65bb5a971371d36d14cec1e50af830"
+          }
+        ]
+      },
+      {
+        "name": "metadata-writer",
+        "containers": [
+          {
+            "name": "main",
+            "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-metadata-writer:2.16.0@sha256:0aabb7e4af425a622b502ff9a32add14e147f0408e127a129b118053b80d270f"
+          }
+        ]
+      },
+      {
+        "name": "ml-pipeline",
+        "containers": [
+          {
+            "name": "ml-pipeline-api-server",
+            "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-api-server:2.16.0@sha256:5f9d674f75dbd9c056ad31a1d8c5432e1bdc1f0597dfefe6f58d00af983fbe22"
+          }
+        ]
+      },
+      {
+        "name": "ml-pipeline-persistenceagent",
+        "containers": [
+          {
+            "name": "ml-pipeline-persistenceagent",
+            "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-persistence-agent:2.16.0@sha256:7d44250d37fd8026740d1640cb91313580c05c875bd72ccbd66bc0ed44e3ed2b"
+          }
+        ]
+      },
+      {
+        "name": "ml-pipeline-scheduledworkflow",
+        "containers": [
+          {
+            "name": "ml-pipeline-scheduledworkflow",
+            "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-scheduled-workflow-controller:2.16.0@sha256:87851f90101b078defee70e19d0ff1b1fd485dcc99fb66298193c2545c4b0fc5"
+          }
+        ]
+      },
+      {
+        "name": "mysql",
+        "containers": [
+          {
+            "name": "mysql",
+            "image": "10.10.1.66:5001/ani-kubeflow/library/mysql:8.4.11@sha256:80f4933e3835f9dc4d35a28ec500d7986cb4414e6c6821c5461239cb7beb8995"
+          }
+        ]
+      }
+    ],
+    "statefulsets": []
+  },
+  "control_rbac_edges": [
+    {
+      "binding": "ani-modeldev-v21-control",
+      "binding_kind": "rolebindings",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "ani-modeldev-v21-control"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ],
+      "relevant_rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods",
+            "persistentvolumeclaims"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods/log"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "delete"
+          ]
+        }
+      ]
+    },
+    {
+      "binding": "ani-modeldev-v21-namespace",
+      "binding_kind": "clusterrolebindings",
+      "role_ref": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "ani-modeldev-v21-namespace"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "modeldev-control",
+          "namespace": "ani-system"
+        }
+      ],
+      "relevant_rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resourceNames": [
+            "ani-modeldev-tenant-a-v21"
+          ],
+          "resources": [
+            "namespaces"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ]
+    }
+  ]
+}

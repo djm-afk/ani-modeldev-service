@@ -1,0 +1,80 @@
+{
+  "Schema": "ani.modeldev.legacy-cleanup-component-validation.v1",
+  "Source": "/home/chabking/tenantenv-20261101/legacy-data-cleanup",
+  "SourceFilesSHA256": {
+    "scripts/legacy-modeldev-data-cleanup/command.go": "801a124397f80819540032b29a309d00a9e232d4a796405488ebbbcd4dd123a6",
+    "scripts/legacy-modeldev-data-cleanup/command_test.go": "97c06ccddb3e2368a8c5e6f54b76a1060d7a49dddbc7a5833e69ba2d3b311652",
+    "scripts/legacy-modeldev-data-cleanup/database.go": "3430d32309600de52e1cc99d82806efdeea76475e195327e380d39af27336150",
+    "scripts/legacy-modeldev-data-cleanup/evidence.go": "0cb757241376709bb00c29019f21c2968ca4e5731b64a819275ab2f5f16d69ed",
+    "scripts/legacy-modeldev-data-cleanup/fixture_test.go": "7c259bb7126e053cb669f0398bf9db4ccfe33d1ab12087764a03db11774adcff",
+    "scripts/legacy-modeldev-data-cleanup/gpu_fixture_test.go": "6e0290fdaccf2d3f0f20d2d08ed75801a0a0b1129b16ca9b70b9671ba8859871",
+    "scripts/legacy-modeldev-data-cleanup/inventory.go": "a051b8d02c798548ee40c6b15c3c7db3a3dbedd59171d8f9ef2b5784ca12348d",
+    "scripts/legacy-modeldev-data-cleanup/main.go": "162f94adb2698d022fc7883e9c5027f0a064daa8764d46473f3b87fd6fdb6413",
+    "scripts/legacy-modeldev-data-cleanup/qualification.go": "3bab6f101e8894edd56486266b672a614a8b9603874dea18bb96070a6fcd676d",
+    "scripts/legacy-modeldev-data-cleanup/refusal_test.go": "c5cedc4e5043f6586d6163e24499580c49a559d0c6d8e2cd6e24ea9649e4a5b1",
+    "scripts/legacy-modeldev-data-cleanup/schema.go": "c45b79d797042ab33894e1064bab20680dcfad8f7a13820b87cfb0f911212b2b",
+    "scripts/legacy-modeldev-data-cleanup/schema_contract.json": "2d919aa42b54c74cd3d9f78a31411041805a8ff8bfea5dbfb799882bc0ca2d86"
+  },
+  "SourceManifestSHA256": "d6a92a049ab2ee818d9aa4dfae04c83b47f64f36cece670d55d02e177f54172d",
+  "StartedAt": "2026-11-01T00:18:07.998360+00:00",
+  "Commands": [
+    {
+      "Name": "pg-race",
+      "Command": [
+        "go",
+        "test",
+        "-race",
+        "-count=1",
+        "-v",
+        "-timeout=4m",
+        "./scripts/legacy-modeldev-data-cleanup"
+      ],
+      "StartedAt": "2026-11-01T00:18:07.998567+00:00",
+      "Log": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-final/pg-race.log",
+      "ExitCode": 0,
+      "CompletedAt": "2026-11-01T00:18:22.466331+00:00"
+    },
+    {
+      "Name": "vet",
+      "Command": [
+        "go",
+        "vet",
+        "./scripts/legacy-modeldev-data-cleanup"
+      ],
+      "StartedAt": "2026-11-01T00:18:22.466833+00:00",
+      "Log": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-final/vet.log",
+      "ExitCode": 0,
+      "CompletedAt": "2026-11-01T00:18:24.412350+00:00"
+    },
+    {
+      "Name": "build",
+      "Command": [
+        "go",
+        "build",
+        "-trimpath",
+        "-o",
+        "/home/chabking/tenantenv-20261101/legacy-modeldev-data-cleanup-tool",
+        "./scripts/legacy-modeldev-data-cleanup"
+      ],
+      "StartedAt": "2026-11-01T00:18:24.412865+00:00",
+      "Log": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-final/build.log",
+      "ExitCode": 0,
+      "CompletedAt": "2026-11-01T00:18:26.418087+00:00"
+    },
+    {
+      "Name": "modverify",
+      "Command": [
+        "go",
+        "mod",
+        "verify"
+      ],
+      "StartedAt": "2026-11-01T00:18:26.418562+00:00",
+      "Log": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-final/modverify.log",
+      "ExitCode": 0,
+      "CompletedAt": "2026-11-01T00:18:30.895067+00:00"
+    }
+  ],
+  "FullMakeVerify": "NOT_RUN; parent-approved existing old-base required-gate FAIL retained",
+  "CompletedAt": "2026-11-01T00:18:30.895483+00:00",
+  "SourceUnchanged": true
+}

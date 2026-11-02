@@ -1,0 +1,93 @@
+{
+  "observed_at": "2026-11-01T01:12:19.141963+00:00",
+  "results": [
+    {
+      "command": [
+        "git",
+        "symbolic-ref",
+        "HEAD",
+        "refs/heads/codex/maintenance-codec-verification"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "update-ref",
+        "refs/heads/codex/maintenance-codec-verification",
+        "32c61fcbd57c70ca996d62ad2b234ba84ff0b052"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "update-ref",
+        "refs/remotes/origin/main",
+        "ddd98f4c79751ba848fa862bab6878dc7bc99bb7"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "read-tree",
+        "32c61fcbd57c70ca996d62ad2b234ba84ff0b052"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "add",
+        "-N",
+        "--",
+        "app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go"
+      ],
+      "exit_code": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "git",
+        "merge-base",
+        "HEAD",
+        "origin/main"
+      ],
+      "exit_code": 0,
+      "output": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--name-only",
+        "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+        "--"
+      ],
+      "exit_code": 0,
+      "output": "app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go\ngo.mod\ngo.sum\n"
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "exit_code": 0,
+      "output": " A app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go\n M go.mod\n M go.sum\n"
+    }
+  ],
+  "source_hashes": {
+    "go.mod": "75a5b61c2236236d7041d392692939fd9cc380808f992fc021fecb87a4a6b8f9",
+    "go.sum": "f8b4d6aa240f18baf91f11f97a462a5ab3c76ba5fa22e31206d27978ae164d6e",
+    "app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go": "c747bad55e3504e7ac835168531f930600db84fb26e3c6472048de8bd7994d45"
+  },
+  "baseline": "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+  "origin_main": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+  "git_metadata": "independent shared clone with original SSH-fetched commit; no reset or checkout of source"
+}

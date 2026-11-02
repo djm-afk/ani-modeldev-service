@@ -1,0 +1,2671 @@
+{
+  "read_only": true,
+  "observed_at": "2026-10-31T19:02:56.939083+00:00",
+  "target": {
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+  },
+  "node_log_files": [
+    {
+      "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "pod_uid": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+      "expected_node_log_path": "/var/log/pods/ani-modeldev-tenant-a-v21_md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc_49c82c2b-f819-4a03-b7b2-1789999cdd2e/node/0.log",
+      "stat_exit_code": 1,
+      "stat_metadata": null,
+      "directory_listing_exit_code": 1,
+      "file_metadata": [],
+      "original_container_inspect_exit_code": 1
+    },
+    {
+      "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "pod_uid": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+      "expected_node_log_path": "/var/log/pods/ani-modeldev-tenant-a-v21_md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8_d8fb153a-5763-4ae7-8d44-63e3f996a830/node/0.log",
+      "stat_exit_code": 1,
+      "stat_metadata": null,
+      "directory_listing_exit_code": 1,
+      "file_metadata": [],
+      "original_container_inspect_exit_code": 1
+    }
+  ],
+  "kfp_runs": [
+    {
+      "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+      "http_status": 200,
+      "response_bytes": 15525,
+      "response_sha256": "95791c4cf642025bc1aa511b479b010e2fce3316444be781cdb489587812b3d1",
+      "run": {
+        "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+        "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+        "display_name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "state": "FAILED",
+        "created_at": "2026-10-30T00:54:46Z",
+        "scheduled_at": "2026-10-30T00:54:46Z",
+        "finished_at": "2026-10-30T00:58:28Z",
+        "service_account": "modeldev-step",
+        "storage_state": "AVAILABLE"
+      },
+      "runtime_parameters": {
+        "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "spec_hash": "2385186a840df5cddef1778071703aee310ee6fef9a27bf381120429d0560893"
+      },
+      "pipeline_root": null,
+      "pipeline_version_reference": {
+        "pipeline_id": "687f942d-4622-4eef-a006-4b4f7ce38f4e",
+        "pipeline_version_id": "4bb2e676-64a6-419d-b46d-8a58416e76a1"
+      },
+      "top_level_keys": [
+        "created_at",
+        "display_name",
+        "experiment_id",
+        "finished_at",
+        "pipeline_version_reference",
+        "run_details",
+        "run_id",
+        "runtime_config",
+        "scheduled_at",
+        "service_account",
+        "state",
+        "state_history",
+        "storage_state"
+      ],
+      "tasks": [
+        {
+          "task_id": "0e621b6f-67f4-4451-b504-1b98bdc481ee",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "publish-driver",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2344258002"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "24fb1f28-51ed-48ce-9ca0-345e5ff1e9bd",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "verify-driver",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-4107195262"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "3267491f-51d5-41cb-8a55-d11112fb73cf",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "executor",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:57:17Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-3760280205"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "327eaaa6-20de-4efa-9a0c-65cc4558fd24",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "collect-driver",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-1526351"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "372a96d6-d932-4b53-92d2-7d744cb1d36c",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "publish",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2569248995"
+            },
+            {
+              "pod_name": "ft-sw2pr-426048850"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "43314811-9dfb-4e3e-9acf-a47c2218950b",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "exit-handler-1.onExit",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:58:28Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-4163451948"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "4c5410a3-f7d1-48aa-b2eb-4c87a59967db",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "root-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:54:46Z",
+          "end_time": "2026-10-30T00:54:50Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-3661357998"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "4c9aa1e8-866d-4b7e-9975-13c3bd49f12a",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "train-wait-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:57:07Z",
+          "end_time": "2026-10-30T00:57:11Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2192475775"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "4e99eec5-be0c-444a-9291-88fb46313045",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "collect",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2504940279"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "582bcc10-e3ac-4741-bffc-7b2b98f1c56f",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "executor",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:58:06Z",
+          "end_time": "2026-10-30T00:58:28Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-966427769"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "5918b8e2-5c25-4de3-ab4a-654c1ec3c0b8",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "register",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-426048850"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "5b48483b-94f1-4657-b5c0-b93eca1050a5",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "executor",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:46Z",
+          "end_time": "2026-10-30T00:57:07Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-3306403124"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "5cce9d2e-2018-416a-ae66-b8041270353f",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "export",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-1687932011"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "6834dcf1-412f-437e-8724-7b0ff9598ec8",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "executor(0)",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:46Z",
+          "end_time": "2026-10-30T00:56:58Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-811855208"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "68ef4dde-1af1-4484-a8ea-fa252e93fe85",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "close",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "765caf35-3a56-4b0d-b344-55a24814a22d",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "ft-sw2pr",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:54:46Z",
+          "end_time": "2026-10-30T00:58:28Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-1601558171"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "775d8bd9-83f6-4e6a-b78b-4b463a1b98ca",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "workspace-name-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:06Z",
+          "end_time": "2026-10-30T00:55:10Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-3130890412"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "830e5e06-d5a2-4994-9bf4-b8a4825a664a",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "root",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:54:56Z",
+          "end_time": "2026-10-30T00:58:28Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-623417368"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "8a74f210-8e8f-4070-8e2d-7acb0966a7f5",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "finalize-close",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:58:06Z",
+          "end_time": "2026-10-30T00:58:28Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-3419239170"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "a561f498-6fb8-43a3-8b2d-9061882f1088",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "register-driver",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2347412198"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "a79a9870-4d8b-4a84-8527-54674e257658",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "export-driver",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-661238697"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "ab5c9100-2530-4da5-a65d-1b66a58513bf",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "finalize-close-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:58:00Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-705388363"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "ae809828-8f73-44af-905c-2d2f2a48be98",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "exit-handler-1-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:54:56Z",
+          "end_time": "2026-10-30T00:55:00Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-971580399"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "bd02f25b-d4b3-43a3-a145-596b9752fe5b",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "workspace-name",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:16Z",
+          "end_time": "2026-10-30T00:55:26Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-1698643791"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "c104c53c-9b03-428d-b030-03adf45fae65",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "executor(0)",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:16Z",
+          "end_time": "2026-10-30T00:55:22Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-1948764010"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "c5f55114-d7a9-4699-8682-29c917830154",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "verify",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2719316984"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "c9200b13-3d2a-4a1a-8370-738d7205fc9a",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "prepare",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:46Z",
+          "end_time": "2026-10-30T00:57:07Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-4168161749"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "c925d948-141a-44e7-aee9-ba6cdcb9d56b",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "prepare-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:36Z",
+          "end_time": "2026-10-30T00:55:40Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-12706998"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "cc6e4dba-b192-4403-8bc8-4d79c1f09616",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "exit-handler-1",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:55:06Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-202354017"
+            },
+            {
+              "pod_name": "ft-sw2pr-2684634646"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "d2a92aba-8d9a-4178-8482-df58b7bbe03a",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "executor(0)",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:58:06Z",
+          "end_time": "2026-10-30T00:58:18Z",
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "de0f308c-effa-472d-a650-fb56127ac25e",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "executor(0)",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:57:17Z",
+          "end_time": "2026-10-30T00:57:47Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-166691538"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "ebb99fed-c560-4555-ae10-449a7deab97e",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "close-driver",
+          "start_time": "2026-10-30T00:57:56Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-3257146153"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "eed5c06a-7989-4372-a0a1-ca0eb3958c5b",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "createpvc",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:26Z",
+          "end_time": "2026-10-30T00:55:30Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2481913331"
+            },
+            {
+              "pod_name": "ft-sw2pr-166691538"
+            },
+            {
+              "pod_name": "ft-sw2pr-1687932011"
+            },
+            {
+              "pod_name": "ft-sw2pr-2719316984"
+            },
+            {
+              "pod_name": "ft-sw2pr-2504940279"
+            },
+            {
+              "pod_name": "ft-sw2pr-2569248995"
+            },
+            {
+              "pod_name": "ft-sw2pr-426048850"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "fc1646a9-a96a-4e8b-92ca-beaca52969f8",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "train-wait",
+          "state": "FAILED",
+          "start_time": "2026-10-30T00:57:17Z",
+          "end_time": "2026-10-30T00:57:56Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2685537246"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "fdf43d82-8920-4753-a68c-ba7ffc18df7e",
+          "run_id": "bbd4ad22-5b1a-448a-b71a-1069e18adc2f",
+          "display_name": "executor",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T00:55:16Z",
+          "end_time": "2026-10-30T00:55:26Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-sw2pr-2185172434"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ]
+    },
+    {
+      "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+      "http_status": 200,
+      "response_bytes": 15529,
+      "response_sha256": "92fb9c11cedae2e607b93b5d443d92442e00253128194fa844c86700e61e8c2c",
+      "run": {
+        "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+        "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+        "display_name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "state": "FAILED",
+        "created_at": "2026-10-29T15:57:11Z",
+        "scheduled_at": "2026-10-29T15:57:11Z",
+        "finished_at": "2026-10-29T16:00:43Z",
+        "service_account": "modeldev-step",
+        "storage_state": "AVAILABLE"
+      },
+      "runtime_parameters": {
+        "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "spec_hash": "801ce15e644881d9c92699358b28aa15edd1c7a5ba342761d19ef34c88e2ae2d"
+      },
+      "pipeline_root": null,
+      "pipeline_version_reference": {
+        "pipeline_id": "687f942d-4622-4eef-a006-4b4f7ce38f4e",
+        "pipeline_version_id": "4bb2e676-64a6-419d-b46d-8a58416e76a1"
+      },
+      "top_level_keys": [
+        "created_at",
+        "display_name",
+        "experiment_id",
+        "finished_at",
+        "pipeline_version_reference",
+        "run_details",
+        "run_id",
+        "runtime_config",
+        "scheduled_at",
+        "service_account",
+        "state",
+        "state_history",
+        "storage_state"
+      ],
+      "tasks": [
+        {
+          "task_id": "01bd8222-448b-40ee-9a9d-c06ae6c3df7a",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "register-driver",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3144841648"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "0b77fad8-0baf-40ed-a125-2487d35c3b67",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "verify",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1335711578"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "11ad6596-cdd1-40b9-9ff5-a63fd09c9d80",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "exit-handler-1.onExit",
+          "state": "FAILED",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:43Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3925835598"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "40967862-0320-48a9-9fae-357db67a7b84",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "verify-driver",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1382999348"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "456a2ce9-8034-4b3d-9b7b-b5204e3682f5",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "executor",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:58:11Z",
+          "end_time": "2026-10-29T15:59:26Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3998358738"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "4800d974-66cc-4b9d-8054-7f458d6634c4",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "finalize-close",
+          "state": "FAILED",
+          "start_time": "2026-10-29T16:00:22Z",
+          "end_time": "2026-10-29T16:00:43Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-2916972808"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "4dce1ff3-1219-429d-bb72-384214b83b89",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "train-wait",
+          "state": "FAILED",
+          "start_time": "2026-10-29T15:59:37Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-492590760"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "700f6a42-2899-43c5-9fc1-7a3f7dbef2bd",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "finalize-close-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:16Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1358256509"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "78135e93-cf29-479c-86f5-c368d983fa09",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "close-driver",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3810877651"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "7ea65724-e231-497d-b197-10d159c2ffac",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "export",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1037034009"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "820311d4-8ec8-4f84-bf95-1bb4f285e43a",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "publish",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1326383661"
+            },
+            {
+              "pod_name": "ft-j4ncq-1169708260"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "88ccee0d-e204-439c-a791-f96157fc022f",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "executor(0)",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:58:11Z",
+          "end_time": "2026-10-29T15:59:17Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3057988846"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "9010668c-564d-4623-bb9a-94cc2d3b8028",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "register",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1169708260"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "984900e4-5d06-4b53-9eaa-380a85cc90fe",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "collect-driver",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-815471585"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "9f8b60cd-fcc4-447c-95b4-de5431958770",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "executor(0)",
+          "state": "FAILED",
+          "start_time": "2026-10-29T16:00:22Z",
+          "end_time": "2026-10-29T16:00:33Z",
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "a0342afd-37e8-4f00-91c8-ff37ee951d65",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "createpvc",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:57:51Z",
+          "end_time": "2026-10-29T15:57:55Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1277631073"
+            },
+            {
+              "pod_name": "ft-j4ncq-867448244"
+            },
+            {
+              "pod_name": "ft-j4ncq-1037034009"
+            },
+            {
+              "pod_name": "ft-j4ncq-1335711578"
+            },
+            {
+              "pod_name": "ft-j4ncq-1764101125"
+            },
+            {
+              "pod_name": "ft-j4ncq-1326383661"
+            },
+            {
+              "pod_name": "ft-j4ncq-1169708260"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "a604f0fc-57f9-44e0-940b-2cc245defe25",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "collect",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1764101125"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "a9d79e31-1665-4b0d-9f40-e1c3019084b3",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "train-wait-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:59:26Z",
+          "end_time": "2026-10-29T15:59:31Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1749379101"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "b2a3965d-6e29-4a84-bb3e-192bd0fa3728",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "prepare",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:58:11Z",
+          "end_time": "2026-10-29T15:59:26Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-2999776335"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "b38f12d7-1c1c-421c-b2c4-b91a5c74172b",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "executor",
+          "state": "FAILED",
+          "start_time": "2026-10-29T15:59:37Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-721423291"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "ba3399ac-e0fc-431d-93ee-8ce35a9f042d",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "root",
+          "state": "FAILED",
+          "start_time": "2026-10-29T15:57:21Z",
+          "end_time": "2026-10-29T16:00:43Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-7761250"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "c3161902-6050-4400-bbb0-44d3608b1b35",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "publish-driver",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3886456056"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "ca3541cd-48d6-4c34-9e72-acb078795f4c",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "exit-handler-1",
+          "state": "FAILED",
+          "start_time": "2026-10-29T15:57:31Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-140421023"
+            },
+            {
+              "pod_name": "ft-j4ncq-824483184"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "cc3e004e-7836-4e19-9762-3ac0aa7508f3",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "ft-j4ncq",
+          "state": "FAILED",
+          "start_time": "2026-10-29T15:57:11Z",
+          "end_time": "2026-10-29T16:00:43Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-83711101"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "cd1255d8-23ac-421c-9609-e5aa1cb2bb0b",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "exit-handler-1-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:57:21Z",
+          "end_time": "2026-10-29T15:57:25Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3195887353"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "d24f0ed5-1b93-478a-b9f3-599d8526b631",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "export-driver",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3365855011"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "d6a8e473-7dc4-4c57-9236-7f65aeab0de8",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "workspace-name-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:57:31Z",
+          "end_time": "2026-10-29T15:57:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1795157418"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "d9f5ce6d-c88d-44c6-bf0f-8ce73f6a2b8a",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "executor",
+          "state": "FAILED",
+          "start_time": "2026-10-29T16:00:22Z",
+          "end_time": "2026-10-29T16:00:43Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3878424987"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "dd381104-c542-499c-b238-d73cea7e2989",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "workspace-name",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:57:41Z",
+          "end_time": "2026-10-29T15:57:51Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-3828660465"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "dd639c44-8226-491c-9eeb-210662379533",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "close",
+          "start_time": "2026-10-29T16:00:12Z",
+          "end_time": "2026-10-29T16:00:12Z",
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "e1d908d8-37a6-45a4-959e-0d7461b85911",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "executor",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:57:41Z",
+          "end_time": "2026-10-29T15:57:51Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-2697945544"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "e20863d1-5978-4443-aa07-0fd8cec7116c",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "executor(0)",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:57:41Z",
+          "end_time": "2026-10-29T15:57:47Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-2781204608"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "e6e61846-8620-4a52-ad33-c4c942e636d6",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "prepare-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:58:01Z",
+          "end_time": "2026-10-29T15:58:05Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-679366572"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "f90ac7c1-390a-4629-b462-0a8f44225a8e",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "executor(0)",
+          "state": "FAILED",
+          "start_time": "2026-10-29T15:59:37Z",
+          "end_time": "2026-10-29T16:00:02Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-867448244"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "ff842426-3e9b-4a72-aff6-2d9c9dca31ac",
+          "run_id": "2c372d09-70a8-4557-8b60-20f7ecd7d861",
+          "display_name": "root-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-29T15:57:11Z",
+          "end_time": "2026-10-29T15:57:15Z",
+          "child_tasks": [
+            {
+              "pod_name": "ft-j4ncq-1665032960"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ]
+    },
+    {
+      "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+      "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+      "http_status": 200,
+      "response_bytes": 10531,
+      "response_sha256": "e35a4860ecdb9fb0da89cd7b9c5411185c3980569f69e1f2626a6f725766b704",
+      "run": {
+        "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+        "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+        "display_name": "md-eca4d47b-5911-4f0f-8b45-89c1be775925",
+        "state": "FAILED",
+        "created_at": "2026-10-30T09:21:04Z",
+        "scheduled_at": "2026-10-30T09:21:04Z",
+        "finished_at": "2026-10-30T09:21:45Z",
+        "service_account": "modeldev-step",
+        "storage_state": "AVAILABLE"
+      },
+      "runtime_parameters": {
+        "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+        "spec_hash": "c149fba74453b130803396f16de66fb9ca21b8c975c66a388d5619943e50fe7c"
+      },
+      "pipeline_root": null,
+      "pipeline_version_reference": {
+        "pipeline_id": "17249a75-95c0-4640-8b5a-7be345d25262",
+        "pipeline_version_id": "7ecdea6b-e05b-45b0-a5b1-b2d5eb252266"
+      },
+      "top_level_keys": [
+        "created_at",
+        "display_name",
+        "experiment_id",
+        "finished_at",
+        "pipeline_version_reference",
+        "run_details",
+        "run_id",
+        "runtime_config",
+        "scheduled_at",
+        "service_account",
+        "state",
+        "state_history",
+        "storage_state"
+      ],
+      "tasks": [
+        {
+          "task_id": "0387c325-17e2-416e-a531-d861f813a82e",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "createpvc",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-3178215174"
+            },
+            {
+              "pod_name": "md-kpwkw-3327140517"
+            },
+            {
+              "pod_name": "md-kpwkw-2661232982"
+            },
+            {
+              "pod_name": "md-kpwkw-2908076647"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "22d25a70-587b-4d40-9013-c154443767c0",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "exit-handler-1",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:25Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-2664895950"
+            },
+            {
+              "pod_name": "md-kpwkw-3357786591"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "34069c61-88b6-4f47-9b50-b63da6505d5c",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "exit-handler-1-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T09:21:15Z",
+          "end_time": "2026-10-30T09:21:18Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-839171660"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "3a73930e-a3d0-4449-95e1-2608b36a8510",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "workspace-name-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T09:21:25Z",
+          "end_time": "2026-10-30T09:21:29Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-180573437"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "3f95e392-5a1a-419f-82db-8e7e98701ffe",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "train-wait-driver",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-661992602"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "4018c467-c849-4d7d-b501-f1f5ec5fbe29",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "collect-driver",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-2491855256"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "43b1e2fa-f425-4b4f-a443-1598fe89a648",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "root",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:15Z",
+          "end_time": "2026-10-30T09:21:45Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-292890369"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "502922e2-3ab5-44af-b30d-3fe9add46a7d",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "train-wait",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-3327140517"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "546af26c-7021-489b-8200-f150336d96bf",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "prepare",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-262696847"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "5f1fe545-0365-4829-b57f-9f0614cc5e86",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "close",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "6116e719-4189-4d1e-996d-183ffe15f5ac",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "publish-driver",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-250533237"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "6b5c9cd0-6b26-4861-b87f-be84ae91feb6",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "executor(0)",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:45Z",
+          "end_time": "2026-10-30T09:21:45Z",
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "7d55cb67-17fc-422b-9bb9-a3df5b8518fa",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "workspace-name",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-3305321352"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "89b04e66-3e5f-4a5d-b82d-f4ada3df6b5c",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "prepare-driver",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-3450351525"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "8baa89dc-7377-4f7c-98dc-1553f39a8a8d",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "exit-handler-1.onExit",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:45Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-1116544117"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "8c917563-6d42-43b5-9586-84326935d1c2",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "finalize-close",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:45Z",
+          "end_time": "2026-10-30T09:21:45Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-398258483"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "8f1bb08c-0e32-4af9-9e2c-ac461cebe4a0",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "finalize-close-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:39Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-3653394152"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "97215f2d-40c3-4e29-924e-4f0d9b7e1bd8",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "md-kpwkw",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:04Z",
+          "end_time": "2026-10-30T09:21:45Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-4002437296"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "9f85c9eb-7102-4412-b2c8-35bc989f9fca",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "close-driver",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-1308866178"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "a4a7956f-766d-4b4b-bc2d-897a311ddc7d",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "executor(0)",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-3270930809"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "b0af311c-8119-43fa-af1c-c221dd86a1cb",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "executor",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:45Z",
+          "end_time": "2026-10-30T09:21:45Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-1084837950"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "ce9aacab-1ff2-4ed6-95c0-fb930f157fc8",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "executor",
+          "state": "FAILED",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-2678142235"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "de24aedc-4a50-4f7b-915a-b5922a6fd859",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "collect",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-2661232982"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "de32f7b8-c560-4a9c-a20f-77992fe46e90",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "root-driver",
+          "state": "SUCCEEDED",
+          "start_time": "2026-10-30T09:21:04Z",
+          "end_time": "2026-10-30T09:21:08Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-3641011607"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "task_id": "f5704bc5-84be-43c7-9da8-23d6b2a58a6c",
+          "run_id": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+          "display_name": "publish",
+          "start_time": "2026-10-30T09:21:35Z",
+          "end_time": "2026-10-30T09:21:35Z",
+          "child_tasks": [
+            {
+              "pod_name": "md-kpwkw-2908076647"
+            }
+          ],
+          "error_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ]
+    }
+  ],
+  "actual_control_reads": [
+    {
+      "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "path": "/api/v1/namespaces/ani-modeldev-tenant-a-v21",
+      "http_status": 200,
+      "response_bytes": 1210,
+      "response_sha256": "10df0d7cbdd3ffd5850a9c83d0cf6330cfee3a82da23fe3705bb169dcc4f5ae1",
+      "object_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+    },
+    {
+      "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "path": "/api/v1/namespaces/ani-modeldev-tenant-a-v21/pods/md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc",
+      "http_status": 200,
+      "response_bytes": 13286,
+      "response_sha256": "646191007504fbcaaf98092f90ee7f3c753de9095b067b5decc6e7d55e350628",
+      "object_uid": "49c82c2b-f819-4a03-b7b2-1789999cdd2e"
+    },
+    {
+      "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "path": "/api/v1/namespaces/ani-modeldev-tenant-a-v21/pods/md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc/log?container=node&timestamps=true&tailLines=1001&limitBytes=65537",
+      "http_status": 200,
+      "response_bytes": 115,
+      "response_sha256": "224eade78cbd65470c1e776fdae13018619345eff1a3be65cfde0ef0c3f20ad0",
+      "kubelet_error_body": true,
+      "timestamp_prefix": false
+    },
+    {
+      "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "path": "/api/v1/namespaces/ani-modeldev-tenant-a-v21",
+      "http_status": 200,
+      "response_bytes": 1210,
+      "response_sha256": "10df0d7cbdd3ffd5850a9c83d0cf6330cfee3a82da23fe3705bb169dcc4f5ae1",
+      "object_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+    },
+    {
+      "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "path": "/api/v1/namespaces/ani-modeldev-tenant-a-v21/pods/md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8",
+      "http_status": 200,
+      "response_bytes": 13291,
+      "response_sha256": "d27ef473f447bebc0952ca8e1e6b56d014284a2144a02e85163997e678b3da35",
+      "object_uid": "d8fb153a-5763-4ae7-8d44-63e3f996a830"
+    },
+    {
+      "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "path": "/api/v1/namespaces/ani-modeldev-tenant-a-v21/pods/md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8/log?container=node&timestamps=true&tailLines=1001&limitBytes=65537",
+      "http_status": 200,
+      "response_bytes": 115,
+      "response_sha256": "9ce39f9afd60e2fad4686865e363b3978b52907559bf7bfa75aa34dcdeb6f7fc",
+      "kubelet_error_body": true,
+      "timestamp_prefix": false
+    }
+  ],
+  "existing_kfp_token_claims": {
+    "sub": "system:serviceaccount:ani-system:modeldev-control",
+    "aud": [
+      "pipelines.kubeflow.org"
+    ],
+    "exp": 1793475142
+  },
+  "existing_api_token_claims": {
+    "sub": "system:serviceaccount:ani-system:modeldev-control",
+    "aud": [
+      "https://kubernetes.default.svc.cluster.local"
+    ],
+    "exp": 1825007754
+  },
+  "remaining_original_workflow_pods": [
+    {
+      "name": "ft-j4ncq-1277631073",
+      "uid": "d74344c2-f010-4e0d-a4e3-b9daf858c2f9",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://afaec1d90c25c34aeb21dec51ef55858cf550f0d31db04b1127911ca2f676799",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:58:04Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:58:03Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://791ccc0204de98ed81bf20c4e7c1f1287780ae7c90f81c0afaf2acd5c31e7b26",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:58:05Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:58:03Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-140421023",
+      "uid": "2deccd84-3c43-458d-bfb3-7f508880d3b1",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://377a9d0f43bcd987dc4e5fa7b8271c5df5efbbb3aa867fb71f044896b0747958",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:34Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:33Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://4cc8a94532cbac5fbe6a0f3f35bfe961a3257c41a54235cfb84365ca822db38f",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:35Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:33Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-2697945544",
+      "uid": "514829b4-21d8-43c6-ad66-9baf542c0608",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://ded86af1d566028a4ba43550f78b8a491dc25e85eeb171302312d8b644a0cda8",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:46Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:45Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://3d1223a85c1329c8106bd10a425bedfe5e247f858133bd55c8e85862c2485964",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:47Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:45Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-2781204608",
+      "uid": "42b714b2-0cca-4568-b638-fda82e811e77",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://243caf347d3d8e8ceda32daaf142e3cf0b67911e6444ee8e1f59819537758982",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:54Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:53Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://dec6d5c57cf173056e3085aa0cc7e969046bcc1b2b113dff32fa2225837574eb",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:55Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:53Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-3057988846",
+      "uid": "5236c0ac-ff4d-403f-82cd-db05de7d1e46",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://ebf5a2e7e8b15f622d4954b2ca3cf086c636b8b3c1451d8905070b9113bc5a63",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:59:30Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:59:29Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://5c5aee0b334ce543de53f7dccc00846465d9461ac762b7ef64f23bbc9bab27d5",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:59:31Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:59:29Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-3878424987",
+      "uid": "bdaa5b15-5495-4e67-ad1b-5bc58d43a64f",
+      "phase": "Failed",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://f5fb1f641e84266785abb4bac2c9c870c4e44cde7fad1334140a6a02ca22f327",
+            "exitCode": 1,
+            "finishedAt": "2026-10-29T16:00:32Z",
+            "reason": "Error",
+            "startedAt": "2026-10-29T16:00:25Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://bc3d2fd69f46df9efc243f7afe9dbdcfa3880117e068eb84af24659231d4bfca",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T16:00:33Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T16:00:25Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-3925835598",
+      "uid": "5200f2dd-39bc-47db-8227-6f22df24892d",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://ca58747cee2a66ac05a34d0ef6e497a3289022d4139e7307c8e336f8b931650f",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T16:00:16Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T16:00:14Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://2c35e81588f1843d6bd75ec1bed8997fcc678735d85d2faa8ec9955c9adbfda4",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T16:00:16Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T16:00:14Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-3998358738",
+      "uid": "eb02f039-9b39-4c4c-9289-8daf8f89188a",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://88fe7264c873590a62df0bed877975206f26d0fb2652e92993a3caa930dc65b7",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:59:16Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:58:24Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://297bd7530f64c1f63215d6278238d5c8c29a85e89c5e25dc9470ccc3dabf3115",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:59:17Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:58:24Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-721423291",
+      "uid": "94bbbdd7-d69d-4c1a-ad35-a6ce0a536e2c",
+      "phase": "Failed",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://7a153d1938ec1dbbefb07280138cdf309e009ca42f5c0755f7a73c7b6b5465d3",
+            "exitCode": 1,
+            "finishedAt": "2026-10-29T16:00:01Z",
+            "reason": "Error",
+            "startedAt": "2026-10-29T15:59:40Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://cd4af844162bcec484ca8aa602f006dfc3ceab8df54c9228e6b3c24d61511866",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T16:00:02Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:59:40Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-7761250",
+      "uid": "45ee866d-8408-4e96-8bae-10e52b12c6f9",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://62b129d6d115c6cadb0e07645458281cb94d13f9fda7406491bc53ffa680c585",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:24Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:23Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://3da78bc5f4999472844f0954555ff1d27242ce11621175f708b11d685c2a829a",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:25Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:22Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-j4ncq-83711101",
+      "uid": "2ffc0543-867b-426d-a48b-53940ccfd78a",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-j4ncq",
+          "uid": "1e9521b7-fc75-41f2-a406-690a7c142b73"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://66b08d06d50daae3f3636d0424f9e05bbd99efdfcbec8e98ac7d93031d73eda0",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:15Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:13Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://780152864bb006dc594c5b90749415c8f6312f24401917033c59a1fbc66b3cc4",
+            "exitCode": 0,
+            "finishedAt": "2026-10-29T15:57:15Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-29T15:57:13Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-1601558171",
+      "uid": "30dbcd8b-2d4c-41e9-bbda-d68f874cbbd6",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://b9943262de3fdf9e21154f4667552dd5936e787b54352bb09a37d8e7aa71ca09",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:54:49Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:54:48Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://999d5f8d9db766a66d7a3428610d027d733591cf677fc8713400a069f17e36e0",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:54:50Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:54:48Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-1948764010",
+      "uid": "9879f36a-d395-4a20-a875-9824953813ad",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://d5ee24bf7945b3bb0605ca36c6e521311e49893a9e336d4bd5a7ef60ae5535c4",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:29Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:28Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://92f347ee5028b9fe39f167303f800efb6bed757e7635881557d4e15c4f2cfd1e",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:30Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:28Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-202354017",
+      "uid": "4e2c0319-74ff-4c22-b67d-fe9852000793",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://1b8e959480bb925e24e582ac29df346c89b545de36e5181dcec63fd44e8a9b39",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:09Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:08Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://55d51dd552d9c80981d473c2094355fa82e2b4ad6ba3baa54f55f28335c5de7b",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:10Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:08Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-2185172434",
+      "uid": "1416e467-c9d7-48b9-a35f-a23995dbf6f2",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://82647ea1004e576d576b9e2de6f29217a57fa7e6162efb65d848c894e03928c5",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:22Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:20Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://1025528b36b4a8c37c68c8f063a64166b0064664cdd3b64308de5f5b475a5708",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:22Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:20Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-2481913331",
+      "uid": "8b4fdec3-1b91-4b5a-84d3-bf9b567e4416",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://90c610330bbc61e759f4b3deb23296d2cb3e91c9d1b1056e169eb56a2464f4e3",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:40Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:38Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://b73bde7cfddcad9da801f5c631ed59d8891a7518fc54c8db6bfb43c23e7532b5",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:40Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:38Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-3306403124",
+      "uid": "09896b3a-7692-4139-9763-963e07122229",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://90cdce02f81e5149a46d9e38ab5bdaacbeb81a79c6ea9a2ed6ca0e7c31176707",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:56:57Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:58Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://d2eb33354811d8c2a2d8b4d0627ab100c8c65168788d9618e9523f406e6b8ec2",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:56:58Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:55:58Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-3760280205",
+      "uid": "6d9a544f-9958-46c1-8f77-85590caa973a",
+      "phase": "Failed",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://ddf69981de9a59a7f97b5c9f7281b86cb13987a15b3233c816d4149be2f300a7",
+            "exitCode": 1,
+            "finishedAt": "2026-10-30T00:57:46Z",
+            "reason": "Error",
+            "startedAt": "2026-10-30T00:57:21Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://746f24be2fa0d01bd81fd0d4086b2f00fac5a6442b4663b791e6d843abd6306f",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:57:47Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:57:20Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-4163451948",
+      "uid": "99cda8d2-3497-43d6-b0fb-d31ca5012675",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://086089a97fd04770f17c4e77c735cd83ee994f44345391e7d7b0a67d50569ffb",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:57:59Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:57:58Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://ffe1bd91b4e68065b07e52521b4001c96e76acccb33fdd9e28d6368f9e415101",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:58:00Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:57:58Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-623417368",
+      "uid": "3073470b-93d8-4eed-9679-3519b14cc078",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://be75e89382311c265656da777e7252e29f2d06e746ef83f6f20cf6f786a603f8",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:54:59Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:54:58Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://fbf03a54cacace8b00812b8a3040d39d2b6bffccb092186ac37641e9cc79ce57",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:55:00Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:54:58Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-811855208",
+      "uid": "7271ac89-30f4-4d2a-9d3c-f91cb1219ea1",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://d42890ded3a004af433755134689b9cf3183bbd4abe561cc3ae351e9e50fe9e6",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:57:11Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:57:09Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://b5a8719e09af68c9fd6a5723ab78665e1ffc91f50f6139368c5b89be92f08ba7",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:57:11Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:57:09Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ft-sw2pr-966427769",
+      "uid": "9da5d478-ce69-42f0-9397-1d794c83f808",
+      "phase": "Failed",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "ft-sw2pr",
+          "uid": "edcf4a1d-cdf9-44da-9f28-20593d79469f"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://0fa2e363414853798d8db7caa62445bda93f6fc8543a0de381360c0dc03e4e8c",
+            "exitCode": 1,
+            "finishedAt": "2026-10-30T00:58:17Z",
+            "reason": "Error",
+            "startedAt": "2026-10-30T00:58:10Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://a93c5936e6b8e7c614c932ba366f6af815a1277e8df6fa90d5756c2042b0ccdb",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T00:58:18Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T00:58:10Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "md-kpwkw-1116544117",
+      "uid": "89551f40-7467-40b7-a6e3-ebe66c6346e4",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "md-kpwkw",
+          "uid": "d2acb3df-3979-4d60-aed5-16db0ce440fb"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://4c082e765540d1f836026c1da9c5765b3cc4f0da1e408ba5d69241449522fa29",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T09:21:38Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T09:21:37Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://3a4708ccef76035e82df69b875c1853f43bb39016154971ee6cc8eeaefb1c1dd",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T09:21:39Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T09:21:37Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "md-kpwkw-2664895950",
+      "uid": "23905daa-1629-4644-89f0-ca1d20e13652",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "md-kpwkw",
+          "uid": "d2acb3df-3979-4d60-aed5-16db0ce440fb"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://c68763451f1165c913f476f92ecd3e8680febd0099f685cc5ec48f27912942a4",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T09:21:28Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T09:21:27Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://8b05a006fc0b4ecda8de83191cbe25f4a23c86e803ce03e271de44454da650f4",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T09:21:29Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T09:21:26Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "md-kpwkw-292890369",
+      "uid": "bcfd51ce-aae9-46ee-a87f-e4be91d14bc6",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "md-kpwkw",
+          "uid": "d2acb3df-3979-4d60-aed5-16db0ce440fb"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://4b996b7f0e17104aa8252969be2ba4f0b6c53a022fca24e38b608ed1a1058cec",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T09:21:18Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T09:21:16Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://cbd9dd45e509bbc2733ba1d570b806e3d4cfbee969b4d727ba7790669cc42eac",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T09:21:18Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T09:21:16Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "md-kpwkw-4002437296",
+      "uid": "a3c87fad-e926-45e0-8866-94f17f25661d",
+      "phase": "Succeeded",
+      "owners": [
+        {
+          "apiVersion": "argoproj.io/v1alpha1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Workflow",
+          "name": "md-kpwkw",
+          "uid": "d2acb3df-3979-4d60-aed5-16db0ce440fb"
+        }
+      ],
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "container_exits": [
+        {
+          "name": "main",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://f213209208e1167bbe5ac13f0c03eafbf7826c9a47bf58709ed9f25ac530fa68",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T09:21:07Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T09:21:06Z"
+          }
+        },
+        {
+          "name": "wait",
+          "restartCount": 0,
+          "terminated": {
+            "containerID": "containerd://98ad524e1f8fbaeee0eaf755a7aa05c34947a353983830211a629799af7bfa97",
+            "exitCode": 0,
+            "finishedAt": "2026-10-30T09:21:08Z",
+            "reason": "Completed",
+            "startedAt": "2026-10-30T09:21:06Z"
+          }
+        }
+      ]
+    }
+  ],
+  "central_log_services": [
+    {
+      "namespace": "ani-observability",
+      "name": "ani-opensearch-master",
+      "ports": [
+        9200,
+        9300,
+        9600
+      ]
+    },
+    {
+      "namespace": "ani-observability",
+      "name": "ani-opensearch-master-headless",
+      "ports": [
+        9200,
+        9300,
+        9600
+      ]
+    }
+  ]
+}

@@ -27,14 +27,13 @@ message ManagedRuntime {
   HTTPSWorkloadConnection kubernetes = 4;
   HTTPSWorkloadConnection pipeline = 5;
   ObjectStorageConnection object_storage = 6;
-  // JSON PipelineDispatchBinding with the tenant, complete frozen environment
-  // and owner configuration. It contains no credentials and is SHA256 pinned.
-  string binding_file = 7;
-  string binding_sha256 = 8;
+  reserved 7, 8;
+  reserved "binding_file", "binding_sha256";
   string token_audience = 9;
   google.protobuf.Duration api_timeout = 10;
   google.protobuf.Duration dispatch_interval = 11;
-  uint32 dispatch_batch_size = 12;
+  reserved 12;
+  reserved "dispatch_batch_size";
   // Optional GPU-owner dependencies. CPU execution does not require them.
   ManagedGPUOwner gpu_owner = 13;
   // The sole content policy. Presence and a positive representable value are
@@ -42,6 +41,9 @@ message ManagedRuntime {
   RuntimeLimits limits = 14;
   uint32 import_timeout_seconds = 15;
   uint32 model_resolution_timeout_seconds = 16;
+  // One platform provision specification, containing no tenant bindings.
+  string tenant_environment_file = 17;
+  string tenant_environment_sha256 = 18;
 }
 
 message RuntimeLimits {
@@ -142,18 +144,15 @@ message ModelConnection {
 message BaseModelStorageScope {
   string connection_id = 1;
   string bucket = 2;
-  string approved_prefix = 3;
+  reserved 3;
+  reserved "approved_prefix";
   string credential_reference = 4;
 }
 
 message AdmissionResolution {
   string catalogue_directory = 1;
-  repeated AdmissionFactsFile facts_files = 2;
-}
-
-message AdmissionFactsFile {
-  string path = 1;
-  string sha256 = 2;
+  reserved 2;
+  reserved "facts_files";
 }
 
 message Server {

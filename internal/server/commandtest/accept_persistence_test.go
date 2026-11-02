@@ -27,7 +27,7 @@ import (
 
 func TestGovernanceAcceptAfterEarlierCloseIsFirstAndReplaysAfterRestart(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request, original := validAcceptCommand(t)
+	request, original := validAcceptCommand(t, openPool())
 	closeRequest, wantClose := closeBeforeAcceptRequest(request)
 	certificates := commandtls.New(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -84,7 +84,7 @@ func TestGovernanceAcceptAfterEarlierCloseIsFirstAndReplaysAfterRestart(t *testi
 
 func TestGovernanceAcceptCommitFailureHasNoACKAndPreservesEarlierClose(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request, original := validAcceptCommand(t)
+	request, original := validAcceptCommand(t, openPool())
 	closeRequest, wantClose := closeBeforeAcceptRequest(request)
 	certificates := commandtls.New(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)

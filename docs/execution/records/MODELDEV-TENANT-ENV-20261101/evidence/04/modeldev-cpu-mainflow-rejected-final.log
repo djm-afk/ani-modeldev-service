@@ -1,0 +1,12 @@
+=== RUN   TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication
+    complete_flow_test.go:67: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    complete_flow_test.go:70: WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary
+2026/11/01 03:28:57 INFO [gRPC] server listening addr=127.0.0.1:41223
+2026/11/01 03:28:57 INFO [gRPC] server stopping
+2026/11/01 03:28:57 INFO [gRPC] server listening addr=127.0.0.1:39221
+    complete_flow_test.go:193: MAIN_FLOW: Governance mTLS command -> durable inbox -> one KFP CreateRun -> authenticated Begin
+    complete_flow_test.go:256: MAIN_FLOW_FAILURE: actual bad CSV rejected; no training or publication; skipped tasks proven; STEP_FAILED CLOSED persisted
+2026/11/01 03:29:44 INFO [gRPC] server stopping
+--- PASS: TestMainFlowCompleteRejectedInputClosesWithoutTrainingOrPublication (52.59s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	52.608s

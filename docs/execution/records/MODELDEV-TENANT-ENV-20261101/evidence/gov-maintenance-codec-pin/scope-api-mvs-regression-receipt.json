@@ -1,0 +1,73 @@
+{
+  "schema": "ani.modeldev.maintenance.original-codec-pin.v1",
+  "observed_at": "2026-11-01T01:14:19.193941+00:00",
+  "scope": "old API Create-paused Governance maintenance branch only; no deployment/live mutation",
+  "base_commit": "32c61fcbd57c70ca996d62ad2b234ba84ff0b052",
+  "old_modeldev_commit": "c99c9f1081c754f7e38ceccd056db9a032ca3c27",
+  "new_modeldev_commit": "21bf4bd6540d462a61c91b629f26250899583223",
+  "new_module_version": "v0.0.0-20261030095126-21bf4bd6540d",
+  "affected_contract": "Persisted original v3 canonical acceptance bytes contain training_image; old native decoder rejects original identities after canonical/hash checking. Fixed pin consumes the single original format without rewriting original canonical or adding a compatibility decoder.",
+  "api_comparison": {
+    "status": "PASS",
+    "dependency_go_mod_diff": "empty",
+    "existing_rpc_removed_or_renamed": false,
+    "existing_fields_removed_or_renumbered": false,
+    "additions": [
+      "UserIntent.training_image_id=18",
+      "UserIntent.training_image_scope=19",
+      "ExecutionView.training_image_digest=36",
+      "ExecutionView.training_image_registry_authority=37",
+      "ExecutionSnapshot.training_image=21",
+      "TrainingPlatform",
+      "TrainingImageFacts"
+    ],
+    "raw_evidence": [
+      "modeldev-module-requirements.diff",
+      "modeldev-api.numstat",
+      "modeldev-proto.diff",
+      "api-requirements-comparison-receipt.json"
+    ]
+  },
+  "mvs": {
+    "root_requirements_change": "only ModelDev version",
+    "go_sum_change": "only old/new ModelDev module + go.mod checksums",
+    "modeldev_transitive_requirements": "identical go.mod at exact old/new commits",
+    "go_mod_graph_exit": 0,
+    "complete_after_module_info_listing": "FAIL: official proxy .info EOF; cache-only listing also unavailable. Preserved rather than claimed PASS.",
+    "raw_evidence": [
+      "mvs-before.log",
+      "mvs-after.log",
+      "mvs-after-name-version.log",
+      "mvs-graph-after.log",
+      "pin-receipt.json",
+      "green-graph-receipt.json"
+    ]
+  },
+  "regression": {
+    "test": "TestMaintenanceOriginalFiveAcceptanceCodec",
+    "tag": "modeldev_maintenance_codec",
+    "actual_original_acceptance_ids": [
+      55,
+      57,
+      59,
+      60,
+      74
+    ],
+    "native_decoder": "modelDevAcceptanceFromRow",
+    "old_pin": "FAIL expected RED: all five original rows rejected",
+    "new_pin": "PASS: all five native decodes and byte-identical snapshots; altered spec hash rejected",
+    "private_input": "mode0600 fixed read-only original five capture; deleted after regression; contents not retained in public evidence",
+    "raw_evidence": [
+      "original-codec-red.log",
+      "red-receipt.json",
+      "original-codec-green.log",
+      "green-graph-receipt.json"
+    ]
+  },
+  "not_run": [
+    "Workbench/deployment",
+    "live retry/rearm/Stop/cleanup",
+    "additional full business/race test groups"
+  ],
+  "final_v4_modeldev_pin_unchanged": "d807cbdbd5dd6664d61480acedc752e19cfca48a"
+}

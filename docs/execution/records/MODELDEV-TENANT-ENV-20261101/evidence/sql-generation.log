@@ -1,0 +1,7 @@
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+test "$(/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc version)" = "v1.31.1"
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+test "$(go version -m /home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc | awk '$1 == "mod" {print $2 "@" $3; exit}')" = "github.com/sqlc-dev/sqlc@v1.31.1"
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/sqlc generate
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量

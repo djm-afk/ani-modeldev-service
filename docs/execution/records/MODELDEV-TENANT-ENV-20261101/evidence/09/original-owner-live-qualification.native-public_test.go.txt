@@ -1,0 +1,37 @@
+package lifecycle_test
+
+import (
+ "context"
+ "crypto/sha256"
+ "encoding/hex"
+ "encoding/json"
+ "os"
+ "testing"
+ "sort"
+ "strings"
+ "github.com/jackc/pgx/v5"
+ "github.com/jackc/pgx/v5/pgxpool"
+ "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
+ "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
+ "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+ "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
+)
+func finite(err error)string{if err==nil{return "PASS"};return err.Error()}
+func TestOriginalF216PublicOwnerReader(t *testing.T){
+ raw,err:=os.ReadFile(os.Getenv("OWNER_QUALIFICATION_PRIVATE_INPUT"));if err!=nil{t.Fatal("PRIVATE_INPUT_UNAVAILABLE")}
+ var input struct{ModelDev map[string]json.RawMessage `json:"modeldev"`};if json.Unmarshal(raw,&input)!=nil{t.Fatal("PRIVATE_INPUT_INVALID")}
+ ctx:=context.Background();open:=postgres.Prepare(t);runtime:=open();config,err:=pgxpool.ParseConfig(os.Getenv("CPU_P01_TEST_DATABASE_ADMIN_URL"));if err!=nil{t.Fatal("PRIVATE_PG_REFERENCE_INVALID")};config.ConnConfig.RuntimeParams=map[string]string{"search_path":runtime.Config().ConnConfig.RuntimeParams["search_path"]};admin,err:=pgxpool.NewWithConfig(ctx,config);if err!=nil{t.Fatal("ISOLATED_ADMIN_UNAVAILABLE")};defer admin.Close()
+ for _,table:=range []string{"modeldev_execution_identities","modeldev_executions","modeldev_pipeline_dispatches","modeldev_pipeline_confirmed_runs","modeldev_run_authorities","modeldev_execution_runtimes","modeldev_close_intents","modeldev_execution_cleanup_audits"}{
+  var rows []json.RawMessage;if json.Unmarshal(input.ModelDev[table],&rows)!=nil{t.Fatal("PRIVATE_ROW_SHAPE_INVALID")};for _,row:=range rows{var fields map[string]json.RawMessage;_ =json.Unmarshal(row,&fields);columns:=[]string{};for name:=range fields{if table=="modeldev_execution_runtimes"&&name=="authority_execution_id"{continue};columns=append(columns,name)};sort.Strings(columns);for i:=range columns{columns[i]=pgx.Identifier{columns[i]}.Sanitize()};list:=strings.Join(columns,",");if _,err:=admin.Exec(ctx,"INSERT INTO "+table+"("+list+") SELECT "+list+" FROM jsonb_populate_record(NULL::"+table+",$1::jsonb)",string(row));err!=nil{t.Fatalf("ISOLATED_ORIGINAL_ROW_RESTORE_FAILED table=%s error_kind=%T",table,err)}}
+ }
+ tenant,id:="64c5c35a-f554-432c-b4bc-7b4f36f08420","f2168fbf-d7c9-4e96-8cc6-784bb1546083"
+ tx,err:=runtime.BeginTx(ctx,pgx.TxOptions{IsoLevel:pgx.RepeatableRead,AccessMode:pgx.ReadOnly});if err!=nil{t.Fatal("ISOLATED_RUNTIME_TX_FAILED")};defer tx.Rollback(ctx)
+ state,lifeErr:=lifecycle.ReadInTransaction(ctx,tx,tenant,id)
+ _,dispatchErr:=submission.ReadInTransaction(ctx,tx,tenant,id)
+ _,authorityErr:=submission.ReadAuthorityInTransaction(ctx,tx,tenant,id)
+ query,queryErr:=execution.New(runtime).GetQueryRecord(ctx,tenant,id)
+ admitted,admissionErr:=execution.New(runtime).Get(ctx,tenant,id)
+ sum:=sha256.Sum256(raw)
+ result:=map[string]any{"execution_id":id,"input_sha256":hex.EncodeToString(sum[:]),"native_lifecycle_reader":finite(lifeErr),"native_submission_reader":finite(dispatchErr),"native_authority_reader":finite(authorityErr),"native_query_record_reader":finite(queryErr),"native_admitted_execution_reader":finite(admissionErr),"lifecycle_revision":state.OwnerRevision,"query_revision":query.Execution.OwnerRevision,"admission_revision":admitted.OwnerRevision,"live_writes":0,"fixture":"exact original 8-table rows restored unchanged to isolated real PostgreSQL"}
+ encoded,_:=json.Marshal(result);t.Log("NATIVE_OWNER_RESULT "+string(encoded))
+}

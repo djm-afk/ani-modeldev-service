@@ -68,7 +68,7 @@ func TestFinetuningTrainingPartitionsWritesAndPreservesOriginalLookupDeadline(t 
 		t.Fatal("lookup changed the original deadline or template")
 	}
 	spec := runtimePodTemplate(f)["spec"].(map[string]any)
-	if spec["serviceAccountName"] != "cpu-training" {
+	if spec["serviceAccountName"] != "trainer-workload" {
 		t.Fatalf("unsupported/unsafe override: %v", spec)
 	}
 	volumes := spec["volumes"].([]any)

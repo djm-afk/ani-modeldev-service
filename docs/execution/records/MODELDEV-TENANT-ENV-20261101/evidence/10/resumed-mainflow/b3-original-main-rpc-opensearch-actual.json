@@ -1,0 +1,131 @@
+{
+  "read_only": true,
+  "observed_at": "2026-11-01T15:47:28.105282+00:00",
+  "pod_uid": "fd1003d1-7c40-4b96-b8d2-5dc537080f68",
+  "pod_name": "ani-modeldev-6fd45bf8cc-x9768",
+  "namespace": "ani-system",
+  "container": "modeldev",
+  "time_window": [
+    "2026-11-01T15:19:39Z",
+    "2026-11-01T15:19:42Z"
+  ],
+  "auth_source": "existing ani-opensearch-admin Secret; values never output",
+  "tls_verified": true,
+  "index": "ani-logs-2026.11.01",
+  "metadata_http_status": 200,
+  "selected_fields": {
+    "uid": null,
+    "namespace": "kubernetes.namespace_name.keyword",
+    "container": "kubernetes.container_name.keyword",
+    "time": "@timestamp",
+    "pod_name": "kubernetes.pod_name.keyword"
+  },
+  "query": {
+    "size": 12,
+    "track_total_hits": true,
+    "timeout": "5s",
+    "sort": [
+      {
+        "@timestamp": "asc"
+      }
+    ],
+    "query": {
+      "bool": {
+        "filter": [
+          {
+            "term": {
+              "kubernetes.pod_name.keyword": "ani-modeldev-6fd45bf8cc-x9768"
+            }
+          },
+          {
+            "term": {
+              "kubernetes.namespace_name.keyword": "ani-system"
+            }
+          },
+          {
+            "term": {
+              "kubernetes.container_name.keyword": "modeldev"
+            }
+          },
+          {
+            "range": {
+              "@timestamp": {
+                "gte": "2026-11-01T15:19:39Z",
+                "lt": "2026-11-01T15:19:42Z"
+              }
+            }
+          }
+        ],
+        "should": [
+          {
+            "match_phrase": {
+              "log": "BeginFinetuningStep"
+            }
+          },
+          {
+            "match_phrase": {
+              "log": "GetExecutionConfiguration"
+            }
+          }
+        ],
+        "minimum_should_match": 1
+      }
+    },
+    "_source": [
+      "@timestamp",
+      "time",
+      "kubernetes",
+      "k8s",
+      "log",
+      "message"
+    ]
+  },
+  "http_status": 200,
+  "response_sha256": "778e73da6bd72a844a65b17f2ed15cf2022c83163ac5097737076cf5999ed0ec",
+  "response_bytes": 4733,
+  "total": {
+    "value": 3,
+    "relation": "eq"
+  },
+  "timed_out": false,
+  "shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "binding_source": "Original main2ac rollout receipt binds Deployment UID to original Ready PodUID/name; OpenSearch has no UID field",
+  "documents": [
+    {
+      "index": "ani-logs-2026.11.01",
+      "document_id": "3DC535B0-1589-D8F4-F8EA-75E9CF83817E",
+      "timestamp": "2026-11-01T15:19:39.957Z",
+      "namespace": "ani-system",
+      "pod_name": "ani-modeldev-6fd45bf8cc-x9768",
+      "container": "modeldev",
+      "container_id": "0735b0042370e71756238c3e7314eda907bbbe08aa3d4145323402ee3dd4dcaa",
+      "log": "{\"time\":\"2026-11-01T15:19:39.957611206Z\",\"level\":\"INFO\",\"source\":{\"function\":\"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server.(*Observability).ServerMiddleware.Server.func3.1\",\"file\":\"github.com/go-kratos/kratos/v3@v3.0.0/middleware/logging/logging.go\",\"line\":65},\"msg\":\"server request\",\"service.id\":\"ani-modeldev-6fd45bf8cc-x9768\",\"service.name\":\"ani-modeldev-service\",\"service.version\":\"dev\",\"kind\":\"server\",\"component\":\"grpc\",\"operation\":\"/ani.modeldev.v1.ModelDevStepService/GetExecutionConfiguration\",\"args\":\"***\",\"code\":200,\"reason\":\"\",\"latency\":0.329414982,\"trace_id\":\"8d675de8ed4aabcbadcdad8dd799a46f\",\"span_id\":\"e6b80b5abeca4e42\"}"
+    },
+    {
+      "index": "ani-logs-2026.11.01",
+      "document_id": "6B99199B-25AA-642F-E9AA-8980E9BA56D2",
+      "timestamp": "2026-11-01T15:19:40.447Z",
+      "namespace": "ani-system",
+      "pod_name": "ani-modeldev-6fd45bf8cc-x9768",
+      "container": "modeldev",
+      "container_id": "0735b0042370e71756238c3e7314eda907bbbe08aa3d4145323402ee3dd4dcaa",
+      "log": "{\"time\":\"2026-11-01T15:19:40.44719518Z\",\"level\":\"INFO\",\"source\":{\"function\":\"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server.(*Observability).ServerMiddleware.Server.func3.1\",\"file\":\"github.com/go-kratos/kratos/v3@v3.0.0/middleware/logging/logging.go\",\"line\":65},\"msg\":\"server request\",\"service.id\":\"ani-modeldev-6fd45bf8cc-x9768\",\"service.name\":\"ani-modeldev-service\",\"service.version\":\"dev\",\"kind\":\"server\",\"component\":\"grpc\",\"operation\":\"/ani.modeldev.v1.ModelDevStepService/GetExecutionConfiguration\",\"args\":\"***\",\"code\":200,\"reason\":\"\",\"latency\":0.475396643,\"trace_id\":\"0095e05d4f1ec6e8c450cfc1db564561\",\"span_id\":\"aefe73750cd4c9fd\"}"
+    },
+    {
+      "index": "ani-logs-2026.11.01",
+      "document_id": "BFC2D530-7F49-C3F7-B104-671CF3032F62",
+      "timestamp": "2026-11-01T15:19:40.948Z",
+      "namespace": "ani-system",
+      "pod_name": "ani-modeldev-6fd45bf8cc-x9768",
+      "container": "modeldev",
+      "container_id": "0735b0042370e71756238c3e7314eda907bbbe08aa3d4145323402ee3dd4dcaa",
+      "log": "{\"time\":\"2026-11-01T15:19:40.948744161Z\",\"level\":\"ERROR\",\"source\":{\"function\":\"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server.(*Observability).ServerMiddleware.Server.func3.1\",\"file\":\"github.com/go-kratos/kratos/v3@v3.0.0/middleware/logging/logging.go\",\"line\":65},\"msg\":\"server request\",\"service.id\":\"ani-modeldev-6fd45bf8cc-x9768\",\"service.name\":\"ani-modeldev-service\",\"service.version\":\"dev\",\"kind\":\"server\",\"component\":\"grpc\",\"operation\":\"/ani.modeldev.v1.ModelDevStepService/BeginFinetuningStep\",\"args\":\"***\",\"code\":409,\"reason\":\"\",\"latency\":0.485177097,\"error\":\"rpc error: code = AlreadyExists desc = runtime report conflicts with committed facts\",\"stack\":\"rpc error: code = AlreadyExists desc = runtime report conflicts with committed facts\",\"trace_id\":\"51c814f2f225961d4842e8f13e942a2f\",\"span_id\":\"c9ba5e3e74fea320\"}"
+    }
+  ],
+  "result": "FOUND_EXACT_ORIGINAL_NAME_TIME_CONTAINER"
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "ani.modeldev.history-discard-user-correction.v1",
+  "recorded_at": "2026-11-01T03:42:43.352706+00:00",
+  "authority": "Parent relayed direct user instruction during active goal",
+  "user_instruction": "你不能直接操作数据库之类的吗？我又不要恢复历史数据，只要保证相关占用资源都释放",
+  "affected_spec_sections": [
+    "13.3 historical codec restoration",
+    "13.3 cleanup display state",
+    "13.3 missing historical ACK journal",
+    "13.4 exact related historical deletion"
+  ],
+  "minimal_correction": "After exact actual resource release and zero hold/leases/old writers, use existing native PostgreSQL owner transactions to DELETE fixed original PK and rowSHA history. Do not restore historical display/codec/ACK facts merely to discard those rows. Normal runtime contracts unchanged.",
+  "prohibited": [
+    "SQL occupied=0",
+    "SQL fake CLOSED/APPLIED/ACK",
+    "TRUNCATE",
+    "CASCADE",
+    "new identity/grants",
+    "unscoped owner-string deletion"
+  ],
+  "stopped_actions": [
+    "f216 original event RPC replay/journal",
+    "ABE ObserveCAS",
+    "new recovery modes/tests"
+  ],
+  "f216_rpc_calls": 0
+}

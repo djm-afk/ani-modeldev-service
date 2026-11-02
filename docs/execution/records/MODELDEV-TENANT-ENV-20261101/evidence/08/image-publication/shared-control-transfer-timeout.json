@@ -1,0 +1,17 @@
+{
+  "time": "2026-11-01T01:28:34.544612+00:00",
+  "shared_control_socket": "/home/chabking/workspace/.evidence/modeldev-node-control-20261101/node.sock",
+  "owner": "root",
+  "control_check": "Master running pid1901435",
+  "rsync_exit": 30,
+  "rsync_reason": "io timeout after 90 seconds",
+  "progress_output_bytes": 0,
+  "shared_socket_closed_by_subagent": false,
+  "node_build_or_push_started": false,
+  "simple_command_probe": {
+    "command": "printf ordinary-command-ok",
+    "wait_seconds": 20,
+    "exit": 124,
+    "stdout_bytes": 0
+  }
+}

@@ -146,6 +146,8 @@ func timedConfigurationResponse(t *testing.T, config component.Config, timing cp
 	}
 	admission := admissionfixture.Bind(t, biz.Admission{TenantID: config.TenantID, Actor: "governance:user:42", OperationID: operation, ExecutionID: config.Context.Identity.ExecutionId, Intent: domainIntent, Snapshot: domainSnapshot, AcceptedAt: timing.AcceptedAt})
 	config.Context.Identity.ExecutionSpecHash = admission.SpecHash
+	config.Context.Association.NamespaceName = admission.Snapshot.Environment.NamespaceName
+	config.Context.Association.NamespaceUid = admission.Snapshot.Environment.NamespaceUID
 	snapshot, err := contractpb.EncodeSnapshot(admission.Snapshot)
 	if err != nil {
 		t.Fatal(err)

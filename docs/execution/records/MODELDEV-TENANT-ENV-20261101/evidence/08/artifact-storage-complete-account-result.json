@@ -1,0 +1,59 @@
+{
+  "schema": "ani.modeldev.artifact-storage.preflight.v1",
+  "observed_at_utc": "2026-11-01T02:13:13.103151+00:00",
+  "identity_match": true,
+  "read_only": false,
+  "credential_values_output": false,
+  "endpoint": "https://ani-rustfs-svc.ani-platform.svc.cluster.local:9000",
+  "tls_verified": true,
+  "public_ca_sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+  "service_uid": "8efd9343-10e1-49c1-a777-2a6b22e646a9",
+  "service_vip": "10.96.221.78",
+  "deployment_uid": "644c24df-70df-4cc0-a6e2-60e8846a647c",
+  "storage_images": [
+    "10.10.1.66:5001/rustfs/rustfs:1.0.0"
+  ],
+  "admin_authenticated_read_http": 200,
+  "candidate_bucket": "ani-md-tenantenv-kfp-20261101",
+  "candidate_bucket_head_http": 200,
+  "candidate_source_secret": "modeldev-tenantenv-artifact-source-20261101",
+  "candidate_source_secret_absent": false,
+  "writes": 1,
+  "provisioning": {
+    "status": "PROVISIONED_POLICY_READBACK_AND_CROSS_BUCKET_DENIAL_PASS",
+    "bucket": "ani-md-tenantenv-kfp-20261101",
+    "versioning": "Enabled",
+    "source_secret": {
+      "name": "modeldev-tenantenv-artifact-source-20261101",
+      "namespace": "ani-system",
+      "resourceVersion": "20887925",
+      "uid": "bc62d45a-d83c-4ca8-b5fa-ca07c6cadb47"
+    },
+    "policy_sha256": "8633ff12dba4ffec0ace149ac0af0bd933da2274eece6e7ab9948faea96f0503",
+    "explicit_bucket_only_account": true,
+    "shared_platform_identity_not_tenant_iam": true,
+    "other_bucket_denials": [
+      {
+        "bucket": "ani-md-v21-input-01a15f47",
+        "get_http": 403
+      },
+      {
+        "bucket": "ani-md-v21-output-01a15f47",
+        "get_http": 403
+      },
+      {
+        "bucket": "ani-models-v21-01a15f47",
+        "get_http": 403
+      }
+    ],
+    "admin_api_denial_http": 403,
+    "credential_values_output": false,
+    "writes": 1,
+    "phases": [
+      "create-artifact-service-account-short-name"
+    ],
+    "launcher_io": "NOT_RUN",
+    "credential_rotation": "NOT_RUN"
+  },
+  "ssh_exit": 0
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"path"
+	"reflect"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ var (
 	ErrAdmissionEnvironmentNotReady = errors.New("ENVIRONMENT_NOT_READY")
 	ErrAdmissionPlanMismatch        = errors.New("ADMISSION_PLAN_MISMATCH")
 	ErrUnsupportedDevice            = errors.New("UNSUPPORTED_DEVICE")
+	ErrComputeClusterMismatch       = EnvironmentError("COMPUTE_CLUSTER_MISMATCH")
 )
 
 type PrepareAdmissionInput struct {
@@ -30,13 +32,16 @@ type TenantAdmissionFacts struct {
 	Environment         cpup01.EnvironmentBindingSnapshot
 	PublicationScope    cpup01.StorageScope
 	InputScope          cpup01.StorageScope
+	ModelScope          cpup01.StorageScope
 	Workspace           cpup01.WorkspaceContract
 	InputFilePath       string
 	OutputDirectoryPath string
 	Timing              cpup01.TimingConfiguration
 	// TargetPlatform is the pinned OCI platform of this environment. It is
 	// required for general training, whose image is resolved per execution.
-	TargetPlatform cpup01.TrainingPlatform
+	TargetPlatform     cpup01.TrainingPlatform
+	DispatchOwner      cpup01.DispatchOwnerSnapshot
+	ManagedImageAccess cpup01.ManagedImageAccessSnapshot
 }
 
 type AdmissionResolution struct {
@@ -123,8 +128,15 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 	if err != nil {
 		return cpup01.PreparedCandidate{}, err
 	}
-	if !strings.EqualFold(facts.TenantID, identity.TenantID) || facts.Workspace != material.Workspace {
+	if facts.TenantID != identity.TenantID || facts.Workspace != material.Workspace {
 		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
+	}
+	gpuRequest, err := cpup01.GPURequestFor(request.ComputeOrigin)
+	if err != nil {
+		return cpup01.PreparedCandidate{}, ErrUnsupportedDevice
+	}
+	if gpuRequest != nil && gpuRequest.ClusterID != facts.Environment.ClusterID {
+		return cpup01.PreparedCandidate{}, ErrComputeClusterMismatch
 	}
 	timing, err := facts.Timing.Resolve(request.AcceptedAt, intent.TimeoutSeconds)
 	if err != nil {
@@ -164,6 +176,9 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 		if err != nil {
 			return cpup01.PreparedCandidate{}, err
 		}
+		if fine.BaseModel.Scope != facts.ModelScope {
+			return cpup01.PreparedCandidate{}, EnvironmentError("ENVIRONMENT_CONFIG_DRIFT")
+		}
 		var baseBytes int64
 		for _, file := range fine.BaseModel.Files {
 			baseBytes, err = cpup01.CheckedAdd(baseBytes, file.SizeBytes)
@@ -191,11 +206,8 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 		}
 	}
 	memory := request.ComputeOrigin.MemoryMiB * 1024 * 1024
-	snapshot := cpup01.Snapshot{SchemaVersion: cpup01.SnapshotSchemaVersion, Limits: limits, Kind: intent.Kind, DeliveryMode: "SAVE_ARTIFACTS", IdentityRef: identity, Implementation: material.Implementation, ComputeOrigin: request.ComputeOrigin, Timing: timing, Input: input, Program: program, TrainingImage: trainingImage, Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: request.ComputeOrigin.CPUMillis, LimitMillicpu: request.ComputeOrigin.CPUMillis, RequestMemoryBytes: memory, LimitMemoryBytes: memory}, Environment: facts.Environment, Workspace: facts.Workspace, PublicationScope: facts.PublicationScope, OutputContract: material.OutputContract, DeadlineAt: timing.ExecutionDeadlineAt, Finetuning: fine}
-	gpuRequest, err := cpup01.GPURequestFor(request.ComputeOrigin)
-	if err != nil {
-		return cpup01.PreparedCandidate{}, ErrUnsupportedDevice
-	}
+	snapshot := cpup01.Snapshot{SchemaVersion: cpup01.SnapshotSchemaVersion, Limits: limits, Kind: intent.Kind, DeliveryMode: "SAVE_ARTIFACTS", IdentityRef: identity, Implementation: material.Implementation, ComputeOrigin: request.ComputeOrigin, Timing: timing, Input: input, Program: program, TrainingImage: trainingImage, Resources: cpup01.CPUResources{Nodes: 1, ProcessesPerNode: 1, RequestMillicpu: request.ComputeOrigin.CPUMillis, LimitMillicpu: request.ComputeOrigin.CPUMillis, RequestMemoryBytes: memory, LimitMemoryBytes: memory}, Environment: facts.Environment, DispatchOwner: facts.DispatchOwner, ManagedImageAccess: facts.ManagedImageAccess, Workspace: facts.Workspace, PublicationScope: facts.PublicationScope, OutputContract: material.OutputContract, DeadlineAt: timing.ExecutionDeadlineAt, Finetuning: fine}
+	snapshot.DispatchOwner.PipelineRoot += "/" + identity.ExecutionID
 	candidate := cpup01.PreparedCandidate{SchemaVersion: cpup01.CandidateSchemaVersion, Intent: intent, Snapshot: snapshot, GPURequest: gpuRequest}
 	if err := candidate.Validate(); err != nil {
 		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
@@ -235,6 +247,21 @@ func (r *AdmissionResolver) Finalize(ctx context.Context, candidate cpup01.Prepa
 	defer cancel()
 	if err := ctx.Err(); err != nil {
 		return AdmissionResolution{}, err
+	}
+	if r.facts == nil {
+		return AdmissionResolution{}, ErrAdmissionEnvironmentNotReady
+	}
+	facts, err := r.facts.ReadAdmissionFacts(ctx, snapshot.IdentityRef.TenantID, snapshot.Implementation.ImplementationID)
+	if err != nil {
+		return AdmissionResolution{}, err
+	}
+	owner := facts.DispatchOwner
+	owner.PipelineRoot += "/" + snapshot.IdentityRef.ExecutionID
+	if facts.TenantID != snapshot.IdentityRef.TenantID || facts.Environment != snapshot.Environment || owner != snapshot.DispatchOwner || facts.Workspace != snapshot.Workspace || facts.PublicationScope != snapshot.PublicationScope || !reflect.DeepEqual(facts.ManagedImageAccess.Canonical(), snapshot.ManagedImageAccess.Canonical()) {
+		return AdmissionResolution{}, ErrAdmissionPlanMismatch
+	}
+	if snapshot.Finetuning != nil && snapshot.Finetuning.BaseModel.Scope != facts.ModelScope {
+		return AdmissionResolution{}, ErrAdmissionPlanMismatch
 	}
 	if snapshot.ComputeOrigin.DeviceMode == "cpu" {
 		if gpu != nil {

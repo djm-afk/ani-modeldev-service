@@ -34,13 +34,14 @@ func TestComponentResourcesComeFromImmutableMaterialRoleWithoutHiddenMaximum(t *
 	sha := sha256.Sum256(raw)
 	config.Profiles[0].MaterialFile = file
 	config.Profiles[0].MaterialSHA256 = hex.EncodeToString(sha[:])
+	refreshProjection(t, &config, reader)
 	handler, err := modeldevwebhook.New(config, reader, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
-	body := request(t, config, "cpu-v1", "prepare")
+	body := request(t, config, "modeldev-mlp-cpu", "prepare")
 	changePod(t, &body, func(pod *corev1.Pod) {
 		pod.Spec.Containers[0].Resources = corev1.ResourceRequirements{Requests: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("1250m"), corev1.ResourceMemory: resource.MustParse("3Gi")}, Limits: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("2500m"), corev1.ResourceMemory: resource.MustParse("9Gi")}}
 	})
@@ -82,19 +83,19 @@ func TestComponentResourceDigestAndRoleCacheMustMatchFrozenMaterial(t *testing.T
 	defer server.Close()
 	for _, role := range []string{"prepare", "collect", "publish"} {
 		t.Run(role, func(t *testing.T) {
-			body := request(t, config, "cpu-v1", role)
+			body := request(t, config, "modeldev-mlp-cpu", role)
 			changePod(t, &body, func(pod *corev1.Pod) { pod.Annotations["ani.modeldev/component-resources-sha256"] = "wrong" })
 			if call(t, server, body).Allowed {
 				t.Fatal("accepted an IR resource digest different from frozen material")
 			}
-			body = request(t, config, "cpu-v1", role)
+			body = request(t, config, "modeldev-mlp-cpu", role)
 			changePod(t, &body, func(pod *corev1.Pod) {
 				pod.Spec.Volumes[0].EmptyDir.SizeLimit = resource.NewQuantity(1, resource.BinarySI)
 			})
 			if call(t, server, body).Allowed {
 				t.Fatal("accepted a control directory size outside frozen resources")
 			}
-			body = request(t, config, "cpu-v1", role)
+			body = request(t, config, "modeldev-mlp-cpu", role)
 			changePod(t, &body, func(pod *corev1.Pod) { pod.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TMPDIR", Value: "/tmp"}} })
 			if call(t, server, body).Allowed {
 				t.Fatal("accepted library temp files outside role PVC work")
@@ -130,7 +131,7 @@ func TestComponentWorkEnvironmentAcceptsOnlyNativeKFPMetadataEnvFrom(t *testing.
 		{name: "metadata cannot supply missing work paths", sources: []corev1.EnvFromSource{native}, remove: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			body := request(t, config, "cpu-v1", "prepare")
+			body := request(t, config, "modeldev-mlp-cpu", "prepare")
 			changePod(t, &body, func(pod *corev1.Pod) {
 				pod.Spec.Containers[0].EnvFrom = tc.sources
 				if tc.remove {
@@ -152,7 +153,7 @@ func TestPrepareBootstrapRequiresExactSamePVCSubPath(t *testing.T) {
 	}
 	server := httptest.NewTLSServer(handler)
 	defer server.Close()
-	for _, profile := range []string{"cpu-v1", "sft-v1"} {
+	for _, profile := range []string{"modeldev-mlp-cpu", "modeldev-sft-lora-cpu"} {
 		for _, mode := range []string{"native bootstrap", "missing", "other subpath", "expression", "duplicate", "other PVC"} {
 			t.Run(profile+"/"+mode, func(t *testing.T) {
 				body := request(t, config, profile, "prepare")

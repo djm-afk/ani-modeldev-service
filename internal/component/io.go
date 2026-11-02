@@ -94,13 +94,9 @@ func (runner *Runner) prepare(ctx context.Context) error {
 	}
 
 	environment := execution.Snapshot.Environment
-	namespace, err := runner.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "namespaces"}).Get(ctx, environment.NamespaceName, metav1.GetOptions{})
-	if err != nil {
-		return ErrConfiguration
-	}
-	if namespace.GetAPIVersion() != "v1" || namespace.GetKind() != "Namespace" || namespace.GetName() != environment.NamespaceName || string(namespace.GetUID()) != environment.NamespaceUID || namespace.GetDeletionTimestamp() != nil {
-		return ErrConfiguration
-	}
+	// BeginExecution and GetExecutionConfiguration independently verify the live
+	// Namespace UID and network ownership under the control identity. The step
+	// uses that authenticated binding without cluster-wide Namespace access.
 	pvc, err := runner.kube.Resource(schema.GroupVersionResource{Version: "v1", Resource: "persistentvolumeclaims"}).Namespace(environment.NamespaceName).Get(ctx, runner.config.PVCName, metav1.GetOptions{})
 	if err != nil || pvc == nil {
 		return ErrConfiguration

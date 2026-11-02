@@ -1,0 +1,57 @@
+{
+  "observed_at_utc": "2026-10-31T21:41:17.893058+00:00",
+  "operation": "query only; no POST/new request ID",
+  "request_id": "cb7a967c-747a-4737-8554-b5020f067848",
+  "helper_source_sha256": "9464a0f22c76ccb970eb98a69c5e8e4cc6fb56d4497d50ff72e66983e07de6ca",
+  "ssh_exit_code": 1,
+  "stdout_bytes": 0,
+  "stderr_bytes": 244,
+  "stderr_sha256": "c3a4c1aaeded6e84ec4160f4188c05cc9f78aeaec3960139d0709f1fea837a10",
+  "traceback_frames": [
+    {
+      "file": "<stdin>",
+      "line": 310,
+      "function": "<module>"
+    },
+    {
+      "file": "<stdin>",
+      "line": 261,
+      "function": "main"
+    },
+    {
+      "file": "<stdin>",
+      "line": 175,
+      "function": "remote"
+    }
+  ],
+  "exception_classes": [
+    "UnboundLocalError"
+  ],
+  "known_safe_exception": "UnboundLocalError: cannot access local variable 'http' where it is not associated with a value",
+  "raw_stderr_retained": false,
+  "original_unknown_receipt_modified": false,
+  "fix": {
+    "change": "Directly import CookieJar and use CookieJar(); no other behavior changed by this fix. Root context/ProxyHandler changes preserved.",
+    "helper_sha256": "d56c0c5354359f258f1498782fb67039309097a734f56548f262689b4db98155",
+    "syntax": "PASS"
+  },
+  "fixed_query": {
+    "observed_at_utc": "2026-10-31T21:42:11.268840+00:00",
+    "command": "query --request-id cb7a967c-747a-4737-8554-b5020f067848",
+    "exit_code": 2,
+    "result": {
+      "status": "NOT_FOUND_OR_AMBIGUOUS_NOT_PROOF_OF_NO_SUBMISSION",
+      "request_id": "cb7a967c-747a-4737-8554-b5020f067848"
+    },
+    "absence_alone_not_used_as_no_post_proof": true
+  },
+  "startup_proof": {
+    "same_remote_entry_for_submit_and_query": true,
+    "failing_opener_line": 175,
+    "first_HTTP_call_line": 205,
+    "failure_precedes_identity_and_HTTP": true,
+    "original_receipt_status": "POST_OUTCOME_UNKNOWN",
+    "original_receipt_sha256_after_diagnosis": "8764c7ff49d9ae72eaa72fdd7f9f9373e6dc9e98704d9adfac2e49b759a9083f",
+    "original_receipt_modified": false
+  }
+}

@@ -17,24 +17,21 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore"
+	environment "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres"
+	envfixture "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/tenantenvironment"
 )
 
 // Only immutable material/configuration and remote S3 are fixture boundaries.
 // Import, both PG repositories, Prepare/Finalize, canonical compilation and the
 // real workspace transformation all execute their normal business code.
-type preparedVerticalMaterial struct{ value cpup01.ImplementationMaterial }
-
-func (material preparedVerticalMaterial) ReadImplementationMaterial(context.Context, string, string) (cpup01.ImplementationMaterial, error) {
-	return material.value, nil
-}
-
-type preparedVerticalFacts struct{ value biz.TenantAdmissionFacts }
-
 // preparedVerticalImages is the catalogue answer for the synthetic fixture.
 type preparedVerticalImages struct{}
 
@@ -47,13 +44,12 @@ func (preparedVerticalImages) EnsurePullSecret(_ context.Context, tenant, cluste
 	return cpup01.PullSecretName(tenant, cluster, namespace, registry)
 }
 
-func (facts preparedVerticalFacts) ReadAdmissionFacts(context.Context, string, string) (biz.TenantAdmissionFacts, error) {
-	return facts.value, nil
-}
-
 func TestRealImportPreparedFactsAndAcceptedExecutionDriveSingleReadPrepare(t *testing.T) {
 	open := postgres.Prepare(t)
 	request, contents := managedImportFixture()
+	request.Scope.ApprovedPrefix = "inputs/" + request.TenantID
+	request.Scope.CredentialReference = "input-read"
+	request.Object.Key = request.Scope.ApprovedPrefix + "/data.csv"
 	var reads atomic.Int64
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/"+request.Object.Bucket+"/"+request.Object.Key || r.URL.Query().Get("versionId") != *request.Object.VersionID {
@@ -74,7 +70,7 @@ func TestRealImportPreparedFactsAndAcceptedExecutionDriveSingleReadPrepare(t *te
 	if err != nil || ready.Verification == nil {
 		t.Fatalf("real import failed: %+v %v", ready, err)
 	}
-	snapshot, material, intent := conformance.SnapshotV1(), conformance.MaterialV21(), conformance.IntentV1()
+	snapshot, intent := conformance.SnapshotV1(), conformance.IntentV1()
 	intent.DatasetVersionID = request.InputVersionID
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
@@ -82,9 +78,20 @@ func TestRealImportPreparedFactsAndAcceptedExecutionDriveSingleReadPrepare(t *te
 	}
 	identity := snapshot.IdentityRef
 	identity.TenantID, identity.Actor, identity.IntentHash = request.TenantID, request.Actor, intentHash
-	facts := biz.TenantAdmissionFacts{TenantID: request.TenantID, Environment: snapshot.Environment, PublicationScope: snapshot.PublicationScope, InputScope: request.Scope, Workspace: material.Workspace, InputFilePath: "/inputs/data.csv", OutputDirectoryPath: "/outputs", Timing: cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 3600, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 900}, TargetPlatform: cpup01.TrainingPlatform{OS: "linux", Architecture: "amd64"}}
-	resolver := biz.NewAdmissionResolver(preparedVerticalMaterial{material}, input.New(open()), preparedVerticalFacts{facts}, preparedVerticalImages{}, limits)
-	candidate, err := resolver.Prepare(ctx, biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: time.Now().UTC().Truncate(time.Microsecond)})
+	acceptedAt := time.Now().UTC().Truncate(time.Microsecond)
+	snapshot.DeadlineAt = acceptedAt.Add(time.Hour)
+	snapshot.Input.Object.StorageConnectionID = request.Scope.StorageConnectionID
+	snapshot.Input.Object.Bucket = request.Scope.Bucket
+	a := admissionfixture.Bind(t, biz.Admission{TenantID: identity.TenantID, Actor: identity.Actor, OperationID: identity.OperationID, ExecutionID: identity.ExecutionID, Intent: intent, AcceptedAt: acceptedAt, Snapshot: snapshot})
+	f := envfixture.NewFixture(t, a)
+	a = f.Ensure(t, open(), a)
+	materials := catalogue.NewReader(f.MaterialsDirectory)
+	facts, err := admissionfacts.New(environment.NewRepository(open()), f.Platform, materials, a.Snapshot.Environment.ClusterID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resolver := biz.NewAdmissionResolver(materials, input.New(open()), facts, preparedVerticalImages{}, limits)
+	candidate, err := resolver.Prepare(ctx, biz.PrepareAdmissionInput{IdentityRef: identity, Intent: intent, ComputeOrigin: snapshot.ComputeOrigin, AcceptedAt: acceptedAt})
 	if err != nil || candidate.Snapshot.Input.PreparedDataset != ready.Verification.PreparedDataset {
 		t.Fatalf("Prepare lost durable input observations: %+v %v", candidate.Snapshot.Input, err)
 	}

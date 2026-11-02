@@ -1,0 +1,153 @@
+{
+  "source_commit": "fa80f886d022177173d7e9cf81ec51e54c2df4c8",
+  "purpose": "Acceptance coverage recommendation only; root owns Result/report updates. Source/test assertions were inspected; package PASS is not taken as proof of unimplemented test scenarios.",
+  "test_run_evidence": [
+    "environment-formal-default-tests.log",
+    "environment-formal-pg-tests.log",
+    "environment-formal-make-check.log",
+    "fedora-round2-original-session-exits.json",
+    "fedora-round2-source-identity.json"
+  ],
+  "public_routes": {
+    "ensure": "POST /api/v1/modeldev/environment:ensure",
+    "get": "GET /api/v1/modeldev/environment"
+  },
+  "rpc_methods": [
+    "/ani.modeldev.v1.ModelDevTenantEnvironmentService/EnsureTenantExecutionEnvironment",
+    "/ani.modeldev.v1.ModelDevTenantEnvironmentService/GetTenantExecutionEnvironment"
+  ],
+  "API01": {
+    "recommendation": "PARTIAL_COMPONENT_PASS; live/end-to-end remains NOT_RUN",
+    "directly_verified": [
+      {
+        "source": "app/admin/service/internal/server/modeldev_environment_http_test.go:20",
+        "test": "TestModelDevEnvironmentRoutesEnterAuthenticationAndRejectGetInputs",
+        "assertions": [
+          "Both exact registered public routes enter denying authentication and return 401",
+          "GET query tenant_id and GET body {} return 400 before authentication middleware"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/server/modeldev_environment_http_test.go:51",
+        "test": "TestModelDevEnvironmentStrictEmptyJSONAndKey",
+        "assertions": [
+          "POST empty object/whitespace accepted by decoder",
+          "null/array/tenant_id property/trailing object/>1024 bytes/zero UUID/uppercase UUID/query/empty query/duplicate Idempotency-Key/non-JSON rejected by decoder"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/server/modeldev_environment_http_test.go:83",
+        "test": "TestModelDevEnvironmentExactHTTPBudgetsAndParent",
+        "assertions": [
+          "Exact POST Ensure=30s; exact GET Get=5s in timeout filter",
+          "wrong verbs, trailing slash and GET executions retain configured 1s baseline",
+          "Ensure 100ms parent deadline is retained"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/data/modeldev_environment_client_test.go:67",
+        "test": "TestModelDevEnvironmentRebuildsMetadataAndFiniteBudgets",
+        "boundary": "real TLS sockets; external ModelDev peer only",
+        "assertions": [
+          "Ensure RPC <=28s, Get RPC <=3s",
+          "trusted tenant and tenant-all replace poisoned outgoing metadata; Authorization removed",
+          "Ensure authorized-method exact full RPC name; fresh request IDs differ",
+          "original poisoned metadata object remains unchanged"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/data/modeldev_environment_client_test.go:96",
+        "test": "TestModelDevEnvironmentRejectsUnknownAndIncompleteREADY",
+        "boundary": "view validator unit",
+        "assertions": [
+          "missing namespace UID/digest, foreign namespace, state99, phase0, view/timestamp unknown fields rejected"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/service/modeldev_environment_service_test.go:13",
+        "test": "TestModelDevEnvironmentRefusesPlatformAndAPIKeyWithoutDependencies",
+        "assertions": [
+          "both Ensure/Get reject tenant0 user and API-key principal with 403 before dependencies"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/data/modeldev_environment_authorization_test.go:45",
+        "test": "TestModelDevEnvironmentCurrentIndependentGrantsAndRevocation",
+        "boundary": "real exclusive PostgreSQL; direct authoritative authorization function",
+        "assertions": [
+          "no grant denied; Get tenant0 denied",
+          "view-only grant cannot Ensure; respective exact path/method grants allow",
+          "OFF grant recheck denied; foreign API path denied; Ensure SELF scope denied",
+          "acceptance=0 and charge=0 at end of this authorization scenario"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/data/modeldev_environment_permissions_test.go:30",
+        "test": "TestModelDevEnvironmentPermissionDataStepGrantsOnlyTenantManagers",
+        "assertions": [
+          "actual SQL gives 2 grants to exact tenant manager and template manager; viewer 0",
+          "reapply keeps viewer 0"
+        ]
+      }
+    ],
+    "source_only_or_not_directly_tested": [
+      "authenticated HTTP success 200/202 and Retry-After=2 through real BFF current authorization and ModelDev service chain",
+      "same Idempotency-Key HTTP retry after revocation; current-grant recheck is tested directly, not via that full HTTP scenario",
+      "unknown request and top-level response-wrapper fields: source rejects, but new tests directly exercise unknown view/timestamp and nested violation only",
+      "new RPC parent-deadline cancellation and Get authorized-method metadata equality have source implementation but no dedicated assertion in the new test",
+      "migration reapply preserving an existing OFF/revoked grant is source ON CONFLICT behavior, not a tested scenario",
+      "real A/B cross-tenant namespace/authorization/Stop acceptance"
+    ]
+  },
+  "API02": {
+    "recommendation": "PARTIAL_COMPONENT_PASS; no claim of full BFF missing-environment/quota integration acceptance",
+    "directly_verified": [
+      {
+        "source": "app/admin/service/internal/data/modeldev_environment_client_test.go:113",
+        "test": "TestModelDevEnvironmentErrorWhitelistRejectsExtras",
+        "assertions": [
+          "direct resolution-error converter iterates all 22 frozen causes and retains each exact finite violation cause while discarding private message",
+          "wrong kind/extra violation/UNKNOWN cause/nested violation unknown field/foreign correlation lose details"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/data/modeldev_environment_client_test.go:91",
+        "test": "TestModelDevEnvironmentRebuildsMetadataAndFiniteBudgets",
+        "assertions": [
+          "real mTLS Get peer returns NotFound reason38 with private text; client retains NotFound and removes private text"
+        ]
+      },
+      {
+        "source": "app/admin/service/internal/service/modeldev_environment_service_test.go:27",
+        "test": "TestModelDevEnvironmentPublicErrorRetainsOnlyFiniteCause",
+        "assertions": [
+          "service error mapping for TENANT_NAMESPACE_NOT_FOUND yields503/ENVIRONMENT_NOT_READY and exactly metadata.environment_reason",
+          "Get reason38 service error mapping yields404/ENVIRONMENT_NOT_REGISTERED"
+        ]
+      }
+    ],
+    "source_only_or_not_directly_tested": [
+      "all 22 causes were tested at the data converter, but public service metadata mapping has one direct cause example; no full HTTP roundtrip for all22",
+      "no real Gov HTTP Create missing-environment scenario that asserts acceptance/charge/CREATE outbox remain zero; the zero counts here belong to direct authorization scenario",
+      "HTTP 404 body from authenticated current-tenant Get against real ModelDev no-row registry is not live-tested"
+    ]
+  },
+  "NS01": {
+    "recommendation": "Gov namespace resolver ownership NOT_APPLICABLE; consumer component evidence only, not direct full-vector PASS",
+    "boundary": [
+      "Gov owns neither Kubernetes namespace resolver nor namespace creation; no new Namespace RPC",
+      "trusted resource UUID mapping and canonical checks precede outgoing RPC",
+      "environment view validator requires namespace_name == tenant-<trusted UUID>",
+      "official cpup01 v4 codec consumed in default prepared/finalized and PG original acceptance tests"
+    ],
+    "actual_test_sources": [
+      "app/admin/service/internal/data/modeldev_environment_client_test.go:96 foreignName validator negative",
+      "app/admin/service/internal/data/modeldev_client_response_test.go:47 formal conformance/codec fixture and prepared/finalized response boundaries",
+      "app/admin/service/internal/data/modeldev_fixture_scope_test.go:14 binds synthetic external responses to exact tenant/execution facts without relaxing validators"
+    ],
+    "not_claimed": [
+      "Gov did not directly run the entire shared tenant namespace vector corpus",
+      "Gov test package PASS does not prove all Res/ModelDev owner namespace resolver branches or live Namespace GET behavior"
+    ]
+  }
+}

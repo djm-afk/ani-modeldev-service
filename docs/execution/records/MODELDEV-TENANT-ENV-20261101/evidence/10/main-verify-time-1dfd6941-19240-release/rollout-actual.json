@@ -1,0 +1,92 @@
+{
+  "started_at": "2026-11-01T15:53:46.214040+00:00",
+  "source_commit": "1dfd6941e5780eca0d55dc4e5fbbd2f58e0710ab",
+  "source_tree": "8f15d37c37ab77c64dd1e7643f3b00c88981ed74",
+  "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+  "cluster_patch_count": 1,
+  "configuration_changed": false,
+  "identity_before_patch": {
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "resource_cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+  },
+  "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+  "old_rv": "21310572",
+  "old_spec_sha256": "0b4a1c0b9fa49cde7d01f2a1a1a84bc46464800c5d540337c6a34e6ec33c0eb6",
+  "old_image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:f440ce07e7a04939793ca5f86aabb09f50860bbf355a6acaafe98e82b930ed89",
+  "old_pod": {
+    "name": "ani-modeldev-6fd45bf8cc-x9768",
+    "uid": "fd1003d1-7c40-4b96-b8d2-5dc537080f68",
+    "node": "node3",
+    "ip": "10.16.1.43",
+    "phase": "Running",
+    "deleting_at": null,
+    "containers": [
+      {
+        "name": "modeldev",
+        "image": "sha256:efe4d6f929520d33fcc4a4eb10edf677638a065d44434f67e7ff84dbd5c214b3",
+        "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:f440ce07e7a04939793ca5f86aabb09f50860bbf355a6acaafe98e82b930ed89",
+        "container_id": "containerd://0735b0042370e71756238c3e7314eda907bbbe08aa3d4145323402ee3dd4dcaa",
+        "ready": true,
+        "restarts": 0,
+        "state": {
+          "running": {
+            "startedAt": "2026-11-01T13:45:30Z"
+          }
+        }
+      }
+    ]
+  },
+  "desired_spec_sha256": "998c65016fdf98d61dcc180868d0dc1bb97ec300e2fc06ed7a699e9692a98dfb",
+  "patched_at": "2026-11-01T15:53:46.756449+00:00",
+  "patched_rv": "21387663",
+  "status": "IMAGE_ONLY_RECREATE_SINGLE_READY_ZERO_RESTART_UNIQUE_ENDPOINT",
+  "finished_at": "2026-11-01T15:53:53.403831+00:00",
+  "deployment_rv": "21387787",
+  "new_pod": {
+    "name": "ani-modeldev-6fd745c85c-z59v4",
+    "uid": "b98cfbef-fd6d-4a8f-99fe-d47b6ed2d6f9",
+    "node": "node3",
+    "ip": "10.16.1.124",
+    "phase": "Running",
+    "deleting_at": null,
+    "containers": [
+      {
+        "name": "modeldev",
+        "image": "sha256:bb2990c19f0f0617ba77ddd99e2530e139db45e0a3f7c97c18ee4dacaa17dcf3",
+        "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:fe944d52cabd90e728ab1c8c5b3f29e08e51edd2e8a1f897e7b68a42311eb998",
+        "container_id": "containerd://e92145309ad9a6bf3e1a00d26361fb352a3a9d8e0fcb90d310eeb3b0816475b9",
+        "ready": true,
+        "restarts": 0,
+        "state": {
+          "running": {
+            "startedAt": "2026-11-01T15:53:50Z"
+          }
+        }
+      }
+    ]
+  },
+  "new_rs": {
+    "name": "ani-modeldev-6fd745c85c",
+    "uid": "9fd75510-459e-4242-b89f-d867a116032d"
+  },
+  "old_pod_gone": true,
+  "endpoint": {
+    "name": "ani-modeldev",
+    "uid": "b6698330-9072-4493-a69f-146234140677",
+    "addresses": [
+      {
+        "ip": "10.16.1.124",
+        "nodeName": "node3",
+        "targetRef": {
+          "kind": "Pod",
+          "name": "ani-modeldev-6fd745c85c-z59v4",
+          "namespace": "ani-system",
+          "uid": "b98cfbef-fd6d-4a8f-99fe-d47b6ed2d6f9"
+        }
+      }
+    ]
+  },
+  "full_spec_only_image_changed": true
+}

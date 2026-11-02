@@ -47,7 +47,7 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 			actual, getErr := a.client.Resource(resource).Namespace(namespace).Get(ctx, prior.Name, metav1.GetOptions{})
 			if apierrors.IsNotFound(getErr) {
 				prior.APIObjectPresent, prior.CreationDisabled = false, false
-				if prior.Kind != "Pod" || !prior.Terminal || prior.ExitCode == nil {
+				if prior.Kind != "Pod" || !prior.Terminal || prior.ExitCode == nil && !prior.TrainingAdmissionAbortedAt(observation.ObservedAt) {
 					prior.Terminal, prior.ExitCode = false, nil
 				}
 				resources[prior.UID] = prior
@@ -59,11 +59,14 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 			if actual.GetAPIVersion() != prior.APIVersion || actual.GetKind() != prior.Kind || actual.GetNamespace() != namespace || actual.GetName() != prior.Name || string(actual.GetUID()) != prior.UID || controllerUID(actual) != prior.OwnerUID {
 				return observation, biz.ErrRuntimeConflict
 			}
-			terminal, code := false, (*int32)(nil)
+			fact := resourceFact(actual, prior.OwnerUID, false, nil)
 			if prior.Kind == "Pod" {
-				terminal, code = podTermination(actual)
+				fact = trainingPodFact(actual, prior.OwnerUID, observation.ObservedAt)
+				if fact.AdmissionAbort != nil && validateEffectiveTrainingPod(plan, actual) != nil {
+					return observation, biz.ErrRuntimeConflict
+				}
 			}
-			resources[prior.UID] = resourceFact(actual, prior.OwnerUID, terminal, code)
+			resources[prior.UID] = fact
 		}
 		observation.Resources = orderedResources(resources)
 		return observation, nil
@@ -152,7 +155,11 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 		if vectorErr != nil || ValidatePodResources(vector, pod) != nil || validateEffectiveTrainingPod(plan, pod) != nil || !groupMatches {
 			observation.SpecificationMismatch = true
 		}
-		terminal, code := podTermination(pod)
+		fact := trainingPodFact(pod, ownerUID, observation.ObservedAt)
+		if fact.AdmissionAbort != nil && observation.SpecificationMismatch {
+			return observation, biz.ErrRuntimeConflict
+		}
+		terminal, code := fact.Terminal, fact.ExitCode
 		// Owner assertions identify live GPU usage. They must not gate observing
 		// an original stopped/deleting worker or retaining its actual exit/logs.
 		if !observation.SpecificationMismatch && !terminal && pod.GetDeletionTimestamp() == nil && plan.Snapshot.ComputeOrigin.DeviceMode == "gpu" {
@@ -163,12 +170,12 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 				return observation, err
 			}
 		}
-		resources[string(pod.GetUID())] = resourceFact(pod, ownerUID, terminal, code)
+		resources[string(pod.GetUID())] = fact
 		objects[string(pod.GetUID())] = pod
 		podCount++
 		allPodsTerminal = allPodsTerminal && terminal
 		allZero = allZero && terminal && code != nil && *code == 0
-		anyNonzero = anyNonzero || (terminal && code != nil && *code != 0)
+		anyNonzero = anyNonzero || (terminal && code != nil && *code != 0) || fact.TrainingAdmissionAbortedAt(observation.ObservedAt)
 	}
 
 	// Lists cannot erase previously observed resources. Explicitly revisit every
@@ -190,12 +197,12 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 		actual, getErr := a.client.Resource(resource).Namespace(namespace).Get(ctx, prior.Name, metav1.GetOptions{})
 		if apierrors.IsNotFound(getErr) {
 			prior.APIObjectPresent, prior.CreationDisabled = false, false
-			if prior.Kind == "Pod" && prior.Terminal && prior.ExitCode != nil {
+			if prior.Kind == "Pod" && prior.Terminal && (prior.ExitCode != nil || prior.TrainingAdmissionAbortedAt(observation.ObservedAt)) {
 				// A persisted exit belongs to this exact Pod UID. Garbage
 				// collection changes API presence, not that completed process.
 				podCount++
-				allZero = allZero && *prior.ExitCode == 0
-				anyNonzero = anyNonzero || *prior.ExitCode != 0
+				allZero = allZero && prior.ExitCode != nil && *prior.ExitCode == 0
+				anyNonzero = anyNonzero || prior.ExitCode != nil && *prior.ExitCode != 0 || prior.TrainingAdmissionAbortedAt(observation.ObservedAt)
 			} else {
 				prior.Terminal, prior.ExitCode = false, nil
 				allPodsTerminal, jobsStopped = false, false
@@ -211,12 +218,16 @@ func (a *Adapter) ObserveTraining(ctx context.Context, plan biz.TrainingPlan, ha
 		}
 		objects[prior.UID] = actual
 		if prior.Kind == "Pod" {
-			terminal, code := podTermination(actual)
-			resources[prior.UID] = resourceFact(actual, prior.OwnerUID, terminal, code)
+			fact := trainingPodFact(actual, prior.OwnerUID, observation.ObservedAt)
+			if fact.AdmissionAbort != nil && validateEffectiveTrainingPod(plan, actual) != nil {
+				return observation, biz.ErrRuntimeConflict
+			}
+			terminal, code := fact.Terminal, fact.ExitCode
+			resources[prior.UID] = fact
 			podCount++
 			allPodsTerminal = allPodsTerminal && terminal
 			allZero = allZero && terminal && code != nil && *code == 0
-			anyNonzero = anyNonzero || (terminal && code != nil && *code != 0)
+			anyNonzero = anyNonzero || (terminal && code != nil && *code != 0) || fact.TrainingAdmissionAbortedAt(observation.ObservedAt)
 		} else if prior.Kind == "PodGroup" {
 			if !controllerIs(actual, "trainer.kubeflow.org/v1alpha1", "TrainJob", plan.Name, handle.TrainJobUID) {
 				return observation, biz.ErrRuntimeConflict
@@ -269,6 +280,122 @@ func resourceFact(object *unstructured.Unstructured, owner string, terminal bool
 		creationDisabled, _, _ = unstructured.NestedBool(object.Object, "spec", "suspend")
 	}
 	return biz.RuntimeResource{APIVersion: object.GetAPIVersion(), Kind: object.GetKind(), Namespace: object.GetNamespace(), Name: object.GetName(), UID: string(object.GetUID()), OwnerUID: owner, Terminal: terminal, ExitCode: code, APIObjectPresent: true, CreationDisabled: creationDisabled, Suspension: trainingSuspension(object, creationDisabled)}
+}
+
+func trainingPodFact(pod *unstructured.Unstructured, owner string, observedAt time.Time) biz.RuntimeResource {
+	terminal, code := podTermination(pod)
+	fact := resourceFact(pod, owner, terminal, code)
+	if !terminal {
+		fact.AdmissionAbort = ObservePodAdmissionAbort(pod, observedAt)
+		fact.Terminal = fact.AdmissionAbort != nil
+	}
+	return fact
+}
+
+// ObservePodAdmissionAbort reads only the kubelet's exact never-created shape.
+// Callers still verify the original UID, plan and complete controller binding.
+// Metadata resourceVersion/finalizer changes do not change these native facts.
+func ObservePodAdmissionAbort(pod *unstructured.Unstructured, observedAt time.Time) *biz.PodAdmissionAbort {
+	if pod == nil || pod.GetAPIVersion() != "v1" || pod.GetKind() != "Pod" || pod.GetNamespace() == "" || pod.GetName() == "" || pod.GetUID() == "" || pod.GetResourceVersion() == "" {
+		return nil
+	}
+	proof := &biz.PodAdmissionAbort{PodGeneration: pod.GetGeneration()}
+	proof.NodeName, _, _ = unstructured.NestedString(pod.Object, "spec", "nodeName")
+	proof.RestartPolicy, _, _ = unstructured.NestedString(pod.Object, "spec", "restartPolicy")
+	proof.Phase, _, _ = unstructured.NestedString(pod.Object, "status", "phase")
+	proof.Reason, _, _ = unstructured.NestedString(pod.Object, "status", "reason")
+	var found bool
+	var err error
+	proof.StatusObservedGeneration, found, err = unstructured.NestedInt64(pod.Object, "status", "observedGeneration")
+	if err != nil || !found {
+		return nil
+	}
+	for _, path := range [][]string{{"spec", "initContainers"}, {"spec", "ephemeralContainers"}, {"status", "initContainerStatuses"}, {"status", "ephemeralContainerStatuses"}} {
+		items, _, err := unstructured.NestedSlice(pod.Object, path...)
+		if err != nil || len(items) != 0 {
+			return nil
+		}
+	}
+	declared, found, err := unstructured.NestedSlice(pod.Object, "spec", "containers")
+	statuses, statusesFound, statusesErr := unstructured.NestedSlice(pod.Object, "status", "containerStatuses")
+	if err != nil || !found || len(declared) != 1 || statusesErr != nil || !statusesFound || len(statuses) != 1 {
+		return nil
+	}
+	container, declaredOK := declared[0].(map[string]any)
+	status, statusOK := statuses[0].(map[string]any)
+	if !declaredOK || !statusOK || container["name"] != "node" || status["name"] != "node" || status["image"] != container["image"] {
+		return nil
+	}
+	for _, field := range []string{"restartPolicy", "restartPolicyRules"} {
+		if _, present := container[field]; present {
+			return nil
+		}
+	}
+	proof.DeclaredContainers = []string{"node"}
+	state, found, err := unstructured.NestedMap(status, "state")
+	terminated, terminalOK := state["terminated"].(map[string]any)
+	if err != nil || !found || len(state) != 1 || !terminalOK || len(terminated) != 5 || terminated["reason"] != "ContainerStatusUnknown" || terminated["message"] != biz.SandboxMissingMessage {
+		return nil
+	}
+	for _, field := range []string{"startedAt", "finishedAt"} {
+		if value, present := terminated[field]; !present || value != nil {
+			return nil
+		}
+	}
+	code, found, err := unstructured.NestedInt64(terminated, "exitCode")
+	if err != nil || !found || code != 137 {
+		return nil
+	}
+	marker := biz.InitializationContainerNotCreated{Name: "node", Reason: "ContainerStatusUnknown", Message: biz.SandboxMissingMessage, ReportedExitCode: 137}
+	marker.ContainerID, _, err = unstructured.NestedString(status, "containerID")
+	if err != nil {
+		return nil
+	}
+	marker.ImageID, found, err = unstructured.NestedString(status, "imageID")
+	if err != nil || !found {
+		return nil
+	}
+	marker.RestartCount, found, err = unstructured.NestedInt64(status, "restartCount")
+	if err != nil || !found {
+		return nil
+	}
+	marker.Started, found, err = unstructured.NestedBool(status, "started")
+	if err != nil || !found {
+		return nil
+	}
+	marker.Ready, found, err = unstructured.NestedBool(status, "ready")
+	if err != nil || !found {
+		return nil
+	}
+	last, found, err := unstructured.NestedMap(status, "lastState")
+	if err != nil || !found || len(last) != 0 {
+		return nil
+	}
+	marker.LastStateEmpty = true
+	proof.UncreatedContainer = marker
+	conditions, found, err := unstructured.NestedSlice(pod.Object, "status", "conditions")
+	if err != nil || !found {
+		return nil
+	}
+	for _, raw := range conditions {
+		condition, ok := raw.(map[string]any)
+		if !ok {
+			return nil
+		}
+		kind, kindOK := condition["type"].(string)
+		status, statusOK := condition["status"].(string)
+		generation, present, generationErr := unstructured.NestedInt64(condition, "observedGeneration")
+		text, _, _ := unstructured.NestedString(condition, "lastTransitionTime")
+		at, timeErr := time.Parse(time.RFC3339Nano, text)
+		if !kindOK || !statusOK || !present || generationErr != nil || timeErr != nil {
+			return nil
+		}
+		proof.Conditions = append(proof.Conditions, biz.SandboxTerminationCondition{Type: kind, Status: status, ObservedGeneration: generation, TransitionAt: at.UTC()})
+	}
+	if !proof.ValidAt(observedAt) {
+		return nil
+	}
+	return proof
 }
 
 func orderedResources(resources map[string]biz.RuntimeResource) []biz.RuntimeResource {

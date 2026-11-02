@@ -14,7 +14,7 @@ import (
 
 func TestRunAuthorityBindsOnceAfterRealSubmissionAndSurvivesReconnect(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	admissionPool, writerPool := openPool(), openPool()
@@ -118,7 +118,7 @@ func TestRunAuthorityCannotBindAfterCloseOrAcrossFrozenScope(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 			pool := openPool()

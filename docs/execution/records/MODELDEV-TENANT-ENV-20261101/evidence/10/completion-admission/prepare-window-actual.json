@@ -1,0 +1,127 @@
+{
+  "schema": "ani.modeldev.LIVE10-current-preparation.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "started_at": "2026-11-01T16:57:31.450244+00:00",
+  "window_opened": false,
+  "cluster_mutations": 0,
+  "temporary_tls": {
+    "temporary_original_admin_tls_copy_absent": true,
+    "new_identity": false
+  },
+  "argo_projected_source": {
+    "pod_name": "workflow-controller-65f677577c-rxk9t",
+    "pod_uid": "e91979c6-b012-4fff-a555-aa85db4c9e7c",
+    "node": "node1",
+    "volume": "kube-api-access-9j6gp",
+    "aud": [
+      "https://kubernetes.default.svc.cluster.local"
+    ],
+    "iat": 1793551903,
+    "exp": 1825087903,
+    "principal": {
+      "http_status": 201,
+      "username": "system:serviceaccount:kubeflow:argo",
+      "uid": "fad3d394-d7ef-4be1-a1d8-a864a3497c58",
+      "groups": [
+        "system:serviceaccounts",
+        "system:serviceaccounts:kubeflow",
+        "system:authenticated"
+      ],
+      "response_sha256": "9f6040539bb65ce28295d9ba5490c9b36b64566b1c7e5cbf5098ade9e96aa9b6",
+      "authentication": "actual existing projected token; no impersonation or TokenRequest"
+    },
+    "maintenance": {
+      "namespace": "rook-ceph",
+      "pod_name": "rook-ceph.cephfs.csi.ceph.com-nodeplugin-mqzqj",
+      "pod_uid": "3bbfe46d-cabf-4fb6-85b3-d2e47e8c55e5",
+      "node": "node1",
+      "container": "csi-cephfsplugin",
+      "container_id": "containerd://2b2f2d4289c7d3e4dc9378eca3e5744406370b3ccc45012139558dba789cf496",
+      "daemonset_uid": "e2476dc4-0d61-4591-9334-cfb5550e7fd8",
+      "host_path": "/var/lib/kubelet/pods",
+      "mount_path": "/var/lib/kubelet/pods",
+      "existing_image": "10.10.1.66:5001/cephcsi/cephcsi:v3.17.1"
+    }
+  },
+  "ordinary_baseline": {
+    "http_status": 201,
+    "reason": null,
+    "message": null,
+    "response_sha256": "401c1b79d8aac1949b9897b7221e6afe2763d841615fbb2daadb121a9a9b0422",
+    "generated_name": "md-live10-ordinary-4c72j",
+    "source_uid": "81ac92e1-d863-4ac1-abcf-5bf6a3df8711",
+    "source_kind": "actual unrelated KubeVirt hotplug Pod",
+    "actor": "original operator; admission selector isolation only, not ordinary-tenant authorization"
+  },
+  "prepared": {
+    "webhook_uid": "c452d29d-89be-41af-ac95-eb467e1a89c2",
+    "webhooks_sha256": "9c90e4cf3ce630816d00e157abe5dbe5ec1d24402c9ff6445d5ccb8ea84b3d20",
+    "webhooks": [
+      {
+        "admissionReviewVersions": [
+          "v1"
+        ],
+        "clientConfig": {
+          "caBundle": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI0VENDQVlhZ0F3SUJBZ0lVV2QxcWIrU25pQXZSZUVCWnN6QXdHRFVzMllnd0NnWUlLb1pJemowRUF3SXcKVGpFV01CUUdBMVVFQ2hNTllXNXBMV2x1YzNSaGJHeGxjakVlTUJ3R0ExVUVDeE1WWm05MWJtUmhkR2x2YmkxagpiMjF3YjI1bGJuUnpNUlF3RWdZRFZRUURFd3RoYm1rdGNtOXZkQzFqWVRBZUZ3MHlOakV3TWpFeE5EQXlOVFphCkZ3MHpOakV3TVRneE5EQXlOVFphTUU0eEZqQVVCZ05WQkFvVERXRnVhUzFwYm5OMFlXeHNaWEl4SGpBY0JnTlYKQkFzVEZXWnZkVzVrWVhScGIyNHRZMjl0Y0c5dVpXNTBjekVVTUJJR0ExVUVBeE1MWVc1cExYSnZiM1F0WTJFdwpXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CQndOQ0FBVG5Wc1Rkd3hxdG1tekhWUmp5dmVJQnlnZlhNalY1CmlPTVgzZXlLQ3Rsei90Wk1wbWFoakE0Sy90cGFjdUF2MEQyU3d3RWM0MjJ0Wm5SaURPYW5sWFBQbzBJd1FEQU8KQmdOVkhROEJBZjhFQkFNQ0FxUXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QWRCZ05WSFE0RUZnUVUwdE5pVUpWeQppQnIraytiRG9KZm1NcWxyWFVvd0NnWUlLb1pJemowRUF3SURTUUF3UmdJaEFPTTh4WVNDVDBKUmNkcENPSFc1ClNGVWxBMmJUbjhlNjhTWTVRQzg1bmxSTUFpRUFrUm5wNnlSdi9zclZyUXdZZFc0Q1VxeFU3YUJ1R0N0bXVuc3cKd2FsdU1Ccz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
+          "service": {
+            "name": "ani-modeldev-webhook",
+            "namespace": "ani-system",
+            "path": "/mutate",
+            "port": 443
+          }
+        },
+        "failurePolicy": "Fail",
+        "matchConditions": [
+          {
+            "expression": "(has(object.spec.serviceAccountName) && object.spec.serviceAccountName in [\"modeldev-step\", \"trainer-workload\", \"verifier\"]) || (has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))) || (has(object.spec.volumes) && object.spec.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(s,has(s.secret) && s.secret.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.containers) && object.spec.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.initContainers) && object.spec.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.ephemeralContainers) && object.spec.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))",
+            "name": "modeldev-reserved-identity-or-reference"
+          },
+          {
+            "expression": "!(request.userInfo.username in [\"system:node:node1\",\"system:node:node2\",\"system:node:node3\",\"system:serviceaccount:kcn-system:kcn-controller\",\"system:serviceaccount:kube-system:ani-multus\",\"system:serviceaccount:kube-system:generic-garbage-collector\",\"system:serviceaccount:kube-system:volcano-device-plugin\",\"system:serviceaccount:kubeflow-system:jobset-controller-manager\",\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\",\"system:serviceaccount:volcano-system:ani-volcano-scheduler\"])",
+            "name": "platform-controller-trust"
+          }
+        ],
+        "matchPolicy": "Exact",
+        "name": "dynamic.modeldev.ani.io",
+        "namespaceSelector": {},
+        "objectSelector": {},
+        "reinvocationPolicy": "Never",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "apiVersions": [
+              "v1"
+            ],
+            "operations": [
+              "CREATE"
+            ],
+            "resources": [
+              "pods"
+            ],
+            "scope": "Namespaced"
+          }
+        ],
+        "sideEffects": "None",
+        "timeoutSeconds": 8
+      }
+    ],
+    "service_uid": "882b642b-7efe-4c0f-9624-8ba9f2542f6b",
+    "service_cluster_ip": "10.96.59.191",
+    "ordinary_source": {
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "name": "hp-volume-9tvb5",
+      "uid": "81ac92e1-d863-4ac1-abcf-5bf6a3df8711"
+    }
+  },
+  "status": "READY_NO_WINDOW_OPENED_ACTUAL_ARGO_PRINCIPAL_AND_ORDINARY_BASELINE",
+  "finished_at": "2026-11-01T16:57:32.255539+00:00"
+}

@@ -1,0 +1,4 @@
+127.0.0.1:5432 - accepting connections
+PostgreSQL image=docker.io/library/postgres@sha256:4ef4dbc939d61acea57712655ddb4b4ab27419c913f94cca0cd57cb3ea3c2280 container=88adda95237c1a3d4f9b193027946d46b0dada5bbd93b6b683b5d7f47caa240e; owner/runtime roles are separate
+ok  	go-wind-admin/app/admin/service/internal/data	0.294s
+removed task PostgreSQL container=88adda95237c1a3d4f9b193027946d46b0dada5bbd93b6b683b5d7f47caa240e

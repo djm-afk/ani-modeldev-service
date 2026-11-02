@@ -1,0 +1,2 @@
+rsync: connection unexpectedly closed (34393 bytes received so far) [sender]
+rsync error: error in rsync protocol data stream (code 12) at io.c(285) [sender=3.5.0-g41cb6b71]

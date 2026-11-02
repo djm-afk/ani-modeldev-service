@@ -1,0 +1,13 @@
+{
+  "started_at": "2026-11-01T04:57:32.784997+00:00",
+  "directory": "/home/chabking/tenantenv-20261101/modeldev-native-rbac-fullverify-20261101T045658Z",
+  "log": "/home/chabking/tenantenv-20261101/modeldev-native-rbac-fullverify-20261101T045658Z.make-verify.log",
+  "source_head": "f22fd4cef5f13cf1210eae504690206fbf922723",
+  "remote_head": "UNBORN; exact fixed local HEAD index reconstructed without commit",
+  "source_files": 1756,
+  "pre_mismatch": [],
+  "finished_at": "2026-11-01T05:02:14.656699+00:00",
+  "exit": 2,
+  "post_mismatch": [],
+  "log_sha256": "04336ae8ee32bc57ca0f6f83d83c228b586a0c1a3c37f4f64f078a8fea53366f"
+}

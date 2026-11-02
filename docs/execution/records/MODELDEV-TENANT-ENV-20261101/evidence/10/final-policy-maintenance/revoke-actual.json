@@ -1,0 +1,294 @@
+{
+  "schema": "ani.modeldev.spec54-two-original-ready-environments-revoke.v1",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T16:30:24.137617+00:00"
+  },
+  "started_at": "2026-11-01T16:30:24.137642+00:00",
+  "operations": [
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-kfp-access",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "eabed291-3aa3-4908-b0bf-ebffb685ba14",
+      "resource_version": "21243847",
+      "original_digest": "3ba83fec40ce9ad6a68f6b62718479e7b5192e7d3d197848aeb47ab2bc5a6132",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-kfp-api",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "77267ffd-8c5c-47bd-a8b0-f95c85db311e",
+      "resource_version": "21243843",
+      "original_digest": "d0cb2aadbeab07ad057752070ee03c6ad432129b48d47ac4f0b79104fe969ebf",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-runtime",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "246588fe-3087-4872-8598-6c3e2e3f07dc",
+      "resource_version": "21243838",
+      "original_digest": "e3e694ebb696f7f2b290f184beac3957afe227958f758a29ac1667e061ee3a61",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-step",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "38c9aa52-c348-4a8d-80a2-cf26697e578e",
+      "resource_version": "21243839",
+      "original_digest": "994549414db9b46c1eeba485ca68f24190946c8f38abbaed0142f29a8871665c",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-webhook-read",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "35a14289-965e-4aa9-97cb-83c7aabcfd6b",
+      "resource_version": "21243841",
+      "original_digest": "2a4b78331321ca4ad870089141b6e76ae5c24afb6ff07bc040eadeb43a9d94b2",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-kfp-access",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "23fd2855-3ac9-441c-9ef9-21c237404107",
+      "resource_version": "21243768",
+      "original_digest": "5051cab9948314292a47818de40344a71ac368381dd119c3bb552c32df773f5b",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-kfp-api",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "0cac9b43-7068-4b3f-886d-dff55a0202ea",
+      "resource_version": "21243766",
+      "original_digest": "a28cd29ec442476c8546f1c62d73e4d454362ed07aaf12b85fb3c1e130fe68da",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-runtime",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "6c68f31e-c7fe-4c2d-9ddc-b2477c29294e",
+      "resource_version": "21243763",
+      "original_digest": "5d49c3def5d74b612ddaadd9abe1acaf9a4a4f2b3127d59cc1043d464c382786",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-step",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "4b5e5a61-c5d1-47be-a73c-191b51ae1a5f",
+      "resource_version": "21243764",
+      "original_digest": "9287bd978cede70e2709e1a56db115d08c861f2ad0b516df62c8a4f011c6edb9",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-webhook-read",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "c2455d2d-3100-4ff1-95c1-ff6971646d95",
+      "resource_version": "21243765",
+      "original_digest": "fb2b27673826dedec8b4a39b9ac6e035543787e277ea22c8b506e9741c090850",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "ani-kfp-ca",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "329f7138-5b2b-4186-b981-48e8eecf2daf",
+      "resource_version": "21243859",
+      "original_digest": "04737a4611c9620cd81ae365f3a130945eaf3ad24dae0aa34adc736bb028df66",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "kfp-launcher",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "c898f0c7-e4dc-445d-895c-ef5a5195a51e",
+      "resource_version": "21243861",
+      "original_digest": "2f91738b8850d693e8d16eafde8a98feda5b9e018e14e08fd1ce4852c42e0d19",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "metadata-grpc-configmap",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "5787876c-f932-4837-a555-2ae056686b5f",
+      "resource_version": "21243864",
+      "original_digest": "ba6ddd0163a6c03f143450df478fb19c718227ac5a77792249359ad225fdff59",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "modeldev-execution-environment",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "13b2199e-c838-49b6-9944-a5dbad3631fc",
+      "resource_version": "21243884",
+      "original_digest": "c2373c60cdfd6d26d226f218060316c24f9a35195ef7ae4b2f12883d1983fbbf",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "modeldev-step-owner",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "b93d99a1-56ac-4ee5-8329-1f60834ebdb2",
+      "resource_version": "21243858",
+      "original_digest": "98214c21c2f90387b3ce247fe640761c6fda44bfc3c141597e4bf8417e6da003",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "ani-kfp-ca",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "b731bc94-71b0-4c94-a520-4f3e906bf614",
+      "resource_version": "21243784",
+      "original_digest": "56f57166729905929b5704f0853276ba2525988d39814ba0cf10dc0a8dfe9676",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "kfp-launcher",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "ee10caeb-224b-46e4-8034-1e7c827206ed",
+      "resource_version": "21243785",
+      "original_digest": "cc6f6ea4f66f046dd985c6d264437c0d95de44daaa595246c2b7c21b13de6d7f",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "metadata-grpc-configmap",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "97584c7f-0f3f-4d16-992d-12fff2ba65bd",
+      "resource_version": "21243786",
+      "original_digest": "72b33c7b25fb71ef0fedf15d39faee53b9c45635a49eea36ad81e3a93618da38",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "modeldev-execution-environment",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "f860a061-fc99-4c7d-8993-df8acdcf6f4b",
+      "resource_version": "21243813",
+      "original_digest": "3e5682fe7dcdb51e1dac6720981c80df9f2e281e785d85143380bfb5e4ef7934",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "modeldev-step-owner",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "a945a227-e971-4fce-9960-b0dd60086d19",
+      "resource_version": "21243770",
+      "original_digest": "11f932a420259c357187030beb9e27f71d2f5157373d5c2f295e1c566a9cf097",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "Secret",
+      "name": "modeldev-kfp-artifacts",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "d35a5162-0b42-4bd5-9232-1c59e09c75dd",
+      "resource_version": "21243865",
+      "original_digest": "254e47090bfb85d029fcf04de2ff789a4a2d3e84c245f3a793333822317d5ffa",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "Secret",
+      "name": "modeldev-kfp-artifacts",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "97fbc6ca-184f-4d65-8995-2e551a3d0f7e",
+      "resource_version": "21243787",
+      "original_digest": "254e47090bfb85d029fcf04de2ff789a4a2d3e84c245f3a793333822317d5ffa",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "modeldev-step",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "4906b321-14d8-4443-a7b0-d8c41b837656",
+      "resource_version": "21243832",
+      "original_digest": "881f25a3c8f34fb0240dedb5efa56b2e4f68d833efa61fb4afc3560c5a6a8779",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "trainer-workload",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "01ceeac6-7b60-439c-90e7-d7110ad84730",
+      "resource_version": "21243834",
+      "original_digest": "6ea5bdaa756c1c2243f88dbe1bedbf71df20a0af8ba350247eb530e96cf2bba7",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "verifier",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "uid": "4a787cd1-f374-46f0-8ee9-934a30837272",
+      "resource_version": "21243835",
+      "original_digest": "9f90f4cb11f45e95b87243b06190c8b0ec1279e9bbad4d7fcb132032609e0052",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "modeldev-step",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "6f0c7006-7458-4a4e-8cd0-f5780c215852",
+      "resource_version": "21243760",
+      "original_digest": "78c4b4573507dcd45d4b5d0f3e5fb53d60fb5273117d84007bc4535f5f2e8e74",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "trainer-workload",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "45e11ee0-75b0-4043-98ef-b01354f14311",
+      "resource_version": "21243761",
+      "original_digest": "c043b039051564afd9eaa5576c9ad2169ac98c77245841e03178b493acda74ea",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "verifier",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "uid": "afcbd29b-9653-4492-a129-f03d2d2c5951",
+      "resource_version": "21243762",
+      "original_digest": "39659f2e091fb46cc0456ec3c3285355df878d5f5f99b846c2374776bb33ed4c",
+      "action": "DELETED_ORIGINAL_UID_GET404"
+    }
+  ],
+  "preserved": [
+    "standard Namespaces",
+    "external input versions/objects",
+    "base models",
+    "coexisting VM/PVC",
+    "Res-managed image pull Secrets",
+    "shared dedicated artifact IAM and bucket",
+    "four platform parent Pipelines and all versions"
+  ],
+  "kfp_metadata_database_result": {
+    "deleted": 2,
+    "defaults": 0,
+    "committed": true,
+    "qualified": 2,
+    "remaining": 0,
+    "references": 0,
+    "original_runs": 0
+  },
+  "md_environment_database_result": {
+    "deleted": 2,
+    "environment_ids": [
+      "81df7d6b-8026-4849-b8f0-4a9800ff5ffe",
+      "01169a48-1980-42be-b2ed-c76731c10ac6"
+    ]
+  },
+  "status": "ORIGINAL_28_ACCESS_OBJECTS_TWO_EXPERIMENTS_TWO_ENVIRONMENTS_REVOKED",
+  "finished_at": "2026-11-01T16:30:39.139295+00:00"
+}

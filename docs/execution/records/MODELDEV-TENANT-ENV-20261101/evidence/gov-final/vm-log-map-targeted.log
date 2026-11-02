@@ -1,0 +1,77 @@
+=== RUN   TestModelDevEnvironmentRoutesUseIndependentFrozenPermissions
+--- PASS: TestModelDevEnvironmentRoutesUseIndependentFrozenPermissions (0.00s)
+=== RUN   TestNormalizePath
+--- PASS: TestNormalizePath (0.00s)
+=== RUN   TestResolveAuthoritativeCodes
+--- PASS: TestResolveAuthoritativeCodes (0.00s)
+=== RUN   TestInstanceConfigurationRoutePermissions
+=== RUN   TestInstanceConfigurationRoutePermissions//api/v1/instances/mountable-pvcs
+=== RUN   TestInstanceConfigurationRoutePermissions//api/v1/instances/{instance_id}/configuration
+--- PASS: TestInstanceConfigurationRoutePermissions (0.00s)
+    --- PASS: TestInstanceConfigurationRoutePermissions//api/v1/instances/mountable-pvcs (0.00s)
+    --- PASS: TestInstanceConfigurationRoutePermissions//api/v1/instances/{instance_id}/configuration (0.00s)
+=== RUN   TestInstanceMetricsRoutePermissions
+=== RUN   TestInstanceMetricsRoutePermissions/POST_/api/v1/instances/{instance_id}/metrics/query
+=== RUN   TestInstanceMetricsRoutePermissions/GET_/api/v1/instances/{instance_id}/metrics/latest
+--- PASS: TestInstanceMetricsRoutePermissions (0.00s)
+    --- PASS: TestInstanceMetricsRoutePermissions/POST_/api/v1/instances/{instance_id}/metrics/query (0.00s)
+    --- PASS: TestInstanceMetricsRoutePermissions/GET_/api/v1/instances/{instance_id}/metrics/latest (0.00s)
+=== RUN   TestComputePresetPlatformPermissions
+=== RUN   TestComputePresetPlatformPermissions/GET_/api/v1/admin/compute-presets
+=== RUN   TestComputePresetPlatformPermissions/GET_/api/v1/admin/compute-presets/{id}
+=== RUN   TestComputePresetPlatformPermissions/POST_/api/v1/admin/compute-presets
+=== RUN   TestComputePresetPlatformPermissions/PATCH_/api/v1/admin/compute-presets/{id}
+=== RUN   TestComputePresetPlatformPermissions/POST_/api/v1/admin/compute-presets/{id}:set-enabled
+=== RUN   TestComputePresetPlatformPermissions/DELETE_/api/v1/admin/compute-presets/{id}
+--- PASS: TestComputePresetPlatformPermissions (0.00s)
+    --- PASS: TestComputePresetPlatformPermissions/GET_/api/v1/admin/compute-presets (0.00s)
+    --- PASS: TestComputePresetPlatformPermissions/GET_/api/v1/admin/compute-presets/{id} (0.00s)
+    --- PASS: TestComputePresetPlatformPermissions/POST_/api/v1/admin/compute-presets (0.00s)
+    --- PASS: TestComputePresetPlatformPermissions/PATCH_/api/v1/admin/compute-presets/{id} (0.00s)
+    --- PASS: TestComputePresetPlatformPermissions/POST_/api/v1/admin/compute-presets/{id}:set-enabled (0.00s)
+    --- PASS: TestComputePresetPlatformPermissions/DELETE_/api/v1/admin/compute-presets/{id} (0.00s)
+=== RUN   TestResolveMissing
+--- PASS: TestResolveMissing (0.00s)
+=== RUN   TestExempt
+--- PASS: TestExempt (0.00s)
+=== RUN   TestNoConflicts
+--- PASS: TestNoConflicts (0.00s)
+=== RUN   TestCountsAndKeys
+    permcode_test.go:249: CapabilityCount() = 221, want 220
+    permcode_test.go:253: AllKeys() = 405, want 404
+=== RUN   TestCountsAndKeys/gpu-read-management
+=== RUN   TestCountsAndKeys/platform-eip-capability
+=== RUN   TestCountsAndKeys/security-group-capability
+--- FAIL: TestCountsAndKeys (0.00s)
+    --- PASS: TestCountsAndKeys/gpu-read-management (0.00s)
+    --- PASS: TestCountsAndKeys/platform-eip-capability (0.00s)
+    --- PASS: TestCountsAndKeys/security-group-capability (0.00s)
+=== RUN   TestModelImportLogsReadPermission
+--- PASS: TestModelImportLogsReadPermission (0.00s)
+=== RUN   TestLookup
+--- PASS: TestLookup (0.00s)
+=== RUN   TestResourceUsageReadHasIndependentPlatformPermission
+--- PASS: TestResourceUsageReadHasIndependentPlatformPermission (0.00s)
+=== RUN   TestSandboxCapabilities
+--- PASS: TestSandboxCapabilities (0.00s)
+FAIL
+FAIL	go-wind-admin/pkg/permcode	0.019s
+=== RUN   TestCatalogValidation
+--- PASS: TestCatalogValidation (0.00s)
+=== RUN   TestInferenceKeyCatalogIsSeparateFromPlatformKeys
+--- PASS: TestInferenceKeyCatalogIsSeparateFromPlatformKeys (2.49s)
+=== RUN   TestVMCatalogUsesRuntimePathVariables
+    catalog_test.go:77: 
+        	Error Trace:	/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source/sql/bootstrap/catalog_test.go:77
+        	Error:      	Not equal: 
+        	            	expected: 26
+        	            	actual  : 28
+        	Test:       	TestVMCatalogUsesRuntimePathVariables
+--- FAIL: TestVMCatalogUsesRuntimePathVariables (2.51s)
+=== RUN   TestDecideDisableProtectsOutOfScopeCodes
+--- PASS: TestDecideDisableProtectsOutOfScopeCodes (0.00s)
+=== RUN   TestDecideDisableEmptyInputs
+--- PASS: TestDecideDisableEmptyInputs (0.00s)
+FAIL
+FAIL	go-wind-admin/sql/bootstrap	5.065s
+FAIL

@@ -1,0 +1,19 @@
+{
+  "started_at": "2026-11-01T05:04:07.046035+00:00",
+  "command": [
+    "go",
+    "test",
+    "-p=1",
+    "-count=1",
+    "./internal/data/input",
+    "./internal/data/submission",
+    "./internal/data/submittest"
+  ],
+  "source_changed": false,
+  "test_timeouts_extended": false,
+  "original_fullgate": "FAIL",
+  "finished_at": "2026-11-01T05:06:15.813739+00:00",
+  "exit": 0,
+  "log": "/home/chabking/tenantenv-20261101/modeldev-native-rbac-fullverify-20261101T045658Z.three-failed-packages-isolation.log",
+  "log_sha256": "ec029a50485092d39c8d0488f60aea42ad1a1be7d51d18664f5f72826c9b9211"
+}

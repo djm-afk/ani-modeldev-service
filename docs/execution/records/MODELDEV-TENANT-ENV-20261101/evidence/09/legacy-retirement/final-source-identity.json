@@ -1,0 +1,73 @@
+{
+  "recorded_at": "2026-10-31T23:03:43.991168+00:00",
+  "base_commit": "21bf4bd6540d462a61c91b629f26250899583223",
+  "branch": "codex/modeldev-legacy-retirement",
+  "fedora_directory": "/home/chabking/tenantenv-20261101/legacy-retirement-command",
+  "local_fedora_equal": true,
+  "source_file_count": 32,
+  "sha256": {
+    "cmd/ani-modeldev-legacy-retirement/governance.go": "60052b4b4baaaabe35f8b051d907799968e421382a7578e3dcb56512d3354315",
+    "cmd/ani-modeldev-legacy-retirement/governance_test.go": "be54227d4b89e7e6383c7322835ce440e80df48c2616de32f6acf61a7e2a230d",
+    "cmd/ani-modeldev-legacy-retirement/main.go": "96c54f32abfbd2e1e8aa4b4485739d6c5e39cb87a90cbf99ea8932fdccefce35",
+    "cmd/ani-modeldev-legacy-retirement/plan.go": "8f92aa53566ce0ee2baa19e54e112c4febb16c1ff080db47af0ac5f78c3a4713",
+    "cmd/ani-modeldev-legacy-retirement/plan_test.go": "df1767a7446853ebd66d94351123541bac486af9237d1fe6377ea45c7115cca5",
+    "cmd/ani-modeldev-legacy-retirement/readers.go": "2aa3fd60286b32393053e3183e93fce93fdbbf1997d568094a53581711c2c5b0",
+    "docs/legacy-retirement-20261101.md": "f24aab5797682bce5367a75b5b10d46f438db8f06ddb4182e79b866044b45ff0",
+    "internal/biz/execution_runtime.go": "870bf050d25f1ba4850272e7af7fd7c82e306d65628095b9fec2f3f16e051e1e",
+    "internal/biz/legacy_retirement.go": "ca8d6bab5b2ba0da567414f6dd0d768feb2b7aa2d2c2917a40a143d14b9a2af5",
+    "internal/data/cleanup/execution.go": "a11ce91a9efd8dbdc83b94597d28b967bba1947f1cb66a62b6b4b378b2b9dbfc",
+    "internal/data/cleanup/legacy_retirement.go": "6742a738474a4c71e61b9c6eb4ff1ca117c88f14743336ec5be6ed4d9ad80936",
+    "internal/data/cleanup/legacy_retirement_test.go": "276046b1627a81b7f8c5bf37b84fe2a4b1d2bbc9f60ee8cd21a8fb3eec0eff5c",
+    "internal/data/execution/query.go": "74cfd4bb3032359b1ec7b2092464ae5d800f52a9bc219fe5df3c88754b6d2333",
+    "internal/data/execution/query_list.go": "06c2e535b0ce0690aa15fb8b4119fc1b855cf9621401dfafe5adb1519d8a3370",
+    "internal/data/imageruntime/client.go": "218864d65f39788b177790ac8d7515c7d1402fbac1d18ba99d1b097389436fc7",
+    "internal/data/lifecycle/compute_cleanup.go": "da59866a9c1024e6b41a09c1705ff671d258dac0ea22fbb11cfaab1419ac720d",
+    "internal/data/lifecycle/gpu_release.go": "e9be291f9db75d1ce8ee596b4dabd205e98eb16cc1dab27323718d10251e129c",
+    "internal/data/lifecycle/legacy_retirement.go": "e783f55e0e6d1247d5155c47c258e4be1a5f5ab663f4ac8ae6a307438d808728",
+    "internal/data/lifecycle/legacy_retirement_gpu.go": "79802f663a6d5d1f6860de2b6637108ef36aec0cbd27d7453fbbe43b727f4d0d",
+    "internal/data/lifecycle/legacy_retirement_test.go": "66f5f56ef19eb8e3b363b5cadc325b5fec523b8a7e228a0d234c3396268305de",
+    "internal/data/lifecycle/repository.go": "7ffa7066bd0db0b2a5df57bd87fb85aed8bcb280321cdb1cae4b82ebbcefa428",
+    "internal/data/runtimeproof/compute_cleanup.go": "ca4b4bafc38eebdfd67fd36e6e7f73403322d5cac12fee15929c18ee7491ab39",
+    "internal/data/runtimeproof/legacy_retirement.go": "2a9f9711d67401b0fe591416d8a9f033d2fa61a8a541b39e168575712765c892",
+    "internal/data/runtimeproof/legacy_retirement_cleanup.go": "97d5226c7e39cd1186d21704f4432fb585d8b24f4f9a5041591134014c952744",
+    "internal/data/runtimeproof/legacy_retirement_cleanup_test.go": "c5e7cd0b8a87439e82194d107881a8cab7330ca6970f0510310d70af6a14d3ff",
+    "internal/data/runtimeproof/legacy_retirement_test.go": "a3add581b4e09be3f7973db5f064303833858394cb85fe78a1ce966287c8eddb",
+    "internal/data/runtimeproof/owner_close.go": "ed299879ff8031e8626fcfa0fe3b2906262ddfc962ba3766aa3ca5b88d8bd007",
+    "internal/data/runtimeproof/step_retention.go": "b4426911e0f85a22e2fe37ef5b6f25cd8e9ea5860e8170470e11587db51339ec",
+    "internal/data/runtimeproof/unprepared_workspace.go": "678d06988186b57caa3d098c4fcd1ad7f3844a04ff66027c5d3c109bfed49936",
+    "internal/data/trainer/legacy_retirement.go": "8d8284d22209c8216593781590ad8b44347cca914b9311e28ef2d3b07a4adb98",
+    "internal/data/trainer/legacy_retirement_test.go": "2d8e85cc406aba1c584484e58f8e496c2b10a0531144cee27769909a1ddbf660",
+    "internal/data/trainer/runtime_observe.go": "34e4a71cc436e5ee0aca60df1af8bcabfd5af69d4a8451117b474ad4858c17bd"
+  },
+  "full_make_verify": {
+    "status": "FAIL",
+    "exit_code": 2,
+    "evidence": "final-make-verify.log",
+    "remaining_stages": [
+      "go vet ./...",
+      "go build ./...",
+      "go mod verify (full-gate stage)"
+    ],
+    "cause": "fixed old base Resource API symbol mismatch and old facts/material fixtures; no production contract/pin widened"
+  },
+  "targeted_real_postgres_and_boundaries": {
+    "status": "PASS",
+    "exit_code": 0,
+    "evidence": "final-targeted.log"
+  },
+  "live_plan": {
+    "status": "NOT_RUN",
+    "cause": "specified SSH endpoint transfer exit 255 before execution"
+  },
+  "apply": {
+    "status": "NOT_RUN",
+    "cause": "root stop-admission and real plan review still required"
+  },
+  "affected_packages_vet_standalone_cmd_build_module_verify": {
+    "status": "PASS",
+    "exit_code": 0,
+    "command": "GOTOOLCHAIN=auto go vet ./cmd/ani-modeldev-legacy-retirement ./internal/biz ./internal/data/lifecycle ./internal/data/runtimeproof ./internal/data/trainer ./internal/data/cleanup; GOTOOLCHAIN=auto go build -trimpath -o /dev/null ./cmd/ani-modeldev-legacy-retirement; GOTOOLCHAIN=auto go mod verify",
+    "evidence": "maintenance-command-vet-build.log"
+  },
+  "baseline_conflict_evidence": "baseline-required-gate-conflicts.json"
+}

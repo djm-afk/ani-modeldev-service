@@ -280,8 +280,8 @@ func TestGPUReleaseNoDispatchOutboxAndACKSurviveReconnect(t *testing.T) {
 	if original.Outbox == nil {
 		t.Fatal("owner close did not persist an event without ACC evidence")
 	}
-	binding := biz.PipelineDispatchBinding{TenantID: a.TenantID, Environment: a.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "gpu-release-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/gpu-release"}}
-	pending, err := lifecycle.New(open()).ListPendingClosures(ctx, binding, "", 10)
+	binding := admissionfixture.DispatchBinding{TenantID: a.TenantID, Environment: a.Snapshot.Environment, Owner: biz.PipelineOwnerConfiguration{Reference: "gpu-release-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/gpu-release"}}
+	pending, err := testPendingCloseIDs(ctx, lifecycle.New(open()), binding)
 	if err != nil || len(pending) != 1 || pending[0] != a.ExecutionID {
 		t.Fatal("restart scan lost pending GPU release", pending, err)
 	}
@@ -344,7 +344,7 @@ func TestGPUReleaseNoDispatchOutboxAndACKSurviveReconnect(t *testing.T) {
 	if err != nil || replay.OwnerRevision != delivered.OwnerRevision || !reflect.DeepEqual(replay.GPURelease, delivered.GPURelease) {
 		t.Fatal("ACK replay rewrote durable facts", err)
 	}
-	pending, err = lifecycle.New(open()).ListPendingClosures(ctx, binding, "", 10)
+	pending, err = testPendingCloseIDs(ctx, lifecycle.New(open()), binding)
 	if err != nil || len(pending) != 0 {
 		t.Fatal("acknowledged GPU no-dispatch release remained pending", pending, err)
 	}

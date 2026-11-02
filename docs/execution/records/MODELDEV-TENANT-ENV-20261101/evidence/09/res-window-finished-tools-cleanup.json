@@ -1,0 +1,44 @@
+{
+  "schema": "ani.resource.finished-window-tools-cleanup-complete.v1",
+  "completed_at": "2026-11-01T05:24:32.397707+00:00",
+  "status": "PASS",
+  "completed_window_evidence": "res-recovery-v3-final-window-actual.json",
+  "node_root_absent": true,
+  "fedora_three_binaries_absent": true,
+  "fedora_private_fixtures_in_exact_task_root": [],
+  "fedora_remaining_public_build_logs_only": [
+    "ani-resource-service.build.log",
+    "build-receipt.json",
+    "tenant-namespace-backfill.build.log",
+    "tenant-namespace-window.build.log"
+  ],
+  "local_transit_root_absent": true,
+  "node_private_dsn_config_shim_inputs_and_three_bins_removed": 13,
+  "all_pre_mount_and_process_references_empty": true,
+  "nominal_file_bytes_removed_all_three_hosts": 458212963,
+  "df_space_is_recorded_per_host_not_inferred_from_file_bytes": true,
+  "public_records_local": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/09/res-window-completed-public-journals",
+  "public_records_node": "/home/kubercloud/tenantenv-20261101/resource-window-completed-public-journals",
+  "receipts": {
+    "node": {
+      "path": "res-window-finished-node-tools-cleanup.json",
+      "sha256": "3c3898f4a6d65ef2c6f5f2afd77b707e445d763b11ad43465a3cf99396e2ef32"
+    },
+    "fedora": {
+      "path": "res-window-finished-fedora-tools-cleanup.json",
+      "sha256": "3ee87128c1a66b20e5238164cf83cdaf603dfed3a714f43bfa4fdb6f937a4150"
+    },
+    "local": {
+      "path": "res-window-finished-local-tools-cleanup.json",
+      "sha256": "8dc3945c81ee83a3843d44f2afa80ce6f11bd0afdc37acdf147fe7ff6150d615"
+    }
+  },
+  "preserved": [
+    "original source Secrets/SA/RBAC and host kubeconfig",
+    "shared Git/source/toolchain/cache",
+    "Workbench actual job source and delivered images/services",
+    "root sole ControlMaster socket",
+    "Env current normal proxy"
+  ],
+  "new_tests_or_business_operations": false
+}

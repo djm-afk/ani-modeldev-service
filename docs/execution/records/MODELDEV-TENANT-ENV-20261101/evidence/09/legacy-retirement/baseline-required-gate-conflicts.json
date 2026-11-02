@@ -1,0 +1,77 @@
+{
+  "recorded_at": "2026-10-31T23:10:16.642160+00:00",
+  "old_base": "21bf4bd6540d462a61c91b629f26250899583223",
+  "fixed_resource_module": "v0.0.0-20261019174951-733f625995f8",
+  "unchanged_baseline_inputs": [
+    {
+      "path": "go.mod",
+      "head_sha256": "8b9ecd197c91f388c26ad3c22cf0fa411f1b38fce00770b80cf9f499c14fee72",
+      "candidate_sha256": "8b9ecd197c91f388c26ad3c22cf0fa411f1b38fce00770b80cf9f499c14fee72",
+      "byte_equal": true
+    },
+    {
+      "path": "go.sum",
+      "head_sha256": "4eaa849cef152140ea23911a5c001642da186325078a342d691ed1884c75ac59",
+      "candidate_sha256": "4eaa849cef152140ea23911a5c001642da186325078a342d691ed1884c75ac59",
+      "byte_equal": true
+    },
+    {
+      "path": "internal/testsupport/imageruntimefixture/fixture.go",
+      "head_sha256": "a10f8a1549a2d44b0007ef67b459ae6553d1e18c460c35ebaacef4aea6baa22b",
+      "candidate_sha256": "a10f8a1549a2d44b0007ef67b459ae6553d1e18c460c35ebaacef4aea6baa22b",
+      "byte_equal": true
+    },
+    {
+      "path": "internal/data/resolutiontest/managed_facts_test.go",
+      "head_sha256": "7ef0442443179c077ffd87f25ecbbced1d587f395672bc3189d7ba1975920ea9",
+      "candidate_sha256": "7ef0442443179c077ffd87f25ecbbced1d587f395672bc3189d7ba1975920ea9",
+      "byte_equal": true
+    },
+    {
+      "path": "internal/data/resolutiontest/managed_facts_boundaries_test.go",
+      "head_sha256": "59b790964034d548d3a7f16468fac1817a9bb2e6ae0a1ec528afdffc33cb59c1",
+      "candidate_sha256": "59b790964034d548d3a7f16468fac1817a9bb2e6ae0a1ec528afdffc33cb59c1",
+      "byte_equal": true
+    },
+    {
+      "path": "scripts/modeldev-execution-materials/main.go",
+      "head_sha256": "73ea3c3da0e58d90a9cce8304f436a8bf5f2f75cc45cb4d416edcd6fe66d1af0",
+      "candidate_sha256": "73ea3c3da0e58d90a9cce8304f436a8bf5f2f75cc45cb4d416edcd6fe66d1af0",
+      "byte_equal": true
+    },
+    {
+      "path": "scripts/modeldev-execution-materials/main_test.go",
+      "head_sha256": "40d86e2d4c7d66dbbe964fefdfee8c3de43b46cda410c982bea79064935b2cfc",
+      "candidate_sha256": "40d86e2d4c7d66dbbe964fefdfee8c3de43b46cda410c982bea79064935b2cfc",
+      "byte_equal": true
+    },
+    {
+      "path": "internal/biz/admission_resolution.go",
+      "head_sha256": "cda6b359ae3b666a6dc8082e5cd7111388217e5a17d03451f3bf3e762886bd5b",
+      "candidate_sha256": "cda6b359ae3b666a6dc8082e5cd7111388217e5a17d03451f3bf3e762886bd5b",
+      "byte_equal": true
+    }
+  ],
+  "imageruntime_production_difference": "only gofmt import ordering; exact patch baseline-imageruntime-format-only.patch",
+  "required_make_verify_status": "FAIL",
+  "required_make_verify_exit": 2,
+  "evidence": "final-make-verify.log",
+  "conflicts": [
+    {
+      "file": "internal/data/imageruntime/client.go:217",
+      "fact": "fixed Resource dependency has no EnsureTenantPullSecretRequest; old default service build and imageruntimefixture fail",
+      "minimum_correction": "separate explicit old-base Resource API contract/pin alignment; not performed by the bounded retirement candidate"
+    },
+    {
+      "file": "internal/data/resolutiontest",
+      "fact": "unchanged old facts fixture preflight INVALID_MANAGED_ADMISSION_FACTS",
+      "minimum_correction": "separate old fixture migration to its fixed facts contract; no production guard relaxed"
+    },
+    {
+      "file": "scripts/modeldev-execution-materials/main_test.go:68",
+      "fact": "unchanged old material fixture dereferences nil m.Program",
+      "minimum_correction": "separate fixture alignment to the fixed material codec; no material semantics changed"
+    }
+  ],
+  "applied_corrections": "only three pre-existing gofmt import-order corrections needed by source verification; pins and old fixtures unchanged"
+}

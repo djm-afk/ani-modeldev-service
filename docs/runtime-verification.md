@@ -32,17 +32,17 @@ by supplying both protected `CPU_P01_TEST_DATABASE_*_URL` references and invokin
 `make verify`. Missing dependencies fail with behavior NOT_RUN, not a skipped
 security check. These real database results do not prove the target cluster.
 
-For CPU-P01, run these commands on Fedora against a fixed source commit. The
+Run these commands on Fedora against a fixed source commit. The
 workstation is used only to edit, review, and transfer source and results. The
-production composition currently has no persistent execution repository or real
-business adapters. Its process health may return HTTP 200 and gRPC health may
-report SERVING, but `/readyz` must remain HTTP 503 until the required business
-dependencies are actually wired and verified. A generated business RPC contract
-does not make that RPC available: unimplemented operations must fail explicitly.
-The production-composition test observes this boundary through real HTTP and
-gRPC listeners while retaining logging and graceful-stop checks. Dependency
-readiness belongs with the real application composition added in CPU04; there is
-no configuration switch that declares absent business capabilities ready.
+default configuration remains an unready shell. Explicit managed runtime
+configuration assembles the persistent execution/environment repositories and
+real business adapters; all required dependencies and the pinned platform
+specification must be present. Its process health or gRPC SERVING status cannot
+declare absent dependencies ready. Production-composition tests exercise real
+listeners while preserving this distinction. A ready listener also does not
+prove any tenant environment is READY or that real training passed. Current
+configuration and the separate component/live evidence layers are defined by
+[dynamic tenant environments](modeldev-tenant-environments.md).
 
 For vulnerability and secret scans, a reproducible CycloneDX JSON runtime SBOM,
 and notice/license-inventory consistency checks (with `jq` available):

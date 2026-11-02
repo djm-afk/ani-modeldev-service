@@ -1,0 +1,5 @@
+{
+  "status": "REMOTE_PREPARATION_RESULT_UNKNOWN_OR_FAILED",
+  "ssh_exit": 2,
+  "stderr": "Argument expected for the -c option\nusage: python3 [option] ... [-c cmd | -m mod | file | -] [arg] ...\nTry `python -h' for more information.\nimport: unable to open X server `' @ error/import.c/ImportImageCommand/350.\nbash: from: \u672a\u627e\u5230\u547d\u4ee4\nbash: -c: \u884c 4: \u672a\u9884\u671f\u7684\u8bb0\u53f7 \"(\" \u9644\u8fd1\u6709\u8bed\u6cd5\u9519\u8bef\nbash: -c: \u884c 4: `inputs=json.load(sys.stdin);root=Path('/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101')'\n"
+}

@@ -1,0 +1,94 @@
+{
+  "observed_at": "2026-11-01T02:24:15.553874+00:00",
+  "source_commit": "ca01cabf",
+  "identity": {
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "gov_deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+  "gov_pod_uid": "7e3c6bd5-4d76-4b44-92bf-6e3b89d48a6f",
+  "gov_pod_node": "node3",
+  "runtime_secret": {
+    "name": "ani-governance-runtime",
+    "uid": "ffc203e6-32a4-4876-8f8d-05bbe4351f72",
+    "resourceVersion": "3773581"
+  },
+  "client_tls_secret": {
+    "name": "ani-governance-client-tls",
+    "uid": "8a449826-6123-4334-84fb-adcad61d543c",
+    "resourceVersion": "5027093"
+  },
+  "trust_configmap": {
+    "name": "ani-internal-service-ca",
+    "uid": "9587d616-9949-4306-b881-3e2fce0b55fa",
+    "resourceVersion": "5052890"
+  },
+  "database_sources": "same original current Gov runtime DSN and original MD runtime DSN; no new credentials or role grants; plan forces read-only on both",
+  "database_ssl_modes": {
+    "governance": "disable",
+    "modeldev": "disable"
+  },
+  "same_original_services_bound_in_maintenance_config_only": [
+    {
+      "original_host": "postgresql.ani-platform.svc.cluster.local",
+      "service": "postgresql",
+      "namespace": "ani-platform",
+      "service_uid": "a211aa89-9521-4570-836f-b9dbb1755e79",
+      "service_resource_version": "6420",
+      "dial_ip": "10.96.133.128",
+      "port": 5432
+    },
+    {
+      "original_host": "postgresql.ani-platform.svc.cluster.local",
+      "service": "postgresql",
+      "namespace": "ani-platform",
+      "service_uid": "a211aa89-9521-4570-836f-b9dbb1755e79",
+      "service_resource_version": "6420",
+      "dial_ip": "10.96.133.128",
+      "port": 5432
+    },
+    {
+      "original_host": "ani-modeldev.ani-system.svc",
+      "service": "ani-modeldev",
+      "namespace": "ani-system",
+      "service_uid": "b9ba8e4b-3120-45be-8e77-109b866dd18d",
+      "service_resource_version": "682804",
+      "dial_ip": "10.96.180.137",
+      "port": 9000
+    }
+  ],
+  "modeldev_tls_fixed_server_identity": "ani-modeldev-service",
+  "gov_client_original_identity": "ani-governance",
+  "same_original_mtls_handshake": {
+    "tls": "TLSv1.3",
+    "alpn": "h2",
+    "server_sans": [
+      [
+        "DNS",
+        "ani-modeldev-service"
+      ],
+      [
+        "DNS",
+        "ani-modeldev"
+      ],
+      [
+        "DNS",
+        "ani-modeldev.ani-system.svc"
+      ],
+      [
+        "DNS",
+        "ani-modeldev.ani-system.svc.cluster.local"
+      ]
+    ],
+    "peer_certificate_sha256": "1ea2a20a953256134193822b609d240e49f7baecea67a9c18918f78b72762f2b"
+  },
+  "node_private_config_path": "/tmp/gov-original-command-retirement-ca01cabf-20261101/config.json",
+  "configuration_sha256": "440023513db759fbe31875618b32ee22301df420e56b841a14aec5c05752c108",
+  "private_material_regular0600_count": 6,
+  "secret_values_saved_to_evidence": false,
+  "new_token_requests": 0,
+  "hosts_dns_network_runtime_changed": false,
+  "apply": "NOT_RUN"
+}

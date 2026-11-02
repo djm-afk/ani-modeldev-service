@@ -1,0 +1,7 @@
+{
+  "cmd/ani-modeldev-service/runtime.go": "c8d7e55d3aa7dd1ada3bebd8dfcfa3afa96ace78e4eb5c3837cd49c2b47e8bd1",
+  "internal/biz/close_worker.go": "56a34082098a112f878a76ffccb688f0f0bf393c5ae67db3df78464703e7cfb0",
+  "internal/biz/dispatch_worker.go": "0a909218d128fd2f7e8a4c78a128a4a209c833af7dc1dc8859acef437362029c",
+  "internal/biz/worker_coordinator.go": "a9ce079c3afb3e06df91b32f4f9bdc76a38aa1e66234091c33c0771dddef2dce",
+  "internal/biz/worker_coordinator_test.go": "9af93b4e887490b56a38237bb89197843845ec6372b9decea6d5e5d19ba2de75"
+}

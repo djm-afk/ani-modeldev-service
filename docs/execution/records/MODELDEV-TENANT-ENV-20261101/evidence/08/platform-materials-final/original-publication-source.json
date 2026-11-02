@@ -1,0 +1,162 @@
+[
+  {
+    "path": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/current-materials-eph1g-release/upload.py",
+    "sha256": "9bbf88d0608ea8db53d73628f5318c21635e827734405adbb97ab779bc863431",
+    "selected_public_source_lines": [
+      {
+        "line": 7,
+        "source": "TOKEN=subprocess.check_output(['kubectl','-n','ani-system','create','token','modeldev-control','--audience=pipelines.kubeflow.org','--duration=15m'],text=True).strip()"
+      },
+      {
+        "line": 32,
+        "source": " data=request('/apis/v2beta1/pipelines?'+urllib.parse.urlencode({'namespace':PLAN['namespace'],'page_size':'100','page_token':page}));allpipes+=data.get('pipelines',[]);page=data.get('next_page_token','')"
+      },
+      {
+        "line": 37,
+        "source": "save('upload-preflight.json',{'at':now(),'state':'UNIQUE_NEW_NAMES_VERIFIED','old_pipeline_count':len(allpipes),'namespace':PLAN['namespace'],'health':health,'tls_verified':True,'auth':'existing modeldev-control bound service account token, audience pipelines.kubeflow.org'})"
+      },
+      {
+        "line": 44,
+        "source": " save(key+'-upload-intent.json',{'at':now(),'state':'INTENT_BEFORE_SINGLE_POST','pipeline_name':p['pipeline_name'],'namespace':PLAN['namespace'],'ir_sha256':c['pipeline_ir_sha256'],'ir_bytes':len(raw),'image':c['component_image'],'profile':p['admission_profile']})"
+      },
+      {
+        "line": 47,
+        "source": " response=request('/apis/v2beta1/pipelines/upload?'+urllib.parse.urlencode({'name':p['pipeline_name'],'display_name':p['pipeline_name'],'namespace':PLAN['namespace'],'description':desc}),body,'multipart/form-data; boundary='+boundary)"
+      },
+      {
+        "line": 49,
+        "source": " pipeline_id=response['pipeline_id'];uid(pipeline_id);assert response.get('namespace')==PLAN['namespace'] and response.get('display_name')==p['pipeline_name'] and not response.get('error')"
+      },
+      {
+        "line": 59,
+        "source": " result={'schema':'ani.modeldev.confirmed-current-pipeline.v1','phase':'CONFIRMED','at':now(),'key':key,'pipeline_id':pipeline_id,'pipeline_version_id':version_id,'pipeline_ir_sha256':c['pipeline_ir_sha256'],'pipeline_name':p['pipeline_name'],'namespace':PLAN['namespace'],'component_image':c['component_image'],'admission_profile':p['admission_profile'],'full_stored_pipeline_and_platform_specs_match':True,'stored_ir_canonical_sha256':digest(json.dumps(ir,sort_keys=True,separators=(',',':')).encode()),'tls_verified':True}"
+      }
+    ]
+  },
+  {
+    "path": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/current-materials-bootstrap-release/upload.py",
+    "sha256": "28ceff6cf614904882e5898d01f431f69b53e3921c7636726feefbe8698f112f",
+    "selected_public_source_lines": [
+      {
+        "line": 7,
+        "source": "assert json.loads(subprocess.check_output(['kubectl','get','namespace','kube-system','-o','json']))['metadata']['uid']=='3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24'"
+      },
+      {
+        "line": 13,
+        "source": "assert json.loads(subprocess.check_output(['kubectl','get','namespace',PLAN['namespace'],'-o','json']))['metadata']['uid']==PLAN['namespace_uid']"
+      },
+      {
+        "line": 14,
+        "source": "TOKEN=subprocess.check_output(['kubectl','-n','ani-system','create','token','modeldev-control','--audience=pipelines.kubeflow.org','--duration=15m'],text=True).strip()"
+      },
+      {
+        "line": 43,
+        "source": " data=request('/apis/v2beta1/pipelines?'+urllib.parse.urlencode({'namespace':PLAN['namespace'],'page_size':'100','page_token':page}));allpipes+=data.get('pipelines',[]);page=data.get('next_page_token','')"
+      },
+      {
+        "line": 48,
+        "source": "save('upload-preflight.json',{'at':now(),'state':'UNIQUE_NEW_NAMES_VERIFIED','old_pipeline_count':len(allpipes),'namespace':PLAN['namespace'],'health':health,'tls_verified':True,'auth':'existing modeldev-control bound service account token, audience pipelines.kubeflow.org'})"
+      },
+      {
+        "line": 55,
+        "source": " save(key+'-upload-intent.json',{'at':now(),'state':'INTENT_BEFORE_SINGLE_POST','pipeline_name':p['pipeline_name'],'namespace':PLAN['namespace'],'ir_sha256':c['pipeline_ir_sha256'],'ir_bytes':len(raw),'image':c['component_image'],'profile':p['admission_profile']})"
+      },
+      {
+        "line": 58,
+        "source": " response=request('/apis/v2beta1/pipelines/upload?'+urllib.parse.urlencode({'name':p['pipeline_name'],'display_name':p['pipeline_name'],'namespace':PLAN['namespace'],'description':desc}),body,'multipart/form-data; boundary='+boundary)"
+      },
+      {
+        "line": 60,
+        "source": " pipeline_id=response['pipeline_id'];uid(pipeline_id);assert response.get('namespace')==PLAN['namespace'] and response.get('display_name')==p['pipeline_name'] and not response.get('error')"
+      },
+      {
+        "line": 70,
+        "source": " result={'schema':'ani.modeldev.confirmed-current-pipeline.v1','phase':'CONFIRMED','at':now(),'key':key,'pipeline_id':pipeline_id,'pipeline_version_id':version_id,'pipeline_ir_sha256':c['pipeline_ir_sha256'],'pipeline_name':p['pipeline_name'],'namespace':PLAN['namespace'],'component_image':c['component_image'],'admission_profile':p['admission_profile'],'full_stored_pipeline_and_platform_specs_match':True,'stored_ir_canonical_sha256':digest(json.dumps(ir,sort_keys=True,separators=(',',':')).encode()),'tls_verified':True}"
+      }
+    ]
+  },
+  {
+    "path": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/current-sft-fixed-materials/upload.py",
+    "sha256": "5291b80d427c3bc0c260bc35bfde770761b80886f2e3158898157b7b9e326a0f",
+    "selected_public_source_lines": [
+      {
+        "line": 10,
+        "source": "assert json.loads(subprocess.check_output(['kubectl','get','namespace','kube-system','-o','json']))['metadata']['uid']=='3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24'"
+      },
+      {
+        "line": 16,
+        "source": "assert json.loads(subprocess.check_output(['kubectl','get','namespace',PLAN['namespace'],'-o','json']))['metadata']['uid']==PLAN['namespace_uid']"
+      },
+      {
+        "line": 17,
+        "source": "TOKEN=subprocess.check_output(['kubectl','-n','ani-system','create','token','modeldev-control','--audience=pipelines.kubeflow.org','--duration=15m'],text=True).strip()"
+      },
+      {
+        "line": 46,
+        "source": " data=request('/apis/v2beta1/pipelines?'+urllib.parse.urlencode({'namespace':PLAN['namespace'],'page_size':'100','page_token':page}));allpipes+=data.get('pipelines',[]);page=data.get('next_page_token','')"
+      },
+      {
+        "line": 51,
+        "source": "save('upload-preflight.json',{'at':now(),'state':'UNIQUE_NEW_NAMES_VERIFIED','old_pipeline_count':len(allpipes),'namespace':PLAN['namespace'],'health':health,'tls_verified':True,'auth':'existing modeldev-control bound service account token, audience pipelines.kubeflow.org'})"
+      },
+      {
+        "line": 58,
+        "source": " save(key+'-upload-intent.json',{'at':now(),'state':'INTENT_BEFORE_SINGLE_POST','pipeline_name':p['pipeline_name'],'namespace':PLAN['namespace'],'ir_sha256':c['pipeline_ir_sha256'],'ir_bytes':len(raw),'image':c['component_image'],'profile':p['admission_profile']})"
+      },
+      {
+        "line": 61,
+        "source": " response=request('/apis/v2beta1/pipelines/upload?'+urllib.parse.urlencode({'name':p['pipeline_name'],'display_name':p['pipeline_name'],'namespace':PLAN['namespace'],'description':desc}),body,'multipart/form-data; boundary='+boundary)"
+      },
+      {
+        "line": 63,
+        "source": " pipeline_id=response['pipeline_id'];uid(pipeline_id);assert response.get('namespace')==PLAN['namespace'] and response.get('display_name')==p['pipeline_name'] and not response.get('error')"
+      },
+      {
+        "line": 73,
+        "source": " result={'schema':'ani.modeldev.confirmed-current-pipeline.v1','phase':'CONFIRMED','at':now(),'key':key,'pipeline_id':pipeline_id,'pipeline_version_id':version_id,'pipeline_ir_sha256':c['pipeline_ir_sha256'],'pipeline_name':p['pipeline_name'],'namespace':PLAN['namespace'],'component_image':c['component_image'],'admission_profile':p['admission_profile'],'full_stored_pipeline_and_platform_specs_match':True,'stored_ir_canonical_sha256':digest(json.dumps(ir,sort_keys=True,separators=(',',':')).encode()),'tls_verified':True}"
+      }
+    ]
+  },
+  {
+    "path": "/home/chabking/workspace/modeldev-open-limits-20261028-01a182e4/current-sft-eos-materials/upload.py",
+    "sha256": "39a0c5dab3f0a4af8db51b9bca05ee4b4b260122e0454d458852530480925719",
+    "selected_public_source_lines": [
+      {
+        "line": 10,
+        "source": "assert json.loads(subprocess.check_output(['kubectl','get','namespace','kube-system','-o','json']))['metadata']['uid']=='3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24'"
+      },
+      {
+        "line": 16,
+        "source": "assert json.loads(subprocess.check_output(['kubectl','get','namespace',PLAN['namespace'],'-o','json']))['metadata']['uid']==PLAN['namespace_uid']"
+      },
+      {
+        "line": 17,
+        "source": "TOKEN=subprocess.check_output(['kubectl','-n','ani-system','create','token','modeldev-control','--audience=pipelines.kubeflow.org','--duration=15m'],text=True).strip()"
+      },
+      {
+        "line": 46,
+        "source": " data=request('/apis/v2beta1/pipelines?'+urllib.parse.urlencode({'namespace':PLAN['namespace'],'page_size':'100','page_token':page}));allpipes+=data.get('pipelines',[]);page=data.get('next_page_token','')"
+      },
+      {
+        "line": 51,
+        "source": "save('upload-preflight.json',{'at':now(),'state':'UNIQUE_NEW_NAMES_VERIFIED','old_pipeline_count':len(allpipes),'namespace':PLAN['namespace'],'health':health,'tls_verified':True,'auth':'existing modeldev-control bound service account token, audience pipelines.kubeflow.org'})"
+      },
+      {
+        "line": 58,
+        "source": " save(key+'-upload-intent.json',{'at':now(),'state':'INTENT_BEFORE_SINGLE_POST','pipeline_name':p['pipeline_name'],'namespace':PLAN['namespace'],'ir_sha256':c['pipeline_ir_sha256'],'ir_bytes':len(raw),'image':c['component_image'],'profile':p['admission_profile']})"
+      },
+      {
+        "line": 61,
+        "source": " response=request('/apis/v2beta1/pipelines/upload?'+urllib.parse.urlencode({'name':p['pipeline_name'],'display_name':p['pipeline_name'],'namespace':PLAN['namespace'],'description':desc}),body,'multipart/form-data; boundary='+boundary)"
+      },
+      {
+        "line": 63,
+        "source": " pipeline_id=response['pipeline_id'];uid(pipeline_id);assert response.get('namespace')==PLAN['namespace'] and response.get('display_name')==p['pipeline_name'] and not response.get('error')"
+      },
+      {
+        "line": 73,
+        "source": " result={'schema':'ani.modeldev.confirmed-current-pipeline.v1','phase':'CONFIRMED','at':now(),'key':key,'pipeline_id':pipeline_id,'pipeline_version_id':version_id,'pipeline_ir_sha256':c['pipeline_ir_sha256'],'pipeline_name':p['pipeline_name'],'namespace':PLAN['namespace'],'component_image':c['component_image'],'admission_profile':p['admission_profile'],'full_stored_pipeline_and_platform_specs_match':True,'stored_ir_canonical_sha256':digest(json.dumps(ir,sort_keys=True,separators=(',',':')).encode()),'tls_verified':True}"
+      }
+    ]
+  }
+]

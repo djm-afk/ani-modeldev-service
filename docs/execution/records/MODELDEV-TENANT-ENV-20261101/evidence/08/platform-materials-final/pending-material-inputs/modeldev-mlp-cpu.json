@@ -1,0 +1,149 @@
+{
+  "state": "AWAITING_REAL_PUBLICATION_AND_RESOURCE_IMAGE_REGISTRATION",
+  "schema_after_completion": "ani.modeldev.material-input.v3",
+  "implementation_id": "builtin.mlp",
+  "device_mode": "cpu",
+  "training_image_known": {
+    "image_scope": "platform",
+    "digest": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+    "entry_sha256": "4a732add0a4457b21c15df2ae5250ca262e80397e737e8ee62b37375c17f9a2f",
+    "python_executable": "/opt/conda/bin/python"
+  },
+  "pipeline_known": {
+    "pipeline_ir_sha256": "58919bf761ddf0a2747e1766afe93584d23523d25c47e4974be48f0547d58ee7"
+  },
+  "workspace_storage_class": "ani-cephfs",
+  "workspace_capacity_bytes": 68719476736,
+  "component_resources": {
+    "close": {
+      "cpu_limit": "1",
+      "cpu_request": "100m",
+      "ephemeral_storage_limit": "1Gi",
+      "ephemeral_storage_request": "256Mi",
+      "memory_limit": "512Mi",
+      "memory_request": "128Mi"
+    },
+    "collect": {
+      "cpu_limit": "4",
+      "cpu_request": "500m",
+      "ephemeral_storage_limit": "2Gi",
+      "ephemeral_storage_request": "256Mi",
+      "memory_limit": "4Gi",
+      "memory_request": "512Mi"
+    },
+    "finalize-close": {
+      "cpu_limit": "1",
+      "cpu_request": "100m",
+      "ephemeral_storage_limit": "1Gi",
+      "ephemeral_storage_request": "256Mi",
+      "memory_limit": "512Mi",
+      "memory_request": "128Mi"
+    },
+    "prepare": {
+      "cpu_limit": "4",
+      "cpu_request": "500m",
+      "ephemeral_storage_limit": "2Gi",
+      "ephemeral_storage_request": "256Mi",
+      "memory_limit": "4Gi",
+      "memory_request": "512Mi"
+    },
+    "publish": {
+      "cpu_limit": "4",
+      "cpu_request": "500m",
+      "ephemeral_storage_limit": "2Gi",
+      "ephemeral_storage_request": "256Mi",
+      "memory_limit": "4Gi",
+      "memory_request": "512Mi"
+    },
+    "train-wait": {
+      "cpu_limit": "1",
+      "cpu_request": "100m",
+      "ephemeral_storage_limit": "1Gi",
+      "ephemeral_storage_request": "256Mi",
+      "memory_limit": "512Mi",
+      "memory_request": "128Mi"
+    },
+    "workspace-name": {
+      "cpu_limit": "500m",
+      "cpu_request": "100m",
+      "ephemeral_storage_limit": "1Gi",
+      "ephemeral_storage_request": "256Mi",
+      "memory_limit": "256Mi",
+      "memory_request": "64Mi"
+    }
+  },
+  "missing": [
+    "training_image.image_id",
+    "training_image.image_version",
+    "pipeline.phase=CONFIRMED",
+    "pipeline.pipeline_id",
+    "pipeline.pipeline_version_id"
+  ],
+  "legacy_candidate_only": {
+    "args_template": [
+      {
+        "literal": "--dataset-manifest"
+      },
+      {
+        "literal": "/inputs/dataset-manifest.json"
+      },
+      {
+        "literal": "--expected-dataset-manifest-sha256"
+      },
+      {
+        "source": "DATASET_MANIFEST_SHA256"
+      },
+      {
+        "literal": "--work-root"
+      },
+      {
+        "literal": "/workspace/work/train"
+      },
+      {
+        "literal": "--output"
+      },
+      {
+        "source": "OUTPUT_PATH"
+      },
+      {
+        "literal": "--learning-rate"
+      },
+      {
+        "source": "LEARNING_RATE"
+      },
+      {
+        "literal": "--epochs"
+      },
+      {
+        "source": "EPOCHS"
+      },
+      {
+        "literal": "--batch-size"
+      },
+      {
+        "source": "BATCH_SIZE"
+      },
+      {
+        "literal": "--seed"
+      },
+      {
+        "source": "SEED"
+      },
+      {
+        "literal": "--device"
+      },
+      {
+        "literal": "cpu"
+      }
+    ],
+    "command": [
+      "/opt/conda/bin/python",
+      "-I",
+      "/opt/ani-modeldev/training/train_mlp.py"
+    ],
+    "default_image": {
+      "image_id": "img_d160b454a52d4c04805e05501f5e1ffd",
+      "scope": "platform"
+    }
+  }
+}

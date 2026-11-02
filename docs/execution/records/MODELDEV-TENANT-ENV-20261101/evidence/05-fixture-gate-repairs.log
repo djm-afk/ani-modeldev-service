@@ -1,0 +1,29 @@
+--- FAIL: TestConfirmationAliasesAndLateUncertaintyPreserveOriginalObservations (0.63s)
+    --- FAIL: TestConfirmationAliasesAndLateUncertaintyPreserveOriginalObservations/direct_confirmation (0.32s)
+        confirmed_invariants_test.go:122: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        confirmed_invariants_test.go:128: real reservation fixture failed; uncertainty behavior NOT_RUN: ADMISSION_CONFLICT
+    --- FAIL: TestConfirmationAliasesAndLateUncertaintyPreserveOriginalObservations/confirmation_after_uncertainty (0.31s)
+        confirmed_invariants_test.go:122: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        confirmed_invariants_test.go:128: real reservation fixture failed; uncertainty behavior NOT_RUN: ADMISSION_CONFLICT
+--- FAIL: TestConfirmedRunObservationsKeepOriginalTenantScope (0.43s)
+    confirmed_invariants_test.go:327: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    confirmed_invariants_test.go:337: real reservation fixture failed; uncertainty behavior NOT_RUN: ADMISSION_CONFLICT
+--- FAIL: TestReservationRejectsDifferentCompleteAdmissionBeforeAndAfterFirstPermit (5.03s)
+    --- FAIL: TestReservationRejectsDifferentCompleteAdmissionBeforeAndAfterFirstPermit/service_account (0.30s)
+        invariants_test.go:98: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        invariants_test.go:102: fixture snapshot INVALID_ARGUMENT: snapshot fixed workload service accounts
+--- FAIL: TestReservationAndGetKeepTenantBoundaryAndCanonicalUUIDAliases (0.33s)
+    invariants_test.go:156: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    invariants_test.go:164: CPU07_RESERVATION_BEHAVIOR: want NOT_FOUND with no fact/permit, got ADMISSION_CONFLICT nonempty=false
+--- FAIL: TestOwnerRevisionSerializesDuplicateAndMixedWriters (0.48s)
+    owner_revision_atomic_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    owner_revision_atomic_test.go:69: CPU04_REVISION_FACTS: concurrent writer failed: ADMISSION_CONFLICT
+--- FAIL: TestUncertaintyAcceptsCanonicalUUIDAndUTCOffsetAliases (0.37s)
+    uncertain_invariants_test.go:131: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    uncertain_invariants_test.go:137: real reservation fixture failed; uncertainty behavior NOT_RUN: ADMISSION_CONFLICT
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission	63.248s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/commandtest	14.691s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input	11.602s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres	0.473s
+FAIL

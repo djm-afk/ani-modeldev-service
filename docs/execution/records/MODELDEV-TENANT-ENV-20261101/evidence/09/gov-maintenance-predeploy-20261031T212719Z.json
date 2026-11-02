@@ -1,0 +1,326 @@
+{
+  "schema": "ani.governance.modeldev-maintenance.predeploy.transport.v1",
+  "started_at": "2026-10-31T21:27:19.319068+00:00",
+  "ssh": "kubercloud@100.64.128.12",
+  "read_only": true,
+  "remote_runner_sha256": "ff7505bebf29dce2bb363aaf39753429bd0a5848cb88bb45de9df4fe04bef5d2",
+  "other_env_values_retained": false,
+  "ssh_exit_code": 0,
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "observation": {
+    "schema": "ani.governance.modeldev-maintenance.predeploy-readonly.v1",
+    "started_at": "2026-10-31T21:27:19.585647+00:00",
+    "ssh": "kubercloud@100.64.128.12",
+    "read_only": true,
+    "deployment_target": "ani-system/ani-governance",
+    "container": "governance",
+    "other_env_values_retained": false,
+    "login_or_create_requests": false,
+    "token_request": false,
+    "identity": {
+      "ssh_user": "kubercloud",
+      "hostname": "node1",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+    },
+    "identity_verified": true,
+    "deployment": {
+      "name": "ani-governance",
+      "namespace": "ani-system",
+      "uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+      "resource_version": "20366558",
+      "generation": 197,
+      "observed_generation": 197,
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:0518f2d3616c8a088113b0e604540565d4419ae1921446d17ca4b233c4090fc0",
+      "replicas": 1,
+      "ready_replicas": 1,
+      "updated_replicas": 1,
+      "strategy": "RollingUpdate",
+      "pause_env": {
+        "name": "ANI_MODELDEV_CREATE_PAUSED",
+        "explicit_entry_count": 0,
+        "env_from_count": 1,
+        "sources": [
+          {
+            "env_from_index": 0,
+            "prefix": "",
+            "can_provide_pause_key": true,
+            "kind": "secret",
+            "name": "ani-governance-environment",
+            "uid": "59266531-0691-4e42-b7aa-dfc972716e9d",
+            "resource_version": "14606584",
+            "key": "ANI_MODELDEV_CREATE_PAUSED",
+            "optional": false,
+            "provides_pause_key": false,
+            "pause_value": null
+          }
+        ],
+        "other_env_values_retained": false,
+        "effective_kubernetes_value_present": false,
+        "effective_kubernetes_value": null,
+        "candidate_parse": "DEFAULT_PAUSED",
+        "env_from_creation_time_caveat": "Referenced values are current; existing Pod process env is not re-read. ConfigMap/Secret changes after Pod creation do not prove its injected old value."
+      }
+    },
+    "pods": [
+      {
+        "name": "ani-governance-78b5778b75-nc5gg",
+        "uid": "76211ecd-65c5-43f2-9c17-f373df78ce20",
+        "resource_version": "20366552",
+        "start_time": "2026-10-31T11:24:12Z",
+        "phase": "Running",
+        "deletion_timestamp": null,
+        "replicaset_uid": "fecefb05-ed38-47e7-8508-be3b782efc5a",
+        "deployment_uid_verified": true,
+        "container": "governance",
+        "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:0518f2d3616c8a088113b0e604540565d4419ae1921446d17ca4b233c4090fc0",
+        "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:0518f2d3616c8a088113b0e604540565d4419ae1921446d17ca4b233c4090fc0",
+        "ready": true,
+        "restart_count": 0,
+        "pause_env": {
+          "name": "ANI_MODELDEV_CREATE_PAUSED",
+          "explicit_entry_count": 0,
+          "env_from_count": 1,
+          "sources": [
+            {
+              "env_from_index": 0,
+              "prefix": "",
+              "can_provide_pause_key": true,
+              "kind": "secret",
+              "name": "ani-governance-environment",
+              "uid": "59266531-0691-4e42-b7aa-dfc972716e9d",
+              "resource_version": "14606584",
+              "key": "ANI_MODELDEV_CREATE_PAUSED",
+              "optional": false,
+              "provides_pause_key": false,
+              "pause_value": null
+            }
+          ],
+          "other_env_values_retained": false,
+          "effective_kubernetes_value_present": false,
+          "effective_kubernetes_value": null,
+          "candidate_parse": "DEFAULT_PAUSED",
+          "env_from_creation_time_caveat": "Referenced values are current; existing Pod process env is not re-read. ConfigMap/Secret changes after Pod creation do not prove its injected old value."
+        }
+      }
+    ],
+    "service": {
+      "name": "ani-governance",
+      "namespace": "ani-system",
+      "uid": "2d4310e8-e5ed-4aef-b8d1-2af22dbd83c8",
+      "resource_version": "471573",
+      "type": "NodePort",
+      "cluster_ip": "10.96.44.233",
+      "ports": [
+        {
+          "name": "http",
+          "port": 7788,
+          "targetPort": "http",
+          "nodePort": 30085,
+          "protocol": "TCP"
+        }
+      ],
+      "http_probe": {
+        "url": "http://10.96.44.233:7788/healthz",
+        "status": 404,
+        "bytes": 19,
+        "sha256": "b16e15764b8bc06c5c3f9f19bc8b99fa48e7894aa5a6ccdad65da49bbf564793",
+        "body_retained": false,
+        "authenticated": false,
+        "http_reachable": true
+      },
+      "internal_http_base": "http://ani-governance.ani-system.svc:7788"
+    },
+    "result": "READONLY_PREDEPLOY_FACTS_COLLECTED_NOT_DEPLOYED_OR_PAUSED_ACCEPTANCE",
+    "completed_at": "2026-10-31T21:27:20.408302+00:00",
+    "initial_database_attempt": {
+      "result": "FAILED",
+      "cause_note": "Initial UUID-typed operation_id comparison did not match the verified character-varying original schema. No SQL mutation ran."
+    },
+    "gov_readonly_database": {
+      "transaction_read_only": "on",
+      "active_create_leases": 0,
+      "any_unexpired_create_leases": 0,
+      "original_four": [
+        {
+          "id": 55,
+          "tenant_id": 2,
+          "operation_id": "13bd316b-0b85-4c8e-a005-698eb9ffdd5e",
+          "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+          "dispatch_state": "UNKNOWN",
+          "retry_blocked": true,
+          "last_error_code": "INVALID_COMMAND",
+          "lease_until": null
+        },
+        {
+          "id": 57,
+          "tenant_id": 2,
+          "operation_id": "cd2ee5e3-e4fb-4515-99f8-33b3da892a8f",
+          "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+          "dispatch_state": "UNKNOWN",
+          "retry_blocked": true,
+          "last_error_code": "INVALID_COMMAND",
+          "lease_until": null
+        },
+        {
+          "id": 59,
+          "tenant_id": 2,
+          "operation_id": "ff5fc1f4-d9a8-4c6a-8c47-5b1d4ef06f05",
+          "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+          "dispatch_state": "UNKNOWN",
+          "retry_blocked": true,
+          "last_error_code": "INVALID_COMMAND",
+          "lease_until": null
+        },
+        {
+          "id": 60,
+          "tenant_id": 2,
+          "operation_id": "25b88cf7-bccb-4fac-8c9a-6b3ff91477ee",
+          "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+          "dispatch_state": "UNKNOWN",
+          "retry_blocked": true,
+          "last_error_code": "INVALID_COMMAND",
+          "lease_until": null
+        }
+      ]
+    }
+  },
+  "completed_at": "2026-10-31T21:28:28.619118+00:00",
+  "database_supplement": {
+    "started_at": "2026-10-31T21:28:26.216092+00:00",
+    "ssh_exit_code": 0,
+    "stderr_bytes": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runner_sha256": "505e2c7000fef19253ad97e4768eba00a8819681889f588da0785326b6bf65c4",
+    "completed_at": "2026-10-31T21:28:28.619118+00:00",
+    "observation": {
+      "started_at": "2026-10-31T21:28:26.198169+00:00",
+      "read_only": true,
+      "scope": "only active ModelDev Create lease counts and original four acceptance operation IDs",
+      "sql_type_correction": "operation_id is character varying in original verified schema; use exact text constants, not uuid-typed comparison",
+      "identity_verified": true,
+      "database": {
+        "transaction_read_only": "on",
+        "active_create_leases": 0,
+        "any_unexpired_create_leases": 0,
+        "original_four": [
+          {
+            "id": 55,
+            "tenant_id": 2,
+            "operation_id": "13bd316b-0b85-4c8e-a005-698eb9ffdd5e",
+            "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+            "dispatch_state": "UNKNOWN",
+            "retry_blocked": true,
+            "last_error_code": "INVALID_COMMAND",
+            "lease_until": null
+          },
+          {
+            "id": 57,
+            "tenant_id": 2,
+            "operation_id": "cd2ee5e3-e4fb-4515-99f8-33b3da892a8f",
+            "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+            "dispatch_state": "UNKNOWN",
+            "retry_blocked": true,
+            "last_error_code": "INVALID_COMMAND",
+            "lease_until": null
+          },
+          {
+            "id": 59,
+            "tenant_id": 2,
+            "operation_id": "ff5fc1f4-d9a8-4c6a-8c47-5b1d4ef06f05",
+            "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+            "dispatch_state": "UNKNOWN",
+            "retry_blocked": true,
+            "last_error_code": "INVALID_COMMAND",
+            "lease_until": null
+          },
+          {
+            "id": 60,
+            "tenant_id": 2,
+            "operation_id": "25b88cf7-bccb-4fac-8c9a-6b3ff91477ee",
+            "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+            "dispatch_state": "UNKNOWN",
+            "retry_blocked": true,
+            "last_error_code": "INVALID_COMMAND",
+            "lease_until": null
+          }
+        ]
+      },
+      "result": "READONLY_DB_PREFLIGHT_COMPLETE",
+      "completed_at": "2026-10-31T21:28:26.605556+00:00"
+    }
+  },
+  "local_contract": {
+    "root": "/home/chabking/workspace/.worktrees/governance-modeldev-create-maintenance",
+    "base_head": "6a7c721ea113d51497421d7975122ec7ca8105c2",
+    "scope": "observed local source, including in-progress default-pause change; not a tested/published candidate declaration",
+    "source_sha256": {
+      "app/admin/service/internal/data/modeldev_maintenance_config.go": "bcc4bb20aa002a0cb5ac200b9e541fcd8964344b387c5c41977a6a77e8c3a21d",
+      "app/admin/service/internal/server/modeldev_http.go": "0a8f2aa4aeec341f8e9293d268309c926e9baf5fb9f8ad1a9e711a3877dc7b27",
+      "app/admin/service/internal/service/modeldev_service.go": "b8b79eb20df1c95b0160bd6fb07e8b23d6a42c67abdb643e4ef026043bd0e2be",
+      "app/admin/service/internal/service/modeldev_create_maintenance.go": "5e7d5bae4d878319ad914bea2e37d8f3fdb27cc1a630e6ca0b2c745db8e2f189",
+      "app/admin/service/internal/service/modeldev_dispatch_worker.go": "fb681945fa10ce71fad1c2c48dbac0df97d5ecb743cdee97f8d5e878cca9d000",
+      "app/admin/service/internal/data/modeldev_dispatch_repo.go": "477a38ff825546d20683f882339c5b217e1817e121ed371ba377c085cf34bc80",
+      "app/admin/service/internal/service/authentication_service.go": "a01836099415db85eb7cdb3cb096053fd47405b3561e398eed1a47f2a0fad722",
+      "app/admin/service/internal/service/auth_origin.go": "5b25ae601ce9def72309a3c4612452d023764568f6e7d377bb793227897ce27c",
+      "pkg/middleware/auth/auth.go": "1396572a17418888c62f353a8ac8c280b87c4b32f3f064c4d62478d242661c24",
+      "api/protos/authentication/service/v1/ani_auth.proto": "f0ab2b352b7e0709ad79e18c3d98cff8443aa4127f6568a5dcc2f631f01e533e",
+      "app/admin/service/internal/server/modeldev_http_test.go": "db14011e05b68cebbfc2cbcf29355eb9646a447414f6d4d8dd6a30b5bc25997c"
+    },
+    "pause_rules": {
+      "missing_or_empty": "paused",
+      "true": "paused",
+      "false": "Create resumes",
+      "other": "startup configuration error"
+    },
+    "production_auth": {
+      "tenant_login": "POST /api/v1/auth/password/login",
+      "login_body_fields": [
+        "tenant_name",
+        "username",
+        "password"
+      ],
+      "tenant_name_semantics": "sys_tenants.code",
+      "token_response_field": "access_token",
+      "create_authorization": "exactly one Authorization: Bearer <tenant-user access token>; no mixed signing headers; authenticated tenant user with route authorization",
+      "origin_contract": "Login uses console allowlist when Origin/Referer supplied; existing non-browser contract permits both headers absent. No Origin/env allowlist values read or retained."
+    },
+    "create_request": {
+      "method": "POST",
+      "path": "/api/v1/modeldev/executions",
+      "content_type": "application/json",
+      "query": "must be absent",
+      "maximum_body_bytes": 16384,
+      "required_fields": [
+        "name",
+        "kind",
+        "implementation_id",
+        "compute_preset_id",
+        "dataset_version_id",
+        "parameters",
+        "idempotency_key"
+      ],
+      "parser_example": {
+        "name": "maintenance-preflight",
+        "kind": "GENERAL_TRAINING",
+        "implementation_id": "builtin.mlp",
+        "compute_preset_id": "11111111-2222-4333-8444-555555555555",
+        "dataset_version_id": "22222222-3333-4444-8555-666666666666",
+        "parameters": {},
+        "idempotency_key": "<fresh unique key selected only for subsequent authorized 503 check>"
+      },
+      "example_scope": "syntactic parser fixture only; not a selected real compute/dataset or business acceptance",
+      "expected_paused_result": {
+        "http_status": 503,
+        "reason": "MODELDEV_CREATE_MAINTENANCE"
+      },
+      "gate_order": "strict HTTP decoding then current authentication/route authorization; in service tenant-user checks precede maintenance; maintenance rejection precedes Create resolution/acceptance/charge/claim",
+      "requests_executed": false
+    },
+    "publisher_drain": "After deployment, separately verify no new claim/attempt generations and no live DISPATCHING lease; current zero leases is only a predeploy observation."
+  },
+  "followup_plan": "evidence/09/gov-maintenance-503-acceptance-plan.md"
+}

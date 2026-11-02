@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"reflect"
 	"strings"
 	"testing"
@@ -342,6 +343,8 @@ func closedCleanupRecoveryFixture(t *testing.T) (*pgxpool.Pool, *execution.Repos
 	pool := postgres.Prepare(t)()
 	ctx := context.Background()
 	request := dispatchRequest(t)
+	request.Admission = admissionfixture.EnsureEnvironment(t, pool, request.Admission)
+	request.Owner = request.Admission.Snapshot.DispatchOwner
 	repository := execution.New(pool)
 	if _, err := repository.Accept(ctx, request.Admission); err != nil {
 		t.Fatal(err)

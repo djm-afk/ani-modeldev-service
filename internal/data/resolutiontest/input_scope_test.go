@@ -3,8 +3,14 @@ package resolutiontest
 import (
 	"errors"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
+	envrepo "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
+	envfixture "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/tenantenvironment"
 	"reflect"
 	"strings"
 	"testing"
@@ -15,12 +21,21 @@ func TestPrepareScopesSameInputUUIDByAuthenticatedTenant(t *testing.T) {
 	f := prepareResolution(t)
 	r := f.request
 	r.IdentityRef.TenantID = "99999999-9999-4999-8999-999999999999"
-	facts := f.facts
-	facts.TenantID = r.IdentityRef.TenantID
-	facts.InputScope.ApprovedPrefix = "other/input"
-	facts.PublicationScope.ApprovedPrefix = "other/artifacts"
-	facts.Environment.NamespaceName = "other-tenant"
-	f.factReader.override = &facts
+	snapshot := conformance.SnapshotV1()
+	admission := admissionfixture.Bind(t, biz.Admission{TenantID: r.IdentityRef.TenantID, Actor: r.IdentityRef.Actor, OperationID: r.IdentityRef.OperationID, ExecutionID: r.IdentityRef.ExecutionID, Intent: r.Intent, AcceptedAt: snapshot.Timing.AcceptedAt, Snapshot: snapshot})
+	tenantB := envfixture.NewFixture(t, admission)
+	tenantB.Ensure(t, f.openPool(), admission)
+	materialB := catalogue.NewReader(tenantB.MaterialsDirectory)
+	readerB, err := admissionfacts.New(envrepo.NewRepository(f.openPool()), tenantB.Platform, materialB, tenantB.Config.ClusterID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	facts, err := readerB.ReadAdmissionFacts(f.ctx, r.IdentityRef.TenantID, r.Intent.ImplementationID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalReader, originalMaterials := f.factReader.reader, f.materials.reader
+	f.factReader.reader, f.materials.reader = readerB, materialB
 	if _, e := f.resolver.Prepare(f.ctx, r); !errors.Is(e, biz.ErrInputNotFound) {
 		t.Fatal("foreign input existence disclosed", e)
 	}
@@ -28,7 +43,7 @@ func TestPrepareScopesSameInputUUIDByAuthenticatedTenant(t *testing.T) {
 	other.TenantID = r.IdentityRef.TenantID
 	other.RequestID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 	other.Scope = facts.InputScope
-	other.Object.Key = "other/input/data.csv"
+	other.Object.Key = facts.InputScope.ApprovedPrefix + "/data.csv"
 	other.Object.SHA256 = strings.Repeat("e", 64)
 	version := "other-fixed-version"
 	other.Object.VersionID = &version
@@ -43,7 +58,7 @@ func TestPrepareScopesSameInputUUIDByAuthenticatedTenant(t *testing.T) {
 	if e != nil || !reflect.DeepEqual(candidate.Snapshot.Input.Object, other.Object) || candidate.Snapshot.Input.RowCount != 19 {
 		t.Fatal("tenant B did not compile its original bytes", e)
 	}
-	f.factReader.override = nil
+	f.factReader.reader, f.materials.reader = originalReader, originalMaterials
 	original, e := f.resolver.Prepare(f.ctx, f.request)
 	if e != nil || !reflect.DeepEqual(original.Snapshot.Input.Object, f.imported.Object) {
 		t.Fatal("tenant A mixed in tenant B facts", e)
@@ -56,7 +71,7 @@ func TestPrepareRejectsPersistedNonReadyProofStates(t *testing.T) {
 		r := f.imported
 		r.InputVersionID = []string{"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "cccccccc-cccc-4ccc-8ccc-cccccccccccc"}[n]
 		r.RequestID = r.InputVersionID
-		r.Object.Key = "fixed/input/nonready-" + r.InputVersionID + ".csv"
+		r.Object.Key = f.facts.InputScope.ApprovedPrefix + "/nonready-" + r.InputVersionID + ".csv"
 		repository := input.New(f.openPool())
 		v, e := repository.FreezeImport(f.ctx, r)
 		if e != nil {

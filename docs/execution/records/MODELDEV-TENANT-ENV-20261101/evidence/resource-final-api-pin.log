@@ -1,0 +1,16 @@
+go: downloading github.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261031180451-71b3ad7a2a88
+go: upgraded github.com/aws/aws-sdk-go-v2 v1.47.1 => v1.47.4
+go: upgraded github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.20 => v1.7.24
+go: upgraded github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.4 => v1.5.7
+go: upgraded github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.4 => v2.8.7
+go: upgraded github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.4 => v1.5.7
+go: upgraded github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 => v1.13.22
+go: upgraded github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.5 => v1.11.8
+go: upgraded github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.4 => v1.14.7
+go: upgraded github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.4 => v1.20.7
+go: upgraded github.com/aws/aws-sdk-go-v2/service/s3 v1.113.4 => v1.114.5
+go: upgraded github.com/aws/smithy-go v1.28.1 => v1.28.6
+go: upgraded github.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261019174951-733f625995f8 => v0.0.0-20261031180451-71b3ad7a2a88
+go: upgraded k8s.io/api v0.36.0 => v0.36.3
+go: upgraded k8s.io/apimachinery v0.36.0 => v0.36.3
+go: upgraded sigs.k8s.io/structured-merge-diff/v6 v6.3.2 => v6.3.3

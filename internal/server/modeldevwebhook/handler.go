@@ -19,7 +19,7 @@ import (
 
 type Handler struct {
 	reader                                        IdentityReader
-	bindings                                      map[string]NamespaceBinding
+	config                                        Config
 	profiles                                      map[string]frozenProfile
 	logger                                        *slog.Logger
 	maxBody                                       int64
@@ -44,23 +44,16 @@ func New(config Config, reader IdentityReader, logger *slog.Logger) (*Handler, e
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
-	handler := &Handler{reader: reader, profiles: profiles, bindings: make(map[string]NamespaceBinding), logger: logger,
+	handler := &Handler{reader: reader, profiles: profiles, config: config, logger: logger,
 		maxBody: config.MaxBodyBytes, requestTimeout: time.Duration(config.RequestTimeoutMilliseconds) * time.Millisecond,
 		dependencyTimeout: time.Duration(config.DependencyTimeoutMilliseconds) * time.Millisecond, capacity: make(chan struct{}, config.MaxConcurrentRequests)}
-	for _, binding := range config.Bindings {
-		binding.Profiles = append([]string(nil), binding.Profiles...)
-		if binding.Training != nil {
-			training := *binding.Training
-			binding.Training = &training
-		}
-		if binding.Driver != nil {
-			driver := *binding.Driver
-			driver.Command = append([]string(nil), driver.Command...)
-			driver.AllowedSupportImages = append([]string(nil), driver.AllowedSupportImages...)
-			binding.Driver = &driver
-		}
-		handler.bindings[binding.Namespace] = binding
-	}
+	training := *config.Training
+	handler.config.Training = &training
+	driver := *config.Driver
+	driver.Command = append([]string{}, driver.Command...)
+	driver.AllowedSupportImages = append([]string{}, driver.AllowedSupportImages...)
+	handler.config.Driver = &driver
+	handler.config.ControllerPrincipals = append([]string{}, config.ControllerPrincipals...)
 	return handler, nil
 }
 
@@ -103,12 +96,6 @@ func (handler *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 func (handler *Handler) ready(ctx context.Context) bool {
 	if handler.certificateReady != nil && !handler.certificateReady() {
 		return false
-	}
-	for _, binding := range handler.bindings {
-		namespace, err := handler.reader.Namespace(ctx, binding.Namespace)
-		if err != nil || namespace == nil || namespace.Name != binding.Namespace || string(namespace.UID) != binding.NamespaceUID || namespace.DeletionTimestamp != nil || namespace.Labels[binding.OwnerLabel.Key] != binding.OwnerLabel.Value {
-			return false
-		}
 	}
 	return ctx.Err() == nil
 }

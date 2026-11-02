@@ -1,0 +1,106 @@
+{
+  "schema": "ani.resource.workbench-source-recovery-readonly-gate.v1",
+  "observed_at": "2026-11-01T04:35:21.263529+00:00",
+  "read_only": true,
+  "cluster_mutations": 0,
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api_server": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "ssh_user": "kubercloud",
+    "hostname": "node1"
+  },
+  "deployment": {
+    "uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+    "resource_version": "20971941",
+    "spec_sha256": "1b63a22a62c5b385100c3d26027a9babbad57ee4f35f8cc07131bee04ee0f5ca",
+    "replicas": 1,
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:71c04b8948728d8d0299320f148afa3fee3eabdbea87051c2b99c300abe730d1",
+    "template_gates": [
+      {
+        "name": "app.kubernetes.io/resource-final-switch-20261101"
+      }
+    ]
+  },
+  "pods": [
+    {
+      "name": "ani-resource-service-85c8ff8877-lpjkf",
+      "uid": "55a01385-d16a-4ec0-ac15-5e0767e6413b",
+      "resource_version": "20966007",
+      "replica_set_uid": "55aa7736-a239-4d91-b42c-73663dea37ff",
+      "original_deployment_owner_chain": true,
+      "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:71c04b8948728d8d0299320f148afa3fee3eabdbea87051c2b99c300abe730d1",
+      "gates": [
+        {
+          "name": "app.kubernetes.io/resource-final-switch-20261101"
+        }
+      ],
+      "node": null,
+      "phase": "Pending",
+      "scheduling_gated": true,
+      "init_or_container_started": false,
+      "deleting": false
+    }
+  ],
+  "database": {
+    "read_only": "on",
+    "authenticated_role": "postgres",
+    "effective_role": "postgres",
+    "database": "ani_resource",
+    "database_oid": "16485",
+    "table_oid": "20127",
+    "schema_version": 25,
+    "resource_runtime_backends": 0,
+    "old_pod_ip_backends": 0,
+    "uid_guard": [
+      {
+        "name": "network_tenant_namespaces_uid_cutover",
+        "expression": "((cluster_id <> 'f39bf6e2-f3ed-4191-ada3-caeebf86c220'::text) OR (namespace_uid IS NOT NULL))",
+        "validated": false,
+        "comment": "ani.resource.namespace-uid-window.v1:132176f6-764a-4a47-ad36-f40884f72d0d"
+      }
+    ],
+    "cluster_row_count": 2,
+    "cluster_null_uid_count": 0,
+    "rows": [
+      {
+        "tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "namespace_uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347"
+      },
+      {
+        "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0"
+      }
+    ]
+  },
+  "postgres_source": {
+    "pod_uid": "333fe87e-4a47-4e99-b5ea-33ef48be2e27",
+    "statefulset_uid": "3ab646a6-9c8d-488c-9f8b-9ce659aa4d37",
+    "service_uid": "a211aa89-9521-4570-836f-b9dbb1755e79",
+    "service_vip": "10.96.133.128"
+  },
+  "secret": {
+    "uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+    "resource_version": "20964527",
+    "config_sha256": "7ace04bb0a3f29c816914e7c4b3bbdeeb929d59207a5b748958739e3272cc3f2"
+  },
+  "checks": {
+    "deployment_uid": true,
+    "armed_spec_sha256": true,
+    "replicas_one_template_gate": true,
+    "oldimage_only_unstarted_gated_pods": true,
+    "old_runtime_backends_zero": true,
+    "database_identity": true,
+    "uid_backfill_exact": true,
+    "require_uid_guard_held": true,
+    "candidate_config": true
+  },
+  "status": "RECOVERY_GATE_READY",
+  "failed_original_job": "09736c7992534a18bcb96ecb467008b6",
+  "job_replayed": false,
+  "activation_executed": false
+}

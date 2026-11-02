@@ -1,0 +1,1037 @@
+{
+  "observed_at_utc": "2026-10-31T15:46:03.754892Z",
+  "modeldev": {
+    "repository": "ani-modeldev-service",
+    "repo_path": "/home/chabking/workspace/ani-modeldev-service",
+    "local_head": "5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163",
+    "local_porcelain": [
+      " M AGENTS.md",
+      "?? .scratch/",
+      "?? docs/agents/",
+      "?? examples/",
+      "?? os,subprocess,json,hashlib,time,stat,struct,traceback"
+    ],
+    "remote_main_sha": "21bf4bd6540d462a61c91b629f26250899583223",
+    "local_head_after": "5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163",
+    "local_porcelain_after": [
+      " M AGENTS.md",
+      "?? .scratch/",
+      "?? docs/agents/",
+      "?? examples/",
+      "?? os,subprocess,json,hashlib,time,stat,struct,traceback"
+    ],
+    "claims_use_remote_sha_only": true,
+    "local_worktree_unchanged_by_observed_status": true,
+    "source_image_mapping": "NOT_VERIFIED"
+  },
+  "govres": {
+    "gov": {
+      "main_sha": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+      "local_head": "323eb749b8a3d607b26687797b372919052895c7",
+      "dirty": [],
+      "remote_main_verified": true,
+      "method": "git ls-remote origin refs/heads/main"
+    },
+    "res": {
+      "main_sha": "23e25b33ca02890231cd273ef7246b0fc415476c",
+      "local_head": "d32c4f438b43b8cb7534486c73e116e4d26c890a",
+      "dirty": [
+        " M CONTEXT.md",
+        " M docs/START-HERE.md",
+        " M docs/execution/status.md",
+        " M docs/specs/vpc-connectivity-lb.md",
+        " M docs/specs/vpc-snat.md",
+        "?? docs/contracts/",
+        "?? docs/execution/records/IMAGE-MVP/frontend-demo-tenant-a-20261013/",
+        "?? docs/execution/records/IMAGE-MVP/img-cleanup-20260930T0344Z/",
+        "?? docs/execution/records/KCN-KUBEVIRT-20261023/",
+        "?? docs/execution/records/LEGACY-DEVICE-CLEANUP-20261030/",
+        "?? docs/execution/records/NETWORK-STACK-RELEASE-20261023/",
+        "?? docs/execution/records/VM-MVP/",
+        "?? docs/execution/records/kcn-network-flow-review-20261021.md",
+        "?? docs/execution/records/nodefacts-removal-assessment-20261030.md",
+        "?? docs/plans/container-instance-release-without-acc-20261027.md",
+        "?? docs/plans/container-instance-restart-pvc-20261028.md",
+        "?? docs/plans/kcn-network-platform-goal-20261021.md",
+        "?? docs/plans/public-eip-binding-20261029.md",
+        "?? docs/plans/vm-mvp-complete-goal-20261023.md",
+        "?? docs/plans/vm-mvp-goals/",
+        "?? docs/plans/vm-mvp-templates/",
+        "?? docs/plans/vm-mvp.md",
+        "?? docs/references/",
+        "?? docs/specs/kcn-v09-underlay-flow.md",
+        "?? docs/specs/vm-mvp.md",
+        "?? docs/verification/"
+      ],
+      "remote_main_verified": true,
+      "method": "git ls-remote HTTPS fallback",
+      "fetched_object_only": true
+    },
+    "source_image_mapping": "NOT_VERIFIED"
+  },
+  "modeldev_findings": [
+    {
+      "evidence_id": "SRC-MD-01",
+      "check_ids": [
+        "K00.SOURCE"
+      ],
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "固定远端 main 与保留工作区",
+      "observation": "git ls-remote origin refs/heads/main 返回 21bf4bd6540d462a61c91b629f26250899583223；本地 HEAD 为 5b7fd05d9a74a8d0c65577e71b9a5c2db5dc8163，开始和结束均存在相同未提交路径。所有结论使用 git show/git grep 固定远端 SHA。远端对象开始缺失（exit 128），随后仅 fetch 对象（exit 0），没有切换分支或覆盖工作区。",
+      "implementation_impact": "源码与部署版本必须分别报告。",
+      "sources": [],
+      "unverified": [
+        "SOURCE_IMAGE_MAPPING_NOT_VERIFIED；没有读取现场组件或制品映射。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-02",
+      "check_ids": [
+        "K02.SOURCE.BINDING"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "进程仅装配一个 PipelineDispatchBinding",
+      "observation": "runtimeClients.binding 是单值；loadRuntimeClients 从 BindingFile 读取并核对 SHA256，解码单个 PipelineDispatchBinding。binding 冻结 TenantID、Environment、Owner；Environment 含 cluster、namespace/UID、Experiment、连接与身份引用。该值传给一个 dispatcher 和一个 close worker。",
+      "implementation_impact": "仅增加第二租户 admission facts 不会使第二租户被同一进程派发、关闭或处理 GPU release outbox；需一次性替换静态 binding 发现与装配。",
+      "sources": [
+        {
+          "path": "cmd/ani-modeldev-service/runtime_clients.go",
+          "line_start": 33,
+          "line_end": 58,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/runtime_clients.go#L33-L58"
+        },
+        {
+          "path": "internal/biz/dispatch_worker.go",
+          "line_start": 15,
+          "line_end": 50,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/dispatch_worker.go#L15-L50"
+        },
+        {
+          "path": "contract/cpup01/snapshot.go",
+          "line_start": 95,
+          "line_end": 110,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/contract/cpup01/snapshot.go#L95-L110"
+        },
+        {
+          "path": "cmd/ani-modeldev-service/runtime.go",
+          "line_start": 117,
+          "line_end": 145,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/runtime.go#L117-L145"
+        }
+      ],
+      "unverified": [
+        "现场 binding 文件、SHA、具体租户、Experiment、身份引用均未读取。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-03",
+      "check_ids": [
+        "K02.SOURCE.KFP_TOKEN",
+        "K04.SOURCE.CONTROL"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "mountedPipelineToken 拒绝不同租户或整份 environment",
+      "observation": "provider 保存启动 binding 和 token 文件路径；BearerToken 要求 tenant == binding.TenantID 且 environment == binding.Environment，然后每次读取 runtimeToken(file)。它不会按 TenantProxyIdentity 交换凭据。KFP CA 和 token 文件路径来自受管配置。",
+      "implementation_impact": "控制身份/刷新方案须依据真实 KFP 入口认证选择；不能把文件轮转误报成动态租户凭据映射。",
+      "sources": [
+        {
+          "path": "cmd/ani-modeldev-service/runtime_clients.go",
+          "line_start": 72,
+          "line_end": 85,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/runtime_clients.go#L72-L85"
+        },
+        {
+          "path": "cmd/ani-modeldev-service/runtime_clients.go",
+          "line_start": 129,
+          "line_end": 129,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/runtime_clients.go#L129-L129"
+        },
+        {
+          "path": "cmd/ani-modeldev-service/runtime_clients.go",
+          "line_start": 152,
+          "line_end": 178,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/runtime_clients.go#L152-L178"
+        }
+      ],
+      "unverified": [
+        "真实 control principal、audience、token 有效性、CA 引用值、入口层均 NOT_VERIFIED；未读取 token/CA/私钥文件。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-04",
+      "check_ids": [
+        "K04.SOURCE.CALLBACK"
+      ],
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "step 回调 audience 与 KFP control 认证分离",
+      "observation": "runtime.token_audience 仅传给 stepidentity.New。回调 verifier 提交显式 audiences 的 TokenReview，并要求 authenticated、返回 audience、Pod name/UID、精确 SA principal 和 SA UID；再 GET Namespace/Pod/SA/Workflow 核对原 UID、删除状态及 owner。",
+      "implementation_impact": "动态化应保留 Pod、SA、Workflow、Namespace 的原实物绑定。runtime.token_audience 不能作为 ModelDev→KFP 实际 audience 证据。",
+      "sources": [
+        {
+          "path": "cmd/ani-modeldev-service/runtime.go",
+          "line_start": 84,
+          "line_end": 91,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/runtime.go#L84-L91"
+        },
+        {
+          "path": "internal/data/stepidentity/verifier.go",
+          "line_start": 29,
+          "line_end": 95,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/stepidentity/verifier.go#L29-L95"
+        }
+      ],
+      "unverified": [
+        "现场 projected token 的 audience、expirationSeconds、volume 与路径关系 NOT_VERIFIED。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-05",
+      "check_ids": [
+        "K05.SOURCE.CREATE_RUN",
+        "K06.SOURCE.FIXED_VERSION"
+      ],
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "CreateRun 由 Experiment 与固定 Version 决定执行材料",
+      "observation": "KFP client 将 base URL 原路径后拼 /apis/v2beta1/runs。CreateRun body 仅含 experiment_id、display_name、pipeline_version_reference（PipelineID/VersionID）、runtime_config（execution_id/spec_hash 与 pipeline_root）、service_account；无独立 Namespace。Authorization 仅由 TokenProvider 生成，不接受浏览器头映射。HTTPS、受管 CA、有限超时、不跟随跳转、无重试；响应须 200 JSON 且完整匹配原请求和非零 Run UUID，含 error 则不确认。",
+      "implementation_impact": "不能从请求体推断实际 Workflow namespace，也不能从固定 ID 推断共享/租户归属或 B 可使用；必须补 KFP 现有对象 GET、权限与执行证据。",
+      "sources": [
+        {
+          "path": "internal/data/kfp/client.go",
+          "line_start": 66,
+          "line_end": 99,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/kfp/client.go#L66-L99"
+        },
+        {
+          "path": "internal/data/kfp/client.go",
+          "line_start": 102,
+          "line_end": 162,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/kfp/client.go#L102-L162"
+        },
+        {
+          "path": "internal/data/kfp/client.go",
+          "line_start": 178,
+          "line_end": 197,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/kfp/client.go#L178-L197"
+        },
+        {
+          "path": "internal/data/kfp/client.go",
+          "line_start": 244,
+          "line_end": 261,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/kfp/client.go#L244-L261"
+        }
+      ],
+      "unverified": [
+        "当前 Pipeline/Version ID、父 Pipeline namespace/共享属性、B 精确读取、runs/create 权限和已有 B Run 均 NOT_VERIFIED。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-06",
+      "check_ids": [
+        "K02.SOURCE.ADMISSION_FACTS"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "admission facts 支持多个键但为启动不可变快照",
+      "observation": "command 构造时从 config.AdmissionResolution.FactsFiles 调用 admissionfacts.Load。Reader 按 resource_tenant_id + implementation_id 索引文件，限制 1..64，拒绝重复键，要求所有文件 timing 相同；ReadAdmissionFacts 只查已加载 map，不做环境探测或动态登记。",
+      "implementation_impact": "动态开通须替换启动 facts 的静态来源，同时保留严格文件/摘要、受信租户和已冻结执行快照语义。",
+      "sources": [
+        {
+          "path": "cmd/ani-modeldev-service/command.go",
+          "line_start": 100,
+          "line_end": 125,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/command.go#L100-L125"
+        },
+        {
+          "path": "internal/data/admissionfacts/reader.go",
+          "line_start": 26,
+          "line_end": 30,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/admissionfacts/reader.go#L26-L30"
+        },
+        {
+          "path": "internal/data/admissionfacts/reader.go",
+          "line_start": 72,
+          "line_end": 132,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/admissionfacts/reader.go#L72-L132"
+        },
+        {
+          "path": "internal/data/admissionfacts/reader.go",
+          "line_start": 134,
+          "line_end": 194,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/admissionfacts/reader.go#L134-L194"
+        }
+      ],
+      "unverified": [
+        "现场 facts 文件数量、租户数量、材料摘要和具体存储 scope 未读取。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-07",
+      "check_ids": [
+        "K02.SOURCE.DISPATCH",
+        "K02.SOURCE.RESERVE"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "派发发现受单 tenant/environment 过滤，Reserve 是唯一发送许可",
+      "observation": "ListPendingAdmissions 要求指定 tenant UUID、snapshot.environment 与参数 JSON 完全相等、close_generation=0、未到 deadline、无既存 dispatch。DispatchWorker 还逐项核对同一 tenant/environment。Reserve 对共享 identity 行 FOR UPDATE，比较持久 admission/完整原计划；已有 reservation 仅回放事实、不返回 SendPermit；只有首次插入成功且事务提交后返回唯一许可。",
+      "implementation_impact": "改发现范围时沿用 Reserve、关闭 fence、deadline 与发送不确定性，不能新增重试系统绕过。",
+      "sources": [
+        {
+          "path": "internal/data/submission/queries.sql",
+          "line_start": 210,
+          "line_end": 233,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/submission/queries.sql#L210-L233"
+        },
+        {
+          "path": "internal/biz/dispatch_worker.go",
+          "line_start": 69,
+          "line_end": 89,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/dispatch_worker.go#L69-L89"
+        },
+        {
+          "path": "internal/biz/dispatch_worker.go",
+          "line_start": 105,
+          "line_end": 128,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/dispatch_worker.go#L105-L128"
+        },
+        {
+          "path": "internal/data/submission/repository.go",
+          "line_start": 59,
+          "line_end": 106,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/submission/repository.go#L59-L106"
+        },
+        {
+          "path": "internal/data/submission/repository.go",
+          "line_start": 111,
+          "line_end": 150,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/submission/repository.go#L111-L150"
+        },
+        {
+          "path": "internal/biz/pipeline_submitter.go",
+          "line_start": 50,
+          "line_end": 86,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/pipeline_submitter.go#L50-L86"
+        }
+      ],
+      "unverified": [
+        "未执行数据库行为测试或新派发；SOURCE 不证明现场可用。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-08",
+      "check_ids": [
+        "K02.SOURCE.CLOSE_OUTBOX"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "关闭与 GPU release outbox 发现同样固定范围",
+      "observation": "ListPendingBoundClosures 要求 admitted.tenant_id 和 snapshot.environment 完全匹配，覆盖关闭 fence、deadline/step 超时、未完成 compute cleanup 以及已关闭但 GPURelease.outbox.delivered_at 为空等条件；CloseWorker 使用同一 binding.TenantID 调 closer/GPU reconciler。",
+      "implementation_impact": "只修改提交路径会遗漏第二租户关闭、清理和 GPU release outbox，必须同次替换发现范围。",
+      "sources": [
+        {
+          "path": "internal/data/lifecycle/queries.sql",
+          "line_start": 78,
+          "line_end": 128,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/lifecycle/queries.sql#L78-L128"
+        },
+        {
+          "path": "internal/biz/close_worker.go",
+          "line_start": 9,
+          "line_end": 41,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/close_worker.go#L9-L41"
+        },
+        {
+          "path": "internal/biz/close_worker.go",
+          "line_start": 47,
+          "line_end": 86,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/close_worker.go#L47-L86"
+        }
+      ],
+      "unverified": [
+        "现场待关闭或待投递记录、GPU释放状态未查询。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-09",
+      "check_ids": [
+        "K08.SOURCE.LABELS",
+        "K08.SOURCE.WEBHOOK_LIMIT"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "webhook 为静态配置，Namespace 租户标签仍使用旧键",
+      "observation": "webhook Config 有 bindings/profiles；freeze 限 bindings 1..32、profiles 1..64；每个 binding 固定 namespace/UID、owner label、Argo creator、step/training SA、profile。Handler.New 将其复制入 map。NamespaceTenantLabel 固定为 ani.io/resource-tenant-id，step/training 会核对该键。",
+      "implementation_impact": "需改成统一 network.ani.io 合同并替换静态绑定来源；32 是源码上限，不是现场加载数量。",
+      "sources": [
+        {
+          "path": "internal/server/modeldevwebhook/config.go",
+          "line_start": 31,
+          "line_end": 58,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/config.go#L31-L58"
+        },
+        {
+          "path": "internal/server/modeldevwebhook/config.go",
+          "line_start": 93,
+          "line_end": 104,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/config.go#L93-L104"
+        },
+        {
+          "path": "internal/server/modeldevwebhook/config.go",
+          "line_start": 162,
+          "line_end": 166,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/config.go#L162-L166"
+        },
+        {
+          "path": "internal/server/modeldevwebhook/config.go",
+          "line_start": 209,
+          "line_end": 242,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/config.go#L209-L242"
+        },
+        {
+          "path": "internal/server/modeldevwebhook/handler.go",
+          "line_start": 32,
+          "line_end": 64,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/handler.go#L32-L64"
+        },
+        {
+          "path": "internal/server/modeldevwebhook/policy.go",
+          "line_start": 233,
+          "line_end": 245,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/policy.go#L233-L245"
+        },
+        {
+          "path": "internal/server/modeldevwebhook/training.go",
+          "line_start": 71,
+          "line_end": 82,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/training.go#L71-L82"
+        }
+      ],
+      "unverified": [
+        "实际 Namespace labels、bindings 数量、webhook 配置未读取。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-10",
+      "check_ids": [
+        "K08.SOURCE.WEBHOOK_REGISTRATION"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "启用 training 的注册会命中 Namespace 全部 Pod CREATE",
+      "observation": "generator 为每个 binding 产生 Pod CREATE、Namespaced、Exact 规则，namespaceSelector 同时要求 kubernetes.io/metadata.name 和配置 owner label；初始 objectSelector=v2_component:true，training 存在时删除该 selector；failurePolicy=Fail、timeoutSeconds=8，无 matchConditions。handler 对非 training SA 且非 v2_component、无 ModelDev 自报角色标签的普通 Pod 返回 outside_scope/Allowed。",
+      "implementation_impact": "handler 放行逻辑不能免除调用前故障影响；后续需收窄实际注册，不能用 Ignore 代替工作负载校验。",
+      "sources": [
+        {
+          "path": "deploy/modeldev-webhook/render.py",
+          "line_start": 76,
+          "line_end": 83,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/deploy/modeldev-webhook/render.py#L76-L83"
+        },
+        {
+          "path": "internal/server/modeldevwebhook/policy.go",
+          "line_start": 202,
+          "line_end": 224,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/policy.go#L202-L224"
+        }
+      ],
+      "unverified": [
+        "没有读取现存 MutatingWebhookConfiguration，不能称现场普通 Pod 已受阻；PSA/网络/Quota/LimitRange 均未核验。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-11",
+      "check_ids": [
+        "K08.SOURCE.READINESS"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "任一 binding 的 Namespace 查询或 UID/owner 校验失败可使共享 readiness 失败",
+      "observation": "/readyz 调用 handler.ready；ready 遍历全部已加载 binding，逐个 GET Namespace；错误、缺失、名称/UID 不符、删除中或 owner label 不匹配均立即 false。它使用一个共享 dependency timeout。",
+      "implementation_impact": "共享服务需拆开单租户环境状态与实例就绪条件，避免一个租户问题影响全部匹配 Namespace 的准入可用性。",
+      "sources": [
+        {
+          "path": "internal/server/modeldevwebhook/handler.go",
+          "line_start": 77,
+          "line_end": 88,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/handler.go#L77-L88"
+        },
+        {
+          "path": "internal/server/modeldevwebhook/handler.go",
+          "line_start": 103,
+          "line_end": 114,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/server/modeldevwebhook/handler.go#L103-L114"
+        },
+        {
+          "path": "deploy/modeldev-webhook/render.py",
+          "line_start": 68,
+          "line_end": 74,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/deploy/modeldev-webhook/render.py#L68-L74"
+        }
+      ],
+      "unverified": [
+        "现场 readiness、Pod UID、RBAC 与实际故障影响未验证。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-12",
+      "check_ids": [
+        "K08.SOURCE.POLICY"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "TrainJob policy/binding 固定全局名称且单 Namespace 内容",
+      "observation": "generator 固定 NAME=modeldev-v21-trainjob-01a15f47，控制/Trainer/GC principal 也为常量；render 输入单 namespace/namespace_uid 与固定 CPU/GPU digest。Policy 与 Binding 同用 NAME，namespaceSelector 仅该 namespace，匹配 trainer.kubeflow.org/v1alpha1 TrainJob/TrainJob status CREATE/UPDATE；Deny/Fail。租户键仍是 ani.io/resource-tenant-id；Namespace UID label 只是 scope marker，注释明确不能作为实际 UID 证明。",
+      "implementation_impact": "为第二租户再次套用同名全局对象会覆盖前一租户配置内容（源码生成碰撞风险）；需一次性改多租户策略设计/命名，保留实际 Namespace UID 读取。",
+      "sources": [
+        {
+          "path": "deploy/modeldev-tenant-policy/render.py",
+          "line_start": 13,
+          "line_end": 31,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/deploy/modeldev-tenant-policy/render.py#L13-L31"
+        },
+        {
+          "path": "deploy/modeldev-tenant-policy/render.py",
+          "line_start": 47,
+          "line_end": 50,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/deploy/modeldev-tenant-policy/render.py#L47-L50"
+        },
+        {
+          "path": "deploy/modeldev-tenant-policy/render.py",
+          "line_start": 66,
+          "line_end": 74,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/deploy/modeldev-tenant-policy/render.py#L66-L74"
+        }
+      ],
+      "unverified": [
+        "实际 Policy/Binding 名称与内容、Kubernetes 支持版本未读取；没有执行 render/apply/server dry-run。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-13",
+      "check_ids": [
+        "K08.SOURCE.WORKSPACE_CLEANUP"
+      ],
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "workspace 与清理使用执行专属名称、原 UID 和 owner 关系",
+      "observation": "ExpectedWorkspacePVCName 为 ani-kfp-workspace-<lowercase execution UUID>，实际 PVC UID 仅在创建/准备后冻结。ValidateWorkspaceBinding 要求 Namespace name/UID、非空 PVC name/UID、子路径和 prepared manifest 匹配。owner close 扫描 Pod 后跳过既非原 Workflow owner、也不挂该 workspace 的 Pod；挂同 workspace 的外部 Pod 不被跳过且非 terminal 则阻止证明。compute cleanup 校验 Namespace/PVC 原 UID，逐个按记录目标删除并使用 UID/resourceVersion precondition；未知 owner 子对象/挂 workspace Pod 会阻止清理。",
+      "implementation_impact": "复用租户 Namespace 不要求无关 Instance/VM 消失；应保留精确执行工作区/原对象 UID 边界，不扩大到 Namespace 清空。",
+      "sources": [
+        {
+          "path": "internal/biz/runtime_plan.go",
+          "line_start": 17,
+          "line_end": 21,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/runtime_plan.go#L17-L21"
+        },
+        {
+          "path": "internal/biz/execution_runtime.go",
+          "line_start": 379,
+          "line_end": 391,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/execution_runtime.go#L379-L391"
+        },
+        {
+          "path": "internal/data/runtimeproof/owner_close.go",
+          "line_start": 58,
+          "line_end": 83,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/runtimeproof/owner_close.go#L58-L83"
+        },
+        {
+          "path": "internal/data/runtimeproof/owner_close.go",
+          "line_start": 115,
+          "line_end": 154,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/runtimeproof/owner_close.go#L115-L154"
+        },
+        {
+          "path": "internal/data/runtimeproof/owner_close.go",
+          "line_start": 582,
+          "line_end": 602,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/runtimeproof/owner_close.go#L582-L602"
+        },
+        {
+          "path": "internal/data/runtimeproof/compute_cleanup.go",
+          "line_start": 94,
+          "line_end": 118,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/runtimeproof/compute_cleanup.go#L94-L118"
+        },
+        {
+          "path": "internal/data/runtimeproof/compute_cleanup.go",
+          "line_start": 183,
+          "line_end": 218,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/runtimeproof/compute_cleanup.go#L183-L218"
+        },
+        {
+          "path": "internal/data/runtimeproof/compute_cleanup.go",
+          "line_start": 330,
+          "line_end": 349,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/runtimeproof/compute_cleanup.go#L330-L349"
+        }
+      ],
+      "unverified": [
+        "现场 PVC/Workflow/JobSet/Job UID 与共享挂载情况未读取；源码不证明已有执行已关闭。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-14",
+      "check_ids": [
+        "K09.SOURCE.IMAGE"
+      ],
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "通用训练走 Res pull-secret；固定微调保留自身模板路径",
+      "observation": "通用 TrainingImage 非空时 RuntimePlan 冻结 imagePullSecrets 引用；ensurePullSecret 调 Res 并传受信 tenant、cluster、namespace、原 namespace UID、registry，比较返回 Secret ref。微调没有 TrainingImage 时不进入此路径；训练模板不显式携带自己的 pull Secret 时，Pod 校验允许 ani-registry-pull 前缀的 SA 继承引用。step 镜像由 pipeline compiler configuration.component_image 固定为 digest，源码未给实际租户 SA 配置提供现场证据。",
+      "implementation_impact": "需要分别取 step/training/fixed finetuning SA 与 Secret 元数据；Res 静态 allowlist 由 Res 负责核验；本任务不调用 Ensure 创建 Secret。",
+      "sources": [
+        {
+          "path": "internal/biz/runtime_plan.go",
+          "line_start": 64,
+          "line_end": 92,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/runtime_plan.go#L64-L92"
+        },
+        {
+          "path": "internal/biz/managed_runtime.go",
+          "line_start": 354,
+          "line_end": 373,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/biz/managed_runtime.go#L354-L373"
+        },
+        {
+          "path": "internal/data/imageruntime/client.go",
+          "line_start": 205,
+          "line_end": 227,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/imageruntime/client.go#L205-L227"
+        },
+        {
+          "path": "internal/data/trainer/pod_contract.go",
+          "line_start": 41,
+          "line_end": 81,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/trainer/pod_contract.go#L41-L81"
+        },
+        {
+          "path": "pipelines/cpu_p01.py",
+          "line_start": 49,
+          "line_end": 75,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/pipelines/cpu_p01.py#L49-L75"
+        }
+      ],
+      "unverified": [
+        "实际 Secret 是否存在/type/ref、SA imagePullSecrets、registry 可拉取性与 Res allowlist 未读取。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-15",
+      "check_ids": [
+        "K09.SOURCE.STS"
+      ],
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "STS scopes 在启动复制；基础凭据可按读取轮转",
+      "observation": "runtimeStorageMaterial 读取 credentials_file 中 sts_bindings；loadRuntimeClients 传给 storagecredentials.New，New 校验 1..64 且复制 Bindings。scope 匹配 tenant+purpose+connection+bucket+prefix，prepare/base-model 为精确源对象读，publish 为 ApprovedPrefix/executionID/ 下读写。mountedStorageCredentials 在 SDK retrieval 时重读文件以支持基础凭据轮转；这不会替换 Issuer.config.Bindings。",
+      "implementation_impact": "动态租户需要替换 scope 注册来源，同时保留按执行 scope 的细粒度凭据授权；不能宣称文件轮转已实现动态 scope 加载。",
+      "sources": [
+        {
+          "path": "cmd/ani-modeldev-service/runtime_clients.go",
+          "line_start": 92,
+          "line_end": 103,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/runtime_clients.go#L92-L103"
+        },
+        {
+          "path": "cmd/ani-modeldev-service/runtime_clients.go",
+          "line_start": 181,
+          "line_end": 209,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/cmd/ani-modeldev-service/runtime_clients.go#L181-L209"
+        },
+        {
+          "path": "internal/data/storagecredentials/issuer.go",
+          "line_start": 30,
+          "line_end": 77,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/storagecredentials/issuer.go#L30-L77"
+        },
+        {
+          "path": "internal/data/storagecredentials/issuer.go",
+          "line_start": 191,
+          "line_end": 230,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/storagecredentials/issuer.go#L191-L230"
+        }
+      ],
+      "unverified": [
+        "实际 endpoint、bucket、prefix、pipeline root、STS scope/role 标识与 A/B 关联均未读取；没有颁发凭据或对象读写。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    },
+    {
+      "evidence_id": "SRC-MD-16",
+      "check_ids": [
+        "K12.SOURCE.REMOVAL_SCOPE"
+      ],
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "observed_at_utc": "2026-10-31T14:52:04.962299Z",
+      "title": "旧数据仅列 ModelDev 自有记录和有原 UID 证据的受管对象",
+      "observation": "固定 main 的 baseline 定义 9 张 ModelDev 表：modeldev_close_intents、modeldev_execution_cleanup_audits、modeldev_execution_identities、modeldev_execution_runtimes、modeldev_executions、modeldev_input_versions、modeldev_pipeline_confirmed_runs、modeldev_pipeline_dispatches、modeldev_run_authorities。执行表按 tenant/execution 关联 identity；run authorities 存 namespace/UID、workflow/UID；runtimes facts 存 workspace/training/close/GPU outbox 等。",
+      "implementation_impact": "后续删除旧 binding/facts/STS/webhook/static policy 材料与这些表内限定 ModelDev 旧记录；先用原执行证据关闭/移除其自有 Run/Workflow/TrainJob/JobSet/Job/Pod/Runtime/工作区，保留共享 Namespace、其他 owner 记录、原数据/基模型/共享镜像/连接。input_versions 是 ModelDev 元数据，不能由元数据删除推导可删除外部源对象。此处不生成清空 SQL。",
+      "sources": [
+        {
+          "path": "migrations/0001_current_baseline.up.sql",
+          "line_start": 67,
+          "line_end": 113,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/migrations/0001_current_baseline.up.sql#L67-L113"
+        },
+        {
+          "path": "migrations/0001_current_baseline.up.sql",
+          "line_start": 130,
+          "line_end": 197,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/migrations/0001_current_baseline.up.sql#L130-L197"
+        },
+        {
+          "path": "migrations/0001_current_baseline.up.sql",
+          "line_start": 267,
+          "line_end": 334,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/migrations/0001_current_baseline.up.sql#L267-L334"
+        },
+        {
+          "path": "migrations/0001_current_baseline.up.sql",
+          "line_start": 508,
+          "line_end": 580,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/migrations/0001_current_baseline.up.sql#L508-L580"
+        },
+        {
+          "path": "internal/data/runtimeproof/compute_cleanup.go",
+          "line_start": 94,
+          "line_end": 118,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/runtimeproof/compute_cleanup.go#L94-L118"
+        },
+        {
+          "path": "internal/data/runtimeproof/compute_cleanup.go",
+          "line_start": 183,
+          "line_end": 218,
+          "sha": "21bf4bd6540d462a61c91b629f26250899583223",
+          "url": "https://github.com/zhangzhe-ctrl/ani-modeldev-service/blob/21bf4bd6540d462a61c91b629f26250899583223/internal/data/runtimeproof/compute_cleanup.go#L183-L218"
+        }
+      ],
+      "unverified": [
+        "未查询数据库、未统计旧行、未确认现场表版本；KFP Experiment/Pipeline 定义可能共享，须由现场归属证明后才能决定删除。"
+      ],
+      "does_not_prove": [
+        "现场运行镜像与本 SHA 一致",
+        "当前 A/B 租户已加载或可创建新执行",
+        "第二租户新建 Run/训练/关闭/隔离验收通过"
+      ]
+    }
+  ],
+  "govres_findings": [
+    {
+      "id": "K00.SOURCE",
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-00",
+      "observation": "Gov/Res latest remote main match spec baseline; workspace heads differ; source inspected with fixed git object"
+    },
+    {
+      "id": "K01.GOV_TRUSTED_MAPPING.SOURCE",
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-01",
+      "observation": "persistent immutable unique resource_tenant_id; Principal current authorization to resolver to rebuilt outgoing metadata"
+    },
+    {
+      "id": "K01.RES_ALGORITHM.SOURCE",
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-02",
+      "observation": "prefix + nonzero canonical lower-case full hyphenated UUID; no hash/truncation"
+    },
+    {
+      "id": "K01.RES_FIXED_PREFIX.SOURCE",
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-02",
+      "reason_code": "PREFIX_STILL_CONFIGURABLE",
+      "observation": {
+        "template_default": "tenant-",
+        "observed_effective_prefix": null
+      }
+    },
+    {
+      "id": "K01.NO_AUTOCREATE.SOURCE",
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-03",
+      "reason_code": "MISSING_NAMESPACE_CREATES_REMAIN",
+      "observation": {
+        "network": "internal/data/network/kc.go:283-300",
+        "sandbox": "internal/data/sandbox/namespace.go:24-75; internal/service/sandbox/service.go:265-277"
+      }
+    },
+    {
+      "id": "K01.FULL_UID_VALIDATION.SOURCE",
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-03",
+      "reason_code": "FULL_OWNER_UID_CONTRACT_NOT_UNIFORM",
+      "observation": "Storage Namespace DTO omits UID; Network ensureNamespace checks name/labels/deletion but not UID"
+    },
+    {
+      "id": "K09.RES_NAMESPACE_UID_GUARD.SOURCE",
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-04",
+      "observation": "external runtime caller requires nonempty frozen UID matched against live namespace; Resource internal instance claim does not Verify"
+    },
+    {
+      "id": "K09.RES_NAMESPACE_LABEL_UNIFIED.SOURCE",
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-04",
+      "reason_code": "NAMESPACE_LABEL_KEYS_DIFFER",
+      "observation": {
+        "current_tenant_key": "ani.io/resource-tenant-id",
+        "current_owner_key": "ani.io/managed-by",
+        "target_tenant_key": "network.ani.io/tenant-id",
+        "target_owner_key": "network.ani.io/managed-by",
+        "target_owner_value": "ani-network-service"
+      }
+    },
+    {
+      "id": "K09.RES_DYNAMIC_NAMESPACE_AUTH.SOURCE",
+      "status": "FAIL",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-04",
+      "reason_code": "STATIC_NAMESPACE_ALLOWLIST",
+      "observation": "deployment per-caller subject/cluster_ids/namespaces/owner_labels; exact membership, no dynamic tenant namespace derivation"
+    },
+    {
+      "id": "SOURCE.MAPPING_READ_ENTRY",
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-05",
+      "observation": "Gov admin Tenant HTTP DTO does not expose resource UUID. Internal resolver reads sys_tenants; authorized read-only data channel may select candidate id/resource_tenant_id only. No database accessed."
+    },
+    {
+      "id": "SOURCE.CLUSTER_ENTRY",
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-05",
+      "observation": "Res actual -conf + network.cluster_id/kubeconfig reference; separate image.pull_secret_cluster_id; Gov ANI_INSTANCE_CLUSTER_ID is another config source. Network internal map network_tenant_namespaces has tenant/cluster/name only."
+    },
+    {
+      "id": "SOURCE.NO_NAMESPACE_RPC",
+      "status": "PASS",
+      "proof_level": [
+        "SOURCE"
+      ],
+      "evidence_id": "SRC-GR-06",
+      "observation": "No rpc name matching Namespace in Resource api protobufs (git grep exit 1); task architecture expressly requires no new Namespace RPC. Existing EnsureTenantPullSecret is Secret capability only."
+    }
+  ],
+  "source_image_mapping": "SOURCE_IMAGE_MAPPING_NOT_VERIFIED"
+}

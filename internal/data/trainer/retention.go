@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"slices"
+	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,7 +41,7 @@ func (a *Adapter) releaseRecordedPodExits(ctx context.Context, plan biz.Training
 		if !retained {
 			continue
 		}
-		if !fact.Terminal || fact.ExitCode == nil || !recordedPodExit(fact, history) {
+		if !fact.Terminal || !recordedPodExit(fact, history) {
 			pending = true
 			continue
 		}
@@ -79,9 +80,15 @@ func (a *Adapter) releaseRecordedPodExits(ctx context.Context, plan biz.Training
 		if err != nil || !slices.Equal(resultFinalizers, remaining) {
 			return false, biz.ErrRuntimeConflict
 		}
-		terminal, code := podTermination(result)
-		if !terminal || code == nil || *code != *fact.ExitCode {
-			return false, biz.ErrRuntimeConflict
+		if fact.AdmissionAbort != nil {
+			if !fact.TrainingAdmissionAbortedAt(time.Now().UTC()) || !reflect.DeepEqual(ObservePodAdmissionAbort(result, time.Now().UTC()), fact.AdmissionAbort) {
+				return false, biz.ErrRuntimeConflict
+			}
+		} else {
+			terminal, code := podTermination(result)
+			if !terminal || code == nil || fact.ExitCode == nil || *code != *fact.ExitCode {
+				return false, biz.ErrRuntimeConflict
+			}
 		}
 	}
 	return pending, nil
@@ -93,7 +100,14 @@ func recordedPodExit(current biz.RuntimeResource, history []biz.RuntimeResource)
 		if prior.UID != current.UID {
 			continue
 		}
-		if found || prior.APIVersion != current.APIVersion || prior.Kind != current.Kind || prior.Namespace != current.Namespace || prior.Name != current.Name || prior.OwnerUID != current.OwnerUID || !prior.Terminal || prior.ExitCode == nil || *prior.ExitCode != *current.ExitCode || prior.TrainingLog == nil || !reflect.DeepEqual(prior.TrainingLog, current.TrainingLog) {
+		if found || prior.APIVersion != current.APIVersion || prior.Kind != current.Kind || prior.Namespace != current.Namespace || prior.Name != current.Name || prior.OwnerUID != current.OwnerUID || !prior.Terminal {
+			return false
+		}
+		if current.AdmissionAbort != nil {
+			if !current.TrainingAdmissionAbortedAt(time.Now().UTC()) || !prior.TrainingAdmissionAbortedAt(time.Now().UTC()) || !reflect.DeepEqual(prior.AdmissionAbort, current.AdmissionAbort) {
+				return false
+			}
+		} else if prior.AdmissionAbort != nil || prior.ExitCode == nil || current.ExitCode == nil || *prior.ExitCode != *current.ExitCode || prior.TrainingLog == nil || !reflect.DeepEqual(prior.TrainingLog, current.TrainingLog) {
 			return false
 		}
 		found = true

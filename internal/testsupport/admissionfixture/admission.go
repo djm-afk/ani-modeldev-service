@@ -3,6 +3,9 @@
 package admissionfixture
 
 import (
+	"github.com/google/uuid"
+	"net/url"
+	"path"
 	"testing"
 	"time"
 
@@ -20,6 +23,24 @@ func Bind(t testing.TB, a biz.Admission) biz.Admission {
 	}
 	a.IntentHash = hash
 	a.Snapshot.IdentityRef = cpup01.IdentityRef{TenantID: a.TenantID, Actor: a.Actor, OperationID: a.OperationID, ExecutionID: a.ExecutionID, IntentHash: hash}
+	if a.Snapshot.Environment.NamespaceName != "tenant-"+a.TenantID {
+		a.Snapshot.Environment.BindingID = uuid.NewSHA1(uuid.NameSpaceOID, []byte("environment/"+a.TenantID)).String()
+		a.Snapshot.Environment.NamespaceUID = uuid.NewSHA1(uuid.NameSpaceOID, []byte("namespace/"+a.TenantID)).String()
+		a.Snapshot.Environment.ExperimentID = uuid.NewSHA1(uuid.NameSpaceOID, []byte("experiment/"+a.TenantID)).String()
+	}
+	a.Snapshot.Environment.NamespaceName = "tenant-" + a.TenantID
+	root, err := url.Parse(a.Snapshot.DispatchOwner.PipelineRoot)
+	if err != nil || root.Host == "" {
+		t.Fatal("fixture requires artifact bucket")
+	}
+	root.Path = "/artifacts/" + a.TenantID + "/" + a.ExecutionID
+	a.Snapshot.DispatchOwner.PipelineRoot = root.String()
+	a.Snapshot.PublicationScope.ApprovedPrefix = "executions/" + a.TenantID
+	a.Snapshot.Input.Object.Key = "inputs/" + a.TenantID + "/" + path.Base(a.Snapshot.Input.Object.Key)
+	if a.Snapshot.Finetuning != nil {
+		a.Snapshot.Finetuning.BaseModel.Scope.ApprovedPrefix = a.TenantID
+		a.Snapshot.Finetuning.BaseModel.Object.Key = a.TenantID + "/" + path.Base(a.Snapshot.Finetuning.BaseModel.Object.Key)
+	}
 	seconds := uint64((a.Snapshot.DeadlineAt.Sub(a.AcceptedAt) + time.Second - 1) / time.Second)
 	if seconds == 0 {
 		t.Fatal("fixture requires positive execution lifetime")

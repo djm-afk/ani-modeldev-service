@@ -1,0 +1,227 @@
+{
+  "started_at": "2026-11-01T17:05:36.536583+00:00",
+  "mode": "readback",
+  "tenant": "A",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/50dc7220-8001-463e-83f3-fe4d70f9af66",
+      "http_status": 200,
+      "response": {
+        "operation_id": "ddd455b5-e6be-4d2a-abfe-e8ec64b8457f",
+        "execution_id": "50dc7220-8001-463e-83f3-fe4d70f9af66",
+        "name": "tenantenv-a_cpu-935c3148-a4",
+        "kind": "GENERAL_TRAINING",
+        "implementation_id": "builtin.mlp",
+        "compute_preset_id": "84547768-be1b-45dd-bdb9-be824f58d583",
+        "input_version_id": "56676789-5fbc-4a13-b566-a2dcbb1b7f76",
+        "image_id": "img_3af6f494c02c493dbbdff11099290d72",
+        "image_version": "1",
+        "image_scope": "platform",
+        "compute_state": "SUCCEEDED",
+        "delivery_state": "PUBLISHED",
+        "close_state": "CLOSED",
+        "resource_state": "NOT_APPLICABLE",
+        "current_step": "CLOSE",
+        "stop_requested": false,
+        "close_generation": "1",
+        "accepted_at": "2026-11-01T17:01:05.52623Z",
+        "deadline_at": "2026-11-01T17:31:05.52623Z",
+        "observed_at": "2026-11-01T17:04:44.55303Z",
+        "parameter_contract_version": "ani.mlp.parameters.v3",
+        "resolved_configuration_sha256": "",
+        "compute": {
+          "compute_preset_id": "84547768-be1b-45dd-bdb9-be824f58d583",
+          "selection_digest": "cb5e1e771551411e51fa235b72c5d0faeaad00cb7b84577619e34d42bb124032",
+          "cpu_millis": "2000",
+          "memory_mib": "4096",
+          "device_mode": "cpu"
+        },
+        "timing": {
+          "execution_timeout_seconds": "1800",
+          "execution_timeout_max_seconds": "14400",
+          "step_timeout_seconds": "14400"
+        },
+        "history": {
+          "run_id": "95ea672f-b010-476c-9e52-07e5e0a68920",
+          "workflow_uid": "cbfc5c3a-79b1-4188-a529-ac4e75508ee9",
+          "observed_at": "2026-11-01T17:04:44.549836909Z",
+          "run_state": "SUCCEEDED",
+          "run_finished_at": "2026-11-01T17:04:42Z",
+          "workflow_phase": "SUCCEEDED",
+          "workflow_finished_at": "2026-11-01T17:04:42Z",
+          "workflow_resource_version": "21432835",
+          "workflow_nodes_sha256": "23e2fd608a068c3d65fe49a1afa0606d739ffbd5799dc4b9cdc6b42e7f16e338"
+        },
+        "steps": [
+          {
+            "role": "prepare",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:02:15.761393Z",
+            "finished_at": "2026-11-01T17:02:46.189547Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T17:31:05.52623Z"
+          },
+          {
+            "role": "train-wait",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:02:46.189547Z",
+            "finished_at": "2026-11-01T17:03:26.495299Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T17:31:05.52623Z"
+          },
+          {
+            "role": "collect",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:03:26.495299Z",
+            "finished_at": "2026-11-01T17:03:47.689554Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T17:31:05.52623Z"
+          },
+          {
+            "role": "publish",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:03:47.689554Z",
+            "finished_at": "2026-11-01T17:03:49Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T17:31:05.52623Z"
+          },
+          {
+            "role": "close",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:04:44.549836909Z",
+            "finished_at": "2026-11-01T17:04:44.55303Z",
+            "exit_code": 0,
+            "deadline_at": ""
+          }
+        ],
+        "metrics": [
+          {
+            "name": "train.loss",
+            "decimal_value": "0.9185541272163391",
+            "step": "1"
+          },
+          {
+            "name": "train.loss",
+            "decimal_value": "0.6795239448547363",
+            "step": "2"
+          },
+          {
+            "name": "train.loss",
+            "decimal_value": "0.44855910539627075",
+            "step": "3"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/50dc7220-8001-463e-83f3-fe4d70f9af66/pods?includeRecycled=true",
+      "http_status": 200,
+      "response": {
+        "pods": [
+          {
+            "pod_name": "md-50dc7220-8001-463e-83f3-fe4d70f9af66-node-0-0-n7nzp",
+            "pod_uid": "497572f0-0130-41f9-ab94-a6272076af35",
+            "phase": "",
+            "ready": false,
+            "node_name": "",
+            "restarts": 0,
+            "created_at": "",
+            "start_time": "",
+            "deletion_timestamp": "",
+            "layer": "TRAINER",
+            "availability": "RECYCLED",
+            "step_name": "",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "69abd283-307f-54b0-8cb9-648fd0a1b161",
+            "log_available": true,
+            "api_present": true,
+            "exit_code": 0,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "node",
+                "type": "container",
+                "state": "terminated",
+                "reason": "",
+                "restart_count": 0,
+                "started_at": "",
+                "finished_at": ""
+              }
+            ],
+            "init_containers": [],
+            "ephemeral_containers": []
+          }
+        ],
+        "observed_at": "2026-11-01T17:05:36.893685913Z",
+        "availability": "RECYCLED",
+        "projection_truncated": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/50dc7220-8001-463e-83f3-fe4d70f9af66/artifacts?page=1&pageSize=100",
+      "http_status": 200,
+      "response": {
+        "items": [
+          {
+            "artifact_id": "19760cfd-24fa-5045-8031-a1b0fc291049",
+            "execution_id": "50dc7220-8001-463e-83f3-fe4d70f9af66",
+            "filename": "metrics.jsonl",
+            "role": "METRICS",
+            "size_bytes": "451",
+            "sha256": "704c8a57bd13b91bc7bd8aa4ad69def5c38fb8eeb29dfb5c19c369de85bc8dbf",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:04:17.510309761Z"
+          },
+          {
+            "artifact_id": "20444b11-3d0e-5c45-a156-541d8a747cf8",
+            "execution_id": "50dc7220-8001-463e-83f3-fe4d70f9af66",
+            "filename": "summary.json",
+            "role": "SUMMARY",
+            "size_bytes": "722",
+            "sha256": "4d3214f1d0cf87c7784d11bcf2b30e49e3eee89a0b6f3c5481a15a04fc45c2a9",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:04:17.510309761Z"
+          },
+          {
+            "artifact_id": "6184c098-a8ff-54c5-bc38-70cc3abc142b",
+            "execution_id": "50dc7220-8001-463e-83f3-fe4d70f9af66",
+            "filename": "model.pt",
+            "role": "CHECKPOINT",
+            "size_bytes": "4504",
+            "sha256": "b6e3f91f5268e929caf3ea95ff9fe356cb62fdabb07e04b64b1ed1c5e71b302a",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:04:17.510309761Z"
+          },
+          {
+            "artifact_id": "7832bf6c-4c7e-53fe-9749-1f2360d8a934",
+            "execution_id": "50dc7220-8001-463e-83f3-fe4d70f9af66",
+            "filename": "model_config.json",
+            "role": "MODEL_CONFIG",
+            "size_bytes": "116",
+            "sha256": "1286ff35c25ffa51845b19862d348f3178557383c883fee7f003ceb4e3b1e0f9",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:04:17.510309761Z"
+          }
+        ],
+        "total": "4"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/50dc7220-8001-463e-83f3-fe4d70f9af66/events?scope=all",
+      "http_status": 200,
+      "response": {
+        "events": [],
+        "observed_at": "2026-11-01T17:05:37.104126243Z",
+        "retention_hint": "1h",
+        "truncated": false
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T17:05:37.130464+00:00",
+  "transport_exit_code": 0
+}

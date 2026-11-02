@@ -104,12 +104,17 @@ func EncodeSnapshot(snapshot cpup01.Snapshot) (*modeldevv1.ExecutionSnapshot, er
 			BindingId: snapshot.Environment.BindingID, BindingDigest: snapshot.Environment.BindingDigest,
 			ClusterId: snapshot.Environment.ClusterID, NamespaceName: snapshot.Environment.NamespaceName, NamespaceUid: snapshot.Environment.NamespaceUID,
 			KfpConnectionRef: snapshot.Environment.KFPConnectionRef, ExperimentId: snapshot.Environment.ExperimentID,
-			Identities: &modeldevv1.RuntimeIdentityRefs{ModeldevControlIdentityRef: snapshot.Environment.Identities.ModeldevControlIdentityRef, KfpStepServiceAccount: snapshot.Environment.Identities.KFPStepServiceAccount, TrainerServiceAccount: snapshot.Environment.Identities.TrainerServiceAccount, VerifierServiceAccount: snapshot.Environment.Identities.VerifierServiceAccount, TenantProxyIdentity: snapshot.Environment.Identities.TenantProxyIdentity},
+			Identities: &modeldevv1.RuntimeIdentityRefs{ModeldevControlIdentityRef: snapshot.Environment.Identities.ModeldevControlIdentityRef, KfpStepServiceAccount: snapshot.Environment.Identities.KFPStepServiceAccount, TrainerServiceAccount: snapshot.Environment.Identities.TrainerServiceAccount, VerifierServiceAccount: snapshot.Environment.Identities.VerifierServiceAccount, TenantProxyIdentity: snapshot.Environment.Identities.TenantProxyIdentity, KfpStepServiceAccountUid: snapshot.Environment.Identities.KFPStepServiceAccountUID, TrainerServiceAccountUid: snapshot.Environment.Identities.TrainerServiceAccountUID, VerifierServiceAccountUid: snapshot.Environment.Identities.VerifierServiceAccountUID},
 		},
 		Workspace:        &trainingv1.WorkspaceContract{Mode: trainingv1.WorkspaceMode(trainingv1.WorkspaceMode_value["WORKSPACE_MODE_"+snapshot.Workspace.Mode]), StorageClass: snapshot.Workspace.StorageClass, CapacityBytes: snapshot.Workspace.CapacityBytes, InputSubpath: snapshot.Workspace.InputSubpath, TrainingSubpath: snapshot.Workspace.TrainingSubpath, ReportsSubpath: snapshot.Workspace.ReportsSubpath, PublicationSubpath: snapshot.Workspace.PublicationSubpath, WorkSubpath: snapshot.Workspace.WorkSubpath},
 		PublicationScope: &modeldevv1.StorageScope{StorageConnectionId: snapshot.PublicationScope.StorageConnectionID, Bucket: snapshot.PublicationScope.Bucket, ApprovedPrefix: snapshot.PublicationScope.ApprovedPrefix, CredentialReference: snapshot.PublicationScope.CredentialReference},
 		OutputContract:   &trainingv1.OutputContract{SchemaVersion: snapshot.OutputContract.SchemaVersion, OutputKind: trainingv1.OutputKind(trainingv1.OutputKind_value["OUTPUT_KIND_"+snapshot.OutputContract.OutputKind]), DeliveryMode: trainingv1.DeliveryMode_DELIVERY_MODE_SAVE_ARTIFACTS, RequiredFiles: files, CreateTarBundle: snapshot.OutputContract.CreateTarBundle},
 		DeadlineAt:       timestamppb.New(snapshot.DeadlineAt.UTC()),
+	}
+	message.DispatchOwner = &modeldevv1.DispatchOwner{Reference: snapshot.DispatchOwner.Reference, RevisionSha256: snapshot.DispatchOwner.RevisionSHA256, PipelineRoot: snapshot.DispatchOwner.PipelineRoot}
+	message.ManagedImageAccess = &modeldevv1.ManagedImageAccess{}
+	for _, binding := range snapshot.ManagedImageAccess.PullBindings {
+		message.ManagedImageAccess.PullBindings = append(message.ManagedImageAccess.PullBindings, &modeldevv1.ManagedImagePullBinding{RegistryAuthority: binding.RegistryAuthority, SecretName: binding.SecretName})
 	}
 	if snapshot.TrainingImage != nil {
 		message.TrainingImage = encodeTrainingImage(*snapshot.TrainingImage)
@@ -130,7 +135,7 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 	if err := checkMessage(message.ProtoReflect(), 0); err != nil {
 		return cpup01.Snapshot{}, err
 	}
-	if message.Limits == nil || message.Implementation == nil || message.IdentityRef == nil || message.ComputeOrigin == nil || message.Timing == nil || message.Timing.AcceptedAt == nil || message.Timing.ExecutionDeadlineAt == nil || message.RuntimePlan == nil || message.Input == nil || message.Input.Object == nil || message.Input.PreparedDataset == nil || message.Program == nil || message.Resources == nil || message.Environment == nil || message.Environment.Identities == nil || message.Workspace == nil || message.PublicationScope == nil || message.OutputContract == nil || message.DeadlineAt == nil {
+	if message.DispatchOwner == nil || message.ManagedImageAccess == nil || message.Limits == nil || message.Implementation == nil || message.IdentityRef == nil || message.ComputeOrigin == nil || message.Timing == nil || message.Timing.AcceptedAt == nil || message.Timing.ExecutionDeadlineAt == nil || message.RuntimePlan == nil || message.Input == nil || message.Input.Object == nil || message.Input.PreparedDataset == nil || message.Program == nil || message.Resources == nil || message.Environment == nil || message.Environment.Identities == nil || message.Workspace == nil || message.PublicationScope == nil || message.OutputContract == nil || message.DeadlineAt == nil {
 		return cpup01.Snapshot{}, invalid("missing snapshot fields")
 	}
 	if err := message.DeadlineAt.CheckValid(); err != nil {
@@ -181,12 +186,19 @@ func DecodeSnapshot(message *modeldevv1.ExecutionSnapshot) (cpup01.Snapshot, err
 		Environment: cpup01.EnvironmentBindingSnapshot{
 			BindingID: message.Environment.BindingId, BindingDigest: message.Environment.BindingDigest, ClusterID: message.Environment.ClusterId,
 			NamespaceName: message.Environment.NamespaceName, NamespaceUID: message.Environment.NamespaceUid, KFPConnectionRef: message.Environment.KfpConnectionRef, ExperimentID: message.Environment.ExperimentId,
-			Identities: cpup01.RuntimeIdentityRefs{ModeldevControlIdentityRef: message.Environment.Identities.ModeldevControlIdentityRef, KFPStepServiceAccount: message.Environment.Identities.KfpStepServiceAccount, TrainerServiceAccount: message.Environment.Identities.TrainerServiceAccount, VerifierServiceAccount: message.Environment.Identities.VerifierServiceAccount, TenantProxyIdentity: message.Environment.Identities.TenantProxyIdentity},
+			Identities: cpup01.RuntimeIdentityRefs{ModeldevControlIdentityRef: message.Environment.Identities.ModeldevControlIdentityRef, KFPStepServiceAccount: message.Environment.Identities.KfpStepServiceAccount, TrainerServiceAccount: message.Environment.Identities.TrainerServiceAccount, VerifierServiceAccount: message.Environment.Identities.VerifierServiceAccount, TenantProxyIdentity: message.Environment.Identities.TenantProxyIdentity, KFPStepServiceAccountUID: message.Environment.Identities.KfpStepServiceAccountUid, TrainerServiceAccountUID: message.Environment.Identities.TrainerServiceAccountUid, VerifierServiceAccountUID: message.Environment.Identities.VerifierServiceAccountUid},
 		},
 		Workspace:        cpup01.WorkspaceContract{Mode: strings.TrimPrefix(message.Workspace.Mode.String(), "WORKSPACE_MODE_"), StorageClass: message.Workspace.StorageClass, CapacityBytes: message.Workspace.CapacityBytes, InputSubpath: message.Workspace.InputSubpath, TrainingSubpath: message.Workspace.TrainingSubpath, ReportsSubpath: message.Workspace.ReportsSubpath, PublicationSubpath: message.Workspace.PublicationSubpath, WorkSubpath: message.Workspace.WorkSubpath},
 		PublicationScope: cpup01.StorageScope{StorageConnectionID: message.PublicationScope.StorageConnectionId, Bucket: message.PublicationScope.Bucket, ApprovedPrefix: message.PublicationScope.ApprovedPrefix, CredentialReference: message.PublicationScope.CredentialReference},
 		OutputContract:   cpup01.OutputContract{SchemaVersion: message.OutputContract.SchemaVersion, OutputKind: strings.TrimPrefix(message.OutputContract.OutputKind.String(), "OUTPUT_KIND_"), DeliveryMode: strings.TrimPrefix(message.OutputContract.DeliveryMode.String(), "DELIVERY_MODE_"), RequiredFiles: files, CreateTarBundle: message.OutputContract.CreateTarBundle},
 		DeadlineAt:       message.DeadlineAt.AsTime(),
+	}
+	snapshot.DispatchOwner = cpup01.DispatchOwnerSnapshot{Reference: message.DispatchOwner.Reference, RevisionSHA256: message.DispatchOwner.RevisionSha256, PipelineRoot: message.DispatchOwner.PipelineRoot}
+	for _, binding := range message.ManagedImageAccess.PullBindings {
+		if binding == nil {
+			return cpup01.Snapshot{}, invalid("managed pull binding")
+		}
+		snapshot.ManagedImageAccess.PullBindings = append(snapshot.ManagedImageAccess.PullBindings, cpup01.ManagedImagePullBinding{RegistryAuthority: binding.RegistryAuthority, SecretName: binding.SecretName})
 	}
 	if message.TrainingImage != nil {
 		facts, err := decodeTrainingImage(message.TrainingImage)

@@ -3,8 +3,7 @@ package biz
 import (
 	"context"
 	"errors"
-	"regexp"
-	"strings"
+	"sync"
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
@@ -12,143 +11,184 @@ import (
 
 var ErrInvalidDispatchWorker = errors.New("INVALID_DISPATCH_WORKER_CONFIGURATION")
 
-// PipelineDispatchBinding is trusted service-owner configuration, not request
-// data. Only admissions already frozen to this exact tenant/environment may use
-// its explicitly supplied PipelineRoot and owner revision.
-type PipelineDispatchBinding struct {
-	TenantID    string                            `json:"tenant_id"`
-	Environment cpup01.EnvironmentBindingSnapshot `json:"environment"`
-	Owner       PipelineOwnerConfiguration        `json:"owner"`
+type DiscoveryCursor struct {
+	SweepBefore      time.Time
+	AfterAcceptedAt  time.Time
+	AfterExecutionID string
 }
-
-var dispatchDNSLabel = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$`)
-
-func (binding PipelineDispatchBinding) Validate() error {
-	environment := binding.Environment
-	for _, id := range []string{binding.TenantID, environment.BindingID, environment.NamespaceUID, environment.ExperimentID} {
-		if !validAdmissionID(id) || strings.ToLower(id) != id {
-			return ErrInvalidDispatchWorker
-		}
-	}
-	if !closeSpecHashPattern.MatchString(environment.BindingDigest) || !closeSpecHashPattern.MatchString(binding.Owner.RevisionSHA256) || !ValidPipelineRoot(binding.Owner.PipelineRoot) {
-		return ErrInvalidDispatchWorker
-	}
-	for _, reference := range []string{environment.ClusterID, environment.KFPConnectionRef, environment.Identities.ModeldevControlIdentityRef, environment.Identities.TenantProxyIdentity, binding.Owner.Reference} {
-		if !pipelineOwnerReferencePattern.MatchString(reference) || strings.Contains(reference, "://") {
-			return ErrInvalidDispatchWorker
-		}
-	}
-	if !validDispatchDNS(environment.NamespaceName, true) {
-		return ErrInvalidDispatchWorker
-	}
-	accounts := map[string]bool{}
-	for _, account := range []string{environment.Identities.KFPStepServiceAccount, environment.Identities.TrainerServiceAccount, environment.Identities.VerifierServiceAccount} {
-		if !validDispatchDNS(account, false) || accounts[account] {
-			return ErrInvalidDispatchWorker
-		}
-		accounts[account] = true
-	}
-	return nil
+type PendingAdmissionRow struct {
+	TenantID, ExecutionID string
+	AcceptedAt            time.Time
+	Admission             Admission
+	DecodeProblem         string
 }
-func validDispatchDNS(value string, labelOnly bool) bool {
-	if value == "" || len(value) > 253 || labelOnly && len(value) > 63 {
-		return false
-	}
-	labels := strings.Split(value, ".")
-	if labelOnly && len(labels) != 1 {
-		return false
-	}
-	for _, label := range labels {
-		if len(label) > 63 || !dispatchDNSLabel.MatchString(label) {
-			return false
-		}
-	}
-	return true
+type PendingAdmissionPage struct {
+	ExaminedCount int
+	Rows          []PendingAdmissionRow
 }
-
 type PendingAdmissionRepository interface {
-	ListPendingAdmissions(context.Context, PipelineDispatchBinding, int) ([]Admission, error)
+	ListPendingDispatchTenants(context.Context, string, string, int) ([]string, error)
+	DispatchDiscoveryTime(context.Context) (time.Time, error)
+	ListPendingAdmissions(context.Context, string, string, DiscoveryCursor, int) (PendingAdmissionPage, error)
+}
+type DispatchEnvironmentVerifier interface {
+	VerifyDispatchAdmission(context.Context, Admission) error
 }
 
-// DispatchWorker only discovers persisted admissions. Reserve remains the sole
-// creator of a sending permit, so independent workers need no second lease or
-// queue. Existing attempts, including uncertain/not-sent attempts, are excluded
-// from scanning and can never be implicitly resubmitted by this worker.
 type DispatchWorker struct {
-	repository PendingAdmissionRepository
-	submitter  *PipelineSubmitter
-	binding    PipelineDispatchBinding
-	batchSize  int
-	interval   time.Duration
+	repository   PendingAdmissionRepository
+	submitter    *PipelineSubmitter
+	environments DispatchEnvironmentVerifier
+	clusterID    string
+	interval     time.Duration
+	coordinator  *WorkerCoordinator
+	afterTenant  string
+	cursors      map[string]DiscoveryCursor
+	seenTenants  map[string]bool
+}
+type DispatchBatchResult struct {
+	Examined, Succeeded, Unresolved int
+	LastError                       error
 }
 
-func NewDispatchWorker(repository PendingAdmissionRepository, submitter *PipelineSubmitter, binding PipelineDispatchBinding, batchSize int, interval time.Duration) (*DispatchWorker, error) {
-	if repository == nil || submitter == nil || binding.Validate() != nil || batchSize < 1 || batchSize > 100 || interval < 100*time.Millisecond || interval > time.Minute {
+func NewDispatchWorker(repository PendingAdmissionRepository, submitter *PipelineSubmitter, clusterID string, environments DispatchEnvironmentVerifier, interval time.Duration) (*DispatchWorker, error) {
+	if repository == nil || submitter == nil || environments == nil || !cpup01.CanonicalTenantID(clusterID) || interval < time.Second || interval > time.Minute {
 		return nil, ErrInvalidDispatchWorker
 	}
-	return &DispatchWorker{repository: repository, submitter: submitter, binding: binding, batchSize: batchSize, interval: interval}, nil
+	return &DispatchWorker{repository: repository, submitter: submitter, environments: environments, clusterID: clusterID, interval: interval, coordinator: NewWorkerCoordinator(), cursors: map[string]DiscoveryCursor{}, seenTenants: map[string]bool{}}, nil
 }
-
-// DispatchOnce returns the number of eligible admissions handled by this call,
-// not a count of outbound calls or successful Runs. Only the submitter receipt
-// and persisted observations establish the outcome of a reservation.
-func (worker *DispatchWorker) DispatchOnce(ctx context.Context) (int, error) {
-	if ctx == nil {
-		return 0, ErrInvalidAdmission
+func (w *DispatchWorker) DispatchOnce(ctx context.Context) (DispatchBatchResult, error) {
+	result := DispatchBatchResult{}
+	if ctx == nil || w == nil {
+		return result, ErrInvalidDispatchWorker
 	}
-	if err := ctx.Err(); err != nil {
-		return 0, err
-	}
-	if worker == nil || worker.repository == nil || worker.submitter == nil {
-		return 0, ErrInvalidDispatchWorker
-	}
-	admissions, err := worker.repository.ListPendingAdmissions(ctx, worker.binding, worker.batchSize)
+	query, cancel := context.WithTimeout(ctx, 3*time.Second)
+	tenants, err := w.repository.ListPendingDispatchTenants(query, w.clusterID, w.afterTenant, 16)
+	cancel()
 	if err != nil {
-		return 0, err
+		return result, err
 	}
-	if len(admissions) > worker.batchSize {
-		return 0, ErrPersistence
+	if len(tenants) > 16 {
+		return result, ErrPersistence
 	}
-	handled := 0
-	for _, admission := range admissions {
-		if admission.TenantID != worker.binding.TenantID || admission.Snapshot.Environment != worker.binding.Environment {
-			return handled, ErrAdmissionConflict
-		}
-		if _, _, err := admission.CanonicalPayloads(); err != nil {
-			return handled, ErrPersistence
-		}
-		_, err = worker.submitter.Submit(ctx, PipelineDispatchRequest{Admission: admission, Owner: worker.binding.Owner})
-		switch {
-		case err == nil, errors.Is(err, ErrPipelineSubmissionUncertain), errors.Is(err, ErrPipelineSubmissionNotSent):
-			handled++
-		case errors.Is(err, ErrPipelineDispatchBlocked):
-			// A close or deadline may win after enumeration. Reserve rejected it
-			// under the shared identity lock; no creation is attempted here.
-		default:
-			return handled, err
-		}
+	type tenantResult struct {
+		cursor DiscoveryCursor
+		end    bool
+		result DispatchBatchResult
+		err    error
 	}
-	return handled, nil
+	results := make([]tenantResult, len(tenants))
+	var tasks sync.WaitGroup
+	for index, tenant := range tenants {
+		if !cpup01.CanonicalTenantID(tenant) || (index > 0 && tenant <= tenants[index-1]) || tenant <= w.afterTenant {
+			return result, ErrPersistence
+		}
+		cursor := w.cursors[tenant]
+		tasks.Add(1)
+		go func(index int, tenant string, cursor DiscoveryCursor) {
+			defer tasks.Done()
+			release, err := w.coordinator.acquire(ctx, tenant)
+			if err != nil {
+				results[index].err = err
+				return
+			}
+			defer release()
+			current := tenantResult{cursor: cursor}
+			defer func() { results[index] = current }()
+			q, c := context.WithTimeout(ctx, 3*time.Second)
+			defer c()
+			if cursor.SweepBefore.IsZero() {
+				cursor.SweepBefore, current.err = w.repository.DispatchDiscoveryTime(q)
+				if current.err != nil {
+					return
+				}
+			}
+			page, e := w.repository.ListPendingAdmissions(q, w.clusterID, tenant, cursor, 4)
+			if e != nil {
+				current.err = e
+				return
+			}
+			if page.ExaminedCount != len(page.Rows) || len(page.Rows) > 4 {
+				current.err = ErrPersistence
+				return
+			}
+			current.end = len(page.Rows) < 4
+			for _, row := range page.Rows {
+				current.result.Examined++
+				cursor.AfterAcceptedAt = row.AcceptedAt
+				cursor.AfterExecutionID = row.ExecutionID
+				if row.DecodeProblem != "" {
+					current.result.Unresolved++
+					continue
+				}
+				bounded, stop := context.WithTimeout(ctx, 30*time.Second)
+				e = w.environments.VerifyDispatchAdmission(bounded, row.Admission)
+				if e == nil {
+					_, e = w.submitter.Submit(bounded, PipelineDispatchRequest{Admission: row.Admission, Owner: row.Admission.Snapshot.DispatchOwner})
+				}
+				stop()
+				if e == nil || errors.Is(e, ErrPipelineSubmissionUncertain) || errors.Is(e, ErrPipelineSubmissionNotSent) {
+					current.result.Succeeded++
+				} else {
+					current.result.Unresolved++
+					current.result.LastError = e
+				}
+			}
+			current.cursor = cursor
+		}(index, tenant, cursor)
+	}
+	tasks.Wait()
+	for index, tenant := range tenants {
+		r := results[index]
+		if r.err != nil {
+			return result, r.err
+		}
+		if r.end {
+			delete(w.cursors, tenant)
+		} else {
+			w.cursors[tenant] = r.cursor
+		}
+		result.Examined += r.result.Examined
+		result.Succeeded += r.result.Succeeded
+		result.Unresolved += r.result.Unresolved
+		if r.result.LastError != nil {
+			result.LastError = r.result.LastError
+		}
+		w.afterTenant = tenant
+		w.seenTenants[tenant] = true
+	}
+	if len(tenants) < 16 {
+		w.afterTenant = ""
+		for tenant := range w.cursors {
+			if !w.seenTenants[tenant] {
+				delete(w.cursors, tenant)
+			}
+		}
+		clear(w.seenTenants)
+	}
+	return result, nil
 }
-
-// Run is an application-owned blocking loop. Its caller owns cancellation and
-// waits for it before closing database/client dependencies. It does not spawn a
-// detached task, retry a reserved attempt, or advance managed KFP steps.
-func (worker *DispatchWorker) Run(ctx context.Context) error {
-	if ctx == nil || worker == nil || worker.interval <= 0 {
+func (w *DispatchWorker) Run(ctx context.Context) error {
+	if ctx == nil || w == nil {
 		return ErrInvalidDispatchWorker
 	}
-	timer := time.NewTicker(worker.interval)
-	defer timer.Stop()
+	backoff := time.Second
 	for {
-		if _, err := worker.DispatchOnce(ctx); err != nil {
-			if ctx.Err() != nil {
-				return nil
-			}
-			return err
+		_, err := w.DispatchOnce(ctx)
+		if ctx.Err() != nil {
+			return nil
 		}
+		delay := w.interval
+		if err != nil {
+			delay = backoff
+			backoff = min(backoff*2, 30*time.Second)
+		} else {
+			backoff = time.Second
+		}
+		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			return nil
 		case <-timer.C:
 		}

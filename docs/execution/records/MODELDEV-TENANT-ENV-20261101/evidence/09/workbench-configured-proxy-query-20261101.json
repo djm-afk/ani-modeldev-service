@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-01T00:43:03.938177+00:00",
+  "proxy_source": "/etc/proxychains.conf",
+  "proxy_host": "192.168.2.197",
+  "proxy_port": 1080,
+  "configured_authentication": false,
+  "method": "GET only",
+  "job_id": "8d8b448e1a8846c0ba96bb391d323a7e",
+  "secrets_emitted": false,
+  "status": "QUERY_FAILED",
+  "error_type": "ConnectionError"
+}

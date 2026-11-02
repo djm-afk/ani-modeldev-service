@@ -1,0 +1,43 @@
+{
+  "time": "2026-10-31T23:43:40.434341+00:00",
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "login_http_status": 200,
+  "normal_owner_query_http_status": 503,
+  "owner_query_public_fields": {
+    "code": 503,
+    "reason": "MODELDEV_QUERY_UNAVAILABLE"
+  },
+  "owner_query_response_sha256": "5abb51e6449127036a05566fbd55c31cdc94914c15b8b5caa174136898b791cc",
+  "owner_query_full_body_retained": false,
+  "state": {
+    "read_only": "on",
+    "close_reason": "STEP_FAILED",
+    "close_requested_at": "2026-10-30T06:31:35.615221+00:00",
+    "closed_at": "2026-10-30T06:31:38.08282+00:00",
+    "close_generation": 1,
+    "owner_revision": 7,
+    "operation_id": "49a62211-703b-4adf-abae-70cf2af78e7e",
+    "spec_hash": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+    "no_dispatch": false,
+    "owner_termination": null,
+    "close_review_reason": "",
+    "workspace": null,
+    "training": null,
+    "training_handle": null,
+    "observation": null,
+    "step_cleanup": null,
+    "compute_cleanup": null,
+    "gpu_release": null,
+    "gpu_anchor": null,
+    "gpu_scope_sha": null
+  },
+  "gpu_replay": "NOT_RUN",
+  "cluster_mutations": 0
+}

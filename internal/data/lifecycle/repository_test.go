@@ -36,6 +36,7 @@ func runtimeFixture(t *testing.T, lifetime ...time.Duration) (func() *pgxpool.Po
 	specHash := ""
 	admission := biz.Admission{TenantID: "11111111-2222-4333-8444-555555555555", Actor: "governance:user:42", OperationID: "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff", ExecutionID: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", Intent: intent, IntentHash: intentHash, Snapshot: snapshot, SpecHash: specHash, AcceptedAt: accepted}
 	admission = admissionfixture.Bind(t, admission)
+	admission = admissionfixture.EnsureEnvironment(t, open(), admission)
 	snapshot = admission.Snapshot
 	pool := open()
 	ctx := context.Background()
@@ -43,7 +44,7 @@ func runtimeFixture(t *testing.T, lifetime ...time.Duration) (func() *pgxpool.Po
 		t.Fatal("runtime preflight admission", err)
 	}
 	repository := submission.New(pool)
-	reserved, err := repository.Reserve(ctx, biz.PipelineDispatchRequest{Admission: admission, Owner: biz.PipelineOwnerConfiguration{Reference: "runtime-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"}})
+	reserved, err := repository.Reserve(ctx, biz.PipelineDispatchRequest{Admission: admission, Owner: admission.Snapshot.DispatchOwner})
 	if err != nil || reserved.SendPermit == nil {
 		t.Fatal("runtime preflight dispatch", err)
 	}

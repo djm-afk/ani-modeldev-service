@@ -1,0 +1,14 @@
+{
+  "build_exit": 0,
+  "build_seconds": 1.34,
+  "source_sha256": "b5ae8a378527e42526397667d9b7bf5d110bd503eee9f9634acb62cbc3a04e7d",
+  "binary_path": "/root/ani-runs/modeldev-completion-live09-20261102/sts-cross-scope-client",
+  "source_root": "/root/ani-runs/modeldev-completion-live09-20261102/source",
+  "tests_run": false,
+  "GOPROXY": "off",
+  "new_tools_installed": false,
+  "binary_sha256": "5692253fe311da4019c615682d8439bc8a42f85b87986ecec825213da1ac8f81",
+  "binary_bytes": 20586658,
+  "node_binary_path": "/home/kubercloud/tenantenv-20261101/completion-live09-live10-20261101/sts-cross-scope-client",
+  "node_binary_sha256_verified": true
+}

@@ -1,0 +1,2013 @@
+{
+  "observed_at_utc": "2026-10-31T14:41:54.934318Z",
+  "host": "node1",
+  "configmaps": [
+    {
+      "metadata": {
+        "name": "modeldev-trainimg-main-20261029b",
+        "namespace": "ani-system",
+        "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+        "resourceVersion": "14648501",
+        "generation": null,
+        "creationTimestamp": "2026-10-29T12:23:32Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/managed-by": "modeldev-execution-v3",
+          "ani.io/task-id": "modeldev-open-limits-r2"
+        },
+        "ownerReferences": null
+      },
+      "values": {
+        "builtin.mlp.facts.json": {
+          "application_evidence": {
+            "reference": "modeldev-open-limits-r2:1e5df243c8a4:final-composite-gate",
+            "sha256": "25278ed02b4152304fdcd64b2f6156b955572403b89be479de494d85ad35d243"
+          },
+          "environment": {
+            "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+            "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+            "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+            "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+            "identities": {
+              "kfp_step_service_account": "modeldev-step",
+              "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control",
+              "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+              "trainer_service_account": "trainer-workload",
+              "verifier_service_account": "verifier"
+            },
+            "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47",
+            "namespace_name": "ani-modeldev-tenant-a-v21",
+            "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+          },
+          "environment_evidence": {
+            "reference": "modeldev-open-limits-r2:existing-environment-identities",
+            "sha256": "a35979a075aecf60dad26ede5c75665ddeb32664dd602439e14eccba031a77a2"
+          },
+          "implementation_id": "builtin.mlp",
+          "input_file_path": "/inputs/data.csv",
+          "input_scope": {
+            "approved_prefix": "inputs/fixed",
+            "bucket": "ani-md-v21-input-01a15f47",
+            "credential_reference": "modeldev:newenv-owner-01a15f47",
+            "storage_connection_id": "modeldev-newenv-rustfs-20261022"
+          },
+          "output_directory_path": "/outputs",
+          "publication_scope": {
+            "approved_prefix": "executions/64c5c35a-f554-432c-b4bc-7b4f36f08420/modeldev-v21-01a15f47",
+            "bucket": "ani-md-v21-output-01a15f47",
+            "credential_reference": "modeldev:newenv-owner-01a15f47",
+            "storage_connection_id": "modeldev-newenv-rustfs-20261022"
+          },
+          "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+          "schema_version": "ani.modeldev.managed-admission-facts.v3",
+          "target_platform": {
+            "architecture": "amd64",
+            "os": "linux",
+            "variant": ""
+          },
+          "timing": {
+            "execution_timeout_default_seconds": 10800,
+            "execution_timeout_max_seconds": 14400,
+            "step_timeout_seconds": 14400
+          },
+          "workspace": {
+            "capacity_bytes": "4294967296",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          }
+        },
+        "builtin.sft_lora.facts.json": {
+          "application_evidence": {
+            "reference": "modeldev-open-limits-r2:1e5df243c8a4:final-composite-gate",
+            "sha256": "25278ed02b4152304fdcd64b2f6156b955572403b89be479de494d85ad35d243"
+          },
+          "environment": {
+            "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+            "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+            "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+            "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+            "identities": {
+              "kfp_step_service_account": "modeldev-step",
+              "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control",
+              "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+              "trainer_service_account": "trainer-workload",
+              "verifier_service_account": "verifier"
+            },
+            "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47",
+            "namespace_name": "ani-modeldev-tenant-a-v21",
+            "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+          },
+          "environment_evidence": {
+            "reference": "modeldev-open-limits-r2:existing-environment-identities",
+            "sha256": "a35979a075aecf60dad26ede5c75665ddeb32664dd602439e14eccba031a77a2"
+          },
+          "implementation_id": "builtin.sft_lora",
+          "input_file_path": "/workspace/inputs/data/finetune_data.jsonl",
+          "input_scope": {
+            "approved_prefix": "inputs/fixed",
+            "bucket": "ani-md-v21-input-01a15f47",
+            "credential_reference": "modeldev:newenv-owner-01a15f47",
+            "storage_connection_id": "modeldev-newenv-rustfs-20261022"
+          },
+          "output_directory_path": "/workspace/training",
+          "publication_scope": {
+            "approved_prefix": "executions/64c5c35a-f554-432c-b4bc-7b4f36f08420/modeldev-v21-01a15f47",
+            "bucket": "ani-md-v21-output-01a15f47",
+            "credential_reference": "modeldev:newenv-owner-01a15f47",
+            "storage_connection_id": "modeldev-newenv-rustfs-20261022"
+          },
+          "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+          "schema_version": "ani.modeldev.managed-admission-facts.v3",
+          "target_platform": {
+            "architecture": "amd64",
+            "os": "linux",
+            "variant": ""
+          },
+          "timing": {
+            "execution_timeout_default_seconds": 10800,
+            "execution_timeout_max_seconds": 14400,
+            "step_timeout_seconds": 14400
+          },
+          "workspace": {
+            "capacity_bytes": "68719476736",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          }
+        },
+        "config.yaml": {
+          "command": {
+            "admission_resolution": {
+              "catalogue_directory": "/etc/modeldev/catalogue",
+              "facts_files": [
+                {
+                  "path": "/etc/modeldev/facts/builtin.mlp.json",
+                  "sha256": "cf054a13472112406081b7cefad1f048af9a69650ec6ef164be989c007d49635"
+                },
+                {
+                  "path": "/etc/modeldev/facts/builtin.sft_lora.json",
+                  "sha256": "d0d133e09b0938bf913b9939e0f73f10231350e03186f299e891f68e8c6be428"
+                }
+              ]
+            },
+            "certificate_file": "/var/run/modeldev-tls/tls.crt",
+            "client_ca_file": "/etc/modeldev/ca/grpc-ca.crt",
+            "database_url_file": "/var/run/modeldev-private/database.dsn",
+            "governance_dns_name": "ani-governance",
+            "model": {
+              "actor": "modeldev:service",
+              "base_model_storage_scope": {
+                "approved_prefix": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+                "bucket": "ani-models-v21-01a15f47",
+                "connection_id": "modeldev-newenv-rustfs-20261022",
+                "credential_reference": "modeldev:newenv-owner-01a15f47"
+              },
+              "ca_file": "/etc/modeldev/ca/model-ca.crt",
+              "certificate_file": "/var/run/modeldev-owner/tls.crt",
+              "client_dns_name": "ani-modeldev-service",
+              "endpoint": "ani-model-grpc.ani-system.svc:19090",
+              "private_key_file": "/var/run/modeldev-owner/tls.key",
+              "server_name": "ani-model.ani.internal",
+              "timeout": "3s"
+            },
+            "private_key_file": "/var/run/modeldev-tls/tls.key"
+          },
+          "runtime": {
+            "api_timeout": "30s",
+            "binding_file": "/etc/modeldev/dispatch-binding.json",
+            "binding_sha256": "44b6f03cf3fd61c21ca4c44e24f16f7a5b3aba53fac80cfc80fca2768deb417e",
+            "certificate_file": "/var/run/modeldev-tls/tls.crt",
+            "dispatch_batch_size": 10,
+            "dispatch_interval": "1s",
+            "gpu_owner": {
+              "governance": {
+                "ca_file": "/etc/modeldev/ca/governance-ca.crt",
+                "certificate_file": "/var/run/modeldev-owner/tls.crt",
+                "endpoint": "ani-governance-quota.ani-system.svc:9002",
+                "private_key_file": "/var/run/modeldev-owner/tls.key",
+                "server_name": "ani-governance",
+                "timeout": "30s"
+              },
+              "owner_private_key_file": "/var/run/modeldev-owner/owner.key"
+            },
+            "import_timeout_seconds": 1800,
+            "kubernetes": {
+              "ca_file": "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+              "endpoint": "https://kubernetes.default.svc:443",
+              "token_file": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            },
+            "limits": {
+              "max_content_bytes": "17179869184"
+            },
+            "model_resolution_timeout_seconds": 300,
+            "object_storage": {
+              "ca_file": "/etc/modeldev/ca/s3-ca.crt",
+              "connection_id": "modeldev-newenv-rustfs-20261022",
+              "credentials_file": "/var/run/modeldev-owner/storage-credentials.json",
+              "endpoint": "https://ani-rustfs-svc.ani-platform.svc.cluster.local:9000",
+              "region": "us-east-1",
+              "streaming_timeout": "3600s"
+            },
+            "pipeline": {
+              "ca_file": "/etc/modeldev/ca/kfp-ca.crt",
+              "endpoint": "https://ani-kfp-entry.kubeflow.svc:8443",
+              "token_file": "/var/run/modeldev-kfp/token"
+            },
+            "private_key_file": "/var/run/modeldev-tls/tls.key",
+            "step": {
+              "addr": "0.0.0.0:9001",
+              "network": "tcp",
+              "timeout": "30s"
+            },
+            "token_audience": "https://kubernetes.default.svc.cluster.local"
+          },
+          "server": {
+            "admin": {
+              "addr": "0.0.0.0:9002",
+              "network": "tcp",
+              "timeout": "1s"
+            },
+            "grpc": {
+              "addr": "0.0.0.0:9000",
+              "network": "tcp",
+              "timeout": "30s"
+            },
+            "shutdown_timeout": "10s"
+          },
+          "image_runtime": {
+            "endpoint": "ani-resource-service.ani-system.svc:19094",
+            "ca_file": "/etc/modeldev/ca/grpc-ca.crt",
+            "certificate_file": "/var/run/modeldev-owner/tls.crt",
+            "private_key_file": "/var/run/modeldev-owner/tls.key",
+            "server_name": "ani-network-service",
+            "timeout": "10s"
+          }
+        },
+        "dispatch-binding.json": {
+          "environment": {
+            "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+            "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+            "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+            "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+            "identities": {
+              "kfp_step_service_account": "modeldev-step",
+              "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control",
+              "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+              "trainer_service_account": "trainer-workload",
+              "verifier_service_account": "verifier"
+            },
+            "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47",
+            "namespace_name": "ani-modeldev-tenant-a-v21",
+            "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+          },
+          "owner": {
+            "pipeline_root": "s3://ani-md-v21-kfp-01a15f47/artifacts",
+            "reference": "modeldev-open-limits-r2:1e5df243c8a4",
+            "revision_sha256": "1de246e0394bc6163fcd43804a6032600fb61ac4203b849f300c1bcaf1c97125"
+          },
+          "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "name": "modeldev-trainimg-catalogue-20261030",
+        "namespace": "ani-system",
+        "uid": "55060a0b-e39c-4e86-b48e-6c7337099185",
+        "resourceVersion": "18628497",
+        "generation": null,
+        "creationTimestamp": "2026-10-30T09:20:36Z",
+        "deletionTimestamp": null,
+        "labels": null,
+        "ownerReferences": null
+      },
+      "values": {
+        "builtin.mlp.cpu.json": {
+          "schema_version": "ani.modeldev.implementation-material.v3",
+          "implementation": {
+            "implementation_id": "builtin.mlp",
+            "parameter_contract_version": "ani.mlp.parameters.v3",
+            "pipeline_id": "f069c4f6-961b-4978-9ba3-7957910ac942",
+            "pipeline_ir_sha256": "f369f7a532f422a585e56551f23d489c6a50aa131c32722f8a53d781280488ce",
+            "pipeline_version_id": "ef17d352-9fdd-46e4-b259-b2c6adc5b5c8",
+            "version": "1"
+          },
+          "workspace": {
+            "capacity_bytes": "4294967296",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          },
+          "image_pull_secrets": null
+        },
+        "builtin.mlp.gpu.json": {
+          "schema_version": "ani.modeldev.implementation-material.v3",
+          "implementation": {
+            "implementation_id": "builtin.mlp",
+            "parameter_contract_version": "ani.mlp.parameters.v3",
+            "pipeline_id": "17249a75-95c0-4640-8b5a-7be345d25262",
+            "pipeline_ir_sha256": "57144d0600446cc6995766eef50fa80d2660c8ad6bfcf41069f4c1de76398572",
+            "pipeline_version_id": "7ecdea6b-e05b-45b0-a5b1-b2d5eb252266",
+            "version": "1"
+          },
+          "workspace": {
+            "capacity_bytes": "4294967296",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          },
+          "image_pull_secrets": null
+        },
+        "builtin.sft_lora.cpu.json": {
+          "schema_version": "ani.modeldev.implementation-material.v3",
+          "implementation": {
+            "implementation_id": "builtin.sft_lora",
+            "parameter_contract_version": "ani.sft-lora.parameters.v3",
+            "pipeline_id": "687f942d-4622-4eef-a006-4b4f7ce38f4e",
+            "pipeline_ir_sha256": "6b45b4f5bd88a9996fe4f9034a6328080b70e392aba88c94414626fd28799de7",
+            "pipeline_version_id": "4bb2e676-64a6-419d-b46d-8a58416e76a1",
+            "version": "1"
+          },
+          "workspace": {
+            "capacity_bytes": "68719476736",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          },
+          "program": {
+            "args_template": [
+              {
+                "literal": "train"
+              },
+              {
+                "literal": "--configuration"
+              },
+              {
+                "literal": "/workspace/inputs/finetune_configuration.json"
+              },
+              {
+                "literal": "--workspace"
+              },
+              {
+                "literal": "/workspace"
+              },
+              {
+                "literal": "--dataset-manifest"
+              },
+              {
+                "literal": "/workspace/inputs/dataset-manifest.json"
+              },
+              {
+                "literal": "--expected-dataset-manifest-sha256"
+              },
+              {
+                "source": "DATASET_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--expected-base-manifest-sha256"
+              },
+              {
+                "source": "BASE_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--expected-template-plan-sha256"
+              },
+              {
+                "source": "TEMPLATE_PLAN_SHA256"
+              }
+            ],
+            "command": [
+              "/opt/conda/bin/python",
+              "-I",
+              "/opt/ani-modeldev/training/finetuning/finetune_entry.py"
+            ],
+            "image_digest": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:e3c8f7471f765466157da94b366fdf45b302c627e3293aa85f5690b71d66a83a",
+            "image_id": "img_d160b454a52d4c04805e05501f5e1ffd",
+            "image_scope": "platform",
+            "image_version": "1"
+          },
+          "image_pull_secrets": null
+        },
+        "builtin.sft_lora.gpu.json": {
+          "schema_version": "ani.modeldev.implementation-material.v3",
+          "implementation": {
+            "implementation_id": "builtin.sft_lora",
+            "parameter_contract_version": "ani.sft-lora.parameters.v3",
+            "pipeline_id": "b13f519a-0310-429f-9f6e-d838363478ec",
+            "pipeline_ir_sha256": "7d0f97102cce8853bfc849ec721c9b4514fa821b1fc765e436a75a06c7ab07ca",
+            "pipeline_version_id": "f7bb501f-0e18-41a7-af2f-49d6db8c05dd",
+            "version": "1"
+          },
+          "workspace": {
+            "capacity_bytes": "68719476736",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          },
+          "program": {
+            "args_template": [
+              {
+                "literal": "train"
+              },
+              {
+                "literal": "--configuration"
+              },
+              {
+                "literal": "/workspace/inputs/finetune_configuration.json"
+              },
+              {
+                "literal": "--workspace"
+              },
+              {
+                "literal": "/workspace"
+              },
+              {
+                "literal": "--dataset-manifest"
+              },
+              {
+                "literal": "/workspace/inputs/dataset-manifest.json"
+              },
+              {
+                "literal": "--expected-dataset-manifest-sha256"
+              },
+              {
+                "source": "DATASET_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--expected-base-manifest-sha256"
+              },
+              {
+                "source": "BASE_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--expected-template-plan-sha256"
+              },
+              {
+                "source": "TEMPLATE_PLAN_SHA256"
+              }
+            ],
+            "command": [
+              "/opt/conda/bin/python",
+              "-I",
+              "/opt/ani-modeldev/training/finetuning/finetune_entry.py"
+            ],
+            "image_digest": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:44f9ba3ef53d42f0c1a887d877783dbcf66fd179066d659783dbd71fe20242fb",
+            "image_id": "img_eabb2f34a49c44aea2bbc50692a03402",
+            "image_scope": "platform",
+            "image_version": "1"
+          },
+          "image_pull_secrets": null
+        }
+      }
+    },
+    {
+      "metadata": {
+        "name": "modeldev-trainimg-webhook-20261030",
+        "namespace": "ani-system",
+        "uid": "974e2d81-6092-44c9-a45a-d014e1e0954c",
+        "resourceVersion": "18652129",
+        "generation": null,
+        "creationTimestamp": "2026-10-30T09:28:06Z",
+        "deletionTimestamp": null,
+        "labels": null,
+        "ownerReferences": null
+      },
+      "values": {
+        "builtin.mlp.cpu.json": {
+          "schema_version": "ani.modeldev.implementation-material.v3",
+          "implementation": {
+            "implementation_id": "builtin.mlp",
+            "parameter_contract_version": "ani.mlp.parameters.v3",
+            "pipeline_id": "f069c4f6-961b-4978-9ba3-7957910ac942",
+            "pipeline_ir_sha256": "cf17a3906bc46b92a9f3dce5b2bb865a7e64594fc1c9471382c1989f4d71836a",
+            "pipeline_version_id": "c060e706-cb11-4043-a3e8-4f6cdf135178",
+            "version": "1"
+          },
+          "workspace": {
+            "capacity_bytes": "4294967296",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          },
+          "program": {
+            "args_template": [
+              {
+                "literal": "--dataset-manifest"
+              },
+              {
+                "literal": "/inputs/dataset-manifest.json"
+              },
+              {
+                "literal": "--expected-dataset-manifest-sha256"
+              },
+              {
+                "source": "DATASET_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--work-root"
+              },
+              {
+                "literal": "/workspace/work/train"
+              },
+              {
+                "literal": "--output"
+              },
+              {
+                "source": "OUTPUT_PATH"
+              },
+              {
+                "literal": "--learning-rate"
+              },
+              {
+                "source": "LEARNING_RATE"
+              },
+              {
+                "literal": "--epochs"
+              },
+              {
+                "source": "EPOCHS"
+              },
+              {
+                "literal": "--batch-size"
+              },
+              {
+                "source": "BATCH_SIZE"
+              },
+              {
+                "literal": "--seed"
+              },
+              {
+                "source": "SEED"
+              },
+              {
+                "literal": "--device"
+              },
+              {
+                "literal": "cpu"
+              }
+            ],
+            "command": [
+              "/opt/conda/bin/python",
+              "-I",
+              "/opt/ani-modeldev/training/train_mlp.py"
+            ],
+            "image_digest": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:e3c8f7471f765466157da94b366fdf45b302c627e3293aa85f5690b71d66a83a",
+            "image_id": "img_d160b454a52d4c04805e05501f5e1ffd",
+            "image_scope": "platform",
+            "image_version": "1"
+          },
+          "image_pull_secrets": null
+        },
+        "builtin.mlp.gpu.json": {
+          "schema_version": "ani.modeldev.implementation-material.v3",
+          "implementation": {
+            "implementation_id": "builtin.mlp",
+            "parameter_contract_version": "ani.mlp.parameters.v3",
+            "pipeline_id": "17249a75-95c0-4640-8b5a-7be345d25262",
+            "pipeline_ir_sha256": "57144d0600446cc6995766eef50fa80d2660c8ad6bfcf41069f4c1de76398572",
+            "pipeline_version_id": "7ecdea6b-e05b-45b0-a5b1-b2d5eb252266",
+            "version": "1"
+          },
+          "workspace": {
+            "capacity_bytes": "4294967296",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          },
+          "program": {
+            "args_template": [
+              {
+                "literal": "--dataset-manifest"
+              },
+              {
+                "literal": "/inputs/dataset-manifest.json"
+              },
+              {
+                "literal": "--expected-dataset-manifest-sha256"
+              },
+              {
+                "source": "DATASET_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--work-root"
+              },
+              {
+                "literal": "/workspace/work/train"
+              },
+              {
+                "literal": "--output"
+              },
+              {
+                "source": "OUTPUT_PATH"
+              },
+              {
+                "literal": "--learning-rate"
+              },
+              {
+                "source": "LEARNING_RATE"
+              },
+              {
+                "literal": "--epochs"
+              },
+              {
+                "source": "EPOCHS"
+              },
+              {
+                "literal": "--batch-size"
+              },
+              {
+                "source": "BATCH_SIZE"
+              },
+              {
+                "literal": "--seed"
+              },
+              {
+                "source": "SEED"
+              },
+              {
+                "literal": "--device"
+              },
+              {
+                "literal": "cuda"
+              }
+            ],
+            "command": [
+              "/opt/conda/bin/python",
+              "-I",
+              "/opt/ani-modeldev/training/train_mlp.py"
+            ],
+            "image_digest": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:44f9ba3ef53d42f0c1a887d877783dbcf66fd179066d659783dbd71fe20242fb",
+            "image_id": "img_eabb2f34a49c44aea2bbc50692a03402",
+            "image_scope": "platform",
+            "image_version": "1"
+          },
+          "image_pull_secrets": null
+        },
+        "builtin.sft_lora.cpu.json": {
+          "schema_version": "ani.modeldev.implementation-material.v3",
+          "implementation": {
+            "implementation_id": "builtin.sft_lora",
+            "parameter_contract_version": "ani.sft-lora.parameters.v3",
+            "pipeline_id": "687f942d-4622-4eef-a006-4b4f7ce38f4e",
+            "pipeline_ir_sha256": "6b45b4f5bd88a9996fe4f9034a6328080b70e392aba88c94414626fd28799de7",
+            "pipeline_version_id": "4bb2e676-64a6-419d-b46d-8a58416e76a1",
+            "version": "1"
+          },
+          "workspace": {
+            "capacity_bytes": "68719476736",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          },
+          "program": {
+            "args_template": [
+              {
+                "literal": "train"
+              },
+              {
+                "literal": "--configuration"
+              },
+              {
+                "literal": "/workspace/inputs/finetune_configuration.json"
+              },
+              {
+                "literal": "--workspace"
+              },
+              {
+                "literal": "/workspace"
+              },
+              {
+                "literal": "--dataset-manifest"
+              },
+              {
+                "literal": "/workspace/inputs/dataset-manifest.json"
+              },
+              {
+                "literal": "--expected-dataset-manifest-sha256"
+              },
+              {
+                "source": "DATASET_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--expected-base-manifest-sha256"
+              },
+              {
+                "source": "BASE_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--expected-template-plan-sha256"
+              },
+              {
+                "source": "TEMPLATE_PLAN_SHA256"
+              }
+            ],
+            "command": [
+              "/opt/conda/bin/python",
+              "-I",
+              "/opt/ani-modeldev/training/finetuning/finetune_entry.py"
+            ],
+            "image_digest": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:e3c8f7471f765466157da94b366fdf45b302c627e3293aa85f5690b71d66a83a",
+            "image_id": "img_d160b454a52d4c04805e05501f5e1ffd",
+            "image_scope": "platform",
+            "image_version": "1"
+          },
+          "image_pull_secrets": null
+        },
+        "builtin.sft_lora.gpu.json": {
+          "schema_version": "ani.modeldev.implementation-material.v3",
+          "implementation": {
+            "implementation_id": "builtin.sft_lora",
+            "parameter_contract_version": "ani.sft-lora.parameters.v3",
+            "pipeline_id": "b13f519a-0310-429f-9f6e-d838363478ec",
+            "pipeline_ir_sha256": "7d0f97102cce8853bfc849ec721c9b4514fa821b1fc765e436a75a06c7ab07ca",
+            "pipeline_version_id": "f7bb501f-0e18-41a7-af2f-49d6db8c05dd",
+            "version": "1"
+          },
+          "workspace": {
+            "capacity_bytes": "68719476736",
+            "input_subpath": "inputs",
+            "mode": "EXECUTION_PVC",
+            "publication_subpath": "publication",
+            "reports_subpath": "reports",
+            "storage_class": "ani-cephfs",
+            "training_subpath": "training",
+            "work_subpath": "work"
+          },
+          "program": {
+            "args_template": [
+              {
+                "literal": "train"
+              },
+              {
+                "literal": "--configuration"
+              },
+              {
+                "literal": "/workspace/inputs/finetune_configuration.json"
+              },
+              {
+                "literal": "--workspace"
+              },
+              {
+                "literal": "/workspace"
+              },
+              {
+                "literal": "--dataset-manifest"
+              },
+              {
+                "literal": "/workspace/inputs/dataset-manifest.json"
+              },
+              {
+                "literal": "--expected-dataset-manifest-sha256"
+              },
+              {
+                "source": "DATASET_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--expected-base-manifest-sha256"
+              },
+              {
+                "source": "BASE_MANIFEST_SHA256"
+              },
+              {
+                "literal": "--expected-template-plan-sha256"
+              },
+              {
+                "source": "TEMPLATE_PLAN_SHA256"
+              }
+            ],
+            "command": [
+              "/opt/conda/bin/python",
+              "-I",
+              "/opt/ani-modeldev/training/finetuning/finetune_entry.py"
+            ],
+            "image_digest": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:44f9ba3ef53d42f0c1a887d877783dbcf66fd179066d659783dbd71fe20242fb",
+            "image_id": "img_eabb2f34a49c44aea2bbc50692a03402",
+            "image_scope": "platform",
+            "image_version": "1"
+          },
+          "image_pull_secrets": null
+        },
+        "config.json": {
+          "bindings": [
+            {
+              "argo_creator": "system:serviceaccount:kubeflow:argo",
+              "driver": {
+                "allowed_support_images": [
+                  "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a"
+                ],
+                "command": [
+                  "driver"
+                ],
+                "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd"
+              },
+              "namespace": "ani-modeldev-tenant-a-v21",
+              "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+              "owner_label": {
+                "key": "ani.io/managed-by",
+                "value": "modeldev-execution-v21"
+              },
+              "profiles": [
+                "md-open-r2-eos-mlp-cpu-eph1g-20261029",
+                "md-open-r2-eos-mlp-gpu-eph1g-20261029",
+                "md-open-r2-eos-sft-cpu-eph1g-20261029",
+                "md-open-r2-eos-sft-gpu-eph1g-20261029"
+              ],
+              "step_service_account": "modeldev-step",
+              "training": {
+                "creator": "system:serviceaccount:kube-system:job-controller",
+                "service_account": "trainer-workload"
+              }
+            }
+          ],
+          "certificate_file": "/tls/tls.crt",
+          "listen_address": ":8443",
+          "private_key_file": "/tls/tls.key",
+          "profiles": [
+            {
+              "allowed_support_images": [
+                "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+                "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+              ],
+              "component_image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-step@sha256:883754def5b98d5e171a4722c0da3ab229f2bdc6d369066f845f5ff9c27260c6",
+              "fs_group": 10001,
+              "id": "md-open-r2-eos-mlp-cpu-eph1g-20261029",
+              "kind": "GENERAL_TRAINING",
+              "material_file": "/etc/modeldev-webhook/materials/builtin.mlp.cpu.json",
+              "material_sha256": "f900d3a7484b4f8939e217b6dbe38c4e35894d7fba318076f23e07aabcfff8bd",
+              "run_as_group": 10001,
+              "run_as_user": 10001
+            },
+            {
+              "allowed_support_images": [
+                "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+                "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+              ],
+              "component_image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-step@sha256:883754def5b98d5e171a4722c0da3ab229f2bdc6d369066f845f5ff9c27260c6",
+              "fs_group": 10001,
+              "id": "md-open-r2-eos-mlp-gpu-eph1g-20261029",
+              "kind": "GENERAL_TRAINING",
+              "material_file": "/etc/modeldev-webhook/materials/builtin.mlp.gpu.json",
+              "material_sha256": "9a48d1fcd4cf4ee7b040d00d51a9d075a8e6a5b1e11060c371ff55c9425aa462",
+              "run_as_group": 10001,
+              "run_as_user": 10001
+            },
+            {
+              "allowed_support_images": [
+                "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+                "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+              ],
+              "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:e3c8f7471f765466157da94b366fdf45b302c627e3293aa85f5690b71d66a83a",
+              "fs_group": 10001,
+              "id": "md-open-r2-eos-sft-cpu-eph1g-20261029",
+              "kind": "FINETUNING",
+              "material_file": "/etc/modeldev-webhook/materials/builtin.sft_lora.cpu.json",
+              "material_sha256": "568299a665ab3920248ba995acfde801fe5e06a1d1cf42a3148ed7da007edce9",
+              "run_as_group": 10001,
+              "run_as_user": 10001
+            },
+            {
+              "allowed_support_images": [
+                "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+                "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+              ],
+              "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:44f9ba3ef53d42f0c1a887d877783dbcf66fd179066d659783dbd71fe20242fb",
+              "fs_group": 10001,
+              "id": "md-open-r2-eos-sft-gpu-eph1g-20261029",
+              "kind": "FINETUNING",
+              "material_file": "/etc/modeldev-webhook/materials/builtin.sft_lora.gpu.json",
+              "material_sha256": "2630753f294981fd76018f2220bf975d4dbc2e894917843645e0585dbd5c2296",
+              "run_as_group": 10001,
+              "run_as_user": 10001
+            }
+          ],
+          "schema_version": "ani.modeldev.webhook.v1"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "name": "ani-kfp-entry",
+        "namespace": "kubeflow",
+        "uid": "0dec6b59-e9d4-43ea-a2e3-23c250a09800",
+        "resourceVersion": "25602",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:45:25Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kubeflow-stage2-v1",
+          "ani.io/managed-by": "ani-kcn-full"
+        },
+        "ownerReferences": null
+      },
+      "values": {
+        "nginx.conf": "pid /tmp/nginx.pid;\nerror_log /dev/stderr warn;\nevents { worker_connections 1024; }\nhttp {\n  access_log off;\n  client_body_temp_path /tmp/client;\n  proxy_temp_path /tmp/proxy;\n  fastcgi_temp_path /tmp/fastcgi;\n  uwsgi_temp_path /tmp/uwsgi;\n  scgi_temp_path /tmp/scgi;\n  grpc_socket_keepalive on;\n  underscores_in_headers on;\n  ignore_invalid_headers on;\n  map \"$http_kubeflow_userid$http_x_goog_authenticated_user_email$http_x_auth_request_user$http_x_auth_request_email$http_remote_user$http_x_forwarded_user\" $forged_identity {\n    \"\" 0; default 1;\n  }\n  server {\n    listen 8443 ssl;\n    ssl_certificate /etc/kfp-tls/tls.crt;\n    ssl_certificate_key /etc/kfp-tls/tls.key;\n    ssl_protocols TLSv1.2 TLSv1.3;\n    client_max_body_size 20m;\n    if ($forged_identity) { return 400; }\n    location ^~ /apis/v1beta1/visualizations { return 404; }\n    location = /healthz { return 200 \"tls-entry-alive\\n\"; }\n    location / {\n      proxy_pass http://ml-pipeline.kubeflow.svc.cluster.local:8888;\n      proxy_http_version 1.1;\n      proxy_set_header Authorization $http_authorization;\n      proxy_set_header kubeflow-userid \"\";\n      proxy_set_header x-goog-authenticated-user-email \"\";\n      proxy_set_header X-Forwarded-User \"\";\n      proxy_set_header X-Auth-Request-User \"\";\n      proxy_set_header X-Auth-Request-Email \"\";\n      proxy_read_timeout 120s;\n    }\n  }\n  server {\n    listen 8444 ssl;\n    http2 on;\n    ssl_certificate /etc/kfp-tls/tls.crt;\n    ssl_certificate_key /etc/kfp-tls/tls.key;\n    ssl_protocols TLSv1.2 TLSv1.3;\n    if ($forged_identity) { return 400; }\n    location ^~ /api.VisualizationService/ { return 404; }\n    location / {\n      grpc_pass grpc://ml-pipeline.kubeflow.svc.cluster.local:8887;\n      grpc_set_header Authorization $http_authorization;\n      grpc_set_header kubeflow-userid \"\";\n      grpc_set_header x-goog-authenticated-user-email \"\";\n      grpc_set_header X-Forwarded-User \"\";\n      grpc_set_header X-Auth-Request-User \"\";\n      grpc_set_header X-Auth-Request-Email \"\";\n      grpc_read_timeout 120s;\n    }\n  }\n}\n"
+      }
+    },
+    {
+      "metadata": {
+        "name": "pipeline-api-server-config-dc9hkg52h6",
+        "namespace": "kubeflow",
+        "uid": "df209218-827e-4b3e-9044-c535d727f3dd",
+        "resourceVersion": "24099",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "app.kubernetes.io/component": "ml-pipeline",
+          "app.kubernetes.io/name": "kubeflow-pipelines",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "ownerReferences": null
+      },
+      "values": {
+        "DEFAULTPIPELINERUNNERSERVICEACCOUNT": "default-editor",
+        "MULTIUSER": true,
+        "MULTIUSER_SHARED_READ": false,
+        "VISUALIZATIONSERVICE_NAME": "ml-pipeline-visualizationserver",
+        "VISUALIZATIONSERVICE_PORT": 8888
+      }
+    },
+    {
+      "metadata": {
+        "name": "pipeline-install-config",
+        "namespace": "kubeflow",
+        "uid": "6c47e0ed-f901-405d-ad74-b410e1d71925",
+        "resourceVersion": "24100",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "app.kubernetes.io/component": "ml-pipeline",
+          "app.kubernetes.io/name": "kubeflow-pipelines",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "ownerReferences": null
+      },
+      "values": {
+        "ARTIFACTS_PROXY_ENABLED": false,
+        "ARTIFACT_RETENTION_DAYS": -1,
+        "ConMaxLifeTime": "120s",
+        "DEFAULT_CACHE_STALENESS": null,
+        "LOG_LEVEL": "info",
+        "MAXIMUM_CACHE_STALENESS": null,
+        "appName": "pipeline",
+        "appVersion": "2.16.0",
+        "autoUpdatePipelineDefaultVersion": true,
+        "bucketName": "ani-kfp-control",
+        "cacheDb": "cachedb",
+        "cacheNodeRestrictions": false,
+        "cronScheduleTimezone": "UTC",
+        "dbHost": "mysql",
+        "dbPort": 3306,
+        "dbType": "mysql",
+        "defaultPipelineRoot": null,
+        "defaultSecurityContextRunAsGroup": 1000,
+        "defaultSecurityContextRunAsNonRoot": true,
+        "defaultSecurityContextRunAsUser": 1000,
+        "mlmdDb": "metadb",
+        "mysqlHost": "mysql",
+        "mysqlPort": 3306,
+        "pipelineDb": "mlpipeline"
+      }
+    },
+    {
+      "metadata": {
+        "name": "workflow-controller-configmap",
+        "namespace": "kubeflow",
+        "uid": "f16b79cc-6125-4cb8-825d-b861546e613f",
+        "resourceVersion": "24101",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "ownerReferences": null
+      },
+      "values": {
+        "executor": {
+          "image": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+          "imagePullPolicy": "IfNotPresent",
+          "securityContext": {
+            "runAsNonRoot": true,
+            "runAsUser": 1000,
+            "allowPrivilegeEscalation": false,
+            "capabilities": {
+              "drop": [
+                "ALL"
+              ]
+            },
+            "seccompProfile": {
+              "type": "RuntimeDefault"
+            }
+          }
+        }
+      }
+    },
+    {
+      "metadata": {
+        "name": "jobset-manager-config",
+        "namespace": "kubeflow-system",
+        "uid": "21198745-375e-4980-8c94-19dae51af0f9",
+        "resourceVersion": "24155",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:33Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full"
+        },
+        "ownerReferences": null
+      },
+      "values": {
+        "controller_manager_config.yaml": {
+          "apiVersion": "config.jobset.x-k8s.io/v1alpha1",
+          "kind": "Configuration",
+          "leaderElection": {
+            "leaderElect": true
+          },
+          "internalCertManagement": {
+            "enable": true
+          }
+        }
+      }
+    },
+    {
+      "metadata": {
+        "name": "kubeflow-trainer-config",
+        "namespace": "kubeflow-system",
+        "uid": "31d14efb-a60d-4658-8002-1499d401b606",
+        "resourceVersion": "24156",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:33Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full"
+        },
+        "ownerReferences": null
+      },
+      "values": {
+        "controller_manager_config.yaml": {
+          "apiVersion": "config.trainer.kubeflow.org/v1alpha1",
+          "kind": "Configuration",
+          "health": {
+            "healthProbeBindAddress": ":8081",
+            "readinessEndpointName": "readyz",
+            "livenessEndpointName": "healthz"
+          },
+          "metrics": {
+            "bindAddress": ":8443",
+            "secureServing": true
+          },
+          "webhook": {
+            "port": 9443,
+            "host": ""
+          },
+          "leaderElection": {
+            "leaderElect": true,
+            "resourceName": "trainer.kubeflow.org",
+            "resourceNamespace": "",
+            "leaseDuration": "15s",
+            "renewDeadline": "10s",
+            "retryPeriod": "2s"
+          },
+          "controller": {
+            "groupKindConcurrency": {
+              "TrainJob.trainer.kubeflow.org": 5,
+              "TrainingRuntime.trainer.kubeflow.org": 1,
+              "ClusterTrainingRuntime.trainer.kubeflow.org": 1
+            }
+          },
+          "certManagement": {
+            "enable": true,
+            "webhookServiceName": "kubeflow-trainer-controller-manager",
+            "webhookSecretName": "kubeflow-trainer-webhook-cert"
+          },
+          "clientConnection": {
+            "qps": 50,
+            "burst": 100
+          }
+        }
+      }
+    }
+  ],
+  "entry_services": [
+    {
+      "metadata": {
+        "name": "ani-kfp-entry",
+        "namespace": "kubeflow",
+        "uid": "85afe201-7cb5-47cd-a8c0-87929d3b5c07",
+        "resourceVersion": "25617",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:45:25Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kubeflow-stage2-v1",
+          "ani.io/managed-by": "ani-kcn-full"
+        },
+        "ownerReferences": null
+      },
+      "spec": {
+        "clusterIP": "10.96.159.221",
+        "clusterIPs": [
+          "10.96.159.221"
+        ],
+        "externalTrafficPolicy": "Cluster",
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "https",
+            "nodePort": 30443,
+            "port": 8443,
+            "protocol": "TCP",
+            "targetPort": 8443
+          },
+          {
+            "name": "grpcs",
+            "nodePort": 30444,
+            "port": 8444,
+            "protocol": "TCP",
+            "targetPort": 8444
+          }
+        ],
+        "selector": {
+          "ani.io/kfp-role": "entry"
+        },
+        "sessionAffinity": "None",
+        "type": "NodePort"
+      }
+    },
+    {
+      "metadata": {
+        "name": "metadata-envoy-service",
+        "namespace": "kubeflow",
+        "uid": "2533dcd4-57cf-4957-8e81-4b5350928728",
+        "resourceVersion": "24108",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "app": "metadata-envoy",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "ownerReferences": null
+      },
+      "spec": {
+        "clusterIP": "10.96.74.161",
+        "clusterIPs": [
+          "10.96.74.161"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "md-envoy",
+            "port": 9090,
+            "protocol": "TCP",
+            "targetPort": 9090
+          }
+        ],
+        "selector": {
+          "application-crd-id": "kubeflow-pipelines",
+          "component": "metadata-envoy"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "metadata": {
+        "name": "metadata-grpc-service",
+        "namespace": "kubeflow",
+        "uid": "5b147509-8f8c-4946-b327-52ba6b156903",
+        "resourceVersion": "24115",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "app": "metadata",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "ownerReferences": null
+      },
+      "spec": {
+        "clusterIP": "10.96.152.230",
+        "clusterIPs": [
+          "10.96.152.230"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "grpc-api",
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": 8080
+          }
+        ],
+        "selector": {
+          "application-crd-id": "kubeflow-pipelines",
+          "component": "metadata-grpc-server"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "metadata": {
+        "name": "ml-pipeline",
+        "namespace": "kubeflow",
+        "uid": "a33813d2-a3f0-4714-a180-988327f350d5",
+        "resourceVersion": "24123",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "app.kubernetes.io/component": "ml-pipeline",
+          "app.kubernetes.io/name": "kubeflow-pipelines",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "ownerReferences": null
+      },
+      "spec": {
+        "clusterIP": "10.96.243.176",
+        "clusterIPs": [
+          "10.96.243.176"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8888,
+            "protocol": "TCP",
+            "targetPort": 8888
+          },
+          {
+            "name": "grpc",
+            "port": 8887,
+            "protocol": "TCP",
+            "targetPort": 8887
+          }
+        ],
+        "selector": {
+          "app": "ml-pipeline",
+          "app.kubernetes.io/component": "ml-pipeline",
+          "app.kubernetes.io/name": "kubeflow-pipelines",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      }
+    },
+    {
+      "metadata": {
+        "name": "mysql",
+        "namespace": "kubeflow",
+        "uid": "630657f3-b075-4150-b4c9-8b918d3a65fa",
+        "resourceVersion": "24130",
+        "generation": null,
+        "creationTimestamp": "2026-10-21T14:43:32Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "ownerReferences": null
+      },
+      "spec": {
+        "clusterIP": "10.96.37.91",
+        "clusterIPs": [
+          "10.96.37.91"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+          "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+          {
+            "port": 3306,
+            "protocol": "TCP",
+            "targetPort": 3306
+          }
+        ],
+        "selector": {
+          "app": "mysql",
+          "application-crd-id": "kubeflow-pipelines"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      }
+    }
+  ],
+  "entry_endpoints": [
+    {
+      "metadata": {
+        "name": "ani-kfp-entry-dks4w",
+        "namespace": "kubeflow",
+        "uid": "ec487dcf-e761-43a8-8121-e2181b201f99",
+        "resourceVersion": "387929",
+        "generation": 11,
+        "creationTimestamp": "2026-10-21T14:45:25Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kubeflow-stage2-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+          "kubernetes.io/service-name": "ani-kfp-entry"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Service",
+            "name": "ani-kfp-entry",
+            "uid": "85afe201-7cb5-47cd-a8c0-87929d3b5c07"
+          }
+        ]
+      },
+      "ports": [
+        {
+          "name": "grpcs",
+          "port": 8444,
+          "protocol": "TCP"
+        },
+        {
+          "name": "https",
+          "port": 8443,
+          "protocol": "TCP"
+        }
+      ],
+      "endpoints": [
+        {
+          "addresses": [
+            "10.16.0.201"
+          ],
+          "conditions": {
+            "ready": true,
+            "serving": true,
+            "terminating": false
+          },
+          "nodeName": "node2",
+          "targetRef": {
+            "kind": "Pod",
+            "name": "ani-kfp-entry-79c7c86cf6-wxsj2",
+            "namespace": "kubeflow",
+            "uid": "29ac8073-0db8-4cfa-887d-2813dd94448a"
+          }
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "name": "metadata-envoy-service-6f2n9",
+        "namespace": "kubeflow",
+        "uid": "5bb896cb-bce7-4bc0-98f3-7105f7c7a61e",
+        "resourceVersion": "403823",
+        "generation": 5,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "app": "metadata-envoy",
+          "application-crd-id": "kubeflow-pipelines",
+          "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+          "kubernetes.io/service-name": "metadata-envoy-service"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Service",
+            "name": "metadata-envoy-service",
+            "uid": "2533dcd4-57cf-4957-8e81-4b5350928728"
+          }
+        ]
+      },
+      "ports": [
+        {
+          "name": "md-envoy",
+          "port": 9090,
+          "protocol": "TCP"
+        }
+      ],
+      "endpoints": [
+        {
+          "addresses": [
+            "10.16.0.150"
+          ],
+          "conditions": {
+            "ready": true,
+            "serving": true,
+            "terminating": false
+          },
+          "nodeName": "node1",
+          "targetRef": {
+            "kind": "Pod",
+            "name": "metadata-envoy-deployment-6fd949cd46-wmgcn",
+            "namespace": "kubeflow",
+            "uid": "f3a42f50-3b73-4b60-ab1d-601e72a14730"
+          }
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "name": "metadata-grpc-service-gkbcq",
+        "namespace": "kubeflow",
+        "uid": "14561d1d-ead2-4042-932c-5a5825bede45",
+        "resourceVersion": "405762",
+        "generation": 14,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "app": "metadata",
+          "application-crd-id": "kubeflow-pipelines",
+          "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+          "kubernetes.io/service-name": "metadata-grpc-service"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Service",
+            "name": "metadata-grpc-service",
+            "uid": "5b147509-8f8c-4946-b327-52ba6b156903"
+          }
+        ]
+      },
+      "ports": [
+        {
+          "name": "grpc-api",
+          "port": 8080,
+          "protocol": "TCP"
+        }
+      ],
+      "endpoints": [
+        {
+          "addresses": [
+            "10.16.0.185"
+          ],
+          "conditions": {
+            "ready": true,
+            "serving": true,
+            "terminating": false
+          },
+          "nodeName": "node1",
+          "targetRef": {
+            "kind": "Pod",
+            "name": "metadata-grpc-deployment-577959dc84-6bdmd",
+            "namespace": "kubeflow",
+            "uid": "f911a4f4-db9e-4e18-a863-0d8f27ee9bef"
+          }
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "name": "ml-pipeline-tkd6p",
+        "namespace": "kubeflow",
+        "uid": "9229dc1b-d486-4f87-8740-992ca714f069",
+        "resourceVersion": "388851",
+        "generation": 7,
+        "creationTimestamp": "2026-10-21T14:43:31Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "app.kubernetes.io/component": "ml-pipeline",
+          "app.kubernetes.io/name": "kubeflow-pipelines",
+          "application-crd-id": "kubeflow-pipelines",
+          "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+          "kubernetes.io/service-name": "ml-pipeline"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Service",
+            "name": "ml-pipeline",
+            "uid": "a33813d2-a3f0-4714-a180-988327f350d5"
+          }
+        ]
+      },
+      "ports": [
+        {
+          "name": "grpc",
+          "port": 8887,
+          "protocol": "TCP"
+        },
+        {
+          "name": "http",
+          "port": 8888,
+          "protocol": "TCP"
+        }
+      ],
+      "endpoints": [
+        {
+          "addresses": [
+            "10.16.0.151"
+          ],
+          "conditions": {
+            "ready": true,
+            "serving": true,
+            "terminating": false
+          },
+          "nodeName": "node2",
+          "targetRef": {
+            "kind": "Pod",
+            "name": "ml-pipeline-599bc84d9f-s8p7m",
+            "namespace": "kubeflow",
+            "uid": "6cfb81d8-c39d-4a4e-9c8c-33ab09c7651e"
+          }
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "name": "mysql-btnld",
+        "namespace": "kubeflow",
+        "uid": "325c468b-07f3-4672-a87e-8fa8225e0285",
+        "resourceVersion": "388649",
+        "generation": 7,
+        "creationTimestamp": "2026-10-21T14:43:32Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-release": "26.03-kfp2.16-trainer2.1-v1",
+          "ani.io/managed-by": "ani-kcn-full",
+          "application-crd-id": "kubeflow-pipelines",
+          "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+          "kubernetes.io/service-name": "mysql"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "Service",
+            "name": "mysql",
+            "uid": "630657f3-b075-4150-b4c9-8b918d3a65fa"
+          }
+        ]
+      },
+      "ports": [
+        {
+          "name": "",
+          "port": 3306,
+          "protocol": "TCP"
+        }
+      ],
+      "endpoints": [
+        {
+          "addresses": [
+            "10.16.0.148"
+          ],
+          "conditions": {
+            "ready": true,
+            "serving": true,
+            "terminating": false
+          },
+          "nodeName": "node2",
+          "targetRef": {
+            "kind": "Pod",
+            "name": "mysql-74fc666448-8dt7z",
+            "namespace": "kubeflow",
+            "uid": "3857b5b5-119c-46d2-943b-83a1b2b355c0"
+          }
+        }
+      ]
+    }
+  ],
+  "namespace_exact_reads": [
+    {
+      "metadata": {
+        "name": "ani-modeldev-tenant-a-v21",
+        "namespace": null,
+        "uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+        "resourceVersion": "652540",
+        "generation": null,
+        "creationTimestamp": "2026-10-22T09:28:40Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "ani.io/kubeflow-tenant": "true",
+          "ani.io/managed-by": "modeldev-execution-v21",
+          "ani.io/resource-tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+          "ani.io/task-id": "01a15f47",
+          "kubernetes.io/metadata.name": "ani-modeldev-tenant-a-v21",
+          "pod-security.kubernetes.io/audit": "restricted",
+          "pod-security.kubernetes.io/enforce": "restricted",
+          "pod-security.kubernetes.io/enforce-version": "v1.35",
+          "pod-security.kubernetes.io/warn": "restricted"
+        },
+        "ownerReferences": null
+      },
+      "status": {
+        "phase": "Active"
+      },
+      "error": null
+    },
+    {
+      "metadata": {
+        "name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "namespace": null,
+        "uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347",
+        "resourceVersion": "13674619",
+        "generation": null,
+        "creationTimestamp": "2026-10-29T07:23:27Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "kubernetes.io/metadata.name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "network.ani.io/managed-by": "ani-network-service",
+          "network.ani.io/tenant-id": "207328fc-f08d-4dc4-b403-16ec86396ce2"
+        },
+        "ownerReferences": null
+      },
+      "status": {
+        "phase": "Active"
+      },
+      "error": null
+    },
+    {
+      "metadata": {
+        "name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "namespace": null,
+        "uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+        "resourceVersion": "8282166",
+        "generation": null,
+        "creationTimestamp": "2026-10-25T12:18:22Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "kubernetes.io/metadata.name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+          "network.ani.io/managed-by": "ani-network-service",
+          "network.ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        },
+        "ownerReferences": null
+      },
+      "status": {
+        "phase": "Active"
+      },
+      "error": null
+    },
+    {
+      "metadata": {
+        "name": "tenant-857c0bcf-5fa9-4151-8736-f3f4fe27c6aa",
+        "namespace": null,
+        "uid": "6a8c2ff9-6722-49ab-a16e-f07ca0e15361",
+        "resourceVersion": "14310632",
+        "generation": null,
+        "creationTimestamp": "2026-10-29T10:39:58Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "kubernetes.io/metadata.name": "tenant-857c0bcf-5fa9-4151-8736-f3f4fe27c6aa",
+          "network.ani.io/managed-by": "ani-network-service",
+          "network.ani.io/tenant-id": "857c0bcf-5fa9-4151-8736-f3f4fe27c6aa"
+        },
+        "ownerReferences": null
+      },
+      "status": {
+        "phase": "Active"
+      },
+      "error": null
+    },
+    {
+      "metadata": {
+        "name": "tenant-bf244b5d-eb29-4350-8530-cefb29f72d8d",
+        "namespace": null,
+        "uid": "58b8d1a4-5699-42f0-9005-f362804d3861",
+        "resourceVersion": "3887017",
+        "generation": null,
+        "creationTimestamp": "2026-10-22T04:18:57Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "kubernetes.io/metadata.name": "tenant-bf244b5d-eb29-4350-8530-cefb29f72d8d",
+          "network.ani.io/managed-by": "ani-network-service",
+          "network.ani.io/tenant-id": "bf244b5d-eb29-4350-8530-cefb29f72d8d"
+        },
+        "ownerReferences": null
+      },
+      "status": {
+        "phase": "Active"
+      },
+      "error": null
+    },
+    {
+      "metadata": {
+        "name": "tenant-dcd7b3ef-46a3-4d42-a57c-dc87f5c7679c",
+        "namespace": null,
+        "uid": "050d7f9b-a825-430b-a641-93451f0b3034",
+        "resourceVersion": "18828140",
+        "generation": null,
+        "creationTimestamp": "2026-10-30T10:23:25Z",
+        "deletionTimestamp": null,
+        "labels": {
+          "kubernetes.io/metadata.name": "tenant-dcd7b3ef-46a3-4d42-a57c-dc87f5c7679c",
+          "network.ani.io/managed-by": "ani-network-service",
+          "network.ani.io/tenant-id": "dcd7b3ef-46a3-4d42-a57c-dc87f5c7679c"
+        },
+        "ownerReferences": null
+      },
+      "status": {
+        "phase": "Active"
+      },
+      "error": null
+    }
+  ],
+  "commands": [
+    {
+      "started_at_utc": "2026-10-31T14:41:55.020331Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "modeldev-trainimg-main-20261029b",
+        "-n",
+        "ani-system",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.121577Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "modeldev-trainimg-catalogue-20261030",
+        "-n",
+        "ani-system",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.311997Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "modeldev-trainimg-webhook-20261030",
+        "-n",
+        "ani-system",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.501154Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "ani-kfp-entry",
+        "-n",
+        "kubeflow",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.572919Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "pipeline-api-server-config-dc9hkg52h6",
+        "-n",
+        "kubeflow",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.645031Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "pipeline-install-config",
+        "-n",
+        "kubeflow",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.717823Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "workflow-controller-configmap",
+        "-n",
+        "kubeflow",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.797164Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "jobset-manager-config",
+        "-n",
+        "kubeflow-system",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.873498Z",
+      "command": [
+        "kubectl",
+        "get",
+        "configmap",
+        "kubeflow-trainer-config",
+        "-n",
+        "kubeflow-system",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:55.959760Z",
+      "command": [
+        "kubectl",
+        "get",
+        "services",
+        "-n",
+        "kubeflow",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:56.038782Z",
+      "command": [
+        "kubectl",
+        "get",
+        "endpointslices",
+        "-n",
+        "kubeflow",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:56.112055Z",
+      "command": [
+        "kubectl",
+        "get",
+        "namespace",
+        "ani-modeldev-tenant-a-v21",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:56.183798Z",
+      "command": [
+        "kubectl",
+        "get",
+        "namespace",
+        "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:56.258720Z",
+      "command": [
+        "kubectl",
+        "get",
+        "namespace",
+        "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:56.338876Z",
+      "command": [
+        "kubectl",
+        "get",
+        "namespace",
+        "tenant-857c0bcf-5fa9-4151-8736-f3f4fe27c6aa",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:56.409410Z",
+      "command": [
+        "kubectl",
+        "get",
+        "namespace",
+        "tenant-bf244b5d-eb29-4350-8530-cefb29f72d8d",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "started_at_utc": "2026-10-31T14:41:56.486322Z",
+      "command": [
+        "kubectl",
+        "get",
+        "namespace",
+        "tenant-dcd7b3ef-46a3-4d42-a57c-dc87f5c7679c",
+        "-o",
+        "json"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

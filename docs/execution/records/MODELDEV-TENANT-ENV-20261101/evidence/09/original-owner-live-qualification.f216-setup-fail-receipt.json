@@ -1,0 +1,17 @@
+{
+  "Command": [
+    "go",
+    "test",
+    "-count=1",
+    "-v",
+    "-timeout=3m",
+    "./internal/data/lifecycle",
+    "-run",
+    "^TestOriginalF216PublicOwnerReader$"
+  ],
+  "StartedAt": "2026-11-01T00:53:12.667794+00:00",
+  "CompletedAt": "2026-11-01T00:53:16.737710+00:00",
+  "ExitCode": 1,
+  "DiagnosticSourceSHA256": "d84a77737d286d02b4b14d3deeda354a5c834392235e0c0a7659bded315606c7",
+  "PrivateInputSHA256": "3c50fa5dbf43a1fae162d39fe691b538cbda1c4be53fdba94f616e5938afb994"
+}

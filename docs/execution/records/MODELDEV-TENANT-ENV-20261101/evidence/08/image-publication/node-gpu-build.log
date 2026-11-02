@@ -1,0 +1,72 @@
+#1 [internal] load build definition from finetuning.Dockerfile
+#1 transferring dockerfile: 1.73kB done
+#1 DONE 0.0s
+
+#2 [auth] ani-resource-factor10-20261022/llamafactory:pull token for 10.10.1.66:30003
+#2 DONE 0.0s
+
+#3 [internal] load metadata for 10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b
+#3 DONE 0.3s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [1/8] FROM 10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b
+#5 resolve 10.10.1.66:30003/ani-resource-factor10-20261022/llamafactory@sha256:eb5e106d93e47532e4b72f5995232624b704edea1c1c79468ddcd2ceffa14b4b 0.0s done
+#5 DONE 0.2s
+
+#6 [internal] load build context
+#6 transferring context: 36.84MB 0.2s done
+#6 DONE 0.2s
+
+#7 [2/8] COPY --chmod=0755 bin/ani-modeldev-step /ani-modeldev-step
+#7 CANCELED
+
+#8 [2/8] COPY --chmod=0755 bin/ani-modeldev-step /ani-modeldev-step
+#8 DONE 0.5s
+
+#9 [3/8] COPY --chmod=0444 training/train_mlp.py training/implementation.py training/implementations.json training/dataset_manifest.py training/structure_limits.json /opt/ani-modeldev/training/
+#9 DONE 0.0s
+
+#10 [4/8] COPY training/finetuning/ /opt/ani-modeldev/training/finetuning/
+#10 DONE 0.0s
+
+#11 [4/8] COPY training/finetuning/ /opt/ani-modeldev/training/finetuning/
+#11 CACHED
+
+#12 [3/8] COPY --chmod=0444 training/train_mlp.py training/implementation.py training/implementations.json training/dataset_manifest.py training/structure_limits.json /opt/ani-modeldev/training/
+#12 CACHED
+
+#13 [5/8] RUN test "gpu" = cpu -o "gpu" = gpu
+#13 DONE 0.2s
+
+#14 [6/8] RUN /opt/conda/bin/python -I /opt/ani-modeldev/training/finetuning/runtime-patches/apply.py /app
+#14 0.144 {"after_sha256": "45af44a2a832ddcb144017fcf49916ca6b8e48d6e00f2208a763bd83e346d52a", "before_sha256": "c596efb447fb50fc915f6aa5c4f228d5409fba83808e23015a1bcf3387a3ffbf", "patch_sha256": "b06ddc25ab04024dfe8248da9eac5f64fce1097da7611df41941a0e654f65af4", "state": "EXACT_ARROW_WRITER_PATCH_APPLIED", "target": "/app/src/llamafactory/data/converter.py"}
+#14 DONE 0.2s
+
+#15 [7/8] RUN /opt/conda/bin/python -I -c 'from pathlib import Path; import os; p=Path("/etc/passwd");g=Path("/etc/group"); users=p.read_bytes();groups=g.read_bytes();assert not any(r.split(b":")[0]==b"modeldev" or r.split(b":")[2]==b"10001" for r in users.splitlines() if r and not r.startswith(b"#"));assert not any(r.split(b":")[0]==b"modeldev" or r.split(b":")[2]==b"10001" for r in groups.splitlines() if r and not r.startswith(b"#"));p.write_bytes(users+b"modeldev:x:10001:10001:ModelDev training:/nonexistent:/usr/sbin/nologin\n");g.write_bytes(groups+b"modeldev:x:10001:\n");root=Path("/opt/ani-modeldev");[(os.chmod(v,0o755) if v.is_dir() else os.chmod(v,0o444)) for v in (root,*root.rglob("*"))]'
+#15 DONE 0.2s
+
+#16 [8/8] WORKDIR /opt/ani-modeldev
+#16 DONE 0.0s
+
+#17 exporting to image
+#17 exporting layers
+#17 exporting layers 1.6s done
+#17 exporting manifest sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e done
+#17 exporting config sha256:f3b5ff33477dc184ba83bcf1dc8e35f42c1b5971def7d33b801820a73d57064d done
+#17 naming to 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4 done
+#17 unpacking to 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4
+#17 unpacking to 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4 0.3s done
+#17 pushing layers
+#17 ...
+
+#18 [auth] ani-resource-factor10-20261022/ani-modeldev-training-gpu:pull,push token for 10.10.1.66:30003
+#18 DONE 0.0s
+
+#17 exporting to image
+#17 pushing layers 2.2s done
+#17 pushing manifest for 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e
+#17 pushing manifest for 10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu:tenantenv-d807cbdbd5dd-node-20261101-8f6ba4@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e 0.3s done
+#17 DONE 4.4s

@@ -1,0 +1,10 @@
+{
+  "files": {
+    "/tmp/gov-original-command-retirement-ca01cabf-20261101/root-deliver55-20261101T023318Z-source.json": "3099f02491a26d1b17843443cf926a83a82d8ff510c17d73d869de45b1c22d51",
+    "/tmp/gov-original-command-retirement-ca01cabf-20261101/root-deliver55-20261101T023318Z-proof.json": "d919018fc5918a02229abc1694625cd92bd074c6ffd1a0f58e86720c2a61197e"
+  },
+  "observed_at": "2026-11-01T02:33:18.502140+00:00",
+  "plan_sha256": "30763cf7446e876277c7bd78bf23083186b64741b59f5c0e695c724176053321",
+  "proof_sha256": "d919018fc5918a02229abc1694625cd92bd074c6ffd1a0f58e86720c2a61197e",
+  "source_sha256": "3099f02491a26d1b17843443cf926a83a82d8ff510c17d73d869de45b1c22d51"
+}

@@ -106,8 +106,8 @@ func TestRuntimePlanNeverSharesBetweenExecutionsOrSilentlyAcceptsResourceDrift(t
 }
 
 // The training Pod must reference the shared tenant pull Secret by name, and
-// the finetuning template must stay unchanged.
-func TestRuntimePlanReferencesTheSharedPullSecretOnlyForTraining(t *testing.T) {
+// finetuning Pods explicitly reference their frozen managed bindings.
+func TestRuntimePlanReferencesFrozenPullSecretsForBothKinds(t *testing.T) {
 	training := conformance.SnapshotV1()
 	plan, err := biz.CompileRuntimePlan(training)
 	if err != nil {
@@ -152,7 +152,20 @@ func TestRuntimePlanReferencesTheSharedPullSecretOnlyForTraining(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(finePlan.ExpectedSpec), "imagePullSecrets") {
-		t.Fatal("finetuning template must stay unchanged")
+	if err := json.Unmarshal(finePlan.ExpectedSpec, &spec); err != nil {
+		t.Fatal(err)
 	}
+	if len(spec.Template.Spec.Jobs) != 1 {
+		t.Fatal("multiple fine jobs")
+	}
+	fineSecrets := spec.Template.Spec.Jobs[0].Template.Spec.Template.Spec.ImagePullSecrets
+	if len(fineSecrets) != len(finetuning.ManagedImageAccess.PullBindings) {
+		t.Fatal("fine managed refs were not frozen")
+	}
+	for i, ref := range finetuning.ManagedImageAccess.PullBindings {
+		if fineSecrets[i].Name != ref.SecretName {
+			t.Fatal("fine refs differ from frozen managed binding")
+		}
+	}
+
 }

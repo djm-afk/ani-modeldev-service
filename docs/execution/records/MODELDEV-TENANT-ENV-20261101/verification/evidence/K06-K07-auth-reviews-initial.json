@@ -1,0 +1,1947 @@
+{
+  "observed_at_utc": "2026-10-31T15:01:01.620843Z",
+  "proof_level": "AUTH_REVIEW",
+  "review_method": "POST SubjectAccessReview; request contains no token; configured SA assertion, not authentication evidence",
+  "reviews": [
+    {
+      "component": "KFP API Server",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:ml-pipeline",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.066569Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-kfp-server/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-kfp-server\" to ServiceAccount \"ml-pipeline/kubeflow\""
+      }
+    },
+    {
+      "component": "KFP API Server",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:ml-pipeline",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.067164Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-kfp-server/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-kfp-server\" to ServiceAccount \"ml-pipeline/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.068013Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "update"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.069613Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.070215Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "list"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.071252Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.121004Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainingruntimes",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.121709Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "jobset.x-k8s.io",
+            "version": "*",
+            "resource": "jobsets",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.123900Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "JobSet",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "jobset.x-k8s.io",
+            "version": "*",
+            "resource": "jobsets",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.124216Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"jobset-manager-rolebinding\" of ClusterRole \"jobset-manager-role\" to ServiceAccount \"jobset-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "JobSet",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "batch",
+            "version": "*",
+            "resource": "jobs",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.124603Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"jobset-manager-rolebinding\" of ClusterRole \"jobset-manager-role\" to ServiceAccount \"jobset-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.131980Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-control/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-control\" to ServiceAccount \"modeldev-control/ani-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.167971Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-control/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-control\" to ServiceAccount \"modeldev-control/ani-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "delete"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.171298Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-control/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-control\" to ServiceAccount \"modeldev-control/ani-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainingruntimes",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.173369Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-control/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-control\" to ServiceAccount \"modeldev-control/ani-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.173681Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-control/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-control\" to ServiceAccount \"modeldev-control/ani-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "",
+            "version": "v1",
+            "resource": "persistentvolumeclaims",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.174812Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "",
+            "version": "v1",
+            "resource": "persistentvolumeclaims",
+            "verb": "delete"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.179708Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "get",
+            "subresource": "log"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.217381Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-control/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-control\" to ServiceAccount \"modeldev-control/ani-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "group": "",
+            "version": "v1",
+            "resource": "namespaces",
+            "verb": "get",
+            "name": "ani-modeldev-tenant-a-v21"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.218270Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"ani-modeldev-v21-namespace\" of ClusterRole \"ani-modeldev-v21-namespace\" to ServiceAccount \"modeldev-control/ani-system\""
+      }
+    },
+    {
+      "component": "ModelDev webhook",
+      "namespace": "",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:ani-modeldev-webhook",
+          "resourceAttributes": {
+            "group": "",
+            "version": "v1",
+            "resource": "namespaces",
+            "verb": "get",
+            "name": "ani-modeldev-tenant-a-v21"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.221989Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"ani-modeldev-webhook\" of ClusterRole \"ani-modeldev-webhook\" to ServiceAccount \"ani-modeldev-webhook/ani-system\""
+      }
+    },
+    {
+      "component": "KFP runs/create configured principal",
+      "namespace": "ani-modeldev-tenant-a-v21",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "ani-modeldev-tenant-a-v21",
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "runs",
+            "verb": "create"
+          }
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.222647Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by RoleBinding \"ani-modeldev-v21-kfp/ani-modeldev-tenant-a-v21\" of Role \"ani-modeldev-v21-kfp\" to ServiceAccount \"modeldev-control/ani-system\""
+      }
+    },
+    {
+      "component": "KFP API Server",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:ml-pipeline",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.223235Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "KFP API Server",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:ml-pipeline",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.225026Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.264767Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "update"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.265638Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.271555Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "list"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.272164Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.272457Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainingruntimes",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.273567Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "jobset.x-k8s.io",
+            "version": "*",
+            "resource": "jobsets",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.310837Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "JobSet",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "jobset.x-k8s.io",
+            "version": "*",
+            "resource": "jobsets",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.318833Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"jobset-manager-rolebinding\" of ClusterRole \"jobset-manager-role\" to ServiceAccount \"jobset-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "JobSet",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "batch",
+            "version": "*",
+            "resource": "jobs",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.319866Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"jobset-manager-rolebinding\" of ClusterRole \"jobset-manager-role\" to ServiceAccount \"jobset-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.320215Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.320596Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "delete"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.321528Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainingruntimes",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.359947Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.363567Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "",
+            "version": "v1",
+            "resource": "persistentvolumeclaims",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.368297Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "",
+            "version": "v1",
+            "resource": "persistentvolumeclaims",
+            "verb": "delete"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.369373Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "get",
+            "subresource": "log"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.369641Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "group": "",
+            "version": "v1",
+            "resource": "namespaces",
+            "verb": "get",
+            "name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.370340Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev webhook",
+      "namespace": "",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:ani-modeldev-webhook",
+          "resourceAttributes": {
+            "group": "",
+            "version": "v1",
+            "resource": "namespaces",
+            "verb": "get",
+            "name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.406275Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "KFP runs/create configured principal",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "runs",
+            "verb": "create"
+          }
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.414576Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "KFP API Server",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:ml-pipeline",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.415520Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "KFP API Server",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:ml-pipeline",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.416712Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.418101Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "update"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.418632Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.452869Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Argo",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow:argo",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "list"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.464726Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"argo-binding\" of ClusterRole \"argo-cluster-role\" to ServiceAccount \"argo/kubeflow\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.466049Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainingruntimes",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.466550Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "Trainer",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "jobset.x-k8s.io",
+            "version": "*",
+            "resource": "jobsets",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.467144Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"kubeflow-trainer-controller-manager\" of ClusterRole \"kubeflow-trainer-controller-manager\" to ServiceAccount \"kubeflow-trainer-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "JobSet",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "jobset.x-k8s.io",
+            "version": "*",
+            "resource": "jobsets",
+            "verb": "watch"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.467869Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"jobset-manager-rolebinding\" of ClusterRole \"jobset-manager-role\" to ServiceAccount \"jobset-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "JobSet",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "batch",
+            "version": "*",
+            "resource": "jobs",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:kubeflow-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.502646Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": true,
+        "reason": "RBAC: allowed by ClusterRoleBinding \"jobset-manager-rolebinding\" of ClusterRole \"jobset-manager-role\" to ServiceAccount \"jobset-controller-manager/kubeflow-system\""
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.514689Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.515757Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainjobs",
+            "verb": "delete"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.515872Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "trainer.kubeflow.org",
+            "version": "*",
+            "resource": "trainingruntimes",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.516583Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "argoproj.io",
+            "version": "*",
+            "resource": "workflows",
+            "verb": "get"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.516977Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "",
+            "version": "v1",
+            "resource": "persistentvolumeclaims",
+            "verb": "create"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.551013Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "",
+            "version": "v1",
+            "resource": "persistentvolumeclaims",
+            "verb": "delete"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.563491Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "",
+            "version": "v1",
+            "resource": "pods",
+            "verb": "get",
+            "subresource": "log"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.564002Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev control",
+      "namespace": "",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "group": "",
+            "version": "v1",
+            "resource": "namespaces",
+            "verb": "get",
+            "name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.565820Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "ModelDev webhook",
+      "namespace": "",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:ani-modeldev-webhook",
+          "resourceAttributes": {
+            "group": "",
+            "version": "v1",
+            "resource": "namespaces",
+            "verb": "get",
+            "name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2"
+          },
+          "groups": [
+            "system:serviceaccounts",
+            "system:serviceaccounts:ani-system",
+            "system:authenticated"
+          ]
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.566239Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    },
+    {
+      "component": "KFP runs/create configured principal",
+      "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "identity_validation": "CONFIGURED_SA_ONLY_NOT_TOKEN_VERIFIED",
+      "review_body": {
+        "apiVersion": "authorization.k8s.io/v1",
+        "kind": "SubjectAccessReview",
+        "spec": {
+          "user": "system:serviceaccount:ani-system:modeldev-control",
+          "resourceAttributes": {
+            "namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "group": "pipelines.kubeflow.org",
+            "version": "v1beta1",
+            "resource": "runs",
+            "verb": "create"
+          }
+        }
+      },
+      "observed_at_utc": "2026-10-31T15:01:01.566361Z",
+      "exit_code": 0,
+      "status": {
+        "allowed": false
+      }
+    }
+  ]
+}

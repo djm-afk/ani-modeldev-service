@@ -1,0 +1,17 @@
+127.0.0.1:5432 - accepting connections
+PostgreSQL image=docker.io/library/postgres@sha256:4ef4dbc939d61acea57712655ddb4b4ab27419c913f94cca0cd57cb3ea3c2280 container=abf6ec435a3d2815cbcd6bd5c9fa68c072714612198dee0e63bbed9172cd9aea
+=== RUN   TestNamespaceUIDWindowOldConflictWritesAndPreservedOperations
+    namespace_uid_window_integration_test.go:131: failed to encode args[2]: unable to encode 0x41c2 into text format for text (OID 25): cannot find encode plan
+--- FAIL: TestNamespaceUIDWindowOldConflictWritesAndPreservedOperations (0.72s)
+=== RUN   TestNamespaceUIDWindowWaitsForInflightTransactionAndRejectsRowDrift
+    namespace_uid_window_integration_test.go:234: failed to encode args[2]: unable to encode 0x4bd1 into text format for text (OID 25): cannot find encode plan
+--- FAIL: TestNamespaceUIDWindowWaitsForInflightTransactionAndRejectsRowDrift (0.65s)
+=== RUN   TestNamespaceUIDWindowFailureLeavesOriginalBarrier
+    namespace_uid_window_integration_test.go:292: failed to encode args[2]: unable to encode 0x55e0 into text format for text (OID 25): cannot find encode plan
+--- FAIL: TestNamespaceUIDWindowFailureLeavesOriginalBarrier (0.63s)
+=== RUN   TestTenantNamespaceBackfillIsExactAndNeverOverwritesUID
+--- PASS: TestTenantNamespaceBackfillIsExactAndNeverOverwritesUID (0.54s)
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-resource-service/internal/data/network	2.592s
+FAIL
+removed task container=abf6ec435a3d2815cbcd6bd5c9fa68c072714612198dee0e63bbed9172cd9aea

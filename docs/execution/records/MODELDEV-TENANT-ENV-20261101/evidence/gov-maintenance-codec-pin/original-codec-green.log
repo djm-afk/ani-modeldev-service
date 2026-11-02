@@ -1,0 +1,9 @@
+=== RUN   TestMaintenanceOriginalFiveAcceptanceCodec
+    modeldev_maintenance_original_codec_test.go:92: original acceptance 55: native decode and byte-identical snapshot PASS; changed-spec refusal PASS
+    modeldev_maintenance_original_codec_test.go:92: original acceptance 59: native decode and byte-identical snapshot PASS; changed-spec refusal PASS
+    modeldev_maintenance_original_codec_test.go:92: original acceptance 60: native decode and byte-identical snapshot PASS; changed-spec refusal PASS
+    modeldev_maintenance_original_codec_test.go:92: original acceptance 57: native decode and byte-identical snapshot PASS; changed-spec refusal PASS
+    modeldev_maintenance_original_codec_test.go:92: original acceptance 74: native decode and byte-identical snapshot PASS; changed-spec refusal PASS
+--- PASS: TestMaintenanceOriginalFiveAcceptanceCodec (0.03s)
+PASS
+ok  	go-wind-admin/app/admin/service/internal/data	0.088s

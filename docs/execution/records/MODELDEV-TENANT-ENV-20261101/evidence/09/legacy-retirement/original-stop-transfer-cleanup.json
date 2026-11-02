@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-11-01T02:08:12.035485+00:00",
+  "source_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "local_transfer_binary_removed": "/home/chabking/workspace/.worktrees/modeldev-legacy-retirement/.scratch/legacy-retirement/legacy-retirement-original-stop-linux-amd64",
+  "removed_bytes": 32694434,
+  "removed_sha256": "4e8d7f7177a7efb521fb27ac9b59b2fe752f8e9cd75d0295dfec0e50af2377a4",
+  "local_temporary_chunk_directories_absent": true,
+  "remote_temporary_cleanup_evidence": "original-stop-short-chunks-assembled.json",
+  "fedora_original_ordinary_source_binary": "retained",
+  "node_verified_final_binary": "retained for reviewed bounded apply; not executed in apply mode",
+  "http_daemon_cleanup_evidence": "evidence/08/image-publication/http-transport-closed-cleanup.json"
+}

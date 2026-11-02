@@ -1,0 +1,60 @@
+{
+  "observed_at": "2026-11-01T15:44:08.192466+00:00",
+  "read_only": true,
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T15:44:08.399848+00:00"
+  },
+  "execution_id": "a3b48752-fc64-4ad6-903d-bf57c2f248b4",
+  "modeldev": {
+    "closed_at": "2026-11-01T15:20:07.508585+00:00",
+    "spec_hash": "552d0570702915464728f97b62374378c470fa2460b87cb9dae1d4fce9672f3b",
+    "operation_id": "1888e3c4-d3dc-4b91-922a-baefe269b545",
+    "step_timings": [
+      {
+        "Binding": {
+          "Role": "prepare",
+          "RunID": "97ec94c9-f5a0-4a94-9acb-f653d2963053",
+          "PodUID": "3f4e3436-877b-4001-90a6-06469a80e6ef",
+          "TaskID": "cc8ed0de-e3a7-4957-8b99-4937b742931a",
+          "PodName": "ft-7cbkg-1060446028",
+          "SpecHash": "552d0570702915464728f97b62374378c470fa2460b87cb9dae1d4fce9672f3b",
+          "WorkflowUID": "81be78fc-ee60-4f89-a77e-55b9a1a227be"
+        },
+        "AdmittedAt": "2026-11-01T15:17:36.75797Z",
+        "DeadlineAt": "2026-11-01T16:16:20.469794Z"
+      }
+    ],
+    "close_generation": 1,
+    "finetuning_steps": [
+      {
+        "Result": {
+          "ExitCode": 0,
+          "StartedAt": "2026-11-01T15:18:59.340320134Z",
+          "FinishedAt": "2026-11-01T15:19:09.01740692Z",
+          "ObservedAt": "2026-11-01T15:19:09.336887Z",
+          "ManifestBytes": 2535,
+          "ManifestSHA256": "e54214ef547d34b818b5b370b19ebda28d1cf0118eafa9bc099aad3b41f5dc03",
+          "ManifestRelativePath": "reports/export/merged_manifest.json"
+        },
+        "Binding": {
+          "Role": "export",
+          "RunID": "97ec94c9-f5a0-4a94-9acb-f653d2963053",
+          "PodUID": "206253a2-22b7-4b29-8cdc-fc1df488c0aa",
+          "TaskID": "2a361458-9449-4c63-a43f-a8702c732b8e",
+          "PodName": "ft-7cbkg-3184889823",
+          "SpecHash": "552d0570702915464728f97b62374378c470fa2460b87cb9dae1d4fce9672f3b",
+          "WorkflowUID": "81be78fc-ee60-4f89-a77e-55b9a1a227be"
+        },
+        "AdmittedAt": "2026-11-01T15:18:59.323421Z",
+        "DeadlineAt": "2026-11-01T16:16:20.469794Z",
+        "ObservedCloseGeneration": 0
+      }
+    ]
+  }
+}

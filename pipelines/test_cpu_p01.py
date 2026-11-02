@@ -86,7 +86,7 @@ class PipelineAssembly(unittest.TestCase):
                               "-abcde-metadata-0-2-retry-system-container-impl-4294967295")
             self.assertLessEqual(len(generated_name.encode("ascii")), 63)
             inputs = ir["root"]["inputDefinitions"]["parameters"]
-            self.assertEqual(set(inputs), {"execution_id", "spec_hash"})
+            self.assertEqual(set(inputs), {"execution_id", "spec_hash", "environment_binding_id", "namespace_uid"})
             self.assertTrue(all(p["parameterType"] == "STRING" and "defaultValue" not in p for p in inputs.values()))
             root_tasks = ir["root"]["dag"]["tasks"]
             self.assertEqual(len(root_tasks), 2)

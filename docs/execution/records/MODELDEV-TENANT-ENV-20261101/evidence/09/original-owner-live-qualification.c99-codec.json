@@ -1,0 +1,74 @@
+[
+  {
+    "canonical_byte_equal": false,
+    "execution_id": "f2168fbf-d7c9-4e96-8cc6-784bb1546083",
+    "native_intent_decode": "PASS",
+    "native_snapshot_canonical": "PASS",
+    "native_snapshot_decode": "FAIL",
+    "native_snapshot_validate": "PASS",
+    "snapshot_sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+    "source": "MD",
+    "strict_shape_reason": "json: unknown field \"training_image\"",
+    "strict_snapshot_json_shape": "FAIL"
+  },
+  {
+    "canonical_byte_equal": false,
+    "execution_id": "27cf73a3-4107-4c07-86f7-862ce9fb413d",
+    "native_intent_decode": "PASS",
+    "native_snapshot_canonical": "PASS",
+    "native_snapshot_decode": "FAIL",
+    "native_snapshot_validate": "PASS",
+    "snapshot_sha256": "cb9831ca80e7df95cf1ca3746db4ff53b623b51671efcf34230275235e0c1690",
+    "source": "GOV",
+    "strict_shape_reason": "json: unknown field \"training_image\"",
+    "strict_snapshot_json_shape": "FAIL"
+  },
+  {
+    "canonical_byte_equal": false,
+    "execution_id": "91e351e7-102e-4807-b0d2-9236c1426da9",
+    "native_intent_decode": "PASS",
+    "native_snapshot_canonical": "PASS",
+    "native_snapshot_decode": "FAIL",
+    "native_snapshot_validate": "PASS",
+    "snapshot_sha256": "e75a332cef7521f278df8fc78df0b3f869d8499f96d188fd3b8a915fe02ec829",
+    "source": "GOV",
+    "strict_shape_reason": "json: unknown field \"training_image\"",
+    "strict_snapshot_json_shape": "FAIL"
+  },
+  {
+    "canonical_byte_equal": false,
+    "execution_id": "f148135c-640f-47ed-b9b1-4b039d4709d1",
+    "native_intent_decode": "PASS",
+    "native_snapshot_canonical": "PASS",
+    "native_snapshot_decode": "FAIL",
+    "native_snapshot_validate": "PASS",
+    "snapshot_sha256": "85fa8793e5ff44c8c611316129f344a36124e027f03cc71bf797d89fa1d40a45",
+    "source": "GOV",
+    "strict_shape_reason": "json: unknown field \"training_image\"",
+    "strict_snapshot_json_shape": "FAIL"
+  },
+  {
+    "canonical_byte_equal": false,
+    "execution_id": "c9b470e0-d9cb-4989-a7f2-d1fbfbe72ab9",
+    "native_intent_decode": "PASS",
+    "native_snapshot_canonical": "PASS",
+    "native_snapshot_decode": "FAIL",
+    "native_snapshot_validate": "PASS",
+    "snapshot_sha256": "9883ac49d909b2809e78002db7d47d564caa88f84bd29ba14d6248a34e8bb096",
+    "source": "GOV",
+    "strict_shape_reason": "json: unknown field \"training_image\"",
+    "strict_snapshot_json_shape": "FAIL"
+  },
+  {
+    "canonical_byte_equal": false,
+    "execution_id": "f2168fbf-d7c9-4e96-8cc6-784bb1546083",
+    "native_intent_decode": "PASS",
+    "native_snapshot_canonical": "PASS",
+    "native_snapshot_decode": "FAIL",
+    "native_snapshot_validate": "PASS",
+    "snapshot_sha256": "60df838e3e66d376e7c8c8de51c9ef630aa6aaa6b627823c9867f1da2fdca232",
+    "source": "GOV",
+    "strict_shape_reason": "json: unknown field \"training_image\"",
+    "strict_snapshot_json_shape": "FAIL"
+  }
+]

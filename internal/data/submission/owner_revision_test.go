@@ -14,7 +14,7 @@ import (
 
 func TestOwnerRevisionTracksCommittedFactsAndNotReplayedDeliveries(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	plan, err := request.Freeze()
 	if err != nil {
 		t.Fatalf("CPU04_REVISION_PREFLIGHT: invalid frozen request; behavior NOT_RUN: %v", err)

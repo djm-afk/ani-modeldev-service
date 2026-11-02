@@ -1,0 +1,135 @@
+{
+  "observed_at": "2026-11-01T02:13:52.074327+00:00",
+  "read_only": true,
+  "journal_query_exit_code": 0,
+  "new_token_requests": 0,
+  "extra_rpc_replays": 0,
+  "journals": {
+    "observed_at": "2026-11-01T02:13:52.06366+00:00",
+    "database_name": "ani_modeldev_v21",
+    "transaction_read_only": "on",
+    "rows": [
+      {
+        "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "closed_at": "2026-11-01T02:11:55.723087+00:00",
+        "close_generation": 2,
+        "owner_revision": 22,
+        "close_review_reason": "",
+        "step_completed_at": "2026-11-01T02:11:57.081237Z",
+        "compute_phase": null,
+        "compute_attempts": null,
+        "logs_ready": null,
+        "captured_log_count": 0,
+        "training_exit_kind": "ORIGINAL_SUSPENDED_EXIT_143",
+        "original_stop_fence": {
+          "Reason": "STEP_FAILED",
+          "Source": "ORIGINAL_PERSISTED_RUNTIME_CLOSE",
+          "Generation": 1,
+          "RequestedAt": "2026-10-30T00:57:45.356467Z"
+        },
+        "original_gpu_journal_present": false,
+        "gpu_release_sealed_at": null,
+        "gpu_release_scope_sha256": null
+      },
+      {
+        "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "closed_at": "2026-11-01T02:12:04.676492+00:00",
+        "close_generation": 2,
+        "owner_revision": 22,
+        "close_review_reason": "",
+        "step_completed_at": "2026-11-01T02:12:06.657747Z",
+        "compute_phase": null,
+        "compute_attempts": null,
+        "logs_ready": null,
+        "captured_log_count": 0,
+        "training_exit_kind": "ORIGINAL_SUSPENDED_EXIT_143",
+        "original_stop_fence": {
+          "Reason": "STEP_FAILED",
+          "Source": "ORIGINAL_PERSISTED_RUNTIME_CLOSE",
+          "Generation": 1,
+          "RequestedAt": "2026-10-29T16:00:01.066939Z"
+        },
+        "original_gpu_journal_present": false,
+        "gpu_release_sealed_at": null,
+        "gpu_release_scope_sha256": null
+      },
+      {
+        "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+        "closed_at": "2026-11-01T02:12:14.238116+00:00",
+        "close_generation": 1,
+        "owner_revision": 12,
+        "close_review_reason": "",
+        "step_completed_at": "2026-11-01T02:12:15.094407Z",
+        "compute_phase": null,
+        "compute_attempts": null,
+        "logs_ready": null,
+        "captured_log_count": 0,
+        "training_exit_kind": "",
+        "original_stop_fence": {
+          "Reason": "DEADLINE",
+          "Source": "ORIGINAL_PERSISTED_RUNTIME_CLOSE",
+          "Generation": 1,
+          "RequestedAt": "2026-10-30T12:21:14.37758Z"
+        },
+        "original_gpu_journal_present": false,
+        "gpu_release_sealed_at": null,
+        "gpu_release_scope_sha256": null
+      }
+    ]
+  },
+  "original_governance_endpoint": {
+    "endpoint": "ani-governance-quota.ani-system.svc:9002",
+    "server_name": "ani-governance",
+    "timeout_ns": 30000000000,
+    "ca_ref": "original control-mounted file",
+    "client_cert_ref": "original control-mounted file",
+    "client_key_ref": "original control-mounted file"
+  },
+  "available_existing_tools": {
+    "grpcurl": false,
+    "python_grpc": false
+  },
+  "exact_original_endpoint_dns": [
+    {
+      "query_type": 1,
+      "rcode": 3,
+      "answers": 0,
+      "response_bytes": 128,
+      "response_sha256": "6c426601475fe9d0ade455a692162b867a2e719fdbb37a7cbcc309de58b80db3"
+    },
+    {
+      "query_type": 28,
+      "rcode": 3,
+      "answers": 0,
+      "response_bytes": 128,
+      "response_sha256": "e30edeed298e5fd3104e08dc1557785e45e3d7d32c87e6bd7f1fb325a3e142bb"
+    }
+  ],
+  "node_resolver_error_type": "gaierror",
+  "original_governance_service": {
+    "name": "ani-governance-quota",
+    "namespace": "ani-system",
+    "uid": "ae286c3d-4744-4bff-a8e9-6629e2b9a20a",
+    "cluster_ip": "10.96.255.113",
+    "ports": [
+      {
+        "name": "quota",
+        "port": 9002,
+        "protocol": "TCP",
+        "target_port": "quota"
+      }
+    ]
+  },
+  "same_original_mtls_via_verified_service_ip": {
+    "status": "PASS",
+    "tls": "TLSv1.3",
+    "alpn": "h2",
+    "server_sans": [
+      [
+        "DNS",
+        "ani-governance"
+      ]
+    ],
+    "peer_cert_sha256": "c4667e9b21c9a45b67ba069eebb9ea30e4d0dc015c452cb3241b838ac88706b5"
+  }
+}

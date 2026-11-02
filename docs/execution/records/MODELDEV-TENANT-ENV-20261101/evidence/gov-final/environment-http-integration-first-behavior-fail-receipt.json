@@ -1,0 +1,11 @@
+{
+  "started_at": "2026-10-31T20:39:56.238179+00:00",
+  "completed_at": "2026-10-31T20:41:12.756248+00:00",
+  "command": [
+    "bash",
+    "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/run-environment-http.sh"
+  ],
+  "exit_code": 1,
+  "source_base": "fa80f886d022177173d7e9cf81ec51e54c2df4c8",
+  "scope": "new environment HTTP test only; separate exclusive runtime/fixture PostgreSQL roles and loopback Redis; external owner transport boundary fixture"
+}

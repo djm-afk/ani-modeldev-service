@@ -1,0 +1,116 @@
+{
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T11:14:25.640011+00:00"
+  },
+  "observed_at": "2026-11-01T11:14:25.640031+00:00",
+  "metadata_writes": 0,
+  "source_objects_modified": false,
+  "deleted": [
+    {
+      "kind": "Job",
+      "name": "modeldev-training-image-register-67b86699",
+      "namespace": "ani-system",
+      "uid": "ed57a56b-70fe-4498-8016-7b6c514ecbb5",
+      "exit": 0
+    },
+    {
+      "kind": "ConfigMap",
+      "name": "modeldev-training-image-register-67b86699-operator",
+      "namespace": "ani-system",
+      "uid": "e701fc26-a6e9-4de1-abe7-c5d4367dce04",
+      "exit": 0
+    }
+  ],
+  "old_registrations_unchanged": {
+    "img_78a1eade7d5148629a1c55b9d69f16cc": true,
+    "img_9df817cd40f442148926525af042d7e1": true
+  },
+  "images": {
+    "cpu": {
+      "image_id": "img_3af6f494c02c493dbbdff11099290d72",
+      "version": 1,
+      "digest": "sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+      "owner_scope": "platform",
+      "repository": "ani-modeldev-training-cpu",
+      "source_reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:ec20caf624f6e48ce43aeb680fe3649047e2fbb9d19ec6c1428eab734de78c51",
+      "purposes": [
+        "finetuning",
+        "training"
+      ],
+      "accelerator": "none",
+      "platforms": [
+        {
+          "OS": "linux",
+          "Variant": "",
+          "Architecture": "amd64"
+        }
+      ],
+      "row_sha256": "b2ac06a372a730e4b8749a5e24eb510362e503133e934439b383e76dc494b680"
+    },
+    "gpu": {
+      "image_id": "img_4e77202d4e3c49daac15d995366f2e8b",
+      "version": 1,
+      "digest": "sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+      "owner_scope": "platform",
+      "repository": "ani-modeldev-training-gpu",
+      "source_reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:245a32006dddc3ee67b5abe85065e2ed1856b1e98f5b5422fe1696499e8ac441",
+      "purposes": [
+        "finetuning",
+        "training"
+      ],
+      "accelerator": "nvidia",
+      "platforms": [
+        {
+          "OS": "linux",
+          "Variant": "",
+          "Architecture": "amd64"
+        }
+      ],
+      "row_sha256": "97a4c3db6be2a292d0a376962997f49031724dc9a5eb24c9b282af616e3af042"
+    }
+  },
+  "predelete_identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T11:14:26.564714+00:00"
+  },
+  "temporary_objects": [
+    {
+      "kind": "ConfigMap",
+      "name": "modeldev-training-image-register-67b86699-operator",
+      "absent": true
+    },
+    {
+      "kind": "Job",
+      "name": "modeldev-training-image-register-67b86699",
+      "absent": true
+    }
+  ],
+  "temporary_pods": [
+    {
+      "name": "modeldev-training-image-register-67b86699-0-l6z4w",
+      "uid": "6924340c-9de6-45f2-b761-4b1dbc4987bb",
+      "absent": true
+    },
+    {
+      "name": "modeldev-training-image-register-67b86699-1-wcdsj",
+      "uid": "ecea3b55-bc6d-4838-ac6b-87b1933b0171",
+      "absent": true
+    }
+  ],
+  "private_capabilities_and_source_copies": "only in terminated Job emptyDirs; no copies written to node filesystem",
+  "status": "TWO_NEW_REGISTRATIONS_READBACK_AND_TEMPORARY_OBJECTS_GONE",
+  "finished_at": "2026-11-01T11:14:26.942876+00:00",
+  "transport_exit": 0,
+  "transport_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

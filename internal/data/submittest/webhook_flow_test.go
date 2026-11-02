@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -19,7 +20,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/modeldevwebhook"
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
@@ -48,6 +49,25 @@ func (reader flowIdentityReader) Namespace(ctx context.Context, name string) (*c
 	err = runtime.DefaultUnstructuredConverter.FromUnstructured(object.Object, &namespace)
 	return &namespace, err
 }
+func (reader flowIdentityReader) Environment(ctx context.Context, namespace string) (*corev1.ConfigMap, error) {
+	object, err := reader.client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "configmaps"}).Namespace(namespace).Get(ctx, "modeldev-execution-environment", metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	var result corev1.ConfigMap
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(object.Object, &result)
+	return &result, err
+}
+func (reader flowIdentityReader) ServiceAccount(ctx context.Context, namespace, name string) (*corev1.ServiceAccount, error) {
+	object, err := reader.client.Resource(schema.GroupVersionResource{Version: "v1", Resource: "serviceaccounts"}).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	var result corev1.ServiceAccount
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(object.Object, &result)
+	return &result, err
+}
+
 func (reader flowIdentityReader) Workflow(ctx context.Context, namespace, name string) (*unstructured.Unstructured, error) {
 	return reader.client.Resource(schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
 }
@@ -55,28 +75,39 @@ func (reader flowIdentityReader) Workflow(ctx context.Context, namespace, name s
 func (f *completeFixture) admitModelDevSteps(t *testing.T) {
 	t.Helper()
 	ns := f.workspace.NamespaceName
-	f.objects["/api/v1/namespaces/"+ns]["metadata"].(map[string]any)["labels"] = map[string]any{"ani.io/managed-by": "modeldev-flow-fixture", modeldevwebhook.NamespaceTenantLabel: f.request.Admission.TenantID}
+	// Namespace, ServiceAccounts and immutable projection came from real Ensure.
 	f.objects["/apis/argoproj.io/v1alpha1/namespaces/"+ns+"/workflows/main-flow"]["metadata"].(map[string]any)["labels"] = map[string]any{"pipeline/runid": completeRunID}
 	snapshot := f.request.Admission.Snapshot
-	material := conformance.MaterialV21()
-	material.Implementation, material.Workspace, material.OutputContract = snapshot.Implementation, snapshot.Workspace, snapshot.OutputContract
-	material.Program.ImageID, material.Program.ImageVersion, material.Program.ImageScope = snapshot.Program.ImageID, snapshot.Program.ImageVersion, snapshot.Program.ImageScope
-	material.Program.ImageDigest, material.Program.Command = f.image, snapshot.Program.Command
-	raw, err := material.Canonical()
-	if err != nil {
-		t.Fatal(err)
+	if f.environment == nil {
+		t.Fatal("webhook mainflow requires real Ensure before Pod admission")
 	}
-	materialFile := filepath.Join(t.TempDir(), "material.json")
-	if err := os.WriteFile(materialFile, raw, 0600); err != nil {
+	material, err := catalogue.ReadImplementationMaterial(context.Background(), f.environment.MaterialsDirectory, "builtin.mlp", "cpu")
+	if err != nil {
 		t.Fatal(err)
 	}
 	componentImage := "registry.example.test/modeldev-step@sha256:" + strings.Repeat("a", 64)
 	supportImage := "registry.example.test/argoexec@sha256:" + strings.Repeat("b", 64)
 	driverImage := "registry.example.test/kfp-driver@sha256:" + strings.Repeat("c", 64)
-	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion,
-		Bindings: []modeldevwebhook.NamespaceBinding{{Namespace: ns, NamespaceUID: f.workspace.NamespaceUID, OwnerLabel: modeldevwebhook.LabelBinding{Key: "ani.io/managed-by", Value: "modeldev-flow-fixture"}, ArgoCreator: "system:serviceaccount:kubeflow:argo", StepServiceAccount: snapshot.Environment.Identities.KFPStepServiceAccount, Profiles: []string{"cpu-v1"}, Driver: &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}}},
-		Profiles: []modeldevwebhook.Profile{{ID: "cpu-v1", Kind: "GENERAL_TRAINING", MaterialFile: materialFile, MaterialSHA256: completeHash(raw), ComponentImage: componentImage, AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001}}}
-	client, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", Timeout: 5 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
+	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, ClusterID: snapshot.Environment.ClusterID, MaterialBundleDigest: f.environment.Config.MaterialBundleDigest, MaterialBundleFile: filepath.Join(f.environment.MaterialsDirectory, "manifest.json"), ArgoCreator: "system:serviceaccount:kubeflow:argo", Training: &modeldevwebhook.TrainingBinding{ServiceAccount: "trainer-workload", Creator: "system:serviceaccount:kube-system:job-controller"}, Driver: &modeldevwebhook.DriverBinding{Image: driverImage, Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}, ControllerPrincipals: f.environment.Config.ControllerPrincipals}
+	for _, profile := range f.environment.Config.Profiles {
+		implementation, device, kind := "builtin.mlp", "cpu", "GENERAL_TRAINING"
+		if strings.Contains(profile.ID, "sft-lora") {
+			implementation, kind = "builtin.sft_lora", "FINETUNING"
+		}
+		if strings.HasSuffix(profile.ID, "-gpu") {
+			device = "gpu"
+		}
+		image := componentImage
+		if kind == "FINETUNING" {
+			fine, err := catalogue.ReadImplementationMaterial(context.Background(), f.environment.MaterialsDirectory, implementation, device)
+			if err != nil {
+				t.Fatal(err)
+			}
+			image = fine.Finetuning.ExportProgram.ImageDigest
+		}
+		config.Profiles = append(config.Profiles, modeldevwebhook.Profile{ID: profile.ID, Kind: kind, MaterialFile: filepath.Join(f.environment.MaterialsDirectory, implementation+"."+device+".json"), MaterialSHA256: profile.MaterialSHA256, ComponentImage: image, AllowedSupportImages: []string{supportImage}, RunAsUser: 10001, RunAsGroup: 10001, FSGroup: 10001})
+	}
+	client, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", RateLimiter: f.kubeRateLimiter, Timeout: 5 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,15 +119,26 @@ func (f *completeFixture) admitModelDevSteps(t *testing.T) {
 	defer endpoint.Close()
 	f.objects["/api/v1/namespaces/"+ns+"/pods/main-driver"] = map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"name": "main-driver", "namespace": ns, "uid": completeStepUID("driver"), "resourceVersion": "1", "ownerReferences": []any{map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": "main-flow", "uid": completeWorkflowUID, "controller": true}}}, "spec": map[string]any{"serviceAccountName": snapshot.Environment.Identities.KFPStepServiceAccount, "containers": []any{map[string]any{"name": "main", "image": driverImage, "command": []string{"driver"}, "args": []string{"--type", "ROOT_DAG", "--run_id", completeRunID}}}}, "status": map[string]any{"phase": "Running"}}
 	f.objects["/api/v1/namespaces/"+ns+"/pods/main-driver"]["metadata"].(map[string]any)["annotations"] = map[string]any{"workflows.argoproj.io/node-id": "main-driver", "workflows.argoproj.io/node-name": "main-flow.driver"}
-	for _, role := range []string{"prepare", "train-wait", "collect", "publish", "close", "driver"} {
+	// Preserve the external CreatePVC request graph independently of Prepare.
+	// Failed input cannot manufacture a durable prepared Workspace authority.
+	created := time.Now().UTC().Add(-time.Second).Truncate(time.Second)
+	request := map[string]any{"taskInfo": map[string]any{"name": "createpvc"}, "componentRef": map[string]any{"name": "comp-createpvc"}, "dependentTasks": []string{"workspace-name"}, "inputs": map[string]any{"parameters": map[string]any{"pvc_name": map[string]any{"taskOutputParameter": map[string]any{"outputParameterKey": "name", "producerTask": "workspace-name"}}, "size": map[string]any{"runtimeValue": map[string]any{"constant": fmt.Sprint(snapshot.Workspace.CapacityBytes)}}, "storage_class_name": map[string]any{"runtimeValue": map[string]any{"constant": snapshot.Workspace.StorageClass}}, "access_modes": map[string]any{"runtimeValue": map[string]any{"constant": []string{"ReadWriteMany"}}}}}}
+	taskJSON, _ := json.Marshal(request)
+	componentJSON := `{"executorLabel":"exec-createpvc"}`
+	f.createPVCNode = map[string]any{"id": "main-createpvc", "name": "main-flow.createpvc", "displayName": "createpvc", "type": "Pod", "phase": "Succeeded", "templateName": "system-container-driver", "startedAt": created.Add(-time.Second).Format(time.RFC3339Nano), "finishedAt": created.Add(time.Second).Format(time.RFC3339Nano), "inputs": map[string]any{"parameters": []any{map[string]any{"name": "task", "value": string(taskJSON)}, map[string]any{"name": "component", "value": componentJSON}}}}
+	pvc := f.objects["/api/v1/namespaces/"+ns+"/persistentvolumeclaims/"+f.workspace.PVCName]
+	pvc["metadata"].(map[string]any)["creationTimestamp"] = created.Format(time.RFC3339Nano)
+	pvc["spec"].(map[string]any)["accessModes"] = []string{"ReadWriteMany"}
+	f.objects["/api/v1/namespaces/"+ns+"/pods/main-createpvc"] = map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"name": "main-createpvc", "namespace": ns, "uid": completeStepUID("createpvc"), "resourceVersion": "1", "annotations": map[string]any{"workflows.argoproj.io/node-id": "main-createpvc", "workflows.argoproj.io/node-name": "main-flow.createpvc"}, "ownerReferences": []any{map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "name": "main-flow", "uid": completeWorkflowUID, "controller": true}}}, "spec": map[string]any{"serviceAccountName": snapshot.Environment.Identities.KFPStepServiceAccount, "containers": []any{map[string]any{"name": "main", "image": driverImage, "command": []string{"driver"}, "args": []string{"--type", "CONTAINER", "--run_id", completeRunID, "--task", string(taskJSON), "--component", componentJSON}}}}, "status": map[string]any{"phase": "Running"}}
+	for _, role := range []string{"prepare", "train-wait", "collect", "publish", "close", "driver", "createpvc"} {
 		path := "/api/v1/namespaces/" + ns + "/pods/main-" + role
 		pod := f.objects[path]
 		meta, spec := pod["metadata"].(map[string]any), pod["spec"].(map[string]any)
-		meta["labels"] = map[string]any{"pipelines.kubeflow.org/v2_component": "true", "pipeline/runid": completeRunID, "workflows.argoproj.io/workflow": "main-flow", modeldevwebhook.ProfileLabel: "cpu-v1", modeldevwebhook.RoleLabel: role}
+		meta["labels"] = map[string]any{"pipelines.kubeflow.org/v2_component": "true", "pipeline/runid": completeRunID, "workflows.argoproj.io/workflow": "main-flow", modeldevwebhook.ProfileLabel: "modeldev-mlp-cpu", modeldevwebhook.RoleLabel: role}
 		containers := spec["containers"].([]any)
 		main := containers[0].(map[string]any)
 		main["image"] = componentImage
-		if role == "driver" {
+		if role == "driver" || role == "createpvc" {
 			main["image"] = driverImage
 			delete(meta["labels"].(map[string]any), modeldevwebhook.ProfileLabel)
 			delete(meta["labels"].(map[string]any), modeldevwebhook.RoleLabel)
@@ -120,6 +162,9 @@ func (f *completeFixture) admitModelDevSteps(t *testing.T) {
 				volumes = append(volumes, map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": f.workspace.PVCName}})
 				mounts = append(mounts, map[string]any{"name": "workspace", "mountPath": "/workspace", "readOnly": role != "prepare"})
 			}
+			if role == "prepare" {
+				mounts = append(mounts, map[string]any{"name": "workspace", "mountPath": "/workspace/work/prepare/tmp", "subPath": "work/prepare/tmp"})
+			}
 			if role == "collect" || role == "publish" {
 				mounts = append(mounts,
 					map[string]any{"name": "workspace", "mountPath": "/workspace/publication", "subPath": material.Workspace.PublicationSubpath},
@@ -137,6 +182,11 @@ func (f *completeFixture) admitModelDevSteps(t *testing.T) {
 			spec["volumes"], main["volumeMounts"] = volumes, mounts
 		}
 		spec["containers"] = append(containers, map[string]any{"name": "wait", "image": supportImage})
+		refs := []any{}
+		for _, binding := range snapshot.ManagedImageAccess.PullBindings {
+			refs = append(refs, map[string]any{"name": binding.SecretName})
+		}
+		spec["imagePullSecrets"] = refs
 		podRaw, _ := json.Marshal(pod)
 		review := admissionv1.AdmissionReview{TypeMeta: metav1.TypeMeta{APIVersion: "admission.k8s.io/v1", Kind: "AdmissionReview"}, Request: &admissionv1.AdmissionRequest{UID: types.UID(uuid.NewString()), Kind: metav1.GroupVersionKind{Version: "v1", Kind: "Pod"}, Resource: metav1.GroupVersionResource{Version: "v1", Resource: "pods"}, Namespace: ns, Operation: admissionv1.Create, UserInfo: authenticationv1.UserInfo{Username: "system:serviceaccount:kubeflow:argo"}, Object: runtime.RawExtension{Raw: podRaw}}}
 		body, _ := json.Marshal(review)
@@ -163,6 +213,7 @@ func (f *completeFixture) admitModelDevSteps(t *testing.T) {
 		}
 		f.objects[path] = pod
 	}
+	f.finishStep("createpvc")
 	t.Log("WEBHOOK_FLOW: production HTTPS AdmissionReview mutated all CPU steps; actual patch applied at Kubernetes boundary")
 }
 
@@ -282,10 +333,10 @@ func (f *completeFixture) assertStepExitCleanup(t *testing.T, ctx context.Contex
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if f.stepDeletes != 6 {
-		t.Fatalf("expected exact original 6 component/driver Pods cleaned, got %d", f.stepDeletes)
+	if f.stepDeletes != 7 {
+		t.Fatalf("expected exact original 7 component/driver Pods cleaned, got %d", f.stepDeletes)
 	}
-	for _, role := range []string{"prepare", "train-wait", "collect", "publish", "close", "driver"} {
+	for _, role := range []string{"prepare", "train-wait", "collect", "publish", "close", "driver", "createpvc"} {
 		if f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/pods/main-"+role] != nil {
 			t.Fatal("retained step Pod leaked", role)
 		}
@@ -312,5 +363,5 @@ func (f *completeFixture) assertStepExitCleanup(t *testing.T, ctx context.Contex
 	if f.objects["/api/v1/namespaces/"+f.workspace.NamespaceName+"/persistentvolumeclaims/"+f.workspace.PVCName] == nil {
 		t.Fatal("cleanup deleted the retained work volume")
 	}
-	t.Log("WEBHOOK_FLOW: real PostgreSQL CLOSED/exit cleanup survived reconnect; 6 original steps and all original compute targets removed only after durable logs; PVC and publication retained")
+	t.Log("WEBHOOK_FLOW: real PostgreSQL CLOSED/exit cleanup survived reconnect; 7 original component/driver Pods and all original compute targets removed only after durable logs; PVC and publication retained")
 }

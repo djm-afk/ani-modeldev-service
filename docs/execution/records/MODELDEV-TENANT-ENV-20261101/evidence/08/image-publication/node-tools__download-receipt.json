@@ -1,0 +1,27 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "official_url": "https://github.com/moby/buildkit/releases/download/v0.25.1/buildkit-v0.25.1.linux-amd64.tar.gz",
+  "official_sha256": "85aa27c480fc9159705d21a3e66abe305f8dc708b8aeecd1e87bbc5c3de98642",
+  "status": "TOOLS_VERIFIED",
+  "download_bytes": 85705330,
+  "elapsed_seconds": 3.0211211640853435,
+  "files": [
+    {
+      "name": "buildkitd",
+      "size": 65278558,
+      "sha256": "2419e6e46c363c5553424edd1155e7706b973b743de42eebaf8749b09342d78c"
+    },
+    {
+      "name": "buildctl",
+      "size": 32910671,
+      "sha256": "a026a3f74160367325bbccc948603699e4bc5e05c7f956a3ec49c730f753acc2"
+    }
+  ]
+}

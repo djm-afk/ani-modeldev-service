@@ -1,0 +1,101 @@
+{
+  "schema": "ani.modeldev.final-runtime-two-fixed-kfp-denials.v1",
+  "started_at": "2026-11-01T12:10:04.393977+00:00",
+  "maintenance_exec_calls": 8,
+  "token_values_or_digests_output": false,
+  "token_persisted": false,
+  "new_token_request_or_identity": false,
+  "kfp_writes": false,
+  "native_sar_issued_by_sampler": false,
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "runtime": {
+    "deployment_uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+    "pod_name": "ani-modeldev-5465b547f8-25k28",
+    "pod_uid": "afabe642-86f9-4c8d-a7d3-25669a17b4a5",
+    "node": "node3",
+    "replicaset_uid": "383df857-dd8e-4a21-a7d2-dfe50b859dce",
+    "container_id": "containerd://3f07aa126312ac05c586c2abb7542297e19224752144c4cecca45fe4c1776382",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:22cf5825120c58c43d6192ffc6ed38365449f3212dee0bffc466b4b1d76ae925",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:22cf5825120c58c43d6192ffc6ed38365449f3212dee0bffc466b4b1d76ae925",
+    "started_at": "2026-11-01T11:56:57Z",
+    "restart_count": 0
+  },
+  "kfp_sample": {
+    "claims": {
+      "iat": 1793534757,
+      "exp": 1793535357,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "pipelines.kubeflow.org"
+      ],
+      "jti_present": true,
+      "pod_uid": "afabe642-86f9-4c8d-a7d3-25669a17b4a5",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 7,
+      "size_bytes": 1148,
+      "mtime_epoch": 1793534757,
+      "resolved_generation": "..2026_11_01_12_05_57.2953322278",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "api_sample": {
+    "claims": {
+      "iat": 1793534216,
+      "exp": 1793537816,
+      "sub": "system:serviceaccount:ani-system:modeldev-control",
+      "aud": [
+        "https://kubernetes.default.svc.cluster.local"
+      ],
+      "jti_present": true,
+      "pod_uid": "afabe642-86f9-4c8d-a7d3-25669a17b4a5",
+      "service_account_uid": "7100a777-b770-4f77-9509-631c8b39f1ec",
+      "lifetime_seconds": 3600,
+      "currently_unexpired": true
+    },
+    "file": {
+      "inode": 3,
+      "size_bytes": 1177,
+      "mtime_epoch": 1793534216,
+      "resolved_generation": "..2026_11_01_11_56_56.2890286767",
+      "same_metadata_before_after_memory_read": true
+    },
+    "signature_verified_by_sampler": false
+  },
+  "calls": [
+    {
+      "label": "outside-named-GET-authority-platform-list",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines?namespace=ani-system&page_size=1",
+      "expected_status": 403,
+      "actual_status": 403,
+      "expected_denial_observed": true,
+      "response_bytes": 947,
+      "response_sha256": "939e1b3b2addddd28f36642d18f98367408d40ee98a7876b81a5bf1f705aa439"
+    },
+    {
+      "label": "wrong-audience-original-platform-parent",
+      "method": "GET",
+      "path": "/apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+      "expected_status": 401,
+      "actual_status": 401,
+      "expected_denial_observed": true,
+      "response_bytes": 987,
+      "response_sha256": "11273d1dc3fcc7eec3278f01877610454b71f8820957187f10b21d6c5a9dc97c"
+    }
+  ],
+  "same_process_after_calls": true,
+  "status": "TWO_ACTUAL_FIXED_NATIVE_AUTH_DENIALS",
+  "finished_at": "2026-11-01T12:10:06.691986+00:00"
+}

@@ -1,5 +1,9 @@
 # CPU-P01 执行快照规范 v1
 
+历史 CPU-P01 v1 设计记录；当前执行快照为 `ani.modeldev.execution-spec.v4`，
+动态环境与有效部署入口见[当前合同](../modeldev-tenant-environments.md)。
+下文旧 Release/facts/快照形状不作为当前配置或兼容入口。
+
 本文件细化 [最小领域合同](cpu-p01-domain-model.md) 的 `execution_spec_hash`。
 源合同是 CPU01、CPU04 及 v0.4 development D03、D05、D08、D13；字段与
 `api/ani/modeldev/v1/modeldev.proto` 的 ExecutionSnapshot 对齐。

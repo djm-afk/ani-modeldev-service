@@ -1,0 +1,238 @@
+{
+  "schema": "ani.modeldev.final-retired-entry-source-search.v1",
+  "observed_at": "2026-11-01T17:05:37.028627+00:00",
+  "read_only": true,
+  "modeldev_commit": "f170631e382e8056882cae81bebd8a44f5c4489f",
+  "resource_commit": "67dceef03f01215c294a55f11464e3e3a52cb783",
+  "search_patterns": {
+    "retired_binding_fields": "\\b(binding_file|binding_sha256|facts_files)\\b",
+    "static_sts_bindings": "\\bsts_bindings\\b|\\bSTSBindings\\b",
+    "old_execution_parser": "ani\\.modeldev\\.execution-spec\\.v3",
+    "old_global_prefix": "\\bapproved_prefix\\b"
+  },
+  "retained_reserved_name_or_rejection_matches": {
+    "retired_binding_fields": [
+      {
+        "file": "deploy/modeldev-environment/platform_config.py",
+        "line": 20,
+        "text": "if set(value) & {\"tenant_id\", \"namespace_name\", \"namespace_uid\", \"bindings\", \"facts_files\", \"access_key\", \"secret_key\", \"password\", \"token\", \"dsn\", \"kubeconfig\"}:"
+      },
+      {
+        "file": "internal/conf/v1/conf.proto",
+        "line": 31,
+        "text": "reserved \"binding_file\", \"binding_sha256\";"
+      },
+      {
+        "file": "internal/conf/v1/conf.proto",
+        "line": 155,
+        "text": "reserved \"facts_files\";"
+      }
+    ],
+    "static_sts_bindings": [
+      {
+        "file": "configs/examples/managed-runtime.yaml",
+        "line": 47,
+        "text": "# No tenant map, sts_bindings or session_token. Scope comes from the pinned"
+      }
+    ],
+    "old_execution_parser": [],
+    "old_global_prefix": [
+      {
+        "file": "contract/cpup01/snapshot.go",
+        "line": 132,
+        "text": "ApprovedPrefix      string `json:\"approved_prefix\"`"
+      },
+      {
+        "file": "internal/conf/v1/conf.proto",
+        "line": 148,
+        "text": "reserved \"approved_prefix\";"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 35,
+        "text": "SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 80,
+        "text": "SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 127,
+        "text": "storage_connection_id, bucket, approved_prefix, credential_reference, object_key,"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 136,
+        "text": "RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 206,
+        "text": "SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 277,
+        "text": "SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 331,
+        "text": "RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 402,
+        "text": "RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format"
+      }
+    ]
+  },
+  "unexpected_runtime_matches": {
+    "retired_binding_fields": [],
+    "static_sts_bindings": [],
+    "old_execution_parser": [],
+    "old_global_prefix": []
+  },
+  "source_receipts": [
+    {
+      "repository": "modeldev-dynamic-tenant-environment",
+      "path": "cmd/ani-modeldev-service/config_scan.go",
+      "sha256": "49a566336ecb26ecf877c6200455f1ee2628d6aebbd6e630b9a1c4bed82d4102"
+    },
+    {
+      "repository": "modeldev-dynamic-tenant-environment",
+      "path": "cmd/ani-modeldev-service/model_connection.go",
+      "sha256": "d014016b6e84131e19de56df70ad3e2264a7d398956563e165915f5263758a84"
+    },
+    {
+      "repository": "modeldev-dynamic-tenant-environment",
+      "path": "internal/data/admissionfacts/reader.go",
+      "sha256": "dae4264d69131a6a2dc6d5a09b0b5d8611ff1deb3f2a7a26a672886cd7c04b43"
+    },
+    {
+      "repository": "modeldev-dynamic-tenant-environment",
+      "path": "internal/data/storagecredentials/issuer.go",
+      "sha256": "0325ba66137fbe21321eed58bfad20754d791155f38e74693b93f23064e65aea"
+    },
+    {
+      "repository": "modeldev-dynamic-tenant-environment",
+      "path": "internal/server/modeldevwebhook/config.go",
+      "sha256": "ccf6b473623aeed9250bc416dd8d8e7b91c0ddbf41ac3bd480c9bf53384a6580"
+    },
+    {
+      "repository": "modeldev-dynamic-tenant-environment",
+      "path": "internal/server/modeldevwebhook/environment.go",
+      "sha256": "e04bdc734f47963c20713781601f282b0ddb4da2b7e14b0b859f7509ff2d5a57"
+    },
+    {
+      "repository": "modeldev-dynamic-tenant-environment",
+      "path": "contract/cpup01/snapshot.go",
+      "sha256": "fe1bbf66251b2557c1a47e32f6e68a57b16e8c40afeeee1df44dcfd1d6cc4461"
+    },
+    {
+      "repository": "resource-dynamic-tenant-environment",
+      "path": "internal/conf/v1/image.go",
+      "sha256": "e8a975e2063e96d917e36e0098961a9f0b61573fea5dabe33140795dbf345e4c"
+    },
+    {
+      "repository": "resource-dynamic-tenant-environment",
+      "path": "internal/biz/image/pullsecret_caller.go",
+      "sha256": "d027918236de042dc774e2ddee866f7f6ebedc044be29fba1b6e7e9a39c4b1cb"
+    },
+    {
+      "repository": "resource-dynamic-tenant-environment",
+      "path": "internal/data/network/tenant_namespace.go",
+      "sha256": "290517d20f7458da8c39ea941d4156475cc48b10ed96c37729b5b9d06f6cf426"
+    },
+    {
+      "repository": "resource-dynamic-tenant-environment",
+      "path": "internal/data/network/vm_namespace.go",
+      "sha256": "0d3f82776f68acecebfdbfdd3b8597f508885c1b244f15e82d7e2cf9388a0960"
+    },
+    {
+      "repository": "resource-dynamic-tenant-environment",
+      "path": "internal/data/image/pullsecret.go",
+      "sha256": "9c5ca3eb336d9445acc0a54153a7f2b3cce4abbb06fb73352c1f4a13cab87ef4"
+    }
+  ],
+  "interpretation": {
+    "protobuf": "binding_file, binding_sha256, facts_files and global approved_prefix are reserved names; strict protojson loader rejects them",
+    "scope": "base_model_storage_scope retains only shared connection/bucket/credential reference; per-tenant approved prefix derives from current resource tenant; no global tenant prefix",
+    "facts": "business admission calls ReadReadyBinding from authoritative environment repository; no startup facts file loader",
+    "sts": "issuer derives session scope from persisted immutable execution; no tenant allowlist array",
+    "webhook": "Config has no bindings list; NamespaceBinding is an internal per-request dynamic readback result, not static config or tenant array",
+    "resource": "ani-modeldev-service explicitly rejects old namespaces/ownerLabels/requireTenantLabel allowlist; fixed cluster and standard tenant name+original UID must match; Sandbox namespace code belongs to another owner and is out of this change",
+    "v3": "only execution spec parser v3 is retired; separate unchanged v3 intent/output/publication formats are current contracts, not compatibility readers"
+  },
+  "result": "PASS",
+  "reviewed_current_scope_matches": {
+    "retired_binding_fields": [],
+    "static_sts_bindings": [
+      {
+        "file": "configs/examples/managed-runtime.yaml",
+        "line": 47,
+        "text": "# No tenant map, sts_bindings or session_token. Scope comes from the pinned",
+        "classification": "comment explicitly forbidding retired field"
+      }
+    ],
+    "old_execution_parser": [],
+    "old_global_prefix": [
+      {
+        "file": "contract/cpup01/snapshot.go",
+        "line": 132,
+        "text": "ApprovedPrefix      string `json:\"approved_prefix\"`",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 35,
+        "text": "SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 80,
+        "text": "SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 127,
+        "text": "storage_connection_id, bucket, approved_prefix, credential_reference, object_key,",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 136,
+        "text": "RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 206,
+        "text": "SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 277,
+        "text": "SELECT tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format FROM modeldev_input_versions",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 331,
+        "text": "RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      },
+      {
+        "file": "internal/data/input/sqlc/queries.sql.go",
+        "line": 402,
+        "text": "RETURNING tenant_id, input_version_id, request_id, actor, requested_at, storage_connection_id, bucket, approved_prefix, object_key, object_version_id, size_bytes, sha256, state, credential_reference, verified_at, verified_schema_version, verified_row_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, verified_feature_count, failure_code, failure_observed_at, format",
+        "classification": "current per-execution/input immutable scope, not global tenant configuration"
+      }
+    ]
+  }
+}

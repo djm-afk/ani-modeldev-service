@@ -15,7 +15,7 @@ import subprocess
 NAME = "ani-modeldev-webhook"
 
 
-def render(config, namespace, image, issuer, issuer_kind, api_servers, kubernetes_service, api_server_port, kubernetes_service_port):
+def render(config, namespace, image, issuer, issuer_kind, api_servers, kubernetes_service, api_server_port, kubernetes_service_port, *, platform_principals):
     if not re.fullmatch(r"[a-z0-9]([-a-z0-9]*[a-z0-9])?", namespace) or not re.fullmatch(r"[^\s@]+@sha256:[0-9a-f]{64}", image):
         raise ValueError("explicit namespace and immutable webhook image required")
     if issuer_kind not in {"Issuer", "ClusterIssuer"} or not re.fullmatch(r"[a-z0-9]([-a-z0-9.]*[a-z0-9])?", issuer):
@@ -28,19 +28,26 @@ def render(config, namespace, image, issuer, issuer_kind, api_servers, kubernete
         raise ValueError("explicit Kubernetes Service individual address required")
     if any(type(port) is not int or not 1 <= port <= 65535 for port in (api_server_port, kubernetes_service_port)):
         raise ValueError("explicit observed API and Kubernetes Service ports required")
-    if any(not binding.get("driver") for binding in config["bindings"]):
+    if not config.get("driver") or config.get("schema_version") != "ani.modeldev.webhook.v2" or namespace != "ani-system":
         raise ValueError("production KFP scope requires frozen backend driver bindings")
+    if not isinstance(platform_principals, list) or not platform_principals or len(platform_principals) != len(set(platform_principals)) or any(not isinstance(p, str) or not re.fullmatch(r"system:(?:serviceaccount:[a-z0-9.-]+:[a-z0-9.-]+|node:[a-z0-9.-]+)", p) for p in platform_principals):
+        raise ValueError("explicit existing trusted platform usernames required")
     config = json.loads(json.dumps(config))
     files = {}
+    bundle = Path(config["material_bundle_file"]).read_bytes()
+    if hashlib.sha256(bundle).hexdigest() != config["material_bundle_digest"]:
+        raise ValueError("shared immutable bundle bytes mismatch")
+    bundle_name = "modeldev-materials-" + config["material_bundle_digest"][:12]
+    config["material_bundle_file"] = "/etc/modeldev-materials/manifest.json"
     for profile in config["profiles"]:
         raw = Path(profile["material_file"]).read_bytes()
         if hashlib.sha256(raw).hexdigest() != profile["material_sha256"]:
             raise ValueError("validated Release bytes changed during assembly")
         filename = profile["id"] + ".json"
         files[filename] = raw.decode()
-        profile["material_file"] = "/etc/modeldev-webhook/materials/" + filename
+        profile["material_file"] = "/etc/modeldev-materials/" + Path(profile["material_file"]).name
     config.update(listen_address=":8443", certificate_file="/tls/tls.crt", private_key_file="/tls/tls.key")
-    data = {"config.json": json.dumps(config, separators=(",", ":")), **files}
+    data = {"config.json": json.dumps(config, separators=(",", ":"))}
     checksum = hashlib.sha256(json.dumps(data, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     config_name = NAME + "-" + checksum[:12]
     labels = {"app.kubernetes.io/name": NAME, "app.kubernetes.io/part-of": "ani-modeldev"}
@@ -49,37 +56,28 @@ def render(config, namespace, image, issuer, issuer_kind, api_servers, kubernete
         if ns:
             meta["namespace"] = ns
         return {"apiVersion": api, "kind": kind, "metadata": meta, **fields}
-    subject = [{"kind": "ServiceAccount", "name": NAME, "namespace": namespace}]
-    rows = [obj("v1", "ServiceAccount"), obj("v1", "ConfigMap", name=config_name, immutable=True, data=data),
-            obj("rbac.authorization.k8s.io/v1", "ClusterRole", ns=None, rules=[{"apiGroups": [""], "resources": ["namespaces"], "resourceNames": sorted(b["namespace"] for b in config["bindings"]), "verbs": ["get"]}]),
-            obj("rbac.authorization.k8s.io/v1", "ClusterRoleBinding", ns=None, roleRef={"apiGroup": "rbac.authorization.k8s.io", "kind": "ClusterRole", "name": NAME}, subjects=subject)]
-    for binding in config["bindings"]:
-        rows += [obj("rbac.authorization.k8s.io/v1", "Role", ns=binding["namespace"], rules=[{"apiGroups": ["argoproj.io"], "resources": ["workflows"], "verbs": ["get"]}]),
-                 obj("rbac.authorization.k8s.io/v1", "RoleBinding", ns=binding["namespace"], roleRef={"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": NAME}, subjects=subject)]
-        if binding.get("training"):
-            rows[-2]["rules"] += [
-                {"apiGroups": ["batch"], "resources": ["jobs"], "verbs": ["get"]},
-                {"apiGroups": ["jobset.x-k8s.io"], "resources": ["jobsets"], "verbs": ["get"]},
-                {"apiGroups": ["trainer.kubeflow.org"], "resources": ["trainjobs", "trainingruntimes"], "verbs": ["get"]},
-            ]
+    rows = [obj("v1", "ServiceAccount"), obj("v1", "ConfigMap", name=config_name, immutable=True, data=data)]
     rows += [obj("cert-manager.io/v1", "Certificate", name=NAME+"-serving", spec={"secretName": NAME+"-tls", "issuerRef": {"name": issuer, "kind": issuer_kind, "group": "cert-manager.io"}, "dnsNames": [NAME+"."+namespace+".svc", NAME+"."+namespace+".svc.cluster.local"], "duration": "2160h", "renewBefore": "360h", "privateKey": {"rotationPolicy": "Always", "algorithm": "ECDSA", "size": 256}, "usages": ["digital signature", "server auth"]}),
              obj("v1", "Service", spec={"selector": labels.copy(), "ports": [{"name": "https", "port": 443, "targetPort": 8443}]}),
              obj("policy/v1", "PodDisruptionBudget", spec={"minAvailable": 1, "selector": {"matchLabels": labels.copy()}})]
     container = {"name": "webhook", "image": image, "imagePullPolicy": "IfNotPresent", "ports": [{"name": "https", "containerPort": 8443}],
                  "securityContext": {"runAsNonRoot": True, "runAsUser": 10001, "runAsGroup": 10001, "readOnlyRootFilesystem": True, "allowPrivilegeEscalation": False, "capabilities": {"drop": ["ALL"]}},
                  "resources": {"requests": {"cpu": "100m", "memory": "128Mi"}, "limits": {"cpu": "1", "memory": "512Mi"}},
-                 "volumeMounts": [{"name": "config", "mountPath": "/etc/modeldev-webhook", "readOnly": True}, {"name": "tls", "mountPath": "/tls", "readOnly": True}],
+                 "volumeMounts": [{"name": "config", "mountPath": "/etc/modeldev-webhook", "readOnly": True}, {"name": "tls", "mountPath": "/tls", "readOnly": True}, {"name":"materials","mountPath":"/etc/modeldev-materials","readOnly":True}],
                  "readinessProbe": {"httpGet": {"scheme": "HTTPS", "path": "/readyz", "port": 8443}, "timeoutSeconds": 3, "periodSeconds": 5},
                  "livenessProbe": {"httpGet": {"scheme": "HTTPS", "path": "/livez", "port": 8443}, "timeoutSeconds": 2, "periodSeconds": 10}}
-    rows.append(obj("apps/v1", "Deployment", spec={"replicas": 2, "revisionHistoryLimit": 3, "strategy": {"type": "RollingUpdate", "rollingUpdate": {"maxUnavailable": 0, "maxSurge": 1}}, "selector": {"matchLabels": labels.copy()}, "template": {"metadata": {"labels": labels.copy(), "annotations": {"ani.modeldev/config-sha256": checksum}}, "spec": {"serviceAccountName": NAME, "automountServiceAccountToken": True, "terminationGracePeriodSeconds": 15, "securityContext": {"fsGroup": 10001, "seccompProfile": {"type": "RuntimeDefault"}}, "topologySpreadConstraints": [{"maxSkew": 1, "topologyKey": "kubernetes.io/hostname", "whenUnsatisfiable": "DoNotSchedule", "labelSelector": {"matchLabels": labels.copy()}}], "containers": [container], "volumes": [{"name": "config", "configMap": {"name": config_name, "defaultMode": 292, "items": [{"key": "config.json", "path": "config.json"}] + [{"key": name, "path": "materials/"+name} for name in files]}}, {"name": "tls", "secret": {"secretName": NAME+"-tls", "defaultMode": 288}}]}}}))
+    initializer={"name":"install-modeldev-materials","image":image,"command":["/usr/local/bin/ani-modeldev-webhook","--copy-materials-from","/source","--copy-materials-to","/materials","--copy-materials-manifest-sha256",config["material_bundle_digest"]],"securityContext":{"runAsNonRoot":True,"runAsUser":10001,"runAsGroup":10001,"readOnlyRootFilesystem":True,"allowPrivilegeEscalation":False,"capabilities":{"drop":["ALL"]}},"volumeMounts":[{"name":"material-source","mountPath":"/source","readOnly":True},{"name":"materials","mountPath":"/materials"}]}
+    rows.append(obj("apps/v1", "Deployment", spec={"replicas": 2, "revisionHistoryLimit": 3, "strategy": {"type": "RollingUpdate", "rollingUpdate": {"maxUnavailable": 0, "maxSurge": 1}}, "selector": {"matchLabels": labels.copy()}, "template": {"metadata": {"labels": labels.copy(), "annotations": {"app.kubernetes.io/config-sha256": checksum}}, "spec": {"serviceAccountName": NAME, "automountServiceAccountToken": True, "terminationGracePeriodSeconds": 15, "securityContext": {"fsGroup": 10001, "seccompProfile": {"type": "RuntimeDefault"}}, "topologySpreadConstraints": [{"maxSkew": 1, "topologyKey": "kubernetes.io/hostname", "whenUnsatisfiable": "DoNotSchedule", "labelSelector": {"matchLabels": labels.copy()}}], "initContainers":[initializer], "containers": [container], "volumes": [{"name": "config", "configMap": {"name": config_name, "defaultMode": 292, "items": [{"key": "config.json", "path": "config.json"}]}}, {"name": "tls", "secret": {"secretName": NAME+"-tls", "defaultMode": 288}}, {"name":"material-source","configMap":{"name":bundle_name,"defaultMode":292}}, {"name":"materials","emptyDir":{}}]}}}))
     rows.append(obj("networking.k8s.io/v1", "NetworkPolicy", spec={"podSelector": {"matchLabels": labels.copy()}, "policyTypes": ["Ingress", "Egress"], "ingress": [{"from": [{"ipBlock": {"cidr": value}} for value in cidrs], "ports": [{"protocol": "TCP", "port": 8443}]}], "egress": [{"to": [{"ipBlock": {"cidr": value}} for value in cidrs], "ports": [{"protocol": "TCP", "port": api_server_port}]}, {"to": [{"ipBlock": {"cidr": str(service)}}], "ports": [{"protocol": "TCP", "port": kubernetes_service_port}]}, {"to": [{"namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "kube-system"}}}], "ports": [{"protocol": "UDP", "port": 53}, {"protocol": "TCP", "port": 53}]}]}))
-    webhooks = []
-    for binding in config["bindings"]:
-        webhooks.append({"name": binding["namespace"]+".modeldev.ani.io", "admissionReviewVersions": ["v1"], "sideEffects": "None", "failurePolicy": "Fail", "matchPolicy": "Exact", "reinvocationPolicy": "Never", "timeoutSeconds": 8, "namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": binding["namespace"], binding["owner_label"]["key"]: binding["owner_label"]["value"]}}, "objectSelector": {"matchLabels": {"pipelines.kubeflow.org/v2_component": "true"}}, "clientConfig": {"service": {"name": NAME, "namespace": namespace, "path": "/mutate", "port": 443}}, "rules": [{"operations": ["CREATE"], "apiGroups": [""], "apiVersions": ["v1"], "resources": ["pods"], "scope": "Namespaced"}]})
-    registration = obj("admissionregistration.k8s.io/v1", "MutatingWebhookConfiguration", ns=None, webhooks=webhooks)
-    for binding, hook in zip(config["bindings"], webhooks):
-        if binding.get("training"):
-            hook.pop("objectSelector")
+    reserved = ["modeldev-step","trainer-workload","verifier"]
+    markers = "(has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/')))"
+    volumes = "has(object.spec.volumes) && object.spec.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(s,has(s.secret) && s.secret.name == 'modeldev-kfp-artifacts')))"
+    containers=[]
+    for field in ["containers","initContainers","ephemeralContainers"]:
+        containers.append("(has(object.spec."+field+") && object.spec."+field+".exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))")
+    expression="(has(object.spec.serviceAccountName) && object.spec.serviceAccountName in "+json.dumps(reserved)+") || "+markers+" || ("+volumes+") || "+" || ".join(containers)
+    hook={"name":"dynamic.modeldev.ani.io","admissionReviewVersions":["v1"],"sideEffects":"None","failurePolicy":"Fail","matchPolicy":"Exact","reinvocationPolicy":"Never","timeoutSeconds":8,"matchConditions":[{"name":"platform-controller-trust","expression":"!(request.userInfo.username in "+json.dumps(sorted(platform_principals),separators=(",",":"))+")"},{"name":"modeldev-reserved-identity-or-reference","expression":expression}],"clientConfig":{"service":{"name":NAME,"namespace":namespace,"path":"/mutate","port":443}},"rules":[{"operations":["CREATE"],"apiGroups":[""],"apiVersions":["v1"],"resources":["pods"],"scope":"Namespaced"}]}
+    registration=obj("admissionregistration.k8s.io/v1","MutatingWebhookConfiguration",ns=None,webhooks=[hook])
     registration["metadata"]["annotations"] = {"cert-manager.io/inject-ca-from": namespace+"/"+NAME+"-serving"}
     return {"apiVersion": "v1", "kind": "List", "items": rows}, registration
 
@@ -88,6 +86,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--webhook-binary", type=Path, required=True)
+    parser.add_argument("--platform-principals", type=Path, required=True, help="JSON array of the same trusted usernames as native policy")
     parser.add_argument("--webhook-image", required=True)
     parser.add_argument("--namespace", required=True)
     parser.add_argument("--issuer-name", required=True)
@@ -99,7 +98,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     subprocess.run([str(args.webhook_binary), "--check-config", "--config", str(args.config)], check=True, capture_output=True, timeout=15)
-    support, registration = render(json.loads(args.config.read_bytes()), args.namespace, args.webhook_image, args.issuer_name, args.issuer_kind, args.api_server_cidr, args.kubernetes_service_cidr, args.api_server_port, args.kubernetes_service_port)
+    support, registration = render(json.loads(args.config.read_bytes()), args.namespace, args.webhook_image, args.issuer_name, args.issuer_kind, args.api_server_cidr, args.kubernetes_service_cidr, args.api_server_port, args.kubernetes_service_port, platform_principals=json.loads(args.platform_principals.read_bytes()))
     args.output.mkdir(mode=0o700, parents=True, exist_ok=False)
     for name, value in (("service.json", support), ("registration.json", registration)):
         (args.output/name).write_text(json.dumps(value, indent=2)+"\n")

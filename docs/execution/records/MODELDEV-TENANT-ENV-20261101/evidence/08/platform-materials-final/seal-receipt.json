@@ -1,0 +1,177 @@
+{
+  "schema": "ani.modeldev.actual-publication-canonical-material-seal.v1",
+  "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+  "actual_publication_receipt_sha256": "2295a5ef48f9973873e7f8cb78bc989e8987087f818fbd8b09560c716f74166d",
+  "canonical_generation_host": "Fedora",
+  "renderer_sha256": "e4fb94044a470de18758e883cda00ef9c056645788508ed50208eddeea954097",
+  "renderer_records": [
+    {
+      "id": "modeldev-mlp-cpu",
+      "command": [
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+        "--facts",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/final-material-inputs/modeldev-mlp-cpu.json",
+        "--entry",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/train_mlp.py",
+        "--mapping",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/configuration.py",
+        "--output",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/canonical-materials/builtin.mlp.cpu.json"
+      ],
+      "exit": 0,
+      "facts_sha256": "a2e081c4d0a81ec9fcc817df268f45bc54402f91d1967a31e0cb5a1e24357b73",
+      "material_sha256": "ff41e5ab740824f06832e9b82c4e6616d1697900e4f6db285f780f5a0fabf16a"
+    },
+    {
+      "id": "modeldev-mlp-gpu",
+      "command": [
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+        "--facts",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/final-material-inputs/modeldev-mlp-gpu.json",
+        "--entry",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/train_mlp.py",
+        "--mapping",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/configuration.py",
+        "--output",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/canonical-materials/builtin.mlp.gpu.json"
+      ],
+      "exit": 0,
+      "facts_sha256": "d363279815bb8fcb8b69a69b8727ec83ab66ba9b1fdaa03b996084c7eb8dca90",
+      "material_sha256": "d4370538471d63e4c40e391f5ccff3cb4b295896480dcd4e9fae895efe3239db"
+    },
+    {
+      "id": "modeldev-sft-lora-cpu",
+      "command": [
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+        "--facts",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/final-material-inputs/modeldev-sft-lora-cpu.json",
+        "--entry",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/finetune_entry.py",
+        "--mapping",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/configuration.py",
+        "--output",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/canonical-materials/builtin.sft_lora.cpu.json"
+      ],
+      "exit": 0,
+      "facts_sha256": "587f2b5823adbcfb961f3fc1301709f51adf5b6dc98403a2edd5f37e018664a5",
+      "material_sha256": "7182d7f9c4d3759ae9d2a5d8143b0f5f969bb87a37b319c8e82df9c125e28f4a"
+    },
+    {
+      "id": "modeldev-sft-lora-gpu",
+      "command": [
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+        "--facts",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/final-material-inputs/modeldev-sft-lora-gpu.json",
+        "--entry",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/finetune_entry.py",
+        "--mapping",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/source/training/finetuning/configuration.py",
+        "--output",
+        "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/canonical-materials/builtin.sft_lora.gpu.json"
+      ],
+      "exit": 0,
+      "facts_sha256": "ba959d6bab00cd5afe107ea760afc45b36c58ff8291e6f00cba58341162bcad3",
+      "material_sha256": "59f60645c2c5ccd640d97e81bada8a2cac7410f7218b3ba4f22369ed726d8d86"
+    }
+  ],
+  "seal_function": "fixed d807 deploy/modeldev-environment/bundle.py seal",
+  "bundle_manifest_sha256": "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6",
+  "bundle_manifest_bytes": 5288,
+  "files": {
+    "ir/modeldev-mlp-cpu.yaml": "58919bf761ddf0a2747e1766afe93584d23523d25c47e4974be48f0547d58ee7",
+    "builtin.mlp.cpu.json": "ff41e5ab740824f06832e9b82c4e6616d1697900e4f6db285f780f5a0fabf16a",
+    "ir/modeldev-mlp-gpu.yaml": "31208542cf6d7bf658c2214141b1409ea1445a2ec05379f24fb5c9ee33ec8281",
+    "builtin.mlp.gpu.json": "d4370538471d63e4c40e391f5ccff3cb4b295896480dcd4e9fae895efe3239db",
+    "ir/modeldev-sft-lora-cpu.yaml": "147852502bc1abb5adfcabb8faad36a98141143b279780cb53b403cdd652150f",
+    "builtin.sft_lora.cpu.json": "7182d7f9c4d3759ae9d2a5d8143b0f5f969bb87a37b319c8e82df9c125e28f4a",
+    "ir/modeldev-sft-lora-gpu.yaml": "753c0aed8e18ba13c13b8a470cd6a4cfcb4b5c1765dd3c26215144b7cfde77b7",
+    "builtin.sft_lora.gpu.json": "59f60645c2c5ccd640d97e81bada8a2cac7410f7218b3ba4f22369ed726d8d86"
+  },
+  "profiles": [
+    {
+      "compile_config_sha256": "bee5b65f15e23987ec7d97c554cfbb9ae79551e395601ade9bef30fbc18efd57",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "device_mode": "cpu",
+      "id": "modeldev-mlp-cpu",
+      "implementation_id": "builtin.mlp",
+      "ir_sha256": "58919bf761ddf0a2747e1766afe93584d23523d25c47e4974be48f0547d58ee7",
+      "namespace": "ani-system",
+      "pipeline_id": "dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+      "version_id": "f27d259b-5a53-434a-a3eb-d31091159a7b",
+      "version_name": "ir-58919bf761ddf0a2",
+      "phase": "CONFIRMED",
+      "ir_file": "/etc/modeldev-materials/ir/modeldev-mlp-cpu.yaml",
+      "material_file": "/etc/modeldev-materials/builtin.mlp.cpu.json",
+      "material_sha256": "ff41e5ab740824f06832e9b82c4e6616d1697900e4f6db285f780f5a0fabf16a"
+    },
+    {
+      "compile_config_sha256": "2ab35845b3c9646087d6b970ec49241d125fe11b4504fe2866fb85771a58e21f",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "device_mode": "gpu",
+      "id": "modeldev-mlp-gpu",
+      "implementation_id": "builtin.mlp",
+      "ir_sha256": "31208542cf6d7bf658c2214141b1409ea1445a2ec05379f24fb5c9ee33ec8281",
+      "namespace": "ani-system",
+      "pipeline_id": "9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+      "version_id": "93939a80-0597-49c3-bbf7-d1b193ce6eea",
+      "version_name": "ir-31208542cf6d7bf6",
+      "phase": "CONFIRMED",
+      "ir_file": "/etc/modeldev-materials/ir/modeldev-mlp-gpu.yaml",
+      "material_file": "/etc/modeldev-materials/builtin.mlp.gpu.json",
+      "material_sha256": "d4370538471d63e4c40e391f5ccff3cb4b295896480dcd4e9fae895efe3239db"
+    },
+    {
+      "compile_config_sha256": "e4f1e1cdc0478cbf835de8e75491528757bf4d529adc707c9f78e56379bba9b7",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "device_mode": "cpu",
+      "id": "modeldev-sft-lora-cpu",
+      "implementation_id": "builtin.sft_lora",
+      "ir_sha256": "147852502bc1abb5adfcabb8faad36a98141143b279780cb53b403cdd652150f",
+      "namespace": "ani-system",
+      "pipeline_id": "4d042c5b-fc25-4819-9a28-80ca7903c863",
+      "version_id": "953f993b-4366-4c0c-89f3-371d5e3d70d2",
+      "version_name": "ir-147852502bc1abb5",
+      "phase": "CONFIRMED",
+      "ir_file": "/etc/modeldev-materials/ir/modeldev-sft-lora-cpu.yaml",
+      "material_file": "/etc/modeldev-materials/builtin.sft_lora.cpu.json",
+      "material_sha256": "7182d7f9c4d3759ae9d2a5d8143b0f5f969bb87a37b319c8e82df9c125e28f4a"
+    },
+    {
+      "compile_config_sha256": "cf45770ebc89121529d61530f63636d19136062b03cf035c65bf0da61dd51e77",
+      "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+      "device_mode": "gpu",
+      "id": "modeldev-sft-lora-gpu",
+      "implementation_id": "builtin.sft_lora",
+      "ir_sha256": "753c0aed8e18ba13c13b8a470cd6a4cfcb4b5c1765dd3c26215144b7cfde77b7",
+      "namespace": "ani-system",
+      "pipeline_id": "a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+      "version_id": "85d51c61-4a67-463e-a316-d8c785d05481",
+      "version_name": "ir-753c0aed8e18ba13",
+      "phase": "CONFIRMED",
+      "ir_file": "/etc/modeldev-materials/ir/modeldev-sft-lora-gpu.yaml",
+      "material_file": "/etc/modeldev-materials/builtin.sft_lora.gpu.json",
+      "material_sha256": "59f60645c2c5ccd640d97e81bada8a2cac7410f7218b3ba4f22369ed726d8d86"
+    }
+  ],
+  "support_images": {
+    "driver": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+    "launcher": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29",
+    "material_copy": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4"
+  },
+  "anonymous_images": [
+    {
+      "evidence_sha256": "ac6f98acd6f263f6c32a1a8eea1662b732190f0efd04088cd77f894fdf18befd",
+      "reference": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd"
+    },
+    {
+      "evidence_sha256": "ac6f98acd6f263f6c32a1a8eea1662b732190f0efd04088cd77f894fdf18befd",
+      "reference": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+    }
+  ],
+  "registry_authority": "10.10.1.66:30003",
+  "platform_project": "ani-resource-factor10-20261022",
+  "status": "FOUR_ACTUAL_PUBLISHED_CANONICAL_MATERIALS_AND_IMMUTABLE_BUNDLE_SEALED",
+  "platform_configuration": "WAIT_ACTUAL_NATIVE_BOOTSTRAP_12_UID_HASHES; no placeholder final config",
+  "model_template_associations": "Original platform material has empty associations; retained empty. Normal source-only readiness must establish supported effective template; no fabricated association."
+}

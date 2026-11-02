@@ -1,0 +1,149 @@
+{
+  "schema": "ani.modeldev.LIVE09-existing-A-workload-remaining-boundary.v1",
+  "started_at": "2026-11-01T13:58:51.998056+00:00",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T13:58:52.205115+00:00"
+  },
+  "environment_id": "01169a48-1980-42be-b2ed-c76731c10ac6",
+  "current_A_environment_state": "READY",
+  "current_A_environment_phase": "COMPLETE",
+  "current_A_environment_reason": "",
+  "normal_HTTP_source_receipt": "../final-material-maintenance/new-A-B-Ensure-actual.json",
+  "normal_HTTP_source_receipt_sha256": "76c80dd43eac637e6e9590b351090718b0f472ba5bc98bdd714d4f2b7fa14c32",
+  "human_coverage": false,
+  "B_coverage": false,
+  "new_identities_or_permissions": false,
+  "new_token_requests": 0,
+  "persistent_objects_created": 0,
+  "token_value_or_hash_saved": false,
+  "secret_values_requested_or_saved": false,
+  "SSR_and_five_SSAR_not_repeated": true,
+  "operations": [
+    {
+      "id": "artifact-secret-get",
+      "method": "GET",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/secrets/modeldev-kfp-artifacts",
+      "http_status": 403,
+      "response_sha256": "f80c441bba654fb9981adcca5aace8fc68fac2f8b57efcb80ba5add49f67285d",
+      "reason": "Forbidden",
+      "coverage_layer": "RBAC"
+    },
+    {
+      "id": "artifact-secret-list",
+      "method": "GET",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/secrets?fieldSelector=metadata.name%3Dmodeldev-kfp-artifacts&limit=1",
+      "http_status": 403,
+      "response_sha256": "190d1ca77800901ba09aeca64662bd9f84f6248121c7026550dbfc5ed604b2c6",
+      "reason": "Forbidden",
+      "coverage_layer": "RBAC"
+    },
+    {
+      "id": "artifact-mount",
+      "method": "POST",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods?dryRun=All&fieldValidation=Strict",
+      "service_account": "default",
+      "mounts_artifact_secret": true,
+      "http_status": 403,
+      "reason": "Forbidden",
+      "coverage_layer": "RBAC",
+      "response_sha256": "188bcb328dc2b17a997ce716e907dd27b5dec2bbe3a6f8295d5bf7ded55977d6",
+      "request_sha256": "c4f546476ec264cf2cc430e368483764ad632fa9f02a087c3b0df0b9526e8773",
+      "before_get": 404,
+      "after_get": 404
+    },
+    {
+      "id": "reserved-modeldev-step",
+      "method": "POST",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods?dryRun=All&fieldValidation=Strict",
+      "service_account": "modeldev-step",
+      "mounts_artifact_secret": false,
+      "http_status": 403,
+      "reason": "Forbidden",
+      "coverage_layer": "RBAC",
+      "response_sha256": "188bcb328dc2b17a997ce716e907dd27b5dec2bbe3a6f8295d5bf7ded55977d6",
+      "request_sha256": "7245f7945d05e476ad637c52d25184490d9099c5505a69eac03485d2df740da7",
+      "before_get": 404,
+      "after_get": 404
+    },
+    {
+      "id": "reserved-trainer-workload",
+      "method": "POST",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods?dryRun=All&fieldValidation=Strict",
+      "service_account": "trainer-workload",
+      "mounts_artifact_secret": false,
+      "http_status": 403,
+      "reason": "Forbidden",
+      "coverage_layer": "RBAC",
+      "response_sha256": "188bcb328dc2b17a997ce716e907dd27b5dec2bbe3a6f8295d5bf7ded55977d6",
+      "request_sha256": "90ce4e14b5edca773e216410dd4a08cfa79cf56a6ca585ffb5e42f6b530b9a13",
+      "before_get": 404,
+      "after_get": 404
+    },
+    {
+      "id": "reserved-verifier",
+      "method": "POST",
+      "path": "/api/v1/namespaces/tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420/pods?dryRun=All&fieldValidation=Strict",
+      "service_account": "verifier",
+      "mounts_artifact_secret": false,
+      "http_status": 403,
+      "reason": "Forbidden",
+      "coverage_layer": "RBAC",
+      "response_sha256": "188bcb328dc2b17a997ce716e907dd27b5dec2bbe3a6f8295d5bf7ded55977d6",
+      "request_sha256": "167d44488e6b119ebf39303be8ff46be731073b0a321e517a014a882a2fd3514",
+      "before_get": 404,
+      "after_get": 404
+    }
+  ],
+  "temporary_original_admin_TLS_copy_removed": {
+    "path": "/tmp/modeldev-ordinary-boundary-tls-gk74fcj5",
+    "absent": true
+  },
+  "actual_artifact_secret": {
+    "name": "modeldev-kfp-artifacts",
+    "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "uid": "97fbc6ca-184f-4d65-8995-2e551a3d0f7e",
+    "resource_version": "21243787",
+    "type": "Opaque",
+    "owner_labels": {
+      "ani.io/managed-by": "ani-modeldev-service",
+      "modeldev.ani.io/environment-id": "01169a48-1980-42be-b2ed-c76731c10ac6",
+      "modeldev.ani.io/tenant-id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+    },
+    "namespace_uid_annotation": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+    "metadata_only_table_request": true,
+    "response_sha256": "65ef5d589309d69dca7985420ac8e0328de0f099b7d5ee94b1436af5314788f8"
+  },
+  "actual_reserved_service_accounts": [
+    {
+      "name": "modeldev-step",
+      "uid": "6f0c7006-7458-4a4e-8cd0-f5780c215852",
+      "resource_version": "21243760"
+    },
+    {
+      "name": "trainer-workload",
+      "uid": "45e11ee0-75b0-4043-98ef-b01354f14311",
+      "resource_version": "21243761"
+    },
+    {
+      "name": "verifier",
+      "uid": "afcbd29b-9653-4492-a129-f03d2d2c5951",
+      "resource_version": "21243762"
+    }
+  ],
+  "credential_source": {
+    "pod": "hp-volume-9tvb5",
+    "pod_uid": "81ac92e1-d863-4ac1-abcf-5bf6a3df8711",
+    "service_account_uid": "4e59088d-0111-4b2f-a59e-2d93f2e08bed",
+    "username": "system:serviceaccount:tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420:default",
+    "scope": "real A default workload token; groups actually established by prior recovered SSR, not a human or B credential"
+  },
+  "status": "ACTUAL_A_WORKLOAD_SECRET_GET_LIST_AND_FOUR_DRYRUN_DENIALS_PASS",
+  "coverage": "Existing real A default workload against current READY environment-owned Secret/SA objects. RBAC-denied requests do not establish admission predicates. No human/B coverage.",
+  "finished_at": "2026-11-01T13:58:54.553463+00:00"
+}

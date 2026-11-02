@@ -1,0 +1,78 @@
+[
+  {
+    "label": "format",
+    "command": [
+      "gofmt",
+      "-w",
+      "scripts/legacy-modeldev-data-cleanup/command.go",
+      "scripts/legacy-modeldev-data-cleanup/command_test.go",
+      "scripts/legacy-modeldev-data-cleanup/database.go",
+      "scripts/legacy-modeldev-data-cleanup/fixture_test.go",
+      "scripts/legacy-modeldev-data-cleanup/gpu_fixture_test.go",
+      "scripts/legacy-modeldev-data-cleanup/inventory.go",
+      "scripts/legacy-modeldev-data-cleanup/main.go",
+      "scripts/legacy-modeldev-data-cleanup/qualification.go",
+      "scripts/legacy-modeldev-data-cleanup/refusal_test.go",
+      "scripts/legacy-modeldev-data-cleanup/schema.go",
+      "scripts/legacy-modeldev-data-cleanup/evidence.go",
+      "scripts/legacy-modeldev-data-cleanup/original_c99.go",
+      "scripts/legacy-modeldev-data-cleanup/original_c99_pg_test.go",
+      "scripts/legacy-modeldev-data-cleanup/originalc99/main.go",
+      "scripts/legacy-modeldev-data-cleanup/originalc99/main_test.go"
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99",
+    "start": "2026-11-01T02:25:21Z",
+    "end": "2026-11-01T02:25:21Z",
+    "exit": 0
+  },
+  {
+    "label": "native-pg-final",
+    "command": [
+      "go",
+      "test",
+      "-count=1",
+      "-tags=original_c99_pg",
+      "-run",
+      "^TestOriginalSevenNativeC99QualificationAndMissingCloseEvidence$",
+      "-v",
+      "."
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99/scripts/legacy-modeldev-data-cleanup/originalc99",
+    "start": "2026-11-01T02:25:21Z",
+    "end": "2026-11-01T02:25:24Z",
+    "exit": 0
+  },
+  {
+    "label": "native-build-final",
+    "command": [
+      "go",
+      "build",
+      "-trimpath",
+      "-o",
+      "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99-evidence/original-c99-qualifier",
+      "."
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99/scripts/legacy-modeldev-data-cleanup/originalc99",
+    "start": "2026-11-01T02:25:24Z",
+    "end": "2026-11-01T02:25:32Z",
+    "exit": 0
+  },
+  {
+    "label": "consumer-pg",
+    "command": [
+      "go",
+      "test",
+      "-race",
+      "-count=1",
+      "-v",
+      "-timeout=4m",
+      "-run",
+      "^(TestOriginalC99NativeProofConsumerUsesExactLockedRows|TestOriginalGPUOutboxWithoutACKRefusesDeletion|TestUnreleasedChargeAndUnclosedExecutionRefuseDeletion|TestConcurrentOriginalRevisionChangeIsRecheckedAfterDrain)$",
+      "./scripts/legacy-modeldev-data-cleanup"
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99",
+    "start": "2026-11-01T02:25:32Z",
+    "end": "2026-11-01T02:25:47Z",
+    "exit": 0
+  }
+]

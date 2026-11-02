@@ -1,0 +1,216 @@
+{
+  "schema": "ani.modeldev.tenant-environment.deployment-inputs.v1",
+  "status": "TEMPLATE_NOT_VERIFIED",
+  "instructions": "null须从明确部署/源证据取得，不是可随意选择；只保存非敏感值或秘密文件引用。",
+  "target": {
+    "ssh_host": "100.64.128.12",
+    "ssh_user": "kubercloud",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "kubernetes_version": "v1.35.8",
+    "confirmed_at": null,
+    "evidence": null,
+    "remote_build_os": null
+  },
+  "source_baseline": {
+    "modeldev": "21bf4bd6540d462a61c91b629f26250899583223",
+    "governance": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+    "resource": "23e25b33ca02890231cd273ef7246b0fc415476c",
+    "refetched_main": null,
+    "related_diff_evidence": null
+  },
+  "kfp": {
+    "version": "2.16.0",
+    "health_sha": "85a38e0719870e5b2f97a74f5c966d79bcc7c960",
+    "endpoint": "https://ani-kfp-entry.kubeflow.svc:8443",
+    "multiuser": true,
+    "shared_read": false,
+    "require_namespace_for_pipelines": true,
+    "connection_ref": null,
+    "control_token_file": "/var/run/modeldev-kfp/token",
+    "control_audience": "pipelines.kubeflow.org",
+    "projected_expiration_seconds": 3600,
+    "callback_audience": "https://kubernetes.default.svc.cluster.local",
+    "actual_token_auth_evidence": null,
+    "rotation_evidence": null,
+    "experiment_unique_constraint_evidence": null,
+    "metadata_grpc_host": null,
+    "metadata_grpc_port": null,
+    "driver_tls_flags": null,
+    "launcher_tls_flags": null,
+    "cabundle_key_name": null,
+    "kfp_public_ca_file": null,
+    "argo_workflow_defaults_evidence": null
+  },
+  "principals": {
+    "control": "system:serviceaccount:ani-system:modeldev-control",
+    "webhook": "system:serviceaccount:ani-system:ani-modeldev-webhook",
+    "kfp_api": "system:serviceaccount:kubeflow:ml-pipeline",
+    "argo": null,
+    "trainer": null,
+    "jobset": null,
+    "job_controller": null,
+    "persistence_agent": null,
+    "maintenance": null,
+    "verified_evidence": null
+  },
+  "platform_materials": {
+    "catalogue_path": null,
+    "catalogue_sha256": null,
+    "managed_registry_authority": null,
+    "platform_project": null,
+    "authenticated_fixed_images": [],
+    "anonymous_support_images": [],
+    "workspace_storage_class": null,
+    "workspace_size": null,
+    "target_platform": null,
+    "step_callback_endpoint": null,
+    "modeldev_public_ca_file": null,
+    "s3_public_ca_file": null,
+    "owner_reference": null,
+    "owner_revision_sha256": null,
+    "pipelines": [
+      {
+        "name": "modeldev-mlp-cpu",
+        "namespace": "ani-system",
+        "pipeline_id": null,
+        "version_id": null,
+        "ir_sha256": null,
+        "material_sha256": null
+      },
+      {
+        "name": "modeldev-mlp-gpu",
+        "namespace": "ani-system",
+        "pipeline_id": null,
+        "version_id": null,
+        "ir_sha256": null,
+        "material_sha256": null
+      },
+      {
+        "name": "modeldev-sft-lora-cpu",
+        "namespace": "ani-system",
+        "pipeline_id": null,
+        "version_id": null,
+        "ir_sha256": null,
+        "material_sha256": null
+      },
+      {
+        "name": "modeldev-sft-lora-gpu",
+        "namespace": "ani-system",
+        "pipeline_id": null,
+        "version_id": null,
+        "ir_sha256": null,
+        "material_sha256": null
+      }
+    ]
+  },
+  "storage": {
+    "input": {
+      "connection_id": null,
+      "bucket": null,
+      "prefix": "inputs/<tenant_uuid>"
+    },
+    "publication": {
+      "connection_id": null,
+      "bucket": null,
+      "prefix": "executions/<tenant_uuid>",
+      "actual_write_prefix": "executions/<tenant_uuid>/<execution_uuid>/"
+    },
+    "model": {
+      "connection_id": null,
+      "bucket": null,
+      "prefix": "<tenant_uuid>"
+    },
+    "kfp_artifacts": {
+      "endpoint": null,
+      "region": null,
+      "dedicated_bucket": null,
+      "default_root": "s3://<dedicated_bucket>/artifacts/<tenant_uuid>",
+      "run_root": "s3://<dedicated_bucket>/artifacts/<tenant_uuid>/<execution_uuid>",
+      "secret_name": "modeldev-kfp-artifacts",
+      "access_key_file": null,
+      "secret_key_file": null,
+      "bucket_only_iam_evidence": null,
+      "tls_loading_evidence": null,
+      "real_io_evidence": null,
+      "access_isolation_evidence": null
+    }
+  },
+  "namespace_samples": [
+    {
+      "name": "A",
+      "gov_tenant_id": 2,
+      "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "namespace_name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+      "image_space_ready": null,
+      "namespace_check_evidence": null
+    },
+    {
+      "name": "B",
+      "gov_tenant_id": 40,
+      "resource_tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "namespace_name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+      "namespace_uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347",
+      "image_space_ready": null,
+      "namespace_check_evidence": null
+    }
+  ],
+  "policies": {
+    "vap_names": [
+      "modeldev-bootstrap-v1",
+      "modeldev-environment-config-v1",
+      "modeldev-workload-guard-v1"
+    ],
+    "webhook_name": "ani-modeldev-webhook",
+    "policy_uids_and_digests": null,
+    "cel_typecheck_evidence": null,
+    "rbac_sar_evidence": null,
+    "coexistence_evidence": null
+  },
+  "cleanup": {
+    "manifest_path": null,
+    "manifest_sha256": null,
+    "old_modeldev_rows_before": null,
+    "old_modeldev_rows_after": null,
+    "old_gov_pending_after": null,
+    "release_reconciliation_evidence": null,
+    "res_uid_backfill_evidence": null
+  },
+  "delivered_builds": {
+    "modeldev": {
+      "commit": null,
+      "image_digest": null,
+      "deployed_image_id": null
+    },
+    "gov": {
+      "commit": null,
+      "image_digest": null,
+      "deployed_image_id": null
+    },
+    "res": {
+      "commit": null,
+      "image_digest": null,
+      "deployed_image_id": null
+    }
+  },
+  "secrets_must_not_be_included": true,
+  "authorization_inventory": {
+    "apiserver_modes": null,
+    "authorization_config_evidence": null,
+    "authorization_config_sha256": null,
+    "platform_trusted_subjects": [],
+    "trusted_group_management_evidence": null,
+    "source_secret_platform_access_evidence": null,
+    "list_page_size": 100,
+    "max_pages_per_collection": 10,
+    "max_distinct_roles": 128,
+    "max_rules": 8192,
+    "timeout_seconds": 8,
+    "proof_valid_seconds": 30,
+    "global_clusterrole": "modeldev-rbac-inventory-global-v1",
+    "global_clusterrolebinding": "modeldev-rbac-inventory-global"
+  }
+}

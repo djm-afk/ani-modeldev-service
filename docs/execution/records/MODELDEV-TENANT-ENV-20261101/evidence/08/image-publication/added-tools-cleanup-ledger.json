@@ -1,0 +1,480 @@
+{
+  "schema": "ani.modeldev.added-tools-cleanup-ledger.v1",
+  "updated_at": "2026-11-01T03:00:22.526120+00:00",
+  "resource_limits": "USER_REMOVED_NO_CPU_MEMORY_OR_PARALLELISM_LIMIT",
+  "original_containerd": "/run/containerd/containerd.sock namespace k8s.io (retain)",
+  "original_image_cache": "retain all original images/layers/DB",
+  "delivered_images": "retain unique completed registry images",
+  "items": [
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildkit-v0.25.1.linux-amd64.tar.gz",
+      "kind": "official_distribution",
+      "original": false,
+      "created": true,
+      "sha256": "85aa27c480fc9159705d21a3e66abe305f8dc708b8aeecd1e87bbc5c3de98642",
+      "cleanup_status": "REMOVED_SHA_AND_ABSENCE_VERIFIED"
+    },
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildkitd",
+      "kind": "tool_v0.25.1",
+      "original": false,
+      "created": true,
+      "sha256": "2419e6e46c363c5553424edd1155e7706b973b743de42eebaf8749b09342d78c",
+      "cleanup_status": "REMOVED_SHA_AND_ABSENCE_VERIFIED"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-image-tools-d807/buildkitd",
+      "kind": "ordinary_transfer_copy",
+      "original": false,
+      "created": true,
+      "sha256": "2419e6e46c363c5553424edd1155e7706b973b743de42eebaf8749b09342d78c",
+      "cleanup_status": "REMOVED_ABSENCE_VERIFIED"
+    },
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildctl",
+      "kind": "tool_v0.25.1",
+      "original": false,
+      "created": true,
+      "sha256": "a026a3f74160367325bbccc948603699e4bc5e05c7f956a3ec49c730f753acc2",
+      "cleanup_status": "REMOVED_SHA_AND_ABSENCE_VERIFIED"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-image-tools-d807/buildctl",
+      "kind": "ordinary_transfer_copy",
+      "original": false,
+      "created": true,
+      "sha256": "a026a3f74160367325bbccc948603699e4bc5e05c7f956a3ec49c730f753acc2",
+      "cleanup_status": "REMOVED_ABSENCE_VERIFIED"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-image-context-d807",
+      "kind": "fixed_source_context",
+      "original": false,
+      "created": true,
+      "sha256": null,
+      "cleanup_status": "REMOVED_ABSENCE_VERIFIED",
+      "cleanup_evidence": "local-transit-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101",
+      "kind": "task_private_root",
+      "original": false,
+      "created": true,
+      "sha256": null,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/tools/buildkitd",
+      "kind": "tool_v0.25.1",
+      "original": false,
+      "created": true,
+      "sha256": "2419e6e46c363c5553424edd1155e7706b973b743de42eebaf8749b09342d78c",
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/tools/buildctl",
+      "kind": "tool_v0.25.1",
+      "original": false,
+      "created": true,
+      "sha256": "a026a3f74160367325bbccc948603699e4bc5e05c7f956a3ec49c730f753acc2",
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/state",
+      "kind": "buildkit_state_no_gc",
+      "original": false,
+      "created": true,
+      "sha256": null,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/buildkitd.sock",
+      "kind": "task_socket",
+      "original": false,
+      "created": true,
+      "sha256": null,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/auth",
+      "kind": "temporary_auth",
+      "original": false,
+      "created": true,
+      "sha256": null,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/ca.crt",
+      "kind": "public_CA_copy",
+      "original": false,
+      "created": true,
+      "sha256": "65f1a1d14d21fed31b89f25b143e78b16605b82d32c56ef6bf8167fe78bab871",
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "ani-modeldev-d807-build.service",
+      "kind": "temporary_systemd_unit_unlimited",
+      "original": false,
+      "created": true,
+      "sha256": null,
+      "cleanup_status": "STOPPED_COLLECTED_MAINPID_ZERO",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildkitd.stripped",
+      "kind": "verified_official_tool_GNU_strip_debug_derivative_not_deployed",
+      "original": false,
+      "created": true,
+      "sha256": "6084ad03ce2c5912aeeaf5a3a3135623d6af20e523ead1d8d37c3cf7bcaf7344",
+      "size": 51744760,
+      "cleanup_status": "REMOVED_SHA_AND_ABSENCE_VERIFIED"
+    },
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/tools/buildctl.stripped",
+      "kind": "verified_official_tool_GNU_strip_debug_derivative_not_deployed",
+      "original": false,
+      "created": true,
+      "sha256": "a13f657a6590bce4e75832921bfb714e1c74972548698fe2a43c9b2cb25ddeab",
+      "size": 25653072,
+      "cleanup_status": "REMOVED_SHA_AND_ABSENCE_VERIFIED"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/tools/official-buildkit-v0.25.1.tar.gz",
+      "kind": "official_distribution_direct_download",
+      "original": false,
+      "created": true,
+      "sha256": "85aa27c480fc9159705d21a3e66abe305f8dc708b8aeecd1e87bbc5c3de98642",
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/http-pull-20261101",
+      "kind": "temporary_fixed_file_HTTP_root_nonce_and_control_files",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_ALL_EXACT_FILES_AND_DIRECTORY_ABSENCE_VERIFIED",
+      "files": [
+        "fixed-file-server.py",
+        "node-build-run.py",
+        "sources.json",
+        "server-private.log",
+        "ready-private.json",
+        "public-receipt.json",
+        "closed-public.json"
+      ]
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/source-d807",
+      "kind": "fixed_689_source_snapshot",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/source-expected.json",
+      "kind": "fixed_source_manifest",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/prepare-go.py",
+      "kind": "temporary_go_prepare_script",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/go-tools",
+      "kind": "empty_private_Go_preparation_directory_no_toolchain_installed",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json",
+      "downloaded_toolchain": false
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/go-mod-cache",
+      "kind": "private_module_cache_if_created",
+      "original": false,
+      "created": false,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/go-build-cache",
+      "kind": "private_build_cache_if_created",
+      "original": false,
+      "created": false,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/go-build-tmp",
+      "kind": "private_build_temporary_if_created",
+      "original": false,
+      "created": false,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/fetch-fixed-source.py",
+      "kind": "temporary_fixed_public_source_fetch_helper",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "local",
+      "path": ".scratch/modeldev-gov-aux-ca01cabf",
+      "kind": "ordinary_aux_cli_transit",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_ABSENCE_VERIFIED",
+      "cleanup_evidence": "local-transit-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/gov-original-command-retirement-ca01cabf",
+      "kind": "task_private_aux_cli_destination",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_SHA_PROCESS_MOUNT_AND_ABSENCE_VERIFIED",
+      "sha256": "bbf33c31d36046f298bce3f5d95c90e1302362e99c1034ab0173da53297aa4e1",
+      "size": 151354706,
+      "cleanup_evidence": "../../09/completed-retirement-tools-cleanup-result.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/small-auth",
+      "kind": "temporary_small_image_auth",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_OR_ABSENCE_VERIFIED_WITH_EXACT_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-node-source-d807",
+      "kind": "task_transit_or_runtime_cache",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_ABSENCE_VERIFIED",
+      "cleanup_evidence": "local-transit-cleanup.json"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-gov-aux-ca01cabf",
+      "kind": "task_transit_or_runtime_cache",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_ABSENCE_VERIFIED",
+      "cleanup_evidence": "local-transit-cleanup.json"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/08/image-publication/__pycache__",
+      "kind": "task_transit_or_runtime_cache",
+      "original": false,
+      "created": true,
+      "cleanup_status": "REMOVED_ABSENCE_VERIFIED",
+      "cleanup_evidence": "local-transit-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "ani-modeldev-d807-runner.service",
+      "kind": "temporary_systemd_unit_unlimited",
+      "original": false,
+      "created": true,
+      "cleanup_status": "STOPPED_COLLECTED_MAINPID_ZERO",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "ani-modeldev-d807-small-build.service",
+      "kind": "temporary_systemd_unit_unlimited",
+      "original": false,
+      "created": true,
+      "cleanup_status": "STOPPED_COLLECTED_MAINPID_ZERO",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "ani-modeldev-d807-small-runner.service",
+      "kind": "temporary_systemd_unit_unlimited",
+      "original": false,
+      "created": true,
+      "cleanup_status": "STOPPED_COLLECTED_MAINPID_ZERO",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    }
+  ],
+  "tunnels": [],
+  "pids": [
+    {
+      "host": "local",
+      "pid": 1890443,
+      "kind": "task_ssh_controlmaster",
+      "cleanup_status": "STOPPED",
+      "present_after_stop": false
+    },
+    {
+      "host": "local",
+      "pid": 1890865,
+      "kind": "context_rsync",
+      "cleanup_status": "STOPPED",
+      "present_after_stop": false
+    },
+    {
+      "host": "fedora",
+      "pid": 1173803,
+      "kind": "fixed_file_HTTP_daemon",
+      "bind_ip": "172.16.101.31",
+      "port": 52035,
+      "allowed_clients": [
+        "10.10.1.66"
+      ],
+      "ttl_seconds": 900,
+      "original": false,
+      "cleanup_status": "STOPPED_PROCESS_LISTENER_NONCE_ABSENCE_VERIFIED",
+      "http_encryption_claimed": false,
+      "present_after_stop": false
+    },
+    {
+      "host": "node1",
+      "pid": 2381000,
+      "kind": "official_Go1.26.10_prepare",
+      "original": false,
+      "script": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/prepare-go.py",
+      "cleanup_status": "FINISHED_NO_PROCESS_REFERENCES_REMOVED_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "pid": 2395405,
+      "kind": "fixed_public_d807_source_fetch",
+      "original": false,
+      "script": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/fetch-fixed-source.py",
+      "cleanup_status": "FINISHED_NO_PROCESS_REFERENCES_REMOVED_TASK_ROOT",
+      "cleanup_evidence": "node-private-build-cleanup.json"
+    }
+  ],
+  "ssh_control": {
+    "local_socket": "/tmp/ani-modeldev-d807-build-cm",
+    "original": false,
+    "created": true,
+    "cleanup_status": "CLOSED_SOCKET_ABSENT"
+  },
+  "transfer_attempts": [
+    {
+      "kind": "tools_rsync",
+      "local_pid": 1890866,
+      "result": "TERMINATED_TO_PRIORITIZE_STEP",
+      "exit": 20
+    },
+    {
+      "kind": "context_rsync",
+      "local_pid": 1890865,
+      "result": "IN_FLIGHT_RESUMED_AFTER_BRIEF_PAUSE",
+      "final_state": "STOPPED_PROCESS_ABSENCE_VERIFIED_PRESERVED_TRANSFER_HISTORY"
+    },
+    {
+      "kind": "node_official_distribution",
+      "result": "IN_FLIGHT_FIXED_OFFICIAL_SOURCE_CHECKSUM",
+      "final_state": "OFFICIAL_SHA_VERIFIED_THEN_EXACT_PRIVATE_TOOL_ROOT_REMOVED"
+    },
+    {
+      "kind": "shared_root_cm_context_rsync",
+      "local_pid": 1903086,
+      "exit": 30,
+      "reason": "I/O timeout 90s",
+      "process_present_after": false
+    }
+  ],
+  "shared_ssh_control": {
+    "local_socket": "/home/chabking/workspace/.evidence/modeldev-node-control-20261101/node.sock",
+    "owner": "root parent agent",
+    "original_to_subtask": true,
+    "cleanup_status": "DO_NOT_CLOSE_OR_DELETE_BY_SNAPSHOT"
+  },
+  "official_download_resolution": {
+    "status": "TOOLS_VERIFIED",
+    "download_bytes": 85705330,
+    "elapsed_seconds": 3.0211211640853435,
+    "sha256": "85aa27c480fc9159705d21a3e66abe305f8dc708b8aeecd1e87bbc5c3de98642",
+    "fuser_exit": 1,
+    "duplicate_download_issued": false,
+    "evidence": "node-resume-preflight.json"
+  },
+  "preserve_original_daemons": [
+    {
+      "host": "node1",
+      "pid": 2756988,
+      "path": "/home/kubercloud/modeldev-open-limits-image-build-20261029/tools/buildkitd",
+      "args": "--config /home/kubercloud/modeldev-open-limits-image-build-20261029/buildkitd.toml",
+      "cgroup": "/user.slice/user-1000.slice/session-26981.scope",
+      "original": true,
+      "cleanup_status": "RETAIN_DO_NOT_KILL_OR_RECONFIGURE"
+    }
+  ],
+  "shared_ssh_control_v2": {
+    "local_socket": "/home/chabking/workspace/.evidence/modeldev-node-control-20261101-v2/node.sock",
+    "owner": "root parent agent",
+    "original_to_subtask": true,
+    "cleanup_status": "ROOT_OWNS_CLOSURE_DO_NOT_CLOSE_BY_SNAPSHOT"
+  },
+  "go_preparation_result": {
+    "status": "FAILED_BEFORE_TOOLCHAIN_DOWNLOAD",
+    "reason": "go.dev TLS EOF",
+    "evidence": "node-go-and-fixed-source-provider.json",
+    "node_compilation": "NOT_RUN_REUSED_VERIFIED_ORIGINAL_BINARY_ROUTE_SELECTED"
+  },
+  "source_transfer_choice": "Direct fixed GitHub ordinary files plus original binary <=1MiB wire fixed-offset chunks; no archive, no new identity",
+  "next_steps": "Image publication subtask complete; parent/environment uses delivered auxiliary CLI and later cleans its private directory and parent-owned shared ControlMaster at Goal completion",
+  "image_build_tools_cleanup": "COMPLETE_EXACT_TASK_ROOT_AND_LOCAL_CONTEXTS_REMOVED_NO_SHARED_GC_OR_PRUNE",
+  "auxiliary_tool": {
+    "path": "/home/kubercloud/tenantenv-20261101/gov-original-command-retirement-ca01cabf/modeldev-original-command-retirement",
+    "sha256": "bbf33c31d36046f298bce3f5d95c90e1302362e99c1034ab0173da53297aa4e1",
+    "mode": "0700",
+    "executed_by_snapshot": false,
+    "retained": "Required by still-active Goal original close protocol; parent/environment owns use and final cleanup"
+  },
+  "retained_shared_control": "Root parent owns v2 ControlMaster and will close at Goal completion; snapshot did not close or delete it",
+  "no_new_go_installed": true
+}

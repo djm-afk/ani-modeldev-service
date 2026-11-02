@@ -1,0 +1,7 @@
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf lint
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf build
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量
+/home/chabking/tenantenv-20261101/modeldev-api/.tools/bin/buf generate --template buf.gen.yaml
+/etc/bashrc: 行 12: BASHRCSOURCED: 未绑定的变量

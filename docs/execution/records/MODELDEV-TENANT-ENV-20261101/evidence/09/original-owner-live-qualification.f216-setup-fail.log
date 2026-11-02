@@ -1,0 +1,7 @@
+=== RUN   TestOriginalF216PublicOwnerReader
+    original_owner_native_public_test.go:20: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    original_owner_native_public_test.go:22: ISOLATED_ORIGINAL_ROW_RESTORE_FAILED table=modeldev_execution_runtimes error_kind=*pgconn.PrepareError
+--- FAIL: TestOriginalF216PublicOwnerReader (0.12s)
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle	0.126s
+FAIL

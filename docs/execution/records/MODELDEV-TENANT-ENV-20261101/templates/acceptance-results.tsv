@@ -1,0 +1,33 @@
+id	scenario	expected_or_level	status	evidence_path	observed	blocker
+NS01	标准 UUID→固定名；大写、数字ID、零UUID、空白/截断拒绝；v4 codec 不通过 lowercase 修好错误	各 owner 同一 vectors + codec	NOT_RUN			
+NS02	Namespace 不存在、错标签、非 Active、删除中、原 UID 变化均拒绝；无任何 Namespace Create/Patch	Fake Kubernetes action + 关键 adapter	NOT_RUN			
+EN01	同 tenant/cluster 并发不同 operation 只一个环境行；原同名资源/Experiment 只一份；锁忙不伪造 state	真 PostgreSQL 事务 + 受控 API stub	NOT_RUN			
+EN02	每个 create 后响应丢失/进程终止，下一次同意图读回原 UID；foreign-owner/不同 UID 拒绝；预算耗尽从 receipts 继续；危险/未完成RBAC审查不写artifact Secret	故障点注入	NOT_RUN			
+EN03	未确认 Experiment唯一约束时未知 POST 不重发；完整分页零/一/多候选按表处理	KFP adapter	NOT_RUN			
+EN04	seal→投影→readback→CAS READY；投影摘要无自引用、坏/未知字段拒绝；无登记 Get 404不建行	canonical + repository + webhook	NOT_RUN			
+API01	当前租户和精确权限；跨 tenant/伪造 metadata/未知 proto/任意 body/query/header 拒绝；Get/Ensure 预算真实生效	Gov/ModelDev 合同	NOT_RUN			
+API02	环境子原因经严格白名单到 HTTP；无行38不被吞；Ensure/Get与失败Prepare不创建charge/acceptance	BFF+仓储	NOT_RUN			
+SNP01	DispatchOwner、三SA UID、managed refs任一变化影响spec_hash；v3拒绝；投影与canonical不符不发送	v4 vectors	NOT_RUN			
+ST01	输入/base精确对象和VersionId；publish仅原execution前缀且只追加一次；关闭后不签发；A不得读写B	既有 issuer + integration	NOT_RUN			
+ST02	没有环境行的合法tenant仍可 source-only Readiness；B基模范围正确；copier目标bucket来自平台配置	Model client/readiness	NOT_RUN			
+DP01	33个环境不受旧32/64静态上限；两级cursor越过坏首行/不READY tenant；持续新增不饿死旧行	worker/repository，非真实33 Namespace	NOT_RUN			
+DP02	多worker竞争一次Reserve仅一次POST；commit未知/not-sent/uncertain/重启不重发	真事务+现有提交测试	NOT_RUN			
+DP03	close或环境非READY在首次Reserve前获锁则拒绝；已提交permit最多一次在途send；Owner不从当前配置重建	fence/race	NOT_RUN			
+CL01	close候选覆盖原deadline/steps/cleanup/GPU分支；真实PG坏UTF8/JSON/deadline/数组不炸批次，NONE/坏行推进；已seal且ACK/DeliveredAt均空时Namespace消失仍GovACK，半ACK隔离	lifecycle真PG+Gov stub	NOT_RUN			
+CL02	未seal仍需原资格，scope无outbox冲突；NoDispatch/runtimeNeverMaterialized不回归；无ACC新依赖	原释放回归	NOT_RUN			
+IM01	general只用TrainingImage.PullSecretRef；fine显式managed refs；合法SA继承过；额外/前缀伪装/SA UID变化拒绝	plan/webhook	NOT_RUN			
+RS01	Network原UID事务及精确回填；Storage replay、Sandbox404、VM/Instance固定名；ModelDev动态Secret与Inference原分支	Res定向	NOT_RUN			
+AD01	reserved SA/PVC/Secret/标记任一命中；去标签不能逃逸，未知projection deny，普通Pod不进入远端webhook	CEL+handler	NOT_RUN			
+AD02	四root参数包括driver，旧UID迟到拒绝；父模板/Pod UPDATE与ephemeral注入防绕过；禁止reserved SA的legacy token Secret；精确activeDeadlineSeconds=0停止及Argo全对象UPDATE通过	native+原owner链	NOT_RUN			
+CL03	同PVC未贴MD标签writer阻止误删；同Namespace独立VM/PVC不受影响；同名新UID对象不删	cleanup	NOT_RUN			
+LIVE01	检查 100.64.128.12 的五项集群身份；填完部署输入和原资源清单	与第1节一致；旧镜像与源码映射、不确定项如实列出	NOT_RUN			
+LIVE02	安装固定native策略/最小RBAC，server dry-run真实正反对象	无CEL编译/type-check warning；错误namespace/roleRef/Secret类型/keys拒绝；正常CPU/GPU资源通过	NOT_RUN			
+LIVE03	同一共享ModelDev/webhook进程先Ensure A，再Ensure B；A并发重放；Get	服务Pod UID/启动时间不变；A/B各一READY、一Experiment；未重启、未编辑tenant配置数组	NOT_RUN			
+LIVE04	真实projected token访问A/B Experiment及ani-system固定父Pipeline/Version；错误audience/无权限目标否定例	真实认证/授权结果与正确SAR resource/name；不输出token；保持shared-read=false	NOT_RUN			
+LIVE05	观察一次实际projected token轮换，在同一进程再次执行LIVE04	token文件/过期时间已轮换的非敏感证明，进程未重启、调用持续成功；不靠重启重读	NOT_RUN			
+LIVE06	A：小型GENERAL_TRAINING CPU成功；B：小型FINETUNING GPU_SHARED成功	两个标准Namespace中的Run/Workflow/Pod/Trainer原UID；输入/base、镜像、KFP内部artifact I/O、logs、publish、Model注册均完成；B实际GPU向量和Gov释放ACK	NOT_RUN			
+LIVE07	B另提交一个小型CPU训练，在运行中从合法B请求Stop；A业务查询同时可用	原close/cleanup、deadline/finalizer、日志留存，原writer终止；无误删A/共存资源	NOT_RUN			
+LIVE08	A身份访问B执行详情、日志、Stop、artifact下载授权；反向至少一次	当前业务授权拒绝，无副作用；共享control跨tenant权限不被误当否定例	NOT_RUN			
+LIVE09	镜像/STS与Secret边界	B固定镜像来自受管平台项目；general/fine实际pull成功；业务STS跨scope拒绝；普通tenant不能读/挂载artifact Secret、借reserved SA/exec/TokenRequest	NOT_RUN			
+LIVE10	在维护窗口制造受控webhook不可达，普通VM/Instance代表Pod与MD代表Pod执行server dry-run，再立即恢复	普通Pod仍过其原策略且不调用MD；MD失败关闭；恢复后探针通过；不实际创建多余VM	NOT_RUN			
+LIVE11	旧资源与数据清理对账，新版本旧入口搜索	原MD清单资源/九表旧记录/Gov旧commands为零；原charge全退；原Namespace VM/Sandbox/其他PVC UID与健康保持	NOT_RUN			

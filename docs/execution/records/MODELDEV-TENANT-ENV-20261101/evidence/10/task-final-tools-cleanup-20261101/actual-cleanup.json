@@ -1,0 +1,47 @@
+{
+  "schema": "ani.modeldev.final-tools-cleanup.actual.v1",
+  "observed_at": "2026-11-01T16:16:46.625318+00:00",
+  "status": "LISTED_TASK_TOOLS_CLEANED",
+  "verified_receipts": [
+    {
+      "path": "10/task-final-tools-cleanup-20261101/node1-exact-cleanup.json",
+      "sha256": "f89fd2aaf23ac87fea99ceb9553bbfb6586a1bceeb7a7ef812de6a7acf7e26f4"
+    },
+    {
+      "path": "10/task-final-tools-cleanup-20261101/workbench-exact-cleanup.json",
+      "sha256": "8bacd8a8d0d02fefdc580701410ffe13b0f7cafae04b275559b28cf561b77a28"
+    },
+    {
+      "path": "10/task-final-tools-cleanup-20261101/local-exact-cleanup.json",
+      "sha256": "eeef7a6f2b105deef74929a0483d16192f223069a548a7c888b7142cbbc1132c"
+    },
+    {
+      "path": "10/task-final-tools-cleanup-20261101/fedora-exact-cleanup.json",
+      "sha256": "2549d28c8de6f9d70d915d7cc48498ef43594c8b7ce23892f9858e593da3da41"
+    },
+    {
+      "path": "10/task-final-tools-cleanup-20261101/node1-gov-private-cleanup.json",
+      "sha256": "d63c6b53a3960b97becf05d80e2bc8685645c77479dda60193e97e94ab29afef"
+    }
+  ],
+  "remaining_exact_tool_paths": [],
+  "deliberately_retained": [
+    {
+      "scope": "19240 main/step compiled binary and OCI",
+      "reason": "User explicitly requires direct reuse; not temporary tools."
+    },
+    {
+      "scope": "Docker/ctr/Go/cache and existing Fedora KFP venv",
+      "reason": "Existing shared assets, outside task-private cleanup."
+    },
+    {
+      "scope": "Public build/transfer/intent/outcome receipts, business model/log downloads, retained PVC",
+      "reason": "Evidence and business assets; user explicitly prohibits deletion."
+    }
+  ],
+  "cluster_writes": 0,
+  "new_tools_installed": false,
+  "extra_tests_or_acceptance_run": false,
+  "credential_values_or_hashes_saved": false,
+  "scope_limit": "Only existing ledger exact paths and this task private STS diagnostic client; no whole-host scan or broad uninstall."
+}

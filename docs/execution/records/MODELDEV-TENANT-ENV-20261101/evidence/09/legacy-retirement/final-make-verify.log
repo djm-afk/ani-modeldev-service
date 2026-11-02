@@ -1,0 +1,181 @@
+test "$(/home/chabking/tenantenv-20261101/legacy-retirement-command/.tools/bin/buf --version)" = "1.60.0"
+test "$(go version -m /home/chabking/tenantenv-20261101/legacy-retirement-command/.tools/bin/buf | awk '$1 == "mod" {print $2 "@" $3; exit}')" = "github.com/bufbuild/buf@v1.60.0"
+test "$(/home/chabking/tenantenv-20261101/legacy-retirement-command/.tools/bin/sqlc version)" = "v1.31.1"
+test "$(go version -m /home/chabking/tenantenv-20261101/legacy-retirement-command/.tools/bin/sqlc | awk '$1 == "mod" {print $2 "@" $3; exit}')" = "github.com/sqlc-dev/sqlc@v1.31.1"
+./scripts/verify-source /home/chabking/tenantenv-20261101/legacy-retirement-command/.tools/bin/buf /home/chabking/tenantenv-20261101/legacy-retirement-command/.tools/bin/sqlc
+1cd325e4ed737dc878dba20d1dde1eae8746af66876ee9cc6067a6f2aa560782  intent-input-v3.json
+b337b5e1f8025d381086bd4e157b32740746752b54ee457fde2d6f342715f2f0  intent-canonical-v3.json
+2f9c688ca06e67e69a8c4481865dbc4dae6d2e2b6fe673caf69d84490c036a35  snapshot-v3.json
+b1fa30faa90fcf78b183f43112b190cbadf16c56cd1f85d7e823fb14b0f2389b  vectors.go
+go mod tidy -diff
+go test -count=1 ./...
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1	[no test files]
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/training/v1	[no test files]
+# github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/imageruntime
+internal/data/imageruntime/client.go:173:23: resolved.GetRegistryAuthority undefined (type *imagev1.ResolveImageForWorkloadResponse has no field or method GetRegistryAuthority)
+internal/data/imageruntime/client.go:217:28: c.client.EnsureTenantPullSecret undefined (type imagev1.ImageRuntimeServiceClient has no field or method EnsureTenantPullSecret)
+internal/data/imageruntime/client.go:217:66: undefined: imagev1.EnsureTenantPullSecretRequest
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-legacy-retirement	0.010s
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-service [build failed]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-step	32.573s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-webhook	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01	0.297s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/protobuf	0.181s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz	0.451s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/component	15.591s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1	0.024s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/accelerator	0.081s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue	0.185s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/cleanup	2.588s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution	16.723s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/finetuningmodel	0.090s
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/imageruntime [build failed]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input	18.830s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp	0.983s
+# github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/imageruntimefixture
+internal/testsupport/imageruntimefixture/fixture.go:57:25: undefined: imagev1.EnsureTenantPullSecretRequest
+internal/testsupport/imageruntimefixture/fixture.go:134:50: unknown field RegistryAuthority in struct literal of type imagev1.ResolveImageForWorkloadResponse
+internal/testsupport/imageruntimefixture/fixture.go:140:78: undefined: imagev1.EnsureTenantPullSecretRequest
+internal/testsupport/imageruntimefixture/fixture.go:140:119: undefined: imagev1.EnsureTenantPullSecretResponse
+internal/testsupport/imageruntimefixture/fixture.go:148:18: undefined: imagev1.EnsureTenantPullSecretResponse
+internal/testsupport/imageruntimefixture/fixture.go:166:40: undefined: imagev1.EnsureTenantPullSecretRequest
+internal/testsupport/imageruntimefixture/fixture.go:169:27: undefined: imagev1.EnsureTenantPullSecretRequest
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle	87.616s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/modelclient	2.056s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/objectstore	5.908s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/pgvalue	0.008s
+--- FAIL: TestPrepareFinalizeFreezeCompleteCandidateWithoutWritesOrSecondReads (0.15s)
+    admission_resolution_test.go:163: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_resolution_test.go:163: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareRPCRejectsAmbiguousReservedAndInconsistentWireFields (0.15s)
+    admission_rpc_boundaries_test.go:47: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:47: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestFinalizeRPCKeepsCandidateHashScopeAndNoReads (0.14s)
+    admission_rpc_boundaries_test.go:62: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:62: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAdmissionRPCUntrustedMetadataAndListenerCapabilityBoundaries (0.18s)
+    admission_rpc_boundaries_test.go:84: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:84: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAdmissionRPCMapsDependencyFailureWithoutUnsafeDetails (0.18s)
+    admission_rpc_boundaries_test.go:120: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:120: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAdmissionRPCCancellationReachesActualFactsRead (0.20s)
+    admission_rpc_boundaries_test.go:158: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_boundaries_test.go:158: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestTwoPhaseRPCPreservesCandidateReadyInputAndFullPlanOverMTLS (0.16s)
+    admission_rpc_test.go:26: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    admission_rpc_test.go:26: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming (0.13s)
+    facts_time_test.go:14: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    facts_time_test.go:14: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareFixedMicrosecondTimeAndContextCancellation (0.14s)
+    facts_time_test.go:55: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    facts_time_test.go:55: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestFinetuningRealJSONReadyTypedCompileDurableInboxAndFrozenReplay (0.17s)
+    finetuning_vertical_test.go:107: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_vertical_test.go:107: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestFinetuningModelScopeAndCutoffRejectBeforeAccept (0.17s)
+    finetuning_vertical_test.go:152: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_vertical_test.go:152: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestFinetuningImportRejectsUnverifiedCallerAndWrongImplementation (0.16s)
+    finetuning_vertical_test.go:168: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_vertical_test.go:168: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads (0.68s)
+    --- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads/WHOLE_EXCLUSIVE/factor10=false (0.16s)
+        gpu_admission_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        gpu_admission_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+    --- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads/WHOLE_EXCLUSIVE/factor10=true (0.13s)
+        gpu_admission_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        gpu_admission_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+    --- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads/SHARED_FIXED/factor10=false (0.20s)
+        gpu_admission_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        gpu_admission_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+    --- FAIL: TestGPUWholeAndSharedFinalizeOriginalCandidateWithoutAdditionalReads/SHARED_FIXED/factor10=true (0.20s)
+        gpu_admission_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+        gpu_admission_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareScopesSameInputUUIDByAuthenticatedTenant (0.15s)
+    input_scope_test.go:15: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    input_scope_test.go:15: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareRejectsPersistedNonReadyProofStates (0.16s)
+    input_scope_test.go:54: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    input_scope_test.go:54: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPreparePresenceOriginalIdentityAndFinalizeMismatchBoundaries (0.13s)
+    intent_selection_test.go:10: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    intent_selection_test.go:10: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsRequireAllFiniteTenantImplementationFields (0.74s)
+    managed_facts_boundaries_test.go:24: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:24: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsRejectAmbiguousUntypedAndRetiredFields (0.58s)
+    managed_facts_boundaries_test.go:34: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:34: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsPinsExactBytesBoundsSourcesAndRejectsDuplicateKeys (0.24s)
+    managed_facts_boundaries_test.go:70: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:70: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsRejectUnsafeActualFileKindsAndPaths (0.17s)
+    managed_facts_boundaries_test.go:99: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:99: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsUsesExactTenantImplementationKeysAndIndependentCopies (0.19s)
+    managed_facts_boundaries_test.go:131: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:131: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsCancellationReturnsNoPartialReaderFactsOrCandidate (0.19s)
+    managed_facts_boundaries_test.go:161: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:161: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestManagedFactsRejectDifferentGlobalTimingByTenantOrImplementation (0.21s)
+    managed_facts_boundaries_test.go:247: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_boundaries_test.go:247: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestPrepareUsesPinnedTenantImplementationFactsAndOwnsCopies (0.16s)
+    managed_facts_test.go:16: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    managed_facts_test.go:16: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+--- FAIL: TestAcceptedTimingSurvivesConfigurationRevisionAndOnlyNewCandidateUsesIt (0.15s)
+    timing_configuration_revision_test.go:26: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    timing_configuration_revision_test.go:26: facts preflight INVALID_MANAGED_ADMISSION_FACTS
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/resolutiontest	5.709s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof	138.848s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity	0.134s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/storagecredentials	0.271s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission	54.156s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission/sqlc	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submittest	44.323s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer	96.249s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/traininglogs	0.486s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workloadview	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace	8.332s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server	0.938s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/commandtest	9.746s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/modeldevwebhook	2.248s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service	0.681s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture	[no test files]
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/commandtls	[no test files]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/finetuningmodel	0.046s
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/imageruntimefixture [build failed]
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/postgres	1.013s
+?   	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/acceptance-pipelinepatch	[no test files]
+--- FAIL: TestFiniteCPULoRAMaterialsUseActualSourcesAndOneDefaultDefinition (0.00s)
+    --- FAIL: TestFiniteCPULoRAMaterialsUseActualSourcesAndOneDefaultDefinition/builtin.mlp/cpu (0.00s)
+panic: runtime error: invalid memory address or nil pointer dereference [recovered, repanicked]
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x50 pc=0x913505]
+
+goroutine 9 [running]:
+testing.tRunner.func1.2({0x9ffa20, 0x1020570})
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/testing/testing.go:1974 +0x232
+testing.tRunner.func1()
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/testing/testing.go:1977 +0x349
+panic({0x9ffa20?, 0x1020570?})
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/runtime/panic.go:860 +0x13a
+github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/modeldev-execution-materials.TestFiniteCPULoRAMaterialsUseActualSourcesAndOneDefaultDefinition.func1(0x1abc5a224d88)
+	/home/chabking/tenantenv-20261101/legacy-retirement-command/scripts/modeldev-execution-materials/main_test.go:68 +0x865
+testing.tRunner(0x1abc5a224d88, 0x1abc5a1b59c0)
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 8
+	/home/chabking/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.10.linux-amd64/src/testing/testing.go:2101 +0x4c5
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/modeldev-execution-materials	0.015s
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/tests/runtime	0.056s
+FAIL
+make: *** [Makefile:105：verify] 错误 1

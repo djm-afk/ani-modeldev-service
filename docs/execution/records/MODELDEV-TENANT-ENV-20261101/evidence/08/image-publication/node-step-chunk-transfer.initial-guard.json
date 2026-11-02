@@ -1,0 +1,170 @@
+{
+  "source": "verified existing Fedora-built binary transferred as ordinary fixed-offset compressed file chunks",
+  "source_sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e",
+  "source_bytes": 36720665,
+  "resume": {
+    "complete": false,
+    "matching_part_offsets": []
+  },
+  "batch_count": 24,
+  "max_request_bytes": 1048576,
+  "batches": [
+    {
+      "batch": 0,
+      "payload_bytes": 634726,
+      "offsets": [
+        0
+      ],
+      "exit": 0,
+      "seconds": 18.725
+    },
+    {
+      "batch": 1,
+      "payload_bytes": 567456,
+      "offsets": [
+        1048576
+      ],
+      "exit": 0,
+      "seconds": 17.798
+    },
+    {
+      "batch": 2,
+      "payload_bytes": 515620,
+      "offsets": [
+        2097152
+      ],
+      "exit": 0,
+      "seconds": 8.227
+    },
+    {
+      "batch": 3,
+      "payload_bytes": 565952,
+      "offsets": [
+        3145728
+      ],
+      "exit": 0,
+      "seconds": 11.986
+    },
+    {
+      "batch": 4,
+      "payload_bytes": 601392,
+      "offsets": [
+        4194304
+      ],
+      "exit": 0,
+      "seconds": 23.474
+    },
+    {
+      "batch": 5,
+      "payload_bytes": 900436,
+      "offsets": [
+        5242880,
+        6291456
+      ],
+      "exit": 0,
+      "seconds": 26.116
+    },
+    {
+      "batch": 6,
+      "payload_bytes": 564156,
+      "offsets": [
+        7340032,
+        8388608
+      ],
+      "exit": 0,
+      "seconds": 17.879
+    },
+    {
+      "batch": 7,
+      "payload_bytes": 962101,
+      "offsets": [
+        9437184,
+        10485760
+      ],
+      "exit": 0,
+      "seconds": 14.705
+    },
+    {
+      "batch": 8,
+      "payload_bytes": 770294,
+      "offsets": [
+        11534336,
+        12582912
+      ],
+      "exit": 0,
+      "seconds": 26.819
+    },
+    {
+      "batch": 9,
+      "payload_bytes": 997359,
+      "offsets": [
+        13631488,
+        14680064,
+        15728640
+      ],
+      "exit": 0,
+      "seconds": 2.351
+    },
+    {
+      "batch": 10,
+      "payload_bytes": 883422,
+      "offsets": [
+        16777216,
+        17825792
+      ],
+      "exit": 0,
+      "seconds": 2.451
+    },
+    {
+      "batch": 11,
+      "payload_bytes": 887745,
+      "offsets": [
+        18874368
+      ],
+      "exit": 0,
+      "seconds": 2.297
+    },
+    {
+      "batch": 12,
+      "payload_bytes": 750905,
+      "offsets": [
+        19922944
+      ],
+      "exit": 0,
+      "seconds": 1.973
+    },
+    {
+      "batch": 13,
+      "payload_bytes": 855670,
+      "offsets": [
+        20971520,
+        22020096
+      ],
+      "exit": 0,
+      "seconds": 2.327
+    },
+    {
+      "batch": 14,
+      "payload_bytes": 693946,
+      "offsets": [
+        23068672,
+        24117248
+      ],
+      "exit": 0,
+      "seconds": 2.1
+    },
+    {
+      "batch": 15,
+      "payload_bytes": 791393,
+      "offsets": [
+        25165824
+      ],
+      "exit": 0,
+      "seconds": 2.193
+    }
+  ],
+  "status": "CLIENT_PAYLOAD_LIMIT_GUARD_STOPPED_BEFORE_OVERSIZED_REQUEST",
+  "root_owns_socket": true,
+  "elapsed_seconds": 181.897,
+  "reason": "An incompressible 1MiB raw block base64-encoded above the 1MiB request bound; guarded before SSH. Resume uses <=512KiB raw blocks, grouping below 1MiB request."
+}

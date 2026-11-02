@@ -1,0 +1,1862 @@
+{
+  "schema": "ani.modeldev.native-rbac-exact-four-operation-actual.v1",
+  "started_at": "2026-11-01T04:45:39.025347+00:00",
+  "reviewed_plan_byte_sha256": "0781f3edfed4d735cc06787cb6766a1a47ad3d805a2dcbaeb3fa12eb5ca32841",
+  "plan_sha256": "bf6f609550d135c56b21fb24fc02650102cf1b7ede220633e072bc62afe39995",
+  "status": "APPLIED_VERIFIED",
+  "events": [
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-runtime-v1",
+      "action": "JSONPatch",
+      "actual": {
+        "uid": "9d141850-ae2b-4586-afed-cb9ac8c3a45a",
+        "resource_version": "20984029",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "pods"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "patch",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "pods/log"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "persistentvolumeclaims"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "modeldev-step",
+              "trainer-workload",
+              "verifier"
+            ],
+            "resources": [
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "events"
+            ],
+            "verbs": [
+              "get",
+              "list"
+            ]
+          },
+          {
+            "apiGroups": [
+              "argoproj.io"
+            ],
+            "resources": [
+              "workflows"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "trainer.kubeflow.org"
+            ],
+            "resources": [
+              "trainjobs"
+            ],
+            "verbs": [
+              "create",
+              "get",
+              "list",
+              "patch",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "trainer.kubeflow.org"
+            ],
+            "resources": [
+              "trainingruntimes"
+            ],
+            "verbs": [
+              "create",
+              "get",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "jobset.x-k8s.io"
+            ],
+            "resources": [
+              "jobsets"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "batch"
+            ],
+            "resources": [
+              "jobs"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "scheduling.volcano.sh"
+            ],
+            "resources": [
+              "podgroups"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          }
+        ]
+      },
+      "observed_at": "2026-11-01T04:45:40.583772+00:00"
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-environment-control-v1",
+      "action": "JSONPatch",
+      "actual": {
+        "uid": "0a752707-833f-4c03-b131-544d950d75f7",
+        "resource_version": "20984034",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "namespaces"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "serviceaccounts",
+              "configmaps",
+              "secrets"
+            ],
+            "verbs": [
+              "create"
+            ]
+          },
+          {
+            "apiGroups": [
+              "rbac.authorization.k8s.io"
+            ],
+            "resources": [
+              "rolebindings"
+            ],
+            "verbs": [
+              "create"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "modeldev-step",
+              "trainer-workload",
+              "verifier"
+            ],
+            "resources": [
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "get",
+              "patch"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "modeldev-step-owner",
+              "ani-kfp-ca",
+              "kfp-launcher",
+              "metadata-grpc-configmap",
+              "modeldev-execution-environment"
+            ],
+            "resources": [
+              "configmaps"
+            ],
+            "verbs": [
+              "get",
+              "patch"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "modeldev-kfp-artifacts"
+            ],
+            "resources": [
+              "secrets"
+            ],
+            "verbs": [
+              "get",
+              "patch"
+            ]
+          },
+          {
+            "apiGroups": [
+              "rbac.authorization.k8s.io"
+            ],
+            "resourceNames": [
+              "modeldev-runtime",
+              "modeldev-step",
+              "modeldev-webhook-read",
+              "modeldev-kfp-api",
+              "modeldev-kfp-access"
+            ],
+            "resources": [
+              "rolebindings"
+            ],
+            "verbs": [
+              "get",
+              "patch"
+            ]
+          },
+          {
+            "apiGroups": [
+              "rbac.authorization.k8s.io"
+            ],
+            "resourceNames": [
+              "modeldev-runtime-v1",
+              "modeldev-step-v1",
+              "modeldev-webhook-read-v1",
+              "modeldev-kfp-api-v1",
+              "modeldev-kfp-access-v1"
+            ],
+            "resources": [
+              "clusterroles"
+            ],
+            "verbs": [
+              "get",
+              "bind"
+            ]
+          },
+          {
+            "apiGroups": [
+              "admissionregistration.k8s.io"
+            ],
+            "resourceNames": [
+              "modeldev-bootstrap-v1",
+              "modeldev-environment-config-v1",
+              "modeldev-workload-guard-v1"
+            ],
+            "resources": [
+              "validatingadmissionpolicies"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              "admissionregistration.k8s.io"
+            ],
+            "resourceNames": [
+              "modeldev-bootstrap-v1-binding",
+              "modeldev-environment-config-v1-binding",
+              "modeldev-workload-guard-v1-binding"
+            ],
+            "resources": [
+              "validatingadmissionpolicybindings"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              "admissionregistration.k8s.io"
+            ],
+            "resourceNames": [
+              "ani-modeldev-webhook"
+            ],
+            "resources": [
+              "mutatingwebhookconfigurations"
+            ],
+            "verbs": [
+              "get"
+            ]
+          }
+        ]
+      },
+      "observed_at": "2026-11-01T04:45:41.051338+00:00"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "name": "modeldev-rbac-inventory-global",
+      "action": "DELETE",
+      "actual": {
+        "original_uid": "7fe33cd8-c5a8-4441-9c47-e050784c05e9",
+        "get_absent": true
+      },
+      "observed_at": "2026-11-01T04:45:41.594827+00:00"
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-rbac-inventory-global-v1",
+      "action": "DELETE",
+      "actual": {
+        "original_uid": "dfc0e4b5-6379-46b0-907d-0879d4222a7b",
+        "get_absent": true
+      },
+      "observed_at": "2026-11-01T04:45:42.516471+00:00"
+    },
+    {
+      "stage": "complete",
+      "four_operations_verified": true,
+      "untouched_objects_verified": 17,
+      "observed_at": "2026-11-01T04:45:42.925663+00:00"
+    }
+  ],
+  "identities": [
+    {
+      "stage": "initial complete identity before exact preconditions",
+      "observed_at": "2026-11-01T04:45:39.363342+00:00",
+      "ssh": "kubercloud@100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "api_server": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "ssh_user": "kubercloud",
+      "hostname": "node1"
+    },
+    {
+      "stage": "JSONPatch ClusterRole/modeldev-runtime-v1",
+      "observed_at": "2026-11-01T04:45:40.427028+00:00",
+      "ssh": "kubercloud@100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "api_server": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "ssh_user": "kubercloud",
+      "hostname": "node1"
+    },
+    {
+      "stage": "JSONPatch ClusterRole/modeldev-environment-control-v1",
+      "observed_at": "2026-11-01T04:45:40.897943+00:00",
+      "ssh": "kubercloud@100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "api_server": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "ssh_user": "kubercloud",
+      "hostname": "node1"
+    },
+    {
+      "stage": "DELETE ClusterRoleBinding/modeldev-rbac-inventory-global",
+      "observed_at": "2026-11-01T04:45:41.382374+00:00",
+      "ssh": "kubercloud@100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "api_server": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "ssh_user": "kubercloud",
+      "hostname": "node1"
+    },
+    {
+      "stage": "DELETE ClusterRole/modeldev-rbac-inventory-global-v1",
+      "observed_at": "2026-11-01T04:45:41.917514+00:00",
+      "ssh": "kubercloud@100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "api_server": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "ssh_user": "kubercloud",
+      "hostname": "node1"
+    }
+  ],
+  "cluster_writes": 4,
+  "preserved_before": [
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "namespace": null,
+      "name": "modeldev-bootstrap-v1",
+      "uid": "57ccd6cb-882a-47ec-83c0-a6cf2ca2bbbe",
+      "before_public_content_sha256": "1a4042410ac33abfb4255d528b319fc1b5bd37e5f93afdd65d5900b0af08498f"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "namespace": null,
+      "name": "modeldev-bootstrap-v1-binding",
+      "uid": "c85543d2-fe50-4205-8f09-12f9df668ae5",
+      "before_public_content_sha256": "b4e8fba5397d88b91c68e2092592c858572dc5670f54f4a572216fcccfcc972e"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "namespace": null,
+      "name": "modeldev-environment-config-v1",
+      "uid": "0bb85730-57be-40d7-84a5-13862e71d951",
+      "before_public_content_sha256": "1fac40f7f956a6cea23118de1451bb8dc053213c537cd959708c39ccacfa7755"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "namespace": null,
+      "name": "modeldev-environment-config-v1-binding",
+      "uid": "160e30ce-bc34-49fc-8527-12499c500e4d",
+      "before_public_content_sha256": "52c5479b992d554e910cb6eaf28218fcce9aa2055b4ffb6a5dc17f8a83a3ddff"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "namespace": null,
+      "name": "modeldev-workload-guard-v1",
+      "uid": "72edb341-581f-4630-b10f-43ac0eeffa13",
+      "before_public_content_sha256": "51229f9b66b48ba4a4864555c7f8e086438f134b8726a371915af2e6612b4f01"
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "namespace": null,
+      "name": "modeldev-workload-guard-v1-binding",
+      "uid": "d3e51d93-9d07-4c77-b6c7-3ae744069d3f",
+      "before_public_content_sha256": "bea3e103320e42f5d9d14ebbfa008daab2866bad1f6be5a54373c79f53a63938"
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-step-v1",
+      "uid": "7f81a827-bdfc-4c63-a1fb-2a4dd64a0f08",
+      "before_public_content_sha256": "047356df4db6d80235ed156b987039c29c1c210542a205ae6c65f8909cf991ac"
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-webhook-read-v1",
+      "uid": "26f81d81-9b56-44af-b170-78a09dbc7e3a",
+      "before_public_content_sha256": "60560df00f9b42e81064970bd921f86cec9b1deaafd94ed2272f32bc734e2c62"
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-kfp-api-v1",
+      "uid": "c07e4a4f-aff6-4e44-9422-360fe2e7aeba",
+      "before_public_content_sha256": "4dc8f13c47fb0cf794d5a122b32872b3ea4f7a887b4e95b02a7245610b594fca"
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-kfp-access-v1",
+      "uid": "93bf2900-ced6-4e77-b91e-b0100955e9ba",
+      "before_public_content_sha256": "1facba0a9cf2f236eeed75991d8106d30b09a8e533450ff1c338bda73e631354"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "namespace": null,
+      "name": "modeldev-environment-control",
+      "uid": "2af418c4-41be-4b86-a0a6-1cfe6603e7a2",
+      "before_public_content_sha256": "ff897bf6133d8fef1f0384fcd46481b7ed9a780fccf6dbdd68bb10ec59167515"
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-webhook-namespace-v1",
+      "uid": "1f625e93-1149-40e9-b80a-ee27c2c97e06",
+      "before_public_content_sha256": "1b48c24ddce6b6b3d8dfbaafaf8a57aed9ab569311fdd9db6078fbf4fcd03a7b"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "namespace": null,
+      "name": "modeldev-webhook-namespace",
+      "uid": "63f4b296-58e4-4339-af1e-a53d88cd5df2",
+      "before_public_content_sha256": "43e3791c4c95762fadd7bf59e2e38e71ba77fbfecff575a1624adc66c1680405"
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-kfp-platform-read-v1",
+      "uid": "2ed55f9d-e42f-48e5-ada2-1ff1690a341a",
+      "before_public_content_sha256": "43dd726864c8b0292697ddc5488dc070c965d0b145d06ee7ca0040f84e5944ff"
+    },
+    {
+      "kind": "RoleBinding",
+      "namespace": "ani-system",
+      "name": "modeldev-kfp-platform-read",
+      "uid": "49906eb8-6ae9-4817-bdff-b41e85c546bc",
+      "before_public_content_sha256": "45a4131bc77253f2b09115b6709e04cb6b5cf7ef10c3e659fa17e23c2a63a535"
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-token-review-v1",
+      "uid": "59d24524-46f8-43ef-b751-4988e7ba9a7b",
+      "before_public_content_sha256": "4ba16d3069804d102c660230f017efee49f172697f901f05a73f35bd1a4d126e"
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "namespace": null,
+      "name": "modeldev-token-review",
+      "uid": "51b46fe1-4fcd-4988-a985-366e23786652",
+      "before_public_content_sha256": "9a162d0d9dd6b209e5ab0d8389e53d864abb0bc302633baaa0b260b03484a426"
+    }
+  ],
+  "fresh_post_binding_delete_references": [],
+  "preserved_before_after": [
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "namespace": null,
+      "name": "modeldev-bootstrap-v1",
+      "uid": "57ccd6cb-882a-47ec-83c0-a6cf2ca2bbbe",
+      "before_public_content_sha256": "1a4042410ac33abfb4255d528b319fc1b5bd37e5f93afdd65d5900b0af08498f",
+      "after_public_content_sha256": "1a4042410ac33abfb4255d528b319fc1b5bd37e5f93afdd65d5900b0af08498f",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "namespace": null,
+      "name": "modeldev-bootstrap-v1-binding",
+      "uid": "c85543d2-fe50-4205-8f09-12f9df668ae5",
+      "before_public_content_sha256": "b4e8fba5397d88b91c68e2092592c858572dc5670f54f4a572216fcccfcc972e",
+      "after_public_content_sha256": "b4e8fba5397d88b91c68e2092592c858572dc5670f54f4a572216fcccfcc972e",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "namespace": null,
+      "name": "modeldev-environment-config-v1",
+      "uid": "0bb85730-57be-40d7-84a5-13862e71d951",
+      "before_public_content_sha256": "1fac40f7f956a6cea23118de1451bb8dc053213c537cd959708c39ccacfa7755",
+      "after_public_content_sha256": "1fac40f7f956a6cea23118de1451bb8dc053213c537cd959708c39ccacfa7755",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "namespace": null,
+      "name": "modeldev-environment-config-v1-binding",
+      "uid": "160e30ce-bc34-49fc-8527-12499c500e4d",
+      "before_public_content_sha256": "52c5479b992d554e910cb6eaf28218fcce9aa2055b4ffb6a5dc17f8a83a3ddff",
+      "after_public_content_sha256": "52c5479b992d554e910cb6eaf28218fcce9aa2055b4ffb6a5dc17f8a83a3ddff",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicy",
+      "namespace": null,
+      "name": "modeldev-workload-guard-v1",
+      "uid": "72edb341-581f-4630-b10f-43ac0eeffa13",
+      "before_public_content_sha256": "51229f9b66b48ba4a4864555c7f8e086438f134b8726a371915af2e6612b4f01",
+      "after_public_content_sha256": "51229f9b66b48ba4a4864555c7f8e086438f134b8726a371915af2e6612b4f01",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ValidatingAdmissionPolicyBinding",
+      "namespace": null,
+      "name": "modeldev-workload-guard-v1-binding",
+      "uid": "d3e51d93-9d07-4c77-b6c7-3ae744069d3f",
+      "before_public_content_sha256": "bea3e103320e42f5d9d14ebbfa008daab2866bad1f6be5a54373c79f53a63938",
+      "after_public_content_sha256": "bea3e103320e42f5d9d14ebbfa008daab2866bad1f6be5a54373c79f53a63938",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-step-v1",
+      "uid": "7f81a827-bdfc-4c63-a1fb-2a4dd64a0f08",
+      "before_public_content_sha256": "047356df4db6d80235ed156b987039c29c1c210542a205ae6c65f8909cf991ac",
+      "after_public_content_sha256": "047356df4db6d80235ed156b987039c29c1c210542a205ae6c65f8909cf991ac",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-webhook-read-v1",
+      "uid": "26f81d81-9b56-44af-b170-78a09dbc7e3a",
+      "before_public_content_sha256": "60560df00f9b42e81064970bd921f86cec9b1deaafd94ed2272f32bc734e2c62",
+      "after_public_content_sha256": "60560df00f9b42e81064970bd921f86cec9b1deaafd94ed2272f32bc734e2c62",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-kfp-api-v1",
+      "uid": "c07e4a4f-aff6-4e44-9422-360fe2e7aeba",
+      "before_public_content_sha256": "4dc8f13c47fb0cf794d5a122b32872b3ea4f7a887b4e95b02a7245610b594fca",
+      "after_public_content_sha256": "4dc8f13c47fb0cf794d5a122b32872b3ea4f7a887b4e95b02a7245610b594fca",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-kfp-access-v1",
+      "uid": "93bf2900-ced6-4e77-b91e-b0100955e9ba",
+      "before_public_content_sha256": "1facba0a9cf2f236eeed75991d8106d30b09a8e533450ff1c338bda73e631354",
+      "after_public_content_sha256": "1facba0a9cf2f236eeed75991d8106d30b09a8e533450ff1c338bda73e631354",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "namespace": null,
+      "name": "modeldev-environment-control",
+      "uid": "2af418c4-41be-4b86-a0a6-1cfe6603e7a2",
+      "before_public_content_sha256": "ff897bf6133d8fef1f0384fcd46481b7ed9a780fccf6dbdd68bb10ec59167515",
+      "after_public_content_sha256": "ff897bf6133d8fef1f0384fcd46481b7ed9a780fccf6dbdd68bb10ec59167515",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-webhook-namespace-v1",
+      "uid": "1f625e93-1149-40e9-b80a-ee27c2c97e06",
+      "before_public_content_sha256": "1b48c24ddce6b6b3d8dfbaafaf8a57aed9ab569311fdd9db6078fbf4fcd03a7b",
+      "after_public_content_sha256": "1b48c24ddce6b6b3d8dfbaafaf8a57aed9ab569311fdd9db6078fbf4fcd03a7b",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "namespace": null,
+      "name": "modeldev-webhook-namespace",
+      "uid": "63f4b296-58e4-4339-af1e-a53d88cd5df2",
+      "before_public_content_sha256": "43e3791c4c95762fadd7bf59e2e38e71ba77fbfecff575a1624adc66c1680405",
+      "after_public_content_sha256": "43e3791c4c95762fadd7bf59e2e38e71ba77fbfecff575a1624adc66c1680405",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-kfp-platform-read-v1",
+      "uid": "2ed55f9d-e42f-48e5-ada2-1ff1690a341a",
+      "before_public_content_sha256": "43dd726864c8b0292697ddc5488dc070c965d0b145d06ee7ca0040f84e5944ff",
+      "after_public_content_sha256": "43dd726864c8b0292697ddc5488dc070c965d0b145d06ee7ca0040f84e5944ff",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "RoleBinding",
+      "namespace": "ani-system",
+      "name": "modeldev-kfp-platform-read",
+      "uid": "49906eb8-6ae9-4817-bdff-b41e85c546bc",
+      "before_public_content_sha256": "45a4131bc77253f2b09115b6709e04cb6b5cf7ef10c3e659fa17e23c2a63a535",
+      "after_public_content_sha256": "45a4131bc77253f2b09115b6709e04cb6b5cf7ef10c3e659fa17e23c2a63a535",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRole",
+      "namespace": null,
+      "name": "modeldev-token-review-v1",
+      "uid": "59d24524-46f8-43ef-b751-4988e7ba9a7b",
+      "before_public_content_sha256": "4ba16d3069804d102c660230f017efee49f172697f901f05a73f35bd1a4d126e",
+      "after_public_content_sha256": "4ba16d3069804d102c660230f017efee49f172697f901f05a73f35bd1a4d126e",
+      "uid_and_public_content_unchanged": true
+    },
+    {
+      "kind": "ClusterRoleBinding",
+      "namespace": null,
+      "name": "modeldev-token-review",
+      "uid": "51b46fe1-4fcd-4988-a985-366e23786652",
+      "before_public_content_sha256": "9a162d0d9dd6b209e5ab0d8389e53d864abb0bc302633baaa0b260b03484a426",
+      "after_public_content_sha256": "9a162d0d9dd6b209e5ab0d8389e53d864abb0bc302633baaa0b260b03484a426",
+      "uid_and_public_content_unchanged": true
+    }
+  ],
+  "target_role_readback": [
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-runtime-v1",
+      "uid": "9d141850-ae2b-4586-afed-cb9ac8c3a45a",
+      "resource_version": "20984029",
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "patch",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods/log"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "persistentvolumeclaims"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resourceNames": [
+            "modeldev-step",
+            "trainer-workload",
+            "verifier"
+          ],
+          "resources": [
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "events"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "argoproj.io"
+          ],
+          "resources": [
+            "workflows"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "trainer.kubeflow.org"
+          ],
+          "resources": [
+            "trainjobs"
+          ],
+          "verbs": [
+            "create",
+            "get",
+            "list",
+            "patch",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "trainer.kubeflow.org"
+          ],
+          "resources": [
+            "trainingruntimes"
+          ],
+          "verbs": [
+            "create",
+            "get",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "jobset.x-k8s.io"
+          ],
+          "resources": [
+            "jobsets"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "batch"
+          ],
+          "resources": [
+            "jobs"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            "scheduling.volcano.sh"
+          ],
+          "resources": [
+            "podgroups"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "delete"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "ClusterRole",
+      "name": "modeldev-environment-control-v1",
+      "uid": "0a752707-833f-4c03-b131-544d950d75f7",
+      "resource_version": "20984034",
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "namespaces"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "serviceaccounts",
+            "configmaps",
+            "secrets"
+          ],
+          "verbs": [
+            "create"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resources": [
+            "rolebindings"
+          ],
+          "verbs": [
+            "create"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resourceNames": [
+            "modeldev-step",
+            "trainer-workload",
+            "verifier"
+          ],
+          "resources": [
+            "serviceaccounts"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resourceNames": [
+            "modeldev-step-owner",
+            "ani-kfp-ca",
+            "kfp-launcher",
+            "metadata-grpc-configmap",
+            "modeldev-execution-environment"
+          ],
+          "resources": [
+            "configmaps"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resourceNames": [
+            "modeldev-kfp-artifacts"
+          ],
+          "resources": [
+            "secrets"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resourceNames": [
+            "modeldev-runtime",
+            "modeldev-step",
+            "modeldev-webhook-read",
+            "modeldev-kfp-api",
+            "modeldev-kfp-access"
+          ],
+          "resources": [
+            "rolebindings"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            "rbac.authorization.k8s.io"
+          ],
+          "resourceNames": [
+            "modeldev-runtime-v1",
+            "modeldev-step-v1",
+            "modeldev-webhook-read-v1",
+            "modeldev-kfp-api-v1",
+            "modeldev-kfp-access-v1"
+          ],
+          "resources": [
+            "clusterroles"
+          ],
+          "verbs": [
+            "get",
+            "bind"
+          ]
+        },
+        {
+          "apiGroups": [
+            "admissionregistration.k8s.io"
+          ],
+          "resourceNames": [
+            "modeldev-bootstrap-v1",
+            "modeldev-environment-config-v1",
+            "modeldev-workload-guard-v1"
+          ],
+          "resources": [
+            "validatingadmissionpolicies"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "admissionregistration.k8s.io"
+          ],
+          "resourceNames": [
+            "modeldev-bootstrap-v1-binding",
+            "modeldev-environment-config-v1-binding",
+            "modeldev-workload-guard-v1-binding"
+          ],
+          "resources": [
+            "validatingadmissionpolicybindings"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "admissionregistration.k8s.io"
+          ],
+          "resourceNames": [
+            "ani-modeldev-webhook"
+          ],
+          "resources": [
+            "mutatingwebhookconfigurations"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ]
+    }
+  ],
+  "actual_eleven_bootstrap_objects": {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [
+      {
+        "apiVersion": "admissionregistration.k8s.io/v1",
+        "kind": "ValidatingAdmissionPolicy",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:31Z",
+          "generation": 1,
+          "name": "modeldev-bootstrap-v1",
+          "resourceVersion": "20954810",
+          "uid": "57ccd6cb-882a-47ec-83c0-a6cf2ca2bbbe"
+        },
+        "spec": {
+          "failurePolicy": "Fail",
+          "matchConditions": [
+            {
+              "expression": "request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\"",
+              "name": "control"
+            }
+          ],
+          "matchConstraints": {
+            "matchPolicy": "Equivalent",
+            "namespaceSelector": {},
+            "objectSelector": {},
+            "resourceRules": [
+              {
+                "apiGroups": [
+                  ""
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE"
+                ],
+                "resources": [
+                  "serviceaccounts",
+                  "configmaps",
+                  "secrets"
+                ],
+                "scope": "Namespaced"
+              },
+              {
+                "apiGroups": [
+                  "rbac.authorization.k8s.io"
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE"
+                ],
+                "resources": [
+                  "rolebindings"
+                ],
+                "scope": "Namespaced"
+              }
+            ]
+          },
+          "validations": [
+            {
+              "expression": "variables.standardNamespace && variables.owner",
+              "message": "ModelDev: standard namespace and original owner identity required"
+            },
+            {
+              "expression": "request.operation != 'UPDATE' || (has(oldObject.metadata.labels) && has(oldObject.metadata.annotations) && object.metadata.labels == oldObject.metadata.labels && object.metadata.annotations == oldObject.metadata.annotations)",
+              "message": "ModelDev: original managed identity metadata cannot change"
+            },
+            {
+              "expression": "request.resource.resource != 'serviceaccounts' || (object.metadata.name in [\"modeldev-step\",\"trainer-workload\",\"verifier\"] && ((object.metadata.name == 'trainer-workload' && (!has(object.imagePullSecrets) || size(object.imagePullSecrets) == 0) && has(object.automountServiceAccountToken) && !object.automountServiceAccountToken) || (object.metadata.name != 'trainer-workload' && has(object.imagePullSecrets) && size(object.imagePullSecrets) == 1 && object.imagePullSecrets[0].name.matches('^ani-pull-[0-9a-f]{32}$'))))",
+              "message": "ModelDev: fixed SA and managed pull references required"
+            },
+            {
+              "expression": "request.resource.resource != 'rolebindings' || ((object.metadata.name == \"modeldev-runtime\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-runtime-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"modeldev-control\" && object.subjects[0].namespace == \"ani-system\") || (object.metadata.name == \"modeldev-step\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-step-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"modeldev-step\" && object.subjects[0].namespace == request.namespace) || (object.metadata.name == \"modeldev-webhook-read\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-webhook-read-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"ani-modeldev-webhook\" && object.subjects[0].namespace == \"ani-system\") || (object.metadata.name == \"modeldev-kfp-api\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-kfp-api-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"ml-pipeline\" && object.subjects[0].namespace == \"kubeflow\") || (object.metadata.name == \"modeldev-kfp-access\" && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == \"modeldev-kfp-access-v1\" && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == \"modeldev-control\" && object.subjects[0].namespace == \"ani-system\"))",
+              "message": "ModelDev: five exact role references and subjects required"
+            },
+            {
+              "expression": "request.resource.resource != 'serviceaccounts' || request.operation != 'UPDATE' || ((has(object.imagePullSecrets) ? object.imagePullSecrets : []) == (has(oldObject.imagePullSecrets) ? oldObject.imagePullSecrets : []) && (has(object.automountServiceAccountToken) ? object.automountServiceAccountToken : true) == (has(oldObject.automountServiceAccountToken) ? oldObject.automountServiceAccountToken : true))",
+              "message": "ModelDev: original service account pull references and token policy cannot change"
+            },
+            {
+              "expression": "request.resource.resource != 'configmaps' || (has(object.immutable) && object.immutable && has(object.data) && (!has(object.binaryData) || size(object.binaryData) == 0) && ((object.metadata.name == \"modeldev-step-owner\" && size(object.data) == 3 && [\"config.json\",\"modeldev-ca.pem\",\"s3-ca.pem\"].all(k,k in object.data && size(object.data[k]) > 0)) || (object.metadata.name == \"ani-kfp-ca\" && size(object.data) == 1 && [\"ca.crt\"].all(k,k in object.data && size(object.data[k]) > 0)) || (object.metadata.name == \"kfp-launcher\" && size(object.data) == 2 && [\"providers\",\"defaultPipelineRoot\"].all(k,k in object.data && size(object.data[k]) > 0)) || (object.metadata.name == \"metadata-grpc-configmap\" && size(object.data) == 2 && [\"METADATA_GRPC_SERVICE_HOST\",\"METADATA_GRPC_SERVICE_PORT\"].all(k,k in object.data && size(object.data[k]) > 0)) || (object.metadata.name == \"modeldev-execution-environment\" && size(object.data) == 2 && [\"binding.json\",\"binding.sha256\"].all(k,k in object.data && size(object.data[k]) > 0))))",
+              "message": "ModelDev: fixed immutable ConfigMaps and exact key sets required"
+            },
+            {
+              "expression": "request.resource.resource != 'secrets' || (object.metadata.name == 'modeldev-kfp-artifacts' && object.type == 'Opaque' && has(object.data) && size(object.data) == 2 && ['access_key','secret_key'].all(k,k in object.data && size(object.data[k]) > 0) && (!has(object.stringData) || size(object.stringData) == 0) && size(object.metadata.labels) == 3 && size(object.metadata.annotations) == 1)",
+              "message": "ModelDev: dedicated two-key artifact Secret and identity-only metadata required"
+            }
+          ],
+          "variables": [
+            {
+              "expression": "namespaceObject != null && has(namespaceObject.metadata.labels) && 'network.ani.io/tenant-id' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/tenant-id'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && namespaceObject.metadata.labels['network.ani.io/tenant-id'] != '00000000-0000-0000-0000-000000000000' && namespaceObject.metadata.name == 'tenant-' + namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'network.ani.io/managed-by' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/managed-by'] == 'ani-network-service'",
+              "name": "standardNamespace"
+            },
+            {
+              "expression": "has(object.metadata.labels) && has(object.metadata.annotations) && 'ani.io/managed-by' in object.metadata.labels && object.metadata.labels['ani.io/managed-by'] == 'ani-modeldev-service' && 'modeldev.ani.io/tenant-id' in object.metadata.labels && object.metadata.labels['modeldev.ani.io/tenant-id'] == namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'modeldev.ani.io/environment-id' in object.metadata.labels && object.metadata.labels['modeldev.ani.io/environment-id'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && object.metadata.labels['modeldev.ani.io/environment-id'] != '00000000-0000-0000-0000-000000000000' && 'modeldev.ani.io/namespace-uid' in object.metadata.annotations && object.metadata.annotations['modeldev.ani.io/namespace-uid'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && object.metadata.annotations['modeldev.ani.io/namespace-uid'] != '00000000-0000-0000-0000-000000000000'",
+              "name": "owner"
+            }
+          ]
+        },
+        "status": {
+          "observedGeneration": 1,
+          "typeChecking": {}
+        }
+      },
+      {
+        "apiVersion": "admissionregistration.k8s.io/v1",
+        "kind": "ValidatingAdmissionPolicy",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:32Z",
+          "generation": 1,
+          "name": "modeldev-environment-config-v1",
+          "resourceVersion": "20954818",
+          "uid": "0bb85730-57be-40d7-84a5-13862e71d951"
+        },
+        "spec": {
+          "failurePolicy": "Fail",
+          "matchConstraints": {
+            "matchPolicy": "Equivalent",
+            "namespaceSelector": {},
+            "objectSelector": {},
+            "resourceRules": [
+              {
+                "apiGroups": [
+                  ""
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE",
+                  "DELETE"
+                ],
+                "resources": [
+                  "serviceaccounts",
+                  "configmaps",
+                  "secrets"
+                ],
+                "scope": "Namespaced"
+              },
+              {
+                "apiGroups": [
+                  "rbac.authorization.k8s.io"
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE",
+                  "DELETE"
+                ],
+                "resources": [
+                  "rolebindings"
+                ],
+                "scope": "Namespaced"
+              }
+            ]
+          },
+          "validations": [
+            {
+              "expression": "request.resource.resource != 'secrets' || !((object != null && has(object.type) && object.type == 'kubernetes.io/service-account-token' && has(object.metadata.annotations) && 'kubernetes.io/service-account.name' in object.metadata.annotations && object.metadata.annotations['kubernetes.io/service-account.name'] in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (oldObject != null && has(oldObject.type) && oldObject.type == 'kubernetes.io/service-account-token' && has(oldObject.metadata.annotations) && 'kubernetes.io/service-account.name' in oldObject.metadata.annotations && oldObject.metadata.annotations['kubernetes.io/service-account.name'] in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]))",
+              "message": "ModelDev: reserved SAs never receive legacy token Secrets"
+            },
+            {
+              "expression": "!variables.protected || request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\",\"kubernetes-admin\"]",
+              "message": "ModelDev: reserved configuration requires an exact platform writer"
+            },
+            {
+              "expression": "request.userInfo.username != \"system:serviceaccount:ani-system:modeldev-control\" || request.operation != 'UPDATE' || (oldObject != null && has(oldObject.metadata.labels) && 'ani.io/managed-by' in oldObject.metadata.labels && oldObject.metadata.labels['ani.io/managed-by'] == 'ani-modeldev-service')",
+              "message": "ModelDev: control cannot adopt foreign configuration"
+            }
+          ],
+          "variables": [
+            {
+              "expression": "request.operation == 'DELETE' ? oldObject : object",
+              "name": "current"
+            },
+            {
+              "expression": "variables.current.metadata.name in ['modeldev-execution-environment','modeldev-kfp-artifacts'] || (request.resource.resource == 'serviceaccounts' && variables.current.metadata.name in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (object != null && has(object.metadata.labels) && 'ani.io/managed-by' in object.metadata.labels && object.metadata.labels['ani.io/managed-by'] == 'ani-modeldev-service') || (oldObject != null && has(oldObject.metadata.labels) && 'ani.io/managed-by' in oldObject.metadata.labels && oldObject.metadata.labels['ani.io/managed-by'] == 'ani-modeldev-service')",
+              "name": "protected"
+            }
+          ]
+        },
+        "status": {
+          "observedGeneration": 1,
+          "typeChecking": {}
+        }
+      },
+      {
+        "apiVersion": "admissionregistration.k8s.io/v1",
+        "kind": "ValidatingAdmissionPolicy",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:32Z",
+          "generation": 1,
+          "name": "modeldev-workload-guard-v1",
+          "resourceVersion": "20954825",
+          "uid": "72edb341-581f-4630-b10f-43ac0eeffa13"
+        },
+        "spec": {
+          "failurePolicy": "Fail",
+          "matchConstraints": {
+            "matchPolicy": "Equivalent",
+            "namespaceSelector": {},
+            "objectSelector": {},
+            "resourceRules": [
+              {
+                "apiGroups": [
+                  "argoproj.io"
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE"
+                ],
+                "resources": [
+                  "workflows",
+                  "workflows/status"
+                ],
+                "scope": "Namespaced"
+              },
+              {
+                "apiGroups": [
+                  "trainer.kubeflow.org"
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE"
+                ],
+                "resources": [
+                  "trainjobs",
+                  "trainjobs/status",
+                  "trainingruntimes"
+                ],
+                "scope": "Namespaced"
+              },
+              {
+                "apiGroups": [
+                  "jobset.x-k8s.io"
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE"
+                ],
+                "resources": [
+                  "jobsets",
+                  "jobsets/status"
+                ],
+                "scope": "Namespaced"
+              },
+              {
+                "apiGroups": [
+                  "batch"
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE"
+                ],
+                "resources": [
+                  "jobs",
+                  "jobs/status"
+                ],
+                "scope": "Namespaced"
+              },
+              {
+                "apiGroups": [
+                  ""
+                ],
+                "apiVersions": [
+                  "*"
+                ],
+                "operations": [
+                  "CREATE",
+                  "UPDATE"
+                ],
+                "resources": [
+                  "pods",
+                  "pods/status",
+                  "pods/ephemeralcontainers"
+                ],
+                "scope": "Namespaced"
+              }
+            ]
+          },
+          "validations": [
+            {
+              "expression": "!variables.protected || variables.standardNamespace",
+              "message": "ModelDev: protected workload requires the standard owned namespace"
+            },
+            {
+              "expression": "!variables.protected || request.operation != 'CREATE' || ((request.resource.resource == \"workflows\" && request.userInfo.username in [\"system:serviceaccount:kubeflow:ml-pipeline\"]) || (request.resource.resource == \"trainjobs\" && request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\"]) || (request.resource.resource == \"trainingruntimes\" && request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\"]) || (request.resource.resource == \"jobsets\" && request.userInfo.username in [\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\"]) || (request.resource.resource == \"jobs\" && request.userInfo.username in [\"system:serviceaccount:kubeflow-system:jobset-controller-manager\"]) || (request.resource.resource == \"pods\" && request.userInfo.username in [\"system:serviceaccount:kubeflow:argo\",\"system:serviceaccount:kube-system:job-controller\"]))",
+              "message": "ModelDev: only exact original controllers create protected resources"
+            },
+            {
+              "expression": "!variables.protected || request.resource.resource != 'pods' || (has(object.spec.serviceAccountName) && ((object.spec.serviceAccountName == 'modeldev-step' && (request.operation != 'CREATE' || request.userInfo.username == \"system:serviceaccount:kubeflow:argo\")) || (object.spec.serviceAccountName == 'trainer-workload' && (request.operation != 'CREATE' || request.userInfo.username == \"system:serviceaccount:kube-system:job-controller\"))))",
+              "message": "ModelDev: reserved Secret, PVC or SA cannot be borrowed"
+            },
+            {
+              "expression": "!variables.protected || request.operation != 'UPDATE' || (request.userInfo.username in [\"kubernetes-admin\",\"system:node:node1\",\"system:node:node2\",\"system:node:node3\",\"system:serviceaccount:ani-system:ani-modeldev-webhook\",\"system:serviceaccount:ani-system:modeldev-control\",\"system:serviceaccount:kube-system:job-controller\",\"system:serviceaccount:kubeflow-system:jobset-controller-manager\",\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\",\"system:serviceaccount:kubeflow:argo\",\"system:serviceaccount:kubeflow:ml-pipeline\",\"system:serviceaccount:kubeflow:ml-pipeline-persistenceagent\"] && variables.sameIdentity && variables.sameRetention && (request.resource.resource == 'workflows' ? (object.spec.templates == oldObject.spec.templates && (has(object.spec.arguments) ? object.spec.arguments : {}) == (has(oldObject.spec.arguments) ? oldObject.spec.arguments : {}) && object.spec.entrypoint == oldObject.spec.entrypoint && object.spec.serviceAccountName == oldObject.spec.serviceAccountName && ((has(object.spec.activeDeadlineSeconds) ? object.spec.activeDeadlineSeconds : -1) == (has(oldObject.spec.activeDeadlineSeconds) ? oldObject.spec.activeDeadlineSeconds : -1) || (request.userInfo.username == \"system:serviceaccount:kubeflow:ml-pipeline\" && has(object.spec.activeDeadlineSeconds) && object.spec.activeDeadlineSeconds == 0))) : request.resource.resource == 'trainjobs' ? (variables.sameSpec || variables.suspendOnly) : request.resource.resource in ['pods','trainingruntimes'] ? variables.sameSpec : variables.newPods == variables.oldPods))",
+              "message": "ModelDev: original templates, four parameters, owner identity and retained Pod spec cannot change"
+            }
+          ],
+          "variables": [
+            {
+              "expression": "(object == null || !has(object.spec) ? [] : request.resource.resource == 'pods' ? [object.spec] : request.resource.resource == 'jobs' ? (has(object.spec.template) && has(object.spec.template.spec) ? [object.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(object.spec.replicatedJobs) ? object.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(object.spec.template) && has(object.spec.template.spec) ? (has(object.spec.template.spec.replicatedJobs) ? object.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [object.spec] + (has(object.spec.templates) ? object.spec.templates.map(t,{'serviceAccountName':dyn(has(t.serviceAccountName) ? t.serviceAccountName : ''), 'volumes':dyn(has(t.volumes) ? t.volumes : []), 'containers':dyn((has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : [])), 'initContainers':dyn(has(t.initContainers) ? t.initContainers : [])}) : []) : [])",
+              "name": "newPods"
+            },
+            {
+              "expression": "(oldObject == null || !has(oldObject.spec) ? [] : request.resource.resource == 'pods' ? [oldObject.spec] : request.resource.resource == 'jobs' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? [oldObject.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(oldObject.spec.replicatedJobs) ? oldObject.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? (has(oldObject.spec.template.spec.replicatedJobs) ? oldObject.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [oldObject.spec] + (has(oldObject.spec.templates) ? oldObject.spec.templates.map(t,{'serviceAccountName':dyn(has(t.serviceAccountName) ? t.serviceAccountName : ''), 'volumes':dyn(has(t.volumes) ? t.volumes : []), 'containers':dyn((has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : [])), 'initContainers':dyn(has(t.initContainers) ? t.initContainers : [])}) : []) : [])",
+              "name": "oldPods"
+            },
+            {
+              "expression": "(object != null && ((has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))))) || (oldObject != null && ((has(oldObject.metadata.labels) && oldObject.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(oldObject.metadata.annotations) && oldObject.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(oldObject.metadata.finalizers) && oldObject.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))))) || variables.newPods.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (has(s.volumes) && s.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(x,has(x.secret) && x.secret.name == 'modeldev-kfp-artifacts')))) || (has(s.containers) && s.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.initContainers) && s.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.ephemeralContainers) && s.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))) || variables.oldPods.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (has(s.volumes) && s.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(x,has(x.secret) && x.secret.name == 'modeldev-kfp-artifacts')))) || (has(s.containers) && s.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.initContainers) && s.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.ephemeralContainers) && s.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))) || (request.resource.resource == 'workflows' && ((object != null && has(object.spec.templates) && object.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"])) || (oldObject != null && has(oldObject.spec.templates) && oldObject.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]))))",
+              "name": "protected"
+            },
+            {
+              "expression": "namespaceObject != null && has(namespaceObject.metadata.labels) && 'network.ani.io/tenant-id' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/tenant-id'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && namespaceObject.metadata.labels['network.ani.io/tenant-id'] != '00000000-0000-0000-0000-000000000000' && namespaceObject.metadata.name == 'tenant-' + namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'network.ani.io/managed-by' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/managed-by'] == 'ani-network-service'",
+              "name": "standardNamespace"
+            },
+            {
+              "expression": "(has(object.metadata.labels) ? object.metadata.labels : {})",
+              "name": "newLabels"
+            },
+            {
+              "expression": "oldObject != null ? (has(oldObject.metadata.labels) ? oldObject.metadata.labels : {}) : {}",
+              "name": "oldLabels"
+            },
+            {
+              "expression": "(has(object.metadata.annotations) ? object.metadata.annotations : {})",
+              "name": "newAnnotations"
+            },
+            {
+              "expression": "oldObject != null ? (has(oldObject.metadata.annotations) ? oldObject.metadata.annotations : {}) : {}",
+              "name": "oldAnnotations"
+            },
+            {
+              "expression": "variables.oldLabels.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/') || k == 'pipeline/runid') || (k in variables.newLabels && variables.oldLabels[k] == variables.newLabels[k])) && variables.newLabels.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/') || k == 'pipeline/runid') || (k in variables.oldLabels && variables.oldLabels[k] == variables.newLabels[k])) && variables.oldAnnotations.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/')) || (k in variables.newAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && variables.newAnnotations.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/')) || (k in variables.oldAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && (has(object.metadata.ownerReferences) ? object.metadata.ownerReferences : []) == (oldObject != null ? (has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []) : [])",
+              "name": "sameIdentity"
+            },
+            {
+              "expression": "oldObject != null && object.spec == oldObject.spec",
+              "name": "sameSpec"
+            },
+            {
+              "expression": "oldObject == null || !has(oldObject.metadata.finalizers) || oldObject.metadata.finalizers.filter(f,f.startsWith('modeldev.ani.io/')).all(f,has(object.metadata.finalizers) && f in object.metadata.finalizers) || request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\"",
+              "name": "sameRetention"
+            },
+            {
+              "expression": "oldObject != null && request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\" && has(object.spec.suspend) && object.spec.suspend && object.spec.all(k,k == 'suspend' || (k in oldObject.spec && object.spec[k] == oldObject.spec[k])) && oldObject.spec.all(k,k == 'suspend' || (k in object.spec && object.spec[k] == oldObject.spec[k]))",
+              "name": "suspendOnly"
+            }
+          ]
+        },
+        "status": {
+          "observedGeneration": 1,
+          "typeChecking": {}
+        }
+      },
+      {
+        "apiVersion": "admissionregistration.k8s.io/v1",
+        "kind": "ValidatingAdmissionPolicyBinding",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:33Z",
+          "generation": 1,
+          "name": "modeldev-bootstrap-v1-binding",
+          "resourceVersion": "20954829",
+          "uid": "c85543d2-fe50-4205-8f09-12f9df668ae5"
+        },
+        "spec": {
+          "policyName": "modeldev-bootstrap-v1",
+          "validationActions": [
+            "Deny"
+          ]
+        }
+      },
+      {
+        "apiVersion": "admissionregistration.k8s.io/v1",
+        "kind": "ValidatingAdmissionPolicyBinding",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:33Z",
+          "generation": 1,
+          "name": "modeldev-environment-config-v1-binding",
+          "resourceVersion": "20954835",
+          "uid": "160e30ce-bc34-49fc-8527-12499c500e4d"
+        },
+        "spec": {
+          "policyName": "modeldev-environment-config-v1",
+          "validationActions": [
+            "Deny"
+          ]
+        }
+      },
+      {
+        "apiVersion": "admissionregistration.k8s.io/v1",
+        "kind": "ValidatingAdmissionPolicyBinding",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:34Z",
+          "generation": 1,
+          "name": "modeldev-workload-guard-v1-binding",
+          "resourceVersion": "20954842",
+          "uid": "d3e51d93-9d07-4c77-b6c7-3ae744069d3f"
+        },
+        "spec": {
+          "policyName": "modeldev-workload-guard-v1",
+          "validationActions": [
+            "Deny"
+          ]
+        }
+      },
+      {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "ClusterRole",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:35Z",
+          "name": "modeldev-step-v1",
+          "resourceVersion": "20954854",
+          "uid": "7f81a827-bdfc-4c63-a1fb-2a4dd64a0f08"
+        },
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "persistentvolumeclaims"
+            ],
+            "verbs": [
+              "create",
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              "argoproj.io"
+            ],
+            "resources": [
+              "workflows"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "patch",
+              "update"
+            ]
+          },
+          {
+            "apiGroups": [
+              "argoproj.io"
+            ],
+            "resources": [
+              "workflowtaskresults"
+            ],
+            "verbs": [
+              "create",
+              "patch"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "kfp-launcher",
+              "metadata-grpc-configmap",
+              "ani-kfp-ca"
+            ],
+            "resources": [
+              "configmaps"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "modeldev-kfp-artifacts"
+            ],
+            "resources": [
+              "secrets"
+            ],
+            "verbs": [
+              "get"
+            ]
+          }
+        ]
+      },
+      {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "ClusterRole",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:35Z",
+          "name": "modeldev-webhook-read-v1",
+          "resourceVersion": "20954859",
+          "uid": "26f81d81-9b56-44af-b170-78a09dbc7e3a"
+        },
+        "rules": [
+          {
+            "apiGroups": [
+              "argoproj.io"
+            ],
+            "resources": [
+              "workflows"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              "batch"
+            ],
+            "resources": [
+              "jobs"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              "jobset.x-k8s.io"
+            ],
+            "resources": [
+              "jobsets"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              "trainer.kubeflow.org"
+            ],
+            "resources": [
+              "trainjobs",
+              "trainingruntimes"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "modeldev-step",
+              "trainer-workload",
+              "verifier"
+            ],
+            "resources": [
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "modeldev-execution-environment"
+            ],
+            "resources": [
+              "configmaps"
+            ],
+            "verbs": [
+              "get"
+            ]
+          }
+        ]
+      },
+      {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "ClusterRole",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:36Z",
+          "name": "modeldev-kfp-api-v1",
+          "resourceVersion": "20954863",
+          "uid": "c07e4a4f-aff6-4e44-9422-360fe2e7aeba"
+        },
+        "rules": [
+          {
+            "apiGroups": [
+              "argoproj.io"
+            ],
+            "resources": [
+              "workflows"
+            ],
+            "verbs": [
+              "create",
+              "patch",
+              "delete"
+            ]
+          }
+        ]
+      },
+      {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "ClusterRole",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:36Z",
+          "name": "modeldev-kfp-access-v1",
+          "resourceVersion": "20954868",
+          "uid": "93bf2900-ced6-4e77-b91e-b0100955e9ba"
+        },
+        "rules": [
+          {
+            "apiGroups": [
+              "pipelines.kubeflow.org"
+            ],
+            "resources": [
+              "experiments"
+            ],
+            "verbs": [
+              "create",
+              "get",
+              "list"
+            ]
+          },
+          {
+            "apiGroups": [
+              "pipelines.kubeflow.org"
+            ],
+            "resources": [
+              "runs"
+            ],
+            "verbs": [
+              "create",
+              "get",
+              "list",
+              "terminate",
+              "delete"
+            ]
+          }
+        ]
+      },
+      {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "ClusterRole",
+        "metadata": {
+          "creationTimestamp": "2026-11-01T03:56:34Z",
+          "name": "modeldev-runtime-v1",
+          "resourceVersion": "20984029",
+          "uid": "9d141850-ae2b-4586-afed-cb9ac8c3a45a"
+        },
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "pods"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "patch",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "pods/log"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "persistentvolumeclaims"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resourceNames": [
+              "modeldev-step",
+              "trainer-workload",
+              "verifier"
+            ],
+            "resources": [
+              "serviceaccounts"
+            ],
+            "verbs": [
+              "get"
+            ]
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "resources": [
+              "events"
+            ],
+            "verbs": [
+              "get",
+              "list"
+            ]
+          },
+          {
+            "apiGroups": [
+              "argoproj.io"
+            ],
+            "resources": [
+              "workflows"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "trainer.kubeflow.org"
+            ],
+            "resources": [
+              "trainjobs"
+            ],
+            "verbs": [
+              "create",
+              "get",
+              "list",
+              "patch",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "trainer.kubeflow.org"
+            ],
+            "resources": [
+              "trainingruntimes"
+            ],
+            "verbs": [
+              "create",
+              "get",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "jobset.x-k8s.io"
+            ],
+            "resources": [
+              "jobsets"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "batch"
+            ],
+            "resources": [
+              "jobs"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          {
+            "apiGroups": [
+              "scheduling.volcano.sh"
+            ],
+            "resources": [
+              "podgroups"
+            ],
+            "verbs": [
+              "get",
+              "list",
+              "delete"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "finished_at": "2026-11-01T04:45:42.927673+00:00"
+}

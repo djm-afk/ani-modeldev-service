@@ -1,0 +1,81 @@
+{
+  "status": "SUBMITTED",
+  "selection": {
+    "project": "governance",
+    "branch": "codex/modeldev-create-maintenance",
+    "commit": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+    "environment": "ani-kcn-full",
+    "harbor": "intranet",
+    "run_verify": false,
+    "request_id": "19c157e0-f769-4291-a40e-e23fcbef9644"
+  },
+  "preflight": {
+    "identity": {
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+    },
+    "required_check_reused": {
+      "commit": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+      "exit_code": 0,
+      "includes_audit": true,
+      "delivery_sha256": "949101bc10dc093f2c3c940bedbc79b4609554c4699833f593257ffd1d53c0fc",
+      "log_sha256": "fe6721e45d7e49b536b38c5ece9d09bb24f9c2729475253926e597f39b70b1e1",
+      "execution_host": "ssh fedora"
+    },
+    "pause_env": {
+      "source": "unset",
+      "effective": "unset"
+    },
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "target": {
+      "id": "ani-kcn-full",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "namespace": "ani-system",
+      "deployment": "ani-governance",
+      "container": "governance"
+    }
+  },
+  "job": {
+    "id": "3b191f8ee306437ea5cdcbba6520399b",
+    "request_id": "19c157e0-f769-4291-a40e-e23fcbef9644",
+    "project": "governance",
+    "branch": "codex/modeldev-create-maintenance",
+    "source_commit": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+    "run_verify": false,
+    "status": "queued",
+    "created_at": "2026-11-01T01:42:47.553839+00:00",
+    "error_present": false,
+    "steps": [
+      {
+        "id": "fetch",
+        "status": "pending"
+      },
+      {
+        "id": "verify",
+        "status": "pending"
+      },
+      {
+        "id": "build",
+        "status": "pending"
+      },
+      {
+        "id": "push",
+        "status": "pending"
+      },
+      {
+        "id": "deploy",
+        "status": "pending"
+      },
+      {
+        "id": "ready",
+        "status": "pending"
+      }
+    ],
+    "recipe_sha256": {},
+    "build": {}
+  }
+}

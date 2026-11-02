@@ -1,0 +1,23 @@
+{
+  "started_at": "2026-10-31T21:05:19.067910+00:00",
+  "completed_at": "2026-10-31T21:05:19.190126+00:00",
+  "command": [
+    "python3",
+    "scripts/permcode/gen-go-maps.py",
+    "--check"
+  ],
+  "cwd": "/home/chabking/workspace/ani-governance-runs/modeldev-tenant-env-20261101/source",
+  "source_base": "f6a68ed7f89cca56b4ea97377a21e4146f4c6b62",
+  "exit_code": 0,
+  "environment": {
+    "GOTOOLCHAIN": "auto",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2"
+  },
+  "source_sha256": {
+    "docs/contracts/permission-code-capability-map.tsv": "9bd2d471bdb49764468fe9866c39e8e0cf7b059c42edbdd9651769ece7b9a4f3",
+    "pkg/permcode/capability_gen.go": "362e30ef666e76ff6f829ea8c4214596a10e35c999ee26109ff77cfeb276f6df",
+    "pkg/permcode/permcode_test.go": "87de4e48ba9e89a52663b1b4536f9f76678cee8d996aaa0a3fbd931ebbd4bf83",
+    "sql/bootstrap/catalog_test.go": "3127bfe808c052fd8f6f2c70dc235ff53a90be7073b42039fba11c45fc0adb5c"
+  }
+}

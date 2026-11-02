@@ -1,0 +1,496 @@
+{
+  "schema": "ani.resource.final-namespace-uid-window-release-actual.v1",
+  "job_id": "34eed91756034329aa34031034f1070a",
+  "request_id": "0b249536-13a5-4a79-855c-4389f907ca76",
+  "started_at": "2026-11-01T05:17:32.630437+00:00",
+  "source_commit": "67dceef03f01215c294a55f11464e3e3a52cb783",
+  "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:67b0751b46c9c8f1d888b0910b12498ea3ab9f7ffd7fea9311d9dcb3d1ecfad2",
+  "image_digest": "sha256:67b0751b46c9c8f1d888b0910b12498ea3ab9f7ffd7fea9311d9dcb3d1ecfad2",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api_server": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "ssh_user": "kubercloud",
+    "hostname": "node1"
+  },
+  "events": [
+    {
+      "phase": "new_image_rollout",
+      "deployment_generation": 117,
+      "observed_generation": 117,
+      "updated_replicas": 1,
+      "available_replicas": 1,
+      "pods": 1,
+      "observed_at": "2026-11-01T05:17:33.116515+00:00"
+    },
+    {
+      "phase": "recovery-v3-release-plan",
+      "exit": 0,
+      "stdout_sha256": "e2f46f1668de3f4ec14b070488753489d51f99cfb00b3bea78002790a4221371",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "safe_stderr": "",
+      "observed_at": "2026-11-01T05:17:34.658810+00:00"
+    },
+    {
+      "phase": "recovery-v3-release-apply",
+      "exit": 0,
+      "stdout_sha256": "6a24e54f90442229d8a75f2f7a2adbd81016d57ea3b04a4bf8d2ede5621340fb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "safe_stderr": "",
+      "observed_at": "2026-11-01T05:17:37.424460+00:00"
+    },
+    {
+      "phase": "complete",
+      "status": "RES_FINAL_READY_WINDOW_RELEASED",
+      "release_applied": true,
+      "uid_guard_absent": true,
+      "stable_new_pod_uid": "23f92d36-30ca-4047-a6aa-c35ff035eb88",
+      "observed_at": "2026-11-01T05:17:37.749872+00:00"
+    }
+  ],
+  "status": "RES_FINAL_READY_WINDOW_RELEASED",
+  "release_applied": true,
+  "stable_new_pod": {
+    "name": "ani-resource-service-5d97d6cf8c-grgbb",
+    "uid": "23f92d36-30ca-4047-a6aa-c35ff035eb88",
+    "replica_set_uid": "6f7f957c-bc93-453d-a3d7-7576b0379971",
+    "node": "node3",
+    "ip": "10.16.12.96",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:67b0751b46c9c8f1d888b0910b12498ea3ab9f7ffd7fea9311d9dcb3d1ecfad2",
+    "actual_image_id": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:67b0751b46c9c8f1d888b0910b12498ea3ab9f7ffd7fea9311d9dcb3d1ecfad2",
+    "ready": true,
+    "restarts": 0,
+    "deployment_spec_sha256": "deec7227159b53c6a32b8171b02f7f00971e2f5ec2048e048edfc8f54116ffb5"
+  },
+  "database_before_release": {
+    "transaction_read_only": "on",
+    "database": "ani_resource",
+    "effective_role": "postgres",
+    "schema_version": 25,
+    "uid_guard_count": 1,
+    "cluster_row_count": 2,
+    "cluster_null_uid_count": 0,
+    "original_ip_backend_count": 0,
+    "resource_runtime_backends": [
+      {
+        "pid": 1104427,
+        "backend_start": "2026-11-01T05:17:23.605143+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104428,
+        "backend_start": "2026-11-01T05:17:23.614621+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104429,
+        "backend_start": "2026-11-01T05:17:23.62521+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104430,
+        "backend_start": "2026-11-01T05:17:23.63556+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104431,
+        "backend_start": "2026-11-01T05:17:23.65138+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104432,
+        "backend_start": "2026-11-01T05:17:23.676531+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104433,
+        "backend_start": "2026-11-01T05:17:23.676926+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104434,
+        "backend_start": "2026-11-01T05:17:23.67769+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104435,
+        "backend_start": "2026-11-01T05:17:23.678197+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104436,
+        "backend_start": "2026-11-01T05:17:23.678753+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104437,
+        "backend_start": "2026-11-01T05:17:23.679343+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104438,
+        "backend_start": "2026-11-01T05:17:23.67965+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104439,
+        "backend_start": "2026-11-01T05:17:23.680232+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104440,
+        "backend_start": "2026-11-01T05:17:23.680873+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104441,
+        "backend_start": "2026-11-01T05:17:23.68127+00:00",
+        "client_address": "10.16.12.96"
+      }
+    ]
+  },
+  "release_manifest_sha256": "ec8264735071efe878322213c7f7a994d09f128c088434b28ead53745efa8136",
+  "reviewed_release_plan_sha256": "e937f2099c29ddc45ec9caf6239a6cb51734814bbb685f0218c3f69488de1537",
+  "official_release_envelope": {
+    "Manifest": {
+      "Schema": "ani.resource.namespace-uid-window.v1",
+      "Window": {
+        "WindowID": "132176f6-764a-4a47-ad36-f40884f72d0d",
+        "Stage": "release",
+        "ClusterID": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "Database": "ani_resource",
+        "RuntimeRole": "resource_runtime",
+        "Rows": [
+          {
+            "TenantID": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "UID": "8698b0b5-f4c8-4770-85e5-10f25ad7b347"
+          },
+          {
+            "TenantID": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "Namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "UID": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0"
+          }
+        ],
+        "WriterAddresses": [
+          "10.16.10.16"
+        ],
+        "OldBackends": [
+          {
+            "PID": 1094333,
+            "StartedAt": "2026-11-01T11:09:27.704587+08:00"
+          },
+          {
+            "PID": 1094829,
+            "StartedAt": "2026-11-01T11:13:44.468077+08:00"
+          },
+          {
+            "PID": 1095129,
+            "StartedAt": "2026-11-01T11:17:45.413878+08:00"
+          },
+          {
+            "PID": 1095172,
+            "StartedAt": "2026-11-01T11:18:24.429327+08:00"
+          },
+          {
+            "PID": 1096666,
+            "StartedAt": "2026-11-01T11:35:19.644992+08:00"
+          },
+          {
+            "PID": 1096668,
+            "StartedAt": "2026-11-01T11:35:24.120584+08:00"
+          },
+          {
+            "PID": 1096974,
+            "StartedAt": "2026-11-01T11:39:24.804997+08:00"
+          },
+          {
+            "PID": 1096991,
+            "StartedAt": "2026-11-01T11:39:34.478436+08:00"
+          },
+          {
+            "PID": 1097193,
+            "StartedAt": "2026-11-01T11:42:20.715227+08:00"
+          },
+          {
+            "PID": 1097483,
+            "StartedAt": "2026-11-01T11:44:54.403126+08:00"
+          },
+          {
+            "PID": 1097758,
+            "StartedAt": "2026-11-01T11:48:41.93427+08:00"
+          },
+          {
+            "PID": 1097928,
+            "StartedAt": "2026-11-01T11:51:04.4545+08:00"
+          },
+          {
+            "PID": 1098068,
+            "StartedAt": "2026-11-01T11:52:48.587916+08:00"
+          },
+          {
+            "PID": 1098387,
+            "StartedAt": "2026-11-01T11:55:56.781267+08:00"
+          },
+          {
+            "PID": 1098709,
+            "StartedAt": "2026-11-01T12:00:15.465883+08:00"
+          }
+        ],
+        "WriterProofSHA256": "5362ad951ee76c164361dc16b4fe7728e2c05a90db25a23c95c671e35a5c56c3"
+      },
+      "Deployment": {
+        "Namespace": "ani-system",
+        "Name": "ani-resource-service",
+        "UID": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+        "Container": "resource"
+      },
+      "OldPods": [
+        {
+          "Name": "ani-resource-service-5d5bb7b9d9-6v4qb",
+          "UID": "f6e8e746-1664-4544-8dca-ea05b53d7483",
+          "IP": "10.16.10.16"
+        }
+      ],
+      "NewImage": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:67b0751b46c9c8f1d888b0910b12498ea3ab9f7ffd7fea9311d9dcb3d1ecfad2",
+      "NewImageDigest": "sha256:67b0751b46c9c8f1d888b0910b12498ea3ab9f7ffd7fea9311d9dcb3d1ecfad2",
+      "NewSourceCommit": "67dceef03f01215c294a55f11464e3e3a52cb783"
+    },
+    "Plan": {
+      "Input": {
+        "WindowID": "132176f6-764a-4a47-ad36-f40884f72d0d",
+        "Stage": "release",
+        "ClusterID": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "Database": "ani_resource",
+        "RuntimeRole": "resource_runtime",
+        "Rows": [
+          {
+            "TenantID": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "UID": "8698b0b5-f4c8-4770-85e5-10f25ad7b347"
+          },
+          {
+            "TenantID": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "Namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "UID": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0"
+          }
+        ],
+        "WriterAddresses": [
+          "10.16.10.16"
+        ],
+        "OldBackends": [
+          {
+            "PID": 1094333,
+            "StartedAt": "2026-11-01T11:09:27.704587+08:00"
+          },
+          {
+            "PID": 1094829,
+            "StartedAt": "2026-11-01T11:13:44.468077+08:00"
+          },
+          {
+            "PID": 1095129,
+            "StartedAt": "2026-11-01T11:17:45.413878+08:00"
+          },
+          {
+            "PID": 1095172,
+            "StartedAt": "2026-11-01T11:18:24.429327+08:00"
+          },
+          {
+            "PID": 1096666,
+            "StartedAt": "2026-11-01T11:35:19.644992+08:00"
+          },
+          {
+            "PID": 1096668,
+            "StartedAt": "2026-11-01T11:35:24.120584+08:00"
+          },
+          {
+            "PID": 1096974,
+            "StartedAt": "2026-11-01T11:39:24.804997+08:00"
+          },
+          {
+            "PID": 1096991,
+            "StartedAt": "2026-11-01T11:39:34.478436+08:00"
+          },
+          {
+            "PID": 1097193,
+            "StartedAt": "2026-11-01T11:42:20.715227+08:00"
+          },
+          {
+            "PID": 1097483,
+            "StartedAt": "2026-11-01T11:44:54.403126+08:00"
+          },
+          {
+            "PID": 1097758,
+            "StartedAt": "2026-11-01T11:48:41.93427+08:00"
+          },
+          {
+            "PID": 1097928,
+            "StartedAt": "2026-11-01T11:51:04.4545+08:00"
+          },
+          {
+            "PID": 1098068,
+            "StartedAt": "2026-11-01T11:52:48.587916+08:00"
+          },
+          {
+            "PID": 1098387,
+            "StartedAt": "2026-11-01T11:55:56.781267+08:00"
+          },
+          {
+            "PID": 1098709,
+            "StartedAt": "2026-11-01T12:00:15.465883+08:00"
+          }
+        ],
+        "WriterProofSHA256": "5362ad951ee76c164361dc16b4fe7728e2c05a90db25a23c95c671e35a5c56c3"
+      },
+      "Before": {
+        "Database": "ani_resource",
+        "User": "postgres",
+        "ServerAddress": "10.16.0.63/32",
+        "TableOwner": "resource_migrate",
+        "DatabaseOID": 16485,
+        "TableOID": 20127,
+        "ServerPort": 5432,
+        "SchemaVersion": 25,
+        "UIDColumn": true,
+        "Constraint": "((cluster_id <> 'f39bf6e2-f3ed-4191-ada3-caeebf86c220'::text) OR (namespace_uid IS NOT NULL))",
+        "ConstraintComment": "ani.resource.namespace-uid-window.v1:132176f6-764a-4a47-ad36-f40884f72d0d",
+        "ConstraintValidated": false,
+        "Rows": [
+          {
+            "TenantID": "207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "Namespace": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+            "UID": "8698b0b5-f4c8-4770-85e5-10f25ad7b347"
+          },
+          {
+            "TenantID": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "Namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "UID": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0"
+          }
+        ],
+        "OldBackends": []
+      },
+      "SQL": [
+        "ALTER TABLE \"public\".\"network_tenant_namespaces\" DROP CONSTRAINT \"network_tenant_namespaces_uid_cutover\""
+      ],
+      "SHA256": "e937f2099c29ddc45ec9caf6239a6cb51734814bbb685f0218c3f69488de1537"
+    },
+    "Applied": true,
+    "Verification": {
+      "ssh": "kubercloud@100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "namespaces": [
+        {
+          "name": "tenant-207328fc-f08d-4dc4-b403-16ec86396ce2",
+          "uid": "8698b0b5-f4c8-4770-85e5-10f25ad7b347"
+        },
+        {
+          "name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+          "uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0"
+        }
+      ],
+      "deployment_uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+      "pods": [
+        {
+          "Name": "ani-resource-service-5d97d6cf8c-grgbb",
+          "UID": "23f92d36-30ca-4047-a6aa-c35ff035eb88",
+          "IP": "10.16.12.96"
+        }
+      ],
+      "stage": "release",
+      "read_only": true
+    }
+  },
+  "database_after_release": {
+    "transaction_read_only": "on",
+    "database": "ani_resource",
+    "effective_role": "postgres",
+    "schema_version": 25,
+    "uid_guard_count": 0,
+    "cluster_row_count": 2,
+    "cluster_null_uid_count": 0,
+    "original_ip_backend_count": 0,
+    "resource_runtime_backends": [
+      {
+        "pid": 1104427,
+        "backend_start": "2026-11-01T05:17:23.605143+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104428,
+        "backend_start": "2026-11-01T05:17:23.614621+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104429,
+        "backend_start": "2026-11-01T05:17:23.62521+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104430,
+        "backend_start": "2026-11-01T05:17:23.63556+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104431,
+        "backend_start": "2026-11-01T05:17:23.65138+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104432,
+        "backend_start": "2026-11-01T05:17:23.676531+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104433,
+        "backend_start": "2026-11-01T05:17:23.676926+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104434,
+        "backend_start": "2026-11-01T05:17:23.67769+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104435,
+        "backend_start": "2026-11-01T05:17:23.678197+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104436,
+        "backend_start": "2026-11-01T05:17:23.678753+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104437,
+        "backend_start": "2026-11-01T05:17:23.679343+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104438,
+        "backend_start": "2026-11-01T05:17:23.67965+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104439,
+        "backend_start": "2026-11-01T05:17:23.680232+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104440,
+        "backend_start": "2026-11-01T05:17:23.680873+00:00",
+        "client_address": "10.16.12.96"
+      },
+      {
+        "pid": 1104441,
+        "backend_start": "2026-11-01T05:17:23.68127+00:00",
+        "client_address": "10.16.12.96"
+      }
+    ]
+  },
+  "finished_at": "2026-11-01T05:17:37.751495+00:00"
+}

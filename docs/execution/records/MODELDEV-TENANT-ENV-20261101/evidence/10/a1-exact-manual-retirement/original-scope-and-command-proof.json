@@ -1,0 +1,354 @@
+{
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T11:34:12.868574+00:00"
+  },
+  "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60",
+  "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+  "kfp_run_id": "83e25294-500f-4d8b-8b02-9e3e3ae235d7",
+  "persistent_mutations": false,
+  "pods": [
+    {
+      "name": "md-q9bb7-2399679389",
+      "uid": "580684e9-8d0d-4c32-85dd-06a551e67105",
+      "resource_version": "21194116",
+      "phase": "Failed",
+      "generation": 2,
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "declared_containers": [
+        "wait",
+        "main"
+      ],
+      "declared_init_containers": [
+        "init"
+      ],
+      "original_native_status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-11-01T10:06:20Z",
+            "observedGeneration": 2,
+            "status": "False",
+            "type": "PodReadyToStartContainers"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-11-01T10:06:20Z",
+            "message": "containers with incomplete status: [init]",
+            "observedGeneration": 2,
+            "reason": "ContainersNotInitialized",
+            "status": "False",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-11-01T10:06:20Z",
+            "message": "containers with unready status: [wait main]",
+            "observedGeneration": 2,
+            "reason": "ContainersNotReady",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-11-01T10:06:20Z",
+            "message": "containers with unready status: [wait main]",
+            "observedGeneration": 2,
+            "reason": "ContainersNotReady",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2026-11-01T10:06:20Z",
+            "observedGeneration": 2,
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "image": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+            "imageID": "",
+            "lastState": {},
+            "name": "main",
+            "ready": false,
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "waiting": {
+                "reason": "PodInitializing"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-9x6hk",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          },
+          {
+            "image": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "imageID": "",
+            "lastState": {},
+            "name": "wait",
+            "ready": false,
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "waiting": {
+                "reason": "PodInitializing"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/mainctrfs/kfp/certs",
+                "name": "custom-ca"
+              },
+              {
+                "mountPath": "/tmp",
+                "name": "tmp-dir-argo"
+              },
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-9x6hk",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "hostIP": "10.10.1.68",
+        "hostIPs": [
+          {
+            "ip": "10.10.1.68"
+          }
+        ],
+        "initContainerStatuses": [
+          {
+            "image": "10.10.1.66:5001/ani-kubeflow/argoproj/argoexec:v3.7.3@sha256:427154a68a3b8ec22225bc46151db943a3d579d69baed2c0eec8c25920f1215a",
+            "imageID": "",
+            "lastState": {},
+            "name": "init",
+            "ready": false,
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "terminated": {
+                "exitCode": 137,
+                "finishedAt": null,
+                "message": "The container could not be located when the pod was terminated",
+                "reason": "ContainerStatusUnknown",
+                "startedAt": null
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/run/argo",
+                "name": "var-run-argo"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-9x6hk",
+                "readOnly": true,
+                "recursiveReadOnly": "Disabled"
+              }
+            ]
+          }
+        ],
+        "observedGeneration": 2,
+        "phase": "Failed",
+        "qosClass": "Burstable",
+        "startTime": "2026-11-01T10:06:20Z"
+      },
+      "exact_never_created_marker_and_sandbox_stopped": true
+    }
+  ],
+  "workflow": {
+    "name": "md-q9bb7",
+    "uid": "f048c2d6-90e9-40b9-afdf-dff24195ccc7",
+    "resource_version": "21194119",
+    "phase": "Failed",
+    "finished_at": "2026-11-01T10:36:19Z",
+    "finalizers": [],
+    "node_graph_sha256": "d979ca3c632c144375da9f9829331b3543363f565b64725e463988676ea48d1c"
+  },
+  "pvc": null,
+  "pv": null,
+  "no_workspace_pvc": true,
+  "original_kfp_binding": {
+    "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60",
+    "operation_id": "136a3255-5c76-4c33-a8e8-79bb60968c11",
+    "spec_hash": "d6ca2aaba887393428a569a87c9a6efa43c6f630df06ad1297fe84687a13fe2f",
+    "environment": {
+      "binding_id": "430ec5fe-057f-4e8a-a86b-b47119cf7d0d",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "identities": {
+        "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+        "trainer_service_account": "trainer-workload",
+        "kfp_step_service_account": "modeldev-step",
+        "verifier_service_account": "verifier",
+        "trainer_service_account_uid": "204af62b-eafb-432f-ada6-3f3e8b8c03e5",
+        "kfp_step_service_account_uid": "7076f549-c586-4971-b554-3eae5516ab7c",
+        "verifier_service_account_uid": "91d8f8ec-0c34-44ef-a64c-3409dd915a1e",
+        "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control"
+      },
+      "experiment_id": "e309c53a-d68e-487f-b4bb-af87ccffead8",
+      "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+      "binding_digest": "6cb539d752797897da81d438775aaff03234d46552c8fb00733fcdb15373614a",
+      "namespace_name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47"
+    },
+    "display_name": "md-f5eb1008-4d77-4c99-874b-05c9e427da60",
+    "pipeline_id": "dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+    "pipeline_version_id": "f27d259b-5a53-434a-a3eb-d31091159a7b",
+    "owner": {
+      "reference": "modeldev-tenantenv-20261101",
+      "pipeline_root": "s3://ani-md-tenantenv-kfp-20261101/artifacts/64c5c35a-f554-432c-b4bc-7b4f36f08420/f5eb1008-4d77-4c99-874b-05c9e427da60",
+      "revision_sha256": "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6"
+    }
+  },
+  "modeldev": {
+    "tables": {
+      "modeldev_executions": {
+        "rows": [
+          {
+            "row_md5": "0e6058a80c23111cf538afd8c216e2cd",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_close_intents": {
+        "rows": [],
+        "count": 0
+      },
+      "modeldev_run_authorities": {
+        "rows": [],
+        "count": 0
+      },
+      "modeldev_execution_runtimes": {
+        "rows": [
+          {
+            "row_md5": "d7c7f2d4faca9fdebcf5397f49fd0236",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_pipeline_dispatches": {
+        "rows": [
+          {
+            "row_md5": "5590b708eccadd9b604393a47e40ebd0",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_execution_identities": {
+        "rows": [
+          {
+            "row_md5": "d56fefa66d48f01ffa7e0fb41a7754a8",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_pipeline_confirmed_runs": {
+        "rows": [
+          {
+            "row_md5": "37985e39957becb0874ec665ec9bacd3",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_execution_cleanup_audits": {
+        "rows": [],
+        "count": 0
+      }
+    },
+    "runtime": {
+      "closed_at": null,
+      "spec_hash": "d6ca2aaba887393428a569a87c9a6efa43c6f630df06ad1297fe84687a13fe2f",
+      "facts_keys": [
+        "ClosedAt",
+        "Training",
+        "Workspace",
+        "CloseReason",
+        "Observation",
+        "Publication",
+        "CloseEvidence",
+        "OwnerRevision",
+        "CloseAuthority",
+        "TrainingHandle",
+        "CloseGeneration",
+        "CloseRequestedAt",
+        "CloseReviewReason",
+        "close_operation_id"
+      ],
+      "close_reason": "DEADLINE",
+      "operation_id": "136a3255-5c76-4c33-a8e8-79bb60968c11",
+      "close_generation": 1,
+      "training_present": false,
+      "workspace_present": false,
+      "training_handle_present": false
+    },
+    "dispatch": {
+      "state": "SUBMISSION_CONFIRMED",
+      "plan_hash": "be4dec0d7241d05ca8017b1f0a5ad74434f3752745b424c153bbf0a0b2b075a0"
+    }
+  },
+  "operation_id": "136a3255-5c76-4c33-a8e8-79bb60968c11",
+  "governance": {
+    "charges": 0,
+    "operations": [],
+    "usage_sync": 0,
+    "acceptances": [
+      {
+        "id": 88,
+        "row_md5": "130e229cd2e923a813444079fcf0407b",
+        "tenant_id": 2,
+        "lease_owner": null,
+        "lease_until": null,
+        "execution_id": "f5eb1008-4d77-4c99-874b-05c9e427da60",
+        "operation_id": "136a3255-5c76-4c33-a8e8-79bb60968c11",
+        "attempt_count": 1,
+        "retry_blocked": false,
+        "dispatch_state": "ACKED",
+        "close_lease_owner": null,
+        "close_lease_until": null,
+        "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "close_dispatch_state": "IDLE",
+        "stop_intent_generation": 0
+      }
+    ]
+  },
+  "observed_at": "2026-11-01T11:34:13.621089+00:00"
+}

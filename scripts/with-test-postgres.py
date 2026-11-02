@@ -39,6 +39,8 @@ def main():
                 "--cpus=1", "--memory=512m", "--pids-limit=128",
                 "--tmpfs", "/var/lib/postgresql/data:rw,size=384m",
                 "--publish", "127.0.0.1::5432", "--env-file", str(credentials), IMAGE,
+                "-c", "shared_buffers=32MB", "-c", "max_wal_size=64MB",
+                "-c", "min_wal_size=32MB", "-c", "checkpoint_timeout=30s",
             ], text=True).strip()
             for _ in range(30):
                 # The image starts a socket-only temporary server during init.
@@ -58,6 +60,10 @@ def main():
                 "NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;\n"
                 "REVOKE CREATE ON SCHEMA public FROM PUBLIC;\n"
             )
+            # Install the fixed public helper once for this exclusive test DB;
+            # individual behavioral tests still create isolated table schemas.
+            migration = Path(__file__).resolve().parents[1] / "migrations/0003_execution_environment_projection.up.sql"
+            sql += "CREATE FUNCTION" + migration.read_text(encoding="utf-8").split("CREATE FUNCTION", 1)[1]
             configured = subprocess.run([
                 "docker", "exec", "-i", container_id, "psql", "-X", "-v", "ON_ERROR_STOP=1",
                 "-U", "cpu_p01_owner", "-d", "cpu_p01_test",
@@ -76,7 +82,24 @@ def main():
                 f"postgres://cpu_p01_owner:{owner_password}@127.0.0.1:{port}/cpu_p01_test?sslmode=disable"
             )
             print("Real PostgreSQL test dependency ready; restricted runtime role; loopback only.", flush=True)
-            return subprocess.run(sys.argv[1:], env=environment, check=False).returncode
+            result = subprocess.run(sys.argv[1:], env=environment, check=False)
+            if result.returncode:
+                # Preserve a bounded infrastructure diagnosis before deleting
+                # this invocation's exclusive fixture. Never emit DB URLs or
+                # SQL statements, which may contain private test references.
+                state = subprocess.check_output([
+                    "docker", "inspect", "--format",
+                    'running={{.State.Running}} oom_killed={{.State.OOMKilled}} exit={{.State.ExitCode}}',
+                    container_id,
+                ], text=True).strip()
+                print("Test PostgreSQL diagnostic: " + state, flush=True)
+                logs = subprocess.run(["docker", "logs", "--tail", "80", container_id], capture_output=True, text=True, check=False)
+                for line in (logs.stdout + logs.stderr).splitlines():
+                    for cause in ("No space left on device", "out of memory", "could not resize shared memory", "PANIC:"):
+                        if cause in line:
+                            print("Test PostgreSQL diagnostic: " + cause, flush=True)
+                            break
+            return result.returncode
         finally:
             if container_id:
                 label = subprocess.check_output([

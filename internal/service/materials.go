@@ -25,6 +25,9 @@ func NewManagement(materials *biz.ManagedMaterials) *Management {
 	return &Management{materials: materials}
 }
 func materialsError(err error, requestID string) error {
+	if mapped, ok := admissionEnvironmentError(err, requestID); ok {
+		return mapped
+	}
 	var violation *cpup01.LimitViolation
 	switch {
 	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):

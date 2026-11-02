@@ -4,8 +4,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -20,6 +18,8 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/lifecycle"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 )
 
 func TestCloseOnlyOriginalNoDispatchClosesWithoutTrainingAndReplaysStop(t *testing.T) {
@@ -71,13 +71,8 @@ func TestCloseOnlyUncertainNoRunKeepsNeedsReviewWithoutResend(t *testing.T) {
 	if _, err := execution.New(pool).Accept(ctx, f.admission); err != nil {
 		t.Fatal(err)
 	}
-	var binding biz.PipelineDispatchBinding
-	raw, err := os.ReadFile(f.config.Runtime.BindingFile)
-	if err != nil || json.Unmarshal(raw, &binding) != nil {
-		t.Fatal("fixture binding unavailable")
-	}
 	dispatches := submission.New(pool)
-	reserved, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.admission, Owner: binding.Owner})
+	reserved, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.admission, Owner: f.admission.Snapshot.DispatchOwner})
 	if err != nil || reserved.SendPermit == nil {
 		t.Fatal("actual original send reservation unavailable", err)
 	}
@@ -96,7 +91,7 @@ func TestCloseOnlyUncertainNoRunKeepsNeedsReviewWithoutResend(t *testing.T) {
 	if err != nil || stored.ClosedAt != nil || stored.CloseReviewReason != "KFP_CREATE_UNRESOLVED" {
 		t.Fatal("original uncertainty was not durably retained", err)
 	}
-	retry, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.admission, Owner: binding.Owner})
+	retry, err := dispatches.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.admission, Owner: f.admission.Snapshot.DispatchOwner})
 	if err != nil || retry.SendPermit != nil || retry.Dispatch.AttemptID != reserved.Dispatch.AttemptID || retry.Dispatch.State != biz.PipelineDispatchUncertain {
 		t.Fatal("closing reconstructed the consumed creation permit", err)
 	}
@@ -148,27 +143,19 @@ func closeOnlyFixture(t *testing.T) (configuredRuntimeFixture, coreFlowFixture) 
 	t.Helper()
 	f := runtimeAppFixture(t)
 	originalSource := strings.Repeat("1", 40)
-	proof := []byte(`{"source_commit":"` + originalSource + `","scope":"external-boundary-fixture"}`)
-	digest := sha256.Sum256(proof)
 	f.admission.Actor = "core-flow:test-driver"
-	f.admission.Snapshot.Environment.BindingDigest = hex.EncodeToString(digest[:])
-	var err error
-	f.admission.SpecHash, err = f.admission.Snapshot.Digest()
+	f.admission = admissionfixture.Bind(t, f.admission)
+	row, err := tenantenvironment.NewRepository(f.openPool()).Get(context.Background(), f.admission.TenantID, f.admission.Snapshot.Environment.ClusterID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var binding biz.PipelineDispatchBinding
-	raw, err := os.ReadFile(f.config.Runtime.BindingFile)
-	if err != nil || json.Unmarshal(raw, &binding) != nil {
-		t.Fatal("binding fixture unavailable")
+	proof, err := json.Marshal(struct {
+		SourceCommit     string          `json:"source_commit"`
+		BindingCanonical json.RawMessage `json:"binding_canonical"`
+	}{originalSource, row.BindingCanonical})
+	if err != nil {
+		t.Fatal(err)
 	}
-	binding.Environment = f.admission.Snapshot.Environment
-	raw, err = json.Marshal(binding)
-	if err != nil || os.WriteFile(f.config.Runtime.BindingFile, raw, 0600) != nil {
-		t.Fatal("binding fixture update failed")
-	}
-	bindDigest := sha256.Sum256(raw)
-	f.config.Runtime.BindingSha256 = hex.EncodeToString(bindDigest[:])
 	proofPath := filepath.Join(t.TempDir(), "original-environment.json")
 	if err := os.WriteFile(proofPath, append(proof, '\n'), 0600); err != nil {
 		t.Fatal(err)

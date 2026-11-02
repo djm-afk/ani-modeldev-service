@@ -1,0 +1,38 @@
+{
+  "image_sources": {
+    "modeldev": "f22fd4cef5f13cf1210eae504690206fbf922723",
+    "governance": "244780ffe6b9a7deb1c3f6f162e474e76a73a566",
+    "resource": "67dceef03f01215c294a55f11464e3e3a52cb783"
+  },
+  "runtime_api_modeldev": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+  "release_branches": {
+    "modeldev": "codex/modeldev-tenantenv-release-20261101",
+    "governance": "codex/modeldev-dynamic-tenant-environment",
+    "resource": "codex/modeldev-dynamic-tenant-environment"
+  },
+  "go_mod_lines": {
+    "modeldev": [
+      "module github.com/zhangzhe-ctrl/ani-modeldev-service",
+      "\tgithub.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261031180451-71b3ad7a2a88"
+    ],
+    "governance": [
+      "\tgithub.com/zhangzhe-ctrl/ani-modeldev-service v0.0.0-20261031195825-d807cbdbd5dd",
+      "\tgithub.com/zhangzhe-ctrl/ani-resource-service v0.0.0-20261031180451-71b3ad7a2a88",
+      "\tgithub.com/zhangzhe-ctrl/ani-resource-service/api/instance/terminal v0.0.0-20261013075021-0937f5aa9c6c",
+      "\tgithub.com/zhangzhe-ctrl/ani-resource-service/api/vm/console v0.0.0-20261023185414-0a53b99c8d9f"
+    ],
+    "resource": [
+      "module github.com/zhangzhe-ctrl/ani-resource-service",
+      "\tgithub.com/zhangzhe-ctrl/ani-resource-service/api/instance/terminal v0.0.0-20261013075021-0937f5aa9c6c",
+      "\tgithub.com/zhangzhe-ctrl/ani-resource-service/api/vm/console v0.0.0-20261023185414-0a53b99c8d9f"
+    ]
+  },
+  "resource_api_71b_to_67d_changed": [],
+  "modeldev_production_source_equivalence": "modeldev-release-source-equivalence.json",
+  "recipe_actual_host": "workbench-actual-recipes.json",
+  "gate_refs": {
+    "modeldev": "full-f22-verify-receipt.json + full-f22-make-verify.log exact f22 complete makeverifyexit0 aftercommit; renderer tests separately PASS",
+    "governance": "../..//gov-final/vm-log-map-final-proof.json actual02f4 makecheckexit0;244780 differs only timeutil/diff_test.go, parent-authorized reuse with exact diff evidence",
+    "resource": "../res-uid-window-final.json actual67dcee PG+makeverifyexit0"
+  }
+}

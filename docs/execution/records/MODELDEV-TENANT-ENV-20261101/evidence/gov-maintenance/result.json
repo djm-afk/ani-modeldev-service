@@ -1,0 +1,26 @@
+{
+  "base": "ddd98f4c79751ba848fa862bab6878dc7bc99bb7",
+  "branch": "codex/modeldev-create-maintenance",
+  "purpose": "old-API Create maintenance only; no v4 upstream pin or new environment endpoint",
+  "source_identity": "14 files local/Fedora equal; source-sha256.json",
+  "checks": {
+    "targeted_data_service": "PASS",
+    "real_pg_lease": "PASS",
+    "make_check": "FAIL: active VM logs route lacks authoritative capability mapping (baseline); server build and all pkg tests passed before sql/bootstrap failure",
+    "independent_audit": "FAIL: govulncheck 0 called vulnerabilities; Gitleaks 1 baseline component-name negative fixture false positive"
+  },
+  "gitleaks_baseline": {
+    "rule": "generic-api-key",
+    "file": "app/admin/service/internal/data/platform_component_log_scope_test.go",
+    "start_line": 57,
+    "end_line": 58,
+    "unchanged_baseline_blob": "b54cec04e6f355a199b47aad717cc4f125a1cd64"
+  },
+  "not_run": [
+    "deployment",
+    "live Create pause/drain acceptance"
+  ],
+  "parent_direction": "required gates were run; commit authorized with baseline failures explicit; do not expand VM permissions or deploy",
+  "commit": "6a7c721ea113d51497421d7975122ec7ca8105c2",
+  "pushed_via": "ssh://git@ssh.github.com:443/zhangzhe-ctrl/ani-governance.git"
+}

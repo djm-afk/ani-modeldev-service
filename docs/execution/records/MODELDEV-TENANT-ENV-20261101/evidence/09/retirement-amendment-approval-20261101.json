@@ -1,0 +1,34 @@
+{
+  "schema": "ani.modeldev.legacy-retirement-amendment-approval.v1",
+  "recorded_at": "2026-10-31T21:43:40.938325+00:00",
+  "source": "direct human reply in this chat",
+  "user_reply": "批准上述限定的一次性修正",
+  "user_confirmed_other_archives": "无",
+  "executions": [
+    "1cce950b-d6e9-453e-aa11-fffd8846224b",
+    "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+    "eca4d47b-5911-4f0f-8b45-89c1be775925"
+  ],
+  "permitted_exceptions": [
+    "record two original training logs as genuinely unrecoverable; never fabricate captured logs",
+    "use exact original UID official archived Workflow with explicit archive provenance; never fake live GET",
+    "only precise image_contract pre-process admission denial with zero-retry/full parent-child/template evidence"
+  ],
+  "unchanged_requirements": [
+    "full original UID and identity",
+    "actual exit evidence",
+    "complete writer/PVC proof",
+    "original close fence and generation/revision CAS",
+    "original cleanup sequence and UID preconditions",
+    "original GPU event/outbox/ACK and account invariant",
+    "no new runtime v3 compatibility or privilege expansion"
+  ],
+  "failure_rule": "any other missing qualification remains BLOCKED",
+  "runtime_or_cleanup_effect": "none from recording approval; implementation and actual validation still required",
+  "affected_spec": [
+    "9",
+    "13.3.4",
+    "13.3.5"
+  ],
+  "concrete_proposal": "implementation-report.md section7"
+}

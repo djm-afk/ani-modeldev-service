@@ -1,0 +1,54 @@
+{
+  "health_source_sha": "85a38e0719870e5b2f97a74f5c966d79bcc7c960",
+  "group": "pipelines.kubeflow.org",
+  "version": "v1beta1",
+  "resource": "pipelines",
+  "namespace": "ani-system",
+  "operations": [
+    {
+      "publisher_route": "POST /apis/v2beta1/pipelines",
+      "verb": "create",
+      "name": "request fixed parent name",
+      "source": "pipeline_server.go:124-144;219-260;1080-1102",
+      "resource_names_possible": true
+    },
+    {
+      "publisher_route": "POST /apis/v2beta1/pipelines/upload_version?pipelineid=...",
+      "verb": "create",
+      "name": "",
+      "source": "pipeline_upload_server.go:270-289;352-378",
+      "resource_names_possible": false,
+      "reason": "upload helper fills namespace/group/version/resource but never parent name"
+    },
+    {
+      "publisher_route": "GET /apis/v2beta1/pipelines?namespace=ani-system",
+      "verb": "list",
+      "name": "",
+      "source": "pipeline_server.go:401-412",
+      "resource_names_possible": false
+    },
+    {
+      "publisher_route": "GET /apis/v2beta1/pipelines/{id}/versions",
+      "verb": "list",
+      "name": "",
+      "source": "pipeline_server.go:867-883;1061-1102",
+      "resource_names_possible": false
+    },
+    {
+      "publisher_route": "GET parent and GET version",
+      "verb": "get",
+      "name": "parent Pipeline.name",
+      "source": "pipeline_server.go:286-294;821-826;1061-1102",
+      "resource_names_possible": true
+    },
+    {
+      "unused_route": "JSON CreatePipelineVersion(package URL)",
+      "verb": "create",
+      "name": "requested PipelineVersion.name (not parent)",
+      "source": "pipeline_server.go:670-691;1080-1093",
+      "reason": "non-empty pv.Name is preserved by canAccessPipeline; original frozen publisher uses multipart instead"
+    }
+  ],
+  "required_update_verb": false,
+  "note": "update is used only by unused UpdatePipelineDefaultVersionV1; no pipelineversions resource or wildcard verb."
+}

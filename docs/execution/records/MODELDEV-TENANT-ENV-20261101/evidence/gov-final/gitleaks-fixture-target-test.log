@@ -1,0 +1,4 @@
+=== RUN   TestPlatformComponentLogScopeRejectsUnregistered
+--- PASS: TestPlatformComponentLogScopeRejectsUnregistered (0.00s)
+PASS
+ok  	go-wind-admin/app/admin/service/internal/data	1.198s

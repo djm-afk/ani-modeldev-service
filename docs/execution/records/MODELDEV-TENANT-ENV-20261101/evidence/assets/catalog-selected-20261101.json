@@ -1,0 +1,18 @@
+{
+  "observed_at_utc": "2026-10-31T22:22:50.514809+00:00",
+  "entry": "local requests via socks5h://127.0.0.1:7897",
+  "auth_retained": false,
+  "business_mutations": 0,
+  "reads": [
+    {
+      "principal": "A",
+      "stage": "authentication",
+      "exception": "ConnectionError"
+    },
+    {
+      "principal": "platform",
+      "stage": "authentication",
+      "exception": "ConnectionError"
+    }
+  ]
+}

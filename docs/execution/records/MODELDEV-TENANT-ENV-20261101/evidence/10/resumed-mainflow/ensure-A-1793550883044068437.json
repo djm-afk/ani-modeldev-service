@@ -1,0 +1,32 @@
+{
+  "started_at": "2026-11-01T16:34:40.443184+00:00",
+  "mode": "ensure",
+  "tenant": "A",
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/v1/modeldev/environment:ensure",
+      "http_status": 202,
+      "response": {
+        "environment_id": "fa7f113c-58c1-4692-a9e2-e9687e8dd162",
+        "state": "PROVISIONING",
+        "phase": "RESOURCES",
+        "reason_code": "",
+        "namespace_name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+        "experiment_id": "e8308780-256f-43b8-88c8-a88c044d1c56",
+        "binding_digest": "08232bdc365360ff601fbce828aaf510519dee0848e2d1487018a37f0021c893"
+      }
+    }
+  ],
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "finished_at": "2026-11-01T16:34:40.971869+00:00",
+  "transport_exit_code": 0
+}

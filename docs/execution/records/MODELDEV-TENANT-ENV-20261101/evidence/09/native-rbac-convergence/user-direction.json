@@ -1,0 +1,34 @@
+{
+  "schema": "ani.modeldev.user-native-rbac-convergence.v1",
+  "recorded_at": "2026-11-01T04:40:01.763202+00:00",
+  "user_instruction": "那能否统一用这种方式，不要自己再做一套实现？",
+  "user_continue_after_accidental_interrupt": "点错了，你继续",
+  "scope": "Use existing configured platform ServiceAccount and Kubernetes native RBAC/admission for actual operations. Remove duplicated runtime global authorization graph/allowlist rather than expanding128to162 or introducing42trusted inputs. Keep Governance current tenant/role checks and existing identity scheme.",
+  "affected_clauses": [
+    "spec.md §4/§11.4 full runtime authorization inventory and 30second proof",
+    "contracts/authorization-inventory.md",
+    "spec.md §10.3 inventory-specific broad readonly grants",
+    "spec.md EN02 dangerous/incomplete inventory only"
+  ],
+  "retained": [
+    "standard existing Namespace+UID fail closed",
+    "existing modeldev-control ServiceAccount identity",
+    "fixed bootstrap policy/role UID+digest/typeChecking verification",
+    "exact five role bind allowlist/native create restrictions",
+    "reserved ServiceAccount/Secret/mount/ephemeral protection",
+    "object owner+UID+intent+conflict/idempotency",
+    "actual API authentication/authorization/admission denial blocks side effects",
+    "ordinary A/B real authorization and isolation acceptance"
+  ],
+  "removed": [
+    "runtime full RBAC graph interpreter and derivedproof",
+    "runtime authorizer-mode/trusted-principal configuration",
+    "global inventory-only ClusterRole and ClusterRoleBinding",
+    "unneeded arbitrary Role/ClusterRole and binding LIST permissions"
+  ],
+  "previous_proposal": "128to162+42trusted not approved/adopted; superseded by user standard-RBAC direction",
+  "new_identities_created": false,
+  "permissions_expanded": false,
+  "private_registry_pull_identity": "SEPARATE_STILL_PENDING_NO_CREATE",
+  "status": "IMPLEMENTATION_IN_PROGRESS_NOT_LIVE_ACCEPTED"
+}

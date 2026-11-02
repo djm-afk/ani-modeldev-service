@@ -1,0 +1,34 @@
+{
+  "status": "EXACT_LOCAL_TRANSIT_CONTEXTS_REMOVED",
+  "items": [
+    {
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-image-context-d807",
+      "existed": true,
+      "file_count": 22,
+      "bytes": 104568648,
+      "absent_after": true
+    },
+    {
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-node-source-d807",
+      "existed": true,
+      "file_count": 690,
+      "bytes": 6813579,
+      "absent_after": true
+    },
+    {
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-gov-aux-ca01cabf",
+      "existed": true,
+      "file_count": 1,
+      "bytes": 151354706,
+      "absent_after": true
+    },
+    {
+      "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/08/image-publication/__pycache__",
+      "existed": true,
+      "file_count": 1,
+      "bytes": 5953,
+      "absent_after": true
+    }
+  ],
+  "preserved": "Package evidence/source helper scripts; original Fedora binaries/source/images/cache; delivered node auxiliary tool"
+}

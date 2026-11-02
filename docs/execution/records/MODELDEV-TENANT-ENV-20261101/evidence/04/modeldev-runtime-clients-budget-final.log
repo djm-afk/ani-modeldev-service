@@ -1,0 +1,25 @@
+=== RUN   TestFinetuningStreamingRuntimeStoragePreservesAPIBudget
+    finetuning_streaming_test.go:21: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    finetuning_streaming_test.go:79: backend storage timeout=10m0s API/header timeout=3s parent deadline=300ms actual cancellation elapsed=300.551497ms
+--- PASS: TestFinetuningStreamingRuntimeStoragePreservesAPIBudget (0.63s)
+=== RUN   TestMountedStorageOwnerRotatesWithoutAmbientCredentials
+--- PASS: TestMountedStorageOwnerRotatesWithoutAmbientCredentials (0.00s)
+=== RUN   TestMountedStorageOwnerRejectsTemporaryCredentialsAndUnknownMaterial
+--- PASS: TestMountedStorageOwnerRejectsTemporaryCredentialsAndUnknownMaterial (0.00s)
+=== RUN   TestConfiguredRuntimeDispatchesPersistedCommandAndServesStepTLS
+    runtime_test.go:40: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    runtime_test.go:144: RUNTIME_ASSEMBLY: production command -> durable admission -> automatic worker -> TLS KFP -> confirmed PostgreSQL; dedicated Step TLS -> actual TokenReview
+--- PASS: TestConfiguredRuntimeDispatchesPersistedCommandAndServesStepTLS (1.43s)
+=== RUN   TestConfiguredRuntimeMissingMaterialsFailWithoutFallback
+=== RUN   TestConfiguredRuntimeMissingMaterialsFailWithoutFallback/platform_digest
+    runtime_test.go:150: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestConfiguredRuntimeMissingMaterialsFailWithoutFallback/Kubernetes_credential
+    runtime_test.go:150: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+=== RUN   TestConfiguredRuntimeMissingMaterialsFailWithoutFallback/storage_credential
+    runtime_test.go:150: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+--- PASS: TestConfiguredRuntimeMissingMaterialsFailWithoutFallback (2.35s)
+    --- PASS: TestConfiguredRuntimeMissingMaterialsFailWithoutFallback/platform_digest (0.35s)
+    --- PASS: TestConfiguredRuntimeMissingMaterialsFailWithoutFallback/Kubernetes_credential (0.59s)
+    --- PASS: TestConfiguredRuntimeMissingMaterialsFailWithoutFallback/storage_credential (1.41s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/cmd/ani-modeldev-service	4.437s

@@ -1,0 +1,39 @@
+{
+  "observed_at": "2026-10-31T23:43:58.463664+00:00",
+  "identity": "existing-original-control-projected-token",
+  "token_request_count": 0,
+  "results": [
+    {
+      "route": "/api/v1/namespaces/ani-modeldev-tenant-a-v21",
+      "status_code": 200,
+      "reason": "",
+      "kind": "Namespace",
+      "uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+      "deleting": false
+    },
+    {
+      "route": "/apis/argoproj.io/v1alpha1/namespaces/ani-modeldev-tenant-a-v21/workflows/ft-sw2pr",
+      "status_code": 404,
+      "reason": "NotFound",
+      "kind": "Status",
+      "uid": "",
+      "deleting": false
+    },
+    {
+      "route": "/apis/argoproj.io/v1alpha1/namespaces/ani-modeldev-tenant-a-v21/workflows/ft-j4ncq",
+      "status_code": 404,
+      "reason": "NotFound",
+      "kind": "Status",
+      "uid": "",
+      "deleting": false
+    },
+    {
+      "route": "/apis/argoproj.io/v1alpha1/namespaces/ani-modeldev-tenant-a-v21/workflows/md-kpwkw",
+      "status_code": 404,
+      "reason": "NotFound",
+      "kind": "Status",
+      "uid": "",
+      "deleting": false
+    }
+  ]
+}

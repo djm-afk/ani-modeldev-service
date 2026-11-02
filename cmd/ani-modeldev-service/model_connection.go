@@ -29,8 +29,10 @@ func loadModelResources(config *conf.GovernanceCommand, runtimeConfig *conf.Mana
 		return nil, nil, noop, errors.New("Model base storage scope required")
 	}
 	s := c.BaseModelStorageScope
-	scope := cpup01.StorageScope{StorageConnectionID: s.ConnectionId, Bucket: s.Bucket, ApprovedPrefix: s.ApprovedPrefix, CredentialReference: s.CredentialReference}
-	if scope.Validate() != nil {
+	scope := cpup01.StorageScope{StorageConnectionID: s.ConnectionId, Bucket: s.Bucket, CredentialReference: s.CredentialReference}
+	validationScope := scope
+	validationScope.ApprovedPrefix = "tenant-scope-validation"
+	if validationScope.Validate() != nil {
 		return nil, nil, noop, errors.New("invalid Model base storage scope")
 	}
 	client, closeClient, err := modelclient.New(modelclient.Config{Endpoint: c.Endpoint, CAFile: c.CaFile, ClientDNSName: c.ClientDnsName, CertificateFile: c.CertificateFile, PrivateKeyFile: c.PrivateKeyFile, ServerName: c.ServerName, Actor: c.Actor, Timeout: c.Timeout.AsDuration(), ResolutionTimeout: runtimeConfig.ModelResolutionTimeout()})

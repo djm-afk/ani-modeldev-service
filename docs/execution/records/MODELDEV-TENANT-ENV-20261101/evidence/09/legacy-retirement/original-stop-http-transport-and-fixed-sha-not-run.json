@@ -1,0 +1,52 @@
+{
+  "observed_at": "2026-11-01T01:50:45.413033+00:00",
+  "source_commit": "651f5ea14f2fb79e8980102de1b6411eac999549",
+  "expected_binary_sha256": "4e8d7f7177a7efb521fb27ac9b59b2fe752f8e9cd75d0295dfec0e50af2377a4",
+  "expected_binary_bytes": 32694434,
+  "node_fixed_path": "/tmp/modeldev-legacy-retirement-101a2fd",
+  "fresh_identity_and_original_refs": {
+    "status": "PASS",
+    "observed_at": "2026-11-01T01:40:44.055104+00:00",
+    "evidence": "original-stop-http-node-original-source-preflight.json"
+  },
+  "node_fixed_path_sha_precondition": {
+    "actual_sha256": "94d9c7556cc557b64a3ad5a05236f02cb0e59b0fbea392f8ab8df4bcc523378c",
+    "matches_final_source": false,
+    "exit_code": 65,
+    "evidence": "original-stop-final-fixed-sha-readonly-plan.stderr",
+    "plan_stdout_bytes": 0,
+    "nonmatching_bytes_executed": false
+  },
+  "attempted_fixed_file_plaintext_http_transport": {
+    "coordinating_agent": "/root/snapshot",
+    "status": "BLOCKED",
+    "node_source_ip": "10.10.1.66",
+    "existing_route_gateway": "10.10.3.254",
+    "existing_route_device": "ens8f0np0",
+    "fedora_address": "172.16.101.31",
+    "actual_server_port": 52035,
+    "node_tcp_5s_results": {
+      "22": "TIMEOUT",
+      "52035": "TIMEOUT"
+    },
+    "server_requests": 0,
+    "fedora_tailnet_interface": "ABSENT",
+    "served_fixed_files_sha_verified_by_transport_agent": 19,
+    "http_encrypted": false,
+    "environment_task_downloads": 0,
+    "nonce_or_url_saved": false,
+    "temporary_daemon_cleanup": {
+      "status": "PASS",
+      "evidence": "evidence/08/image-publication/http-transport-closed-cleanup.json",
+      "actual": "PID1173803 absent;172.16.101.31:52035 listener absent; nonce and six temporary files/directory removed; requests0"
+    }
+  },
+  "current_source_live_plan": "NOT_RUN; fixed binary SHA guard refused before execution",
+  "apply": "NOT_RUN",
+  "cluster_mutations": 0,
+  "database_mutations": 0,
+  "token_requests": 0,
+  "extra_network_probes_by_environment": 0,
+  "additional_rsync_attempts": 0,
+  "next_step": "An authorized existing working transport must place exactly fixed final ordinary binary bytes. Recheck full identity and refs, exact node file SHA, then one original readonly plan. Actual Gov503/zero leases/exact reviewed Ready gate still required before any apply."
+}

@@ -1,0 +1,30 @@
+{
+  "started_at": "2026-11-01T01:56:59.318018+00:00",
+  "commands": [
+    {
+      "name": "original-pg",
+      "command": [
+        "bash",
+        "/home/chabking/tenantenv-20261101/gov-original-command-retirement-evidence/run-original-pg.sh"
+      ],
+      "started_at": "2026-11-01T01:56:59.318073+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T01:59:21.507057+00:00"
+    },
+    {
+      "name": "tool-build",
+      "command": [
+        "go",
+        "build",
+        "-trimpath",
+        "-o",
+        "/home/chabking/tenantenv-20261101/gov-original-command-retirement-evidence/modeldev-original-command-retirement",
+        "./app/admin/service/cmd/modeldev-original-command-retirement"
+      ],
+      "started_at": "2026-11-01T01:59:21.507465+00:00",
+      "exit_code": 0,
+      "ended_at": "2026-11-01T02:00:10.802121+00:00"
+    }
+  ],
+  "source_base": "6c17f0103994620f49c8f6f10c09f414169c6b7d"
+}

@@ -1,0 +1,32 @@
+{
+  "observed_at": "2026-11-01T01:40:44.055104+00:00",
+  "read_only_cluster_and_database": true,
+  "node_private_configuration_sha256": "c07369fd090792222bfad1d74f88e5c35b02e4c87207020f86e64b8736f98aa5",
+  "private_directory": "/tmp/modeldev-legacy-retirement-20261101",
+  "kubeconfig_path": "/home/kubercloud/.kube/config",
+  "identity": {
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api_server": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220"
+  },
+  "original_namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+  "original_api_service": {
+    "uid": "bfbd6463-67e2-471c-8d49-a84b853bd4e0",
+    "cluster_ip": "10.96.0.1",
+    "port": 443
+  },
+  "control_pod": {
+    "name": "ani-modeldev-6995bd77c4-z2gxk",
+    "uid": "592bdd86-ab5b-4416-8a2c-07c21ee69f8d",
+    "resourceVersion": "18629328"
+  },
+  "configmap": {
+    "name": "modeldev-trainimg-main-20261029b",
+    "uid": "94a845d5-2af9-45eb-9738-a5ce9496df40",
+    "resourceVersion": "14648501"
+  },
+  "token_request_count": 0,
+  "secret_values_printed": false
+}

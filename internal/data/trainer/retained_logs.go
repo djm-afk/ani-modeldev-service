@@ -24,6 +24,21 @@ func (a *Adapter) retainPodLogs(ctx context.Context, plan biz.TrainingPlan, hand
 		if fact.Kind != "Pod" {
 			continue
 		}
+		if fact.AdmissionAbort != nil {
+			if !fact.TrainingAdmissionAbortedAt(time.Now().UTC()) {
+				return biz.ErrRuntimeConflict
+			}
+			pod := objects[uid]
+			if (pod == nil || !slices.Contains(pod.GetFinalizers(), trainingExitEvidenceFinalizer)) && !recordedPodExit(fact, history) {
+				return biz.ErrTrainingLogsUnavailable
+			}
+			for _, prior := range history {
+				if prior.UID == uid && (prior.ExitCode != nil || prior.TrainingLog != nil) {
+					return biz.ErrRuntimeConflict
+				}
+			}
+			continue // No container existed: retain the proof, never an empty log.
+		}
 		var retained *biz.RecordedTrainingLog
 		frozen := false
 		for _, prior := range history {

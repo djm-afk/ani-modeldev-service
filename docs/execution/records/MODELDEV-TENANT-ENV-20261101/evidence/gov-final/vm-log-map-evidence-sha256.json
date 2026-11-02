@@ -1,0 +1,15 @@
+{
+  "vm-log-map-catalog-conflict.json": "a769c0fad7f8f1fb0bd72099b6f0b2c58aff80dd0f013c86cd615b36c7ddc12c",
+  "vm-log-map-existing-28-contracts.json": "a52c4a3fa52002fd4a200922f511069270bfe4f05b7afe6d4b2ebd43d3b3ae35",
+  "vm-log-map-final-proof.json": "6a752d7a8a76f55a7963a738b9aaba28a86cd6e16174d426d0a6a4a64d976874",
+  "vm-log-map-generate-receipt.json": "93bf0d0f782d9dc298158596edf111d8b80cb4a497ca7c9ea00ab18d01391708",
+  "vm-log-map-generate.log": "a9dc2a5e303371ce8a10981fe8f11b8eb239615bc8e802371c76f4e520af978a",
+  "vm-log-map-generated-check-receipt.json": "c4962c8a1d5eecee6a218356b540958566754a968d6d7c29c87c11bfa8b473b5",
+  "vm-log-map-generated-check.log": "42d4b857bd3345d757a2cfbc67b6a0c8e06866ace40b1eaf7e3920721d970b02",
+  "vm-log-map-make-check-receipt.json": "8079369b2fcfa232919a0f57fb6f1c025ea611f5cd7b5543b5a378f6c1c6da9c",
+  "vm-log-map-make-check.log": "eb300a810452320e5ab13bb7eb2e1694f277d1dfd206d9c4970eb3875b50b9b0",
+  "vm-log-map-targeted-final-receipt.json": "3ed3c8993d542fac1efe94f38e47ede974c00fbf92f09030cf63591dce2c8421",
+  "vm-log-map-targeted-final.log": "b0918941db2598ecb90d9999871f10205763742126249fdbafba7ce635dac29a",
+  "vm-log-map-targeted-receipt.json": "5dae48e9683971763ce32d0f12d3dd8100d2ece031a2ccb22678a1e5b6507ec1",
+  "vm-log-map-targeted.log": "4991ebae4fb085cbbf7691a3b5031e728e6396fa10dded49991a61c7ed1b6228"
+}

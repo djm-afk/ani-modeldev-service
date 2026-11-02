@@ -1,0 +1,14 @@
+diff --git a/internal/data/imageruntime/client.go b/internal/data/imageruntime/client.go
+index 34c5844..628b5e1 100644
+--- a/internal/data/imageruntime/client.go
++++ b/internal/data/imageruntime/client.go
+@@ -22,8 +22,8 @@ import (
+ 	"google.golang.org/grpc"
+ 	"google.golang.org/grpc/codes"
+ 	"google.golang.org/grpc/credentials"
+-	"google.golang.org/grpc/status"
+ 	"google.golang.org/grpc/metadata"
++	"google.golang.org/grpc/status"
+ )
+ 
+ // ClientDNSName is the single DNS SAN this client certificate must present. The

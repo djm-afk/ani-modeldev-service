@@ -1,0 +1,6 @@
+ .../modeldev-original-command-retirement/main.go   | 202 +++++++++++++
+ .../data/modeldev_original_codec_inventory.go      | 199 +++++++++++++
+ .../data/modeldev_original_command_retirement.go   | 317 +++++++++++++++++++++
+ .../modeldev_original_command_retirement_test.go   | 209 ++++++++++++++
+ .../modeldev-original-command-retirement.md        |  41 +++
+ 5 files changed, 968 insertions(+)

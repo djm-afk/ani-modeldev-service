@@ -1,0 +1,41 @@
+{
+  "schema": "ani.gov.maintenance.original-v3-pin.delivery.v1",
+  "completed_at": "2026-11-01T01:19:47.950307+00:00",
+  "commit": "6c17f0103994620f49c8f6f10c09f414169c6b7d",
+  "branch": "codex/modeldev-create-maintenance",
+  "push": {
+    "transport": "SSH literal ssh.github.com:443",
+    "exit_code": 0,
+    "update": "32c61fcb..6c17f010 HEAD -> codex/modeldev-create-maintenance",
+    "force": false
+  },
+  "local_status": "",
+  "owned_files": [
+    "go.mod",
+    "go.sum",
+    "app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go"
+  ],
+  "source_hashes": {
+    "go.mod": "75a5b61c2236236d7041d392692939fd9cc380808f992fc021fecb87a4a6b8f9",
+    "go.sum": "f8b4d6aa240f18baf91f11f97a462a5ab3c76ba5fa22e31206d27978ae164d6e",
+    "app/admin/service/internal/data/modeldev_maintenance_original_codec_test.go": "c747bad55e3504e7ac835168531f930600db84fb26e3c6472048de8bd7994d45"
+  },
+  "red_original_decoder_exit": 1,
+  "green_original_decoder_exit": 0,
+  "pin_tidy_exit": 0,
+  "complete_make_check": {
+    "exit_code": 0,
+    "started_at": "2026-11-01T01:12:29.614297+00:00",
+    "ended_at": "2026-11-01T01:18:15.229346+00:00",
+    "includes_audit": true,
+    "log": "make-check.log",
+    "log_sha256": "fe6721e45d7e49b536b38c5ece9d09bb24f9c2729475253926e597f39b70b1e1",
+    "receipt": "make-check-receipt.json",
+    "govulncheck": "0 called vulnerabilities; 1 package +10 module findings not called, preserved",
+    "gitleaks": "no leaks found"
+  },
+  "additional_mvs_listing": "FAIL official proxy .info EOF; retained in pin-receipt/mvs-after.log; go mod graph exit0 and exact old/new MD go.mod identical",
+  "api_mvs_scope": "scope-api-mvs-regression-receipt.json",
+  "live_actions": "NOT_RUN: no deployment, rearm, Stop or cleanup",
+  "final_dynamic_branch": "NOT_MODIFIED; d807 remains final pin"
+}

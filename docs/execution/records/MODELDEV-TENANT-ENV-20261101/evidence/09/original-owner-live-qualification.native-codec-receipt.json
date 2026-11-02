@@ -1,0 +1,36 @@
+{
+  "StartedAt": "2026-11-01T00:51:04.721387+00:00",
+  "ProbeSHA256": "f353dd791e3670ac36e52e27e6a5e8bd0bf29832c29ad019d54ab485235f0520",
+  "PrivateInputSHA256": "3c50fa5dbf43a1fae162d39fe691b538cbda1c4be53fdba94f616e5938afb994",
+  "Commands": [
+    {
+      "Name": "c99",
+      "Command": [
+        "go",
+        "run",
+        "-mod=mod",
+        "/home/chabking/tenantenv-20261101/owner-qualification-probe.go",
+        "/home/chabking/tenantenv-20261101/owner-qualification-private-20261101T004834.json"
+      ],
+      "WorkingDirectory": "/home/chabking/tenantenv-20261101/owner-qualification-native/c99",
+      "StartedAt": "2026-11-01T00:51:04.722029+00:00",
+      "CompletedAt": "2026-11-01T00:51:07.775729+00:00",
+      "ExitCode": 0
+    },
+    {
+      "Name": "md21bf-contract",
+      "Command": [
+        "go",
+        "run",
+        "-mod=readonly",
+        "/home/chabking/tenantenv-20261101/owner-qualification-probe.go",
+        "/home/chabking/tenantenv-20261101/owner-qualification-private-20261101T004834.json"
+      ],
+      "WorkingDirectory": "/home/chabking/tenantenv-20261101/legacy-data-cleanup",
+      "StartedAt": "2026-11-01T00:51:07.775819+00:00",
+      "CompletedAt": "2026-11-01T00:51:08.717734+00:00",
+      "ExitCode": 0
+    }
+  ],
+  "CompletedAt": "2026-11-01T00:51:08.717819+00:00"
+}

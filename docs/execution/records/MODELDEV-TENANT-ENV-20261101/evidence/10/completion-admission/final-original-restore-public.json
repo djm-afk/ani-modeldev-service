@@ -1,0 +1,76 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "at": "2026-11-01T17:05:01.056635+00:00",
+  "writes": 0,
+  "mwc": {
+    "name": "ani-modeldev-webhook",
+    "uid": "c452d29d-89be-41af-ac95-eb467e1a89c2",
+    "generation": 5,
+    "webhooks": [
+      {
+        "admissionReviewVersions": [
+          "v1"
+        ],
+        "clientConfig": {
+          "caBundle": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI0VENDQVlhZ0F3SUJBZ0lVV2QxcWIrU25pQXZSZUVCWnN6QXdHRFVzMllnd0NnWUlLb1pJemowRUF3SXcKVGpFV01CUUdBMVVFQ2hNTllXNXBMV2x1YzNSaGJHeGxjakVlTUJ3R0ExVUVDeE1WWm05MWJtUmhkR2x2YmkxagpiMjF3YjI1bGJuUnpNUlF3RWdZRFZRUURFd3RoYm1rdGNtOXZkQzFqWVRBZUZ3MHlOakV3TWpFeE5EQXlOVFphCkZ3MHpOakV3TVRneE5EQXlOVFphTUU0eEZqQVVCZ05WQkFvVERXRnVhUzFwYm5OMFlXeHNaWEl4SGpBY0JnTlYKQkFzVEZXWnZkVzVrWVhScGIyNHRZMjl0Y0c5dVpXNTBjekVVTUJJR0ExVUVBeE1MWVc1cExYSnZiM1F0WTJFdwpXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CQndOQ0FBVG5Wc1Rkd3hxdG1tekhWUmp5dmVJQnlnZlhNalY1CmlPTVgzZXlLQ3Rsei90Wk1wbWFoakE0Sy90cGFjdUF2MEQyU3d3RWM0MjJ0Wm5SaURPYW5sWFBQbzBJd1FEQU8KQmdOVkhROEJBZjhFQkFNQ0FxUXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QWRCZ05WSFE0RUZnUVUwdE5pVUpWeQppQnIraytiRG9KZm1NcWxyWFVvd0NnWUlLb1pJemowRUF3SURTUUF3UmdJaEFPTTh4WVNDVDBKUmNkcENPSFc1ClNGVWxBMmJUbjhlNjhTWTVRQzg1bmxSTUFpRUFrUm5wNnlSdi9zclZyUXdZZFc0Q1VxeFU3YUJ1R0N0bXVuc3cKd2FsdU1Ccz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
+          "service": {
+            "name": "ani-modeldev-webhook",
+            "namespace": "ani-system",
+            "path": "/mutate",
+            "port": 443
+          }
+        },
+        "failurePolicy": "Fail",
+        "matchConditions": [
+          {
+            "expression": "(has(object.spec.serviceAccountName) && object.spec.serviceAccountName in [\"modeldev-step\", \"trainer-workload\", \"verifier\"]) || (has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))) || (has(object.spec.volumes) && object.spec.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(s,has(s.secret) && s.secret.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.containers) && object.spec.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.initContainers) && object.spec.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.ephemeralContainers) && object.spec.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))",
+            "name": "modeldev-reserved-identity-or-reference"
+          },
+          {
+            "expression": "!(request.userInfo.username in [\"system:node:node1\",\"system:node:node2\",\"system:node:node3\",\"system:serviceaccount:kcn-system:kcn-controller\",\"system:serviceaccount:kube-system:ani-multus\",\"system:serviceaccount:kube-system:generic-garbage-collector\",\"system:serviceaccount:kube-system:volcano-device-plugin\",\"system:serviceaccount:kubeflow-system:jobset-controller-manager\",\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\",\"system:serviceaccount:volcano-system:ani-volcano-scheduler\"])",
+            "name": "platform-controller-trust"
+          }
+        ],
+        "matchPolicy": "Exact",
+        "name": "dynamic.modeldev.ani.io",
+        "namespaceSelector": {},
+        "objectSelector": {},
+        "reinvocationPolicy": "Never",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "apiVersions": [
+              "v1"
+            ],
+            "operations": [
+              "CREATE"
+            ],
+            "resources": [
+              "pods"
+            ],
+            "scope": "Namespaced"
+          }
+        ],
+        "sideEffects": "None",
+        "timeoutSeconds": 8
+      }
+    ],
+    "webhooks_sha256": "9c90e4cf3ce630816d00e157abe5dbe5ec1d24402c9ff6445d5ccb8ea84b3d20"
+  },
+  "source_prepare": {
+    "name": "md-k2hqk-136888522",
+    "original_uid": "8d4a7d5e-b286-45f3-afc8-20dc400a1102",
+    "http_status": 404,
+    "note": "original object already normally cleaned; no re-created evidence"
+  },
+  "same_original_webhooks_after_restore": true
+}

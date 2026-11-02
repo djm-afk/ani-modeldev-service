@@ -6,28 +6,39 @@ FINETUNING share that component. The deployment material is in
 [deploy/modeldev-webhook](../deploy/modeldev-webhook/README.md); accepted ownership
 and migration choices are recorded in [ADR 0001](adr/0001-modeldev-webhook.md).
 
-The webhook reads mounted, typed configuration and canonical SHA256-pinned
-Release files. A binding enrolls a precise namespace UID, its management label,
-trusted Argo creator, step ServiceAccount and finite profile IDs. The Pipeline
+The webhook reads one mounted `ani.modeldev.webhook.v2` platform configuration
+and four canonical SHA256-pinned implementation materials from the shared
+immutable bundle. Every protected Pod CREATE reads its live standard Namespace,
+immutable environment projection and original ServiceAccount UID. There is no
+startup tenant binding list, per-tenant webhook item or cache. The Pipeline
 compiler requires the frozen profile ID and puts `ani.modeldev/admission-profile`
 and `ani.modeldev/step-role` on every runnable component, including failure close.
-The request cannot supply replacement policy, images or Release bytes.
+The request cannot supply replacement policy, images or material bytes.
 
 KFP backend driver Pods share the KFP v2 label but do not inherit component
-profile labels. An explicit binding separately pins the driver image, command and
+profile labels. The global configuration separately pins the driver image, command and
 support images. The service verifies its original Workflow and `--run_id`/`--type`
-association and adds exit retention only. It does not apply computation mounts,
+association and adds exit retention only. Both drivers and business steps must
+verify the four original root parameters and the environment/tenant/execution
+PipelineRoot before their role-specific checks. It does not apply computation mounts,
 UID or resource mutations to that backend executable. This keeps driver exits in
 the complete owner proof without rejecting the backend that creates components.
 
-For matching CREATE Pod requests, the webhook reads the live namespace and
-original Workflow, checks their identity and Run association, validates the
+For matching CREATE Pod requests, the webhook reads the live Namespace,
+canonical environment projection, original SA and original Workflow, checks
+their identity, exact managed pull references and Run association, validates the
 role's immutable image and mount contract, then returns a JSONPatch for necessary
 security, read-only mount, temporary-storage and step exit-retention fields.
 Unrelated fields and finalizers survive. It performs no business database writes,
 object-store operations, training, execution close or resource deletion.
 
-The process serves bounded HTTPS admission, liveness, dependency readiness and
+The global registration OR-matches reserved SA, metadata/finalizer, workspace
+PVC and artifact Secret references. Unknown matched environments deny. Ordinary
+Pods do not enter the remote endpoint. Three native policies separately protect
+bootstrap writes, managed configuration, old workload templates and retained
+updates; actual API-server typeChecking and positive/negative probes are required.
+
+The process serves bounded HTTPS admission, liveness, global certificate readiness and
 metrics. Logs contain fixed decision categories, not request bodies, tokens or
 upstream error text. Certificates reload on new TLS handshakes. Deployment
 materials declare cert-manager renewal and multiple replicas; this does not prove
@@ -91,13 +102,17 @@ Kubernetes and S3 remain explicit external boundary substitutes in this lane;
 it cannot establish LIVE or M3-A acceptance. Additional shared-retention cases
 cover both execution kinds and recovery/CAS failures.
 
-Render and review the service, typed binding/profile material,
+Render and review the service, fixed global profiles and immutable projection contract,
 certificate/issuer dependency, RBAC and separate registration manifest before
 registration. Register only within the cluster owner's explicit authorized
 scope; source checks do not establish that any cluster was changed. Keep the old registration untouched
-while old Runs use it, verify new PipelineVersion/Release bytes and nonoverlapping
-selectors, then migrate each enrolled namespace. Existing step/training finalizer
-names remain compatible; no bulk finalizer deletion is part of migration.
+while old Runs use it. Complete old close fences and original quota-release ACKs,
+then clean the authorized obsolete data/definitions before the shared switch.
+Verify new PipelineVersion/material bytes and native policies, switch the one
+service/webhook, and explicitly Ensure A and B. Existing step/training finalizer
+names retain their ownership; no bulk finalizer deletion is part of migration.
+The effective deployment and configuration contract is
+[dynamic tenant environments](modeldev-tenant-environments.md).
 
 Source/Fedora checks establish implementation readiness only. Target-cluster
 admission, HA/renewal, CPU and fine-tuning business Runs, stop/deadline/restart,

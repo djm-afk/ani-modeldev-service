@@ -1,0 +1,398 @@
+{
+  "started_at": "2026-11-01T17:12:05.154963+00:00",
+  "mode": "readback",
+  "tenant": "B",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3",
+      "http_status": 200,
+      "response": {
+        "operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a",
+        "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+        "name": "tenantenv-b_finetuning-935c3148-a5",
+        "kind": "FINETUNING",
+        "implementation_id": "builtin.sft_lora",
+        "compute_preset_id": "a240cb09-0816-4d19-8c04-c8fd36ded552",
+        "input_version_id": "0936b7ae-046f-4ae7-aaa5-2b66b1cf9ba0",
+        "image_id": "img_4e77202d4e3c49daac15d995366f2e8b",
+        "image_version": "1",
+        "image_scope": "platform",
+        "compute_state": "SUCCEEDED",
+        "delivery_state": "PUBLISHED",
+        "close_state": "CLOSED",
+        "resource_state": "NOT_APPLICABLE",
+        "current_step": "CLOSE",
+        "stop_requested": false,
+        "close_generation": "1",
+        "accepted_at": "2026-11-01T17:04:27.23855Z",
+        "deadline_at": "2026-11-01T18:04:27.23855Z",
+        "observed_at": "2026-11-01T17:10:49.274274Z",
+        "parameter_contract_version": "ani.sft-lora.parameters.v3",
+        "resolved_configuration_sha256": "b11d5353a979405d22830dc98f430d9382b72edfcd6502620f2ee70bb55e04d6",
+        "compute": {
+          "compute_preset_id": "a240cb09-0816-4d19-8c04-c8fd36ded552",
+          "selection_digest": "a4dfaf27490a0256afd271e3d4f70607bcb569d9db93115d8c46a188a2f5d54d",
+          "cpu_millis": "4000",
+          "memory_mib": "8192",
+          "device_mode": "gpu"
+        },
+        "timing": {
+          "execution_timeout_seconds": "3600",
+          "execution_timeout_max_seconds": "14400",
+          "step_timeout_seconds": "14400"
+        },
+        "model_registration": {
+          "state": "READY",
+          "registration_id": "18e8257f-c713-4c2c-b549-8f30316c5442",
+          "model_id": "1f7fb625-bb25-4075-9ea8-0b7e79a09c11",
+          "model_version_id": "f07553cf-41f5-4d02-98d6-2f743398b245",
+          "failure_code": ""
+        },
+        "history": {
+          "run_id": "67273049-36c6-4c36-8fc5-bea9594b3d39",
+          "workflow_uid": "7df535f0-4fd3-4db6-8aef-5fac0231f0f0",
+          "observed_at": "2026-11-01T17:10:49.265332339Z",
+          "run_state": "SUCCEEDED",
+          "run_finished_at": "2026-11-01T17:10:47Z",
+          "workflow_phase": "SUCCEEDED",
+          "workflow_finished_at": "2026-11-01T17:10:47Z",
+          "workflow_resource_version": "21437972",
+          "workflow_nodes_sha256": "b2f1d8be872fc797825e7662fa0b40aed4ad604a847ff7e9f9ea80236c727d1d"
+        },
+        "steps": [
+          {
+            "role": "prepare",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:05:40.116819Z",
+            "finished_at": "2026-11-01T17:06:04.683808Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "train-wait",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:06:04.683808Z",
+            "finished_at": "2026-11-01T17:07:01.729341Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "export",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:07:01.748801897Z",
+            "finished_at": "2026-11-01T17:07:11.244920569Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "verify",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:07:42.063482872Z",
+            "finished_at": "2026-11-01T17:07:48.576497392Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "collect",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:08:22.005346Z",
+            "finished_at": "2026-11-01T17:08:53.256403Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "publish",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:08:53.256403Z",
+            "finished_at": "2026-11-01T17:09:01Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "register",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:09:35.887827Z",
+            "finished_at": "2026-11-01T17:09:39.551756Z",
+            "exit_code": 0,
+            "deadline_at": "2026-11-01T18:04:27.23855Z"
+          },
+          {
+            "role": "close",
+            "state": "SUCCEEDED",
+            "started_at": "2026-11-01T17:10:49.265332339Z",
+            "finished_at": "2026-11-01T17:10:49.274274Z",
+            "exit_code": 0,
+            "deadline_at": ""
+          }
+        ],
+        "metrics": [
+          {
+            "name": "train.loss",
+            "decimal_value": "7.05126428604126",
+            "step": "1"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3/pods?includeRecycled=true",
+      "http_status": 200,
+      "response": {
+        "pods": [
+          {
+            "pod_name": "md-636f6bee-093a-4ea4-b768-029bb5031ca3-node-0-0-75kbs",
+            "pod_uid": "4016d559-fbb0-4850-aaa9-8bd1e3da04d6",
+            "phase": "",
+            "ready": false,
+            "node_name": "",
+            "restarts": 0,
+            "created_at": "",
+            "start_time": "",
+            "deletion_timestamp": "",
+            "layer": "TRAINER",
+            "availability": "RECYCLED",
+            "step_name": "",
+            "attempt": 0,
+            "job_index": 0,
+            "log_id": "781af019-42f2-5cc1-b907-6d25c2f5d467",
+            "log_available": true,
+            "api_present": true,
+            "exit_code": 0,
+            "metric_instance_id": "",
+            "containers": [
+              {
+                "name": "node",
+                "type": "container",
+                "state": "terminated",
+                "reason": "",
+                "restart_count": 0,
+                "started_at": "",
+                "finished_at": ""
+              }
+            ],
+            "init_containers": [],
+            "ephemeral_containers": []
+          }
+        ],
+        "observed_at": "2026-11-01T17:12:05.723748949Z",
+        "availability": "RECYCLED",
+        "projection_truncated": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3/artifacts?page=1&pageSize=100",
+      "http_status": 200,
+      "response": {
+        "items": [
+          {
+            "artifact_id": "1181d80a-0d45-5657-890b-92cd4d6a91ee",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/tokenizer.json",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "3522871",
+            "sha256": "bf346d64f6f0fbcefb4c1b6928a98241467dff36c6fbae5fe1785c4ff90667f4",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "13a5f8c1-c413-5754-9a05-7002b10659b7",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/adapter_manifest.json",
+            "role": "SOURCE_METADATA",
+            "size_bytes": "1462",
+            "sha256": "f10b3cb3d900ac8e120eedaa085c4af50175c64bfa25f411725824791a9eeeee",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "25ae9c1a-1ddd-591c-b6a9-0742f2bac364",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/tokenizer_config.json",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "498",
+            "sha256": "cc8c9da869663aede24e63fecb420b5459a6f300533a9fb2ccee58d63b32f855",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "40c699ec-f388-5757-8a74-e62fb113eafe",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/adapter_model.safetensors",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "1274720",
+            "sha256": "c99f214957264a07c15ffd40f5ec1b96f1813dbb3d14a5320db249be9ae2f987",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "43a85831-06b3-5f65-8c8f-c1920b460de9",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/export/merged_manifest.json",
+            "role": "EXPORT_REPORT",
+            "size_bytes": "2535",
+            "sha256": "66d7278cf62c5c7f9049e9a8dd23d766932003d8379d0bfd162b4fccc4e3e669",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "46ba00fc-ed2e-53ed-b8b2-21bfce5c7e62",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/verify/verify.json",
+            "role": "VERIFY_REPORT",
+            "size_bytes": "7103",
+            "sha256": "b091b583f94e5f32a621618fab0cbd15b284b029d6d11f9f07d994a97871f55b",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "4bb7aa1e-e0ae-5ebe-a4c0-48e4059f99cc",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/adapter_config.json",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "1051",
+            "sha256": "ce701013ffa5ce087e5901fd423ba885021b06b7e9832071db20229c3f3ab5e6",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "4e163e33-7e37-559a-806f-37d3b77e5d06",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/model.safetensors",
+            "role": "HF_MODEL",
+            "size_bytes": "538090408",
+            "sha256": "35a0352f34e56aadd3ba846a048be3b1c3f46c2a3fea89b881d33a4f36fa561a",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "4ec1dff1-2144-5368-bdb0-6b3993d48e77",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/chat_template.jinja",
+            "role": "HF_MODEL",
+            "size_bytes": "657",
+            "sha256": "01628798fe5368ee59fea2f53917066483137c43cc26fe832271177ea09358e8",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "625ec501-cc21-52f2-a92b-9d327d91d397",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/effective-template.json",
+            "role": "SOURCE_METADATA",
+            "size_bytes": "1058",
+            "sha256": "b182d6404d80283693cc963b0716ff5025357ccecac3b52230b020c1701f4736",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "6f7d7e6b-5bce-5e69-9941-7c7eca1c4b96",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/export/export.json",
+            "role": "EXPORT_REPORT",
+            "size_bytes": "6703",
+            "sha256": "13217752ed9bc729e57842db68e3a7c8eed9915acc51e371086c961ee4f215f3",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "787fb455-74b5-54b9-b23a-1f37d0dedfe3",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "training/adapter/chat_template.jinja",
+            "role": "LORA_ADAPTER",
+            "size_bytes": "657",
+            "sha256": "01628798fe5368ee59fea2f53917066483137c43cc26fe832271177ea09358e8",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "7ac30f81-fd09-546b-83f7-3e130870389a",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/summary.json",
+            "role": "SUMMARY",
+            "size_bytes": "32716",
+            "sha256": "aa188034f53c7849ac7f6f32e2941e2afb2612d20b44024670956efb7438b334",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "9dc32293-3616-50ef-b5f6-c26ed24ddbf6",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/metrics.jsonl",
+            "role": "METRICS",
+            "size_bytes": "137",
+            "sha256": "f905a437ff9042fe0790822f964cd991641ef3282248c68fde28cb4c6d44da42",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "cc09bffb-dccb-5a37-9b9d-1c39f6d34a1d",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/tokenizer_config.json",
+            "role": "HF_MODEL",
+            "size_bytes": "498",
+            "sha256": "cc8c9da869663aede24e63fecb420b5459a6f300533a9fb2ccee58d63b32f855",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "eee12270-44e3-5c19-8b17-4832586d6ea8",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "reports/train/effective-template.jinja",
+            "role": "SOURCE_METADATA",
+            "size_bytes": "657",
+            "sha256": "01628798fe5368ee59fea2f53917066483137c43cc26fe832271177ea09358e8",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "eeed9ec4-7e2d-55a3-b0eb-c15c882cd11d",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/config.json",
+            "role": "HF_MODEL",
+            "size_bytes": "792",
+            "sha256": "7d166398c2a68500f38f018e945ecb4bc00cdb1dd7fc2305fcdf27abb42df950",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "f8d5706a-16fc-52d8-8570-7b6152f4f62e",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/tokenizer.json",
+            "role": "HF_MODEL",
+            "size_bytes": "3522871",
+            "sha256": "bf346d64f6f0fbcefb4c1b6928a98241467dff36c6fbae5fe1785c4ff90667f4",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          },
+          {
+            "artifact_id": "fef5bfef-99d7-5415-9350-d23bd071f55d",
+            "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+            "filename": "export/merged/generation_config.json",
+            "role": "HF_MODEL",
+            "size_bytes": "148",
+            "sha256": "9469404d2e78ff55997be2f7568c09cf365ba27d24639212480414627caacf08",
+            "delivery_state": "PUBLISHED",
+            "verified_at": "2026-11-01T17:09:39.148705821Z"
+          }
+        ],
+        "total": "19"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/modeldev/executions/636f6bee-093a-4ea4-b768-029bb5031ca3/events?scope=all",
+      "http_status": 200,
+      "response": {
+        "events": [],
+        "observed_at": "2026-11-01T17:12:06.159475535Z",
+        "retention_hint": "1h",
+        "truncated": false
+      }
+    }
+  ],
+  "finished_at": "2026-11-01T17:12:06.185891+00:00",
+  "transport_exit_code": 0
+}

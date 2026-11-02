@@ -1,0 +1,231 @@
+{
+  "observed_at_utc": "2026-10-31T15:05:45.990748Z",
+  "execution_host": "node1 -> existing ani-platform/postgresql-0",
+  "method": "existing managed PostgreSQL pod; credential stays in original process; PGOPTIONS default_transaction_read_only=on; SELECT-only",
+  "queries": [
+    {
+      "observed_at_utc": "2026-10-31T15:05:45.990767Z",
+      "database": "ani_governance",
+      "sql": "SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT id,resource_tenant_id::text FROM sys_tenants WHERE resource_tenant_id::text IN ('64c5c35a-f554-432c-b4bc-7b4f36f08420','207328fc-f08d-4dc4-b403-16ec86396ce2') ORDER BY id) t;",
+      "exit_code": 0,
+      "rows": [
+        {
+          "id": 2,
+          "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420"
+        },
+        {
+          "id": 40,
+          "resource_tenant_id": "207328fc-f08d-4dc4-b403-16ec86396ce2"
+        }
+      ]
+    },
+    {
+      "observed_at_utc": "2026-10-31T15:05:46.154416Z",
+      "database": "ani_modeldev_v21",
+      "sql": "SELECT COALESCE(json_agg(t),'[]'::json) FROM (SELECT table_name,column_name,data_type FROM information_schema.columns WHERE table_schema='public' AND (table_name LIKE '%execution%' OR table_name LIKE '%submission%') ORDER BY table_name,ordinal_position) t;",
+      "exit_code": 0,
+      "rows": [
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "tenant_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "execution_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "plan_sha256",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "actor",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "phase",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "plan",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "receipt",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "started_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "modeldev_execution_cleanup_audits",
+          "column_name": "completed_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "modeldev_execution_identities",
+          "column_name": "tenant_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_identities",
+          "column_name": "execution_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_identities",
+          "column_name": "operation_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_identities",
+          "column_name": "spec_hash",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_identities",
+          "column_name": "close_generation",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "modeldev_execution_identities",
+          "column_name": "owner_revision",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "tenant_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "execution_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "operation_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "spec_hash",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "facts",
+          "data_type": "jsonb"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "training_name",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "training_request_sha256",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "training_uid",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "publication_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "close_generation",
+          "data_type": "numeric"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "close_reason",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "close_requested_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "closed_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "authority_execution_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "gpu_release_sealed_at",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "table_name": "modeldev_execution_runtimes",
+          "column_name": "gpu_release_scope_sha256",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "tenant_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "execution_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "operation_id",
+          "data_type": "uuid"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "actor",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "intent_canonical",
+          "data_type": "bytea"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "intent_hash",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "snapshot_canonical",
+          "data_type": "bytea"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "spec_hash",
+          "data_type": "text"
+        },
+        {
+          "table_name": "modeldev_executions",
+          "column_name": "accepted_at",
+          "data_type": "timestamp with time zone"
+        }
+      ]
+    }
+  ]
+}

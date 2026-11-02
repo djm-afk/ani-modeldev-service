@@ -1,0 +1,570 @@
+{
+  "source_commit": "4d6013c5b13cf150268ebbf63544ad16e1672d13",
+  "trusted_platform_principals": [
+    "system:node:node1",
+    "system:node:node2",
+    "system:node:node3",
+    "system:serviceaccount:kcn-system:kcn-controller",
+    "system:serviceaccount:kube-system:ani-multus",
+    "system:serviceaccount:kube-system:generic-garbage-collector",
+    "system:serviceaccount:kube-system:volcano-device-plugin",
+    "system:serviceaccount:kubeflow-system:jobset-controller-manager",
+    "system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager",
+    "system:serviceaccount:volcano-system:ani-volcano-scheduler"
+  ],
+  "writes": 2,
+  "rbac_changes": 0,
+  "new_identities": 0,
+  "user_override": "Existing exact platform actors bypass ModelDev workload admission; persistence only UPDATE status or unchanged spec. Other business controllers retain CREATE injection.",
+  "identity_before_write": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "verified_at": "2026-11-01T15:10:09.569951+00:00"
+  },
+  "before": {
+    "vap": {
+      "apiVersion": "admissionregistration.k8s.io/v1",
+      "kind": "ValidatingAdmissionPolicy",
+      "metadata": {
+        "creationTimestamp": "2026-11-01T03:56:32Z",
+        "generation": 9,
+        "name": "modeldev-workload-guard-v1",
+        "resourceVersion": "21324421",
+        "uid": "72edb341-581f-4630-b10f-43ac0eeffa13"
+      },
+      "spec": {
+        "failurePolicy": "Fail",
+        "matchConstraints": {
+          "matchPolicy": "Equivalent",
+          "namespaceSelector": {},
+          "objectSelector": {},
+          "resourceRules": [
+            {
+              "apiGroups": [
+                "argoproj.io"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "workflows",
+                "workflows/status"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                "trainer.kubeflow.org"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "trainjobs",
+                "trainjobs/status",
+                "trainingruntimes"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                "jobset.x-k8s.io"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "jobsets",
+                "jobsets/status"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                "batch"
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "jobs",
+                "jobs/status"
+              ],
+              "scope": "Namespaced"
+            },
+            {
+              "apiGroups": [
+                ""
+              ],
+              "apiVersions": [
+                "*"
+              ],
+              "operations": [
+                "CREATE",
+                "UPDATE"
+              ],
+              "resources": [
+                "pods",
+                "pods/status",
+                "pods/ephemeralcontainers"
+              ],
+              "scope": "Namespaced"
+            }
+          ]
+        },
+        "validations": [
+          {
+            "expression": "!variables.protected || variables.standardNamespace",
+            "message": "ModelDev: protected workload requires the standard owned namespace"
+          },
+          {
+            "expression": "!variables.protected || request.operation != 'CREATE' || ((request.resource.resource == \"workflows\" && request.userInfo.username in [\"system:serviceaccount:kubeflow:ml-pipeline\"]) || (request.resource.resource == \"trainjobs\" && request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\"]) || (request.resource.resource == \"trainingruntimes\" && request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\"]) || (request.resource.resource == \"jobsets\" && request.userInfo.username in [\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\"]) || (request.resource.resource == \"jobs\" && request.userInfo.username in [\"system:serviceaccount:kubeflow-system:jobset-controller-manager\"]) || (request.resource.resource == \"pods\" && request.userInfo.username in [\"system:serviceaccount:kubeflow:argo\",\"system:serviceaccount:kube-system:job-controller\"]))",
+            "message": "ModelDev: only exact original controllers create protected resources"
+          },
+          {
+            "expression": "!variables.protected || request.resource.resource != 'pods' || (has(object.spec.serviceAccountName) && ((object.spec.serviceAccountName == 'modeldev-step' && (request.operation != 'CREATE' || request.userInfo.username == \"system:serviceaccount:kubeflow:argo\")) || (object.spec.serviceAccountName == 'trainer-workload' && (request.operation != 'CREATE' || request.userInfo.username == \"system:serviceaccount:kube-system:job-controller\"))))",
+            "message": "ModelDev: reserved Secret, PVC or SA cannot be borrowed"
+          },
+          {
+            "expression": "!variables.protected || request.operation != 'UPDATE' || ((request.userInfo.username in [\"kubernetes-admin\",\"system:node:node1\",\"system:node:node2\",\"system:node:node3\",\"system:serviceaccount:ani-system:ani-modeldev-webhook\",\"system:serviceaccount:ani-system:modeldev-control\",\"system:serviceaccount:kube-system:job-controller\",\"system:serviceaccount:kubeflow-system:jobset-controller-manager\",\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\",\"system:serviceaccount:kubeflow:argo\",\"system:serviceaccount:kubeflow:ml-pipeline\",\"system:serviceaccount:kubeflow:ml-pipeline-persistenceagent\"] && variables.sameIdentity && variables.sameRetention && (request.resource.resource == 'workflows' ? (object.spec.templates == oldObject.spec.templates && (has(object.spec.arguments) ? object.spec.arguments : {}) == (has(oldObject.spec.arguments) ? oldObject.spec.arguments : {}) && object.spec.entrypoint == oldObject.spec.entrypoint && object.spec.serviceAccountName == oldObject.spec.serviceAccountName && ((has(object.spec.activeDeadlineSeconds) ? object.spec.activeDeadlineSeconds : -1) == (has(oldObject.spec.activeDeadlineSeconds) ? oldObject.spec.activeDeadlineSeconds : -1) || (request.userInfo.username == \"system:serviceaccount:kubeflow:ml-pipeline\" && has(object.spec.activeDeadlineSeconds) && object.spec.activeDeadlineSeconds == 0))) : request.resource.resource == 'trainjobs' ? (variables.sameSpec || variables.suspendOnly) : request.resource.resource in ['pods','trainingruntimes'] ? variables.sameSpec : variables.newPods == variables.oldPods)) || variables.networkMetadataUpdate || variables.networkStatusUpdate || variables.gcFinalizerUpdate || variables.gcOrphanDependentUpdate || variables.schedulerMetadataUpdate || variables.schedulerStatusUpdate || variables.deviceMetadataUpdate)",
+            "message": "ModelDev: original templates, four parameters, owner identity and retained Pod spec cannot change"
+          }
+        ],
+        "variables": [
+          {
+            "expression": "(object == null || !has(object.spec) ? [] : request.resource.resource == 'pods' ? [object.spec] : request.resource.resource == 'jobs' ? (has(object.spec.template) && has(object.spec.template.spec) ? [object.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(object.spec.replicatedJobs) ? object.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(object.spec.template) && has(object.spec.template.spec) ? (has(object.spec.template.spec.replicatedJobs) ? object.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [object.spec] + (has(object.spec.templates) ? object.spec.templates.map(t,{'serviceAccountName':dyn(has(t.serviceAccountName) ? t.serviceAccountName : ''), 'volumes':dyn(has(t.volumes) ? t.volumes : []), 'containers':dyn((has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : [])), 'initContainers':dyn(has(t.initContainers) ? t.initContainers : [])}) : []) : [])",
+            "name": "newPods"
+          },
+          {
+            "expression": "(oldObject == null || !has(oldObject.spec) ? [] : request.resource.resource == 'pods' ? [oldObject.spec] : request.resource.resource == 'jobs' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? [oldObject.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(oldObject.spec.replicatedJobs) ? oldObject.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? (has(oldObject.spec.template.spec.replicatedJobs) ? oldObject.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [oldObject.spec] + (has(oldObject.spec.templates) ? oldObject.spec.templates.map(t,{'serviceAccountName':dyn(has(t.serviceAccountName) ? t.serviceAccountName : ''), 'volumes':dyn(has(t.volumes) ? t.volumes : []), 'containers':dyn((has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : [])), 'initContainers':dyn(has(t.initContainers) ? t.initContainers : [])}) : []) : [])",
+            "name": "oldPods"
+          },
+          {
+            "expression": "(object != null && ((has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))))) || (oldObject != null && ((has(oldObject.metadata.labels) && oldObject.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(oldObject.metadata.annotations) && oldObject.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(oldObject.metadata.finalizers) && oldObject.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))))) || variables.newPods.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (has(s.volumes) && s.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(x,has(x.secret) && x.secret.name == 'modeldev-kfp-artifacts')))) || (has(s.containers) && s.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.initContainers) && s.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.ephemeralContainers) && s.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))) || variables.oldPods.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (has(s.volumes) && s.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(x,has(x.secret) && x.secret.name == 'modeldev-kfp-artifacts')))) || (has(s.containers) && s.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.initContainers) && s.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.ephemeralContainers) && s.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))) || (request.resource.resource == 'workflows' && ((object != null && has(object.spec.templates) && object.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"])) || (oldObject != null && has(oldObject.spec.templates) && oldObject.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]))))",
+            "name": "protected"
+          },
+          {
+            "expression": "namespaceObject != null && has(namespaceObject.metadata.labels) && 'network.ani.io/tenant-id' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/tenant-id'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && namespaceObject.metadata.labels['network.ani.io/tenant-id'] != '00000000-0000-0000-0000-000000000000' && namespaceObject.metadata.name == 'tenant-' + namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'network.ani.io/managed-by' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/managed-by'] == 'ani-network-service'",
+            "name": "standardNamespace"
+          },
+          {
+            "expression": "(has(object.metadata.labels) ? object.metadata.labels : {})",
+            "name": "newLabels"
+          },
+          {
+            "expression": "oldObject != null ? (has(oldObject.metadata.labels) ? oldObject.metadata.labels : {}) : {}",
+            "name": "oldLabels"
+          },
+          {
+            "expression": "(has(object.metadata.annotations) ? object.metadata.annotations : {})",
+            "name": "newAnnotations"
+          },
+          {
+            "expression": "oldObject != null ? (has(oldObject.metadata.annotations) ? oldObject.metadata.annotations : {}) : {}",
+            "name": "oldAnnotations"
+          },
+          {
+            "expression": "variables.oldLabels.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/') || k == 'pipeline/runid') || (k in variables.newLabels && variables.oldLabels[k] == variables.newLabels[k])) && variables.newLabels.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/') || k == 'pipeline/runid') || (k in variables.oldLabels && variables.oldLabels[k] == variables.newLabels[k])) && variables.oldAnnotations.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/')) || (k in variables.newAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && variables.newAnnotations.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/')) || (k in variables.oldAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && (has(object.metadata.ownerReferences) ? object.metadata.ownerReferences : []) == (oldObject != null ? (has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []) : [])",
+            "name": "sameIdentity"
+          },
+          {
+            "expression": "oldObject != null && object.spec == oldObject.spec",
+            "name": "sameSpec"
+          },
+          {
+            "expression": "oldObject == null || !has(oldObject.metadata.finalizers) || oldObject.metadata.finalizers.filter(f,f.startsWith('modeldev.ani.io/')).all(f,has(object.metadata.finalizers) && f in object.metadata.finalizers) || request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\"",
+            "name": "sameRetention"
+          },
+          {
+            "expression": "oldObject != null && request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\" && has(object.spec.suspend) && object.spec.suspend && object.spec.all(k,k == 'suspend' || (k in oldObject.spec && object.spec[k] == oldObject.spec[k])) && oldObject.spec.all(k,k == 'suspend' || (k in object.spec && object.spec[k] == oldObject.spec[k]))",
+            "name": "suspendOnly"
+          },
+          {
+            "expression": "request.resource.resource == 'pods' && (!has(request.subResource) || request.subResource == '') && request.userInfo.username == \"system:serviceaccount:kcn-system:kcn-controller\" && variables.sameSpec && variables.sameIdentity && variables.newLabels == variables.oldLabels && (has(object.metadata.finalizers) ? object.metadata.finalizers : []) == (has(oldObject.metadata.finalizers) ? oldObject.metadata.finalizers : []) && \"networking.kubercloud.com/vnic\" in variables.newAnnotations && size(variables.newAnnotations[\"networking.kubercloud.com/vnic\"]) > 0 && variables.oldAnnotations.all(k,k == \"networking.kubercloud.com/vnic\" || (k in variables.newAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && variables.newAnnotations.all(k,k == \"networking.kubercloud.com/vnic\" || (k in variables.oldAnnotations && variables.newAnnotations[k] == variables.oldAnnotations[k]))",
+            "name": "networkMetadataUpdate"
+          },
+          {
+            "expression": "request.resource.resource == 'pods' && has(request.subResource) && request.subResource == 'status' && request.userInfo.username == \"system:serviceaccount:kube-system:ani-multus\" && (has(object.status) ? object.status : {}) == (has(oldObject.status) ? oldObject.status : {}) && variables.sameSpec && variables.sameIdentity && variables.newLabels == variables.oldLabels && (has(object.metadata.finalizers) ? object.metadata.finalizers : []) == (has(oldObject.metadata.finalizers) ? oldObject.metadata.finalizers : []) && \"k8s.v1.cni.cncf.io/network-status\" in variables.newAnnotations && size(variables.newAnnotations[\"k8s.v1.cni.cncf.io/network-status\"]) > 0 && variables.oldAnnotations.all(k,k == \"k8s.v1.cni.cncf.io/network-status\" || (k in variables.newAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && variables.newAnnotations.all(k,k == \"k8s.v1.cni.cncf.io/network-status\" || (k in variables.oldAnnotations && variables.newAnnotations[k] == variables.oldAnnotations[k]))",
+            "name": "networkStatusUpdate"
+          },
+          {
+            "expression": "request.operation == 'UPDATE' && request.resource.resource in ['pods','workflows','trainjobs','trainingruntimes','jobsets','jobs'] && (!has(request.subResource) || request.subResource == '') && request.userInfo.username == \"system:serviceaccount:kube-system:generic-garbage-collector\" && has(request.userInfo.uid) && request.userInfo.uid == \"b2b706d0-0758-4cd7-97c7-a57adf216690\" && oldObject != null && has(oldObject.metadata.deletionTimestamp) && has(object.metadata.deletionTimestamp) && object.metadata.deletionTimestamp == oldObject.metadata.deletionTimestamp && variables.sameSpec && variables.sameIdentity && variables.newLabels == variables.oldLabels && variables.newAnnotations == variables.oldAnnotations && (has(object.status) ? object.status : {}) == (has(oldObject.status) ? oldObject.status : {}) && 'orphan' in (has(oldObject.metadata.finalizers) ? oldObject.metadata.finalizers : []) && (has(object.metadata.finalizers) ? object.metadata.finalizers : []) == (has(oldObject.metadata.finalizers) ? oldObject.metadata.finalizers : []).filter(f,f != 'orphan')",
+            "name": "gcFinalizerUpdate"
+          },
+          {
+            "expression": "request.operation == 'UPDATE' && (!has(request.subResource) || request.subResource == '') && request.userInfo.username == \"system:serviceaccount:kube-system:generic-garbage-collector\" && has(request.userInfo.uid) && request.userInfo.uid == \"b2b706d0-0758-4cd7-97c7-a57adf216690\" && oldObject != null && variables.sameSpec && (has(object.status) ? object.status : {}) == (has(oldObject.status) ? oldObject.status : {}) && (has(object.metadata.name) ? object.metadata.name : null) == (has(oldObject.metadata.name) ? oldObject.metadata.name : null) && (has(object.metadata.generateName) ? object.metadata.generateName : null) == (has(oldObject.metadata.generateName) ? oldObject.metadata.generateName : null) && (has(object.metadata.namespace) ? object.metadata.namespace : null) == (has(oldObject.metadata.namespace) ? oldObject.metadata.namespace : null) && (has(object.metadata.uid) ? object.metadata.uid : null) == (has(oldObject.metadata.uid) ? oldObject.metadata.uid : null) && (has(object.metadata.creationTimestamp) ? object.metadata.creationTimestamp : null) == (has(oldObject.metadata.creationTimestamp) ? oldObject.metadata.creationTimestamp : null) && (has(object.metadata.generation) ? object.metadata.generation : null) == (has(oldObject.metadata.generation) ? oldObject.metadata.generation : null) && (has(object.metadata.deletionTimestamp) ? object.metadata.deletionTimestamp : null) == (has(oldObject.metadata.deletionTimestamp) ? oldObject.metadata.deletionTimestamp : null) && (has(object.metadata.deletionGracePeriodSeconds) ? object.metadata.deletionGracePeriodSeconds : null) == (has(oldObject.metadata.deletionGracePeriodSeconds) ? oldObject.metadata.deletionGracePeriodSeconds : null) && (has(object.metadata.labels) ? object.metadata.labels : null) == (has(oldObject.metadata.labels) ? oldObject.metadata.labels : null) && (has(object.metadata.annotations) ? object.metadata.annotations : null) == (has(oldObject.metadata.annotations) ? oldObject.metadata.annotations : null) && (has(object.metadata.finalizers) ? object.metadata.finalizers : null) == (has(oldObject.metadata.finalizers) ? oldObject.metadata.finalizers : null) && size((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : [])) == 1 && size((has(object.metadata.ownerReferences) ? object.metadata.ownerReferences : [])) == 0 && has(((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].controller) && ((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].controller && size(((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].uid) > 0 && ((request.resource.resource == 'jobsets' && ((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].apiVersion == 'trainer.kubeflow.org/v1alpha1' && ((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].kind == 'TrainJob') || (request.resource.resource == 'jobs' && ((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].apiVersion == 'jobset.x-k8s.io/v1alpha2' && ((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].kind == 'JobSet') || (request.resource.resource == 'pods' && ((((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].apiVersion == 'batch/v1' && ((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].kind == 'Job') || (((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].apiVersion == 'argoproj.io/v1alpha1' && ((has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []))[0].kind == 'Workflow'))))",
+            "name": "gcOrphanDependentUpdate"
+          },
+          {
+            "expression": "request.operation == 'UPDATE' && request.resource.resource == 'pods' && oldObject != null && request.userInfo.username == \"system:serviceaccount:volcano-system:ani-volcano-scheduler\" && has(request.userInfo.uid) && request.userInfo.uid == \"60a5db74-f7d3-4b84-8bb1-d26479cc5bc8\" && variables.sameSpec && (!has(request.subResource) || request.subResource == '') && (has(object.metadata.name) ? object.metadata.name : null) == (has(oldObject.metadata.name) ? oldObject.metadata.name : null) && (has(object.metadata.generateName) ? object.metadata.generateName : null) == (has(oldObject.metadata.generateName) ? oldObject.metadata.generateName : null) && (has(object.metadata.namespace) ? object.metadata.namespace : null) == (has(oldObject.metadata.namespace) ? oldObject.metadata.namespace : null) && (has(object.metadata.uid) ? object.metadata.uid : null) == (has(oldObject.metadata.uid) ? oldObject.metadata.uid : null) && (has(object.metadata.creationTimestamp) ? object.metadata.creationTimestamp : null) == (has(oldObject.metadata.creationTimestamp) ? oldObject.metadata.creationTimestamp : null) && (has(object.metadata.generation) ? object.metadata.generation : null) == (has(oldObject.metadata.generation) ? oldObject.metadata.generation : null) && (has(object.metadata.deletionTimestamp) ? object.metadata.deletionTimestamp : null) == (has(oldObject.metadata.deletionTimestamp) ? oldObject.metadata.deletionTimestamp : null) && (has(object.metadata.deletionGracePeriodSeconds) ? object.metadata.deletionGracePeriodSeconds : null) == (has(oldObject.metadata.deletionGracePeriodSeconds) ? oldObject.metadata.deletionGracePeriodSeconds : null) && (has(object.metadata.labels) ? object.metadata.labels : null) == (has(oldObject.metadata.labels) ? oldObject.metadata.labels : null) && (has(object.metadata.finalizers) ? object.metadata.finalizers : null) == (has(oldObject.metadata.finalizers) ? oldObject.metadata.finalizers : null) && (has(object.metadata.ownerReferences) ? object.metadata.ownerReferences : null) == (has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : null) && (has(object.status) ? object.status : {}) == (has(oldObject.status) ? oldObject.status : {}) && variables.oldAnnotations.all(k,k in [\"volcano.sh/vgpu-node\",\"volcano.sh/vgpu-ids-new\",\"volcano.sh/devices-to-allocate\",\"volcano.sh/vgpu-time\",\"volcano.sh/bind-time\",\"volcano.sh/bind-phase\"] || (k in variables.newAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && variables.newAnnotations.all(k,k in [\"volcano.sh/vgpu-node\",\"volcano.sh/vgpu-ids-new\",\"volcano.sh/devices-to-allocate\",\"volcano.sh/vgpu-time\",\"volcano.sh/bind-time\",\"volcano.sh/bind-phase\"] || (k in variables.oldAnnotations && variables.newAnnotations[k] == variables.oldAnnotations[k]))",
+            "name": "schedulerMetadataUpdate"
+          },
+          {
+            "expression": "(has(object.status) ? object.status : {})",
+            "name": "newStatus"
+          },
+          {
+            "expression": "(has(oldObject.status) ? oldObject.status : {})",
+            "name": "oldStatus"
+          },
+          {
+            "expression": "request.operation == 'UPDATE' && request.resource.resource == 'pods' && oldObject != null && request.userInfo.username == \"system:serviceaccount:volcano-system:ani-volcano-scheduler\" && has(request.userInfo.uid) && request.userInfo.uid == \"60a5db74-f7d3-4b84-8bb1-d26479cc5bc8\" && variables.sameSpec && has(request.subResource) && request.subResource == 'status' && (has(object.metadata.name) ? object.metadata.name : null) == (has(oldObject.metadata.name) ? oldObject.metadata.name : null) && (has(object.metadata.generateName) ? object.metadata.generateName : null) == (has(oldObject.metadata.generateName) ? oldObject.metadata.generateName : null) && (has(object.metadata.namespace) ? object.metadata.namespace : null) == (has(oldObject.metadata.namespace) ? oldObject.metadata.namespace : null) && (has(object.metadata.uid) ? object.metadata.uid : null) == (has(oldObject.metadata.uid) ? oldObject.metadata.uid : null) && (has(object.metadata.creationTimestamp) ? object.metadata.creationTimestamp : null) == (has(oldObject.metadata.creationTimestamp) ? oldObject.metadata.creationTimestamp : null) && (has(object.metadata.generation) ? object.metadata.generation : null) == (has(oldObject.metadata.generation) ? oldObject.metadata.generation : null) && (has(object.metadata.deletionTimestamp) ? object.metadata.deletionTimestamp : null) == (has(oldObject.metadata.deletionTimestamp) ? oldObject.metadata.deletionTimestamp : null) && (has(object.metadata.deletionGracePeriodSeconds) ? object.metadata.deletionGracePeriodSeconds : null) == (has(oldObject.metadata.deletionGracePeriodSeconds) ? oldObject.metadata.deletionGracePeriodSeconds : null) && (has(object.metadata.labels) ? object.metadata.labels : null) == (has(oldObject.metadata.labels) ? oldObject.metadata.labels : null) && (has(object.metadata.annotations) ? object.metadata.annotations : null) == (has(oldObject.metadata.annotations) ? oldObject.metadata.annotations : null) && (has(object.metadata.finalizers) ? object.metadata.finalizers : null) == (has(oldObject.metadata.finalizers) ? oldObject.metadata.finalizers : null) && (has(object.metadata.ownerReferences) ? object.metadata.ownerReferences : null) == (has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : null) && variables.newStatus.all(k,k in ['conditions','nominatedNodeName'] || (k in variables.oldStatus && variables.newStatus[k] == variables.oldStatus[k])) && variables.oldStatus.all(k,k in ['conditions','nominatedNodeName'] || (k in variables.newStatus && variables.oldStatus[k] == variables.newStatus[k])) && ((has(object.status.conditions) ? object.status.conditions : [])).filter(c,c.type != 'PodScheduled') == ((has(oldObject.status.conditions) ? oldObject.status.conditions : [])).filter(c,c.type != 'PodScheduled') && size(((has(object.status.conditions) ? object.status.conditions : [])).filter(c,c.type == 'PodScheduled')) == 1 && size(((has(oldObject.status.conditions) ? oldObject.status.conditions : [])).filter(c,c.type == 'PodScheduled')) <= 1",
+            "name": "schedulerStatusUpdate"
+          },
+          {
+            "expression": "request.operation == 'UPDATE' && request.resource.resource == 'pods' && (!has(request.subResource) || request.subResource == '') && oldObject != null && request.userInfo.username == \"system:serviceaccount:kube-system:volcano-device-plugin\" && has(request.userInfo.uid) && request.userInfo.uid == \"169a4919-60a7-4f7f-8b2d-bc143b18df64\" && variables.sameSpec && (has(object.metadata.name) ? object.metadata.name : null) == (has(oldObject.metadata.name) ? oldObject.metadata.name : null) && (has(object.metadata.generateName) ? object.metadata.generateName : null) == (has(oldObject.metadata.generateName) ? oldObject.metadata.generateName : null) && (has(object.metadata.namespace) ? object.metadata.namespace : null) == (has(oldObject.metadata.namespace) ? oldObject.metadata.namespace : null) && (has(object.metadata.uid) ? object.metadata.uid : null) == (has(oldObject.metadata.uid) ? oldObject.metadata.uid : null) && (has(object.metadata.creationTimestamp) ? object.metadata.creationTimestamp : null) == (has(oldObject.metadata.creationTimestamp) ? oldObject.metadata.creationTimestamp : null) && (has(object.metadata.generation) ? object.metadata.generation : null) == (has(oldObject.metadata.generation) ? oldObject.metadata.generation : null) && (has(object.metadata.deletionTimestamp) ? object.metadata.deletionTimestamp : null) == (has(oldObject.metadata.deletionTimestamp) ? oldObject.metadata.deletionTimestamp : null) && (has(object.metadata.deletionGracePeriodSeconds) ? object.metadata.deletionGracePeriodSeconds : null) == (has(oldObject.metadata.deletionGracePeriodSeconds) ? oldObject.metadata.deletionGracePeriodSeconds : null) && (has(object.metadata.labels) ? object.metadata.labels : null) == (has(oldObject.metadata.labels) ? oldObject.metadata.labels : null) && (has(object.metadata.finalizers) ? object.metadata.finalizers : null) == (has(oldObject.metadata.finalizers) ? oldObject.metadata.finalizers : null) && (has(object.metadata.ownerReferences) ? object.metadata.ownerReferences : null) == (has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : null) && (has(object.status) ? object.status : {}) == (has(oldObject.status) ? oldObject.status : {}) && variables.oldAnnotations.all(k,k in [\"volcano.sh/devices-to-allocate\",\"volcano.sh/bind-phase\",\"volcano.sh/vgpu-time\"] || (k in variables.newAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && variables.newAnnotations.all(k,k in [\"volcano.sh/devices-to-allocate\",\"volcano.sh/bind-phase\",\"volcano.sh/vgpu-time\"] || (k in variables.oldAnnotations && variables.newAnnotations[k] == variables.oldAnnotations[k]))",
+            "name": "deviceMetadataUpdate"
+          }
+        ]
+      },
+      "status": {
+        "observedGeneration": 9,
+        "typeChecking": {}
+      }
+    },
+    "mwc": {
+      "apiVersion": "admissionregistration.k8s.io/v1",
+      "kind": "MutatingWebhookConfiguration",
+      "metadata": {
+        "annotations": {
+          "cert-manager.io/inject-ca-from": "ani-system/ani-modeldev-webhook-serving"
+        },
+        "creationTimestamp": "2026-10-22T10:22:53Z",
+        "generation": 2,
+        "labels": {
+          "ani.io/managed-by": "modeldev-execution-v21",
+          "ani.io/task-id": "01a15f47",
+          "app.kubernetes.io/name": "ani-modeldev-webhook",
+          "app.kubernetes.io/part-of": "ani-modeldev"
+        },
+        "name": "ani-modeldev-webhook",
+        "resourceVersion": "20990649",
+        "uid": "c452d29d-89be-41af-ac95-eb467e1a89c2"
+      },
+      "webhooks": [
+        {
+          "admissionReviewVersions": [
+            "v1"
+          ],
+          "clientConfig": {
+            "caBundle": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI0VENDQVlhZ0F3SUJBZ0lVV2QxcWIrU25pQXZSZUVCWnN6QXdHRFVzMllnd0NnWUlLb1pJemowRUF3SXcKVGpFV01CUUdBMVVFQ2hNTllXNXBMV2x1YzNSaGJHeGxjakVlTUJ3R0ExVUVDeE1WWm05MWJtUmhkR2x2YmkxagpiMjF3YjI1bGJuUnpNUlF3RWdZRFZRUURFd3RoYm1rdGNtOXZkQzFqWVRBZUZ3MHlOakV3TWpFeE5EQXlOVFphCkZ3MHpOakV3TVRneE5EQXlOVFphTUU0eEZqQVVCZ05WQkFvVERXRnVhUzFwYm5OMFlXeHNaWEl4SGpBY0JnTlYKQkFzVEZXWnZkVzVrWVhScGIyNHRZMjl0Y0c5dVpXNTBjekVVTUJJR0ExVUVBeE1MWVc1cExYSnZiM1F0WTJFdwpXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CQndOQ0FBVG5Wc1Rkd3hxdG1tekhWUmp5dmVJQnlnZlhNalY1CmlPTVgzZXlLQ3Rsei90Wk1wbWFoakE0Sy90cGFjdUF2MEQyU3d3RWM0MjJ0Wm5SaURPYW5sWFBQbzBJd1FEQU8KQmdOVkhROEJBZjhFQkFNQ0FxUXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QWRCZ05WSFE0RUZnUVUwdE5pVUpWeQppQnIraytiRG9KZm1NcWxyWFVvd0NnWUlLb1pJemowRUF3SURTUUF3UmdJaEFPTTh4WVNDVDBKUmNkcENPSFc1ClNGVWxBMmJUbjhlNjhTWTVRQzg1bmxSTUFpRUFrUm5wNnlSdi9zclZyUXdZZFc0Q1VxeFU3YUJ1R0N0bXVuc3cKd2FsdU1Ccz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
+            "service": {
+              "name": "ani-modeldev-webhook",
+              "namespace": "ani-system",
+              "path": "/mutate",
+              "port": 443
+            }
+          },
+          "failurePolicy": "Fail",
+          "matchConditions": [
+            {
+              "expression": "(has(object.spec.serviceAccountName) && object.spec.serviceAccountName in [\"modeldev-step\", \"trainer-workload\", \"verifier\"]) || (has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))) || (has(object.spec.volumes) && object.spec.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(s,has(s.secret) && s.secret.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.containers) && object.spec.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.initContainers) && object.spec.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.ephemeralContainers) && object.spec.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))",
+              "name": "modeldev-reserved-identity-or-reference"
+            }
+          ],
+          "matchPolicy": "Exact",
+          "name": "dynamic.modeldev.ani.io",
+          "namespaceSelector": {},
+          "objectSelector": {},
+          "reinvocationPolicy": "Never",
+          "rules": [
+            {
+              "apiGroups": [
+                ""
+              ],
+              "apiVersions": [
+                "v1"
+              ],
+              "operations": [
+                "CREATE"
+              ],
+              "resources": [
+                "pods"
+              ],
+              "scope": "Namespaced"
+            }
+          ],
+          "sideEffects": "None",
+          "timeoutSeconds": 8
+        }
+      ]
+    }
+  },
+  "vap": {
+    "apiVersion": "admissionregistration.k8s.io/v1",
+    "kind": "ValidatingAdmissionPolicy",
+    "metadata": {
+      "creationTimestamp": "2026-11-01T03:56:32Z",
+      "generation": 10,
+      "name": "modeldev-workload-guard-v1",
+      "resourceVersion": "21360772",
+      "uid": "72edb341-581f-4630-b10f-43ac0eeffa13"
+    },
+    "spec": {
+      "failurePolicy": "Fail",
+      "matchConditions": [
+        {
+          "expression": "!(request.userInfo.username in [\"system:node:node1\",\"system:node:node2\",\"system:node:node3\",\"system:serviceaccount:kcn-system:kcn-controller\",\"system:serviceaccount:kube-system:ani-multus\",\"system:serviceaccount:kube-system:generic-garbage-collector\",\"system:serviceaccount:kube-system:volcano-device-plugin\",\"system:serviceaccount:kubeflow-system:jobset-controller-manager\",\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\",\"system:serviceaccount:volcano-system:ani-volcano-scheduler\"] || (request.userInfo.username == \"system:serviceaccount:kubeflow:ml-pipeline-persistenceagent\" && request.operation == 'UPDATE' && ((has(request.subResource) && request.subResource == 'status') || (oldObject != null && object != null && object.spec == oldObject.spec))))",
+          "name": "platform-controller-trust"
+        }
+      ],
+      "matchConstraints": {
+        "matchPolicy": "Equivalent",
+        "namespaceSelector": {},
+        "objectSelector": {},
+        "resourceRules": [
+          {
+            "apiGroups": [
+              "argoproj.io"
+            ],
+            "apiVersions": [
+              "*"
+            ],
+            "operations": [
+              "CREATE",
+              "UPDATE"
+            ],
+            "resources": [
+              "workflows",
+              "workflows/status"
+            ],
+            "scope": "Namespaced"
+          },
+          {
+            "apiGroups": [
+              "trainer.kubeflow.org"
+            ],
+            "apiVersions": [
+              "*"
+            ],
+            "operations": [
+              "CREATE",
+              "UPDATE"
+            ],
+            "resources": [
+              "trainjobs",
+              "trainjobs/status",
+              "trainingruntimes"
+            ],
+            "scope": "Namespaced"
+          },
+          {
+            "apiGroups": [
+              "jobset.x-k8s.io"
+            ],
+            "apiVersions": [
+              "*"
+            ],
+            "operations": [
+              "CREATE",
+              "UPDATE"
+            ],
+            "resources": [
+              "jobsets",
+              "jobsets/status"
+            ],
+            "scope": "Namespaced"
+          },
+          {
+            "apiGroups": [
+              "batch"
+            ],
+            "apiVersions": [
+              "*"
+            ],
+            "operations": [
+              "CREATE",
+              "UPDATE"
+            ],
+            "resources": [
+              "jobs",
+              "jobs/status"
+            ],
+            "scope": "Namespaced"
+          },
+          {
+            "apiGroups": [
+              ""
+            ],
+            "apiVersions": [
+              "*"
+            ],
+            "operations": [
+              "CREATE",
+              "UPDATE"
+            ],
+            "resources": [
+              "pods",
+              "pods/status",
+              "pods/ephemeralcontainers"
+            ],
+            "scope": "Namespaced"
+          }
+        ]
+      },
+      "validations": [
+        {
+          "expression": "!variables.protected || variables.standardNamespace",
+          "message": "ModelDev: protected workload requires the standard owned namespace"
+        },
+        {
+          "expression": "!variables.protected || request.operation != 'CREATE' || ((request.resource.resource == \"workflows\" && request.userInfo.username in [\"system:serviceaccount:kubeflow:ml-pipeline\"]) || (request.resource.resource == \"trainjobs\" && request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\"]) || (request.resource.resource == \"trainingruntimes\" && request.userInfo.username in [\"system:serviceaccount:ani-system:modeldev-control\"]) || (request.resource.resource == \"jobsets\" && request.userInfo.username in [\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\"]) || (request.resource.resource == \"jobs\" && request.userInfo.username in [\"system:serviceaccount:kubeflow-system:jobset-controller-manager\"]) || (request.resource.resource == \"pods\" && request.userInfo.username in [\"system:serviceaccount:kubeflow:argo\",\"system:serviceaccount:kube-system:job-controller\"]))",
+          "message": "ModelDev: only exact original controllers create protected resources"
+        },
+        {
+          "expression": "!variables.protected || request.resource.resource != 'pods' || (has(object.spec.serviceAccountName) && ((object.spec.serviceAccountName == 'modeldev-step' && (request.operation != 'CREATE' || request.userInfo.username == \"system:serviceaccount:kubeflow:argo\")) || (object.spec.serviceAccountName == 'trainer-workload' && (request.operation != 'CREATE' || request.userInfo.username == \"system:serviceaccount:kube-system:job-controller\"))))",
+          "message": "ModelDev: reserved Secret, PVC or SA cannot be borrowed"
+        },
+        {
+          "expression": "!variables.protected || request.operation != 'UPDATE' || (request.userInfo.username in [\"kubernetes-admin\",\"system:serviceaccount:ani-system:ani-modeldev-webhook\",\"system:serviceaccount:ani-system:modeldev-control\",\"system:serviceaccount:kube-system:job-controller\",\"system:serviceaccount:kubeflow:argo\",\"system:serviceaccount:kubeflow:ml-pipeline\"] && variables.sameIdentity && variables.sameRetention && (request.resource.resource == 'workflows' ? (object.spec.templates == oldObject.spec.templates && (has(object.spec.arguments) ? object.spec.arguments : {}) == (has(oldObject.spec.arguments) ? oldObject.spec.arguments : {}) && object.spec.entrypoint == oldObject.spec.entrypoint && object.spec.serviceAccountName == oldObject.spec.serviceAccountName && ((has(object.spec.activeDeadlineSeconds) ? object.spec.activeDeadlineSeconds : -1) == (has(oldObject.spec.activeDeadlineSeconds) ? oldObject.spec.activeDeadlineSeconds : -1) || (request.userInfo.username == \"system:serviceaccount:kubeflow:ml-pipeline\" && has(object.spec.activeDeadlineSeconds) && object.spec.activeDeadlineSeconds == 0))) : request.resource.resource == 'trainjobs' ? (variables.sameSpec || variables.suspendOnly) : request.resource.resource in ['pods','trainingruntimes'] ? variables.sameSpec : variables.newPods == variables.oldPods))",
+          "message": "ModelDev: original templates, four parameters, owner identity and retained Pod spec cannot change"
+        }
+      ],
+      "variables": [
+        {
+          "expression": "(object == null || !has(object.spec) ? [] : request.resource.resource == 'pods' ? [object.spec] : request.resource.resource == 'jobs' ? (has(object.spec.template) && has(object.spec.template.spec) ? [object.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(object.spec.replicatedJobs) ? object.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(object.spec.template) && has(object.spec.template.spec) ? (has(object.spec.template.spec.replicatedJobs) ? object.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [object.spec] + (has(object.spec.templates) ? object.spec.templates.map(t,{'serviceAccountName':dyn(has(t.serviceAccountName) ? t.serviceAccountName : ''), 'volumes':dyn(has(t.volumes) ? t.volumes : []), 'containers':dyn((has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : [])), 'initContainers':dyn(has(t.initContainers) ? t.initContainers : [])}) : []) : [])",
+          "name": "newPods"
+        },
+        {
+          "expression": "(oldObject == null || !has(oldObject.spec) ? [] : request.resource.resource == 'pods' ? [oldObject.spec] : request.resource.resource == 'jobs' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? [oldObject.spec.template.spec] : []) : request.resource.resource == 'jobsets' ? (has(oldObject.spec.replicatedJobs) ? oldObject.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : request.resource.resource == 'trainingruntimes' ? (has(oldObject.spec.template) && has(oldObject.spec.template.spec) ? (has(oldObject.spec.template.spec.replicatedJobs) ? oldObject.spec.template.spec.replicatedJobs.filter(j,has(j.template) && has(j.template.spec) && has(j.template.spec.template) && has(j.template.spec.template.spec)).map(j,j.template.spec.template.spec) : []) : []) : request.resource.resource == 'workflows' ? [oldObject.spec] + (has(oldObject.spec.templates) ? oldObject.spec.templates.map(t,{'serviceAccountName':dyn(has(t.serviceAccountName) ? t.serviceAccountName : ''), 'volumes':dyn(has(t.volumes) ? t.volumes : []), 'containers':dyn((has(t.container) ? [t.container] : []) + (has(t.script) ? [t.script] : []) + (has(t.sidecars) ? t.sidecars : [])), 'initContainers':dyn(has(t.initContainers) ? t.initContainers : [])}) : []) : [])",
+          "name": "oldPods"
+        },
+        {
+          "expression": "(object != null && ((has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))))) || (oldObject != null && ((has(oldObject.metadata.labels) && oldObject.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(oldObject.metadata.annotations) && oldObject.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(oldObject.metadata.finalizers) && oldObject.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))))) || variables.newPods.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (has(s.volumes) && s.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(x,has(x.secret) && x.secret.name == 'modeldev-kfp-artifacts')))) || (has(s.containers) && s.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.initContainers) && s.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.ephemeralContainers) && s.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))) || variables.oldPods.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]) || (has(s.volumes) && s.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(x,has(x.secret) && x.secret.name == 'modeldev-kfp-artifacts')))) || (has(s.containers) && s.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.initContainers) && s.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(s.ephemeralContainers) && s.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))) || (request.resource.resource == 'workflows' && ((object != null && has(object.spec.templates) && object.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"])) || (oldObject != null && has(oldObject.spec.templates) && oldObject.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in [\"modeldev-step\",\"trainer-workload\",\"verifier\"]))))",
+          "name": "protected"
+        },
+        {
+          "expression": "namespaceObject != null && has(namespaceObject.metadata.labels) && 'network.ani.io/tenant-id' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/tenant-id'].matches(\"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\") && namespaceObject.metadata.labels['network.ani.io/tenant-id'] != '00000000-0000-0000-0000-000000000000' && namespaceObject.metadata.name == 'tenant-' + namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'network.ani.io/managed-by' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['network.ani.io/managed-by'] == 'ani-network-service'",
+          "name": "standardNamespace"
+        },
+        {
+          "expression": "(has(object.metadata.labels) ? object.metadata.labels : {})",
+          "name": "newLabels"
+        },
+        {
+          "expression": "oldObject != null ? (has(oldObject.metadata.labels) ? oldObject.metadata.labels : {}) : {}",
+          "name": "oldLabels"
+        },
+        {
+          "expression": "(has(object.metadata.annotations) ? object.metadata.annotations : {})",
+          "name": "newAnnotations"
+        },
+        {
+          "expression": "oldObject != null ? (has(oldObject.metadata.annotations) ? oldObject.metadata.annotations : {}) : {}",
+          "name": "oldAnnotations"
+        },
+        {
+          "expression": "variables.oldLabels.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/') || k == 'pipeline/runid') || (k in variables.newLabels && variables.oldLabels[k] == variables.newLabels[k])) && variables.newLabels.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/') || k == 'pipeline/runid') || (k in variables.oldLabels && variables.oldLabels[k] == variables.newLabels[k])) && variables.oldAnnotations.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/')) || (k in variables.newAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && variables.newAnnotations.all(k,!(k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/')) || (k in variables.oldAnnotations && variables.oldAnnotations[k] == variables.newAnnotations[k])) && (has(object.metadata.ownerReferences) ? object.metadata.ownerReferences : []) == (oldObject != null ? (has(oldObject.metadata.ownerReferences) ? oldObject.metadata.ownerReferences : []) : [])",
+          "name": "sameIdentity"
+        },
+        {
+          "expression": "oldObject != null && object.spec == oldObject.spec",
+          "name": "sameSpec"
+        },
+        {
+          "expression": "oldObject == null || !has(oldObject.metadata.finalizers) || oldObject.metadata.finalizers.filter(f,f.startsWith('modeldev.ani.io/')).all(f,has(object.metadata.finalizers) && f in object.metadata.finalizers) || request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\"",
+          "name": "sameRetention"
+        },
+        {
+          "expression": "oldObject != null && request.userInfo.username == \"system:serviceaccount:ani-system:modeldev-control\" && has(object.spec.suspend) && object.spec.suspend && object.spec.all(k,k == 'suspend' || (k in oldObject.spec && object.spec[k] == oldObject.spec[k])) && oldObject.spec.all(k,k == 'suspend' || (k in object.spec && object.spec[k] == oldObject.spec[k]))",
+          "name": "suspendOnly"
+        }
+      ]
+    },
+    "status": {
+      "observedGeneration": 10,
+      "typeChecking": {}
+    }
+  },
+  "mwc": {
+    "apiVersion": "admissionregistration.k8s.io/v1",
+    "kind": "MutatingWebhookConfiguration",
+    "metadata": {
+      "annotations": {
+        "cert-manager.io/inject-ca-from": "ani-system/ani-modeldev-webhook-serving"
+      },
+      "creationTimestamp": "2026-10-22T10:22:53Z",
+      "generation": 3,
+      "labels": {
+        "ani.io/managed-by": "modeldev-execution-v21",
+        "ani.io/task-id": "01a15f47",
+        "app.kubernetes.io/name": "ani-modeldev-webhook",
+        "app.kubernetes.io/part-of": "ani-modeldev"
+      },
+      "name": "ani-modeldev-webhook",
+      "resourceVersion": "21360773",
+      "uid": "c452d29d-89be-41af-ac95-eb467e1a89c2"
+    },
+    "webhooks": [
+      {
+        "admissionReviewVersions": [
+          "v1"
+        ],
+        "clientConfig": {
+          "caBundle": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUI0VENDQVlhZ0F3SUJBZ0lVV2QxcWIrU25pQXZSZUVCWnN6QXdHRFVzMllnd0NnWUlLb1pJemowRUF3SXcKVGpFV01CUUdBMVVFQ2hNTllXNXBMV2x1YzNSaGJHeGxjakVlTUJ3R0ExVUVDeE1WWm05MWJtUmhkR2x2YmkxagpiMjF3YjI1bGJuUnpNUlF3RWdZRFZRUURFd3RoYm1rdGNtOXZkQzFqWVRBZUZ3MHlOakV3TWpFeE5EQXlOVFphCkZ3MHpOakV3TVRneE5EQXlOVFphTUU0eEZqQVVCZ05WQkFvVERXRnVhUzFwYm5OMFlXeHNaWEl4SGpBY0JnTlYKQkFzVEZXWnZkVzVrWVhScGIyNHRZMjl0Y0c5dVpXNTBjekVVTUJJR0ExVUVBeE1MWVc1cExYSnZiM1F0WTJFdwpXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CQndOQ0FBVG5Wc1Rkd3hxdG1tekhWUmp5dmVJQnlnZlhNalY1CmlPTVgzZXlLQ3Rsei90Wk1wbWFoakE0Sy90cGFjdUF2MEQyU3d3RWM0MjJ0Wm5SaURPYW5sWFBQbzBJd1FEQU8KQmdOVkhROEJBZjhFQkFNQ0FxUXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QWRCZ05WSFE0RUZnUVUwdE5pVUpWeQppQnIraytiRG9KZm1NcWxyWFVvd0NnWUlLb1pJemowRUF3SURTUUF3UmdJaEFPTTh4WVNDVDBKUmNkcENPSFc1ClNGVWxBMmJUbjhlNjhTWTVRQzg1bmxSTUFpRUFrUm5wNnlSdi9zclZyUXdZZFc0Q1VxeFU3YUJ1R0N0bXVuc3cKd2FsdU1Ccz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
+          "service": {
+            "name": "ani-modeldev-webhook",
+            "namespace": "ani-system",
+            "path": "/mutate",
+            "port": 443
+          }
+        },
+        "failurePolicy": "Fail",
+        "matchConditions": [
+          {
+            "expression": "(has(object.spec.serviceAccountName) && object.spec.serviceAccountName in [\"modeldev-step\", \"trainer-workload\", \"verifier\"]) || (has(object.metadata.labels) && object.metadata.labels.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.annotations) && object.metadata.annotations.exists(k,k.startsWith('ani.modeldev/') || k.startsWith('modeldev.ani.io/'))) || (has(object.metadata.finalizers) && object.metadata.finalizers.exists(f,f.startsWith('modeldev.ani.io/'))) || (has(object.spec.volumes) && object.spec.volumes.exists(v,(has(v.persistentVolumeClaim) && v.persistentVolumeClaim.claimName.startsWith('ani-kfp-workspace-')) || (has(v.secret) && v.secret.secretName == 'modeldev-kfp-artifacts') || (has(v.projected) && has(v.projected.sources) && v.projected.sources.exists(s,has(s.secret) && s.secret.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.containers) && object.spec.containers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.initContainers) && object.spec.initContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts')))) || (has(object.spec.ephemeralContainers) && object.spec.ephemeralContainers.exists(c,(has(c.env) && c.env.exists(e,has(e.valueFrom) && has(e.valueFrom.secretKeyRef) && e.valueFrom.secretKeyRef.name == 'modeldev-kfp-artifacts')) || (has(c.envFrom) && c.envFrom.exists(e,has(e.secretRef) && e.secretRef.name == 'modeldev-kfp-artifacts'))))",
+            "name": "modeldev-reserved-identity-or-reference"
+          },
+          {
+            "expression": "!(request.userInfo.username in [\"system:node:node1\",\"system:node:node2\",\"system:node:node3\",\"system:serviceaccount:kcn-system:kcn-controller\",\"system:serviceaccount:kube-system:ani-multus\",\"system:serviceaccount:kube-system:generic-garbage-collector\",\"system:serviceaccount:kube-system:volcano-device-plugin\",\"system:serviceaccount:kubeflow-system:jobset-controller-manager\",\"system:serviceaccount:kubeflow-system:kubeflow-trainer-controller-manager\",\"system:serviceaccount:volcano-system:ani-volcano-scheduler\"])",
+            "name": "platform-controller-trust"
+          }
+        ],
+        "matchPolicy": "Exact",
+        "name": "dynamic.modeldev.ani.io",
+        "namespaceSelector": {},
+        "objectSelector": {},
+        "reinvocationPolicy": "Never",
+        "rules": [
+          {
+            "apiGroups": [
+              ""
+            ],
+            "apiVersions": [
+              "v1"
+            ],
+            "operations": [
+              "CREATE"
+            ],
+            "resources": [
+              "pods"
+            ],
+            "scope": "Namespaced"
+          }
+        ],
+        "sideEffects": "None",
+        "timeoutSeconds": 8
+      }
+    ]
+  },
+  "status": "EXACT_EXISTING_PLATFORM_TRUST_NATIVE_VAP_AND_MWC_INSTALLED"
+}

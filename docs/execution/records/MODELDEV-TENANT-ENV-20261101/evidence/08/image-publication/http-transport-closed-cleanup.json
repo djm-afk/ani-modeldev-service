@@ -1,0 +1,131 @@
+{
+  "closed_receipt": {
+    "pid": 1173803,
+    "bind_ip": "172.16.101.31",
+    "port": 52035,
+    "allowed_clients": [
+      "10.10.1.66"
+    ],
+    "started_at_unix": 1793497554.742964,
+    "expires_at_unix": 1793498454.742964,
+    "file_count": 19,
+    "files": {
+      "training/finetuning.Dockerfile": {
+        "size": 1683,
+        "sha256": "db36755524f553e331682aa71f05037b7c822a9cf53fa7517a58f86e96020a1f"
+      },
+      "training/train_mlp.py": {
+        "size": 17470,
+        "sha256": "4a732add0a4457b21c15df2ae5250ca262e80397e737e8ee62b37375c17f9a2f"
+      },
+      "training/implementation.py": {
+        "size": 398,
+        "sha256": "fa63a69c4f8853aac54ee06962fd4026e37d1bee14cc38c4abf9e2badfdac82f"
+      },
+      "training/implementations.json": {
+        "size": 793,
+        "sha256": "25ae0f2358570046678a78710cd37e6ff75038f444030badedc8410b06374186"
+      },
+      "training/dataset_manifest.py": {
+        "size": 6229,
+        "sha256": "2dadb8c30ff4a0793b31d016344dc06ea757769347cdb1067f0745c0dce63803"
+      },
+      "training/structure_limits.json": {
+        "size": 444,
+        "sha256": "2ded16c971e9b9e11625b5e0f00bb4df8d1f7d1885ccfc00f5d959da0178f33d"
+      },
+      "training/finetuning/README.md": {
+        "size": 4043,
+        "sha256": "c0bb6f8fabce51ceb10e13b6711ff7093c3f396d7d3ac485dfe511cb208b89de"
+      },
+      "training/finetuning/configuration.py": {
+        "size": 6334,
+        "sha256": "05caa944998bb3142548afec183d3d7da4c7057175cb03441e763ad5bab3beda"
+      },
+      "training/finetuning/finetune_entry.py": {
+        "size": 34416,
+        "sha256": "291ad123bcbe39ac1c335e5b3d1efcc497062b36fa782b51a80daa814c16b7ac"
+      },
+      "training/finetuning/inspect_runtime.py": {
+        "size": 2447,
+        "sha256": "a3584fb6921350454174f5845f6b58ed1b9be7388cc4b29867c6c6fe0da93efc"
+      },
+      "training/finetuning/native_stages.py": {
+        "size": 9016,
+        "sha256": "ee1e455c596fc42d2433b773af648cb7760590bb3cd9f8a3f1475ff99abec70a"
+      },
+      "training/finetuning/phase_measurement.py": {
+        "size": 10494,
+        "sha256": "4a58fa7e2871b3e809424c80f8e27dd48b1ba8ea8a6bc4a4bd19b1bc0d5c32e2"
+      },
+      "training/finetuning/runtime-patches/align-writer-batch-size.patch": {
+        "size": 424,
+        "sha256": "b06ddc25ab04024dfe8248da9eac5f64fce1097da7611df41941a0e654f65af4"
+      },
+      "training/finetuning/runtime-patches/apply.py": {
+        "size": 2582,
+        "sha256": "89efc11055345ae81fc81c2747ec2d4fc689b6f7177d340baaa2a09ef03aa9d8"
+      },
+      "training/finetuning/runtime-patches/official-source.json": {
+        "size": 755,
+        "sha256": "6b16ebe084e9d544a5ea8f45fc32371e980f0ef074a993456e28c2a02a441bba"
+      },
+      "training/finetuning/template_runtime.py": {
+        "size": 14843,
+        "sha256": "bcd79b3267a93faddbee41a68c7ed1373d87ec11e8bec0023c0cd96e511c6d8a"
+      },
+      "node-build-run.py": {
+        "size": 34773,
+        "sha256": "dedbd4874461a6dba93dbea0616bf3ffc4dea79e913654cba10964ff8da66619"
+      },
+      "bin/ani-modeldev-step": {
+        "size": 36720665,
+        "sha256": "97a8bae2dd8518dcf8ce845c09adbec29441bf6e581ba0e7819bc7ce5f01287e"
+      },
+      "legacy-retirement-original-stop-linux-amd64": {
+        "size": 32694434,
+        "sha256": "4e8d7f7177a7efb521fb27ac9b59b2fe752f8e9cd75d0295dfec0e50af2377a4"
+      }
+    },
+    "requests": [],
+    "nonce_emitted": false,
+    "closed_at_unix": 1793497718.955966,
+    "private_nonce_file_absent": true
+  },
+  "process_absent": true,
+  "private_nonce_file_absent_before_directory_cleanup": true,
+  "files_removed": [
+    {
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/http-pull-20261101/fixed-file-server.py",
+      "size": 5478,
+      "sha256": "8ed93c5c6b2458e9fe4b32bf08230ee402e32a57a7c9ef3793a6eff0c16d2c29"
+    },
+    {
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/http-pull-20261101/node-build-run.py",
+      "size": 34773,
+      "sha256": "dedbd4874461a6dba93dbea0616bf3ffc4dea79e913654cba10964ff8da66619"
+    },
+    {
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/http-pull-20261101/sources.json",
+      "size": 5270,
+      "sha256": "a0e832679e76c795e3c931bb2ab2a313488b32544ee9a25da0e13f73f1e979e5"
+    },
+    {
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/http-pull-20261101/server-private.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/http-pull-20261101/public-receipt.json",
+      "size": 3227,
+      "sha256": "cbbafc0db1a2ca4b836efd41cee437f92516bc7c464c114b572dfd880038b3a1"
+    },
+    {
+      "path": "/home/chabking/tenantenv-20261101/images-d807-cymq2rk8/http-pull-20261101/closed-public.json",
+      "size": 3303,
+      "sha256": "806d78e96071d28bdad02dadbeca15889fd5e69c1ca41b36cc09484570d0521c"
+    }
+  ],
+  "directory_absent": true,
+  "listener_absent": true
+}

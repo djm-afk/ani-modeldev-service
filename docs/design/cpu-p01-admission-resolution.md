@@ -1,137 +1,57 @@
-# CPU05 不可变受理候选解析
+# 不可变受理候选解析
 
-来源：原 CPU01/CPU04/CPU05、v0.4 development D03/D05，以及当前 Goal 第 5、7、9 节。
-任务来源身份及固定执行证据保存于 `.scratch/cpu-p01/runs/20260930-01/`。
-本文件承接[不可变目录](cpu-p01-catalogue.md)与[执行快照](cpu-p01-snapshot.md)合同。
+当前实现使用 `biz.AdmissionResolver.Prepare` 和 `Finalize`，不再使用历史
+Release＋facts 文件入口。租户开通、平台配置与证据边界见
+[动态租户执行环境](../modeldev-tenant-environments.md)，只读环境来源见
+[受管解析事实](cpu-p01-managed-admission-facts.md)。
 
-## 模块职责
+## 输入和事实来源
 
-`biz.AdmissionResolver.Resolve(ctx, request, facts)` 组合明确选择的不可变 Release、
-本租户已持久 READY 的输入和显式受管事实，返回 `Snapshot` 与 `SpecHash`。
-返回值是独立的候选数据；解析不写 acceptance、execution 或 input，不分配 operation、
-execution、Run、TrainJob、PVC 身份，不确认当前启用指针，不发出受理回执。
+Prepare 接收 Governance 已授权的 IdentityRef、Intent、ComputeOrigin 和
+AcceptedAt。tenant、actor、operation、execution 来自可信调用者，不能由用户
+指定 Namespace、Pipeline、Experiment、材料文件或存储 scope。
+Implementation 和 ComputePreset 分开选择，不建立实现/计算组合审批。
 
-Governance 继续拥有用户业务受理、幂等记录和租户+预设的当前启用指针。ModelDev
-目录没有第二个默认指针，新增 Release 文件不会改变一次明确的旧选择。
-
-## 输入与字段来源
-
-`AdmissionResolutionRequest` 含可信 `TenantID`、原始 `Intent`、Governance 选定的
-`ReleaseID/ReleaseDigest/BindingGeneration` 与固定 `AcceptedAt`。它不是公共用户 JSON，
-tenant 不能由用户 body 覆盖。resolver 不检查新请求的当前授权；调用方必须先完成。
-
-| 快照事实 | 唯一读取或输入来源 |
+| 事实 | 读取来源 |
 | --- | --- |
-| Release、Preset、Pipeline ID/Version/IR、Runtime、镜像、command、参数默认值、资源、workspace、输出合同、总时限 | 固定 ID/digest 对应的规范 Release 文件 |
-| InputVersion ID、版本化对象、字节数/SHA256、CSV schema/行数/维度 | 同 tenant+input ID 的 PG READY 记录及持久核验证明 |
-| Namespace UID、集群/连接/experiment 引用、控制/步骤/训练/verifier 身份、ENV binding 身份及摘要 | 显式 `TenantAdmissionFacts.Environment` |
-| 输入批准存储范围、发布存储范围/凭据引用、匹配的 Runtime/workspace、绝对输入文件/输出目录 | 显式 `TenantAdmissionFacts`；不能从相对 subpath 猜出绝对路径 |
-| accepted binding generation 与 deadline 起点 | Governance 给定的选择代际与 AcceptedAt |
+| 固定实现、Pipeline/Version/原IR hash、程序/参数/输出合同与组件资源 | 同一不可变 bundle 的规范 ImplementationMaterial |
+| InputVersion、版本化对象、大小/hash与核验证明 | 同 tenant 的 PostgreSQL READY 记录 |
+| 原 Namespace/SA UID、Experiment、binding ID/digest、scope/workspace/timing、dispatch owner与managed refs | 该 tenant＋固定 cluster 的持久 READY sealed binding，逐请求 live 身份复核 |
+| 计算来源、预设和原授权范围 | Governance 提供的正式 ComputeOrigin；GPU计划另由正式 ACC事实固定 |
+| 固定受理时间及期限 | 原 AcceptedAt和平台有限 timing；重试不重新计时 |
 
-facts 必须绑定请求的同一 tenant。给定 Runtime 的 name/kind/API group/content SHA256/
-target jobs 集合须与 Release 相符，workspace 合同须相同。输入对象必须位于批准
-connection/bucket/prefix 下；前缀按完整路径分段判断。两个容器路径必须是干净的绝对
-路径，不能重合或互相包含，不接受 traversal、反斜线、通配符或控制字符。
+Prepare 只读事实并返回完整 PreparedCandidate。它不写 acceptance/execution，
+不创建 Run/TrainJob/PVC，不产生 Reserve 或占额。它校验输入/基模属于原 tenant
+批准的 connection/bucket/完整路径前缀，固定所选材料、原身份、参数、资源与
+`artifacts/<tenant>/<execution>` PipelineRoot。普通训练镜像经现有 Resource
+ImageRuntime 解析，冻结 managed authority 与精确 pull refs。
 
-这些检查只验证给定事实的关联与形状。`TenantAdmissionFacts` 没有 VERIFIED 布尔值，
-也不会因为 UUID、digest 或引用字符串合法就证明资源存在、身份有权、挂载可用或
-环境已验收。真实来源 owner 必须证明上述 tenant 关联、配置版本、内容摘要、权限和
-挂载关系；文件 reader 与启动装配不能代替该 owner 的证据。测试中的合成事实不允许
-成为生产默认配置。
+Finalize 重读 READY 环境与 live 原身份，逐项比较候选的 Environment、DispatchOwner、
+Workspace、PublicationScope、ManagedImageAccess；微调另核对 ModelScope。
+它使用已核验的正式 GPU事实编译 RuntimePlan，然后生成规范
+`ani.modeldev.execution-spec.v4` 字节及 SHA256。环境、owner或managed refs变化时
+拒绝原候选，不隐式改写或重绑。Dispatch 在外部请求前再次复核当前 READY和原身份。
 
-## 规范化与固定选择
+## 配置入口
 
-Intent 使用 `cpup01.CanonicalIntent` 的唯一参数语法，resolver 在副本上处理。缺省
-参数、显式空数组、显式默认参数和显式镜像的原 intent presence 不被改写；不同
-intent hash 可以在解析默认值后得到相同 spec hash。显式参数只覆盖 Release 的
-对应登记项，最终固定完整参数集合；未知、重复、类型或范围错误拒绝。显式镜像必须
-与选定 Release 的登记镜像 ID 相符。`SourceExecutionID` 不用于读取旧配置作为默认。
+`command.admission_resolution.catalogue_directory` 是固定四份材料的普通文件目录。
+`runtime.tenant_environment_file` 和 `tenant_environment_sha256` 固定一个公共平台
+spec，不含 tenant 或完整binding/facts数组。启动组装登记 Repository、Platform和
+只读 facts Reader；受理请求不调用 Ensure。普通文件与 ConfigMap投影的安全复制
+方式见[部署合同](../modeldev-tenant-environments.md#authoritative-inputs)。
 
-argv 仅按 Release 的有限 source token 整项映射输入路径、输出路径、固定输入 SHA256/
-字节数与规范化学习率，顺序保持不变。不执行 shell，不引入任意模板解释器。
+旧 `facts_files`、`binding_file`、`binding_sha256`、`controlled_model_facts`
+属于被移除的入口；strictconfig拒绝它们。省略runtime仍是未就绪运行壳；显式配置
+runtime必须同时提供command、catalogue、固定平台spec和真实依赖，不以空块开启。
 
-`AcceptedAt` 必须非零、UTC 等价转换后处于支持年份内，且精确到微秒，不静默截断。
-deadline 为这个固定 instant 加 Release 的总时限；越界拒绝，不读取本机当前时间或
-为重试重新计时。当前 binding generation 原值进入快照；resolver 不判断它仍然当前。
+## 验证边界
 
-最终调用共享 `Snapshot.Canonical()` 校验与规范化，再对完整字节计算小写 SHA256。
-UUID 规范大小写、集合排序与参数数值处理仍由共享合同维护。返回 Snapshot 从规范
-字节解码到新的零值对象，消费者修改其切片或指针不会污染读件、facts 或后续解析。
+共享合同校验规范字节、关联和纯形状；它本身不能证明集群资源、授权或存储存在。
+生产 facts Reader额外校验READY记录和live原Namespace/SA，环境Ensure负责固定对象、
+完整授权边审查与seal发布。Governance继续拥有当前授权、用户幂等和正式受理事务。
+已受理原键重放也必须先完成当前授权，旧actor仅用于审计。
 
-## 依赖与错误
-
-两个窄读取 port 分别读取固定 Release 和 tenant-scoped InputVersion。现有 input
-repository 直接实现输入读取；catalogue.Reader 只持有受信目录，复用严格字节/摘要/
-身份/文件安全读取。目录路径不进入请求，biz 不导入文件系统 adapter 或 PG 驱动。
-
-非法形状返回 `INVALID_ARGUMENT`；Release 不存在、内容不匹配或与用户选择不兼容返回
-`NO_COMPATIBLE_RELEASE`；输入不存在保留 `INPUT_VERSION_NOT_FOUND`，非 READY 返回
-`INPUT_NOT_READY`；不兼容 tenant/Runtime/workspace/输入范围/路径返回
-`ENVIRONMENT_NOT_READY`。最终快照缺失或非法字段仍按共享形状校验返回
-`INVALID_ARGUMENT`。依赖不可用返回有限 `PERSISTENCE_UNAVAILABLE`，不回显目录路径、
-连接或原始系统错误。取消/超时保留 context 原因，所有失败均返回零值候选。
-对外 `ModelDevAdmissionService.ResolveAdmission` 复用共享 Intent codec 和该解析核，
-请求只含 Intent、显式 Release 选择及固定 AcceptedAt。tenant/actor 来自已有 Governance
-mTLS 与经过校验的 metadata。无效请求、不可用 Release、未 READY 输入和依赖失败映射为
-有限 gRPC 状态及 `ErrorDetail`，不透传文件或数据库错误；取消/超时保留对应状态。
-
-## 启动配置
-
-已有 `command` 下的可选 `admission_resolution` 是唯一启动入口，复用同一 Governance
-mTLS listener、数据库连接池及应用退出清理。没有新增普通用户入口或独立 TLS/数据库配置。
-
-| 配置字段 | 约束 |
-| --- | --- |
-| `catalogue_directory` | 干净的绝对目录路径，无 NUL；启动按既有不跟随末级符号链接策略打开目录 |
-| `facts_files` | 明确列出 1–64 份文件，不扫描目录或读取“当前”配置 |
-| 每项 `path` | 干净的绝对文件路径，无 NUL；实际文件安全约束由 facts reader 负责 |
-| 每项 `sha256` | 64 位小写十六进制，固定对应文件的实际字节 |
-
-省略 `command` 保持原运行壳；有 command 而省略 `admission_resolution` 时，原关闭命令
-仍可用，Admission 不注册。显式给出空块或不完整引用会拒绝启动。文件缺失、摘要错误、
-重复 tenant/Release key 或目录不可打开同样拒绝启动，并释放已经建立的数据库连接，
-不会退回省略块的行为。错误使用有限文字，不回显配置内容或底层错误。
-
-启动一次性加载固定 facts 文件，不热更新。文件必须以直接只读普通文件或适当 subPath
-挂载交付；末级为符号链接的投影路径不受支持。详细文件边界及各类摘要含义见
-[受管解析事实](cpu-p01-managed-admission-facts.md)。部署更新需核对各实例材料一致性，
-不能把不同配置版本同时当作同一受理组合。
-
-`catalogue.Reader.Check` 只证明目录在启动时可打开；空目录允许启动，不扫描或选择
-Release。每次请求仍按 Governance 给定的 ID/digest 读取并核验该 Release。目录或文件
-随后失效时请求拒绝，启动检查不授予永久有效性。
-
-配置引用、文件 SHA 和字段形状不证明 ENV、权限、Runtime 或存储实际可用。真实启用仍需
-ENV/CPU02 的交接、对应身份/挂载/存储范围证据和 CPU07/08 的业务 PipelineVersion。
-仓库默认配置省略新块，不提供可冒充生产材料的 fixture。即使候选解析可用，完整业务
-链尚未装配，`/readyz` 仍返回 503。
-
-## 真实验证范围与未接项
-
-`internal/data/resolutiontest` 通过同一个 Resolve interface 使用真实目录导入/读取、
-真实 PostgreSQL 的 restricted runtime role 和隔离版本化 schema。READY 在写入后
-经新连接恢复；其中字节 proof 和 ENV facts 是明确的 module fixture，不代表实际 S3
-核验或环境就绪。测试保留手写完整 Snapshot、argv、deadline 预期，并使用既有规范
-字节独立计算 SHA256。覆盖原 intent presence、独立返回值、双租户同 ID、未 READY、
-旧 Release 选择、参数与 facts 兼容、时间边界、取消及只读副作用约束。
-
-首 stub 在 `19a3b53` 取得有效 RED；`5b0a710` 的首行为及 resolution/catalogue/input
-模块通过；`b67befa` 的 tenant/READY 回归通过。`4c51554` 的完整边界组仅在真实 Release
-读取后取消时失败：PG adapter 遮蔽取消为 PERSISTENCE_UNAVAILABLE；其余断言通过。
-修复在每次依赖返回后优先检查 context，保持错误原因。固定源码
-`479f706f9d21f539d5d7230a0ede6191dc30f11c` 在 Fedora 新 checkout 的完整
-resolution/catalogue/input 模块全部 GREEN / exit 0（1.320s / 0.187s / 4.035s），
-包含原取消失败回归；日志无 SKIP，测试前后 tracked tree 与格式检查均无差异。
-证据为本轮 `resolution-final-green-479f706/`。这是模块级真实 file/PG 验证；最终
-full verify、audit 与独立两轴审查单独记录，当前不以此模块 PASS 代替。
-
-上述为内部解析模块的历史证据。后续真实文件/PG/mTLS RPC 与启动装配的固定 SHA、
-RED/GREEN、完整门禁和未测范围分别记在本轮执行卡及 `admission-startup-checkpoint.md`，
-不能用旧模块通过替代新组合验证。
-
-当前已有 facts 文件 reader、受信 Resolve RPC 及可选启动装配；真实环境材料和
-Governance/BFF 调用仍未接通。实际业务顺序仍需：每次当前授权 → FindAccepted 查原键
-→ 原键未命中才读当前启用绑定 → 调用候选解析 → Governance 在持久受理事务复核
-generation/Release，并固定真实 command IDs。原键重放也必须先完成本次当前授权；
-旧 actor 仅是审计事实。候选解析不等于 CPU05 业务受理通过，也不等于 LIVE 或
-AC02–AC04 已验收。
+真实PG/生产用例＋外部边界替身测试和真实A/B业务验收分别记证据。规范候选、HTTP200、
+配置可加载、渲染成功或监听就绪均不能代替真实开通、调度、训练、artifact隔离、关闭
+和原占额释放验收。旧CPU-P01 Release/facts文件模块记录仅属于其历史revision，
+不证明当前动态环境实现或指定测试集群已上线。

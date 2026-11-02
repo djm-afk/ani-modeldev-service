@@ -1,0 +1,323 @@
+[
+  {
+    "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "execution_id": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+    "operation_id": "ec266a51-6708-401c-a735-a4887d26185e",
+    "spec_hash": "2385186a840df5cddef1778071703aee310ee6fef9a27bf381120429d0560893",
+    "environment": {
+      "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+      "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+      "identities": {
+        "kfp_step_service_account": "modeldev-step",
+        "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control",
+        "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+        "trainer_service_account": "trainer-workload",
+        "verifier_service_account": "verifier"
+      },
+      "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47",
+      "namespace_name": "ani-modeldev-tenant-a-v21",
+      "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+    },
+    "review_reason": "TRAINING_LOGS_UNAVAILABLE",
+    "resources": [
+      {
+        "UID": "1aeb3e82-3d4e-4495-b2e2-bf36aefdb100",
+        "Kind": "JobSet",
+        "Name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "ExitCode": null,
+        "OwnerUID": "6916fc18-5972-4808-be88-6b66c310272d",
+        "Terminal": false,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "jobset.x-k8s.io/v1alpha2",
+        "Suspension": {
+          "Generation": 2,
+          "AcknowledgedAt": "2026-10-30T00:57:48Z",
+          "ObservedGeneration": 0,
+          "WorkerExitRetention": false
+        },
+        "APIObjectPresent": true,
+        "CreationDisabled": true
+      },
+      {
+        "UID": "49c82c2b-f819-4a03-b7b2-1789999cdd2e",
+        "Kind": "Pod",
+        "Name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0-0-6d9lc",
+        "ExitCode": null,
+        "OwnerUID": "f9bf2c20-cff0-4b39-99e3-1789b2bf0b4c",
+        "Terminal": false,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "v1",
+        "APIObjectPresent": true,
+        "CreationDisabled": false
+      },
+      {
+        "UID": "6916fc18-5972-4808-be88-6b66c310272d",
+        "Kind": "TrainJob",
+        "Name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "ExitCode": null,
+        "OwnerUID": "",
+        "Terminal": false,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "trainer.kubeflow.org/v1alpha1",
+        "Suspension": {
+          "Generation": 2,
+          "AcknowledgedAt": "2026-10-30T00:57:48Z",
+          "ObservedGeneration": 0,
+          "WorkerExitRetention": false
+        },
+        "APIObjectPresent": true,
+        "CreationDisabled": true
+      },
+      {
+        "UID": "b97b7d40-30cc-43b2-983c-7ac093bcf8d3",
+        "Kind": "PodGroup",
+        "Name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "ExitCode": null,
+        "OwnerUID": "6916fc18-5972-4808-be88-6b66c310272d",
+        "Terminal": true,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "scheduling.volcano.sh/v1beta1",
+        "APIObjectPresent": true,
+        "CreationDisabled": false
+      },
+      {
+        "UID": "f9bf2c20-cff0-4b39-99e3-1789b2bf0b4c",
+        "Kind": "Job",
+        "Name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b-node-0",
+        "ExitCode": null,
+        "OwnerUID": "1aeb3e82-3d4e-4495-b2e2-bf36aefdb100",
+        "Terminal": false,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "batch/v1",
+        "Suspension": {
+          "Generation": 2,
+          "AcknowledgedAt": "2026-10-30T00:57:48Z",
+          "ObservedGeneration": 0,
+          "WorkerExitRetention": true
+        },
+        "APIObjectPresent": true,
+        "CreationDisabled": true
+      }
+    ],
+    "training": {
+      "Name": "md-1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "Timing": {
+        "AdmittedAt": "2026-10-30T00:57:33.458524Z",
+        "DeadlineAt": "2026-10-30T03:54:43.427841Z"
+      },
+      "SpecHash": "2385186a840df5cddef1778071703aee310ee6fef9a27bf381120429d0560893",
+      "TenantID": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "Workspace": {
+        "Mode": "EXECUTION_PVC",
+        "PVCUID": "6a04378e-38d6-4e65-969e-c31da4322243",
+        "PVCName": "ani-kfp-workspace-1cce950b-d6e9-453e-aa11-fffd8846224b",
+        "WorkSubpath": "work",
+        "InputSubpath": "inputs",
+        "NamespaceUID": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+        "NamespaceName": "ani-modeldev-tenant-a-v21",
+        "ReportsSubpath": "reports",
+        "TrainingSubpath": "training",
+        "PublicationSubpath": "publication",
+        "PreparedManifestBytes": 1030,
+        "PreparedManifestSHA256": "7a13cee03ea222ee4cc810397d4c97414e131bb7f8a319486352f1a66727bd42"
+      },
+      "ExecutionID": "1cce950b-d6e9-453e-aa11-fffd8846224b",
+      "OperationID": "ec266a51-6708-401c-a735-a4887d26185e",
+      "RequestSHA256": "8904a3a1820dc26da24e25469bc624545679916b047e268fb696c228cfa41e2c",
+      "RuntimeBinding": {
+        "UID": "bf66e701-46ea-4a93-ba21-9241749899c9",
+        "Name": "mdrt-ca6ab27016d3ac959e7be41e9bb55273cb781ab4bdfb7a30",
+        "NamespaceUID": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+        "ObservedSpecSHA256": "1b310ba1c7de61aa7e0f8c4b489fb21f1687c313a893a396966054019146747d"
+      }
+    },
+    "training_handle": {
+      "PVCUID": "6a04378e-38d6-4e65-969e-c31da4322243",
+      "TrainJobUID": "6916fc18-5972-4808-be88-6b66c310272d",
+      "NamespaceUID": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+    },
+    "authority": null
+  },
+  {
+    "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "execution_id": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+    "operation_id": "3d0aaae2-705f-4786-a307-520d701d5a2d",
+    "spec_hash": "801ce15e644881d9c92699358b28aa15edd1c7a5ba342761d19ef34c88e2ae2d",
+    "environment": {
+      "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+      "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+      "identities": {
+        "kfp_step_service_account": "modeldev-step",
+        "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control",
+        "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+        "trainer_service_account": "trainer-workload",
+        "verifier_service_account": "verifier"
+      },
+      "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47",
+      "namespace_name": "ani-modeldev-tenant-a-v21",
+      "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+    },
+    "review_reason": "TRAINING_LOGS_UNAVAILABLE",
+    "resources": [
+      {
+        "UID": "04175cfa-ce30-46b7-8011-6c2e4c305a83",
+        "Kind": "PodGroup",
+        "Name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "ExitCode": null,
+        "OwnerUID": "d3a32f9e-e015-49ce-8305-5d388826021c",
+        "Terminal": true,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "scheduling.volcano.sh/v1beta1",
+        "APIObjectPresent": true,
+        "CreationDisabled": false
+      },
+      {
+        "UID": "642dcaaf-9a64-44e5-b604-68364d3df579",
+        "Kind": "JobSet",
+        "Name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "ExitCode": null,
+        "OwnerUID": "d3a32f9e-e015-49ce-8305-5d388826021c",
+        "Terminal": false,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "jobset.x-k8s.io/v1alpha2",
+        "Suspension": {
+          "Generation": 2,
+          "AcknowledgedAt": "2026-10-29T16:00:04Z",
+          "ObservedGeneration": 0,
+          "WorkerExitRetention": false
+        },
+        "APIObjectPresent": true,
+        "CreationDisabled": true
+      },
+      {
+        "UID": "7b0c6b6b-3efb-46b8-909a-5dafb1b18f27",
+        "Kind": "Job",
+        "Name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0",
+        "ExitCode": null,
+        "OwnerUID": "642dcaaf-9a64-44e5-b604-68364d3df579",
+        "Terminal": false,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "batch/v1",
+        "Suspension": {
+          "Generation": 2,
+          "AcknowledgedAt": "2026-10-29T16:00:04Z",
+          "ObservedGeneration": 0,
+          "WorkerExitRetention": true
+        },
+        "APIObjectPresent": true,
+        "CreationDisabled": true
+      },
+      {
+        "UID": "d3a32f9e-e015-49ce-8305-5d388826021c",
+        "Kind": "TrainJob",
+        "Name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "ExitCode": null,
+        "OwnerUID": "",
+        "Terminal": false,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "trainer.kubeflow.org/v1alpha1",
+        "Suspension": {
+          "Generation": 2,
+          "AcknowledgedAt": "2026-10-29T16:00:04Z",
+          "ObservedGeneration": 0,
+          "WorkerExitRetention": false
+        },
+        "APIObjectPresent": true,
+        "CreationDisabled": true
+      },
+      {
+        "UID": "d8fb153a-5763-4ae7-8d44-63e3f996a830",
+        "Kind": "Pod",
+        "Name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc-node-0-0-9rnr8",
+        "ExitCode": null,
+        "OwnerUID": "7b0c6b6b-3efb-46b8-909a-5dafb1b18f27",
+        "Terminal": false,
+        "Namespace": "ani-modeldev-tenant-a-v21",
+        "APIVersion": "v1",
+        "APIObjectPresent": true,
+        "CreationDisabled": false
+      }
+    ],
+    "training": {
+      "Name": "md-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "Timing": {
+        "AdmittedAt": "2026-10-29T15:59:49.183719Z",
+        "DeadlineAt": "2026-10-29T16:27:09.613657Z"
+      },
+      "SpecHash": "801ce15e644881d9c92699358b28aa15edd1c7a5ba342761d19ef34c88e2ae2d",
+      "TenantID": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "Workspace": {
+        "Mode": "EXECUTION_PVC",
+        "PVCUID": "34822665-8a1d-4647-af0b-3e770c9ec67a",
+        "PVCName": "ani-kfp-workspace-4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+        "WorkSubpath": "work",
+        "InputSubpath": "inputs",
+        "NamespaceUID": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+        "NamespaceName": "ani-modeldev-tenant-a-v21",
+        "ReportsSubpath": "reports",
+        "TrainingSubpath": "training",
+        "PublicationSubpath": "publication",
+        "PreparedManifestBytes": 1030,
+        "PreparedManifestSHA256": "038b82bb66324be6d3c12669f663d692c401a036d2cea1041f0da816a2453def"
+      },
+      "ExecutionID": "4a1a92f7-4d94-439d-a8d7-1833f38c7dbc",
+      "OperationID": "3d0aaae2-705f-4786-a307-520d701d5a2d",
+      "RequestSHA256": "2e419bbdc25d892a3764662279a7845823fc6f35ff42d140ad72f024195347c8",
+      "RuntimeBinding": {
+        "UID": "54f2d028-857a-4ef2-a9e2-3f46bf21dcb0",
+        "Name": "mdrt-f8cc292f5d22050823954c3f85f9f8154c122c9e65b5c68e",
+        "NamespaceUID": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+        "ObservedSpecSHA256": "94fd4fad635416d324566486d6121492bbafbf91f4c7729d9a055a5c82de97af"
+      }
+    },
+    "training_handle": {
+      "PVCUID": "34822665-8a1d-4647-af0b-3e770c9ec67a",
+      "TrainJobUID": "d3a32f9e-e015-49ce-8305-5d388826021c",
+      "NamespaceUID": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+    },
+    "authority": null
+  },
+  {
+    "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "execution_id": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+    "operation_id": "1bc185ad-0977-4b3f-bb1c-404bc37e94fa",
+    "spec_hash": "c149fba74453b130803396f16de66fb9ca21b8c975c66a388d5619943e50fe7c",
+    "environment": {
+      "binding_digest": "7d8afd1c88500d2026a5e9d93fbdd9aa99a94f70b1c3d16de71ddc8d9905aa7a",
+      "binding_id": "e91440de-0cef-4d88-b9d8-83126f8f8132",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "experiment_id": "fb392303-5d43-45fc-af68-7100af343f8b",
+      "identities": {
+        "kfp_step_service_account": "modeldev-step",
+        "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control",
+        "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+        "trainer_service_account": "trainer-workload",
+        "verifier_service_account": "verifier"
+      },
+      "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47",
+      "namespace_name": "ani-modeldev-tenant-a-v21",
+      "namespace_uid": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67"
+    },
+    "review_reason": "KFP_CREATE_UNRESOLVED",
+    "resources": [],
+    "training": null,
+    "training_handle": null,
+    "authority": {
+      "RunID": "5f04cda7-4c66-4f16-a552-053ebd4e5b6f",
+      "PlanHash": "e678e0845504ddf7733e1c091b4c59806beff14b0972d0e8427a0a8373674005",
+      "SpecHash": "c149fba74453b130803396f16de66fb9ca21b8c975c66a388d5619943e50fe7c",
+      "TenantID": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "AttemptID": "0b5ab5e3-914f-4d68-8394-98b1df20f9f9",
+      "ExecutionID": "eca4d47b-5911-4f0f-8b45-89c1be775925",
+      "OperationID": "1bc185ad-0977-4b3f-bb1c-404bc37e94fa",
+      "WorkflowUID": "d2acb3df-3979-4d60-aed5-16db0ce440fb",
+      "NamespaceUID": "94f3afc0-7548-4099-9e11-3fa7fdf6cc67",
+      "WorkflowName": "md-kpwkw",
+      "NamespaceName": "ani-modeldev-tenant-a-v21"
+    }
+  }
+]

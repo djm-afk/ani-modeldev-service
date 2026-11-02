@@ -1,0 +1,44 @@
+{
+  "observed_at": "2026-11-01T01:13:10.873393+00:00",
+  "old": "c99c9f1081c7",
+  "new": "21bf4bd6540d462a61c91b629f26250899583223",
+  "results": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "c99c9f1081c7",
+        "21bf4bd6540d462a61c91b629f26250899583223",
+        "--",
+        "go.mod"
+      ],
+      "exit_code": 0,
+      "output_file": "modeldev-module-requirements.diff"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--numstat",
+        "c99c9f1081c7",
+        "21bf4bd6540d462a61c91b629f26250899583223",
+        "--",
+        "api/ani/modeldev/v1"
+      ],
+      "exit_code": 0,
+      "output_file": "modeldev-api.numstat"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "c99c9f1081c7",
+        "21bf4bd6540d462a61c91b629f26250899583223",
+        "--",
+        "api/ani/modeldev/v1/modeldev.proto"
+      ],
+      "exit_code": 0,
+      "output_file": "modeldev-proto.diff"
+    }
+  ]
+}

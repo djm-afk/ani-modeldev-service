@@ -1,0 +1,38 @@
+{
+  "schema": "ani.modeldev.training-build-location-authorization.v1",
+  "recorded_at": "2026-11-01T00:50:54.782266+00:00",
+  "user_request": "那你能不能直接到测试环境打出这两个大镜像？",
+  "scope": "Only the two fixed-source CPU/GPU training image builds may run directly on the designated test environment; this specific later user instruction supersedes their earlier Fedora-only heavy-task location constraint for these builds.",
+  "entry": "ssh kubercloud@100.64.128.12",
+  "preflight": [
+    "complete original cluster identity",
+    "exact cached LF manifest/content/platform",
+    "existing build tools and stores",
+    "disk/memory/DiskPressure and workload impact"
+  ],
+  "remaining_constraints": [
+    "no Inference change",
+    "no different cluster identity",
+    "fixed d807 source and original base digest",
+    "no Fedora archive packaging/transfer",
+    "no Deployment switch by the image build",
+    "record registry digest and actual sizes"
+  ],
+  "status": "PREFLIGHT_IN_PROGRESS; no build claimed",
+  "later_user_constraints": {
+    "no_added_build_resource_limits": {
+      "user_annotation": "资源限额：不要限制，赶紧完成任务",
+      "recorded_at": "2026-11-01T01:00:17.616859+00:00"
+    },
+    "cleanup_added_tools": {
+      "user_request": "做好记录，当任务完成后，需要清理你额外安装的工具",
+      "ledger": "image-publication/added-tools-cleanup-ledger.json",
+      "preserve": [
+        "pre-existing tools",
+        "pre-existing image cache",
+        "delivered images",
+        "unrelated workloads"
+      ]
+    }
+  }
+}

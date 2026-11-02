@@ -1,5 +1,10 @@
 # CPU managed fine tuning execution slice
 
+This file retains the earlier CPU-slice business evidence. Its former static
+environment enrollment and Release-era configuration are superseded by the
+[dynamic environment contract](modeldev-tenant-environments.md); current
+snapshots are v4 and old facts/binding files are rejected.
+
 The implementation extends the existing execution, inbox, KFP assembly, Trainer
 adapter, publication verifier and close worker. The public FINETUNING admission
 composition remains disabled until the real upstream and Model contracts are
@@ -75,18 +80,19 @@ go test -c -tags finetuning_core_flow \
   -o /absolute/task/core-flow-driver ./cmd/ani-modeldev-service
 ```
 
-The compiler configuration is the existing five deployment bindings plus
+The compiler configuration contains the fixed platform compilation inputs plus
 `"kind":"FINETUNING"` and the frozen `"admission_profile"` ID. Images, IR,
 Runtime content, environment UID and object
-versions must be actual immutable bindings, never fixture digests. Final images
+versions must be actual immutable facts, never fixture digests. Final images
 are built from the pushed source commit. No task runs one KFP step by manually
 creating a Job; the production application dispatches one authoritative Run.
 
 Pinned KFP 2.16.0 cannot encode read-only root/PVC mounts or ephemeral-storage
 resource requests. The formal shared [ModelDev webhook](modeldev-webhook.md)
 supplies those fields and retained step Pod exit facts for both GENERAL_TRAINING
-and FINETUNING. Profiles load canonical, digest-pinned Release material and
-explicit namespace UID bindings. The service verifies the live original Workflow,
+and FINETUNING. Four profiles load the same canonical, digest-pinned material
+bundle. Every matched request reads the live Namespace/projection/original SA
+UID; no static tenant binding array remains. The service verifies the live original Workflow,
 run association, role, image and mounts before returning field patches.
 After durable CLOSED and full step exit proof, the existing owner worker persists
 a cleanup receipt, conditionally releases only its step finalizer and removes
@@ -97,14 +103,15 @@ workspace and artifact deletion require a separate audited CleanupPlan.
 
 The unified implementation and Fedora integration can be verified without
 registering it. Live admission additionally requires the reviewed formal
-MutatingWebhookConfiguration and explicit namespace UID bindings. This task's
-formal registration and isolated live acceptance have been authorized; existing
-shared webhooks retain their configuration. Registration and subsequent profile
-installations have separate actual receipts in the active task records. Earlier
+global MutatingWebhookConfiguration, three verified native policies and explicit
+Ensure of the tenant's existing standard Namespace. Registration and actual
+profile/environment receipts must come from the current task's evidence; earlier
 date-specific manifests and actual records remain historical evidence.
 
-Live acceptance uses only the verified 172.16.101.10–12 cluster and the task's
-isolated namespaces, database and S3 identities. WORKLOAD checks, PostgreSQL
+Current live acceptance enters the test environment only through
+`ssh kubercloud@100.64.128.12`, verifies the full cluster identity before writes,
+and updates through `http://192.168.25.40:9998/`. Use its existing standard tenant
+Namespaces and dedicated test database/storage identities. WORKLOAD checks, PostgreSQL
 module checks and compiled IR do not establish CORE_FLOW. CORE_FLOW requires
 real A/B Runs, original-key replay, Stop, deadline and owner restart, real close
 proof and detached persistent-object retrieval without the training PVC.

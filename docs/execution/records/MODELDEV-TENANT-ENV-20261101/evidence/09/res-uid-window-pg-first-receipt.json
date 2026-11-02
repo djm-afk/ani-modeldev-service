@@ -1,0 +1,23 @@
+{
+  "started_at": "2026-10-31T22:22:19.119460+00:00",
+  "completed_at": "2026-10-31T22:23:25.531917+00:00",
+  "command": [
+    "scripts/integration",
+    "-race",
+    "-timeout=3m",
+    "-v",
+    "-run",
+    "^TestNamespaceUIDWindow",
+    "./internal/data/network"
+  ],
+  "exit_code": 0,
+  "source_base": "71b3ad7a2a88ae531e5e7b80abde2f494ff28d9d",
+  "cwd": "/home/chabking/workspace/ani-resource-service-runs/modeldev-tenant-env-20261101/source",
+  "execution_host": "ssh fedora",
+  "environment": {
+    "GOTOOLCHAIN": "auto",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2",
+    "GOWORK": "off"
+  }
+}

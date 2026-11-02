@@ -1,0 +1,95 @@
+{
+  "tool_source_manifest_sha256": "1f103568fc0b1546962a73b1eb32adaa759161fc5a587158badb7d3b196fccbb",
+  "files": [
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/command.go",
+      "sha256": "2fe210d732a91d0e22811502647903adb5c0748d5a6e371b46a8d57aa91e57a1",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/command_test.go",
+      "sha256": "97c06ccddb3e2368a8c5e6f54b76a1060d7a49dddbc7a5833e69ba2d3b311652",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/database.go",
+      "sha256": "3430d32309600de52e1cc99d82806efdeea76475e195327e380d39af27336150",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/evidence.go",
+      "sha256": "0894f879f7dfbfae64ab4281f1d7556f9408f008d9c589c97ee72f24603aed34",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/fixture_test.go",
+      "sha256": "7c259bb7126e053cb669f0398bf9db4ccfe33d1ab12087764a03db11774adcff",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/gpu_fixture_test.go",
+      "sha256": "6e0290fdaccf2d3f0f20d2d08ed75801a0a0b1129b16ca9b70b9671ba8859871",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/inventory.go",
+      "sha256": "a051b8d02c798548ee40c6b15c3c7db3a3dbedd59171d8f9ef2b5784ca12348d",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/main.go",
+      "sha256": "162f94adb2698d022fc7883e9c5027f0a064daa8764d46473f3b87fd6fdb6413",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/original_c99.go",
+      "sha256": "9b0493916ee89766fc241506a2771277c9b7ae5bf1df9a1a35dc0e153ff2b4c3",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/original_c99_pg_test.go",
+      "sha256": "48f881563c4f4d1fa3ab5b165b2b1be1ed0fc668dcf0723639b7ad14abee7362",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/originalc99/go.mod",
+      "sha256": "9bd6f4ff7edd57769b5a81c083698f6733ac57e871c67099bd74b75052f59a46",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/originalc99/go.sum",
+      "sha256": "1501476c0f1cf1e2d05300c918e46799c2db6d8c4c18f9fd075a11bd31b72983",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/originalc99/main.go",
+      "sha256": "4901608c86aac539cd73a56919174b462e92e591335fa3350a555bb186f722c3",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/originalc99/main_test.go",
+      "sha256": "c7e406fa5334822e759151e58a4f10ed5b0fd45b88e9766c76f8ec459cfeeacb",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/qualification.go",
+      "sha256": "b3ed776517e16548d8f1e67119f5f3d1a55efced5358f06ce8ed8f9325b8c33f",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/refusal_test.go",
+      "sha256": "c5cedc4e5043f6586d6163e24499580c49a559d0c6d8e2cd6e24ea9649e4a5b1",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/schema.go",
+      "sha256": "c45b79d797042ab33894e1064bab20680dcfad8f7a13820b87cfb0f911212b2b",
+      "fedora_matched": true
+    },
+    {
+      "path": "scripts/legacy-modeldev-data-cleanup/schema_contract.json",
+      "sha256": "2d919aa42b54c74cd3d9f78a31411041805a8ff8bfea5dbfb799882bc0ca2d86",
+      "fedora_matched": true
+    }
+  ]
+}

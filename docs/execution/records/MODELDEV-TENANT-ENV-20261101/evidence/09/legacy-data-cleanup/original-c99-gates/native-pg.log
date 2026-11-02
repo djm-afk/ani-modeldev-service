@@ -1,0 +1,6 @@
+=== RUN   TestOriginalSevenNativeC99QualificationAndMissingCloseEvidence
+    main_test.go:89: CPU04_DB_PREFLIGHT: current baseline unavailable; behavior NOT_RUN
+--- FAIL: TestOriginalSevenNativeC99QualificationAndMissingCloseEvidence (0.16s)
+FAIL
+FAIL	github.com/zhangzhe-ctrl/ani-modeldev-service/scripts/legacy-modeldev-data-cleanup/originalc99	0.172s
+FAIL

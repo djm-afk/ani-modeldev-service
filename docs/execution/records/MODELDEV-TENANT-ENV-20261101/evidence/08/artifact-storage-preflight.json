@@ -1,0 +1,23 @@
+{
+  "schema": "ani.modeldev.artifact-storage.preflight.v1",
+  "observed_at_utc": "2026-11-01T02:00:14.845157+00:00",
+  "identity_match": true,
+  "read_only": true,
+  "credential_values_output": false,
+  "endpoint": "https://ani-rustfs-svc.ani-platform.svc.cluster.local:9000",
+  "tls_verified": true,
+  "public_ca_sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+  "service_uid": "8efd9343-10e1-49c1-a777-2a6b22e646a9",
+  "service_vip": "10.96.221.78",
+  "deployment_uid": "644c24df-70df-4cc0-a6e2-60e8846a647c",
+  "storage_images": [
+    "10.10.1.66:5001/rustfs/rustfs:1.0.0"
+  ],
+  "admin_authenticated_read_http": 200,
+  "candidate_bucket": "ani-md-tenantenv-kfp-20261101",
+  "candidate_bucket_head_http": 404,
+  "candidate_source_secret": "modeldev-tenantenv-artifact-source-20261101",
+  "candidate_source_secret_absent": true,
+  "writes": 0,
+  "ssh_exit": 0
+}

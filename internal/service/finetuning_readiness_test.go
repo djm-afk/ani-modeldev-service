@@ -142,7 +142,7 @@ func (r readinessCatalogue) ReadImplementationMaterial(_ context.Context, id, mo
 	return r.material, nil
 }
 func (r readinessCatalogue) ReadAdmissionFacts(_ context.Context, tenant, id string) (biz.TenantAdmissionFacts, error) {
-	return biz.TenantAdmissionFacts{TenantID: tenant, Workspace: r.material.Workspace}, nil
+	return biz.TenantAdmissionFacts{}, biz.ErrAdmissionEnvironmentNotReady
 }
 
 type readinessSource struct {

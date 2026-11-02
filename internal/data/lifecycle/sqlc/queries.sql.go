@@ -49,6 +49,17 @@ func (q *Queries) AdvanceRuntimeRevision(ctx context.Context, arg AdvanceRuntime
 	return owner_revision, err
 }
 
+const closeDiscoveryTime = `-- name: CloseDiscoveryTime :one
+SELECT clock_timestamp()::timestamptz AS sweep_before
+`
+
+func (q *Queries) CloseDiscoveryTime(ctx context.Context) (pgtype.Timestamptz, error) {
+	row := q.db.QueryRow(ctx, closeDiscoveryTime)
+	var sweep_before pgtype.Timestamptz
+	err := row.Scan(&sweep_before)
+	return sweep_before, err
+}
+
 const getGPUReleaseAnchor = `-- name: GetGPUReleaseAnchor :one
 SELECT gpu_release_sealed_at, gpu_release_scope_sha256
 FROM modeldev_execution_runtimes
@@ -135,84 +146,224 @@ func (q *Queries) HasUnresolvedManualCleanup(ctx context.Context, arg HasUnresol
 	return blocked, err
 }
 
-const listPendingBoundClosures = `-- name: ListPendingBoundClosures :many
-SELECT admitted.execution_id
-FROM modeldev_executions AS admitted
-JOIN modeldev_execution_identities AS identity
-  ON identity.tenant_id = admitted.tenant_id
- AND identity.execution_id = admitted.execution_id
-LEFT JOIN modeldev_execution_runtimes AS runtime
-  ON runtime.tenant_id = admitted.tenant_id
- AND runtime.execution_id = admitted.execution_id
-WHERE admitted.tenant_id = $1::uuid
-  AND (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'environment') = $2::jsonb
-  AND ((runtime.closed_at IS NULL AND
-        (identity.close_generation > 0 OR
-         (convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'deadline_at')::timestamptz <= clock_timestamp()
-         OR ((runtime.facts -> 'TrainingWindow' ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
-             AND (COALESCE(runtime.facts -> 'Observation' ->> 'WritersAbsent', 'false') <> 'true'
-                  OR COALESCE(runtime.facts -> 'Observation' ->> 'Outcome', 'UNKNOWN') IN ('UNKNOWN', 'RUNNING')))
-         OR EXISTS (
-           SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS step
-           WHERE (step ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
-             AND CASE step -> 'Binding' ->> 'Role'
-               WHEN 'prepare' THEN runtime.facts -> 'TrainingWindow' IS NULL
-               WHEN 'collect' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'publish')
-               WHEN 'publish' THEN CASE WHEN convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb ->> 'kind' = 'FINETUNING'
-                 THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'register')
-                 ELSE runtime.facts -> 'Publication' = 'null'::jsonb OR runtime.facts -> 'Publication' IS NULL END
-               WHEN 'register' THEN COALESCE(runtime.facts -> 'FinetuningRegistration' ->> 'State', 'PENDING') NOT IN ('READY', 'DEPENDENCY_UNAVAILABLE')
-               ELSE false END)
-         OR EXISTS (
-           SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'FinetuningSteps', '[]'::jsonb)) AS step
-           WHERE (step ->> 'DeadlineAt')::timestamptz <= clock_timestamp()
-             AND CASE step -> 'Binding' ->> 'Role'
-               WHEN 'export' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'FinetuningSteps', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'verify')
-               WHEN 'verify' THEN NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(runtime.facts -> 'StepTimings', '[]'::jsonb)) AS successor WHERE successor -> 'Binding' ->> 'Role' = 'collect')
-               ELSE false END)))
-       OR (runtime.closed_at IS NOT NULL
-           AND COALESCE(runtime.facts -> 'CloseEvidence' ->> 'NoDispatch', 'false') <> 'true'
-           AND (runtime.facts -> 'StepExitCleanup' ->> 'CompletedAt' IS NULL
-                OR runtime.facts -> 'ComputeCleanup' IS NULL
-                OR (runtime.facts -> 'ComputeCleanup' ->> 'phase' <> 'APPLIED'
-                    AND (COALESCE((runtime.facts -> 'ComputeCleanup' ->> 'attempts')::integer, 0) < 3
-                         OR runtime.facts -> 'ComputeCleanup' ->> 'phase' = 'STARTED'))))
-       OR (runtime.closed_at IS NOT NULL
-           AND convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'gpu' IS NOT NULL
-           AND convert_from(admitted.snapshot_canonical, 'UTF8')::jsonb -> 'gpu' <> 'null'::jsonb
-           AND runtime.facts -> 'GPURelease' -> 'outbox' ->> 'delivered_at' IS NULL))
-  AND ($3::uuid IS NULL OR admitted.execution_id > $3::uuid)
-ORDER BY admitted.execution_id
-LIMIT $4::integer
+const listPendingCloseTenants = `-- name: ListPendingCloseTenants :many
+SELECT DISTINCT a.tenant_id
+FROM modeldev_executions AS a
+JOIN modeldev_execution_identities AS i ON i.tenant_id=a.tenant_id AND i.execution_id=a.execution_id AND i.operation_id=a.operation_id AND i.spec_hash=a.spec_hash
+LEFT JOIN modeldev_execution_runtimes AS r ON r.tenant_id=a.tenant_id AND r.execution_id=a.execution_id
+WHERE a.cluster_id=$1::uuid AND (
+  -- U: 尚未 CLOSED。内部期限与 successor 的精确判断移到逐行 Go。
+  (
+    r.closed_at IS NULL
+    AND (
+      i.close_generation > 0
+      OR a.deadline_at <= statement_timestamp()
+      OR COALESCE(NULLIF(r.facts -> 'TrainingWindow', 'null'::jsonb),
+                  '{}'::jsonb) <> '{}'::jsonb
+      OR COALESCE(NULLIF(r.facts -> 'StepTimings', 'null'::jsonb),
+                  '[]'::jsonb) <> '[]'::jsonb
+      OR COALESCE(NULLIF(r.facts -> 'FinetuningSteps', 'null'::jsonb),
+                  '[]'::jsonb) <> '[]'::jsonb
+    )
+  )
+  OR
+  -- C: 已 CLOSED，仍可能需要原步骤/compute cleanup。
+  (
+    r.closed_at IS NOT NULL
+    AND (r.facts #> '{CloseEvidence,NoDispatch}')
+          IS DISTINCT FROM 'true'::jsonb
+    AND (
+      jsonb_typeof(r.facts #> '{StepExitCleanup,CompletedAt}')
+          IS DISTINCT FROM 'string'
+      OR (r.facts #>> '{StepExitCleanup,CompletedAt}') = ''
+      OR jsonb_typeof(r.facts -> 'ComputeCleanup')
+          IS DISTINCT FROM 'object'
+      OR (
+        (r.facts #>> '{ComputeCleanup,phase}') IS DISTINCT FROM 'APPLIED'
+        AND (
+          (r.facts #>> '{ComputeCleanup,phase}') = 'STARTED'
+          OR CASE
+               WHEN jsonb_typeof(r.facts #> '{ComputeCleanup,attempts}')
+                      = 'number'
+                 THEN (r.facts #> '{ComputeCleanup,attempts}') < '3'::jsonb
+               ELSE TRUE
+             END
+        )
+      )
+    )
+  )
+  OR
+  -- G: 已 CLOSED，GPU 尚未 seal/完整 ACK，或快照无法安全分类。
+  -- CASE 使完整 ACK 的正常闭合行无需再为此分支解析快照。
+  CASE
+    WHEN r.closed_at IS NULL THEN FALSE
+    WHEN jsonb_typeof(r.facts #> '{GPURelease,outbox,ack}') = 'object'
+     AND jsonb_typeof(r.facts #> '{GPURelease,outbox,delivered_at}') = 'string'
+      THEN FALSE
+    ELSE
+      (public.modeldev_scan_snapshot_jsonb(a.snapshot_canonical)
+         #>> '{compute_origin,device_mode}') IS DISTINCT FROM 'cpu'
+  END
+)
+ AND ($2::uuid IS NULL OR a.tenant_id>$2::uuid)
+ORDER BY a.tenant_id LIMIT $3::integer
 `
 
-type ListPendingBoundClosuresParams struct {
-	TenantID         pgtype.UUID
-	Environment      []byte
-	AfterExecutionID pgtype.UUID
-	BatchSize        int32
+type ListPendingCloseTenantsParams struct {
+	ClusterID     pgtype.UUID
+	AfterTenantID pgtype.UUID
+	BatchSize     int32
 }
 
-// Discovery only. Reconcile rereads the shared fence and original submission.
-// Include admission delivered after a stop tombstone, before any Run exists.
-func (q *Queries) ListPendingBoundClosures(ctx context.Context, arg ListPendingBoundClosuresParams) ([]pgtype.UUID, error) {
-	rows, err := q.db.Query(ctx, listPendingBoundClosures,
-		arg.TenantID,
-		arg.Environment,
-		arg.AfterExecutionID,
-		arg.BatchSize,
-	)
+func (q *Queries) ListPendingCloseTenants(ctx context.Context, arg ListPendingCloseTenantsParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, listPendingCloseTenants, arg.ClusterID, arg.AfterTenantID, arg.BatchSize)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	var items []pgtype.UUID
 	for rows.Next() {
-		var execution_id pgtype.UUID
-		if err := rows.Scan(&execution_id); err != nil {
+		var tenant_id pgtype.UUID
+		if err := rows.Scan(&tenant_id); err != nil {
 			return nil, err
 		}
-		items = append(items, execution_id)
+		items = append(items, tenant_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPendingClosures = `-- name: ListPendingClosures :many
+SELECT a.tenant_id, a.execution_id, a.operation_id, a.actor, a.intent_canonical, a.intent_hash, a.snapshot_canonical, a.spec_hash, a.accepted_at, a.cluster_id, a.environment_binding_id, a.deadline_at,i.close_generation,r.closed_at,r.facts,r.gpu_release_sealed_at
+FROM modeldev_executions AS a
+JOIN modeldev_execution_identities AS i ON i.tenant_id=a.tenant_id AND i.execution_id=a.execution_id AND i.operation_id=a.operation_id AND i.spec_hash=a.spec_hash
+LEFT JOIN modeldev_execution_runtimes AS r ON r.tenant_id=a.tenant_id AND r.execution_id=a.execution_id
+WHERE a.cluster_id=$1::uuid AND (
+  -- U: 尚未 CLOSED。内部期限与 successor 的精确判断移到逐行 Go。
+  (
+    r.closed_at IS NULL
+    AND (
+      i.close_generation > 0
+      OR a.deadline_at <= statement_timestamp()
+      OR COALESCE(NULLIF(r.facts -> 'TrainingWindow', 'null'::jsonb),
+                  '{}'::jsonb) <> '{}'::jsonb
+      OR COALESCE(NULLIF(r.facts -> 'StepTimings', 'null'::jsonb),
+                  '[]'::jsonb) <> '[]'::jsonb
+      OR COALESCE(NULLIF(r.facts -> 'FinetuningSteps', 'null'::jsonb),
+                  '[]'::jsonb) <> '[]'::jsonb
+    )
+  )
+  OR
+  -- C: 已 CLOSED，仍可能需要原步骤/compute cleanup。
+  (
+    r.closed_at IS NOT NULL
+    AND (r.facts #> '{CloseEvidence,NoDispatch}')
+          IS DISTINCT FROM 'true'::jsonb
+    AND (
+      jsonb_typeof(r.facts #> '{StepExitCleanup,CompletedAt}')
+          IS DISTINCT FROM 'string'
+      OR (r.facts #>> '{StepExitCleanup,CompletedAt}') = ''
+      OR jsonb_typeof(r.facts -> 'ComputeCleanup')
+          IS DISTINCT FROM 'object'
+      OR (
+        (r.facts #>> '{ComputeCleanup,phase}') IS DISTINCT FROM 'APPLIED'
+        AND (
+          (r.facts #>> '{ComputeCleanup,phase}') = 'STARTED'
+          OR CASE
+               WHEN jsonb_typeof(r.facts #> '{ComputeCleanup,attempts}')
+                      = 'number'
+                 THEN (r.facts #> '{ComputeCleanup,attempts}') < '3'::jsonb
+               ELSE TRUE
+             END
+        )
+      )
+    )
+  )
+  OR
+  -- G: 已 CLOSED，GPU 尚未 seal/完整 ACK，或快照无法安全分类。
+  -- CASE 使完整 ACK 的正常闭合行无需再为此分支解析快照。
+  CASE
+    WHEN r.closed_at IS NULL THEN FALSE
+    WHEN jsonb_typeof(r.facts #> '{GPURelease,outbox,ack}') = 'object'
+     AND jsonb_typeof(r.facts #> '{GPURelease,outbox,delivered_at}') = 'string'
+      THEN FALSE
+    ELSE
+      (public.modeldev_scan_snapshot_jsonb(a.snapshot_canonical)
+         #>> '{compute_origin,device_mode}') IS DISTINCT FROM 'cpu'
+  END
+)
+ AND a.tenant_id=$2::uuid AND a.accepted_at<=$3::timestamptz
+ AND ($4::uuid IS NULL OR (a.accepted_at,a.execution_id)>($5::timestamptz,$4::uuid))
+ORDER BY a.accepted_at,a.execution_id LIMIT $6::integer
+`
+
+type ListPendingClosuresParams struct {
+	ClusterID        pgtype.UUID
+	TenantID         pgtype.UUID
+	SweepBefore      pgtype.Timestamptz
+	AfterExecutionID pgtype.UUID
+	AfterAcceptedAt  pgtype.Timestamptz
+	BatchSize        int32
+}
+
+type ListPendingClosuresRow struct {
+	TenantID             pgtype.UUID
+	ExecutionID          pgtype.UUID
+	OperationID          pgtype.UUID
+	Actor                string
+	IntentCanonical      []byte
+	IntentHash           string
+	SnapshotCanonical    []byte
+	SpecHash             string
+	AcceptedAt           pgtype.Timestamptz
+	ClusterID            pgtype.UUID
+	EnvironmentBindingID pgtype.UUID
+	DeadlineAt           pgtype.Timestamptz
+	CloseGeneration      pgtype.Numeric
+	ClosedAt             pgtype.Timestamptz
+	Facts                []byte
+	GpuReleaseSealedAt   pgtype.Timestamptz
+}
+
+func (q *Queries) ListPendingClosures(ctx context.Context, arg ListPendingClosuresParams) ([]ListPendingClosuresRow, error) {
+	rows, err := q.db.Query(ctx, listPendingClosures,
+		arg.ClusterID,
+		arg.TenantID,
+		arg.SweepBefore,
+		arg.AfterExecutionID,
+		arg.AfterAcceptedAt,
+		arg.BatchSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPendingClosuresRow
+	for rows.Next() {
+		var i ListPendingClosuresRow
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.ExecutionID,
+			&i.OperationID,
+			&i.Actor,
+			&i.IntentCanonical,
+			&i.IntentHash,
+			&i.SnapshotCanonical,
+			&i.SpecHash,
+			&i.AcceptedAt,
+			&i.ClusterID,
+			&i.EnvironmentBindingID,
+			&i.DeadlineAt,
+			&i.CloseGeneration,
+			&i.ClosedAt,
+			&i.Facts,
+			&i.GpuReleaseSealedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

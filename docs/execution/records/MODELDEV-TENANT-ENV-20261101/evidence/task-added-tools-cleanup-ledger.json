@@ -1,0 +1,247 @@
+{
+  "schema": "ani.modeldev.task-tool-cleanup-ledger.v1",
+  "updated_at": "2026-11-01T17:13:30.176693+00:00",
+  "status": "LISTED_COMPLETION_LIVE09_AND_B5_TOOLS_CLEANED",
+  "user_requirement": "Record each added tool and remove at task completion; no additional build CPU/memory/concurrency caps.",
+  "completed_ledgers": [
+    "08/image-publication/added-tools-cleanup-ledger.json",
+    "08/platform-materials-final/cleanup-ledger.json",
+    "09/legacy-data-cleanup/final-training-platform-images.json",
+    "10/live-datasets/private-journal-cleanup.json",
+    "09/res-window-finished-tools-cleanup.json",
+    "09/final-switch/resource-source-network/source-network-cleanup.json",
+    "10/task-final-tools-cleanup-20261101/actual-cleanup.json"
+  ],
+  "retained_required": [
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/modeldev-materials-d807-20261101/modeldev-execution-materials",
+      "sha256": "e4fb94044a470de18758e883cda00ef9c056645788508ed50208eddeea954097",
+      "purpose": "Final canonical material render needs real published IDs; remove after seal verified.",
+      "state": "REMOVED_ABSENCE_VERIFIED",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/fedora-exact-cleanup.json"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.evidence/modeldev-node-control-20261101-v2/node.sock",
+      "purpose": "Task-owned stable SSH ControlMaster, parent closes only after all node work completes.",
+      "state": "EXACT_PATH_ABSENT_VERIFIED",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/local-exact-read.json",
+      "limit": "No claim about other SSH processes; only the listed path was checked."
+    },
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/gov-normal-management-244780",
+      "purpose": "Pinned normal admin CLI for exact reviewed API-catalog sync and current-user-authenticated input import; remove task binary/source/private inputs after final use.",
+      "state": "PRIVATE_CLI_AND_SOURCE_REMOVED_PUBLIC_EVIDENCE_RETAINED",
+      "evidence": "10/gov-normal-management-tool/build-receipt.json",
+      "sha256": "e058305ffbbcc2f77d204637d4b0b1f5e781bd9631e45fd8f7520911cbd7c1f9",
+      "size_bytes": 117162146,
+      "reason": "Root confirmed all normal business calls finished. Exact admin binary removed; Fedora private source removed; public build/transfer receipts retained.",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/fedora-exact-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/gov-normal-management-244780",
+      "purpose": "Temporary normal Gov admin CLI and public transfer/read-only receipts; delete exact binary and private inputs after last normal sync/import use.",
+      "state": "PRIVATE_CLI_AND_SOURCE_REMOVED_PUBLIC_EVIDENCE_RETAINED",
+      "reason": "Root confirmed all normal business calls finished. Exact admin binary removed; Fedora private source removed; public build/transfer receipts retained.",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/node1-gov-private-cleanup.json"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.scratch/gov-normal-management-244780/admin",
+      "purpose": "Ordinary single-file transit, never locally executed; delete once node final SHA verified.",
+      "sha256": "e058305ffbbcc2f77d204637d4b0b1f5e781bd9631e45fd8f7520911cbd7c1f9",
+      "state": "EXACT_PATH_ABSENT_VERIFIED",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/local-exact-read.json",
+      "limit": "No claim about other SSH processes; only the listed path was checked."
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/gov-normal-input-import-244780-20261101",
+      "purpose": "Original Gov identity private CLI config/TLS/request files; current tokens only during import and always deleted; remove exact root after all three imports/readback.",
+      "state": "PRIVATE_RUNTIME_CONFIG_IDENTITY_REQUESTS_REMOVED_PUBLIC_EVIDENCE_RETAINED",
+      "reason": "configs/identity/requests/private-environment/private-integrity removed and absent; normal public intent/outcome journals retained.",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/node1-gov-private-cleanup.json"
+    },
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/modeldev-native-rbac-fullverify-20261101T045658Z",
+      "purpose": "Task private frozen source/isolated PostgreSQL/fullgate scratch; renderer two-file gate now active. Remove after actual gate evidence captured and final source committed.",
+      "state": "REMOVED_ABSENCE_VERIFIED",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/fedora-exact-cleanup.json"
+    },
+    {
+      "host": "fedora",
+      "path": "/home/chabking/tenantenv-20261101/modeldev-snapshot/.scratch/final-config-service-links-repro",
+      "purpose": "Completed production-scanner minimal service-links reproduction; remove own helper/public config after evidence copied.",
+      "state": "REMOVED_ABSENCE_VERIFIED",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/fedora-exact-cleanup.json"
+    },
+    {
+      "host": "local",
+      "path": "/home/chabking/workspace/.evidence/modeldev-normal-source-proxy-20261101/control.sock",
+      "purpose": "Task owned PID2183146 reverse tunnel; retain only through Gov original branchcheck and real source fetch; close this master without parent control.",
+      "state": "EXACT_PATH_ABSENT_VERIFIED",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/local-exact-read.json",
+      "limit": "No claim about other SSH processes; only the listed path was checked."
+    },
+    {
+      "host": "Workbench 192.168.25.40",
+      "path": "/etc/gitconfig exact repoURL http.proxy keys for three ANI repos",
+      "purpose": "No global proxy; original system file absent. Restore original exact-key state/file absence and delete own private probes after final Gov actual source consumption; never remove native job cache.",
+      "state": "THREE_EXACT_KEYS_RESTORED_AND_ORIGINAL_FILE_ABSENCE_VERIFIED",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/workbench-exact-cleanup.json"
+    },
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/modeldev-live-training-20261101",
+      "purpose": "Finite actual POST intent/outcome journals, may not exist before first submit. Retain to resolve unknown outcomes, then remove after public evidence archived.",
+      "state": "BUSINESS_EVIDENCE_RETAINED_NOT_A_TEMPORARY_TOOL",
+      "cleanup_evidence": "10/task-final-tools-cleanup-20261101/node1-exact-cleanup.json",
+      "reason": "Contains actual intent/outcome journals and downloads; user explicitly retains business evidence."
+    }
+  ],
+  "new_system_packages_installed": false,
+  "retained_deliverables": [
+    "Four immutable platform registry images",
+    "Canonical material source/evidence",
+    "Dedicated internal-artifact bucket/IAM and source Secret",
+    "B test account50/private plan10 and later authorized business assets",
+    "User-requested 19240 main/step compiled binary and OCI outputs",
+    "Normal model/log downloads and public evidence; retained execution PVC per contract"
+  ],
+  "cleanup_rules": [
+    "Verify exact task ownership, SHA/UID and absence after removal.",
+    "Preserve original BuildKit/tools/containerd cache/tasks and all other-owner data.",
+    "Do not label whole task tool cleanup PASS before all active auxiliary tools/temporary jobs and private credentials are removed."
+  ],
+  "completed_retirement_tools": [
+    {
+      "host": "node1",
+      "path": "/home/kubercloud/tenantenv-20261101/gov-original-command-retirement-ca01cabf/modeldev-original-command-retirement",
+      "sha256": "bbf33c31d36046f298bce3f5d95c90e1302362e99c1034ab0173da53297aa4e1",
+      "purpose": "Original four delivery completed; retain until accepted original envelopes and final DB manifest captured; then delete exact tool and private config.",
+      "cleanup_status": "REMOVED_SHA_PROCESS_MOUNT_AND_ABSENCE_VERIFIED",
+      "cleanup_evidence": "09/completed-retirement-tools-cleanup-result.json"
+    },
+    {
+      "host": "node1",
+      "path": "/tmp/modeldev-legacy-retirement-101a2fd",
+      "sha256": "4e8d7f7177a7efb521fb27ac9b59b2fe752f8e9cd75d0295dfec0e50af2377a4",
+      "purpose": "Original three retirement completed; retain private journal for cleanup qualification, delete binary/private config once exact history cleanup finishes.",
+      "cleanup_status": "REMOVED_SHA_PROCESS_MOUNT_AND_ABSENCE_VERIFIED",
+      "cleanup_evidence": "09/completed-retirement-tools-cleanup-result.json"
+    }
+  ],
+  "removed_completed_retirement_tool_bytes": 184153030,
+  "active_tool_inventory_refs": [
+    "09/legacy-data-cleanup/active-auxiliary-tools.json",
+    "09/originalabe/transport-created.json",
+    "10/normal-input-import/asset-ledger.json (pending preparation)"
+  ],
+  "new_native_rbac_and_source_transport_task_artifacts": {
+    "fedora_renderer_test_directory": "/home/chabking/tenantenv-20261101/native-rbac-revision",
+    "cleanup": "FEDORA_EXACT_NATIVE_RBAC_REVISION_REMOVED_ABSENCE_VERIFIED",
+    "workbench_private_source_transport": "evidence/09/final-switch/resource-source-network",
+    "cleanup_after": "Gov final normal Workbench55a371 actual fetch succeeded; once no remaining source POST/fetch needed restore three system exact URL keys to original absence, close owned2183146 master, delete owned private probes; preserve native caches and parent sole CM.",
+    "system_package_install": false,
+    "cleanup_evidence": "10/task-final-tools-cleanup-20261101/fedora-exact-cleanup.json",
+    "workbench_exact_proxy_restore_evidence": "10/task-final-tools-cleanup-20261101/workbench-exact-cleanup.json"
+  },
+  "completion_not_claimed": "All current exact ledger tool/private-input entries have recorded removal or exact absence. Public business evidence and requested reusable deliverables are retained. No whole-host or unlisted-historical cleanup claim.",
+  "current_new10_checkpoint": {
+    "status": "CURRENT_NEW10_TEMPORARY_ARTIFACTS_REMOVED_OLD_GOAL_LEDGER_NOT_RECONCILED",
+    "new_system_packages_installed": false,
+    "records": [
+      "ani-lab-20261101/modeldev-runtime/cleanup-ledger.json",
+      "10/ani-lab-res-gov-images-20261101/node-evidence/task-cleanup.json",
+      "10/ani-lab-res-gov-images-20261101/fedora-evidence/task-cleanup.json",
+      "10/fixed-image-content-copy/task-cleanup-small.json",
+      "10/md-webhook-sa-release-20261101/result.json"
+    ],
+    "remaining_historical_items": "Original retained_required entries are historical inventory, not current-use assertions. Old target tools/private source and offline Workbench exact Git proxy restoration remain unreconciled; do not claim task-wide cleanup complete.",
+    "historical_checkpoint": true
+  },
+  "retained_compiled_deliverable_19240": {
+    "user_direction": "Keep compiled output for direct reuse; do not delete it or recompile the same version next time.",
+    "host": "root@192.168.25.40",
+    "path": "/root/ani-runs/modeldev-89d3ebef-build-20261101/ani-modeldev-service",
+    "receipt_path": "/root/ani-runs/modeldev-89d3ebef-build-20261101/build-receipt.json",
+    "commit": "89d3ebef313a9e023c5d015f30356f008685ea68",
+    "sha256": "bb0f04bcb4cd6c4efa74304474ccbef6c979c445b686988c7e903a1594a8a3e6",
+    "classification": "RETAINED_BUILD_DELIVERABLE_NOT_A_TEMPORARY_TOOL",
+    "new_tools_installed": false,
+    "temporary_source_removed": true,
+    "evidence": "10/workbench-via-node-compile-probe-20261101/result.json"
+  },
+  "current_final_cleanup": {
+    "observed_at": "2026-11-01T16:16:46.625318+00:00",
+    "evidence": [
+      "10/task-final-tools-cleanup-20261101/node1-exact-cleanup.json",
+      "10/task-final-tools-cleanup-20261101/workbench-exact-cleanup.json",
+      "10/task-final-tools-cleanup-20261101/local-exact-cleanup.json",
+      "10/task-final-tools-cleanup-20261101/fedora-exact-cleanup.json",
+      "10/task-final-tools-cleanup-20261101/node1-gov-private-cleanup.json"
+    ],
+    "remaining_exact_paths": [],
+    "business_evidence_and_PVC_retained": true,
+    "main_step_binary_and_OCI_retained_per_user": true,
+    "shared_Docker_ctr_Go_cache_Fedora_KFP_venv_not_removed": true,
+    "cluster_writes": 0,
+    "tests_or_extra_acceptance_run": false,
+    "unlisted_historical_paths_not_scanned": true,
+    "business_calls_finished_by_root": true,
+    "remaining_unverified_scope": "No broad rescan of unlisted historical host paths or other SSH processes; completed prior cleanup ledgers retain their original evidence."
+  },
+  "removed_STS_diagnostic_client": {
+    "node1_path": "/home/kubercloud/tenantenv-20261101/modeldev-live09-sts-client-20261101",
+    "workbench_path": "/root/ani-runs/modeldev-live09-sts-client-20261101",
+    "binary_sha256": "9858ce8b6d030a993ead0a4124cdb05100753089c3365d16a045855c04d270c8",
+    "source_sha256": "bd39862008eb0bdf412c26408768580152b2b4eb04bea011627f18b2994e246a",
+    "state": "REMOVED_EXACT_SHA_OWNER_NO_PROCESS_NO_MOUNT_AND_ABSENCE_VERIFIED",
+    "local_tool_sources_and_temp_staging_removed": true,
+    "credential_values_persisted": false,
+    "cleanup_evidence": [
+      "10/task-final-tools-cleanup-20261101/node1-exact-cleanup.json",
+      "10/task-final-tools-cleanup-20261101/workbench-exact-cleanup.json",
+      "10/task-final-tools-cleanup-20261101/local-exact-cleanup.json"
+    ]
+  },
+  "completion_live09_tool": {
+    "created_for": "Required real LIVE09 normal business STS cross-scope rejection, CPU A attempt4 prepare",
+    "source_sha256": "01feafc4a4a07f343dac01b565857f022b9cde1f87024fc3f0bde05200474581",
+    "workbench_root": "/root/ani-runs/modeldev-completion-live09-20261102",
+    "node_root": "/home/kubercloud/tenantenv-20261101/completion-live09-live10-20261101",
+    "cleanup": "Remove own client binary/source/private staging after actual bounded request; preserve only public receipts and marker needed by LIVE10",
+    "state": "REMOVED_EXACT_OWNER_SHA_PROCESS_AND_ABSENCE_VERIFIED",
+    "binary_sha256": "5692253fe311da4019c615682d8439bc8a42f85b87986ecec825213da1ac8f81",
+    "binary_bytes": 20586658,
+    "watcher_pid": 817964,
+    "ready_evidence": "10/completion-live09/watcher-ready.json",
+    "projected_tokens_persisted": false,
+    "STS_requests_so_far": 1,
+    "live09_status": "PASS_OWN_INPUT_READ_AND_CROSS_SCOPE_ACCESS_DENIED",
+    "actual_evidence": "10/completion-live09/actual.json",
+    "cleanup_evidence": "10/completion-live09/cleanup.json",
+    "credential_values_or_hashes_persisted": false
+  },
+  "completion_B5_observer": {
+    "state": "COMPLETED_PIPELINE_SUCCEEDED_PROCESS_EXITED_LOCAL_HELPER_REMOVED",
+    "remote_pid": 854288,
+    "remote_program": "existing python3 reading stdin; no remote helper file installed",
+    "duration_limit_seconds": 600,
+    "interval_seconds": 5,
+    "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+    "source_sha256": "769d03bd1d162658784b04bd4fbbd959fedb0d7ca053996efa01de4a13cb3b12",
+    "local_source": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/10/completion-multitenant-regression/watch-b5-original-pods.py",
+    "public_output": "10/completion-multitenant-regression/b5-original-pods.jsonl",
+    "cleanup": "After original pipeline terminal/finite stop, remove own local helper source; retain public snapshots; do not touch service binaries/OCI/cache",
+    "cluster_writes": 0,
+    "new_tools_installed": false,
+    "cleanup_evidence": "10/completion-multitenant-regression/b5-observer-complete.json",
+    "public_snapshots_retained": true,
+    "ssh_exit": 0
+  }
+}

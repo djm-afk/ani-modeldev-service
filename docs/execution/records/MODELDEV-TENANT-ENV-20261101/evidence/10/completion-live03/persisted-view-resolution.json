@@ -1,0 +1,53 @@
+{
+  "schema": "ani.modeldev.live03-persisted-view-resolution.v1",
+  "reviewed_at": "2026-11-01T17:00:20.776921+00:00",
+  "result": "PASS",
+  "new_tests_run": false,
+  "source_mutations": 0,
+  "live_calls_replayed": 0,
+  "deployed_main_source": "1dfd6941e5780eca0d55dc4e5fbbd2f58e0710ab",
+  "sources": [
+    {
+      "path": "internal/biz/tenant_environment.go",
+      "sha256": "e6ad3789dbd9f1fa89ef51e41ebabaa703fcd85d15b2f22c3d039a66bbe63190",
+      "identical_to_deployed_main_source": true
+    },
+    {
+      "path": "internal/data/tenantenvironment/repository.go",
+      "sha256": "91ed0de994f8973ed15de7c9d35f6480d921d072da8dbf1386a3472d78de451f",
+      "identical_to_deployed_main_source": true
+    },
+    {
+      "path": "internal/data/tenantenvironment/repository_test.go",
+      "sha256": "eb2ef03b650369afdba075e35c8c852cd1911256c8b3dbbae9b2ae0a055c126b",
+      "identical_to_deployed_main_source": true
+    }
+  ],
+  "actual_receipts": [
+    {
+      "path": "evidence/10/resumed-mainflow/ensure-A-1793550885636781688.json",
+      "sha256": "975e89ed47148d5e05292df59e333578b06cad7b89984bce0d36ffb3f82817d7"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/ensure-A-1793550883044068437.json",
+      "sha256": "32eaddd3dda7c2cb9c16353e85bd6756d7690e9283a40c2dd0350ef7d1f42d38"
+    },
+    {
+      "path": "evidence/10/resumed-mainflow/environment-A-1793550966252706452.json",
+      "sha256": "fca2b831c81f070061dbf440ad9f1edb237724fc837b3f30f0a6eafeb3e4be90"
+    },
+    {
+      "path": "evidence/10/final-policy-maintenance/new-A-B-Ensure-actual.json",
+      "sha256": "a82075e4c720999507f60ff3c6364ab382cf7c74073dfdaa7416aeffbd620b7c"
+    }
+  ],
+  "resolution": {
+    "register": "INSERT ON CONFLICT(tenant_id,cluster_id) DO NOTHING followed by repository.Get; existing READY is never overwritten by Register",
+    "busy_branch": "TryLock held=false immediately returns repository.Get; no Save and no state synthesis",
+    "lock_holder": "explicit Ensure rechecks Namespace and persists PROVISIONING/RESOURCES before Resources; Save is an UPDATE with row_version compare and returns persisted version/timestamp",
+    "observed": "overlapping same-key requests returned 202 PROVISIONING/RESOURCES and later 200 READY/COMPLETE for identical environment_id, namespace_uid, binding_digest and experiment_id; final Get READY",
+    "contract": "spec 4.4 requires each response match its persisted state; simultaneous requests need not return the same state during legitimate locked revalidation",
+    "existing_targeted_test": "TestEnvironmentPostgresVerticalEnsureSealPublishAndBusyRead; same held advisory lock on persisted READY verifies busy READY with unchanged row_version, and repeated Ensure retains original Experiment exactly once; existing component result only, not rerun this turn",
+    "defect": "none found; do not introduce a synthetic READY fast-path or alter state machine to force equal response codes"
+  }
+}

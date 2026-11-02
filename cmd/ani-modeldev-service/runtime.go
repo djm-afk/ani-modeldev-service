@@ -11,6 +11,8 @@ import (
 	kratos "github.com/go-kratos/kratos/v3"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/admissionfacts"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/imageruntime"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
@@ -19,6 +21,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/runtimeproof"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/stepidentity"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/submission"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/trainer"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/service"
@@ -53,6 +56,14 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 		clients.close()
 		return nil, err
 	}
+	schemaContext, schemaCancel := context.WithTimeout(context.Background(), 3*time.Second)
+	_, schemaErr := pool.Exec(schemaContext, `SELECT cluster_id,environment_binding_id,deadline_at FROM modeldev_executions LIMIT 0; SELECT environment_id,binding_canonical FROM modeldev_tenant_execution_environments LIMIT 0;`)
+	schemaCancel()
+	if schemaErr != nil {
+		pool.Close()
+		clients.close()
+		return nil, errors.New("tenant execution schema is incompatible or unavailable")
+	}
 	ready := server.NewReadiness()
 	observability, err := server.NewObservability(Name, Version, ready)
 	if err != nil {
@@ -69,6 +80,21 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 		return nil, errors.New(message)
 	}
 	middlewares := observability.ServerMiddleware(logger)
+	environments := tenantenvironment.NewRepository(pool)
+	environmentPlatform, err := tenantenvironment.NewPlatform(clients.environmentConfig, clients.environmentKube, ensurer)
+	if err != nil {
+		return failed("tenant environment platform invalid")
+	}
+	environmentUsecase, err := biz.NewTenantEnvironment(environments, environmentPlatform, clients.environmentConfig.ClusterID, clients.environmentConfig.KFPConnectionRef)
+	if err != nil {
+		return failed("tenant environment configuration invalid")
+	}
+	environmentService := service.NewTenantEnvironment(environmentUsecase)
+	admissionFacts, err := admissionfacts.New(environments, environmentPlatform, catalogue.NewReader(config.Command.AdmissionResolution.CatalogueDirectory), clients.environmentConfig.ClusterID)
+	if err != nil {
+		return failed("tenant environment facts invalid")
+	}
+	clients.tokenProvider.repository = environments
 	query := service.NewQuery(execution.New(pool), objectstore.NewDownloadSigner(clients.store, config.Runtime.ObjectStorage.ConnectionId), clients.logs).
 		WithMetrics(objectstore.NewObjectReader(clients.store, config.Runtime.ObjectStorage.ConnectionId)).
 		WithOperations(execution.New(pool)).
@@ -118,7 +144,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("managed submitter configuration invalid")
 	}
-	dispatcher, err := biz.NewDispatchWorker(dispatch, submitter, clients.binding, int(config.Runtime.DispatchBatchSize), config.Runtime.DispatchInterval.AsDuration())
+	dispatcher, err := biz.NewDispatchWorker(dispatch, submitter, clients.environmentConfig.ClusterID, dispatchEnvironment{environments, environmentPlatform, clients.environmentConfig.ClusterID}, config.Runtime.DispatchInterval.AsDuration())
 	if err != nil {
 		return failed("managed dispatch configuration invalid")
 	}
@@ -133,7 +159,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if modelClient != nil {
 		operations.WithRegistrationRecovery(runtime, admissions)
 	}
-	command, err := buildCommandServerWithCapabilitiesAndModelFacts(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, images, config.Runtime, middlewares...)
+	command, err := buildCommandServerWithEnvironment(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, images, config.Runtime, admissionFacts, environmentService, middlewares...)
 	if err != nil {
 		return failed("managed command listener configuration invalid: " + err.Error())
 	}
@@ -141,9 +167,16 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if gpuRelease != nil {
 		releaseReconcilers = append(releaseReconcilers, gpuRelease)
 	}
-	closeWorker, err := biz.NewCloseWorker(facts, closer, clients.binding, int(config.Runtime.DispatchBatchSize), config.Runtime.DispatchInterval.AsDuration(), releaseReconcilers...)
+	closeWorker, err := biz.NewCloseWorker(facts, closer, clients.environmentConfig.ClusterID, config.Runtime.DispatchInterval.AsDuration(), releaseReconcilers...)
 	if err != nil {
 		return failed("managed close worker configuration invalid")
+	}
+	workerCoordinator := biz.NewWorkerCoordinator()
+	if err = dispatcher.SetCoordinator(workerCoordinator); err != nil {
+		return failed("managed dispatch coordinator configuration invalid")
+	}
+	if err = closeWorker.SetCoordinator(workerCoordinator); err != nil {
+		return failed("managed close coordinator configuration invalid")
 	}
 	workerContext, cancelWorker := context.WithCancel(context.Background())
 	worker := &runtimeWorker{dispatcher: dispatcher, closer: closeWorker, ctx: workerContext, cancel: cancelWorker, done: make(chan struct{}), ready: ready}

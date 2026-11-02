@@ -1,0 +1,460 @@
+{
+  "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+  "components": [
+    {
+      "kind": "Deployment",
+      "namespace": "ani-system",
+      "name": "ani-governance",
+      "uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+      "generation": 197,
+      "images": [
+        "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:0518f2d3616c8a088113b0e604540565d4419ae1921446d17ca4b233c4090fc0"
+      ],
+      "service_account": "ani-governance",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 197
+      },
+      "pods": [
+        {
+          "name": "ani-governance-78b5778b75-nc5gg",
+          "uid": "76211ecd-65c5-43f2-9c17-f373df78ce20",
+          "service_account": "ani-governance",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "governance",
+              "image": "sha256:c3c3d54516c920bae913dddbdb8ffef06d3c3fe8b2c668e32f5a1ca588bacbb6",
+              "imageID": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:0518f2d3616c8a088113b0e604540565d4419ae1921446d17ca4b233c4090fc0",
+              "ready": true,
+              "restartCount": 0
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-system",
+      "name": "ani-modeldev",
+      "uid": "fc5ecff7-f2a7-4d1d-9a0e-6f2f1d4366a3",
+      "generation": 69,
+      "images": [
+        "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:b0358ec0c5babcdaa97c645c06f89564478406715a4958e121099c4f6534e38d"
+      ],
+      "service_account": "modeldev-control",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 69
+      },
+      "pods": [
+        {
+          "name": "ani-modeldev-6995bd77c4-z2gxk",
+          "uid": "592bdd86-ab5b-4416-8a2c-07c21ee69f8d",
+          "service_account": "modeldev-control",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "modeldev",
+              "image": "sha256:19f944bba22ff4b94d88cdbba99b4951fd5d97a11a75138f69f150a7af97fd36",
+              "imageID": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-service@sha256:b0358ec0c5babcdaa97c645c06f89564478406715a4958e121099c4f6534e38d",
+              "ready": true,
+              "restartCount": 0
+            }
+          ]
+        },
+        {
+          "name": "ani-modeldev-webhook-5d4cccd55-5mg74",
+          "uid": "a7f5ce44-f6c0-401f-9bfa-93949735c578",
+          "service_account": "ani-modeldev-webhook",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "webhook",
+              "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+              "imageID": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+              "ready": true,
+              "restartCount": 0
+            }
+          ]
+        },
+        {
+          "name": "ani-modeldev-webhook-5d4cccd55-rvgk2",
+          "uid": "2a575fe5-3e17-4c68-9216-00fa95a99306",
+          "service_account": "ani-modeldev-webhook",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "webhook",
+              "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+              "imageID": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+              "ready": true,
+              "restartCount": 0
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-system",
+      "name": "ani-modeldev-webhook",
+      "uid": "9675820e-2eb5-40cd-a59c-59bb547b7eea",
+      "generation": 21,
+      "images": [
+        "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03"
+      ],
+      "service_account": "ani-modeldev-webhook",
+      "status": {
+        "readyReplicas": 2,
+        "replicas": 2,
+        "observedGeneration": 21
+      },
+      "pods": [
+        {
+          "name": "ani-modeldev-webhook-5d4cccd55-5mg74",
+          "uid": "a7f5ce44-f6c0-401f-9bfa-93949735c578",
+          "service_account": "ani-modeldev-webhook",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "webhook",
+              "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+              "imageID": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+              "ready": true,
+              "restartCount": 0
+            }
+          ]
+        },
+        {
+          "name": "ani-modeldev-webhook-5d4cccd55-rvgk2",
+          "uid": "2a575fe5-3e17-4c68-9216-00fa95a99306",
+          "service_account": "ani-modeldev-webhook",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "webhook",
+              "image": "sha256:24937cbd024670ed00ce160e9a5f29db578d4414a918533582f83c6673d36860",
+              "imageID": "10.10.1.66:30003/ani-gpu-platform/ani-modeldev-webhook@sha256:aab84d298107fa61f10cf1b3d7ea6085297cb12896f07daa3eaa086c78c51e03",
+              "ready": true,
+              "restartCount": 0
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-system",
+      "name": "ani-resource-service",
+      "uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+      "generation": 111,
+      "images": [
+        "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:71c04b8948728d8d0299320f148afa3fee3eabdbea87051c2b99c300abe730d1"
+      ],
+      "service_account": "ani-resource-service",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 111
+      },
+      "pods": [
+        {
+          "name": "ani-resource-service-5d5bb7b9d9-6v4qb",
+          "uid": "f6e8e746-1664-4544-8dca-ea05b53d7483",
+          "service_account": "ani-resource-service",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "resource",
+              "image": "sha256:a8372e5c2247574026dd7499167d15deef991f4b91d5a93fa489a18f516fa96e",
+              "imageID": "10.10.1.66:30003/ani-gpu-platform/ani-resource-service@sha256:71c04b8948728d8d0299320f148afa3fee3eabdbea87051c2b99c300abe730d1",
+              "ready": true,
+              "restartCount": 0
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "kubeflow-system",
+      "name": "jobset-controller-manager",
+      "uid": "3647f135-ce0c-46b1-9c00-76f77b8f994c",
+      "generation": 1,
+      "images": [
+        "10.10.1.66:5001/ani-kubeflow/jobset/jobset:v0.10.1@sha256:a018e2ca9b2a73645e108930a1a1795392fe8b765e4c81f5240f640b854436c4"
+      ],
+      "service_account": "jobset-controller-manager",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 1
+      },
+      "pods": [
+        {
+          "name": "jobset-controller-manager-5c6997b7c5-7s48j",
+          "uid": "34df0faf-9b15-4431-af7a-fdcff3f2ee42",
+          "service_account": "jobset-controller-manager",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "manager",
+              "image": "sha256:3fac2b411b01664c6a672fc2aa38023e5c64a9322e81c0d867adf40300ada244",
+              "imageID": "10.10.1.66:5001/ani-kubeflow/jobset/jobset@sha256:a018e2ca9b2a73645e108930a1a1795392fe8b765e4c81f5240f640b854436c4",
+              "ready": true,
+              "restartCount": 1
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "kubeflow-system",
+      "name": "kubeflow-trainer-controller-manager",
+      "uid": "3f58bec1-34ef-4378-ab3c-396489748da9",
+      "generation": 1,
+      "images": [
+        "10.10.1.66:5001/ani-kubeflow/kubeflow/trainer/trainer-controller-manager:v2.1.0@sha256:aa5949fc4ccbbed2537fa05f08ca330bc83b40aef930d2a0d44970922f197a73"
+      ],
+      "service_account": "kubeflow-trainer-controller-manager",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 1
+      },
+      "pods": [
+        {
+          "name": "kubeflow-trainer-controller-manager-76b46445b5-jbb4x",
+          "uid": "6825f7b8-5cca-4efe-9a90-fe790a2f3570",
+          "service_account": "kubeflow-trainer-controller-manager",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "manager",
+              "image": "sha256:3fb5b9707d492e6de4ecad6b0cd945f490dc61e5035d48fb8e28647d6d1931ac",
+              "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/trainer/trainer-controller-manager@sha256:aa5949fc4ccbbed2537fa05f08ca330bc83b40aef930d2a0d44970922f197a73",
+              "ready": true,
+              "restartCount": 2
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "kubeflow",
+      "name": "ml-pipeline",
+      "uid": "56189e37-8874-4f2d-90bb-19846a332b64",
+      "generation": 1,
+      "images": [
+        "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-api-server:2.16.0@sha256:5f9d674f75dbd9c056ad31a1d8c5432e1bdc1f0597dfefe6f58d00af983fbe22"
+      ],
+      "service_account": "ml-pipeline",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 1
+      },
+      "pods": [
+        {
+          "name": "ml-pipeline-599bc84d9f-s8p7m",
+          "uid": "6cfb81d8-c39d-4a4e-9c8c-33ab09c7651e",
+          "service_account": "ml-pipeline",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "ml-pipeline-api-server",
+              "image": "sha256:c9098e288eb2199ba243523def4d10a1c843a67fdf65d54a1991727b0dd88648",
+              "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-api-server@sha256:5f9d674f75dbd9c056ad31a1d8c5432e1bdc1f0597dfefe6f58d00af983fbe22",
+              "ready": true,
+              "restartCount": 1
+            }
+          ]
+        },
+        {
+          "name": "ml-pipeline-persistenceagent-867bfc46c4-hfcg5",
+          "uid": "cdaa151b-372c-4f89-bf39-d70c48e59e7e",
+          "service_account": "ml-pipeline-persistenceagent",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "ml-pipeline-persistenceagent",
+              "image": "sha256:1487cf3d4caf6b522f6c27ee7e4f16d240bb5e29c2af57b6f8f7f02a8429e9f2",
+              "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-persistence-agent@sha256:7d44250d37fd8026740d1640cb91313580c05c875bd72ccbd66bc0ed44e3ed2b",
+              "ready": true,
+              "restartCount": 1
+            }
+          ]
+        },
+        {
+          "name": "ml-pipeline-scheduledworkflow-dd5854b44-fc7t9",
+          "uid": "5a9126ee-cea0-407c-9eba-23397e964b9f",
+          "service_account": "ml-pipeline-scheduledworkflow",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "ml-pipeline-scheduledworkflow",
+              "image": "sha256:2ad747b624d7f44a3e86a4ed16012c444492416658fa1f56714b4d4f29737e00",
+              "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-scheduled-workflow-controller@sha256:87851f90101b078defee70e19d0ff1b1fd485dcc99fb66298193c2545c4b0fc5",
+              "ready": true,
+              "restartCount": 1
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "kubeflow",
+      "name": "ml-pipeline-persistenceagent",
+      "uid": "ecdd6857-98e6-487e-8628-b92011967229",
+      "generation": 1,
+      "images": [
+        "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-persistence-agent:2.16.0@sha256:7d44250d37fd8026740d1640cb91313580c05c875bd72ccbd66bc0ed44e3ed2b"
+      ],
+      "service_account": "ml-pipeline-persistenceagent",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 1
+      },
+      "pods": [
+        {
+          "name": "ml-pipeline-persistenceagent-867bfc46c4-hfcg5",
+          "uid": "cdaa151b-372c-4f89-bf39-d70c48e59e7e",
+          "service_account": "ml-pipeline-persistenceagent",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "ml-pipeline-persistenceagent",
+              "image": "sha256:1487cf3d4caf6b522f6c27ee7e4f16d240bb5e29c2af57b6f8f7f02a8429e9f2",
+              "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-persistence-agent@sha256:7d44250d37fd8026740d1640cb91313580c05c875bd72ccbd66bc0ed44e3ed2b",
+              "ready": true,
+              "restartCount": 1
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "kubeflow",
+      "name": "ml-pipeline-scheduledworkflow",
+      "uid": "706b3d7f-e268-4de4-8460-9d8277fe0699",
+      "generation": 1,
+      "images": [
+        "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-scheduled-workflow-controller:2.16.0@sha256:87851f90101b078defee70e19d0ff1b1fd485dcc99fb66298193c2545c4b0fc5"
+      ],
+      "service_account": "ml-pipeline-scheduledworkflow",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 1
+      },
+      "pods": [
+        {
+          "name": "ml-pipeline-scheduledworkflow-dd5854b44-fc7t9",
+          "uid": "5a9126ee-cea0-407c-9eba-23397e964b9f",
+          "service_account": "ml-pipeline-scheduledworkflow",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "ml-pipeline-scheduledworkflow",
+              "image": "sha256:2ad747b624d7f44a3e86a4ed16012c444492416658fa1f56714b4d4f29737e00",
+              "imageID": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-scheduled-workflow-controller@sha256:87851f90101b078defee70e19d0ff1b1fd485dcc99fb66298193c2545c4b0fc5",
+              "ready": true,
+              "restartCount": 1
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "kubeflow",
+      "name": "workflow-controller",
+      "uid": "441104f5-3647-430e-a020-911dd99c0aca",
+      "generation": 1,
+      "images": [
+        "10.10.1.66:5001/ani-kubeflow/argoproj/workflow-controller:v3.7.3@sha256:5c8f5b6e5a2134dafdeadf758f230e4cc08db78f813e52d928e8f4f4541f243d"
+      ],
+      "service_account": "argo",
+      "status": {
+        "readyReplicas": 1,
+        "replicas": 1,
+        "observedGeneration": 1
+      },
+      "pods": [
+        {
+          "name": "workflow-controller-65f677577c-rxk9t",
+          "uid": "e91979c6-b012-4fff-a555-aa85db4c9e7c",
+          "service_account": "argo",
+          "phase": "Running",
+          "container_statuses": [
+            {
+              "name": "workflow-controller",
+              "image": "sha256:4239861511d623f5b6c11259572d22a9a45d19f6c01a3e4654755e6d6bdf1e5a",
+              "imageID": "10.10.1.66:5001/ani-kubeflow/argoproj/workflow-controller@sha256:5c8f5b6e5a2134dafdeadf758f230e4cc08db78f813e52d928e8f4f4541f243d",
+              "ready": true,
+              "restartCount": 2
+            }
+          ]
+        }
+      ],
+      "source_image_mapping": "NOT_VERIFIED",
+      "observed_at_utc": "2026-10-31T14:39:45.979452Z",
+      "evidence_files": [
+        "evidence/K00-discovery.json"
+      ]
+    }
+  ]
+}

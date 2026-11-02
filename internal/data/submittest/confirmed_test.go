@@ -3,10 +3,10 @@ package submittest_test
 import (
 	"context"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -33,6 +33,8 @@ func TestSubmitConfirmedResponseRetainsRunAcrossCloseAndRecordingFailure(t *test
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 			request := dispatchRequest(t)
+			request.Admission = admissionfixture.EnsureEnvironment(t, openPool(), request.Admission)
+			request.Owner = request.Admission.Snapshot.DispatchOwner
 			readerPool, writerPool := openPool(), openPool()
 			if _, err := execution.New(readerPool).Accept(ctx, request.Admission); err != nil {
 				t.Fatalf("CPU07_CONFIRM_PREFLIGHT: Admission unavailable; behavior NOT_RUN: %v", err)
@@ -64,14 +66,14 @@ func TestSubmitConfirmedResponseRetainsRunAcrossCloseAndRecordingFailure(t *test
 					writerPool.Close()
 				}
 				w.Header().Set("Content-Type", "application/json")
-				_, _ = w.Write([]byte(strings.ReplaceAll(`{
+				_, _ = w.Write([]byte(frozenRunLiteral(request, `{
   "run_id":"55555555-6666-4777-8888-999999999999",
   "experiment_id":"44444444-4444-4444-8444-444444444444",
   "display_name":"md-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
   "pipeline_version_reference":{"pipeline_id":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","pipeline_version_id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd"},
   "runtime_config":{"parameters":{"execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","spec_hash":"FIXTURE_SPEC_HASH"},"pipeline_root":"s3://fixture-kfp-artifacts/frozen-submit-root"},
   "service_account":"cpu-managed-step","state":"PENDING","created_at":"2026-09-30T09:00:00Z"
-}`, "FIXTURE_SPEC_HASH", request.Admission.SpecHash)))
+}`)))
 			}))
 			t.Cleanup(server.Close)
 			provider := tokenProviderFunc(func(context.Context, string, cpup01.EnvironmentBindingSnapshot) (string, error) {

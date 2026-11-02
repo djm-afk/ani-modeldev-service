@@ -1,0 +1,26 @@
+{
+  "retrieved_at": "2026-10-31T20:24:27.298058+00:00",
+  "method": "rsync of original completed log files, no test rerun",
+  "files": {
+    "formal-module-pin.log": {
+      "bytes": 361,
+      "sha256": "b011580bdb2d190ba0b886ee7bb259a9dc82e243910b4d4836191c811e737d39"
+    },
+    "environment-formal-default-tests.log": {
+      "bytes": 180,
+      "sha256": "8a8ff9e7e45440a8ff54c9d4f32187bf69ee0ea247ae807eb46e4a4998cfd972"
+    },
+    "environment-formal-make-check.log": {
+      "bytes": 12855,
+      "sha256": "60f01de1aef4ff8dcbfe481db3eed4e753d5434dcf23f1f5337af8ddc0d5eae7"
+    },
+    "environment-formal-audit.log": {
+      "bytes": 854,
+      "sha256": "26357d4dff2b3b1bf27bf1c2b2bd30f27ffc8fe83bf0c5f80dc2b3f246c1db11"
+    },
+    "environment-formal-pg-tests.log": {
+      "bytes": 421,
+      "sha256": "c20513d201b1a187f0a1e02163052ff28433b1f0020d908118d44b16c6d866a6"
+    }
+  }
+}

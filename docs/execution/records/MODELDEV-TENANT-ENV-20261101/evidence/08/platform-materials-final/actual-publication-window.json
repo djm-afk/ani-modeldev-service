@@ -1,0 +1,1106 @@
+{
+  "ssh_exit": 0,
+  "runner_sha256": "2531e7e2cea4bf8bb75dd6303c8b5ec05b7f3b9d9f6fc7f441b6cdbbcbbbde17",
+  "syntax_check": {
+    "host": "ssh fedora",
+    "exit": 0
+  },
+  "schema": "ani.modeldev.approved-material-publication-live.v1",
+  "approval_sha256": "56e26e1f3db9c788dbae23fe36dd27836d4a692cdef977561d82d4c839a26685",
+  "started_at": "2026-11-01T03:33:14.263978+00:00",
+  "created": [
+    {
+      "kind": "Job",
+      "name": "modeldev-material-publisher-d807",
+      "uid": "46c86feb-4148-4059-b14d-5ecf9763ed15",
+      "resourceVersion": "20940479"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "modeldev-material-publisher-d807",
+      "uid": "070ce02d-5024-4c70-9328-253f6a0d196f",
+      "resourceVersion": "20940488"
+    },
+    {
+      "kind": "Role",
+      "name": "modeldev-material-publisher-d807",
+      "uid": "38237fd2-28fb-4ece-9160-09fcf4edf900",
+      "resourceVersion": "20940491"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-material-publisher-d807",
+      "uid": "3cd1fbe1-edda-4d4a-b5f8-b70934e043ff",
+      "resourceVersion": "20940492"
+    }
+  ],
+  "identity_windows": [
+    {
+      "action": "before node task directory creation",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793503994.5433273
+    },
+    {
+      "action": "create Job",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793503995.7846825
+    },
+    {
+      "action": "create ServiceAccount",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793503996.2082944
+    },
+    {
+      "action": "create Role",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793503996.654572
+    },
+    {
+      "action": "create RoleBinding",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793503997.0741084
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/create/",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793503997.4297178
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/list/",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793503999.3863974
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/modeldev-mlp-cpu",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504001.4196634
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/modeldev-mlp-gpu",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504003.3709521
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/modeldev-sft-lora-cpu",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504005.3392503
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/modeldev-sft-lora-gpu",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504007.2829425
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/foreign-modeldev-parent",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504009.2777953
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 default/create/",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504011.3364158
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-control ani-system/create/",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504013.2736738
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-control ani-system/list/",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504015.185094
+    },
+    {
+      "action": "activate original token Job",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504017.1319194
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504020.000562
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines/upload_version",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504021.0103672
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504022.1221344
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines/upload_version",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504023.1039453
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504024.2571056
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines/upload_version",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504025.2224734
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504026.4404132
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines/upload_version",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504027.433375
+    },
+    {
+      "action": "delete original RoleBinding",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504028.4337096
+    },
+    {
+      "action": "delete original Job",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504028.827551
+    },
+    {
+      "action": "delete original Pod",
+      "ssh_user": "kubercloud",
+      "ssh_host": "100.64.128.12",
+      "context": "kubernetes-admin@ani-kcn-full",
+      "apiserver": "https://lb.kubesphere.local:6443",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+      "verified_at_unix": 1793504029.2078104
+    }
+  ],
+  "sars": [
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-material-publisher-d807",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "create",
+        "name": ""
+      },
+      "allowed": true,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-material-publisher-d807",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "list",
+        "name": ""
+      },
+      "allowed": true,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-material-publisher-d807",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "get",
+        "name": "modeldev-mlp-cpu"
+      },
+      "allowed": true,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-material-publisher-d807",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "get",
+        "name": "modeldev-mlp-gpu"
+      },
+      "allowed": true,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-material-publisher-d807",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "get",
+        "name": "modeldev-sft-lora-cpu"
+      },
+      "allowed": true,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-material-publisher-d807",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "get",
+        "name": "modeldev-sft-lora-gpu"
+      },
+      "allowed": true,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-material-publisher-d807",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "get",
+        "name": "foreign-modeldev-parent"
+      },
+      "allowed": false,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-material-publisher-d807",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "default",
+        "verb": "create",
+        "name": ""
+      },
+      "allowed": false,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-control",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "create",
+        "name": ""
+      },
+      "allowed": false,
+      "evaluation_error_present": false
+    },
+    {
+      "principal": "system:serviceaccount:ani-system:modeldev-control",
+      "attributes": {
+        "group": "pipelines.kubeflow.org",
+        "version": "v1beta1",
+        "resource": "pipelines",
+        "namespace": "ani-system",
+        "verb": "list",
+        "name": ""
+      },
+      "allowed": false,
+      "evaluation_error_present": false
+    }
+  ],
+  "events": [
+    {
+      "action": "create Job",
+      "exit": 0,
+      "stdout_sha256": "33a3f2a8bdc3094fc34aa050b74c50340a4ec672380dfaab716a304485bddddd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "create ServiceAccount",
+      "exit": 0,
+      "stdout_sha256": "43c7d38a54aed5ac7a91128051c366ff350c5e7b9baf3882332dbc902a339648",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "create Role",
+      "exit": 0,
+      "stdout_sha256": "d05cb5e86e9b13cf298479a6c2f59c2ddac60260c2f8b5b320f2674371c339e2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "create RoleBinding",
+      "exit": 0,
+      "stdout_sha256": "3232828eb6722bb0a8e3d92f1f97e0262a64e8f1dc18062bb6968d9325c601ec",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/create/",
+      "exit": 0,
+      "stdout_sha256": "02efc1fbfad59792761b4518e3cd317a633f269b70331eea5487d47761a04091",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/list/",
+      "exit": 0,
+      "stdout_sha256": "8e4699b763e18fcb48ccbad125fc1723b4e79d3fe77f0c711a148448cc8ab8e0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/modeldev-mlp-cpu",
+      "exit": 0,
+      "stdout_sha256": "e4caf38ebf30fa7a614fe90b6a239a0025081c053a6377b67290b4fcc08f79a8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/modeldev-mlp-gpu",
+      "exit": 0,
+      "stdout_sha256": "6ab4202bfa0a5f65a012e6c76b51267ba116918a1860e69e9b63ce74a3b8c829",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/modeldev-sft-lora-cpu",
+      "exit": 0,
+      "stdout_sha256": "fef68d0b473e3e8a56c595c46b0eeeb6c82add8c9a63fa26587c658e7b5d3b9a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/modeldev-sft-lora-gpu",
+      "exit": 0,
+      "stdout_sha256": "aa65b26db2e1eefe360637931a175f5cedc2abd28599ef0e25ec6571d43f292e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 ani-system/get/foreign-modeldev-parent",
+      "exit": 0,
+      "stdout_sha256": "28ab54cd8e37d27b3c2f4ddf3f01e85b2143264ef2bcb35f754172dcfb863d92",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-material-publisher-d807 default/create/",
+      "exit": 0,
+      "stdout_sha256": "1c436dba9be275d9e90afea366b347300b1f332c6699808439bb85cd03854083",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-control ani-system/create/",
+      "exit": 0,
+      "stdout_sha256": "3a06e91d4f025095cd26eed80d6c7458b6d68cfd618f55b5fbe172f4a85fa71a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "SAR system:serviceaccount:ani-system:modeldev-control ani-system/list/",
+      "exit": 0,
+      "stdout_sha256": "9c667bd5afd5c3bef042a07b5374c589bd03c31373f8d87af548869eafbfd3ef",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "activate original token Job",
+      "exit": 0,
+      "stdout_sha256": "a65f5c3cb107faf1914c0afa6346dcac884dba983c4f4156efb17dff43627cc6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "action": "KFP HTTP POST /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "8c241eede8ff362e3c703244438d1dc9eef0376dc95464c82f47f3bf49589a81"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "293c06a950aae43d24185a9280bb11eed4a1fddf6bec936203acc8dc9fb5eb2a"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "8c241eede8ff362e3c703244438d1dc9eef0376dc95464c82f47f3bf49589a81"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e/versions",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e/versions",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "action": "KFP HTTP POST /apis/v2beta1/pipelines/upload_version",
+      "http_status": 200
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines/upload_version",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "b6b7da7b14b542b0a723f15f488fb6ec70d570edda6c255ff20fc2c2f9c6c9a8"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e/versions",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e/versions",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "ec32b82b362b72b424be5ccb281237817c01de9f1c3ff05626daea11ec0887ce"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e/versions/f27d259b-5a53-434a-a3eb-d31091159a7b",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/dc2f677d-5cd6-439b-87ae-04d7e73ae42e/versions/f27d259b-5a53-434a-a3eb-d31091159a7b",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "b6b7da7b14b542b0a723f15f488fb6ec70d570edda6c255ff20fc2c2f9c6c9a8"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "293c06a950aae43d24185a9280bb11eed4a1fddf6bec936203acc8dc9fb5eb2a"
+    },
+    {
+      "action": "KFP HTTP POST /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "74e87036c09f70fa9a8043705aabd5dd73ab7a990a4f5502eae306d5042ae0bf"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "9280719e2698cc62d2a0a17b4838eb50b12aceb91d8e23b4fe283c4653f9f6ba"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "74e87036c09f70fa9a8043705aabd5dd73ab7a990a4f5502eae306d5042ae0bf"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39/versions",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39/versions",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "action": "KFP HTTP POST /apis/v2beta1/pipelines/upload_version",
+      "http_status": 200
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines/upload_version",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "f5f99c2c1aa441001d4640f3b63d5390c1720fb6a0e80f32aa15c04cb0319758"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39/versions",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39/versions",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "0f8f9127f965916735a31d3348878718be9ea6f0b37a66973d90c8bc205c3d3b"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39/versions/93939a80-0597-49c3-bbf7-d1b193ce6eea",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39/versions/93939a80-0597-49c3-bbf7-d1b193ce6eea",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "f5f99c2c1aa441001d4640f3b63d5390c1720fb6a0e80f32aa15c04cb0319758"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "9280719e2698cc62d2a0a17b4838eb50b12aceb91d8e23b4fe283c4653f9f6ba"
+    },
+    {
+      "action": "KFP HTTP POST /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "c98d8d66285ccaee3a0d4480e5a6e0e30bbcf89d1d1d4991b4506d51be361a73"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "e75963f2bfc24a38336ef4e888f47883105be2407c060e067086aff2504c90ff"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "c98d8d66285ccaee3a0d4480e5a6e0e30bbcf89d1d1d4991b4506d51be361a73"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863/versions",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863/versions",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "action": "KFP HTTP POST /apis/v2beta1/pipelines/upload_version",
+      "http_status": 200
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines/upload_version",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "d8d9b123d34e599ffb6bdbd00fc712cf9ffedb5b322aff7dcbdd952afda2d2ff"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863/versions",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863/versions",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "5c665be199bdb0d8f8fd1e4a64b2196b2476b37afd7aa7f6624a91a7acbf8702"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863/versions/953f993b-4366-4c0c-89f3-371d5e3d70d2",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/4d042c5b-fc25-4819-9a28-80ca7903c863/versions/953f993b-4366-4c0c-89f3-371d5e3d70d2",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "d8d9b123d34e599ffb6bdbd00fc712cf9ffedb5b322aff7dcbdd952afda2d2ff"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "e75963f2bfc24a38336ef4e888f47883105be2407c060e067086aff2504c90ff"
+    },
+    {
+      "action": "KFP HTTP POST /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "4b6662011caa83c5a51085df0cbafcd9f42a49379eade419b83189f78eedba98"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "823af582d1329d37fa260cd10dec3db8f467b98e07d3e2283761c1969565447c"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "4b6662011caa83c5a51085df0cbafcd9f42a49379eade419b83189f78eedba98"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1/versions",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1/versions",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "action": "KFP HTTP POST /apis/v2beta1/pipelines/upload_version",
+      "http_status": 200
+    },
+    {
+      "action": "KFP POST /apis/v2beta1/pipelines/upload_version",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "f04355ba21af8c186626173bed01f08608d68145d0bc0004f48d1a1f881c7be9"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1/versions",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1/versions",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "411b6491f372e4c714bc67162ea078a779d2d32e8d4a63be74a82010cc8724ce"
+    },
+    {
+      "action": "KFP HTTP GET /apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1/versions/85d51c61-4a67-463e-a316-d8c785d05481",
+      "http_status": 200
+    },
+    {
+      "action": "KFP GET /apis/v2beta1/pipelines/a3cf8be5-0244-4a6d-9010-c5afda0d61b1/versions/85d51c61-4a67-463e-a316-d8c785d05481",
+      "publisher_response_success": true,
+      "response_canonical_sha256": "f04355ba21af8c186626173bed01f08608d68145d0bc0004f48d1a1f881c7be9"
+    },
+    {
+      "action": "delete original RoleBinding",
+      "exit": 0,
+      "stdout_sha256": "dddf45003e9b10b1f523e9127bc74332974c9a5eb53a9226a7d6fbc225f4d05d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "delete original Job",
+      "exit": 0,
+      "stdout_sha256": "5ce151f0edaa106c310e92f94c594e7db4e260a76824c2553245b60101b94e6d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "action": "delete original Pod",
+      "exit": 0,
+      "stdout_sha256": "14b9b40be2fb911fe19b901dd2d7211a64cb50674dacfbd1b6dcf2f914f2a209",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "new_token_requests": 0,
+  "resources_requests_limits_added": false,
+  "creation_attempts": [
+    {
+      "kind": "Job",
+      "name": "modeldev-material-publisher-d807",
+      "body_sha256": "0819a2ebc60f8ab852e98cd76792324cc4954ec31519e007ac22b4993dcf79e0"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "modeldev-material-publisher-d807",
+      "body_sha256": "4736e4bcb1ba11f316a4a206e48eaf4582ef163a3ba2619493d048a30413c153"
+    },
+    {
+      "kind": "Role",
+      "name": "modeldev-material-publisher-d807",
+      "body_sha256": "288cae805dbaf59c7dc9e4d056c04cb596ddf6c5d8dd76608028915aaca8255f"
+    },
+    {
+      "kind": "RoleBinding",
+      "name": "modeldev-material-publisher-d807",
+      "body_sha256": "55004baa976583bb4c94e4c8428cb993402334a42fe1ba690c62817fb9f486c6"
+    }
+  ],
+  "prior_prewrite_receipt_sha256": "ff4700f267de58ee27423947207cfe8793bb06da2dcb7e395e06b9ef2b27769a",
+  "exact_cached_image": {
+    "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+    "CRI_status_id": "sha256:68d9e85a2d240edbf0c8f267b410019fe60ecfc831bdd546442be9be4fea97a4",
+    "manifest_sha256": "31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+    "complete_blob_count": 37,
+    "layer_count": 36,
+    "all_blob_sizes_match": true
+  },
+  "kfp_transport": {
+    "endpoint": "https://ani-kfp-entry.kubeflow.svc:8443",
+    "service_uid": "85afe201-7cb5-47cd-a8c0-87929d3b5c07",
+    "service_vip": "10.96.159.221",
+    "ca_uid": "174a118b-adce-4ad1-91aa-b9a1b6c1f1ec",
+    "ca_sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236",
+    "server_name": "ani-kfp-entry.kubeflow.svc",
+    "binding": "Only this Python process getaddrinfo for exact original hostname to verified original Service VIP; TLS CA/SNI unchanged; no global DNS/hosts modification"
+  },
+  "token_source_pod": {
+    "name": "modeldev-material-publisher-d807-kz2fz",
+    "uid": "f80d4891-3129-4964-bb57-6a38819239f0",
+    "node": "node1",
+    "sa_uid": "070ce02d-5024-4c70-9328-253f6a0d196f",
+    "job_uid": "46c86feb-4148-4059-b14d-5ecf9763ed15",
+    "image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+    "imagePullPolicy": "Never"
+  },
+  "projected_token_host_path": "/var/lib/kubelet/pods/f80d4891-3129-4964-bb57-6a38819239f0/volumes/kubernetes.io~projected/publisher-token/token",
+  "published": {
+    "anonymous_images": [
+      {
+        "evidence_sha256": "ac6f98acd6f263f6c32a1a8eea1662b732190f0efd04088cd77f894fdf18befd",
+        "reference": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd"
+      },
+      {
+        "evidence_sha256": "ac6f98acd6f263f6c32a1a8eea1662b732190f0efd04088cd77f894fdf18befd",
+        "reference": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29"
+      }
+    ],
+    "kfp_source_sha": "85a38e0719870e5b2f97a74f5c966d79bcc7c960",
+    "platform_project": "ani-resource-factor10-20261022",
+    "profiles": [
+      {
+        "compile_config_sha256": "bee5b65f15e23987ec7d97c554cfbb9ae79551e395601ade9bef30fbc18efd57",
+        "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+        "device_mode": "cpu",
+        "id": "modeldev-mlp-cpu",
+        "implementation_id": "builtin.mlp",
+        "ir_file": "/home/kubercloud/tenantenv-20261101/material-publication-d807-20261101/modeldev-mlp-cpu.yaml",
+        "ir_sha256": "58919bf761ddf0a2747e1766afe93584d23523d25c47e4974be48f0547d58ee7",
+        "namespace": "ani-system",
+        "pipeline_id": "dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+        "version_id": "f27d259b-5a53-434a-a3eb-d31091159a7b",
+        "version_name": "ir-58919bf761ddf0a2",
+        "phase": "CONFIRMED"
+      },
+      {
+        "compile_config_sha256": "2ab35845b3c9646087d6b970ec49241d125fe11b4504fe2866fb85771a58e21f",
+        "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+        "device_mode": "gpu",
+        "id": "modeldev-mlp-gpu",
+        "implementation_id": "builtin.mlp",
+        "ir_file": "/home/kubercloud/tenantenv-20261101/material-publication-d807-20261101/modeldev-mlp-gpu.yaml",
+        "ir_sha256": "31208542cf6d7bf658c2214141b1409ea1445a2ec05379f24fb5c9ee33ec8281",
+        "namespace": "ani-system",
+        "pipeline_id": "9616ccd5-b32b-4ba4-adcc-f00a0b8f1a39",
+        "version_id": "93939a80-0597-49c3-bbf7-d1b193ce6eea",
+        "version_name": "ir-31208542cf6d7bf6",
+        "phase": "CONFIRMED"
+      },
+      {
+        "compile_config_sha256": "e4f1e1cdc0478cbf835de8e75491528757bf4d529adc707c9f78e56379bba9b7",
+        "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+        "device_mode": "cpu",
+        "id": "modeldev-sft-lora-cpu",
+        "implementation_id": "builtin.sft_lora",
+        "ir_file": "/home/kubercloud/tenantenv-20261101/material-publication-d807-20261101/modeldev-sft-lora-cpu.yaml",
+        "ir_sha256": "147852502bc1abb5adfcabb8faad36a98141143b279780cb53b403cdd652150f",
+        "namespace": "ani-system",
+        "pipeline_id": "4d042c5b-fc25-4819-9a28-80ca7903c863",
+        "version_id": "953f993b-4366-4c0c-89f3-371d5e3d70d2",
+        "version_name": "ir-147852502bc1abb5",
+        "phase": "CONFIRMED"
+      },
+      {
+        "compile_config_sha256": "cf45770ebc89121529d61530f63636d19136062b03cf035c65bf0da61dd51e77",
+        "component_image": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-step@sha256:edc52340b24ef678608c3119c7eb05a95cd9f60505324f59f83dd47ef1f6a600",
+        "device_mode": "gpu",
+        "id": "modeldev-sft-lora-gpu",
+        "implementation_id": "builtin.sft_lora",
+        "ir_file": "/home/kubercloud/tenantenv-20261101/material-publication-d807-20261101/modeldev-sft-lora-gpu.yaml",
+        "ir_sha256": "753c0aed8e18ba13c13b8a470cd6a4cfcb4b5c1765dd3c26215144b7cfde77b7",
+        "namespace": "ani-system",
+        "pipeline_id": "a3cf8be5-0244-4a6d-9010-c5afda0d61b1",
+        "version_id": "85d51c61-4a67-463e-a316-d8c785d05481",
+        "version_name": "ir-753c0aed8e18ba13",
+        "phase": "CONFIRMED"
+      }
+    ],
+    "registry_authority": "10.10.1.66:30003",
+    "schema": "ani.modeldev.prepared-materials.v1",
+    "source_commit": "d807cbdbd5dd6664d61480acedc752e19cfca48a",
+    "source_tree": "141053367fa4be9a6fb9c764b2d7900b5282be20",
+    "support_images": {
+      "driver": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-driver:2.16.0@sha256:249a0e2f2ce2ed078648c5bd3b90e61f202f4864d75376ba77853e81a53535cd",
+      "launcher": "10.10.1.66:5001/ani-kubeflow/kubeflow/kfp-launcher:2.16.0@sha256:6b2d6c5733d957c9f7831cafe12aebcf9ef8ec503f57b74ed2ab00d5db113d29",
+      "material_copy": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-webhook@sha256:98715f788bceeae293c64cc10617190b6cc28c0468824f24e59dac02f3795ec4"
+    }
+  },
+  "publication_journal_sha256": "5578eb534649f09d29e95fbcdd654cc9c5e4f6bf4c147b1a493808f994942a8e",
+  "status": "FOUR_ACTUAL_PIPELINE_VERSIONS_CONFIRMED",
+  "cleanup": {
+    "objects": [
+      {
+        "kind": "RoleBinding",
+        "name": "modeldev-material-publisher-d807",
+        "uid": "3cd1fbe1-edda-4d4a-b5f8-b70934e043ff",
+        "delete_requested": true
+      },
+      {
+        "kind": "Job",
+        "name": "modeldev-material-publisher-d807",
+        "uid": "46c86feb-4148-4059-b14d-5ecf9763ed15",
+        "delete_requested": true
+      },
+      {
+        "kind": "Pod",
+        "name": "modeldev-material-publisher-d807-kz2fz",
+        "uid": "f80d4891-3129-4964-bb57-6a38819239f0",
+        "delete_requested": true
+      },
+      {
+        "kind": "ServiceAccount",
+        "name": "modeldev-material-publisher-d807",
+        "uid": "070ce02d-5024-4c70-9328-253f6a0d196f",
+        "already_absent": true
+      },
+      {
+        "kind": "Role",
+        "name": "modeldev-material-publisher-d807",
+        "uid": "38237fd2-28fb-4ece-9160-09fcf4edf900",
+        "already_absent": true
+      }
+    ],
+    "all_temporary_objects_absent": true,
+    "token_source_pod_absent": true,
+    "original_projected_token_path_absent": true,
+    "token_copies_created": false,
+    "publication_journal_retained": true,
+    "completed_at": "2026-11-01T03:33:50.847818+00:00"
+  },
+  "retained_node_files": [
+    {
+      "name": "modeldev-mlp-gpu.yaml",
+      "size": 29212,
+      "sha256": "31208542cf6d7bf658c2214141b1409ea1445a2ec05379f24fb5c9ee33ec8281"
+    },
+    {
+      "name": "proposed-publisher-token-job.json",
+      "size": 2961,
+      "sha256": "4a91e39805b40178b2e084e15ec26eef6b617041d9c7798ccd0cfa4e9818ce9d"
+    },
+    {
+      "name": "kfp-ca.crt",
+      "size": 713,
+      "sha256": "e8ce7d3b810977805834b968604c3610342a1366be420d9729edc44bc1d96236"
+    },
+    {
+      "name": "prepared.json",
+      "size": 3483,
+      "sha256": "deac8d8b951ef0e604e209bc8ec8831842a6bfbb4d3d922d05e1863019b740f1"
+    },
+    {
+      "name": "modeldev-sft-lora-gpu.yaml",
+      "size": 43388,
+      "sha256": "753c0aed8e18ba13c13b8a470cd6a4cfcb4b5c1765dd3c26215144b7cfde77b7"
+    },
+    {
+      "name": "published.json",
+      "size": 4099,
+      "sha256": "b2e91ac2471174ad0cfea2b544af519d6df8f4d154dec3f56fb39fd5559e1127"
+    },
+    {
+      "name": "modeldev-mlp-cpu.yaml",
+      "size": 29212,
+      "sha256": "58919bf761ddf0a2747e1766afe93584d23523d25c47e4974be48f0547d58ee7"
+    },
+    {
+      "name": "publisher.py",
+      "size": 13116,
+      "sha256": "c1f986936d42d1372fdbe7d6b49a000bbd835b38d14ffb469d84fcde5c2cd355"
+    },
+    {
+      "name": "node-prepared.json",
+      "size": 3451,
+      "sha256": "60182ca59d5a89a8bdcd4c80b5cb4780f2a49933f957e1544ae3881e841a3de2"
+    },
+    {
+      "name": "prewrite-live-receipt.json",
+      "size": 674,
+      "sha256": "ff4700f267de58ee27423947207cfe8793bb06da2dcb7e395e06b9ef2b27769a"
+    },
+    {
+      "name": "modeldev-sft-lora-cpu.yaml",
+      "size": 43388,
+      "sha256": "147852502bc1abb5adfcabb8faad36a98141143b279780cb53b403cdd652150f"
+    },
+    {
+      "name": "publisher-identity-user-approval.json",
+      "size": 2052,
+      "sha256": "56e26e1f3db9c788dbae23fe36dd27836d4a692cdef977561d82d4c839a26685"
+    },
+    {
+      "name": "publisher-sar-contract.json",
+      "size": 1940,
+      "sha256": "70b47437d69fda7791067b5eda2a7843bab54731879b863b2bf6c0865f475b13"
+    },
+    {
+      "name": "publisher-identity-conflict-and-minimal-correction.md",
+      "size": 5153,
+      "sha256": "98421dd7497ec7d9562d478c8a5ac41f2a30d7121e141bfa4fcd7f5d5c72a248"
+    },
+    {
+      "name": "proposed-publisher-rbac.json",
+      "size": 2244,
+      "sha256": "b3a411cdf4b2583e08dd1d1d679665ab8da09883db3ae66fe85a35b8f45f9b31"
+    },
+    {
+      "name": "identity.json",
+      "size": 288,
+      "sha256": "57365d054e59b7faec8c4a720b81cbaa41535b450988bc6f3e2adc50b33c4784"
+    },
+    {
+      "name": "publication-journal.lock",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "publication-journal.json",
+      "size": 2711,
+      "sha256": "5578eb534649f09d29e95fbcdd654cc9c5e4f6bf4c147b1a493808f994942a8e"
+    }
+  ]
+}

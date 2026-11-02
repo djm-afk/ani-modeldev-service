@@ -35,7 +35,7 @@ func TestPublicationRequiresOriginalReadOnlyPVCAndSuccessfulUploader(t *testing.
 			at := time.Now().UTC().Add(-time.Second).Format(time.RFC3339Nano)
 			nodes := map[string]any{}
 			tasks := []any{}
-			objects := []runtime.Object{&unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": a.NamespaceName, "uid": a.NamespaceUID}}}}
+			objects := []runtime.Object{&unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": a.NamespaceName, "uid": a.NamespaceUID, "labels": map[string]any{"network.ani.io/tenant-id": f.execution.TenantID, "network.ani.io/managed-by": "ani-network-service"}}}}}
 			var publisher *unstructured.Unstructured
 			for _, role := range []string{"publish", "close"} {
 				controller, nodeID := role+"-controller", role+"-node"

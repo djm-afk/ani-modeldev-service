@@ -1,0 +1,13 @@
+{
+  "stage": "NODE_OFFICIAL_TOOL_DOWNLOAD",
+  "result": "REMOTE_RESULT_UNKNOWN",
+  "local_wait_timeout_seconds": 300,
+  "ssh_stdout_bytes": 0,
+  "ssh_stderr_bytes": 0,
+  "fixed_official_url": "https://github.com/moby/buildkit/releases/download/v0.25.1/buildkit-v0.25.1.linux-amd64.tar.gz",
+  "expected_sha256": "85aa27c480fc9159705d21a3e66abe305f8dc708b8aeecd1e87bbc5c3de98642",
+  "node_receipt_expected": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101/tools/download-receipt.json",
+  "must_query_before_retry": true,
+  "runner_or_build_daemon_issued": false,
+  "registry_push_issued": false
+}

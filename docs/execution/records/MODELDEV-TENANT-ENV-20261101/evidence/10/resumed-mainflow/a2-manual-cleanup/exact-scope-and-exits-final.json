@@ -1,0 +1,455 @@
+{
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T11:20:10.755101+00:00"
+  },
+  "execution_id": "629cc704-028f-420b-af07-a68128fa0da8",
+  "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+  "kfp_run_id": "6b27b44c-e4e5-4f48-82d2-3a3cb7cbd9d9",
+  "persistent_mutations": false,
+  "pods": [
+    {
+      "name": "md-kbvhj-1282542045",
+      "uid": "3c4b093a-90e6-47d5-91e9-b40dd04cffd2",
+      "resource_version": "21203653",
+      "phase": "Succeeded",
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "exits": [
+        {
+          "name": "init",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:51:39Z",
+          "finished_at": "2026-11-01T10:51:39Z",
+          "container_id": "containerd://9ab57f9d9677eceff2469bcc3903fbd898428c1f7973b562d2271d20cdd7118e"
+        },
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:51:41Z",
+          "finished_at": "2026-11-01T10:51:43Z",
+          "container_id": "containerd://34a5bbc72b3167663a59ee3757e6540f368793d83174a1088960b9ad6a533f8d"
+        },
+        {
+          "name": "wait",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:51:41Z",
+          "finished_at": "2026-11-01T10:51:43Z",
+          "container_id": "containerd://1994fb9f829ad8688e88f73c6092271d15fcca7f35f6da75e15c1a179b11fb89"
+        }
+      ]
+    },
+    {
+      "name": "md-kbvhj-2026429762",
+      "uid": "bb2f5cfa-9158-4132-9775-158cd3afd502",
+      "resource_version": "21203804",
+      "phase": "Succeeded",
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "exits": [
+        {
+          "name": "init",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:51:49Z",
+          "finished_at": "2026-11-01T10:51:49Z",
+          "container_id": "containerd://a6fcd5e80ea7938d254af658dcc02b90bd8e0e5f9aa2f7df692269c72333f26f"
+        },
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:51:51Z",
+          "finished_at": "2026-11-01T10:51:53Z",
+          "container_id": "containerd://561c32a8046060bc13578d0e02dbdbe3afeaa6b1e2e8bc5de304e4db680d22b1"
+        },
+        {
+          "name": "wait",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:51:51Z",
+          "finished_at": "2026-11-01T10:51:53Z",
+          "container_id": "containerd://721a6aec8c848a16243700d46d11e4360bc3e1d5c31ce8fbb7ed2ae77f7cad6c"
+        }
+      ]
+    },
+    {
+      "name": "md-kbvhj-3140005358",
+      "uid": "59915865-d5d2-49ce-9287-96398b4da67d",
+      "resource_version": "21204457",
+      "phase": "Succeeded",
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "exits": [
+        {
+          "name": "init",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:29Z",
+          "finished_at": "2026-11-01T10:52:30Z",
+          "container_id": "containerd://03223f783af21f0fb02ead9dc751a94cbde79cbe60a2048cc520505fbaf9dabf"
+        },
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:31Z",
+          "finished_at": "2026-11-01T10:52:32Z",
+          "container_id": "containerd://d78a3843930efd7a7d6e2041a918b5e8b06e38d66e54f682a63a00f8332b7c4a"
+        },
+        {
+          "name": "wait",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:31Z",
+          "finished_at": "2026-11-01T10:52:33Z",
+          "container_id": "containerd://6656fe201dd98ffce81bf9947ad9387df789229de02b2bf2f8497ac97352af1d"
+        }
+      ]
+    },
+    {
+      "name": "md-kbvhj-3799624831",
+      "uid": "cca4c157-d3d6-4a2b-9b6c-da65f6aac97c",
+      "resource_version": "21203984",
+      "phase": "Succeeded",
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "exits": [
+        {
+          "name": "init",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:51:59Z",
+          "finished_at": "2026-11-01T10:51:59Z",
+          "container_id": "containerd://5722809e515d789779ee2520abc579b3e5d7bd8bf3ac0727b34ad0a21edf40d6"
+        },
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:01Z",
+          "finished_at": "2026-11-01T10:52:02Z",
+          "container_id": "containerd://18498f9e8a942538bbe685862ddec5b180244d6eeb9561a2c2dfed9878209908"
+        },
+        {
+          "name": "wait",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:00Z",
+          "finished_at": "2026-11-01T10:52:02Z",
+          "container_id": "containerd://95db924e2d0b3d708db11758d496aa46bfebe9292870f647f27493189447796f"
+        }
+      ]
+    },
+    {
+      "name": "md-kbvhj-3922998971",
+      "uid": "545e0fe6-4017-4db4-ace6-f8762a7eef52",
+      "resource_version": "21204601",
+      "phase": "Failed",
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "exits": [
+        {
+          "name": "init",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:40Z",
+          "finished_at": "2026-11-01T10:52:40Z",
+          "container_id": "containerd://5cacebe8fda996bfbf249f6ad761f31b042d0ec1b8da910348d327eaa6e7728a"
+        },
+        {
+          "name": "kfp-launcher",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:41Z",
+          "finished_at": "2026-11-01T10:52:42Z",
+          "container_id": "containerd://5607aa4b79fbd82ea5a48739adae91bfbe42831386d892971b0f214a42536ada"
+        },
+        {
+          "name": "main",
+          "exit_code": 1,
+          "started_at": "2026-11-01T10:52:43Z",
+          "finished_at": "2026-11-01T10:52:44Z",
+          "container_id": "containerd://9fe94a0f3b4662b04934b6392c4fdb477e0ce8d46f7c1aa8f3e94058fd47d170"
+        },
+        {
+          "name": "wait",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:43Z",
+          "finished_at": "2026-11-01T10:52:45Z",
+          "container_id": "containerd://2f1a226d30bd059a3788d5a02cb271e40ae60cd173cc11b0fe6b270523553740"
+        }
+      ]
+    },
+    {
+      "name": "md-kbvhj-637256416",
+      "uid": "b360a491-f3dc-4b4c-bf02-7d440dd9e60e",
+      "resource_version": "21204287",
+      "phase": "Failed",
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "exits": [
+        {
+          "name": "init",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:19Z",
+          "finished_at": "2026-11-01T10:52:19Z",
+          "container_id": "containerd://adb39910e220e47fd70f2b60c00708f15b331187018950131f790e19c7caa9dc"
+        },
+        {
+          "name": "main",
+          "exit_code": 1,
+          "started_at": "2026-11-01T10:52:21Z",
+          "finished_at": "2026-11-01T10:52:22Z",
+          "container_id": "containerd://229e98202b8012dec8a5b768fb950d1e39c3801dd9abe1c35a182a37b57ef380"
+        },
+        {
+          "name": "wait",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:21Z",
+          "finished_at": "2026-11-01T10:52:23Z",
+          "container_id": "containerd://6bff01803c6ca12c452ebf65393318d57c146fc741af5def46e78e98e460bb07"
+        }
+      ]
+    },
+    {
+      "name": "md-kbvhj-815957928",
+      "uid": "a04fcfd4-95ed-48b3-b3b5-2f89ab258cae",
+      "resource_version": "21204136",
+      "phase": "Succeeded",
+      "finalizers": [
+        "modeldev.ani.io/step-exit-evidence"
+      ],
+      "exits": [
+        {
+          "name": "init",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:09Z",
+          "finished_at": "2026-11-01T10:52:09Z",
+          "container_id": "containerd://5249e314d991590a12fc559fb3b34c585746c9be1eb8c5c86944ab59651814cb"
+        },
+        {
+          "name": "kfp-launcher",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:12Z",
+          "finished_at": "2026-11-01T10:52:12Z",
+          "container_id": "containerd://ee3414808a6962e0660dcc8c346da029a2dcbcd8886e7db0f23ead54c1ce8aa9"
+        },
+        {
+          "name": "main",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:13Z",
+          "finished_at": "2026-11-01T10:52:15Z",
+          "container_id": "containerd://533f6fb902c974d5325ef64cafba9f814183a025458f1cfc1108169ffc8be58f"
+        },
+        {
+          "name": "wait",
+          "exit_code": 0,
+          "started_at": "2026-11-01T10:52:13Z",
+          "finished_at": "2026-11-01T10:52:16Z",
+          "container_id": "containerd://2eec89cbf1191f6933eb910021a27d27ee9c9aee7f0aa9ef2a249e7f6bdd374e"
+        }
+      ]
+    }
+  ],
+  "workflow": {
+    "name": "md-kbvhj",
+    "uid": "ad112d68-39c1-418c-8573-d9ddbb39d47c",
+    "resource_version": "21204606",
+    "phase": "Failed",
+    "finished_at": "2026-11-01T10:52:49Z",
+    "finalizers": [],
+    "node_graph_sha256": "66d9d13b167c2cacbdd066ad340837fe7a1f10aad54ded917c8d0121acab9982"
+  },
+  "pvc": {
+    "name": "ani-kfp-workspace-629cc704-028f-420b-af07-a68128fa0da8",
+    "uid": "bfbecef6-6db4-4fc1-9cc7-70308052c79d",
+    "resource_version": "21204188",
+    "spec_sha256": "2a4bbf1f828e2cc695f9b0889e27389ea2e5fd3c71a7f9d1dcc9e1885f74b873",
+    "phase": "Bound",
+    "finalizers": [
+      "kubernetes.io/pvc-protection"
+    ],
+    "references": []
+  },
+  "pv": {
+    "name": "pvc-bfbecef6-6db4-4fc1-9cc7-70308052c79d",
+    "uid": "a736cbd7-9571-4404-8174-3397bdcae088",
+    "resource_version": "21204186",
+    "reclaim_policy": "Delete",
+    "claim_ref": {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "name": "ani-kfp-workspace-629cc704-028f-420b-af07-a68128fa0da8",
+      "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "resourceVersion": "21204176",
+      "uid": "bfbecef6-6db4-4fc1-9cc7-70308052c79d"
+    },
+    "finalizers": [
+      "external-provisioner.volume.kubernetes.io/finalizer",
+      "kubernetes.io/pv-protection"
+    ],
+    "csi_driver": "rook-ceph.cephfs.csi.ceph.com"
+  },
+  "original_kfp_binding": {
+    "execution_id": "629cc704-028f-420b-af07-a68128fa0da8",
+    "operation_id": "a5e3c9c0-de59-421f-8ff5-13395e514a21",
+    "spec_hash": "a1b6b5c1e01a13c81a292be0806d6465045ce0e3a331464717c7e6a85f6080f7",
+    "environment": {
+      "binding_id": "430ec5fe-057f-4e8a-a86b-b47119cf7d0d",
+      "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+      "identities": {
+        "tenant_proxy_identity": "system:serviceaccount:ani-system:modeldev-control",
+        "trainer_service_account": "trainer-workload",
+        "kfp_step_service_account": "modeldev-step",
+        "verifier_service_account": "verifier",
+        "trainer_service_account_uid": "204af62b-eafb-432f-ada6-3f3e8b8c03e5",
+        "kfp_step_service_account_uid": "7076f549-c586-4971-b554-3eae5516ab7c",
+        "verifier_service_account_uid": "91d8f8ec-0c34-44ef-a64c-3409dd915a1e",
+        "modeldev_control_identity_ref": "system:serviceaccount:ani-system:modeldev-control"
+      },
+      "experiment_id": "e309c53a-d68e-487f-b4bb-af87ccffead8",
+      "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+      "binding_digest": "6cb539d752797897da81d438775aaff03234d46552c8fb00733fcdb15373614a",
+      "namespace_name": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+      "kfp_connection_ref": "modeldev-newenv-kfp-01a15f47"
+    },
+    "display_name": "md-629cc704-028f-420b-af07-a68128fa0da8",
+    "pipeline_id": "dc2f677d-5cd6-439b-87ae-04d7e73ae42e",
+    "pipeline_version_id": "f27d259b-5a53-434a-a3eb-d31091159a7b",
+    "owner": {
+      "reference": "modeldev-tenantenv-20261101",
+      "pipeline_root": "s3://ani-md-tenantenv-kfp-20261101/artifacts/64c5c35a-f554-432c-b4bc-7b4f36f08420/629cc704-028f-420b-af07-a68128fa0da8",
+      "revision_sha256": "a27e1669fd2657d2d46cc4ceb419c4420e1733e743798653e9e8d300e91c8ee6"
+    }
+  },
+  "modeldev": {
+    "tables": {
+      "modeldev_executions": {
+        "rows": [
+          {
+            "row_md5": "574f3da089f670e5a362c65eee40e439",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "629cc704-028f-420b-af07-a68128fa0da8"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_close_intents": {
+        "rows": [
+          {
+            "row_md5": "25288db8aafc8d26c3cf3bab8857902f",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "629cc704-028f-420b-af07-a68128fa0da8"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_run_authorities": {
+        "rows": [],
+        "count": 0
+      },
+      "modeldev_execution_runtimes": {
+        "rows": [
+          {
+            "row_md5": "498514a28bfe3ad095fb2ac7d9bde281",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "629cc704-028f-420b-af07-a68128fa0da8"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_pipeline_dispatches": {
+        "rows": [
+          {
+            "row_md5": "d4b9afd1abef3d28a14c01f9cebc74d4",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "629cc704-028f-420b-af07-a68128fa0da8"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_execution_identities": {
+        "rows": [
+          {
+            "row_md5": "54858db8c730091e63a20bfd4e2ff062",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "629cc704-028f-420b-af07-a68128fa0da8"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_pipeline_confirmed_runs": {
+        "rows": [
+          {
+            "row_md5": "bcdf2c07a2e80a997ffcfd4560d92f99",
+            "tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+            "execution_id": "629cc704-028f-420b-af07-a68128fa0da8"
+          }
+        ],
+        "count": 1
+      },
+      "modeldev_execution_cleanup_audits": {
+        "rows": [],
+        "count": 0
+      }
+    },
+    "runtime": {
+      "closed_at": null,
+      "spec_hash": "a1b6b5c1e01a13c81a292be0806d6465045ce0e3a331464717c7e6a85f6080f7",
+      "facts_keys": [
+        "ClosedAt",
+        "Training",
+        "Workspace",
+        "CloseReason",
+        "Observation",
+        "Publication",
+        "CloseEvidence",
+        "OwnerRevision",
+        "CloseAuthority",
+        "TrainingHandle",
+        "CloseGeneration",
+        "CloseRequestedAt",
+        "CloseReviewReason",
+        "close_operation_id"
+      ],
+      "close_reason": "USER_STOP",
+      "operation_id": "a5e3c9c0-de59-421f-8ff5-13395e514a21",
+      "close_generation": 1,
+      "training_present": false,
+      "workspace_present": false
+    },
+    "dispatch": {
+      "state": "SUBMISSION_CONFIRMED",
+      "plan_hash": "4b53d6584c48bc4af4ec46db136b431a9f766c6e3b2d7ef3e476c3c964f76e96"
+    }
+  },
+  "operation_id": "a5e3c9c0-de59-421f-8ff5-13395e514a21",
+  "governance": {
+    "charges": 0,
+    "operations": [],
+    "usage_sync": 0,
+    "acceptances": [
+      {
+        "id": 90,
+        "row_md5": "c6df9dedcf506cda096d35f56c281dd3",
+        "tenant_id": 2,
+        "lease_owner": null,
+        "lease_until": null,
+        "execution_id": "629cc704-028f-420b-af07-a68128fa0da8",
+        "operation_id": "a5e3c9c0-de59-421f-8ff5-13395e514a21",
+        "attempt_count": 1,
+        "retry_blocked": false,
+        "dispatch_state": "ACKED",
+        "close_lease_owner": null,
+        "close_lease_until": null,
+        "resource_tenant_id": "64c5c35a-f554-432c-b4bc-7b4f36f08420",
+        "close_dispatch_state": "ACKED",
+        "stop_intent_generation": 1
+      }
+    ]
+  },
+  "observed_at": "2026-11-01T11:20:11.583890+00:00",
+  "transport_exit": 0,
+  "transport_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

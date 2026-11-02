@@ -1,0 +1,16 @@
+{
+  "ready": {
+    "status": "READY_WAITING_ONLY_ORIGINAL_A_ATTEMPT4_JOURNAL",
+    "pid": 817964,
+    "at": "2026-11-01T16:59:25.343661+00:00",
+    "expires_after_seconds": 600,
+    "journal": "/home/kubercloud/tenantenv-20261101/modeldev-live-training-20261101/a_cpu-attempt4-submit-outcome.json",
+    "namespace": "tenant-64c5c35a-f554-432c-b4bc-7b4f36f08420",
+    "namespace_uid": "a8d8a472-8a8a-43cf-abf0-0e805bbe67b0",
+    "client_sha256": "5692253fe311da4019c615682d8439bc8a42f85b87986ecec825213da1ac8f81",
+    "new_tokens_requested": 0,
+    "marker": "/home/kubercloud/tenantenv-20261101/completion-live09-live10-20261101/sts-window-done.json"
+  },
+  "actual": null,
+  "stderr": ""
+}

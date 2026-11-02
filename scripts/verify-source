@@ -29,12 +29,15 @@ repository_root=$(cd "$script_dir/.." && pwd -P)
 generated_file=$repository_root/internal/conf/v1/conf.pb.go
 [[ -f $generated_file ]] || die "generated config is missing"
 
-# The application initializes an empty schema from one current baseline. Old
-# writer fixtures and upgrade entry points must not re-enter source verification.
+# The baseline and two explicit tenant-environment migrations form the current
+# schema. Historical writer fixtures must not re-enter source verification.
 baseline=$repository_root/migrations/0001_current_baseline.up.sql
 [[ -f $baseline ]] || die "current database baseline is missing"
 while IFS= read -r -d '' migration; do
-  [[ $migration == "$baseline" ]] || die "historical database migration remains: ${migration#"$repository_root/"}"
+  case ${migration#"$repository_root/"} in
+    migrations/0001_current_baseline.up.sql|migrations/0002_tenant_execution_environments.up.sql|migrations/0003_execution_environment_projection.up.sql) ;;
+    *) die "unexpected database migration: ${migration#"$repository_root/"}" ;;
+  esac
 done < <(find "$repository_root/migrations" -maxdepth 1 -type f -name '*.sql' -print0)
 for obsolete in \
   scripts/verify-revision-upgrade \

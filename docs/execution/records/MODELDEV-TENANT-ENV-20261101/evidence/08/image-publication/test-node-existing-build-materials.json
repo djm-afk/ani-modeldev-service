@@ -1,0 +1,301 @@
+{
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "original_material_files": [
+    {
+      "name": "smollm2-a3-suspend-receipt.json",
+      "bytes": 675
+    },
+    {
+      "name": "metadata-pod-final-receipt.json",
+      "bytes": 1422
+    },
+    {
+      "name": "model-candidate-ca-original-registry-copy-receipt.json",
+      "bytes": 579
+    },
+    {
+      "name": "regctl-copy-resume01-receipt.json",
+      "bytes": 923
+    },
+    {
+      "name": "build-model-candidate.py",
+      "bytes": 3509
+    },
+    {
+      "name": "smollm2-original-job-expiry-receipt.json",
+      "bytes": 760
+    },
+    {
+      "name": "model-candidate-ca-artifact-transfer-receipt.json",
+      "bytes": 417
+    },
+    {
+      "name": "model-candidate-ttl-build-receipt.json",
+      "bytes": 822
+    },
+    {
+      "name": "model-candidate-ttl-artifact-transfer-receipt.json",
+      "bytes": 634
+    },
+    {
+      "name": "model-import-ttl-deployment-receipt.json",
+      "bytes": 520
+    },
+    {
+      "name": "smollm2-a5-suspend-receipt.json",
+      "bytes": 734
+    },
+    {
+      "name": "model-candidate-ca-build-receipt.json",
+      "bytes": 822
+    },
+    {
+      "name": "smollm2-a5-resume-expiry-receipt.json",
+      "bytes": 768
+    },
+    {
+      "name": "model-candidate-ca-credential-setup-receipt.json",
+      "bytes": 255
+    },
+    {
+      "name": "smollm2-terminal-attempt-cleanup-receipt.json",
+      "bytes": 1507
+    },
+    {
+      "name": "smollm2-a3-resume-expiry-receipt.json",
+      "bytes": 768
+    },
+    {
+      "name": "target-copy-receipt.json",
+      "bytes": 713
+    },
+    {
+      "name": "ani-ftmat-build-ttl-candidate.py",
+      "bytes": 3581
+    },
+    {
+      "name": "model-candidate-build-issued.json",
+      "bytes": 577
+    },
+    {
+      "name": "model-candidate-base-copy-receipt.json",
+      "bytes": 401
+    },
+    {
+      "name": "original-registry-auth-transfer-receipt.json",
+      "bytes": 230
+    },
+    {
+      "name": "metadata-pod-final-receipt-02.json",
+      "bytes": 2050
+    },
+    {
+      "name": "model-candidate-ttl-original-registry-copy-receipt.json",
+      "bytes": 579
+    },
+    {
+      "name": "import-image-user-binary-layer.tar.gz",
+      "bytes": 17518944
+    },
+    {
+      "name": "model-import-ca-deployment-receipt.json",
+      "bytes": 542
+    },
+    {
+      "name": "model-candidate-ttl-image-config.json",
+      "bytes": 4331
+    },
+    {
+      "name": "model-candidate-build-receipt.json",
+      "bytes": 816
+    },
+    {
+      "name": "model-candidate-original-registry-copy-receipt.json",
+      "bytes": 573
+    },
+    {
+      "name": "smollm2-ttl-live-attempt-receipt.json",
+      "bytes": 2402
+    },
+    {
+      "name": "smollm2-ca-live-attempt-receipt.json",
+      "bytes": 1382
+    },
+    {
+      "name": "platform-image-final-get.json",
+      "bytes": 1246
+    },
+    {
+      "name": "model-candidate-registry-setup-receipt.json",
+      "bytes": 310
+    },
+    {
+      "name": "model-import-fix-deployment-receipt.json",
+      "bytes": 476
+    },
+    {
+      "name": "model-candidate-anonymous-pull-receipt.json",
+      "bytes": 613
+    },
+    {
+      "name": "model-candidate-ca-image-config.json",
+      "bytes": 4377
+    },
+    {
+      "name": "model-running-image-source-receipt.json",
+      "bytes": 409
+    },
+    {
+      "name": "model-candidate-ca-build-issued.json",
+      "bytes": 583
+    },
+    {
+      "name": "current-model-buildinfo.json",
+      "bytes": 635
+    },
+    {
+      "name": "model-candidate-image-config.json",
+      "bytes": 4284
+    },
+    {
+      "name": "model-candidate-ttl-build-issued.json",
+      "bytes": 583
+    },
+    {
+      "name": "ani-ftmat-build-ca-candidate.py",
+      "bytes": 3623
+    },
+    {
+      "name": "proxy-throughput-receipt.json",
+      "bytes": 251
+    },
+    {
+      "name": "smollm2-resume-login-receipt.json",
+      "bytes": 134
+    },
+    {
+      "name": "register-platform-receipt.json",
+      "bytes": 1743
+    },
+    {
+      "name": "register-platform-cleanup-receipt.json",
+      "bytes": 262
+    },
+    {
+      "name": "model-candidate-artifact-transfer-receipt.json",
+      "bytes": 634
+    }
+  ],
+  "training_cached_configs": [
+    {
+      "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:7c6cef0c6d7703c004ec5359c47b1f3f711a07d67e6703622d20c352ed423b20",
+      "manifest_sha256": "7c6cef0c6d7703c004ec5359c47b1f3f711a07d67e6703622d20c352ed423b20",
+      "config_digest": "sha256:1589e3b9d001b032bc0532fe9f58357dfba434645edc37f3702cf73346c8ebb7",
+      "layers": 36,
+      "compressed_bytes": 9369570332,
+      "source_labels": {
+        "ani.modeldev.device_mode": "cpu",
+        "ani.modeldev.source-state": "committed-current",
+        "ani.modeldev.source-tree": "3f7cd9f96616e80ad76ada865662ece2ef08d407",
+        "org.opencontainers.image.revision": "f839f438ee14cfbf8d211131f0b57a289e393c6a",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "user": "10001:10001"
+    },
+    {
+      "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:e3c8f7471f765466157da94b366fdf45b302c627e3293aa85f5690b71d66a83a",
+      "manifest_sha256": "e3c8f7471f765466157da94b366fdf45b302c627e3293aa85f5690b71d66a83a",
+      "config_digest": "sha256:3f3016276c5fb06b80475c79763d142660360147cc4f6570ac5d36efade341b0",
+      "layers": 36,
+      "compressed_bytes": 9369570886,
+      "source_labels": {
+        "ani.modeldev.device_mode": "cpu",
+        "ani.modeldev.source-state": "committed-current",
+        "ani.modeldev.source-tree": "de4d5d96073456dddc991a438a06113336601695",
+        "org.opencontainers.image.revision": "622e09f53bc183163afcdf6e996f9162c4cb78dc",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "user": "10001:10001"
+    },
+    {
+      "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa",
+      "manifest_sha256": "eff93abe80ab4a1760adbe5fa1c04a27e60b68f171c1b85172e9114fc225e2aa",
+      "config_digest": "sha256:f32dd4a4e2550da4c7b44e1311f979eb2ce9718c1a2d4dc058f337461a2d0a90",
+      "layers": 36,
+      "compressed_bytes": 9369562697,
+      "source_labels": {
+        "ani.modeldev.device_mode": "cpu",
+        "ani.modeldev.source-base-commit": "2c946f65fcfd63ed010be26ed9aa595253ffb59d",
+        "ani.modeldev.source-state": "uncommitted-runtime-candidate"
+      },
+      "user": "10001:10001"
+    },
+    {
+      "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:f9f88741276f749279463a8c7e87efa18d3652f62a5a2889e9318b3ed406ea30",
+      "manifest_sha256": "f9f88741276f749279463a8c7e87efa18d3652f62a5a2889e9318b3ed406ea30",
+      "config_digest": "sha256:0c7ea5ae732a1b59003b98c38736f896a7d198d72939937fc5a4a0927c6c3c1f",
+      "layers": 36,
+      "compressed_bytes": 9369570532,
+      "source_labels": {
+        "ani.modeldev.device_mode": "cpu",
+        "ani.modeldev.source-state": "committed-current",
+        "ani.modeldev.source-tree": "b8af40cd1dc68d37b1f47193242f1de040115616",
+        "org.opencontainers.image.revision": "2a8ead1e2b81da4f60013dba988ab94d5e8f8b20",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "user": "10001:10001"
+    },
+    {
+      "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:44f9ba3ef53d42f0c1a887d877783dbcf66fd179066d659783dbd71fe20242fb",
+      "manifest_sha256": "44f9ba3ef53d42f0c1a887d877783dbcf66fd179066d659783dbd71fe20242fb",
+      "config_digest": "sha256:0fa246b1279934743c2e4e64e1986a35a7be71a8b3af2ba026aa4b600c7bd894",
+      "layers": 36,
+      "compressed_bytes": 9369570887,
+      "source_labels": {
+        "ani.modeldev.device_mode": "gpu",
+        "ani.modeldev.source-state": "committed-current",
+        "ani.modeldev.source-tree": "de4d5d96073456dddc991a438a06113336601695",
+        "org.opencontainers.image.revision": "622e09f53bc183163afcdf6e996f9162c4cb78dc",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "user": "10001:10001"
+    },
+    {
+      "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:9d1dc444f06264ea905b41cad5eb113a7c4eecf2778d2a4678f201f1b34c29b1",
+      "manifest_sha256": "9d1dc444f06264ea905b41cad5eb113a7c4eecf2778d2a4678f201f1b34c29b1",
+      "config_digest": "sha256:8b14a3ac08bfae33638f1e3f4e48190045d8a0f443c78613060c178bdd3c567a",
+      "layers": 36,
+      "compressed_bytes": 9369570533,
+      "source_labels": {
+        "ani.modeldev.device_mode": "gpu",
+        "ani.modeldev.source-state": "committed-current",
+        "ani.modeldev.source-tree": "b8af40cd1dc68d37b1f47193242f1de040115616",
+        "org.opencontainers.image.revision": "2a8ead1e2b81da4f60013dba988ab94d5e8f8b20",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "user": "10001:10001"
+    },
+    {
+      "reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:c1774417d3cbb3d6541fa5d64da29788886aef1f581aa7183005ba776a8e4768",
+      "manifest_sha256": "c1774417d3cbb3d6541fa5d64da29788886aef1f581aa7183005ba776a8e4768",
+      "config_digest": "sha256:e651704d48afdea0ce3bd57cad6a0aa3e1d75fb22ba20dfde872a34d08e31f33",
+      "layers": 36,
+      "compressed_bytes": 9369570336,
+      "source_labels": {
+        "ani.modeldev.device_mode": "gpu",
+        "ani.modeldev.source-state": "committed-current",
+        "ani.modeldev.source-tree": "3f7cd9f96616e80ad76ada865662ece2ef08d407",
+        "org.opencontainers.image.revision": "f839f438ee14cfbf8d211131f0b57a289e393c6a",
+        "org.opencontainers.image.source": "https://github.com/zhangzhe-ctrl/ani-modeldev-service"
+      },
+      "user": "10001:10001"
+    }
+  ]
+}

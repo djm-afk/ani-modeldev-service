@@ -3,7 +3,6 @@ package biz
 import (
 	"context"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
-	"strings"
 	"time"
 )
 
@@ -36,6 +35,22 @@ func NewManagedMaterials(materials AdmissionMaterialReader, facts AdmissionFacts
 	return &ManagedMaterials{materials: materials, facts: facts, inputs: inputs, importer: importer}
 }
 
+// PlatformImplementation is a source-only material read. It needs no tenant
+// execution environment and never invokes the environment facts port.
+func (m *ManagedMaterials) PlatformImplementation(ctx context.Context, implementationID, deviceMode string) (cpup01.ImplementationMaterial, error) {
+	if m == nil || m.materials == nil || (implementationID != "builtin.mlp" && implementationID != "builtin.sft_lora") || (deviceMode != "cpu" && deviceMode != "gpu") {
+		return cpup01.ImplementationMaterial{}, ErrImplementationUnavailable
+	}
+	material, err := m.materials.ReadImplementationMaterial(ctx, implementationID, deviceMode)
+	if err != nil {
+		return cpup01.ImplementationMaterial{}, err
+	}
+	if _, err = material.Canonical(); err != nil || material.Implementation.ImplementationID != implementationID {
+		return cpup01.ImplementationMaterial{}, ErrImplementationUnavailable
+	}
+	return material, nil
+}
+
 func (m *ManagedMaterials) Implementation(ctx context.Context, tenant, implementationID, deviceMode string) (cpup01.ImplementationMaterial, TenantAdmissionFacts, error) {
 	if !validAdmissionID(tenant) || (implementationID != "builtin.mlp" && implementationID != "builtin.sft_lora") || (deviceMode != "cpu" && deviceMode != "gpu") {
 		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, ErrInvalidAdmission
@@ -51,7 +66,7 @@ func (m *ManagedMaterials) Implementation(ctx context.Context, tenant, implement
 	if err != nil {
 		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, err
 	}
-	if material.Implementation.ImplementationID != implementationID || !strings.EqualFold(facts.TenantID, tenant) || material.Workspace != facts.Workspace {
+	if material.Implementation.ImplementationID != implementationID || facts.TenantID != tenant || material.Workspace != facts.Workspace {
 		return cpup01.ImplementationMaterial{}, TenantAdmissionFacts{}, ErrAdmissionEnvironmentNotReady
 	}
 	if _, err := material.Canonical(); err != nil {
@@ -68,7 +83,7 @@ func (m *ManagedMaterials) TimingFor(ctx context.Context, tenant, implementation
 	if err != nil {
 		return cpup01.TimingConfiguration{}, err
 	}
-	if !strings.EqualFold(facts.TenantID, tenant) {
+	if facts.TenantID != tenant {
 		return cpup01.TimingConfiguration{}, ErrAdmissionEnvironmentNotReady
 	}
 	if _, err := facts.Timing.Resolve(time.Now().UTC().Truncate(time.Microsecond), nil); err != nil {
@@ -97,7 +112,7 @@ func (m *ManagedMaterials) importInput(ctx context.Context, request InputImport,
 	if err != nil {
 		return InputVersion{}, err
 	}
-	if !strings.EqualFold(facts.TenantID, request.TenantID) {
+	if facts.TenantID != request.TenantID {
 		return InputVersion{}, ErrAdmissionEnvironmentNotReady
 	}
 	request.Scope = facts.InputScope

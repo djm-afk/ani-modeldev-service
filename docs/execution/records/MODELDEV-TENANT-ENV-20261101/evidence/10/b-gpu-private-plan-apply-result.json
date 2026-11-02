@@ -1,0 +1,294 @@
+{
+  "schema": "ani.modeldev.b-private-plan.v1",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "runtime": {
+    "deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+    "generation": 198,
+    "pod_uid": "7e3c6bd5-4d76-4b44-92bf-6e3b89d48a6f",
+    "pod_name": "ani-governance-7ddc444f78-nt5vc",
+    "image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "image_id": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+    "pause_value": "default"
+  },
+  "observed_at": "2026-11-01T02:43:17.928160+00:00",
+  "status": "B_PRIVATE_PLAN_BOUND",
+  "source_plan": {
+    "id": 2,
+    "name": "ani-factor10-e2e",
+    "version": "STANDARD",
+    "expiryPolicy": "READONLY",
+    "createdBy": 1,
+    "createdAt": "2026-10-22T04:09:05.070644Z"
+  },
+  "source_modules": [
+    "ACCELERATOR",
+    "DASHBOARD",
+    "IMAGE",
+    "INFERENCE",
+    "INSTANCE",
+    "MODEL",
+    "NETWORK",
+    "OPM",
+    "STORAGE",
+    "SYSTEM",
+    "TENANT",
+    "VIRTUAL_MACHINE"
+  ],
+  "source_quotas": {
+    "gpu.physical.count": "1"
+  },
+  "new_plan_data": {
+    "version": "STANDARD",
+    "expiryPolicy": "READONLY",
+    "name": "modeldev-live-b-20261101"
+  },
+  "only_added_quota": {
+    "gpu.shared_memory_mib": "49140"
+  },
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/platform/password/login",
+      "status": 200,
+      "response_sha256": "a1fd62a2d6c240c9c44b6b96d005a0101be8770ff94ce1ef311afdf24e800f51"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tenants/40",
+      "status": 200,
+      "response_sha256": "46182af27f09166cc2ac0993be762c2bc268cf0672d6089edefd27b7d2d3087c"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/roles/26",
+      "status": 200,
+      "response_sha256": "f0775212542a2e3889fdbc2930ef95e403416203a03016ac15463370eaa6eeb6"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plans/2",
+      "status": 200,
+      "response_sha256": "e273e329269206bd07b87cb991ce9cc7f70bbf2832e7c90f0945ac33eae93230"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "a490c7b391f075c60349eb36214bdac76fd66f1eb81fc9dc0cd19064562bfe13"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-quotas",
+      "status": 200,
+      "response_sha256": "08ad223e0c72cf027409d4b94cec8c364a5c2e1df1e5cb245e040a391b0fda8e"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plans",
+      "status": 200,
+      "response_sha256": "d143ad2745c0cca549895d28cf2471e90655dafa906ef64d8cc5a0edffb7bab6"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plans",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plans",
+      "status": 200,
+      "response_sha256": "8d354318dbfded117d27bf2f028ef6f7144619da805e8400313c9a016f858eec"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tenants",
+      "status": 200,
+      "response_sha256": "d143ad2745c0cca549895d28cf2471e90655dafa906ef64d8cc5a0edffb7bab6"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-quotas",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/plan-quotas",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "24b95ee7275c4821982440a7524f1b54668b692de57a065d90bf1029f0c6bd31"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-quotas",
+      "status": 200,
+      "response_sha256": "cf4c33b2b87618b69d114720cdf5ba2f057bc6772aa5f1d3296ddb3c591e9297"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "a490c7b391f075c60349eb36214bdac76fd66f1eb81fc9dc0cd19064562bfe13"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-quotas",
+      "status": 200,
+      "response_sha256": "08ad223e0c72cf027409d4b94cec8c364a5c2e1df1e5cb245e040a391b0fda8e"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plans/2",
+      "status": 200,
+      "response_sha256": "e273e329269206bd07b87cb991ce9cc7f70bbf2832e7c90f0945ac33eae93230"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tenants/40",
+      "status": 200,
+      "response_sha256": "46182af27f09166cc2ac0993be762c2bc268cf0672d6089edefd27b7d2d3087c"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/admin/tenants/40",
+      "status": 200,
+      "response_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tenants/40",
+      "status": 200,
+      "response_sha256": "35ef37addeddbe4cd2545bac9564c9828bd0a425734c786b36529b4210ee59cf"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tenants",
+      "status": 200,
+      "response_sha256": "5ea5667d6d3ec79c265a1605428aa9951e056dc49e884cf3155f14b51d726217"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-modules",
+      "status": 200,
+      "response_sha256": "a490c7b391f075c60349eb36214bdac76fd66f1eb81fc9dc0cd19064562bfe13"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/plan-quotas",
+      "status": 200,
+      "response_sha256": "08ad223e0c72cf027409d4b94cec8c364a5c2e1df1e5cb245e040a391b0fda8e"
+    }
+  ],
+  "private_plan_id": 10,
+  "private_modules": [
+    "ACCELERATOR",
+    "DASHBOARD",
+    "IMAGE",
+    "INFERENCE",
+    "INSTANCE",
+    "MODEL",
+    "NETWORK",
+    "OPM",
+    "STORAGE",
+    "SYSTEM",
+    "TENANT",
+    "VIRTUAL_MACHINE"
+  ],
+  "private_quotas": {
+    "gpu.physical.count": "1",
+    "gpu.shared_memory_mib": "49140"
+  },
+  "tenant_references": [
+    40
+  ],
+  "preserved_shared_plan_id": 2,
+  "quota_accounts_or_charges_written": false,
+  "native_cas": false,
+  "concurrency": "Single task writer; complete source and immediate B state rechecked before assignment; ordinary API has no conditional update field",
+  "gpu_profile_selectability_and_training": "NOT_RUN",
+  "ssh_exit": 0
+}

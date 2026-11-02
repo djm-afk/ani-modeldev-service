@@ -136,7 +136,7 @@ def compile_pipeline(configuration, output):
     # KFP/Argo includes this name in component Pod names; KCN also uses each
     # Pod name as an annotation suffix, limited to 63 bytes by Kubernetes.
     @dsl.pipeline(name="ft" if finetuning else "md")
-    def pipeline(execution_id: str, spec_hash: str):
+    def pipeline(execution_id: str, spec_hash: str, environment_binding_id: str, namespace_uid: str):
         # KFP records display_name as the managed role checked by ModelDev.
         run_id = dsl.PIPELINE_JOB_ID_PLACEHOLDER
         finalizer = configure(finalize_close(execution_id=execution_id, spec_hash=spec_hash, run_id=run_id)).set_display_name("close-finalizer")

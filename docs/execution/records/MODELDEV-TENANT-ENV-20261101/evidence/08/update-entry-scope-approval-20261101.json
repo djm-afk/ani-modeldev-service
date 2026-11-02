@@ -1,0 +1,14 @@
+{
+  "schema": "ani.modeldev.update-entry-scope-approval.v1",
+  "recorded_at": "2026-11-01T00:36:29.648119+00:00",
+  "user_reply": "你先试试1,如果太慢就报告",
+  "selected_route": "Main service images through Workbench; other fixed images/materials on Fedora and bootstrap/config/storage/migration/cleanup through the same designated cluster SSH",
+  "reviewable_scope": "update-entry-complete-inventory.md",
+  "conditions": [
+    "If materially slow report actual bytes/rate/ETA or observed elapsed time",
+    "Heavy tasks only Fedora",
+    "No Fedora archive packaging/transfer",
+    "Complete cluster identity before writes",
+    "All original qualification/UID/release/gates remain"
+  ]
+}

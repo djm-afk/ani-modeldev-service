@@ -19,6 +19,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/workspace"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 )
 
 func TestCollectHashesActualRegisteredBytesWithoutTrustingCandidate(t *testing.T) {
@@ -157,19 +158,8 @@ func preparedWorkspace(t *testing.T) (string, biz.Execution, map[string][]byte) 
 
 func refreshSpec(t *testing.T, execution *biz.Execution) {
 	t.Helper()
-	execution.Snapshot.IdentityRef = cpup01.IdentityRef{TenantID: execution.TenantID, Actor: execution.Actor, ExecutionID: execution.ExecutionID, OperationID: execution.OperationID, IntentHash: execution.IntentHash}
-	var err error
-	execution.Snapshot.RuntimePlan, err = biz.CompileRuntimePlan(execution.Snapshot)
-	if err != nil {
-		t.Fatal(err)
-	}
-	execution.SpecHash, err = execution.Snapshot.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, _, err := execution.CanonicalPayloads(); err != nil {
-		t.Fatalf("invalid admission fixture: %v", err)
-	}
+	execution.Admission = admissionfixture.Bind(t, execution.Admission)
+
 }
 
 func writeFile(t *testing.T, name string, data []byte) {

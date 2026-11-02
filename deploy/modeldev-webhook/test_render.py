@@ -1,4 +1,4 @@
-"""Offline deployment-boundary tests; no Kubernetes or Pod policy substitute."""
+"""Deployment shape only; actual CEL enforcement is a separate API-server gate."""
 import copy
 import hashlib
 import json
@@ -10,62 +10,59 @@ import render
 
 class ManifestTests(unittest.TestCase):
     def setUp(self):
-        self.directory = tempfile.TemporaryDirectory()
-        self.addCleanup(self.directory.cleanup)
-        # render() accepts only material already validated by the real Go CLI.
-        # This minimal byte fixture tests packaging/selection, not Release codec.
-        path = Path(self.directory.name) / "release.json"
-        path.write_bytes(b'{"fixture":"deployment-shape-only"}')
-        self.config = {"schema_version": "ani.modeldev.webhook.v1", "bindings": [{"namespace": "test-tenant", "namespace_uid": "test-uid", "owner_label": {"key": "ani.io/managed-by", "value": "test-owner"}, "driver": {"image": "frozen"}}], "profiles": [{"id": "test-profile", "material_file": str(path), "material_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}]}
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        material = root / "builtin.mlp.cpu.json"
+        material.write_bytes(b'{"fixture":"validated-by-Go-before-render"}')
+        manifest = root / "manifest.json"
+        manifest.write_bytes(b'{"fixture":"same-shared-bundle"}')
+        self.config = {"schema_version":"ani.modeldev.webhook.v2","driver":{"image":"frozen"},"material_bundle_file":str(manifest),"material_bundle_digest":hashlib.sha256(manifest.read_bytes()).hexdigest(),"profiles":[{"id":"modeldev-mlp-cpu","material_file":str(material),"material_sha256":hashlib.sha256(material.read_bytes()).hexdigest()}]}
 
     def call(self, config=None):
-        return render.render(config or self.config, "test-system", "example.invalid/webhook@sha256:"+"a"*64, "operator-issuer", "Issuer", ["172.16.101.10/32"], "10.96.0.1/32", 16443, 1443)
+        return render.render(config or self.config,"ani-system","registry.example.test/platform/webhook@sha256:"+"a"*64,"operator-issuer","Issuer",["172.16.101.10/32"],"10.96.0.1/32",6443,443,platform_principals=["system:serviceaccount:kube-system:verified-platform"])
 
-    def test_registration_separate_and_missing_profile_still_selected(self):
+    def test_single_global_or_match_and_no_creator_skip(self):
         support, registration = self.call()
-        self.assertFalse(any(row["kind"] == "MutatingWebhookConfiguration" for row in support["items"]))
-        hook = registration["webhooks"][0]
-        self.assertEqual(hook["objectSelector"], {"matchLabels": {"pipelines.kubeflow.org/v2_component": "true"}})
-        self.assertEqual(hook["namespaceSelector"]["matchLabels"], {"kubernetes.io/metadata.name": "test-tenant", "ani.io/managed-by": "test-owner"})
-        self.assertEqual(hook["rules"][0]["operations"], ["CREATE"])
-        self.assertEqual(hook["failurePolicy"], "Fail")
-        self.assertEqual(registration["metadata"]["annotations"]["cert-manager.io/inject-ca-from"], "test-system/ani-modeldev-webhook-serving")
+        self.assertEqual(len(registration["webhooks"]),1)
+        hook=registration["webhooks"][0]
+        self.assertNotIn("namespaceSelector",hook)
+        self.assertNotIn("objectSelector",hook)
+        expression=hook["matchConditions"][0]["expression"]
+        for text in ["modeldev-step","trainer-workload","verifier","ani.modeldev/","modeldev.ani.io/","ani-kfp-workspace-","modeldev-kfp-artifacts","projected","initContainers","ephemeralContainers","envFrom"]:
+            self.assertIn(text,expression)
+        self.assertNotIn("request.userInfo",expression)
+        self.assertEqual(hook["rules"][0]["operations"],["CREATE"])
+        self.assertEqual(hook["failurePolicy"],"Fail")
+        self.assertFalse(any(row["kind"]=="MutatingWebhookConfiguration" for row in support["items"]))
 
-    def test_least_privilege_renewal_and_two_replicas(self):
-        support, _ = self.call()
-        rows = {row["kind"]: row for row in support["items"]}
-        self.assertEqual(rows["ClusterRole"]["rules"], [{"apiGroups": [""], "resources": ["namespaces"], "resourceNames": ["test-tenant"], "verbs": ["get"]}])
-        self.assertEqual(rows["Role"]["rules"][0]["verbs"], ["get"])
-        self.assertEqual(rows["Certificate"]["spec"]["privateKey"]["rotationPolicy"], "Always")
-        self.assertEqual(rows["Deployment"]["spec"]["replicas"], 2)
-        self.assertEqual(rows["Deployment"]["spec"]["strategy"]["rollingUpdate"]["maxUnavailable"], 0)
-        egress = rows["NetworkPolicy"]["spec"]["egress"]
-        self.assertEqual(egress[0]["ports"], [{"protocol": "TCP", "port": 16443}])
-        self.assertEqual(egress[1]["ports"], [{"protocol": "TCP", "port": 1443}])
-        cm = rows["ConfigMap"]
-        self.assertTrue(cm["immutable"])
-        config = json.loads(cm["data"]["config.json"])
-        self.assertEqual(config["profiles"][0]["material_file"], "/etc/modeldev-webhook/materials/test-profile.json")
-        for row in support["items"]:
-            self.assertNotEqual(row["kind"], "Secret", "renderer must not generate or copy private keys")
+    def test_shared_bundle_init_regular_files_and_no_tenant_roles(self):
+        support,_=self.call()
+        self.assertFalse(any(row["kind"] in {"Role","RoleBinding","ClusterRole","ClusterRoleBinding","Secret"} for row in support["items"]))
+        deployment=next(r for r in support["items"] if r["kind"]=="Deployment")
+        pod=deployment["spec"]["template"]["spec"]
+        self.assertEqual(deployment["spec"]["replicas"],2)
+        annotations=deployment["spec"]["template"]["metadata"]["annotations"]
+        config_map=next(r for r in support["items"] if r["kind"]=="ConfigMap")
+        expected=hashlib.sha256(json.dumps(config_map["data"],sort_keys=True,separators=(",",":")).encode()).hexdigest()
+        self.assertEqual(annotations,{"app.kubernetes.io/config-sha256":expected})
+        self.assertFalse(any(key.startswith(("ani.modeldev/","modeldev.ani.io/")) for key in annotations))
+        self.assertIn("--copy-materials-manifest-sha256",pod["initContainers"][0]["command"])
+        self.assertEqual(pod["initContainers"][0]["image"],pod["containers"][0]["image"])
+        source=next(v for v in pod["volumes"] if v["name"]=="material-source")
+        self.assertEqual(source["configMap"]["name"],"modeldev-materials-"+self.config["material_bundle_digest"][:12])
+        config_map=next(r for r in support["items"] if r["kind"]=="ConfigMap")
+        self.assertEqual(set(config_map["data"]),{"config.json"})
+        config=json.loads(config_map["data"]["config.json"])
+        self.assertEqual(config["material_bundle_file"],"/etc/modeldev-materials/manifest.json")
+        self.assertTrue(config_map["immutable"])
 
-    def test_missing_driver_or_changed_release_rejected(self):
-        for change in (lambda c: c["bindings"][0].pop("driver"), lambda c: c["profiles"][0].update(material_sha256="0"*64)):
-            value = copy.deepcopy(self.config); change(value)
+    def test_changed_material_or_missing_driver_rejected(self):
+        for mutate in [lambda c:c.pop("driver"),lambda c:c["profiles"][0].update(material_sha256="0"*64),lambda c:c.update(material_bundle_digest="0"*64)]:
+            config=copy.deepcopy(self.config);mutate(config)
             with self.assertRaises(ValueError):
-                self.call(value)
-        for api_port, service_port in ((0, 1443), (16443, 65536)):
-            with self.assertRaises(ValueError):
-                render.render(self.config, "test-system", "example.invalid/webhook@sha256:"+"a"*64, "operator-issuer", "Issuer", ["172.16.101.10/32"], "10.96.0.1/32", api_port, service_port)
-
-    def test_training_pods_cannot_escape_by_omitting_kfp_label(self):
-        self.config["bindings"][0]["training"] = {"service_account": "trainer-worker", "creator": "system:serviceaccount:kube-system:job-controller"}
-        support, registration = self.call()
-        self.assertNotIn("objectSelector", registration["webhooks"][0])
-        role = next(row for row in support["items"] if row["kind"] == "Role")
-        self.assertEqual({resource for rule in role["rules"] for resource in rule["resources"]}, {"workflows", "jobs", "jobsets", "trainjobs", "trainingruntimes"})
-        self.assertTrue(all(rule["verbs"] == ["get"] for rule in role["rules"]))
+                self.call(config)
 
 
-if __name__ == "__main__":
+if __name__=="__main__":
     unittest.main()

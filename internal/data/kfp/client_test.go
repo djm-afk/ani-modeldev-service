@@ -18,6 +18,9 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/kfp"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic/fake"
 )
 
 func TestCreateRunResponseLostPreservesUncertaintyWithoutResending(t *testing.T) {
@@ -58,12 +61,12 @@ func TestCreateRunResponseLostPreservesUncertaintyWithoutResending(t *testing.T)
   },
   "runtime_config":{
     "parameters":{
-      "execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+      "execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","environment_binding_id":"11111111-1111-4111-8111-111111111111","namespace_uid":"33333333-3333-4333-8333-333333333333",
       "spec_hash":"972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9"
     },
-    "pipeline_root":"s3://fixture-kfp-artifacts/managed-root"
+    "pipeline_root":"s3://kfp-artifacts/artifacts/11111111-2222-4333-8444-555555555555/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
   },
-  "service_account":"cpu-managed-step"
+  "service_account":"modeldev-step"
 }`), &want); err != nil {
 			t.Errorf("invalid handwritten fixture: %v", err)
 		}
@@ -106,6 +109,10 @@ func (provider tokenProviderFunc) BearerToken(ctx context.Context, tenant string
 func fixtureAdmission(t *testing.T) biz.Admission {
 	t.Helper()
 	snapshot := conformance.SnapshotV1()
+	// Keep the independently authored boundary fixture's original UID/Experiment
+	// tuple while targeting its explicit tenant; Bind derives new identities
+	// only when moving a snapshot from another tenant's Namespace.
+	snapshot.Environment.NamespaceName = "tenant-11111111-2222-4333-8444-555555555555"
 	intent := cpup01.Intent{Name: "kfp-boundary-fixture", Kind: "GENERAL_TRAINING", ImplementationID: snapshot.Implementation.ImplementationID, ComputePresetID: snapshot.ComputeOrigin.ComputePresetID, MLP: &cpup01.MLPParameters{}, DatasetVersionID: snapshot.Input.InputVersionID}
 	_, intentHash, err := cpup01.CanonicalIntent(intent)
 	if err != nil {
@@ -128,7 +135,7 @@ func fixtureCreateRequest(t *testing.T, admission biz.Admission) biz.PipelineCre
 	t.Helper()
 	plan, err := (biz.PipelineDispatchRequest{
 		Admission: admission,
-		Owner:     biz.PipelineOwnerConfiguration{Reference: "cpu07-fixture-owner", RevisionSHA256: strings.Repeat("a", 64), PipelineRoot: "s3://fixture-kfp-artifacts/managed-root"},
+		Owner:     admission.Snapshot.DispatchOwner,
 	}).Freeze()
 	if err != nil {
 		t.Fatalf("freeze create request fixture: %v", err)
@@ -158,12 +165,12 @@ func TestCreateRunConfirmsOnlyCompleteMatchingOfficialResponse(t *testing.T) {
   },
   "runtime_config":{
     "parameters":{
-      "execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+      "execution_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","environment_binding_id":"11111111-1111-4111-8111-111111111111","namespace_uid":"33333333-3333-4333-8333-333333333333",
       "spec_hash":"972dee14e65202d5d4da7da199cf5f37139b535701a0cb1b3de4d8ef8a5170b9"
     },
-    "pipeline_root":"s3://fixture-kfp-artifacts/managed-root"
+    "pipeline_root":"s3://kfp-artifacts/artifacts/11111111-2222-4333-8444-555555555555/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
   },
-  "service_account":"cpu-managed-step",
+  "service_account":"modeldev-step",
   "state":"PENDING",
   "created_at":"2026-09-30T09:00:00Z"
 }`
@@ -184,7 +191,7 @@ func TestCreateRunConfirmsOnlyCompleteMatchingOfficialResponse(t *testing.T) {
 		{name: "JSON with charset", body: response, contentType: "application/json; charset=UTF-8", confirmed: true},
 		{name: "additional output structures", body: strings.TrimSuffix(response, "}") + `,"extra":[1,{"ok":true},null]}`, confirmed: true},
 		{name: "null response", body: `null`},
-		{name: "null service account", body: strings.Replace(response, `"service_account":"cpu-managed-step"`, `"service_account":null`, 1)},
+		{name: "null service account", body: strings.Replace(response, `"service_account":"modeldev-step"`, `"service_account":null`, 1)},
 		{name: "null error is not confirmation", body: strings.TrimSuffix(response, "}") + `,"error":null}`},
 		{name: "zero Run UUID", body: strings.Replace(response, "55555555-6666-4777-8888-999999999999", "00000000-0000-0000-0000-000000000000", 1)},
 		{name: "invalid UTF8 in output", body: strings.TrimSuffix(response, "}") + ",\"extra\":\"\xff\"}"},
@@ -198,8 +205,8 @@ func TestCreateRunConfirmsOnlyCompleteMatchingOfficialResponse(t *testing.T) {
 		{name: "other pipeline version", body: strings.Replace(response, "dddddddd-dddd-4ddd-8ddd-dddddddddddd", "dddddddd-dddd-4ddd-8ddd-cccccccccccc", 1)},
 		{name: "other execution", body: strings.ReplaceAll(response, "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", "aaaaaaaa-bbbb-4ccc-8ddd-ffffffffffff")},
 		{name: "other spec", body: strings.Replace(response, fixture.SpecHash, strings.Repeat("f", 64), 1)},
-		{name: "other step service account", body: strings.Replace(response, "cpu-managed-step", "cpu-training", 1)},
-		{name: "other artifact root", body: strings.Replace(response, "managed-root", "other-root", 1)},
+		{name: "other step service account", body: strings.Replace(response, "modeldev-step", "cpu-training", 1)},
+		{name: "other artifact root", body: strings.Replace(response, "artifacts/", "wrong/", 1)},
 		{name: "duplicate run ID", body: strings.TrimSuffix(response, "}") + `,"run_id":"55555555-6666-4777-8888-999999999999"}`},
 		{name: "duplicate nested spec", body: strings.Replace(response, `"spec_hash":`, `"spec_hash":"different","spec_hash":`, 1)},
 		{name: "case alias is not an official key", body: strings.Replace(response, `"run_id":`, `"RUN_ID":`, 1)},
@@ -278,5 +285,9 @@ func fixtureClient(t *testing.T, server *httptest.Server, provider kfp.TokenProv
 	if err != nil {
 		t.Fatalf("construct fixture client: %v", err)
 	}
-	return client
+	return client.WithMutationIdentity(fixtureMutationIdentity())
+}
+
+func fixtureMutationIdentity() *fake.FakeDynamicClient {
+	return fake.NewSimpleDynamicClient(runtime.NewScheme(), &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": "tenant-11111111-2222-4333-8444-555555555555", "uid": "33333333-3333-4333-8333-333333333333", "labels": map[string]any{"network.ani.io/tenant-id": "11111111-2222-4333-8444-555555555555", "network.ani.io/managed-by": "ani-network-service"}}, "status": map[string]any{"phase": "Active"}}})
 }

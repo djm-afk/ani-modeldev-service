@@ -1,0 +1,15 @@
+{
+  "schema": "ani.modeldev.legacy-retirement.stopped-admission.v1",
+  "source_evidence_sha256": "1cb88a18fdff59e903a5ae305329b14a24f030cc6f17a95ff16c847f60011c5d",
+  "reviewed_plan_sha256": "5cbe9d22437cefc8f1b82e09ac4972b6514bbd88281850972c643dd80d57e9ef",
+  "observed_at": "2026-11-01T02:18:01.544062+00:00",
+  "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+  "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+  "governance_deployment_uid": "4ae87828-5f2c-4b27-a8b8-d348aeb86ee5",
+  "governance_image": "10.10.1.66:30003/ani-gpu-platform/ani-governance@sha256:2f66dc480e1a45a1a6c2cfc6df2275cd8496eb29a5d9ad5066f2776f02528d05",
+  "create_paused": true,
+  "create_http_status": 503,
+  "create_reason": "MODELDEV_CREATE_MAINTENANCE",
+  "active_create_leases": 0,
+  "root_apply_authorized": true
+}

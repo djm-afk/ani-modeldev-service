@@ -1,8 +1,10 @@
 package runtimeproof
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -159,11 +161,17 @@ func namedWorkflowTemplate(workflow *unstructured.Unstructured, name string) map
 		return nil
 	}
 	var selected map[string]any
+	seen := map[string]bool{}
 	for _, raw := range templates {
 		template, ok := raw.(map[string]any)
 		if !ok {
 			return nil
 		}
+		actualName, ok := template["name"].(string)
+		if !ok || actualName == "" || seen[actualName] {
+			return nil
+		}
+		seen[actualName] = true
 		if template["name"] == name {
 			if selected != nil {
 				return nil
@@ -180,11 +188,17 @@ func rootNamedParameter(value map[string]any, field, name string) (string, bool)
 		return "", false
 	}
 	matches, result := 0, ""
+	seen := map[string]bool{}
 	for _, raw := range parameters {
 		parameter, ok := raw.(map[string]any)
 		if !ok {
 			return "", false
 		}
+		actualName, ok := parameter["name"].(string)
+		if !ok || actualName == "" || seen[actualName] {
+			return "", false
+		}
+		seen[actualName] = true
 		if parameter["name"] == name {
 			matches++
 			result, ok = parameter["value"].(string)
@@ -210,10 +224,62 @@ func rootDriverFlag(args []any, flag, expected string) bool {
 }
 
 func rootRuntimeConfigMatches(raw string, plan biz.PipelineDispatchPlan) bool {
+	if !strictRootConfigJSON([]byte(raw)) {
+		return false
+	}
 	var config map[string]any
 	if json.Unmarshal([]byte(raw), &config) != nil || len(config) != 2 || config["gcsOutputDirectory"] != plan.Owner.PipelineRoot {
 		return false
 	}
 	parameters, ok := config["parameterValues"].(map[string]any)
-	return ok && len(parameters) == 2 && parameters["execution_id"] == plan.ExecutionID && parameters["spec_hash"] == plan.SpecHash
+	return ok && len(parameters) == 4 && parameters["execution_id"] == plan.ExecutionID && parameters["spec_hash"] == plan.SpecHash && parameters["environment_binding_id"] == plan.Environment.BindingID && parameters["namespace_uid"] == plan.Environment.NamespaceUID
+}
+
+func strictRootConfigJSON(raw []byte) bool {
+	if len(raw) == 0 || len(raw) > 65536 {
+		return false
+	}
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.UseNumber()
+	var value func(int) bool
+	value = func(depth int) bool {
+		if depth > 8 {
+			return false
+		}
+		token, err := d.Token()
+		if err != nil || token == nil {
+			return false
+		}
+		switch token {
+		case json.Delim('{'):
+			seen := map[string]bool{}
+			for d.More() {
+				t, e := d.Token()
+				k, ok := t.(string)
+				if e != nil || !ok || seen[k] {
+					return false
+				}
+				seen[k] = true
+				if !value(depth + 1) {
+					return false
+				}
+			}
+			t, e := d.Token()
+			return e == nil && t == json.Delim('}')
+		case json.Delim('['):
+			for d.More() {
+				if !value(depth + 1) {
+					return false
+				}
+			}
+			t, e := d.Token()
+			return e == nil && t == json.Delim(']')
+		}
+		return true
+	}
+	if !value(0) {
+		return false
+	}
+	_, err := d.Token()
+	return err == io.EOF
 }

@@ -1,0 +1,8 @@
+test_exact_policies_old_object_and_global_token_secret_guard (test_render.NativeTemplates.test_exact_policies_old_object_and_global_token_secret_guard) ... ok
+test_no_runtime_privilege_expansion (test_render.NativeTemplates.test_no_runtime_privilege_expansion) ... ok
+test_no_wildcard_or_missing_identity_default (test_render.NativeTemplates.test_no_wildcard_or_missing_identity_default) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+OK

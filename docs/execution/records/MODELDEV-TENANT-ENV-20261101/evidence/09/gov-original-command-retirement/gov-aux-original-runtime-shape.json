@@ -1,0 +1,76 @@
+{
+  "observed_at": "2026-11-01T02:22:39.586821+00:00",
+  "source_runtime_secret": {
+    "name": "ani-governance-runtime",
+    "uid": "ffc203e6-32a4-4876-8f8d-05bbe4351f72",
+    "resourceVersion": "3773581"
+  },
+  "environment_secret": {
+    "name": "ani-governance-environment",
+    "uid": "59266531-0691-4e42-b7aa-dfc972716e9d",
+    "resourceVersion": "14606584"
+  },
+  "database_key_shape": [
+    {
+      "path": "data.database",
+      "type": "dict",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.driver",
+      "type": "str",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.source",
+      "type": "str",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.migrate",
+      "type": "bool",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.debug",
+      "type": "bool",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.enable_trace",
+      "type": "bool",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.enable_metrics",
+      "type": "bool",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.max_idle_connections",
+      "type": "int",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.max_open_connections",
+      "type": "int",
+      "template_environment_refs": []
+    },
+    {
+      "path": "data.database.connection_max_lifetime",
+      "type": "str",
+      "template_environment_refs": []
+    }
+  ],
+  "environment_key_names_only": [
+    "GOWIND_CRYPTO_KEY"
+  ],
+  "top_level_keys_only": [
+    "authn",
+    "authz",
+    "client",
+    "data",
+    "logger",
+    "server"
+  ]
+}

@@ -1,0 +1,92 @@
+[
+  {
+    "label": "consumer-vet",
+    "command": [
+      "go",
+      "vet",
+      "./scripts/legacy-modeldev-data-cleanup"
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99",
+    "start": "2026-11-01T02:26:31Z",
+    "end": "2026-11-01T02:26:35Z",
+    "exit": 0
+  },
+  {
+    "label": "consumer-build",
+    "command": [
+      "go",
+      "build",
+      "-trimpath",
+      "-o",
+      "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99-evidence/ani-modeldev-legacy-data-cleanup",
+      "./scripts/legacy-modeldev-data-cleanup"
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99",
+    "start": "2026-11-01T02:26:35Z",
+    "end": "2026-11-01T02:26:37Z",
+    "exit": 0
+  },
+  {
+    "label": "consumer-modverify",
+    "command": [
+      "go",
+      "mod",
+      "verify"
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99",
+    "start": "2026-11-01T02:26:37Z",
+    "end": "2026-11-01T02:26:59Z",
+    "exit": 0
+  },
+  {
+    "label": "native-vet",
+    "command": [
+      "go",
+      "vet",
+      "-tags=original_c99_pg",
+      "."
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99/scripts/legacy-modeldev-data-cleanup/originalc99",
+    "start": "2026-11-01T02:26:59Z",
+    "end": "2026-11-01T02:27:05Z",
+    "exit": 0
+  },
+  {
+    "label": "native-modverify",
+    "command": [
+      "go",
+      "mod",
+      "verify"
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99/scripts/legacy-modeldev-data-cleanup/originalc99",
+    "start": "2026-11-01T02:27:05Z",
+    "end": "2026-11-01T02:27:10Z",
+    "exit": 0
+  },
+  {
+    "label": "native-binary-metadata",
+    "command": [
+      "go",
+      "version",
+      "-m",
+      "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99-evidence/original-c99-qualifier"
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99",
+    "start": "2026-11-01T02:27:10Z",
+    "end": "2026-11-01T02:27:10Z",
+    "exit": 0
+  },
+  {
+    "label": "consumer-binary-metadata",
+    "command": [
+      "go",
+      "version",
+      "-m",
+      "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99-evidence/ani-modeldev-legacy-data-cleanup"
+    ],
+    "cwd": "/home/chabking/tenantenv-20261101/legacy-data-cleanup-originalc99",
+    "start": "2026-11-01T02:27:10Z",
+    "end": "2026-11-01T02:27:10Z",
+    "exit": 0
+  }
+]

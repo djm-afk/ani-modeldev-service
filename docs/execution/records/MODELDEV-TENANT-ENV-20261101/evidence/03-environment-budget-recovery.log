@@ -1,0 +1,6 @@
+=== RUN   TestEnvironmentPostgresEnsureBudgetExhaustionResumesReceipts
+    budget_recovery_test.go:71: CPU04_DB_PREFLIGHT PASS: real PostgreSQL, restricted runtime role, isolated current schema baseline
+    budget_recovery_test.go:211: EN02_BUDGET_RECOVERY PASS elapsed=25.001233984s completed_bounded_requests=6 canceled_requests=1 persisted_receipts=7 confirmed_receipts=6 pending_intents=1 original_environment=true original_namespace_uid=true original_object_uids=true advisory_lock_released=true sealed_ready=true experiment_posts=1
+--- PASS: TestEnvironmentPostgresEnsureBudgetExhaustionResumesReceipts (25.54s)
+PASS
+ok  	github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/tenantenvironment	25.555s

@@ -311,7 +311,7 @@ func observationBinding() biz.TrainJobBinding {
 		TenantID:     "11111111-1111-4111-8111-111111111111",
 		ExecutionID:  "22222222-2222-4222-8222-222222222222",
 		SpecSHA256:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-		Namespace:    "cpu-execution",
+		Namespace:    "tenant-11111111-1111-4111-8111-111111111111",
 		NamespaceUID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
 		Name:         "md-22222222-2222-4222-8222-222222222222",
 		UID:          "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
@@ -368,10 +368,10 @@ func observationAPI(t *testing.T, fixture *observationFixture) (*trainer.Adapter
 		var object map[string]any
 		var status int
 		switch r.URL.Path {
-		case "/api/v1/namespaces/cpu-execution":
+		case "/api/v1/namespaces/tenant-11111111-1111-4111-8111-111111111111":
 			requests.namespace.Add(1)
 			object, status = fixture.namespace, fixture.namespaceStatus
-		case "/apis/trainer.kubeflow.org/v1alpha1/namespaces/cpu-execution/trainjobs/md-22222222-2222-4222-8222-222222222222":
+		case "/apis/trainer.kubeflow.org/v1alpha1/namespaces/tenant-11111111-1111-4111-8111-111111111111/trainjobs/md-22222222-2222-4222-8222-222222222222":
 			requests.job.Add(1)
 			object, status = fixture.job, fixture.jobStatus
 		default:

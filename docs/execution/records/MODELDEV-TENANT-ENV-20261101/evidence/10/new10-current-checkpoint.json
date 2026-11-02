@@ -1,0 +1,62 @@
+{
+  "schema": "ani.modeldev.new10-manual-cleanup-checkpoint.v1",
+  "recorded_at": "2026-11-01T09:16:41.945164+00:00",
+  "user_scope": [
+    "Use ani-lab nodes172.16.101.10-12",
+    "Manual cleanup without backup or extra validation",
+    "Prepare environment and stop before real training"
+  ],
+  "cleanup": {
+    "status": "PASS",
+    "runtime_and_pvc_objects_deleted": 42,
+    "corresponding_pv_deleted": 23,
+    "modeldev_rows_deleted": 201,
+    "governance_rows_deleted": 42,
+    "quota_released_mib": 7680,
+    "occupied_units_after": 0,
+    "backup_created": false,
+    "evidence": "evidence/new10-manual-cleanup/cleanup-complete.json"
+  },
+  "migrations": {
+    "status": "PASS",
+    "evidence": "evidence/new10-manual-cleanup/native-migrations-actual.json",
+    "temporary_barrier_removed_evidence": "evidence/new10-manual-cleanup/resource-temporary-barrier-released.json"
+  },
+  "deployments": {
+    "resource": "READY_67dceef",
+    "governance": "READY_244780_CREATE_PAUSED",
+    "modeldev": "REPLICAS_0_MATERIALS_NOT_READY",
+    "webhook": "ORIGINAL_V21_DEPLOYMENT_NOT_REPLACED_NEW_MWC_ABSENT",
+    "evidence": "evidence/10/ani-lab-res-gov-deploy-20261101/actual-final.json"
+  },
+  "source": {
+    "commit": "89d3ebef313a9e023c5d015f30356f008685ea68",
+    "tree": "373df41c8039c88358d2b51b1e0911c9c9634636",
+    "pushed_over_ssh": true,
+    "manifest": "evidence/10/md-webhook-sa-release-20261101/committed-source-manifest.json",
+    "tests": "NOT_RUN_USER_DIRECTION",
+    "make_verify": "NOT_RUN_USER_DIRECTION",
+    "image": "172.16.101.10:30003/icn-01a15337-release/eight-modeldev@sha256:4911a6dbecff3e3266c69127643ea3f1176f058802f700307c79c97fc10bb786",
+    "deployed": false
+  },
+  "environment_preparation": {
+    "status": "BLOCKED",
+    "missing_training_image_content_bytes": 9369678752,
+    "measured_copy_bytes_per_second_approx": 142000,
+    "estimated_transfer_hours_approx": 18.3,
+    "large_copy_started": false,
+    "chain": "image content unavailable -> normal Resource image registration unavailable -> canonical bundle not sealed -> new webhook/MD activation and A/B Ensure unavailable",
+    "image_evidence": "evidence/10/fixed-image-content-copy/result.json",
+    "platform_evidence": "evidence/ani-lab-20261101/modeldev-runtime/handoff-current.json"
+  },
+  "training": {
+    "status": "NOT_RUN",
+    "actual_create_count": 0,
+    "reason": "User explicitly requested stopping before real training"
+  },
+  "temporary_tools": {
+    "new_host_packages_installed": 0,
+    "platform_publisher_objects_and_token_path": "REMOVED",
+    "evidence": "evidence/ani-lab-20261101/modeldev-runtime/cleanup-ledger.json"
+  }
+}

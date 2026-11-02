@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/testsupport/admissionfixture"
 	"os"
 	"path/filepath"
 	"testing"
@@ -142,10 +143,11 @@ func assembleRecoveryOwner(t *testing.T, f *completeFixture, pool *pgxpool.Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
-	kube, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", Timeout: 10 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
+	kube, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", RateLimiter: f.kubeRateLimiter, Timeout: 10 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
 	if err != nil {
 		t.Fatal(err)
 	}
+	runs.WithMutationIdentity(kube)
 	identity, err := stepidentity.New(kube, "ani-modeldev-managed-step")
 	if err != nil {
 		t.Fatal(err)
@@ -165,7 +167,7 @@ func assembleRecoveryOwner(t *testing.T, f *completeFixture, pool *pgxpool.Pool)
 	if err != nil {
 		t.Fatal(err)
 	}
-	worker, err := biz.NewCloseWorker(lifecycle.New(pool), closer, biz.PipelineDispatchBinding{TenantID: f.request.Admission.TenantID, Environment: f.request.Admission.Snapshot.Environment, Owner: f.request.Owner}, 10, 100*time.Millisecond)
+	worker, err := biz.NewCloseWorker(lifecycle.New(pool), closer, (admissionfixture.DispatchBinding{TenantID: f.request.Admission.TenantID, Environment: f.request.Admission.Snapshot.Environment, Owner: f.request.Owner}).Environment.ClusterID, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,0 +1,184 @@
+{
+  "schema": "ani.modeldev.final-training-platform-images.v1",
+  "status": "TWO_FINAL_DIGESTS_REGISTERED_AND_INDEPENDENTLY_READ_BACK",
+  "readback_observed_at": "2026-11-01T02:44:11.459998+00:00",
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "api_server": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "ssh_user": "kubercloud",
+    "hostname": "node1"
+  },
+  "images": {
+    "cpu": {
+      "image_id": "img_9df817cd40f442148926525af042d7e1",
+      "owner_scope": "platform",
+      "tenant_id": null,
+      "space_id": "6f91947d-28d0-4b59-9d29-e9df29b2e989",
+      "repository": "ani-modeldev-training-cpu",
+      "source_reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-cpu@sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+      "digest": "sha256:31227c3af9d3d0afe5cffddf34d6a3e0a922e29ea7e153892c8b0a0d1ed7f1d5",
+      "platforms": [
+        {
+          "OS": "linux",
+          "Variant": "",
+          "Architecture": "amd64"
+        }
+      ],
+      "purposes": [
+        "finetuning",
+        "training"
+      ],
+      "accelerator": "none",
+      "version": 2,
+      "created_by": "operator:modeldev-tenantenv-20261101",
+      "updated_by": "operator:modeldev-tenantenv-20261101",
+      "unregistered_at": null
+    },
+    "gpu": {
+      "image_id": "img_78a1eade7d5148629a1c55b9d69f16cc",
+      "owner_scope": "platform",
+      "tenant_id": null,
+      "space_id": "6f91947d-28d0-4b59-9d29-e9df29b2e989",
+      "repository": "ani-modeldev-training-gpu",
+      "source_reference": "10.10.1.66:30003/ani-resource-factor10-20261022/ani-modeldev-training-gpu@sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+      "digest": "sha256:aa1f6ae2159eead52d0d2343d53d785021aa4572dc9978e1af221eb30519eb6e",
+      "platforms": [
+        {
+          "OS": "linux",
+          "Variant": "",
+          "Architecture": "amd64"
+        }
+      ],
+      "purposes": [
+        "finetuning",
+        "training"
+      ],
+      "accelerator": "nvidia",
+      "version": 1,
+      "created_by": "operator:modeldev-tenantenv-20261101",
+      "updated_by": "operator:modeldev-tenantenv-20261101",
+      "unregistered_at": null
+    }
+  },
+  "source_publication_result_byte_sha256": "e35d2545ee9f54a9bd0849602f848f49cfec101612a141a92ff05b357e710205",
+  "write_protocol": "Original deployed Res71c image-admin RegisterPlatformImage; CPU UpdatePlatformMetadata CASv1-to-v2; original same SA/Secret via finite unprivileged temporary Job; no SQL writes/RPC/RBAC/grants/runtime changes",
+  "registration_before_count": 0,
+  "final_registration_count": 2,
+  "cleanup": [
+    {
+      "observed_at": "2026-11-01T02:43:02.466351+00:00",
+      "identity": {
+        "ssh": "kubercloud@100.64.128.12",
+        "context": "kubernetes-admin@ani-kcn-full",
+        "api_server": "https://lb.kubesphere.local:6443",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+        "ssh_user": "kubercloud",
+        "hostname": "node1"
+      },
+      "deleted_only_original_task_uids": [
+        {
+          "path": "/apis/batch/v1/namespaces/ani-system/jobs/modeldev-training-image-register-20261101",
+          "uid": "8a24e3b6-4a8f-4157-a754-443dbdef5233",
+          "exit": 0
+        },
+        {
+          "path": "/api/v1/namespaces/ani-system/configmaps/modeldev-training-image-register-20261101-operator",
+          "uid": "a124f8ef-b6cd-4938-8cf5-31e7c0a783b0",
+          "exit": 0
+        }
+      ],
+      "absence": [
+        {
+          "kind": "job",
+          "name": "modeldev-training-image-register-20261101",
+          "absent": true
+        },
+        {
+          "kind": "configmap",
+          "name": "modeldev-training-image-register-20261101-operator",
+          "absent": true
+        }
+      ],
+      "owned_job_pods_absent": true,
+      "original_resource": {
+        "deployment_uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+        "generation": 111,
+        "pod_uid": "f6e8e746-1664-4544-8dca-ea05b53d7483",
+        "secret_uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+        "secret_resource_version": "20339931",
+        "config_sha256": "87631172ea6104e430d302ef1885fbf0f8f11b6f929ef55bafcff87517ea15a3",
+        "service_account_uid": "b01307c9-f6e2-4122-b82a-dea120ed30f1",
+        "matched_before": true
+      },
+      "capability_existed_only_in_own_terminated_job_emptydirs": true
+    },
+    {
+      "observed_at": "2026-11-01T02:44:29.780009+00:00",
+      "identity": {
+        "ssh": "kubercloud@100.64.128.12",
+        "context": "kubernetes-admin@ani-kcn-full",
+        "api_server": "https://lb.kubesphere.local:6443",
+        "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+        "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+        "ssh_user": "kubercloud",
+        "hostname": "node1"
+      },
+      "deleted_only_original_task_uids": [
+        {
+          "path": "/apis/batch/v1/namespaces/ani-system/jobs/modeldev-training-cpu-purpose-20261101",
+          "uid": "d120e817-e6c6-44f7-93b0-f4ba7b3c7abf",
+          "exit": 0
+        },
+        {
+          "path": "/api/v1/namespaces/ani-system/configmaps/modeldev-training-cpu-purpose-20261101-operator",
+          "uid": "d89ad04a-ec74-4fd4-9fdd-ca78e2a80b46",
+          "exit": 0
+        }
+      ],
+      "absence": [
+        {
+          "kind": "job",
+          "name": "modeldev-training-cpu-purpose-20261101",
+          "absent": true
+        },
+        {
+          "kind": "configmap",
+          "name": "modeldev-training-cpu-purpose-20261101-operator",
+          "absent": true
+        }
+      ],
+      "owned_job_pods_absent": true,
+      "original_resource": {
+        "deployment_uid": "9b17ed7e-6521-40e8-8bf5-70a44237e501",
+        "generation": 111,
+        "pod_uid": "f6e8e746-1664-4544-8dca-ea05b53d7483",
+        "secret_uid": "54303da4-f97a-451d-b186-4d1a35d0c466",
+        "secret_resource_version": "20339931",
+        "config_sha256": "87631172ea6104e430d302ef1885fbf0f8f11b6f929ef55bafcff87517ea15a3",
+        "service_account_uid": "b01307c9-f6e2-4122-b82a-dea120ed30f1",
+        "matched_before": true
+      },
+      "capability_existed_only_in_own_terminated_job_emptydirs": true
+    }
+  ],
+  "metadata_correction": "CPU original registration purposes[training] was insufficient for the required CPU finetuning profile; original owner CAS updated only purposes to [finetuning,training], same ImageID/digest.",
+  "preserved_failures": [
+    "training-platform-image-registration.stderr (distroless has no mkdir/sh; no registration)",
+    "platform-operator-node-placement-blocker.json (original Pod on node3; no guessed host write)",
+    "training-image-register-job-create.stderr (create succeeded; two JSON documents caused local parser error; originalUID reconciled, no repeat create/register)"
+  ],
+  "observation_annotation_correction": "CPU-purpose raw observation reused original registration request annotation; actual CPU update request is bound by training-image-cpu-purpose-job-create.json SHA and request body byteSHA9557a003760d4e9354a3cbeeead6fed9049d1aee93897c92d1de36116adc52df. Actual update-platform receipt/readback are authoritative.",
+  "evidence": {
+    "training-image-register-job-observation.json": "248d39af60731ac5066721bfc1c73e112b879ca2877a480dc4f406a5fbc7c883",
+    "training-image-cpu-purpose-job-create.json": "969551da4136a00b37c6c964eef572dd80f7110a3d56d8af22f6923ceaf520fa",
+    "training-image-cpu-purpose-job-observation.json": "299a52a7bed85af137647da2db856292758e8f8e373fccfb4b6d091a58dcbf16",
+    "platform-image-fixed-digest-after.json": "9a9383102cd4db9e7d2e951e1ede72f6df6279cb551e7488738f64f789f9c664",
+    "training-register-job-cleanup.json": "f40be8e504f218f6ef03f32685091a1c75c6608bfc7874fac9c5809a13e640ae",
+    "training-cpu-purpose-job-cleanup.json": "0ce2f692207da3cbc2f4239ba884fb1dfa21e4c1e5122e51c9a5fa71260764bc"
+  },
+  "business_acceptance": "NOT_RUN_REGISTRY_METADATA_ONLY"
+}

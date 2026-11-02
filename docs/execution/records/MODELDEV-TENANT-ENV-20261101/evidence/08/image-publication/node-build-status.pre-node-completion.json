@@ -1,0 +1,48 @@
+{
+  "status": "BLOCKED_NODE_TO_FEDORA_EXISTING_ROUTE_TCP_TIMEOUT",
+  "build_started": false,
+  "registry_push_issued": false,
+  "new_base_pull_issued": false,
+  "last_verified_identity_evidence": "node-ready-preflight-3.json",
+  "node_private_root": "/home/kubercloud/tenantenv-20261101/images-d807-build-20261101",
+  "fixed_context_evidence": "training-build-context.json",
+  "tool_evidence": "buildkit-release.json",
+  "cleanup_ledger": "added-tools-cleanup-ledger.json",
+  "preserved_receipts": [
+    "node-cgroup-preflight-failure.json",
+    "node-ready-preflight.json",
+    "node-ready-preflight-2.json",
+    "node-ready-preflight-3.json",
+    "node-official-tool-route.json",
+    "node-official-tool-download-unknown.json",
+    "sole-entry-socks-read.json"
+  ],
+  "remote_partial_files": "UNKNOWN_QUERY_BEFORE_REUSE_OR_CLEANUP",
+  "next_action": "Existing node route to Fedora172.16.101.31 does not reach TCP22 or actual fixed-file TCP52035. No route/interface/firewall/identity changes made. Root selects an authorized existing transport or alternate fixed-source preparation; do not repeat same probes or download cached LF base.",
+  "tool_status": "NODE_TOOLS_VERIFIED_FROM_OFFICIAL_CHECKSUM_NO_REPEAT_DOWNLOAD",
+  "authoritative_tool_evidence": "node-resume-preflight.json",
+  "last_identity_evidence": "node-resume-preflight.json",
+  "current_transport_evidence": "shared-control-transfer-timeout.json",
+  "source_transfer_exit": 30,
+  "simple_command_probe_exit": 124,
+  "node_build_or_push_started": false,
+  "fedora_local_redundant_tools_cleanup": "COMPLETE",
+  "node_cleanup": "PENDING_CONNECTION_RESTORE_AND_BUILD",
+  "updated_at": "2026-11-01T01:51:40.433430+00:00",
+  "runner_source": {
+    "path": "/home/chabking/workspace/.worktrees/modeldev-dynamic-tenant-environment/.scratch/modeldev-dynamic-tenant-environment/evidence/08/image-publication/node-build.py",
+    "sha256": "ee1bf6b0dc4d038f075ecf990fb4f6d13eaea2b1820296656cfb73d5ffb3e669",
+    "assembled_context_runner_sha256": "dedbd4874461a6dba93dbea0616bf3ffc4dea79e913654cba10964ff8da66619"
+  },
+  "latest_identity_evidence": "fixed-file-http-tcp.json",
+  "http_transport_evidence": [
+    "node-existing-route-and-original-daemon.json",
+    "node-to-fedora-existing-tcp.json",
+    "fixed-file-http-head.json",
+    "fixed-file-http-tcp.json",
+    "http-transport-closed-cleanup.json"
+  ],
+  "transport_server_cleanup": "COMPLETE_PROCESS_LISTENER_NONCE_DIRECTORY_ABSENT",
+  "fedora_original_sources": "RETAINED_UNCHANGED",
+  "node_context_completion": "NOT_RUN_NO_HTTP_REQUEST_REACHED_SERVER"
+}

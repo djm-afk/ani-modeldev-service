@@ -107,6 +107,7 @@ func bootstrapFixtureWithPool(t *testing.T, f *completeFixture, pool *pgxpool.Po
 	admissions, dispatch, facts := execution.New(pool), submission.New(pool), lifecycle.New(pool)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+	f.ensureEnvironment(t, pool)
 	acceptThroughCommandRPC(t, ctx, admissions, f.request.Admission)
 	roots := x509.NewCertPool()
 	roots.AddCert(f.kfp.Certificate())
@@ -116,6 +117,7 @@ func bootstrapFixtureWithPool(t *testing.T, f *completeFixture, pool *pgxpool.Po
 	if err != nil {
 		t.Fatal(err)
 	}
+	runs.WithMutationIdentity(f.mutationKube(t))
 	submitter, err := biz.NewPipelineSubmitter(dispatch, runs, 3*time.Second)
 	if err != nil {
 		t.Fatal(err)
@@ -123,7 +125,7 @@ func bootstrapFixtureWithPool(t *testing.T, f *completeFixture, pool *pgxpool.Po
 	if _, err = submitter.Submit(ctx, f.request); err != nil {
 		t.Fatal(err)
 	}
-	kube, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", Timeout: 10 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
+	kube, err := dynamic.NewForConfig(&rest.Config{Host: f.kube.URL, BearerToken: "synthetic-kube-owner", RateLimiter: f.kubeRateLimiter, Timeout: 10 * time.Second, TLSClientConfig: rest.TLSClientConfig{CAData: pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.kube.Certificate().Raw})}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,6 +151,7 @@ func newFixtureRuntimeClient(t *testing.T, f *completeFixture, pool *pgxpool.Poo
 	if err != nil {
 		t.Fatal(err)
 	}
+	managed.WithPullSecrets(submissionImages{reference: f.image})
 	client, stop := startMainFlowStepHandler(t, service.NewRuntimeStep(steps, managed, issuers...))
 	t.Cleanup(stop)
 	return client

@@ -38,7 +38,7 @@ func TestUncertaintyRejectsOtherIdentityOrPlanWithoutChangingOriginal(t *testing
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -66,7 +66,7 @@ func TestUncertaintyCannotCreateAMissingReservation(t *testing.T) {
 	for _, setup := range []string{"no identity", "admission only", "close tombstone only"} {
 		t.Run(setup, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			admissions := execution.New(openPool())
@@ -110,7 +110,7 @@ func TestUncertaintyRejectsInvalidObservationTimeWithoutRoundingOrReplacing(t *t
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			openPool := postgres.Prepare(t)
-			request := validDispatchRequest(t)
+			request := validDispatchRequest(t, openPool())
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -129,9 +129,9 @@ func TestUncertaintyRejectsInvalidObservationTimeWithoutRoundingOrReplacing(t *t
 
 func TestUncertaintyAcceptsCanonicalUUIDAndUTCOffsetAliases(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	request.Admission.TenantID = "aaaaaaaa-2222-4333-8444-555555555555"
-	refreshDispatchHashes(t, &request.Admission)
+	refreshDispatchHashes(t, openPool(), &request)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -163,10 +163,10 @@ func TestUncertaintyAfterDatabaseDeadlineRetainsOriginalAttempt(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	now := databaseTime(t, ctx, observer)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	request.Admission.AcceptedAt = now.Add(-time.Minute)
 	request.Admission.Snapshot.DeadlineAt = now.Add(3 * time.Second)
-	refreshDispatchHashes(t, &request.Admission)
+	refreshDispatchHashes(t, openPool(), &request)
 	first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
 	waitForDatabaseDeadline(t, ctx, observer, request.Admission.Snapshot.DeadlineAt)
 	observedAt := databaseTime(t, ctx, observer)
@@ -176,7 +176,7 @@ func TestUncertaintyAfterDatabaseDeadlineRetainsOriginalAttempt(t *testing.T) {
 
 func TestConcurrentUncertaintyObserversKeepOneFirstCommittedObservation(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	first := reserveUncertaintyAttempt(t, ctx, openPool(), request)
@@ -233,7 +233,7 @@ func TestConcurrentUncertaintyObserversKeepOneFirstCommittedObservation(t *testi
 
 func TestConcurrentCloseAndUncertaintyBothRemainDurable(t *testing.T) {
 	openPool := postgres.Prepare(t)
-	request := validDispatchRequest(t)
+	request := validDispatchRequest(t, openPool())
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	first := reserveUncertaintyAttempt(t, ctx, openPool(), request)

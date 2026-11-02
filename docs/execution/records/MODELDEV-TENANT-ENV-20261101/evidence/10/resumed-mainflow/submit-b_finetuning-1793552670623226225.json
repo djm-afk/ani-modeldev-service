@@ -1,0 +1,32 @@
+{
+  "started_at": "2026-11-01T17:04:26.803573+00:00",
+  "mode": "submit",
+  "tenant": "B",
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/api/v1/modeldev/executions",
+      "http_status": 202,
+      "response": {
+        "operation_id": "173a31f1-a07a-42ba-949d-3c4d001b7f8a",
+        "execution_id": "636f6bee-093a-4ea4-b768-029bb5031ca3",
+        "replayed": false,
+        "compute_state": "ACCEPTED",
+        "delivery_state": "PENDING",
+        "close_state": "OPEN",
+        "resource_state": "NOT_APPLICABLE"
+      }
+    }
+  ],
+  "identity": {
+    "ssh_user": "kubercloud",
+    "ssh_host": "100.64.128.12",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24"
+  },
+  "attempt": 5,
+  "finished_at": "2026-11-01T17:04:28.557433+00:00",
+  "transport_exit_code": 0
+}

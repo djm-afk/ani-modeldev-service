@@ -1,0 +1,9 @@
+{
+  "time": "2026-10-31T23:07:54.714713+00:00",
+  "job_id": "eda85e66a4f24c3895b7be87a5211500",
+  "method": "GET only",
+  "transport": "local SOCKS5h 127.0.0.1:7897",
+  "status": "QUERY_FAILED",
+  "error": "ConnectionError",
+  "no_post": true
+}

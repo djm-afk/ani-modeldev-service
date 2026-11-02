@@ -57,12 +57,19 @@ func assertUnpreparedOwnerCloseVertical(t *testing.T, f *ownerCloseFixture, pvc 
 	}
 	open := postgres.Prepare(t)
 	pool := open()
+	beforeEnsureHash := f.execution.SpecHash
+	ensureOwnerCloseEnvironment(t, pool, f)
+	rawPVC, _ := json.Marshal(pvc.Object)
+	rawPVC = []byte(strings.ReplaceAll(strings.ReplaceAll(string(rawPVC), beforeEnsureHash, f.execution.SpecHash), oldHash, f.execution.SpecHash))
+	if err := json.Unmarshal(rawPVC, pvc); err != nil {
+		t.Fatal(err)
+	}
 	ctx := context.Background()
 	executions, dispatch := execution.New(pool), submission.New(pool)
 	if _, err := executions.Accept(ctx, f.execution.Admission); err != nil {
 		t.Fatal(err)
 	}
-	reserved, err := dispatch.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.execution.Admission, Owner: f.dispatch.Plan.Owner})
+	reserved, err := dispatch.Reserve(ctx, biz.PipelineDispatchRequest{Admission: f.execution.Admission, Owner: f.execution.Snapshot.DispatchOwner})
 	if err != nil || reserved.SendPermit == nil {
 		t.Fatal("original dispatch reservation", err)
 	}
@@ -78,9 +85,17 @@ func assertUnpreparedOwnerCloseVertical(t *testing.T, f *ownerCloseFixture, pvc 
 	p := f.dispatch.Plan
 	f.run["experiment_id"], f.run["display_name"], f.run["service_account"] = p.Environment.ExperimentID, p.DisplayName, p.Environment.Identities.KFPStepServiceAccount
 	f.run["pipeline_version_reference"] = map[string]any{"pipeline_id": p.PipelineID, "pipeline_version_id": p.PipelineVersionID}
-	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": p.ExecutionID, "spec_hash": p.SpecHash}, "pipeline_root": p.Owner.PipelineRoot}
-	namespace := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": a.NamespaceName, "uid": a.NamespaceUID}}}
-	account := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "ServiceAccount", "metadata": map[string]any{"namespace": a.NamespaceName, "name": p.Environment.Identities.KFPStepServiceAccount, "uid": "289ad3d6-01ac-4886-8e8c-7318a1865e9f"}}}
+	f.run["runtime_config"] = map[string]any{"parameters": map[string]any{"execution_id": p.ExecutionID, "spec_hash": p.SpecHash, "environment_binding_id": p.Environment.BindingID, "namespace_uid": p.Environment.NamespaceUID}, "pipeline_root": p.Owner.PipelineRoot}
+	namespace := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": a.NamespaceName, "uid": a.NamespaceUID, "labels": map[string]any{"network.ani.io/tenant-id": p.TenantID, "network.ani.io/managed-by": "ani-network-service"}}}}
+	account := &unstructured.Unstructured{Object: map[string]any{"apiVersion": "v1", "kind": "ServiceAccount", "metadata": map[string]any{"namespace": a.NamespaceName, "name": p.Environment.Identities.KFPStepServiceAccount, "uid": p.Environment.Identities.KFPStepServiceAccountUID}}}
+	refs := []any{}
+	for _, ref := range f.execution.Snapshot.ManagedImageAccess.PullBindings {
+		refs = append(refs, map[string]any{"name": ref.SecretName})
+	}
+	account.Object["imagePullSecrets"] = refs
+	for i := range f.pods {
+		_ = unstructured.SetNestedSlice(f.pods[i].Object, refs, "spec", "imagePullSecrets")
+	}
 	objects := []runtime.Object{namespace, account, f.workflow, pvc}
 	for i := range f.pods {
 		objects = append(objects, &f.pods[i])

@@ -1,0 +1,82 @@
+{
+  "identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T11:25:57.094287+00:00"
+  },
+  "execution_id": "629cc704-028f-420b-af07-a68128fa0da8",
+  "status": "EXACT_A2_GOV_AND_MODELDEV_HISTORY_DELETED",
+  "databases": [
+    {
+      "database": "ani_governance",
+      "phase": "COMMITTED",
+      "sql_sha256": "d32da8c4e8481fe31d21bd0a41866311f8bf6e36d5a96276cbe96a42f6cd9fad",
+      "started_at": "2026-11-01T11:25:57.377234+00:00",
+      "exit": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "finished_at": "2026-11-01T11:25:57.551623+00:00",
+      "result": {
+        "database": "ani_governance",
+        "committed": true,
+        "ledger_writes": 0,
+        "acceptances_deleted": 1,
+        "effective_delete_role": "gov_migrate",
+        "remaining_original_acceptance": 0
+      }
+    },
+    {
+      "database": "ani_modeldev_v21",
+      "phase": "COMMITTED",
+      "sql_sha256": "c007e8f562a1c6868b7728e434a4e9deb61f7d1098f5c867e333f76e35eb4984",
+      "started_at": "2026-11-01T11:25:57.752686+00:00",
+      "exit": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "finished_at": "2026-11-01T11:25:57.913628+00:00",
+      "result": {
+        "deleted": {
+          "modeldev_executions": 1,
+          "modeldev_close_intents": 1,
+          "modeldev_run_authorities": 0,
+          "modeldev_execution_runtimes": 1,
+          "modeldev_pipeline_dispatches": 1,
+          "modeldev_execution_identities": 1,
+          "modeldev_pipeline_confirmed_runs": 1,
+          "modeldev_execution_cleanup_audits": 0
+        },
+        "database": "ani_modeldev_v21",
+        "committed": true,
+        "remaining": {
+          "modeldev_executions": 0,
+          "modeldev_close_intents": 0,
+          "modeldev_run_authorities": 0,
+          "modeldev_execution_runtimes": 0,
+          "modeldev_pipeline_dispatches": 0,
+          "modeldev_execution_identities": 0,
+          "modeldev_pipeline_confirmed_runs": 0,
+          "modeldev_execution_cleanup_audits": 0
+        },
+        "effective_delete_role": "modeldev_v21_migrate",
+        "history_status_updates": 0,
+        "input_or_environment_deletes": 0
+      }
+    }
+  ],
+  "ledger_writes": 0,
+  "history_state_fabrication": false,
+  "prewrite_identity": {
+    "ssh": "kubercloud@100.64.128.12",
+    "hostname": "node1",
+    "context": "kubernetes-admin@ani-kcn-full",
+    "apiserver": "https://lb.kubesphere.local:6443",
+    "cluster_id": "f39bf6e2-f3ed-4191-ada3-caeebf86c220",
+    "kube_system_uid": "3eeb5379-8748-4bf8-8f6d-d7a48ce3bc24",
+    "observed_at": "2026-11-01T11:25:57.752658+00:00"
+  },
+  "finished_at": "2026-11-01T11:25:57.914724+00:00",
+  "transport_exit": 0,
+  "transport_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
