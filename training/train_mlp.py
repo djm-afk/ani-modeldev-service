@@ -1,4 +1,4 @@
-"""Train the built-in single-device MLP from a selected CSV.
+"""Train the built-in single-device MLP from a selected CSV or Alpaca JSONL.
 
 The result is a workload candidate. This command has no control-plane clients
 and does not mark an Execution successful or publish files to object storage.
@@ -28,10 +28,11 @@ from implementation import defaults, implementation
 
 RULE = implementation("builtin.mlp")
 from dataset_manifest import (
-    load_dataset_manifest as load_frozen_dataset_manifest,
+    load_dataset_manifest_any as load_frozen_dataset_manifest,
     MAX_RECORD_BYTES, MAX_MANIFEST_BYTES,
 )
 DECIMAL_FEATURE = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
+ALPACA_FIELDS = frozenset(("instruction", "input", "output"))
 
 
 def checked_path(value):
@@ -87,6 +88,15 @@ def unique_fields(pairs):
     return value
 
 
+def unique_record_fields(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError(f"duplicate Alpaca field: {key}")
+        value[key] = item
+    return value
+
+
 def regular_file(path):
     descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     stream = os.fdopen(descriptor, "rb")
@@ -97,7 +107,21 @@ def regular_file(path):
 
 
 def load_dataset_manifest(path, expected_sha256):
-    return load_frozen_dataset_manifest(path, expected_sha256, "CSV")
+    return load_frozen_dataset_manifest(path, expected_sha256)
+
+
+def prepared_data_path(manifest_path, manifest):
+    """Resolve the prepared file inside this container.
+
+    The manifest records a workspace-relative path that carries the `inputs/`
+    prefix, while the container mounts that same subtree at `/inputs` and puts
+    the manifest at `/inputs/dataset-manifest.json`. Joining the recorded path
+    onto the manifest directory would therefore yield `/inputs/inputs/...`.
+    """
+    relative = manifest["prepared_relative_path"]
+    if not relative.startswith("inputs/"):
+        raise ValueError("prepared dataset path must be workspace-relative under inputs/")
+    return manifest_path.parent / relative[len("inputs/"):]
 
 
 class CSVRecords:
@@ -130,6 +154,74 @@ def checked_payload(rows, width):
     return rows * width
 
 
+class AlpacaJSONLRecords:
+    """Bound physical reads and reproduce the importer's string semantics.
+
+    The importer compacted each record and appended one LF. A record's byte
+    budget applies to the object without that LF, so the limit is compared
+    against the line minus a single trailing newline; the file digest and size
+    still cover every byte including it.
+    """
+
+    def __init__(self, stream):
+        self.stream = stream
+        self.digest = hashlib.sha256()
+        self.size = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        raw = self.stream.readline(MAX_RECORD_BYTES + 2)
+        if not raw:
+            raise StopIteration
+        self.size += len(raw)
+        self.digest.update(raw)
+        if not raw.endswith(b"\n"):
+            raise ValueError("prepared JSONL record must end with a single LF")
+        body = raw[:-1]
+        if len(body) > MAX_RECORD_BYTES:
+            raise ValueError(f"MaxRecordBytes exceeded: actual={len(body)} limit={MAX_RECORD_BYTES}")
+        if len(body) == MAX_RECORD_BYTES and not body.lstrip().startswith(b"{"):
+            raise ValueError("prepared JSONL record is not an object")
+        return body
+
+
+def _strip_surrogates(text):
+    """Replace lone surrogates with U+FFFD before UTF-8 encoding.
+
+    Go's encoding/json already did this on import, so a READY version can
+    legitimately contain such a record. Python's errors='replace' emits '?'
+    instead of U+FFFD, which would change the hashed bytes.
+    """
+    if not any(0xD800 <= ord(ch) <= 0xDFFF for ch in text):
+        return text
+    return "".join("\ufffd" if 0xD800 <= ord(ch) <= 0xDFFF else ch for ch in text)
+
+
+def alpaca_source_text(record, index):
+    """Return the instruction bytes under the importer's accepted shape."""
+    try:
+        value = json.loads(record.decode("utf-8"), object_pairs_hook=unique_record_fields)
+    except (UnicodeDecodeError, ValueError) as error:
+        raise ValueError(f"prepared JSONL record {index + 1} is not strict JSON: {error}") from error
+    if not isinstance(value, dict) or set(value) != ALPACA_FIELDS or any(type(v) is not str for v in value.values()):
+        raise ValueError(f"prepared JSONL record {index + 1} requires exactly the Alpaca string fields")
+    if value["instruction"].strip() == "" or value["output"].strip() == "":
+        raise ValueError(f"prepared JSONL record {index + 1} requires a nonblank instruction and output")
+    return _strip_surrogates(value["instruction"]).encode("utf-8")
+
+
+def project_features(text):
+    """Deterministic 16-dim projection; standard library only.
+
+    Every digest byte reaches all 16 dimensions through SHA-256, so no input
+    position owns a fixed dimension and the label is not decided by a prefix.
+    """
+    digest = hashlib.sha256(text).digest()
+    return [struct.unpack(">H", digest[2 * j:2 * j + 2])[0] / 65535.0 for j in range(16)]
+
+
 @contextmanager
 def selected_input_maps(path, manifest, work):
     rows = int(manifest["row_count"])
@@ -154,32 +246,13 @@ def selected_input_maps(path, manifest, work):
             with regular_file(path) as stream:
                 if os.fstat(stream.fileno()).st_size != int(manifest["prepared_size_bytes"]):
                     raise ValueError("selected input size does not match the frozen input")
-                lines = CSVRecords(stream)
-                csv.field_size_limit(MAX_RECORD_BYTES)
-                records = csv.reader(lines, strict=True)
-                header = next(records, None)
-                if header != [f"x{i}" for i in range(16)] + ["label"]:
-                    raise ValueError("fixed CPU input requires exactly x0 through x15 and label")
-                count = 0
-                while True:
-                    lines.record_bytes = 0
-                    row = next(records, None)
-                    if row is None:
-                        break
-                    if len(row) != 17 or row[-1] not in ("0", "1"):
-                        raise ValueError("each sample requires 16 features and a binary integer label")
-                    if any("\r" in value or "\n" in value for value in row):
-                        raise ValueError("CSV numeric fields cannot contain CR or LF")
-                    if any(not DECIMAL_FEATURE.fullmatch(value.strip()) for value in row[:-1]):
-                        raise ValueError("CSV features must use the current decimal numeric grammar")
-                    values = [float(value) for value in row[:-1]]
-                    if any(not math.isfinite(value) or abs(value) > 3.4028234663852886e38 for value in values):
-                        raise ValueError("features must be finite float32 values")
-                    if count >= rows:
-                        raise ValueError("selected input row count exceeds the frozen input")
-                    struct.pack_into("<16f", maps["features.f32"], count * 64, *values)
-                    struct.pack_into("<q", maps["labels.i64"], count * 8, int(row[-1]))
-                    count += 1
+                format = manifest["source_format"]
+                if format == "CSV":
+                    lines, count = _load_csv(stream, maps, rows)
+                elif format == "JSON":
+                    lines, count = _load_jsonl(stream, maps, rows)
+                else:
+                    raise ValueError("unknown dataset source format")
                 if (count != rows or lines.size != int(manifest["prepared_size_bytes"])
                     or lines.digest.hexdigest() != manifest["prepared_sha256"]):
                     raise ValueError("selected input facts do not match the frozen input")
@@ -187,6 +260,52 @@ def selected_input_maps(path, manifest, work):
     finally:
         for target in paths:
             target.unlink()
+
+
+def _load_csv(stream, maps, rows):
+    lines = CSVRecords(stream)
+    csv.field_size_limit(MAX_RECORD_BYTES)
+    records = csv.reader(lines, strict=True)
+    header = next(records, None)
+    if header != [f"x{i}" for i in range(16)] + ["label"]:
+        raise ValueError("fixed CPU input requires exactly x0 through x15 and label")
+    count = 0
+    while True:
+        lines.record_bytes = 0
+        row = next(records, None)
+        if row is None:
+            break
+        if len(row) != 17 or row[-1] not in ("0", "1"):
+            raise ValueError("each sample requires 16 features and a binary integer label")
+        if any("\r" in value or "\n" in value for value in row):
+            raise ValueError("CSV numeric fields cannot contain CR or LF")
+        if any(not DECIMAL_FEATURE.fullmatch(value.strip()) for value in row[:-1]):
+            raise ValueError("CSV features must use the current decimal numeric grammar")
+        values = [float(value) for value in row[:-1]]
+        if any(not math.isfinite(value) or abs(value) > 3.4028234663852886e38 for value in values):
+            raise ValueError("features must be finite float32 values")
+        if count >= rows:
+            raise ValueError("selected input row count exceeds the frozen input")
+        struct.pack_into("<16f", maps["features.f32"], count * 64, *values)
+        struct.pack_into("<q", maps["labels.i64"], count * 8, int(row[-1]))
+        count += 1
+    return lines, count
+
+
+def _load_jsonl(stream, maps, rows):
+    lines = AlpacaJSONLRecords(stream)
+    count = 0
+    for index, record in enumerate(lines):
+        if count >= rows:
+            raise ValueError("selected input row count exceeds the frozen input")
+        features = project_features(alpaca_source_text(record, index))
+        if any(not math.isfinite(value) or value < 0.0 or value > 1.0 for value in features):
+            raise ValueError("projected features must be finite and within [0,1]")
+        label = 1 if features[0] >= 0.5 else 0
+        struct.pack_into("<16f", maps["features.f32"], count * 64, *features)
+        struct.pack_into("<q", maps["labels.i64"], count * 8, label)
+        count += 1
+    return lines, count
 
 
 def write_json(path, value):
@@ -249,7 +368,7 @@ def main():
     check_output(output)
     manifest_path = checked_path(args.dataset_manifest)
     manifest = load_dataset_manifest(manifest_path, args.expected_dataset_manifest_sha256)
-    data = checked_path(manifest_path.parent / "data.csv")
+    data = checked_path(prepared_data_path(manifest_path, manifest))
     work = checked_path(args.work_root)
     with selected_input_maps(data, manifest, work) as maps:
         return train(args, output, manifest, maps, canonical_rate, optimizer_rate,

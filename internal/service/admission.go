@@ -119,6 +119,8 @@ func admissionError(err error, requestID string) error {
 		return commandError(codes.NotFound, modeldevv1.ErrorReason_ERROR_REASON_RESOURCE_NOT_FOUND, "input version unavailable", requestID)
 	case errors.Is(err, biz.ErrAdmissionInputNotReady):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INPUT_NOT_READY, "input version is not ready", requestID)
+	case errors.Is(err, biz.ErrInputKindFormatMismatch):
+		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INPUT_KIND_FORMAT_MISMATCH, "input format is not accepted by this execution kind", requestID)
 	case errors.Is(err, biz.ErrAdmissionEnvironmentNotReady):
 		return commandError(codes.Unavailable, modeldevv1.ErrorReason_ERROR_REASON_ENVIRONMENT_NOT_READY, "managed environment is not ready", requestID)
 	case errors.Is(err, biz.ErrImplementationUnavailable):
@@ -127,6 +129,8 @@ func admissionError(err error, requestID string) error {
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_UNSUPPORTED_DEVICE, "implementation does not support this device", requestID)
 	case errors.Is(err, biz.ErrAdmissionPlanMismatch):
 		return commandError(codes.InvalidArgument, modeldevv1.ErrorReason_ERROR_REASON_ADMISSION_PLAN_MISMATCH, "admission plan mismatch", requestID)
+	case errors.Is(err, biz.ErrInputProofUnavailable), errors.Is(err, biz.ErrInputPathUnavailable):
+		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INTEGRITY_MISMATCH, "input proof does not match its frozen contract", requestID)
 	default:
 		return commandError(codes.Unavailable, modeldevv1.ErrorReason_ERROR_REASON_UPSTREAM_UNAVAILABLE, "admission dependency unavailable", requestID)
 	}

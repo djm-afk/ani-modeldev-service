@@ -44,6 +44,64 @@ def positive_int64(value):
     return int(value)
 
 
+def read_manifest_structure(path, expected_sha256):
+    """Return the frozen manifest object after size/hash/canonical checks.
+
+    Structural validation only: the caller has not yet chosen a source format,
+    so this reads the format out of the verified document instead of being told
+    what it must be.
+    """
+    path = Path(path)
+    if not isinstance(expected_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+        raise ValueError("expected dataset manifest SHA256 must be lowercase hexadecimal")
+    if path.name != "dataset-manifest.json" or path.parent.name != "inputs":
+        raise ValueError("dataset manifest must be inputs/dataset-manifest.json")
+    with regular_file(path) as stream:
+        raw = stream.read(MAX_MANIFEST_BYTES + 1)
+    if len(raw) > MAX_MANIFEST_BYTES:
+        raise ValueError(f"MaxManifestBytes exceeded: actual={len(raw)} limit={MAX_MANIFEST_BYTES}")
+    if hashlib.sha256(raw).hexdigest() != expected_sha256:
+        raise ValueError("dataset manifest does not match the frozen SHA256")
+    manifest = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_fields)
+    fields = {
+        "schema_version", "input_version_id", "source_format", "source_size_bytes",
+        "source_sha256", "row_count", "prepared_format", "transform_id",
+        "prepared_relative_path", "prepared_size_bytes", "prepared_sha256",
+    }
+    if not isinstance(manifest, dict) or set(manifest) != fields or any(type(v) is not str for v in manifest.values()):
+        raise ValueError("dataset manifest requires exactly the current string fields")
+    if manifest["schema_version"] != "ani.modeldev.dataset-manifest.v3":
+        raise ValueError("dataset manifest schema differs")
+    if manifest["source_format"] not in ("CSV", "JSON"):
+        raise ValueError("unknown dataset source format")
+    try:
+        identity = uuid.UUID(manifest["input_version_id"])
+    except ValueError as error:
+        raise ValueError("dataset input version must be a UUID") from error
+    if identity.int == 0 or str(identity) != manifest["input_version_id"]:
+        raise ValueError("dataset input version must be a canonical nonzero UUID")
+    for key in ("source_sha256", "prepared_sha256"):
+        if not re.fullmatch(r"[0-9a-f]{64}", manifest[key]):
+            raise ValueError(f"invalid dataset {key}")
+    for key in ("source_size_bytes", "prepared_size_bytes", "row_count"):
+        positive_int64(manifest[key])
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    if raw != canonical:
+        raise ValueError("dataset manifest must use current canonical JSON bytes")
+    return manifest
+
+
+def load_dataset_manifest_any(path, expected_sha256):
+    """Load the manifest without being told the source format up front.
+
+    Any caller that hardcodes the format has to know the answer before it can
+    read the file, which is circular. This verifies the document, then applies
+    that document's own format rules through load_dataset_manifest.
+    """
+    manifest = read_manifest_structure(path, expected_sha256)
+    return load_dataset_manifest(path, expected_sha256, manifest["source_format"])
+
+
 def load_dataset_manifest(path, expected_sha256, source_format):
     path = Path(path)
     if not isinstance(expected_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):

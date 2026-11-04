@@ -28,13 +28,11 @@ func (r *recordingResolver) ResolveTrainingImage(_ context.Context, _, imageID, 
 func resolutionInputs() (cpup01.ImplementationMaterial, TenantAdmissionFacts, cpup01.InputRef, []cpup01.Parameter) {
 	snapshot := conformance.SnapshotV1()
 	facts := TenantAdmissionFacts{
-		TenantID:            snapshot.IdentityRef.TenantID,
-		Environment:         snapshot.Environment,
-		InputScope:          cpup01.StorageScope{StorageConnectionID: snapshot.Input.Object.StorageConnectionID, Bucket: snapshot.Input.Object.Bucket, ApprovedPrefix: "fixed", CredentialReference: "input-read"},
-		Workspace:           snapshot.Workspace,
-		InputFilePath:       "/inputs/data.csv",
-		OutputDirectoryPath: "/outputs",
-		TargetPlatform:      cpup01.TrainingPlatform{OS: "linux", Architecture: "amd64"},
+		TenantID:       snapshot.IdentityRef.TenantID,
+		Environment:    snapshot.Environment,
+		InputScope:     cpup01.StorageScope{StorageConnectionID: snapshot.Input.Object.StorageConnectionID, Bucket: snapshot.Input.Object.Bucket, ApprovedPrefix: "fixed", CredentialReference: "input-read"},
+		Workspace:      snapshot.Workspace,
+		TargetPlatform: cpup01.TrainingPlatform{OS: "linux", Architecture: "amd64"},
 	}
 	return conformance.MaterialV21(), facts, snapshot.Input, snapshot.Program.ResolvedParameters
 }

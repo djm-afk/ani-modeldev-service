@@ -149,6 +149,22 @@ func TenantEnvironmentLockKey(tenant, cluster string) int64 {
 	h := sha256.Sum256([]byte("ani.modeldev.tenant-environment.v1\x00" + tenant + "\x00" + cluster))
 	return int64(binary.BigEndian.Uint64(h[:8]))
 }
+
+// DatasetTargetCommitLockKey is the short "target authority commit" lock's key.
+// It shares one key domain per tenant+cluster between dataset acceptance,
+// publication, credential issuance and the registry's own short transactions,
+// so "no registry row yet" cannot race with the first registration. Its domain
+// deliberately differs from TenantEnvironmentLockKey, which stays the long
+// Ensure session lock.
+//
+// The byte string is prefix + NUL + tenant + NUL + cluster, hashed with
+// SHA-256 and truncated to the first eight bytes as a big-endian int64. The
+// SQL function modeldev_lock_dataset_target_commit computes the same value;
+// both sides must keep this exact layout.
+func DatasetTargetCommitLockKey(tenant, cluster string) int64 {
+	h := sha256.Sum256([]byte("ani.modeldev.dataset-target-commit.v1\x00" + tenant + "\x00" + cluster))
+	return int64(binary.BigEndian.Uint64(h[:8]))
+}
 func EnvironmentDigest(b []byte) string { h := sha256.Sum256(b); return hex.EncodeToString(h[:]) }
 func (u *TenantEnvironment) Get(ctx context.Context, tenant string) (TenantExecutionEnvironment, error) {
 	if u == nil || !CanonicalEnvironmentUUID(tenant) {

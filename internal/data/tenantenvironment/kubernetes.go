@@ -65,6 +65,49 @@ func originalObjectFailure(err error) error {
 	}
 	return kubernetesFailure(err)
 }
+
+// NamespaceIdentity is the verified standard tenant Namespace fact. It carries
+// no training-registry state, so the dataset import path can reuse the same
+// rule without reading a training environment projection.
+type NamespaceIdentity struct {
+	ClusterID string
+	Name      string
+	UID       string
+}
+
+// ReadNamespaceIdentity verifies exactly one standard tenant Namespace and
+// returns its real identity. It is the KFP-free core of VerifyNamespace; the
+// training path keeps its own row-updating wrapper.
+func (p *Platform) ReadNamespaceIdentity(ctx context.Context, tenantID, originalUID string) (NamespaceIdentity, error) {
+	name, err := biz.TenantNamespace(tenantID)
+	if err != nil {
+		return NamespaceIdentity{}, biz.EnvironmentConflict("TENANT_NAMESPACE_OWNERSHIP_MISMATCH")
+	}
+	o, err := p.get(ctx, resource("Namespace"), "", name)
+	if apierrors.IsNotFound(err) {
+		return NamespaceIdentity{}, biz.EnvironmentError("TENANT_NAMESPACE_NOT_FOUND")
+	}
+	if apierrors.IsForbidden(err) || apierrors.IsUnauthorized(err) {
+		return NamespaceIdentity{}, biz.EnvironmentError("TENANT_NAMESPACE_ACCESS_DENIED")
+	}
+	if err != nil {
+		return NamespaceIdentity{}, biz.EnvironmentError("ENVIRONMENT_DEPENDENCY_UNAVAILABLE")
+	}
+	labels := o.GetLabels()
+	uid := string(o.GetUID())
+	if o.GetName() != name || labels["network.ani.io/tenant-id"] != tenantID || labels["network.ani.io/managed-by"] != "ani-network-service" || !biz.CanonicalEnvironmentUUID(uid) {
+		return NamespaceIdentity{}, biz.EnvironmentConflict("TENANT_NAMESPACE_OWNERSHIP_MISMATCH")
+	}
+	if originalUID != "" && originalUID != uid {
+		return NamespaceIdentity{}, biz.EnvironmentConflict("TENANT_NAMESPACE_UID_CHANGED")
+	}
+	phase, _, _ := unstructured.NestedString(o.Object, "status", "phase")
+	if phase != "Active" || o.GetDeletionTimestamp() != nil {
+		return NamespaceIdentity{}, biz.EnvironmentError("TENANT_NAMESPACE_NOT_ACTIVE")
+	}
+	return NamespaceIdentity{ClusterID: p.config.ClusterID, Name: name, UID: uid}, nil
+}
+
 func (p *Platform) VerifyNamespace(ctx context.Context, row *biz.TenantExecutionEnvironment) error {
 	name, err := biz.TenantNamespace(row.TenantID)
 	if err != nil || name != row.NamespaceName || row.ClusterID != p.config.ClusterID {

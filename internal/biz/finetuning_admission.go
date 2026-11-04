@@ -28,21 +28,32 @@ func verifiedAdmissionInput(v InputVersion, kind string) (cpup01.InputRef, error
 		return cpup01.InputRef{}, ErrAdmissionInputNotReady
 	}
 	ref := cpup01.InputRef{InputVersionID: v.Import.InputVersionID, Object: v.Import.Object, Format: v.Import.InputFormat()}
-	switch kind {
-	case "GENERAL_TRAINING":
+	// Readiness and compatibility are separate answers. A READY input whose
+	// format this kind does not accept is not "not ready"; telling operators so
+	// sends them after a dataset-state problem that does not exist. The
+	// legality rule is shared with the container-path lookup so the two gates
+	// cannot disagree.
+	if !AdmissionKindFormatSupported(kind, ref.Format) {
+		if kind != "GENERAL_TRAINING" && kind != "FINETUNING" {
+			return cpup01.InputRef{}, ErrImplementationUnavailable
+		}
+		return cpup01.InputRef{}, ErrInputKindFormatMismatch
+	}
+	switch ref.Format {
+	case "CSV":
 		if v.Verification == nil || v.AlpacaVerification != nil || v.Verification.ValidateFor(v.Import) != nil {
-			return cpup01.InputRef{}, ErrAdmissionInputNotReady
+			return cpup01.InputRef{}, ErrInputProofUnavailable
 		}
 		ref.SchemaVersion, ref.RowCount, ref.FeatureCount = v.Verification.SchemaVersion, v.Verification.RowCount, v.Verification.FeatureCount
 		ref.PreparedDataset = v.Verification.PreparedDataset
-	case "FINETUNING":
+	case "JSON":
 		if v.AlpacaVerification == nil || v.Verification != nil || v.AlpacaVerification.ValidateFor(v.Import) != nil {
-			return cpup01.InputRef{}, ErrAdmissionInputNotReady
+			return cpup01.InputRef{}, ErrInputProofUnavailable
 		}
 		ref.SchemaVersion, ref.RowCount = v.AlpacaVerification.SchemaVersion, v.AlpacaVerification.RowCount
 		ref.PreparedDataset = v.AlpacaVerification.PreparedDataset
 	default:
-		return cpup01.InputRef{}, ErrImplementationUnavailable
+		return cpup01.InputRef{}, ErrInputKindFormatMismatch
 	}
 	return ref, nil
 }

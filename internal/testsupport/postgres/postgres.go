@@ -118,7 +118,7 @@ func (fixture *schemaFixture) install(t *testing.T) {
 	defer cancel()
 	transaction := fixture.migrationTransaction(t, ctx)
 	defer rollbackMigration(transaction)
-	for _, migration := range []string{"0001_current_baseline.up.sql", "0002_tenant_execution_environments.up.sql", "0003_execution_environment_projection.up.sql"} {
+	for _, migration := range []string{"0001_current_baseline.up.sql", "0002_tenant_execution_environments.up.sql", "0003_execution_environment_projection.up.sql", "0004_dataset_domain.up.sql"} {
 		raw, err := os.ReadFile(filepath.Join(repositoryRoot(t), "migrations", migration))
 		if err != nil {
 			t.Fatal("CPU04_DB_PREFLIGHT: current schema unavailable; behavior NOT_RUN")
@@ -162,6 +162,27 @@ func (fixture *schemaFixture) install(t *testing.T) {
 	}
 	if _, err := transaction.Exec(ctx, "GRANT UPDATE (state, verified_at, verified_schema_version, verified_row_count, verified_feature_count, prepared_format, prepared_transform_id, prepared_size_bytes, prepared_sha256, prepared_row_count, failure_code, failure_observed_at) ON "+schemaSQL+".modeldev_input_versions TO "+roleSQL); err != nil {
 		t.Fatal("CPU04_DB_PREFLIGHT: runtime input-verification grant failed; behavior NOT_RUN")
+	}
+	// Dataset facts. No business DELETE anywhere; immutable fact tables are
+	// insert/select only, and mutable tables get exactly their controlled columns.
+	for _, grant := range []string{
+		"GRANT INSERT, SELECT ON " + schemaSQL + ".modeldev_datasets TO " + roleSQL,
+		"GRANT UPDATE (name, description, state, revision, next_version_number, updated_by, updated_at, archived_at) ON " + schemaSQL + ".modeldev_datasets TO " + roleSQL,
+		"GRANT INSERT, SELECT ON " + schemaSQL + ".modeldev_dataset_command_receipts TO " + roleSQL,
+		"GRANT INSERT, SELECT ON " + schemaSQL + ".modeldev_dataset_import_tasks TO " + roleSQL,
+		"GRANT UPDATE (state, phase, recovery_generation, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, target_invalidated_at, target_invalidated_reason, finished_at, published_at, updated_at) ON " + schemaSQL + ".modeldev_dataset_import_tasks TO " + roleSQL,
+		"GRANT INSERT, SELECT ON " + schemaSQL + ".modeldev_dataset_import_attempts TO " + roleSQL,
+		"GRANT UPDATE (job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_observation, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at) ON " + schemaSQL + ".modeldev_dataset_import_attempts TO " + roleSQL,
+		"GRANT INSERT, SELECT ON " + schemaSQL + ".modeldev_dataset_credential_issuances TO " + roleSQL,
+		"GRANT UPDATE (outcome, result_recorded_at, actual_expires_at, unknown_expires_upper_bound, expiry_bound_basis, delivery_state, delivery_intended_at, delivery_expected_resource_version, delivery_observed_resource_version, delivered_at) ON " + schemaSQL + ".modeldev_dataset_credential_issuances TO " + roleSQL,
+		"GRANT INSERT, SELECT ON " + schemaSQL + ".modeldev_dataset_version_metadata TO " + roleSQL,
+		"GRANT INSERT, SELECT ON " + schemaSQL + ".modeldev_dataset_operations TO " + roleSQL,
+		"GRANT EXECUTE ON FUNCTION " + schemaSQL + ".modeldev_lock_input_identity(uuid, uuid, uuid) TO " + roleSQL,
+		"GRANT EXECUTE ON FUNCTION " + schemaSQL + ".modeldev_lock_dataset_target_commit(uuid, uuid) TO " + roleSQL,
+	} {
+		if _, err := transaction.Exec(ctx, grant); err != nil {
+			t.Fatal("CPU04_DB_PREFLIGHT: dataset grant failed; behavior NOT_RUN")
+		}
 	}
 	if err := transaction.Commit(ctx); err != nil {
 		t.Fatal("CPU04_DB_PREFLIGHT: migration commit failed; behavior NOT_RUN")

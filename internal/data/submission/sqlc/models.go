@@ -22,6 +22,196 @@ type ModeldevCloseIntent struct {
 	CloseState       string
 }
 
+type ModeldevDataset struct {
+	TenantID          pgtype.UUID
+	DatasetID         pgtype.UUID
+	Name              string
+	Description       string
+	Modality          string
+	SchemaKind        string
+	State             string
+	Revision          int64
+	NextVersionNumber int64
+	CreatedBy         string
+	UpdatedBy         string
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+	ArchivedAt        pgtype.Timestamptz
+}
+
+type ModeldevDatasetCommandReceipt struct {
+	TenantID         pgtype.UUID
+	ReceiptID        pgtype.UUID
+	ActorID          string
+	OperationKind    string
+	IdempotencyKey   string
+	RequestSha256    string
+	CanonicalRequest []byte
+	DatasetID        pgtype.UUID
+	TaskID           pgtype.UUID
+	ResponseStatus   int32
+	Receipt          []byte
+	AcceptedAt       pgtype.Timestamptz
+}
+
+type ModeldevDatasetCredentialIssuance struct {
+	TenantID                        pgtype.UUID
+	IssuanceID                      pgtype.UUID
+	DatasetID                       pgtype.UUID
+	TaskID                          pgtype.UUID
+	AttemptID                       pgtype.UUID
+	Generation                      int64
+	TaskLeaseEpoch                  int64
+	AttemptReconcileEpoch           int64
+	SecretUid                       string
+	Policy                          []byte
+	PolicySha256                    string
+	RequestedDurationSeconds        int32
+	IntendedAt                      pgtype.Timestamptz
+	RequestDeadlineAt               pgtype.Timestamptz
+	AuthorizationDeadlineAt         pgtype.Timestamptz
+	Outcome                         string
+	ResultRecordedAt                pgtype.Timestamptz
+	ActualExpiresAt                 pgtype.Timestamptz
+	UnknownExpiresUpperBound        pgtype.Timestamptz
+	ExpiryBoundBasis                []byte
+	DeliveryState                   string
+	DeliveryIntendedAt              pgtype.Timestamptz
+	DeliveryExpectedResourceVersion pgtype.Text
+	DeliveryObservedResourceVersion pgtype.Text
+	DeliveredAt                     pgtype.Timestamptz
+}
+
+type ModeldevDatasetImportAttempt struct {
+	TenantID                 pgtype.UUID
+	AttemptID                pgtype.UUID
+	DatasetID                pgtype.UUID
+	TaskID                   pgtype.UUID
+	AttemptNo                int64
+	RecoveryGeneration       int64
+	ClusterID                pgtype.UUID
+	NamespaceName            string
+	NamespaceUid             pgtype.UUID
+	JobName                  string
+	PvcName                  string
+	SecretName               string
+	JobUid                   pgtype.Text
+	JobResourceVersion       pgtype.Text
+	PvcUid                   pgtype.Text
+	PvcResourceVersion       pgtype.Text
+	SecretUid                pgtype.Text
+	SecretResourceVersion    pgtype.Text
+	RuntimePlan              []byte
+	RuntimePlanSha256        string
+	RuntimeObservation       []byte
+	DataObjectKey            string
+	ResultObjectKey          string
+	CreatedAt                pgtype.Timestamptz
+	DeadlineAt               pgtype.Timestamptz
+	DispatchClosedAt         pgtype.Timestamptz
+	CloseReason              pgtype.Text
+	WritersStoppedAt         pgtype.Timestamptz
+	ResultObjectVersionID    pgtype.Text
+	ResultSha256             pgtype.Text
+	LastCredentialGeneration int64
+	SecretGeneration         pgtype.Int8
+	ReconcileOwner           pgtype.Text
+	ReconcileEpoch           int64
+	ReconcileUntil           pgtype.Timestamptz
+	ReconcileNextAt          pgtype.Timestamptz
+	CleanupState             string
+	CleanupCompletedAt       pgtype.Timestamptz
+}
+
+type ModeldevDatasetImportTask struct {
+	TenantID                         pgtype.UUID
+	TaskID                           pgtype.UUID
+	DatasetID                        pgtype.UUID
+	AcceptanceReceiptID              pgtype.UUID
+	ReservedInputVersionID           pgtype.UUID
+	InputRequestID                   pgtype.UUID
+	VersionNumber                    int64
+	CreatedBy                        string
+	AcceptedAt                       pgtype.Timestamptz
+	SourceProvider                   string
+	SourceSnapshot                   []byte
+	SourceSnapshotSha256             string
+	ExpectedSizeBytes                int64
+	AcceptedLimitBytes               int64
+	ClusterID                        pgtype.UUID
+	NamespaceName                    string
+	NamespaceUid                     pgtype.UUID
+	TargetSnapshot                   []byte
+	TargetSnapshotSha256             string
+	StorageConnectionID              string
+	Bucket                           string
+	ApprovedPrefix                   string
+	InputScopeSha256                 string
+	CredentialReference              string
+	ObservedEnvironmentID            pgtype.UUID
+	ObservedEnvironmentBindingDigest pgtype.Text
+	AuthorizationScope               []byte
+	AuthorizationScopeSha256         string
+	TargetInvalidatedAt              pgtype.Timestamptz
+	TargetInvalidatedReason          pgtype.Text
+	State                            string
+	Phase                            string
+	RecoveryGeneration               int64
+	RecoveryPolicy                   []byte
+	ValidationRetryCount             int32
+	ValidationDeadlineAt             pgtype.Timestamptz
+	NextRunAt                        pgtype.Timestamptz
+	CurrentAttemptID                 pgtype.UUID
+	LeaseOwner                       pgtype.Text
+	LeaseEpoch                       int64
+	LeaseUntil                       pgtype.Timestamptz
+	CancelRequestedAt                pgtype.Timestamptz
+	FailureCode                      pgtype.Text
+	FailureDetail                    []byte
+	Retryable                        bool
+	CandidateAttemptID               pgtype.UUID
+	CandidateObjectKey               pgtype.Text
+	CandidateVersionID               pgtype.Text
+	CandidateSizeBytes               pgtype.Int8
+	CandidateSha256                  pgtype.Text
+	CandidateFrozenAt                pgtype.Timestamptz
+	CandidateReportVersionID         pgtype.Text
+	CandidateReportSha256            pgtype.Text
+	FinishedAt                       pgtype.Timestamptz
+	PublishedAt                      pgtype.Timestamptz
+	UpdatedAt                        pgtype.Timestamptz
+}
+
+type ModeldevDatasetOperation struct {
+	TenantID           pgtype.UUID
+	OperationID        pgtype.UUID
+	DatasetID          pgtype.UUID
+	TaskID             pgtype.UUID
+	AttemptID          pgtype.UUID
+	ReceiptID          pgtype.UUID
+	Actor              string
+	EventType          string
+	Result             string
+	BeforeState        string
+	AfterState         string
+	BeforeRevision     pgtype.Int8
+	AfterRevision      pgtype.Int8
+	RecoveryGeneration pgtype.Int8
+	FailureCode        pgtype.Text
+	Detail             []byte
+	OccurredAt         pgtype.Timestamptz
+}
+
+type ModeldevDatasetVersionMetadatum struct {
+	TenantID       pgtype.UUID
+	InputVersionID pgtype.UUID
+	DatasetID      pgtype.UUID
+	ImportTaskID   pgtype.UUID
+	VersionNumber  int64
+	Preview        []byte
+	PublishedAt    pgtype.Timestamptz
+}
+
 type ModeldevExecution struct {
 	TenantID             pgtype.UUID
 	ExecutionID          pgtype.UUID
