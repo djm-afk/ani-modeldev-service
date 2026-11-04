@@ -73,9 +73,12 @@ func NewGovernanceCommandServer(c *conf.Server_GRPC, security CommandTLS, comman
 }
 
 type GovernanceServices struct {
-	Management             modeldevv1.ModelDevManagementServiceServer
-	Operations             modeldevv1.ModelDevOperationsServiceServer
-	Environment            modeldevv1.ModelDevTenantEnvironmentServiceServer
+	Management  modeldevv1.ModelDevManagementServiceServer
+	Operations  modeldevv1.ModelDevOperationsServiceServer
+	Environment modeldevv1.ModelDevTenantEnvironmentServiceServer
+	// Dataset is nil when the import configuration is absent; the methods then
+	// stay unreachable rather than silently succeeding.
+	Dataset                modeldevv1.ModelDevDatasetServiceServer
 	ModelResolutionTimeout time.Duration
 	ImportTimeout          time.Duration
 }
@@ -158,6 +161,9 @@ func newGovernanceServer(c *conf.Server_GRPC, security CommandTLS, command model
 	}
 	if extra.Environment != nil {
 		modeldevv1.RegisterModelDevTenantEnvironmentServiceServer(s, extra.Environment)
+	}
+	if extra.Dataset != nil {
+		modeldevv1.RegisterModelDevDatasetServiceServer(s, extra.Dataset)
 	}
 	return s, nil
 }

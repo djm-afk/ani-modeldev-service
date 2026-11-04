@@ -210,10 +210,11 @@ type DatasetCommand struct {
 // intent". It excludes trace ids, current limits, observation timestamps and
 // any server-generated id, per design §9.2.
 func (command DatasetCommand) Digest() string {
-	parts := []string{
-		string(command.Kind),
-		command.DatasetID,
-		command.TaskID,
+	// Create names no target yet: the id is server-generated, so including it
+	// would make every replay look like a different intent.
+	parts := []string{string(command.Kind)}
+	if command.Kind != OpCreateDataset {
+		parts = append(parts, command.DatasetID, command.TaskID)
 	}
 	if command.UpdateName || command.Name != "" {
 		parts = append(parts, "name="+command.Name)

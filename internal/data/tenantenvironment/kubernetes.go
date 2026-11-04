@@ -487,3 +487,22 @@ func (p *Platform) VerifyPublication(ctx context.Context, row *biz.TenantExecuti
 	}
 	return p.verifyBootstrap(ctx)
 }
+
+// ReadNamespaceIdentityParts adapts ReadNamespaceIdentity to the dataset
+// package's narrow port without exporting the registry model across packages.
+func (p *Platform) ReadNamespaceIdentityParts(ctx context.Context, tenantID, originalUID string) (string, string, string, error) {
+	identity, err := p.ReadNamespaceIdentity(ctx, tenantID, originalUID)
+	if err != nil {
+		return "", "", "", err
+	}
+	return identity.ClusterID, identity.Name, identity.UID, nil
+}
+
+// PlatformInputScope returns the platform-level input scope the dataset target
+// reader derives the tenant prefix from. It carries no tenant identity.
+func (p *Platform) PlatformInputScope() cpup01.StorageScope {
+	if p == nil {
+		return cpup01.StorageScope{}
+	}
+	return p.config.InputScope
+}

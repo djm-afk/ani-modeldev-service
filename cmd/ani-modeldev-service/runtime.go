@@ -159,7 +159,14 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if modelClient != nil {
 		operations.WithRegistrationRecovery(runtime, admissions)
 	}
-	command, err := buildCommandServerWithEnvironment(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, images, config.Runtime, admissionFacts, environmentService, middlewares...)
+	datasetService, err := buildDatasetService(pool, environmentPlatform, environments, clients.environmentConfig.ClusterID, datasetImportConfig(config.Runtime), func() (int64, error) {
+		limits, err := config.Runtime.ContentLimits()
+		return limits.MaxContentBytes, err
+	})
+	if err != nil {
+		return failed("dataset import service invalid")
+	}
+	command, err := buildCommandServerWithEnvironment(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, images, config.Runtime, admissionFacts, environmentService, datasetService, middlewares...)
 	if err != nil {
 		return failed("managed command listener configuration invalid: " + err.Error())
 	}

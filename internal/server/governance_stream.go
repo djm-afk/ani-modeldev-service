@@ -51,6 +51,27 @@ func verifiedQueryMethods(query modeldevv1.ModelDevQueryServiceServer, extra Gov
 		methods[modeldevv1.ModelDevOperationsService_ApplyExecutionCleanup_FullMethodName] = true
 		methods[modeldevv1.ModelDevOperationsService_ResumeModelRegistration_FullMethodName] = true
 	}
+	if extra.Dataset != nil {
+		for _, method := range []string{
+			modeldevv1.ModelDevDatasetService_CreateDataset_FullMethodName,
+			modeldevv1.ModelDevDatasetService_GetDataset_FullMethodName,
+			modeldevv1.ModelDevDatasetService_ListDatasets_FullMethodName,
+			modeldevv1.ModelDevDatasetService_UpdateDataset_FullMethodName,
+			modeldevv1.ModelDevDatasetService_ArchiveDataset_FullMethodName,
+			modeldevv1.ModelDevDatasetService_RestoreDataset_FullMethodName,
+			modeldevv1.ModelDevDatasetService_InspectDatasetSource_FullMethodName,
+			modeldevv1.ModelDevDatasetService_ImportDatasetVersion_FullMethodName,
+			modeldevv1.ModelDevDatasetService_CancelDatasetImport_FullMethodName,
+			modeldevv1.ModelDevDatasetService_RetryDatasetImport_FullMethodName,
+			modeldevv1.ModelDevDatasetService_ListDatasetVersions_FullMethodName,
+			modeldevv1.ModelDevDatasetService_GetInputVersionPreview_FullMethodName,
+			modeldevv1.ModelDevDatasetService_ListDatasetImportTasks_FullMethodName,
+			modeldevv1.ModelDevDatasetService_GetDatasetImportTask_FullMethodName,
+			modeldevv1.ModelDevDatasetService_ListDatasetOperations_FullMethodName,
+		} {
+			methods[method] = true
+		}
+	}
 	if extra.Environment != nil {
 		// Ensure is a write: delegation must name its exact method, following
 		// the BFF's current manage_environment permission and API grant check.
