@@ -308,3 +308,124 @@ SELECT modeldev_lock_input_identity(
 SELECT modeldev_lock_dataset_target_commit(
     sqlc.arg(tenant_id)::uuid, sqlc.arg(cluster_id)::uuid
 );
+
+-- name: ListDueTasks :many
+SELECT * FROM modeldev_dataset_import_tasks
+WHERE state IN ('QUEUED','RUNNING','CANCELING')
+  AND next_run_at <= sqlc.arg(now)
+  AND (lease_until IS NULL OR lease_until < sqlc.arg(now))
+ORDER BY next_run_at, accepted_at, tenant_id, task_id
+LIMIT sqlc.arg(batch_size);
+
+-- name: AcquireTaskLease :one
+-- The lease is granted only when it is free or already ours. The epoch advances
+-- on every hand-over so a stale owner cannot act on the new lease.
+UPDATE modeldev_dataset_import_tasks
+SET lease_owner = sqlc.arg(owner),
+    lease_epoch = CASE WHEN lease_owner = sqlc.arg(owner) THEN lease_epoch ELSE lease_epoch + 1 END,
+    lease_until = clock_timestamp() + sqlc.arg(ttl)::interval,
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND state IN ('QUEUED','RUNNING','CANCELING')
+  AND (lease_owner IS NULL OR lease_owner = sqlc.arg(owner) OR lease_until < clock_timestamp())
+RETURNING *;
+
+-- name: ReleaseTaskLease :exec
+UPDATE modeldev_dataset_import_tasks
+SET lease_owner = NULL, lease_until = NULL, updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND lease_owner = sqlc.arg(owner)
+  AND lease_epoch = sqlc.arg(epoch);
+
+-- name: CountRunningAttempts :one
+SELECT count(*) FROM modeldev_dataset_import_attempts
+WHERE cleanup_state NOT IN ('DONE')
+  AND dispatch_closed_at IS NULL;
+
+-- name: InsertAttempt :one
+INSERT INTO modeldev_dataset_import_attempts (
+    tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation,
+    cluster_id, namespace_name, namespace_uid,
+    job_name, pvc_name, secret_name, runtime_plan, runtime_plan_sha256,
+    data_object_key, result_object_key, deadline_at
+) VALUES (
+    sqlc.arg(tenant_id)::uuid, sqlc.arg(attempt_id)::uuid, sqlc.arg(dataset_id)::uuid,
+    sqlc.arg(task_id)::uuid, sqlc.arg(attempt_no)::bigint, sqlc.arg(recovery_generation)::bigint,
+    sqlc.arg(cluster_id)::uuid, sqlc.arg(namespace_name), sqlc.arg(namespace_uid)::uuid,
+    sqlc.arg(job_name), sqlc.arg(pvc_name), sqlc.arg(secret_name),
+    sqlc.arg(runtime_plan)::jsonb, sqlc.arg(runtime_plan_sha256),
+    sqlc.arg(data_object_key), sqlc.arg(result_object_key), sqlc.arg(deadline_at)
+)
+ON CONFLICT DO NOTHING
+RETURNING *;
+
+-- name: SetCurrentAttempt :one
+UPDATE modeldev_dataset_import_tasks
+SET current_attempt_id = sqlc.arg(attempt_id)::uuid,
+    phase = 'WAITING',
+    next_run_at = clock_timestamp(),
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND state = 'RUNNING'
+  AND cancel_requested_at IS NULL
+  AND current_attempt_id IS NULL
+RETURNING *;
+
+-- name: ListDueAttempts :many
+SELECT * FROM modeldev_dataset_import_attempts
+WHERE reconcile_next_at IS NOT NULL
+  AND reconcile_next_at <= sqlc.arg(now)
+  AND (reconcile_until IS NULL OR reconcile_until < sqlc.arg(now))
+ORDER BY reconcile_next_at, tenant_id, attempt_id
+LIMIT sqlc.arg(batch_size);
+
+-- name: AcquireAttemptLease :one
+UPDATE modeldev_dataset_import_attempts
+SET reconcile_owner = sqlc.arg(owner),
+    reconcile_epoch = CASE WHEN reconcile_owner = sqlc.arg(owner) THEN reconcile_epoch ELSE reconcile_epoch + 1 END,
+    reconcile_until = clock_timestamp() + sqlc.arg(ttl)::interval
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
+  AND (reconcile_owner IS NULL OR reconcile_owner = sqlc.arg(owner) OR reconcile_until < clock_timestamp())
+RETURNING *;
+
+-- name: ClaimAttemptCleanup :one
+-- The cleanup claim is the only path that may delete an attempt's objects.
+UPDATE modeldev_dataset_import_attempts
+SET cleanup_state = 'RUNNING'
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
+  AND cleanup_state IN ('PENDING','WAITING')
+  AND writers_stopped_at IS NOT NULL
+  AND dispatch_closed_at IS NOT NULL
+RETURNING *;
+
+-- name: FinishAttemptCleanup :one
+UPDATE modeldev_dataset_import_attempts
+SET cleanup_state = 'DONE',
+    cleanup_completed_at = clock_timestamp(),
+    reconcile_next_at = NULL,
+    reconcile_owner = NULL,
+    reconcile_until = NULL
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
+  AND cleanup_state = 'RUNNING'
+RETURNING *;
+
+-- name: FreezeCandidate :one
+-- Candidate fields go from all-empty to complete in one step and may only be
+-- replayed at the same value afterwards.
+UPDATE modeldev_dataset_import_attempts
+SET result_object_version_id = sqlc.arg(version_id),
+    result_sha256 = sqlc.arg(sha256),
+    writers_stopped_at = clock_timestamp(),
+    dispatch_closed_at = clock_timestamp(),
+    close_reason = 'SUCCEEDED'
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
+  AND writers_stopped_at IS NULL
+  AND result_object_version_id IS NULL
+RETURNING *;

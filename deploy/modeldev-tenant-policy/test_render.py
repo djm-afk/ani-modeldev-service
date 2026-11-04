@@ -5,7 +5,7 @@ import render
 
 
 def config():
-    p={name:"system:serviceaccount:platform:"+name.replace("_","-") for name in ["control","webhook","kfp_api","argo","trainer","jobset","job_controller","persistence_agent"]}
+    p={name:"system:serviceaccount:platform:"+name.replace("_","-") for name in ["control","webhook","kfp_api","argo","trainer","jobset","job_controller","persistence_agent","dataset_control"]}
     p.update(control="system:serviceaccount:ani-system:modeldev-control",webhook="system:serviceaccount:ani-system:ani-modeldev-webhook",maintenance="verified-maintenance")
     return {"principals":p,"node_principals":["system:node:verified-node"],"kfp_ca_key":"ca.crt","network_metadata_writer":"system:serviceaccount:kcn-system:kcn-controller","network_status_writer":"system:serviceaccount:kube-system:ani-multus","gc_finalizer_writer":{"username":"system:serviceaccount:kube-system:generic-garbage-collector","uid":"33333333-3333-4333-8333-333333333333"},"scheduler_writer":{"username":"system:serviceaccount:volcano-system:ani-volcano-scheduler","uid":"44444444-4444-4444-8444-444444444444"},"device_plugin_writer":{"username":"system:serviceaccount:kube-system:volcano-device-plugin","uid":"55555555-5555-4555-8555-555555555555"}}
 
@@ -51,6 +51,69 @@ class NativeTemplates(unittest.TestCase):
             value=copy.deepcopy(config());mutate(value)
             with self.assertRaises(ValueError):
                 render.render(value)
+
+
+    def test_importer_identity_is_separate_and_pinned(self):
+        rows = render.render(config())["items"]
+        roles = {o["metadata"]["name"]: o for o in rows if o["kind"] == "ClusterRole"}
+        # The importer account itself has no API permissions.
+        self.assertNotIn("modeldev-dataset-importer-v1", roles)
+        # Its webhook reader is distinct from the training one and only reads
+        # a Job, the importer account and Pods.
+        webhook = roles["modeldev-dataset-webhook-read-v1"]["rules"]
+        self.assertEqual({r["resources"][0] for r in webhook}, {"jobs", "serviceaccounts", "pods"})
+        self.assertEqual(next(r for r in webhook if r["resources"] == ["serviceaccounts"])["resourceNames"], [render.IMPORTER])
+        # Control keeps only the verbs the close/cleanup path needs.
+        control = roles["modeldev-dataset-control-v1"]["rules"]
+        self.assertEqual(next(r for r in control if r["resources"] == ["serviceaccounts"])["resourceNames"], [render.IMPORTER])
+        self.assertEqual(next(r for r in control if r["resources"] == ["namespaces"])["verbs"], ["get"])
+        for rule in control:
+            self.assertNotIn("*", rule["verbs"])
+            self.assertFalse(set(rule["verbs"]) & {"escalate", "impersonate"})
+
+    def test_importer_service_account_shape_is_fixed(self):
+        document = render.render(config())
+        bootstrap = next(o for o in document["items"] if o["kind"] == "ValidatingAdmissionPolicy" and o["metadata"]["name"] == render.NAMES[0])
+        expression = str(bootstrap)
+        # automount off and no image pull secret, exactly like trainer-workload.
+        self.assertIn("modeldev-dataset-importer", expression)
+        self.assertIn("automountServiceAccountToken", expression)
+        # Both rolebinding rows for the dataset branch exist in RBAC.
+        rows = document["items"]
+        names = {o["metadata"]["name"] for o in rows if o["kind"] == "ClusterRole"}
+        self.assertIn("modeldev-dataset-control-v1", names)
+        self.assertIn("modeldev-dataset-webhook-read-v1", names)
+
+    def test_importer_purpose_is_required_on_pods(self):
+        document = render.render(config())
+        workload = next(o for o in document["items"] if o["kind"] == "ValidatingAdmissionPolicy" and o["metadata"]["name"] == render.NAMES[2])
+        text = str(workload)
+        # Purpose label and the importer SA must appear together in the pod gate.
+        self.assertIn("dataset-import", text)
+        self.assertIn("modeldev-dataset-importer", text)
+        # Creation is limited to the dataset control plane, not to a trainer.
+        self.assertIn("system:serviceaccount:platform:dataset-control", text)
+
+    def test_dataset_principal_is_required(self):
+        value = copy.deepcopy(config())
+        del value["principals"]["dataset_control"]
+        with self.assertRaises(ValueError):
+            render.render(value)
+
+
+    def test_dataset_control_cannot_update_training_workloads(self):
+        document = render.render(config())
+        workload = next(o for o in document["items"] if o["kind"] == "ValidatingAdmissionPolicy" and o["metadata"]["name"] == render.NAMES[2])
+        dataset_control = "system:serviceaccount:platform:dataset-control"
+        # The generic trusted list feeds the UPDATE allow-list; the dataset
+        # control plane must not be in it, or it could rewrite training specs.
+        update_condition = next(e["expression"] for e in workload["spec"]["validations"] if "variables.sameIdentity" in e["expression"])
+        self.assertNotIn('"' + dataset_control + '"', update_condition)
+        create_condition = next(e["expression"] for e in workload["spec"]["validations"] if "only exact original controllers" in e["message"])
+        self.assertIn("dataset-import", create_condition)
+        # It appears only alongside the importer purpose label.
+        self.assertIn(dataset_control, str(workload["spec"]["matchConditions"]))
+        self.assertIn("dataset-import", str(workload["spec"]["matchConditions"]))
 
     def test_native_rbac_needs_no_global_authorization_inventory(self):
         rows=render.render(config())["items"]

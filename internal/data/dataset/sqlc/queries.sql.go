@@ -11,6 +11,166 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const acquireAttemptLease = `-- name: AcquireAttemptLease :one
+UPDATE modeldev_dataset_import_attempts
+SET reconcile_owner = $1,
+    reconcile_epoch = CASE WHEN reconcile_owner = $1 THEN reconcile_epoch ELSE reconcile_epoch + 1 END,
+    reconcile_until = clock_timestamp() + $2::interval
+WHERE tenant_id = $3::uuid
+  AND attempt_id = $4::uuid
+  AND (reconcile_owner IS NULL OR reconcile_owner = $1 OR reconcile_until < clock_timestamp())
+RETURNING tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation, cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name, job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_plan, runtime_plan_sha256, runtime_observation, data_object_key, result_object_key, created_at, deadline_at, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at
+`
+
+type AcquireAttemptLeaseParams struct {
+	Owner     pgtype.Text
+	Ttl       pgtype.Interval
+	TenantID  pgtype.UUID
+	AttemptID pgtype.UUID
+}
+
+func (q *Queries) AcquireAttemptLease(ctx context.Context, arg AcquireAttemptLeaseParams) (ModeldevDatasetImportAttempt, error) {
+	row := q.db.QueryRow(ctx, acquireAttemptLease,
+		arg.Owner,
+		arg.Ttl,
+		arg.TenantID,
+		arg.AttemptID,
+	)
+	var i ModeldevDatasetImportAttempt
+	err := row.Scan(
+		&i.TenantID,
+		&i.AttemptID,
+		&i.DatasetID,
+		&i.TaskID,
+		&i.AttemptNo,
+		&i.RecoveryGeneration,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.JobName,
+		&i.PvcName,
+		&i.SecretName,
+		&i.JobUid,
+		&i.JobResourceVersion,
+		&i.PvcUid,
+		&i.PvcResourceVersion,
+		&i.SecretUid,
+		&i.SecretResourceVersion,
+		&i.RuntimePlan,
+		&i.RuntimePlanSha256,
+		&i.RuntimeObservation,
+		&i.DataObjectKey,
+		&i.ResultObjectKey,
+		&i.CreatedAt,
+		&i.DeadlineAt,
+		&i.DispatchClosedAt,
+		&i.CloseReason,
+		&i.WritersStoppedAt,
+		&i.ResultObjectVersionID,
+		&i.ResultSha256,
+		&i.LastCredentialGeneration,
+		&i.SecretGeneration,
+		&i.ReconcileOwner,
+		&i.ReconcileEpoch,
+		&i.ReconcileUntil,
+		&i.ReconcileNextAt,
+		&i.CleanupState,
+		&i.CleanupCompletedAt,
+	)
+	return i, err
+}
+
+const acquireTaskLease = `-- name: AcquireTaskLease :one
+UPDATE modeldev_dataset_import_tasks
+SET lease_owner = $1,
+    lease_epoch = CASE WHEN lease_owner = $1 THEN lease_epoch ELSE lease_epoch + 1 END,
+    lease_until = clock_timestamp() + $2::interval,
+    updated_at = clock_timestamp()
+WHERE tenant_id = $3::uuid
+  AND task_id = $4::uuid
+  AND state IN ('QUEUED','RUNNING','CANCELING')
+  AND (lease_owner IS NULL OR lease_owner = $1 OR lease_until < clock_timestamp())
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+`
+
+type AcquireTaskLeaseParams struct {
+	Owner    pgtype.Text
+	Ttl      pgtype.Interval
+	TenantID pgtype.UUID
+	TaskID   pgtype.UUID
+}
+
+// The lease is granted only when it is free or already ours. The epoch advances
+// on every hand-over so a stale owner cannot act on the new lease.
+func (q *Queries) AcquireTaskLease(ctx context.Context, arg AcquireTaskLeaseParams) (ModeldevDatasetImportTask, error) {
+	row := q.db.QueryRow(ctx, acquireTaskLease,
+		arg.Owner,
+		arg.Ttl,
+		arg.TenantID,
+		arg.TaskID,
+	)
+	var i ModeldevDatasetImportTask
+	err := row.Scan(
+		&i.TenantID,
+		&i.TaskID,
+		&i.DatasetID,
+		&i.AcceptanceReceiptID,
+		&i.ReservedInputVersionID,
+		&i.InputRequestID,
+		&i.VersionNumber,
+		&i.CreatedBy,
+		&i.AcceptedAt,
+		&i.SourceProvider,
+		&i.SourceSnapshot,
+		&i.SourceSnapshotSha256,
+		&i.ExpectedSizeBytes,
+		&i.AcceptedLimitBytes,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.TargetSnapshot,
+		&i.TargetSnapshotSha256,
+		&i.StorageConnectionID,
+		&i.Bucket,
+		&i.ApprovedPrefix,
+		&i.InputScopeSha256,
+		&i.CredentialReference,
+		&i.ObservedEnvironmentID,
+		&i.ObservedEnvironmentBindingDigest,
+		&i.AuthorizationScope,
+		&i.AuthorizationScopeSha256,
+		&i.TargetInvalidatedAt,
+		&i.TargetInvalidatedReason,
+		&i.State,
+		&i.Phase,
+		&i.RecoveryGeneration,
+		&i.RecoveryPolicy,
+		&i.ValidationRetryCount,
+		&i.ValidationDeadlineAt,
+		&i.NextRunAt,
+		&i.CurrentAttemptID,
+		&i.LeaseOwner,
+		&i.LeaseEpoch,
+		&i.LeaseUntil,
+		&i.CancelRequestedAt,
+		&i.FailureCode,
+		&i.FailureDetail,
+		&i.Retryable,
+		&i.CandidateAttemptID,
+		&i.CandidateObjectKey,
+		&i.CandidateVersionID,
+		&i.CandidateSizeBytes,
+		&i.CandidateSha256,
+		&i.CandidateFrozenAt,
+		&i.CandidateReportVersionID,
+		&i.CandidateReportSha256,
+		&i.FinishedAt,
+		&i.PublishedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const archiveDataset = `-- name: ArchiveDataset :one
 UPDATE modeldev_datasets
 SET state = 'ARCHIVED',
@@ -55,6 +215,69 @@ func (q *Queries) ArchiveDataset(ctx context.Context, arg ArchiveDatasetParams) 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const claimAttemptCleanup = `-- name: ClaimAttemptCleanup :one
+UPDATE modeldev_dataset_import_attempts
+SET cleanup_state = 'RUNNING'
+WHERE tenant_id = $1::uuid
+  AND attempt_id = $2::uuid
+  AND cleanup_state IN ('PENDING','WAITING')
+  AND writers_stopped_at IS NOT NULL
+  AND dispatch_closed_at IS NOT NULL
+RETURNING tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation, cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name, job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_plan, runtime_plan_sha256, runtime_observation, data_object_key, result_object_key, created_at, deadline_at, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at
+`
+
+type ClaimAttemptCleanupParams struct {
+	TenantID  pgtype.UUID
+	AttemptID pgtype.UUID
+}
+
+// The cleanup claim is the only path that may delete an attempt's objects.
+func (q *Queries) ClaimAttemptCleanup(ctx context.Context, arg ClaimAttemptCleanupParams) (ModeldevDatasetImportAttempt, error) {
+	row := q.db.QueryRow(ctx, claimAttemptCleanup, arg.TenantID, arg.AttemptID)
+	var i ModeldevDatasetImportAttempt
+	err := row.Scan(
+		&i.TenantID,
+		&i.AttemptID,
+		&i.DatasetID,
+		&i.TaskID,
+		&i.AttemptNo,
+		&i.RecoveryGeneration,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.JobName,
+		&i.PvcName,
+		&i.SecretName,
+		&i.JobUid,
+		&i.JobResourceVersion,
+		&i.PvcUid,
+		&i.PvcResourceVersion,
+		&i.SecretUid,
+		&i.SecretResourceVersion,
+		&i.RuntimePlan,
+		&i.RuntimePlanSha256,
+		&i.RuntimeObservation,
+		&i.DataObjectKey,
+		&i.ResultObjectKey,
+		&i.CreatedAt,
+		&i.DeadlineAt,
+		&i.DispatchClosedAt,
+		&i.CloseReason,
+		&i.WritersStoppedAt,
+		&i.ResultObjectVersionID,
+		&i.ResultSha256,
+		&i.LastCredentialGeneration,
+		&i.SecretGeneration,
+		&i.ReconcileOwner,
+		&i.ReconcileEpoch,
+		&i.ReconcileUntil,
+		&i.ReconcileNextAt,
+		&i.CleanupState,
+		&i.CleanupCompletedAt,
 	)
 	return i, err
 }
@@ -126,6 +349,19 @@ func (q *Queries) CountImportTasks(ctx context.Context, arg CountImportTasksPara
 	return count, err
 }
 
+const countRunningAttempts = `-- name: CountRunningAttempts :one
+SELECT count(*) FROM modeldev_dataset_import_attempts
+WHERE cleanup_state NOT IN ('DONE')
+  AND dispatch_closed_at IS NULL
+`
+
+func (q *Queries) CountRunningAttempts(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countRunningAttempts)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countVersionMetadata = `-- name: CountVersionMetadata :one
 SELECT count(*) FROM modeldev_dataset_version_metadata
 WHERE tenant_id = $1::uuid
@@ -160,6 +396,70 @@ func (q *Queries) DatasetNameTaken(ctx context.Context, arg DatasetNameTakenPara
 	var dataset_id string
 	err := row.Scan(&dataset_id)
 	return dataset_id, err
+}
+
+const finishAttemptCleanup = `-- name: FinishAttemptCleanup :one
+UPDATE modeldev_dataset_import_attempts
+SET cleanup_state = 'DONE',
+    cleanup_completed_at = clock_timestamp(),
+    reconcile_next_at = NULL,
+    reconcile_owner = NULL,
+    reconcile_until = NULL
+WHERE tenant_id = $1::uuid
+  AND attempt_id = $2::uuid
+  AND cleanup_state = 'RUNNING'
+RETURNING tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation, cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name, job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_plan, runtime_plan_sha256, runtime_observation, data_object_key, result_object_key, created_at, deadline_at, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at
+`
+
+type FinishAttemptCleanupParams struct {
+	TenantID  pgtype.UUID
+	AttemptID pgtype.UUID
+}
+
+func (q *Queries) FinishAttemptCleanup(ctx context.Context, arg FinishAttemptCleanupParams) (ModeldevDatasetImportAttempt, error) {
+	row := q.db.QueryRow(ctx, finishAttemptCleanup, arg.TenantID, arg.AttemptID)
+	var i ModeldevDatasetImportAttempt
+	err := row.Scan(
+		&i.TenantID,
+		&i.AttemptID,
+		&i.DatasetID,
+		&i.TaskID,
+		&i.AttemptNo,
+		&i.RecoveryGeneration,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.JobName,
+		&i.PvcName,
+		&i.SecretName,
+		&i.JobUid,
+		&i.JobResourceVersion,
+		&i.PvcUid,
+		&i.PvcResourceVersion,
+		&i.SecretUid,
+		&i.SecretResourceVersion,
+		&i.RuntimePlan,
+		&i.RuntimePlanSha256,
+		&i.RuntimeObservation,
+		&i.DataObjectKey,
+		&i.ResultObjectKey,
+		&i.CreatedAt,
+		&i.DeadlineAt,
+		&i.DispatchClosedAt,
+		&i.CloseReason,
+		&i.WritersStoppedAt,
+		&i.ResultObjectVersionID,
+		&i.ResultSha256,
+		&i.LastCredentialGeneration,
+		&i.SecretGeneration,
+		&i.ReconcileOwner,
+		&i.ReconcileEpoch,
+		&i.ReconcileUntil,
+		&i.ReconcileNextAt,
+		&i.CleanupState,
+		&i.CleanupCompletedAt,
+	)
+	return i, err
 }
 
 const finishCancelledTask = `-- name: FinishCancelledTask :one
@@ -241,6 +541,80 @@ func (q *Queries) FinishCancelledTask(ctx context.Context, arg FinishCancelledTa
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const freezeCandidate = `-- name: FreezeCandidate :one
+UPDATE modeldev_dataset_import_attempts
+SET result_object_version_id = $1,
+    result_sha256 = $2,
+    writers_stopped_at = clock_timestamp(),
+    dispatch_closed_at = clock_timestamp(),
+    close_reason = 'SUCCEEDED'
+WHERE tenant_id = $3::uuid
+  AND attempt_id = $4::uuid
+  AND writers_stopped_at IS NULL
+  AND result_object_version_id IS NULL
+RETURNING tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation, cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name, job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_plan, runtime_plan_sha256, runtime_observation, data_object_key, result_object_key, created_at, deadline_at, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at
+`
+
+type FreezeCandidateParams struct {
+	VersionID pgtype.Text
+	Sha256    pgtype.Text
+	TenantID  pgtype.UUID
+	AttemptID pgtype.UUID
+}
+
+// Candidate fields go from all-empty to complete in one step and may only be
+// replayed at the same value afterwards.
+func (q *Queries) FreezeCandidate(ctx context.Context, arg FreezeCandidateParams) (ModeldevDatasetImportAttempt, error) {
+	row := q.db.QueryRow(ctx, freezeCandidate,
+		arg.VersionID,
+		arg.Sha256,
+		arg.TenantID,
+		arg.AttemptID,
+	)
+	var i ModeldevDatasetImportAttempt
+	err := row.Scan(
+		&i.TenantID,
+		&i.AttemptID,
+		&i.DatasetID,
+		&i.TaskID,
+		&i.AttemptNo,
+		&i.RecoveryGeneration,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.JobName,
+		&i.PvcName,
+		&i.SecretName,
+		&i.JobUid,
+		&i.JobResourceVersion,
+		&i.PvcUid,
+		&i.PvcResourceVersion,
+		&i.SecretUid,
+		&i.SecretResourceVersion,
+		&i.RuntimePlan,
+		&i.RuntimePlanSha256,
+		&i.RuntimeObservation,
+		&i.DataObjectKey,
+		&i.ResultObjectKey,
+		&i.CreatedAt,
+		&i.DeadlineAt,
+		&i.DispatchClosedAt,
+		&i.CloseReason,
+		&i.WritersStoppedAt,
+		&i.ResultObjectVersionID,
+		&i.ResultSha256,
+		&i.LastCredentialGeneration,
+		&i.SecretGeneration,
+		&i.ReconcileOwner,
+		&i.ReconcileEpoch,
+		&i.ReconcileUntil,
+		&i.ReconcileNextAt,
+		&i.CleanupState,
+		&i.CleanupCompletedAt,
 	)
 	return i, err
 }
@@ -415,6 +789,108 @@ func (q *Queries) GetVersionMetadata(ctx context.Context, arg GetVersionMetadata
 		&i.VersionNumber,
 		&i.Preview,
 		&i.PublishedAt,
+	)
+	return i, err
+}
+
+const insertAttempt = `-- name: InsertAttempt :one
+INSERT INTO modeldev_dataset_import_attempts (
+    tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation,
+    cluster_id, namespace_name, namespace_uid,
+    job_name, pvc_name, secret_name, runtime_plan, runtime_plan_sha256,
+    data_object_key, result_object_key, deadline_at
+) VALUES (
+    $1::uuid, $2::uuid, $3::uuid,
+    $4::uuid, $5::bigint, $6::bigint,
+    $7::uuid, $8, $9::uuid,
+    $10, $11, $12,
+    $13::jsonb, $14,
+    $15, $16, $17
+)
+ON CONFLICT DO NOTHING
+RETURNING tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation, cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name, job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_plan, runtime_plan_sha256, runtime_observation, data_object_key, result_object_key, created_at, deadline_at, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at
+`
+
+type InsertAttemptParams struct {
+	TenantID           pgtype.UUID
+	AttemptID          pgtype.UUID
+	DatasetID          pgtype.UUID
+	TaskID             pgtype.UUID
+	AttemptNo          int64
+	RecoveryGeneration int64
+	ClusterID          pgtype.UUID
+	NamespaceName      string
+	NamespaceUid       pgtype.UUID
+	JobName            string
+	PvcName            string
+	SecretName         string
+	RuntimePlan        []byte
+	RuntimePlanSha256  string
+	DataObjectKey      string
+	ResultObjectKey    string
+	DeadlineAt         pgtype.Timestamptz
+}
+
+func (q *Queries) InsertAttempt(ctx context.Context, arg InsertAttemptParams) (ModeldevDatasetImportAttempt, error) {
+	row := q.db.QueryRow(ctx, insertAttempt,
+		arg.TenantID,
+		arg.AttemptID,
+		arg.DatasetID,
+		arg.TaskID,
+		arg.AttemptNo,
+		arg.RecoveryGeneration,
+		arg.ClusterID,
+		arg.NamespaceName,
+		arg.NamespaceUid,
+		arg.JobName,
+		arg.PvcName,
+		arg.SecretName,
+		arg.RuntimePlan,
+		arg.RuntimePlanSha256,
+		arg.DataObjectKey,
+		arg.ResultObjectKey,
+		arg.DeadlineAt,
+	)
+	var i ModeldevDatasetImportAttempt
+	err := row.Scan(
+		&i.TenantID,
+		&i.AttemptID,
+		&i.DatasetID,
+		&i.TaskID,
+		&i.AttemptNo,
+		&i.RecoveryGeneration,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.JobName,
+		&i.PvcName,
+		&i.SecretName,
+		&i.JobUid,
+		&i.JobResourceVersion,
+		&i.PvcUid,
+		&i.PvcResourceVersion,
+		&i.SecretUid,
+		&i.SecretResourceVersion,
+		&i.RuntimePlan,
+		&i.RuntimePlanSha256,
+		&i.RuntimeObservation,
+		&i.DataObjectKey,
+		&i.ResultObjectKey,
+		&i.CreatedAt,
+		&i.DeadlineAt,
+		&i.DispatchClosedAt,
+		&i.CloseReason,
+		&i.WritersStoppedAt,
+		&i.ResultObjectVersionID,
+		&i.ResultSha256,
+		&i.LastCredentialGeneration,
+		&i.SecretGeneration,
+		&i.ReconcileOwner,
+		&i.ReconcileEpoch,
+		&i.ReconcileUntil,
+		&i.ReconcileNextAt,
+		&i.CleanupState,
+		&i.CleanupCompletedAt,
 	)
 	return i, err
 }
@@ -914,6 +1390,170 @@ func (q *Queries) ListDatasets(ctx context.Context, arg ListDatasetsParams) ([]M
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.ArchivedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDueAttempts = `-- name: ListDueAttempts :many
+SELECT tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation, cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name, job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_plan, runtime_plan_sha256, runtime_observation, data_object_key, result_object_key, created_at, deadline_at, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at FROM modeldev_dataset_import_attempts
+WHERE reconcile_next_at IS NOT NULL
+  AND reconcile_next_at <= $1
+  AND (reconcile_until IS NULL OR reconcile_until < $1)
+ORDER BY reconcile_next_at, tenant_id, attempt_id
+LIMIT $2
+`
+
+type ListDueAttemptsParams struct {
+	Now       pgtype.Timestamptz
+	BatchSize int32
+}
+
+func (q *Queries) ListDueAttempts(ctx context.Context, arg ListDueAttemptsParams) ([]ModeldevDatasetImportAttempt, error) {
+	rows, err := q.db.Query(ctx, listDueAttempts, arg.Now, arg.BatchSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ModeldevDatasetImportAttempt
+	for rows.Next() {
+		var i ModeldevDatasetImportAttempt
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.AttemptID,
+			&i.DatasetID,
+			&i.TaskID,
+			&i.AttemptNo,
+			&i.RecoveryGeneration,
+			&i.ClusterID,
+			&i.NamespaceName,
+			&i.NamespaceUid,
+			&i.JobName,
+			&i.PvcName,
+			&i.SecretName,
+			&i.JobUid,
+			&i.JobResourceVersion,
+			&i.PvcUid,
+			&i.PvcResourceVersion,
+			&i.SecretUid,
+			&i.SecretResourceVersion,
+			&i.RuntimePlan,
+			&i.RuntimePlanSha256,
+			&i.RuntimeObservation,
+			&i.DataObjectKey,
+			&i.ResultObjectKey,
+			&i.CreatedAt,
+			&i.DeadlineAt,
+			&i.DispatchClosedAt,
+			&i.CloseReason,
+			&i.WritersStoppedAt,
+			&i.ResultObjectVersionID,
+			&i.ResultSha256,
+			&i.LastCredentialGeneration,
+			&i.SecretGeneration,
+			&i.ReconcileOwner,
+			&i.ReconcileEpoch,
+			&i.ReconcileUntil,
+			&i.ReconcileNextAt,
+			&i.CleanupState,
+			&i.CleanupCompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDueTasks = `-- name: ListDueTasks :many
+SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at FROM modeldev_dataset_import_tasks
+WHERE state IN ('QUEUED','RUNNING','CANCELING')
+  AND next_run_at <= $1
+  AND (lease_until IS NULL OR lease_until < $1)
+ORDER BY next_run_at, accepted_at, tenant_id, task_id
+LIMIT $2
+`
+
+type ListDueTasksParams struct {
+	Now       pgtype.Timestamptz
+	BatchSize int32
+}
+
+func (q *Queries) ListDueTasks(ctx context.Context, arg ListDueTasksParams) ([]ModeldevDatasetImportTask, error) {
+	rows, err := q.db.Query(ctx, listDueTasks, arg.Now, arg.BatchSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ModeldevDatasetImportTask
+	for rows.Next() {
+		var i ModeldevDatasetImportTask
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.TaskID,
+			&i.DatasetID,
+			&i.AcceptanceReceiptID,
+			&i.ReservedInputVersionID,
+			&i.InputRequestID,
+			&i.VersionNumber,
+			&i.CreatedBy,
+			&i.AcceptedAt,
+			&i.SourceProvider,
+			&i.SourceSnapshot,
+			&i.SourceSnapshotSha256,
+			&i.ExpectedSizeBytes,
+			&i.AcceptedLimitBytes,
+			&i.ClusterID,
+			&i.NamespaceName,
+			&i.NamespaceUid,
+			&i.TargetSnapshot,
+			&i.TargetSnapshotSha256,
+			&i.StorageConnectionID,
+			&i.Bucket,
+			&i.ApprovedPrefix,
+			&i.InputScopeSha256,
+			&i.CredentialReference,
+			&i.ObservedEnvironmentID,
+			&i.ObservedEnvironmentBindingDigest,
+			&i.AuthorizationScope,
+			&i.AuthorizationScopeSha256,
+			&i.TargetInvalidatedAt,
+			&i.TargetInvalidatedReason,
+			&i.State,
+			&i.Phase,
+			&i.RecoveryGeneration,
+			&i.RecoveryPolicy,
+			&i.ValidationRetryCount,
+			&i.ValidationDeadlineAt,
+			&i.NextRunAt,
+			&i.CurrentAttemptID,
+			&i.LeaseOwner,
+			&i.LeaseEpoch,
+			&i.LeaseUntil,
+			&i.CancelRequestedAt,
+			&i.FailureCode,
+			&i.FailureDetail,
+			&i.Retryable,
+			&i.CandidateAttemptID,
+			&i.CandidateObjectKey,
+			&i.CandidateVersionID,
+			&i.CandidateSizeBytes,
+			&i.CandidateSha256,
+			&i.CandidateFrozenAt,
+			&i.CandidateReportVersionID,
+			&i.CandidateReportSha256,
+			&i.FinishedAt,
+			&i.PublishedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -1427,6 +2067,32 @@ func (q *Queries) MarkTaskSucceeded(ctx context.Context, arg MarkTaskSucceededPa
 	return i, err
 }
 
+const releaseTaskLease = `-- name: ReleaseTaskLease :exec
+UPDATE modeldev_dataset_import_tasks
+SET lease_owner = NULL, lease_until = NULL, updated_at = clock_timestamp()
+WHERE tenant_id = $1::uuid
+  AND task_id = $2::uuid
+  AND lease_owner = $3
+  AND lease_epoch = $4
+`
+
+type ReleaseTaskLeaseParams struct {
+	TenantID pgtype.UUID
+	TaskID   pgtype.UUID
+	Owner    pgtype.Text
+	Epoch    int64
+}
+
+func (q *Queries) ReleaseTaskLease(ctx context.Context, arg ReleaseTaskLeaseParams) error {
+	_, err := q.db.Exec(ctx, releaseTaskLease,
+		arg.TenantID,
+		arg.TaskID,
+		arg.Owner,
+		arg.Epoch,
+	)
+	return err
+}
+
 const requestCancelTask = `-- name: RequestCancelTask :one
 UPDATE modeldev_dataset_import_tasks
 SET state = 'CANCELING',
@@ -1647,6 +2313,90 @@ func (q *Queries) RestoreDataset(ctx context.Context, arg RestoreDatasetParams) 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const setCurrentAttempt = `-- name: SetCurrentAttempt :one
+UPDATE modeldev_dataset_import_tasks
+SET current_attempt_id = $1::uuid,
+    phase = 'WAITING',
+    next_run_at = clock_timestamp(),
+    updated_at = clock_timestamp()
+WHERE tenant_id = $2::uuid
+  AND task_id = $3::uuid
+  AND state = 'RUNNING'
+  AND cancel_requested_at IS NULL
+  AND current_attempt_id IS NULL
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+`
+
+type SetCurrentAttemptParams struct {
+	AttemptID pgtype.UUID
+	TenantID  pgtype.UUID
+	TaskID    pgtype.UUID
+}
+
+func (q *Queries) SetCurrentAttempt(ctx context.Context, arg SetCurrentAttemptParams) (ModeldevDatasetImportTask, error) {
+	row := q.db.QueryRow(ctx, setCurrentAttempt, arg.AttemptID, arg.TenantID, arg.TaskID)
+	var i ModeldevDatasetImportTask
+	err := row.Scan(
+		&i.TenantID,
+		&i.TaskID,
+		&i.DatasetID,
+		&i.AcceptanceReceiptID,
+		&i.ReservedInputVersionID,
+		&i.InputRequestID,
+		&i.VersionNumber,
+		&i.CreatedBy,
+		&i.AcceptedAt,
+		&i.SourceProvider,
+		&i.SourceSnapshot,
+		&i.SourceSnapshotSha256,
+		&i.ExpectedSizeBytes,
+		&i.AcceptedLimitBytes,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.TargetSnapshot,
+		&i.TargetSnapshotSha256,
+		&i.StorageConnectionID,
+		&i.Bucket,
+		&i.ApprovedPrefix,
+		&i.InputScopeSha256,
+		&i.CredentialReference,
+		&i.ObservedEnvironmentID,
+		&i.ObservedEnvironmentBindingDigest,
+		&i.AuthorizationScope,
+		&i.AuthorizationScopeSha256,
+		&i.TargetInvalidatedAt,
+		&i.TargetInvalidatedReason,
+		&i.State,
+		&i.Phase,
+		&i.RecoveryGeneration,
+		&i.RecoveryPolicy,
+		&i.ValidationRetryCount,
+		&i.ValidationDeadlineAt,
+		&i.NextRunAt,
+		&i.CurrentAttemptID,
+		&i.LeaseOwner,
+		&i.LeaseEpoch,
+		&i.LeaseUntil,
+		&i.CancelRequestedAt,
+		&i.FailureCode,
+		&i.FailureDetail,
+		&i.Retryable,
+		&i.CandidateAttemptID,
+		&i.CandidateObjectKey,
+		&i.CandidateVersionID,
+		&i.CandidateSizeBytes,
+		&i.CandidateSha256,
+		&i.CandidateFrozenAt,
+		&i.CandidateReportVersionID,
+		&i.CandidateReportSha256,
+		&i.FinishedAt,
+		&i.PublishedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
