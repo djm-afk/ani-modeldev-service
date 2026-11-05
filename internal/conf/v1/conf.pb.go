@@ -275,8 +275,23 @@ type DatasetImport struct {
 	// Global running-attempt budget, coordinated across replicas.
 	MaxRunningImports      uint32 `protobuf:"varint,3,opt,name=max_running_imports,json=maxRunningImports,proto3" json:"max_running_imports,omitempty"`
 	ProviderTimeoutSeconds uint32 `protobuf:"varint,4,opt,name=provider_timeout_seconds,json=providerTimeoutSeconds,proto3" json:"provider_timeout_seconds,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	// Importer workload. The image is pinned by digest and never selected per
+	// request; the ServiceAccount is the fixed identity the native policy pins.
+	ImporterImage          string `protobuf:"bytes,5,opt,name=importer_image,json=importerImage,proto3" json:"importer_image,omitempty"`
+	ImporterImageDigest    string `protobuf:"bytes,6,opt,name=importer_image_digest,json=importerImageDigest,proto3" json:"importer_image_digest,omitempty"`
+	ImporterServiceAccount string `protobuf:"bytes,7,opt,name=importer_service_account,json=importerServiceAccount,proto3" json:"importer_service_account,omitempty"`
+	StorageClass           string `protobuf:"bytes,8,opt,name=storage_class,json=storageClass,proto3" json:"storage_class,omitempty"`
+	CpuRequest             string `protobuf:"bytes,9,opt,name=cpu_request,json=cpuRequest,proto3" json:"cpu_request,omitempty"`
+	CpuLimit               string `protobuf:"bytes,10,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty"`
+	MemoryRequest          string `protobuf:"bytes,11,opt,name=memory_request,json=memoryRequest,proto3" json:"memory_request,omitempty"`
+	MemoryLimit            string `protobuf:"bytes,12,opt,name=memory_limit,json=memoryLimit,proto3" json:"memory_limit,omitempty"`
+	PvcSize                string `protobuf:"bytes,13,opt,name=pvc_size,json=pvcSize,proto3" json:"pvc_size,omitempty"`
+	CredentialFile         string `protobuf:"bytes,14,opt,name=credential_file,json=credentialFile,proto3" json:"credential_file,omitempty"`
+	// Scan and lease timing for the import scheduler.
+	SchedulerInterval *durationpb.Duration `protobuf:"bytes,15,opt,name=scheduler_interval,json=schedulerInterval,proto3" json:"scheduler_interval,omitempty"`
+	SchedulerLeaseTtl *durationpb.Duration `protobuf:"bytes,16,opt,name=scheduler_lease_ttl,json=schedulerLeaseTtl,proto3" json:"scheduler_lease_ttl,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *DatasetImport) Reset() {
@@ -335,6 +350,90 @@ func (x *DatasetImport) GetProviderTimeoutSeconds() uint32 {
 		return x.ProviderTimeoutSeconds
 	}
 	return 0
+}
+
+func (x *DatasetImport) GetImporterImage() string {
+	if x != nil {
+		return x.ImporterImage
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetImporterImageDigest() string {
+	if x != nil {
+		return x.ImporterImageDigest
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetImporterServiceAccount() string {
+	if x != nil {
+		return x.ImporterServiceAccount
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetStorageClass() string {
+	if x != nil {
+		return x.StorageClass
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetCpuRequest() string {
+	if x != nil {
+		return x.CpuRequest
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetCpuLimit() string {
+	if x != nil {
+		return x.CpuLimit
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetMemoryRequest() string {
+	if x != nil {
+		return x.MemoryRequest
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetMemoryLimit() string {
+	if x != nil {
+		return x.MemoryLimit
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetPvcSize() string {
+	if x != nil {
+		return x.PvcSize
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetCredentialFile() string {
+	if x != nil {
+		return x.CredentialFile
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetSchedulerInterval() *durationpb.Duration {
+	if x != nil {
+		return x.SchedulerInterval
+	}
+	return nil
+}
+
+func (x *DatasetImport) GetSchedulerLeaseTtl() *durationpb.Duration {
+	if x != nil {
+		return x.SchedulerLeaseTtl
+	}
+	return nil
 }
 
 type RuntimeLimits struct {
@@ -1280,12 +1379,26 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	" model_resolution_timeout_seconds\x18\x10 \x01(\rR\x1dmodelResolutionTimeoutSeconds\x126\n" +
 	"\x17tenant_environment_file\x18\x11 \x01(\tR\x15tenantEnvironmentFile\x12:\n" +
 	"\x19tenant_environment_sha256\x18\x12 \x01(\tR\x17tenantEnvironmentSha256\x12=\n" +
-	"\x0edataset_import\x18\x13 \x01(\v2\x16.conf.v1.DatasetImportR\rdatasetImportJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\f\x10\rR\fbinding_fileR\x0ebinding_sha256R\x13dispatch_batch_size\"\xdd\x01\n" +
+	"\x0edataset_import\x18\x13 \x01(\v2\x16.conf.v1.DatasetImportR\rdatasetImportJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\f\x10\rR\fbinding_fileR\x0ebinding_sha256R\x13dispatch_batch_size\"\xf8\x05\n" +
 	"\rDatasetImport\x121\n" +
 	"\x14huggingface_endpoint\x18\x01 \x01(\tR\x13huggingfaceEndpoint\x12/\n" +
 	"\x13modelscope_endpoint\x18\x02 \x01(\tR\x12modelscopeEndpoint\x12.\n" +
 	"\x13max_running_imports\x18\x03 \x01(\rR\x11maxRunningImports\x128\n" +
-	"\x18provider_timeout_seconds\x18\x04 \x01(\rR\x16providerTimeoutSeconds\";\n" +
+	"\x18provider_timeout_seconds\x18\x04 \x01(\rR\x16providerTimeoutSeconds\x12%\n" +
+	"\x0eimporter_image\x18\x05 \x01(\tR\rimporterImage\x122\n" +
+	"\x15importer_image_digest\x18\x06 \x01(\tR\x13importerImageDigest\x128\n" +
+	"\x18importer_service_account\x18\a \x01(\tR\x16importerServiceAccount\x12#\n" +
+	"\rstorage_class\x18\b \x01(\tR\fstorageClass\x12\x1f\n" +
+	"\vcpu_request\x18\t \x01(\tR\n" +
+	"cpuRequest\x12\x1b\n" +
+	"\tcpu_limit\x18\n" +
+	" \x01(\tR\bcpuLimit\x12%\n" +
+	"\x0ememory_request\x18\v \x01(\tR\rmemoryRequest\x12!\n" +
+	"\fmemory_limit\x18\f \x01(\tR\vmemoryLimit\x12\x19\n" +
+	"\bpvc_size\x18\r \x01(\tR\apvcSize\x12'\n" +
+	"\x0fcredential_file\x18\x0e \x01(\tR\x0ecredentialFile\x12H\n" +
+	"\x12scheduler_interval\x18\x0f \x01(\v2\x19.google.protobuf.DurationR\x11schedulerInterval\x12I\n" +
+	"\x13scheduler_lease_ttl\x18\x10 \x01(\v2\x19.google.protobuf.DurationR\x11schedulerLeaseTtl\";\n" +
 	"\rRuntimeLimits\x12*\n" +
 	"\x11max_content_bytes\x18\x01 \x01(\x03R\x0fmaxContentBytes\"\xf8\x01\n" +
 	"\x16ImageRuntimeConnection\x12\x1a\n" +
@@ -1405,24 +1518,26 @@ var file_conf_v1_conf_proto_depIdxs = []int32{
 	5,  // 10: conf.v1.ManagedRuntime.gpu_owner:type_name -> conf.v1.ManagedGPUOwner
 	3,  // 11: conf.v1.ManagedRuntime.limits:type_name -> conf.v1.RuntimeLimits
 	2,  // 12: conf.v1.ManagedRuntime.dataset_import:type_name -> conf.v1.DatasetImport
-	16, // 13: conf.v1.ImageRuntimeConnection.timeout:type_name -> google.protobuf.Duration
-	6,  // 14: conf.v1.ManagedGPUOwner.governance:type_name -> conf.v1.OwnerMTLSConnection
-	16, // 15: conf.v1.OwnerMTLSConnection.timeout:type_name -> google.protobuf.Duration
-	16, // 16: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
-	12, // 17: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
-	10, // 18: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
-	16, // 19: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
-	11, // 20: conf.v1.ModelConnection.base_model_storage_scope:type_name -> conf.v1.BaseModelStorageScope
-	14, // 21: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
-	15, // 22: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
-	16, // 23: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
-	16, // 24: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	16, // 25: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	26, // [26:26] is the sub-list for method output_type
-	26, // [26:26] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	16, // 13: conf.v1.DatasetImport.scheduler_interval:type_name -> google.protobuf.Duration
+	16, // 14: conf.v1.DatasetImport.scheduler_lease_ttl:type_name -> google.protobuf.Duration
+	16, // 15: conf.v1.ImageRuntimeConnection.timeout:type_name -> google.protobuf.Duration
+	6,  // 16: conf.v1.ManagedGPUOwner.governance:type_name -> conf.v1.OwnerMTLSConnection
+	16, // 17: conf.v1.OwnerMTLSConnection.timeout:type_name -> google.protobuf.Duration
+	16, // 18: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
+	12, // 19: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
+	10, // 20: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
+	16, // 21: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
+	11, // 22: conf.v1.ModelConnection.base_model_storage_scope:type_name -> conf.v1.BaseModelStorageScope
+	14, // 23: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
+	15, // 24: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
+	16, // 25: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
+	16, // 26: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	16, // 27: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	28, // [28:28] is the sub-list for method output_type
+	28, // [28:28] is the sub-list for method input_type
+	28, // [28:28] is the sub-list for extension type_name
+	28, // [28:28] is the sub-list for extension extendee
+	0,  // [0:28] is the sub-list for field type_name
 }
 
 func init() { file_conf_v1_conf_proto_init() }

@@ -10,6 +10,7 @@ import (
 
 	projection "github.com/zhangzhe-ctrl/ani-modeldev-service/contract/tenantenvironment"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server/modeldevwebhook"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,6 +33,12 @@ func (r *dynamicIdentities) Environment(ctx context.Context, ns string) (*corev1
 func (r *dynamicIdentities) ServiceAccount(ctx context.Context, ns, name string) (*corev1.ServiceAccount, error) {
 	if e := r.environments[ns]; e != nil {
 		return e.ServiceAccount(ctx, ns, name)
+	}
+	return nil, errors.New("not found")
+}
+func (r *dynamicIdentities) Job(ctx context.Context, ns, name string) (*batchv1.Job, error) {
+	if e := r.environments[ns]; e != nil {
+		return e.Job(ctx, ns, name)
 	}
 	return nil, errors.New("not found")
 }

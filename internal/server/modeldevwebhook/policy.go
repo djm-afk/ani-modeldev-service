@@ -12,6 +12,7 @@ import (
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	admissionv1 "k8s.io/api/admission/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,6 +28,9 @@ type IdentityReader interface {
 	Workflow(context.Context, string, string) (*unstructured.Unstructured, error)
 	Environment(context.Context, string) (*corev1.ConfigMap, error)
 	ServiceAccount(context.Context, string, string) (*corev1.ServiceAccount, error)
+	// Job reads the batch Job a dataset importer Pod belongs to. The importer
+	// branch verifies that parent instead of the training environment projection.
+	Job(context.Context, string, string) (*batchv1.Job, error)
 }
 
 type mountRule struct {
@@ -214,6 +218,13 @@ func (handler *Handler) admit(ctx context.Context, request *admissionv1.Admissio
 	}
 	if !protectedPod(&pod) {
 		return allowed, "outside_scope"
+	}
+	// Dataset import Pods are protected by the same reserved identities, but they
+	// have no training Environment or KFP Workflow. They are verified by their
+	// own contract before the training lookup, which would otherwise reject every
+	// legitimate importer Pod with environment_identity.
+	if isImporterPod(&pod) {
+		return handler.admitImporter(ctx, request, &pod, failure)
 	}
 	binding, err := handler.environment(ctx, request.Namespace, &pod, failure)
 	if err != nil {

@@ -103,6 +103,10 @@ func (f *fakeAcceptance) AcceptImport(ctx context.Context, request AcceptanceReq
 
 type fakePublication struct{}
 
+func (f *fakePublication) ReserveImport(ctx context.Context, request InputImport) (InputVersion, error) {
+	return InputVersion{}, nil
+}
+
 func (f *fakePublication) PublishVersion(ctx context.Context, request PublicationRequest) (PublicationResult, error) {
 	return PublicationResult{}, nil
 }

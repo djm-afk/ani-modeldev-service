@@ -66,6 +66,15 @@ BEGIN
     PERFORM pg_advisory_xact_lock(v_key);
 END $$;
 
+-- Advisory-lock helper for the global import capacity decision. Allocation and
+-- release serialize on it so two replicas can never both take the last slot.
+-- It covers one short transaction only; it never spans Job execution.
+CREATE FUNCTION modeldev_lock_import_capacity() RETURNS void
+LANGUAGE plpgsql AS $$
+BEGIN
+    PERFORM pg_advisory_xact_lock(hashtextextended('ani.modeldev.import-capacity.v1', 0));
+END $$;
+
 CREATE TABLE modeldev_datasets (
     tenant_id uuid NOT NULL,
     dataset_id uuid NOT NULL,
@@ -515,3 +524,60 @@ CREATE INDEX dataset_task_state_list_idx
 CREATE INDEX dataset_operation_task_list_idx
     ON modeldev_dataset_operations (tenant_id, task_id, occurred_at DESC, operation_id DESC)
     WHERE task_id IS NOT NULL;
+
+-- Ownership and runtime privileges belong to the migration, not to a manual
+-- follow-up: tables created by a superuser would otherwise stay owned by it and
+-- the runtime role would have no access at all, which surfaces only at the first
+-- real insert. Guarded by role existence so an isolated test schema, whose roles
+-- have other names, still applies the migration unchanged. No DELETE anywhere:
+-- the fact tables are append-only and the three mutable ones are updated by name.
+DO $dataset_privileges$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'modeldev_v21_migrate') THEN
+        EXECUTE 'ALTER TABLE modeldev_datasets OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER TABLE modeldev_dataset_command_receipts OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER TABLE modeldev_dataset_import_tasks OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER TABLE modeldev_dataset_import_attempts OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER TABLE modeldev_dataset_credential_issuances OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER TABLE modeldev_dataset_version_metadata OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER TABLE modeldev_dataset_operations OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER FUNCTION modeldev_lock_input_identity(uuid, uuid, uuid) OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER FUNCTION modeldev_lock_dataset_target_commit(uuid, uuid) OWNER TO modeldev_v21_migrate';
+        EXECUTE 'ALTER FUNCTION modeldev_lock_import_capacity() OWNER TO modeldev_v21_migrate';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'modeldev_v21_runtime') THEN
+        EXECUTE 'GRANT SELECT, INSERT ON modeldev_datasets, modeldev_dataset_command_receipts, '
+             || 'modeldev_dataset_import_tasks, modeldev_dataset_import_attempts, '
+             || 'modeldev_dataset_credential_issuances, modeldev_dataset_version_metadata, '
+             || 'modeldev_dataset_operations TO modeldev_v21_runtime';
+        -- A table-wide UPDATE would also let the runtime rewrite the frozen
+        -- identity columns; drop it so only the named columns stay writable.
+        EXECUTE 'REVOKE UPDATE ON modeldev_datasets, modeldev_dataset_import_tasks, '
+             || 'modeldev_dataset_import_attempts, modeldev_dataset_credential_issuances '
+             || 'FROM modeldev_v21_runtime';
+        EXECUTE 'GRANT UPDATE (name, description, state, revision, next_version_number, updated_by, updated_at, archived_at) '
+             || 'ON modeldev_datasets TO modeldev_v21_runtime';
+        EXECUTE 'GRANT UPDATE (state, phase, recovery_generation, validation_retry_count, validation_deadline_at, '
+             || 'next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, '
+             || 'failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, '
+             || 'candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, '
+             || 'candidate_report_version_id, candidate_report_sha256, target_invalidated_at, '
+             || 'target_invalidated_reason, finished_at, published_at, updated_at, '
+             || 'observed_environment_id, observed_environment_binding_digest) '
+             || 'ON modeldev_dataset_import_tasks TO modeldev_v21_runtime';
+        EXECUTE 'GRANT UPDATE (job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, '
+             || 'secret_resource_version, runtime_observation, dispatch_closed_at, close_reason, '
+             || 'writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, '
+             || 'secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, '
+             || 'cleanup_state, cleanup_completed_at) '
+             || 'ON modeldev_dataset_import_attempts TO modeldev_v21_runtime';
+        EXECUTE 'GRANT UPDATE (outcome, result_recorded_at, actual_expires_at, unknown_expires_upper_bound, '
+             || 'expiry_bound_basis, delivery_state, delivery_intended_at, delivery_expected_resource_version, '
+             || 'delivery_observed_resource_version, delivered_at) '
+             || 'ON modeldev_dataset_credential_issuances TO modeldev_v21_runtime';
+        EXECUTE 'GRANT EXECUTE ON FUNCTION modeldev_lock_input_identity(uuid, uuid, uuid) TO modeldev_v21_runtime';
+        EXECUTE 'GRANT EXECUTE ON FUNCTION modeldev_lock_dataset_target_commit(uuid, uuid) TO modeldev_v21_runtime';
+        EXECUTE 'GRANT EXECUTE ON FUNCTION modeldev_lock_import_capacity() TO modeldev_v21_runtime';
+    END IF;
+END
+$dataset_privileges$;

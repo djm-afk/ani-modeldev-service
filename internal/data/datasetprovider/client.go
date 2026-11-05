@@ -139,7 +139,10 @@ func (c *Client) getJSON(ctx context.Context, endpoint, path string, query url.V
 		if ctx.Err() != nil {
 			return 0, ctx.Err()
 		}
-		return 0, biz.ErrSourceNotFound
+		// A transport failure is not a missing source. Reporting it as
+		// SOURCE_NOT_FOUND would tell the caller to fix a repository name when
+		// the real problem is DNS, egress or the hub being down.
+		return 0, biz.ErrSourceUnavailable
 	}
 	defer response.Body.Close()
 	switch response.StatusCode {

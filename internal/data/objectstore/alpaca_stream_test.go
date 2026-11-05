@@ -127,3 +127,84 @@ func TestAlpacaImportObservesFrozenSourceAndPreparedFactsInOneGET(t *testing.T) 
 		t.Fatalf("import did not observe both immutable datasets together: proof=%+v gets=%d error=%v", proof, gets, err)
 	}
 }
+
+// The public Alpaca corpora ship as JSONL, one object per line, often with the
+// `_zh` field names. Both must derive exactly the same bytes as an equivalent
+// JSON array with canonical keys, because one transform id covers both.
+func TestConvertAlpacaJSONAcceptsJSONLAndChineseFieldAliases(t *testing.T) {
+	arraySource := `[{"instruction":"一","input":"","output":"甲"},{"instruction":"二","input":"辅","output":"乙"}]`
+	jsonlSource := "{\"instruction_zh\":\"一\",\"input_zh\":\"\",\"output_zh\":\"甲\"}\n" +
+		"{\"instruction_zh\":\"二\",\"input_zh\":\"辅\",\"output_zh\":\"乙\"}\n"
+
+	var arrayOut, jsonlOut bytes.Buffer
+	arrayFacts, err := objectstore.ConvertAlpacaJSON(strings.NewReader(arraySource), &arrayOut)
+	if err != nil {
+		t.Fatalf("array source rejected: %v", err)
+	}
+	jsonlFacts, err := objectstore.ConvertAlpacaJSON(strings.NewReader(jsonlSource), &jsonlOut)
+	if err != nil {
+		t.Fatalf("jsonl source rejected: %v", err)
+	}
+	if arrayOut.String() != jsonlOut.String() {
+		t.Fatalf("derived bytes differ:\n array=%q\n jsonl=%q", arrayOut.String(), jsonlOut.String())
+	}
+	if arrayFacts != jsonlFacts {
+		t.Fatalf("facts differ: array=%+v jsonl=%+v", arrayFacts, jsonlFacts)
+	}
+	if jsonlFacts.RowCount != 2 || jsonlFacts.TransformID != "alpaca-array-compact-jsonl-v3" {
+		t.Fatalf("unexpected facts: %+v", jsonlFacts)
+	}
+	// The derived record must carry the canonical keys, never the aliases.
+	if strings.Contains(jsonlOut.String(), "_zh") {
+		t.Fatalf("derived record kept an alias: %q", jsonlOut.String())
+	}
+}
+
+// The public Chinese corpora carry both the English and the `_zh` value of each
+// field in one record. The English value is canonical; `_zh` is only a fallback
+// when the English spelling is absent.
+func TestConvertAlpacaJSONPrefersEnglishOverChineseAlias(t *testing.T) {
+	both := `[{"instruction":"a","instruction_zh":"甲","input":"","input_zh":"","output":"c","output_zh":"丙"}]`
+	english := `[{"instruction":"a","input":"","output":"c"}]`
+	var bothOut, englishOut bytes.Buffer
+	bothFacts, err := objectstore.ConvertAlpacaJSON(strings.NewReader(both), &bothOut)
+	if err != nil {
+		t.Fatalf("record carrying both spellings rejected: %v", err)
+	}
+	if _, err := objectstore.ConvertAlpacaJSON(strings.NewReader(english), &englishOut); err != nil {
+		t.Fatal(err)
+	}
+	if bothOut.String() != englishOut.String() {
+		t.Fatalf("English value not preferred: both=%q english=%q", bothOut.String(), englishOut.String())
+	}
+	if bothFacts.RowCount != 1 {
+		t.Fatalf("unexpected facts: %+v", bothFacts)
+	}
+}
+
+// A record with only the alias must still work: that is the JSONL-only shape.
+func TestConvertAlpacaJSONAcceptsAliasOnlyRecord(t *testing.T) {
+	source := `[{"instruction_zh":"甲","input_zh":"","output_zh":"丙"}]`
+	var out bytes.Buffer
+	if _, err := objectstore.ConvertAlpacaJSON(strings.NewReader(source), &out); err != nil {
+		t.Fatalf("alias-only record rejected: %v", err)
+	}
+	if out.String() != "{\"instruction\":\"甲\",\"input\":\"\",\"output\":\"丙\"}\n" {
+		t.Fatalf("alias-only record normalised to %q", out.String())
+	}
+}
+
+// JSONL with a truncated or non-object line is invalid, not an empty dataset.
+func TestConvertAlpacaJSONRejectsMalformedJSONL(t *testing.T) {
+	for name, source := range map[string]string{
+		"truncated":   "{\"instruction\":\"a\",\"input\":\"\",\"output\":\"b\"}\n{\"instruction\":",
+		"blank first": "\n\n",
+		// A JSON array is the other accepted container, not a malformed line; a
+		// scalar on its own line is neither container and must be refused.
+		"scalar line": "{\"instruction\":\"a\",\"input\":\"\",\"output\":\"b\"}\n123\n",
+	} {
+		if _, err := objectstore.ConvertAlpacaJSON(strings.NewReader(source), nil); err == nil {
+			t.Fatalf("%s accepted", name)
+		}
+	}
+}

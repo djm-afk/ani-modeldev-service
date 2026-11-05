@@ -45,9 +45,10 @@ func (observer *Observer) ObserveEnvironment(ctx context.Context, tenantID, clus
 		return dataset.EnvironmentObservation{}, dataset.ErrRegistryObservationFailed
 	}
 	observation := dataset.EnvironmentObservation{
-		Present:      true,
-		State:        string(row.State),
-		NamespaceUID: row.NamespaceUID,
+		Present:       true,
+		EnvironmentID: row.ID,
+		State:         string(row.State),
+		NamespaceUID:  row.NamespaceUID,
 	}
 	// NEEDS_REVIEW holds new work; the reason stays with the environment and is
 	// never cleared or restated by the dataset path.

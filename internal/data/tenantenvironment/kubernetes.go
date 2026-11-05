@@ -310,9 +310,9 @@ func (p *Platform) publicObjects(row *biz.TenantExecutionEnvironment) ([]*unstru
 	c := p.config
 	refs := []any{map[string]any{"name": row.Receipts.ImageSecret}}
 	out := []*unstructured.Unstructured{}
-	for _, name := range []string{"modeldev-step", "trainer-workload", "verifier"} {
+	for _, name := range []string{"modeldev-step", "trainer-workload", "verifier", "modeldev-dataset-importer"} {
 		fields := map[string]any{"imagePullSecrets": refs}
-		if name == "trainer-workload" {
+		if name == "trainer-workload" || name == "modeldev-dataset-importer" {
 			fields["automountServiceAccountToken"] = false
 			fields["imagePullSecrets"] = []any{}
 		}
@@ -413,7 +413,11 @@ func (p *Platform) Seal(ctx context.Context, row *biz.TenantExecutionEnvironment
 		return nil, biz.ErrTenantEnvironmentInvalid
 	}
 	for _, r := range row.Receipts.Objects {
-		if r.Kind != "Secret" && r.Name != "modeldev-execution-environment" {
+		// The dataset importer account is created by Ensure but is deliberately
+		// not part of the frozen twelve-object training binding (design §17.2:
+		// dataset SA/RBAC/material are verified by the dataset policy, never by
+		// expanding the training profile set).
+		if r.Kind != "Secret" && r.Name != "modeldev-execution-environment" && r.Name != "modeldev-dataset-importer" {
 			b.Objects = append(b.Objects, projection.ObjectRef{Kind: r.Kind, Name: r.Name, UID: r.UID, SpecDigest: r.SpecDigest})
 		}
 	}

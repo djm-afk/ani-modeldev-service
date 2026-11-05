@@ -78,6 +78,47 @@ func TestTargetUsesStandardNamespaceAndInputScope(t *testing.T) {
 	}
 }
 
+// The platform scope is a root, not a tenant scope: TenantStorageScope always
+// overwrites its prefix. The deployed platform file therefore carries no
+// approved_prefix, and construction must still succeed — requiring one rejected
+// the whole service at startup.
+func TestTargetAcceptsPlatformScopeWithoutPrefix(t *testing.T) {
+	platform := cpup01.StorageScope{
+		StorageConnectionID: "input-store-v1", Bucket: "inputs", CredentialReference: "input-read",
+	}
+	reader, err := dataset.NewTargetReader(&fakeNamespaces{identity: liveNamespace()}, nil, platform, targetCluster)
+	if err != nil {
+		t.Fatalf("a platform scope without a prefix was refused: %v", err)
+	}
+	target, err := reader.ReadDatasetImportTarget(context.Background(), targetTenant)
+	if err != nil {
+		t.Fatalf("read target: %v", err)
+	}
+	if target.InputScope.ApprovedPrefix != "inputs/"+targetTenant {
+		t.Fatalf("prefix = %q", target.InputScope.ApprovedPrefix)
+	}
+}
+
+// The three fields the platform really contributes are still required.
+func TestTargetRejectsIncompletePlatformScope(t *testing.T) {
+	complete := cpup01.StorageScope{
+		StorageConnectionID: "input-store-v1", Bucket: "inputs", CredentialReference: "input-read",
+	}
+	for name, mutate := range map[string]func(*cpup01.StorageScope){
+		"no connection": func(s *cpup01.StorageScope) { s.StorageConnectionID = "" },
+		"no bucket":     func(s *cpup01.StorageScope) { s.Bucket = "" },
+		"no credential": func(s *cpup01.StorageScope) { s.CredentialReference = "" },
+		"spaced value":  func(s *cpup01.StorageScope) { s.Bucket = " inputs" },
+		"control rune":  func(s *cpup01.StorageScope) { s.Bucket = "inputs" + string(rune(1)) },
+	} {
+		scope := complete
+		mutate(&scope)
+		if _, err := dataset.NewTargetReader(&fakeNamespaces{identity: liveNamespace()}, nil, scope, targetCluster); !errors.Is(err, biz.ErrImportEnvironmentMissing) {
+			t.Errorf("%s was accepted: %v", name, err)
+		}
+	}
+}
+
 func TestTargetGenericTenantCannotSupplyPrefix(t *testing.T) {
 	// A non-canonical tenant must be refused before any observation. Note the
 	// fixture tenant is all digits, so an upper-case variant of it is still

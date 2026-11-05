@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -38,6 +39,15 @@ func taskFromRow(row datasetsql.ModeldevDatasetImportTask) (biz.DatasetImportTas
 		State: biz.ImportTaskState(row.State), Phase: biz.ImportPhase(row.Phase),
 		RecoveryGeneration: row.RecoveryGeneration, RecoveryPolicy: row.RecoveryPolicy,
 		Retryable: row.Retryable, UpdatedAt: row.UpdatedAt.Time.UTC(),
+		NextRunAt: row.NextRunAt.Time.UTC(), LeaseOwner: row.LeaseOwner.String, LeaseEpoch: row.LeaseEpoch,
+		EnvironmentID:      uuidText(row.ObservedEnvironmentID),
+		CurrentAttemptID:   uuidText(row.CurrentAttemptID),
+		CandidateAttemptID: uuidText(row.CandidateAttemptID), CandidateObjectKey: row.CandidateObjectKey.String,
+		CandidateVersionID: row.CandidateVersionID.String, CandidateSHA256: row.CandidateSha256.String,
+		CandidateReportVersionID: row.CandidateReportVersionID.String, CandidateReportSHA256: row.CandidateReportSha256.String,
+	}
+	if row.CandidateSizeBytes.Valid {
+		task.CandidateSizeBytes = row.CandidateSizeBytes.Int64
 	}
 	if row.CancelRequestedAt.Valid {
 		at := row.CancelRequestedAt.Time.UTC()
@@ -188,7 +198,7 @@ func (r *Repository) ListVersions(ctx context.Context, filter biz.DatasetVersion
 // dataset row → input identity locks. No network call runs inside it.
 func (r *Repository) AcceptImport(ctx context.Context, request biz.AcceptanceRequest) (biz.AcceptanceResult, error) {
 	if r == nil || r.pool == nil {
-		return biz.AcceptanceResult{}, biz.ErrPersistence
+		return biz.AcceptanceResult{}, fmt.Errorf("%w: repository not configured", biz.ErrPersistence)
 	}
 	tenant, datasetID, err := tenantAndDataset(request.TenantID, request.DatasetID)
 	if err != nil {
@@ -196,7 +206,7 @@ func (r *Repository) AcceptImport(ctx context.Context, request biz.AcceptanceReq
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return biz.AcceptanceResult{}, biz.ErrPersistence
+		return biz.AcceptanceResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	defer tx.Rollback(ctx)
 	queries := datasetsql.New(tx)
@@ -220,7 +230,7 @@ func (r *Repository) AcceptImport(ctx context.Context, request biz.AcceptanceReq
 		return biz.AcceptanceResult{Receipt: receipt, Task: task, Replayed: true, ResponseStatus: receipt.ResponseStatus}, nil
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
-		return biz.AcceptanceResult{}, biz.ErrPersistence
+		return biz.AcceptanceResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 
 	// 2. Target commit lock: registry writes and acceptance share one boundary.
@@ -230,7 +240,7 @@ func (r *Repository) AcceptImport(ctx context.Context, request biz.AcceptanceReq
 			return biz.AcceptanceResult{}, clusterErr
 		}
 		if err := queries.LockTargetCommit(ctx, datasetsql.LockTargetCommitParams{TenantID: tenant, ClusterID: cluster}); err != nil {
-			return biz.AcceptanceResult{}, biz.ErrPersistence
+			return biz.AcceptanceResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 		}
 	}
 
@@ -241,7 +251,7 @@ func (r *Repository) AcceptImport(ctx context.Context, request biz.AcceptanceReq
 		return biz.AcceptanceResult{}, biz.ErrDatasetNotFound
 	}
 	if err != nil {
-		return biz.AcceptanceResult{}, biz.ErrPersistence
+		return biz.AcceptanceResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	if datasetRow.State != string(biz.DatasetActive) {
 		return biz.AcceptanceResult{}, biz.ErrDatasetArchived
@@ -251,7 +261,7 @@ func (r *Repository) AcceptImport(ctx context.Context, request biz.AcceptanceReq
 		return biz.AcceptanceResult{}, biz.ErrDatasetArchived
 	}
 	if err != nil {
-		return biz.AcceptanceResult{}, biz.ErrPersistence
+		return biz.AcceptanceResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 
 	// 4. Reserve the input identity before writing the task that claims it.
@@ -264,20 +274,23 @@ func (r *Repository) AcceptImport(ctx context.Context, request biz.AcceptanceReq
 		return biz.AcceptanceResult{}, inputErr
 	}
 	if err := queries.LockInputIdentity(ctx, datasetsql.LockInputIdentityParams{TenantID: tenant, InputVersionID: inputVersion, RequestID: inputRequest}); err != nil {
-		return biz.AcceptanceResult{}, biz.ErrPersistence
+		return biz.AcceptanceResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 
-	// 5. The receipt, the task and the history event commit together.
+	// 5. The task, the receipt and the history event commit together. The task
+	// is written first: an import receipt must carry task_id (both the table's
+	// CHECK and the receipt→task foreign key say so), and the task row has to
+	// exist before a receipt can legitimately name it.
+	task, err := writeTask(ctx, queries, request, tenant, datasetID, versionNumber)
+	if err != nil {
+		return biz.AcceptanceResult{}, err
+	}
 	receipt, err := writeReceipt(ctx, queries, biz.CommandReceipt{
 		TenantID: request.TenantID, ReceiptID: request.ReceiptID, ActorID: request.ActorID,
 		Kind: biz.OpImportVersion, IdempotencyKey: request.IdempotencyKey,
 		RequestSHA256: request.RequestSHA256, DatasetID: request.DatasetID, TaskID: request.TaskID,
 		ResponseStatus: biz.ReceiptStatusAccepted, AcceptedAt: request.AcceptedAt,
 	})
-	if err != nil {
-		return biz.AcceptanceResult{}, err
-	}
-	task, err := writeTask(ctx, queries, request, tenant, datasetID, versionNumber)
 	if err != nil {
 		return biz.AcceptanceResult{}, err
 	}
@@ -290,14 +303,14 @@ func (r *Repository) AcceptImport(ctx context.Context, request biz.AcceptanceReq
 		return biz.AcceptanceResult{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return biz.AcceptanceResult{}, biz.ErrPersistence
+		return biz.AcceptanceResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	return biz.AcceptanceResult{Receipt: receipt, Task: task, ResponseStatus: biz.ReceiptStatusAccepted}, nil
 }
 
 func taskForReplay(ctx context.Context, queries *datasetsql.Queries, tenant pgtype.UUID, taskID string) (biz.DatasetImportTask, error) {
 	if taskID == "" {
-		return biz.DatasetImportTask{}, biz.ErrPersistence
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: replay receipt carries no task id", biz.ErrPersistence)
 	}
 	id, err := databaseID(taskID)
 	if err != nil {
@@ -308,7 +321,7 @@ func taskForReplay(ctx context.Context, queries *datasetsql.Queries, tenant pgty
 		return biz.DatasetImportTask{}, biz.ErrImportTaskNotFound
 	}
 	if err != nil {
-		return biz.DatasetImportTask{}, biz.ErrPersistence
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	return taskFromRow(row)
 }
@@ -360,7 +373,7 @@ func writeTask(ctx context.Context, queries *datasetsql.Queries, request biz.Acc
 		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
 	}
 	if err != nil {
-		return biz.DatasetImportTask{}, biz.ErrPersistence
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: insert import task: %v", biz.ErrPersistence, err)
 	}
 	return taskFromRow(row)
 }
@@ -386,11 +399,11 @@ func writeReceipt(ctx context.Context, queries *datasetsql.Queries, receipt biz.
 	}
 	body, err := json.Marshal(map[string]string{"receipt_id": receipt.ReceiptID, "operation": string(receipt.Kind)})
 	if err != nil {
-		return biz.CommandReceipt{}, biz.ErrPersistence
+		return biz.CommandReceipt{}, fmt.Errorf("%w: encode receipt body: %v", biz.ErrPersistence, err)
 	}
 	canonical, err := json.Marshal(map[string]string{"request_sha256": receipt.RequestSHA256})
 	if err != nil {
-		return biz.CommandReceipt{}, biz.ErrPersistence
+		return biz.CommandReceipt{}, fmt.Errorf("%w: encode canonical request: %v", biz.ErrPersistence, err)
 	}
 	row, err := queries.InsertCommandReceipt(ctx, datasetsql.InsertCommandReceiptParams{
 		TenantID: tenant, ReceiptID: receiptID, ActorID: receipt.ActorID,
@@ -403,7 +416,7 @@ func writeReceipt(ctx context.Context, queries *datasetsql.Queries, receipt biz.
 		return biz.CommandReceipt{}, biz.ErrIdempotencyConflict
 	}
 	if err != nil {
-		return biz.CommandReceipt{}, biz.ErrPersistence
+		return biz.CommandReceipt{}, fmt.Errorf("%w: insert command receipt: %v", biz.ErrPersistence, err)
 	}
 	return receiptFromRow(row)
 }
@@ -443,7 +456,7 @@ func writeOperation(ctx context.Context, queries *datasetsql.Queries, operation 
 		params.AfterRevision = pgtype.Int8{Int64: operation.AfterRevision, Valid: true}
 	}
 	if _, err := queries.InsertDatasetOperation(ctx, params); err != nil {
-		return biz.ErrPersistence
+		return fmt.Errorf("%w: insert dataset operation: %v", biz.ErrPersistence, err)
 	}
 	return nil
 }
@@ -456,7 +469,7 @@ func writeOperation(ctx context.Context, queries *datasetsql.Queries, operation 
 // package keeps ownership of the boundary.
 func (r *Repository) PublishVersion(ctx context.Context, request biz.PublicationRequest) (biz.PublicationResult, error) {
 	if r == nil || r.pool == nil || r.inputs == nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: repository or input publisher not configured", biz.ErrPersistence)
 	}
 	tenant, datasetID, err := tenantAndDataset(request.TenantID, request.DatasetID)
 	if err != nil {
@@ -464,7 +477,7 @@ func (r *Repository) PublishVersion(ctx context.Context, request biz.Publication
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	defer tx.Rollback(ctx)
 	queries := datasetsql.New(tx)
@@ -475,14 +488,14 @@ func (r *Repository) PublishVersion(ctx context.Context, request biz.Publication
 		return biz.PublicationResult{}, err
 	}
 	if err := queries.LockTargetCommit(ctx, datasetsql.LockTargetCommitParams{TenantID: tenant, ClusterID: cluster}); err != nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	datasetRow, err := queries.LockDataset(ctx, datasetsql.LockDatasetParams{TenantID: tenant, DatasetID: datasetID})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return biz.PublicationResult{}, biz.ErrDatasetNotFound
 	}
 	if err != nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: lock dataset: %v", biz.ErrPersistence, err)
 	}
 	if datasetRow.State != string(biz.DatasetActive) {
 		return biz.PublicationResult{}, biz.ErrDatasetArchived
@@ -496,7 +509,7 @@ func (r *Repository) PublishVersion(ctx context.Context, request biz.Publication
 		return biz.PublicationResult{}, biz.ErrImportTaskNotFound
 	}
 	if err != nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: lock import task: %v", biz.ErrPersistence, err)
 	}
 	if taskRow.CancelRequestedAt.Valid {
 		return biz.PublicationResult{}, biz.ErrImportStateConflict
@@ -521,17 +534,17 @@ func (r *Repository) PublishVersion(ctx context.Context, request biz.Publication
 		return biz.PublicationResult{}, biz.ErrImportStateConflict
 	}
 	if err != nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: insert version metadata: %v", biz.ErrPersistence, err)
 	}
 	succeeded, err := queries.MarkTaskSucceeded(ctx, datasetsql.MarkTaskSucceededParams{TenantID: tenant, TaskID: taskID})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return biz.PublicationResult{}, biz.ErrImportStateConflict
 	}
 	if err != nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: mark task succeeded: %v", biz.ErrPersistence, err)
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	task, err := taskFromRow(succeeded)
 	if err != nil {
@@ -552,7 +565,7 @@ func replayPublication(ctx context.Context, queries *datasetsql.Queries, tenant,
 		return biz.PublicationResult{}, biz.ErrImportStateConflict
 	}
 	if err != nil {
-		return biz.PublicationResult{}, biz.ErrPersistence
+		return biz.PublicationResult{}, fmt.Errorf("%w: read version metadata for replay: %v", biz.ErrPersistence, err)
 	}
 	version, err := versionFromRow(row)
 	if err != nil {
@@ -585,7 +598,7 @@ func (r *Repository) RetryTask(ctx context.Context, request biz.TaskCommandReque
 
 func (r *Repository) transitionTask(ctx context.Context, request biz.TaskCommandRequest, cancel bool) (biz.DatasetImportTask, error) {
 	if r == nil || r.pool == nil {
-		return biz.DatasetImportTask{}, biz.ErrPersistence
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: repository not configured", biz.ErrPersistence)
 	}
 	tenant, _, err := tenantAndDataset(request.TenantID, request.DatasetID)
 	if err != nil {
@@ -597,7 +610,7 @@ func (r *Repository) transitionTask(ctx context.Context, request biz.TaskCommand
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return biz.DatasetImportTask{}, biz.ErrPersistence
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	defer tx.Rollback(ctx)
 	queries := datasetsql.New(tx)
@@ -611,10 +624,18 @@ func (r *Repository) transitionTask(ctx context.Context, request biz.TaskCommand
 		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
 	}
 	if err != nil {
-		return biz.DatasetImportTask{}, biz.ErrPersistence
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: transition import task: %v", biz.ErrPersistence, err)
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return biz.DatasetImportTask{}, biz.ErrPersistence
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	return taskFromRow(row)
+}
+
+// ReserveImport writes the frozen input row the publication transaction locks.
+func (r *Repository) ReserveImport(ctx context.Context, request biz.InputImport) (biz.InputVersion, error) {
+	if r == nil || r.inputs == nil {
+		return biz.InputVersion{}, fmt.Errorf("%w: input publisher not configured", biz.ErrPersistence)
+	}
+	return r.inputs.FreezeImport(ctx, request)
 }

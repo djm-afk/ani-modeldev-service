@@ -18,6 +18,11 @@ var (
 	ErrSourceChanged      = errors.New("SOURCE_CHANGED")
 	ErrSourceFileInvalid  = errors.New("SOURCE_FILE_INVALID")
 	ErrSourceInvalidInput = errors.New("SOURCE_INVALID_INPUT")
+	// ErrSourceUnavailable is a transport-level failure reaching the hub (DNS,
+	// egress, TLS, hub outage). It is deliberately distinct from
+	// SOURCE_NOT_FOUND: the repository may well exist, and the caller must not
+	// be told to fix its name.
+	ErrSourceUnavailable = errors.New("IMPORT_DEPENDENCY_UNAVAILABLE")
 )
 
 // SourceProvider is the two supported public hubs. Both are dataset repos only.
@@ -80,7 +85,11 @@ func ValidateSourceFilePath(path string) error {
 			return ErrSourceInvalidInput
 		}
 	}
-	if !strings.HasSuffix(path, ".json") {
+	// The public Alpaca corpora ship as either one JSON array (.json) or one
+	// object per line (.jsonl). Both are the same records, and the converter
+	// derives the identical normalised JSONL from either, so both are accepted
+	// here. Any other extension is refused: this feature does not sniff formats.
+	if !strings.HasSuffix(path, ".json") && !strings.HasSuffix(path, ".jsonl") {
 		return ErrSourceInvalidInput
 	}
 	return nil

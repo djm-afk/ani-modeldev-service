@@ -141,17 +141,18 @@ func (uploader *S3Uploader) Put(ctx context.Context, target PlanObject, body io.
 	if uploader == nil || uploader.client == nil || size <= 0 {
 		return "", "", errors.New("importer uploader is not configured")
 	}
-	// Versioning is required: without an immutable version the pinned identity
-	// could change under a later read.
-	versioning, err := uploader.client.GetBucketVersioning(ctx, &s3.GetBucketVersioningInput{Bucket: aws.String(target.Bucket)})
-	if err != nil || versioning.Status != "Enabled" {
-		return "", "", errVersioningRequired{}
-	}
+	// The bucket's versioning is a deployment fact, not something this Pod can
+	// query: the attempt session carries object-level rights only, and the parent
+	// identity is denied GetBucketVersioning as well (verified in-cluster). What
+	// is provable here is the PutObject result — an unversioned bucket returns no
+	// VersionId, which is rejected below.
 	digest := sha256.New()
+	// No IfNoneMatch: the key is a preallocated per-attempt path, so a second
+	// writer would be a control-plane bug, and the conditional-write header is
+	// rejected by this store's STS session policy.
 	response, err := uploader.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(target.Bucket), Key: aws.String(target.Key),
 		Body: io.TeeReader(body, digest), ContentLength: aws.Int64(size),
-		IfNoneMatch: aws.String("*"),
 	})
 	if err != nil {
 		return "", "", err

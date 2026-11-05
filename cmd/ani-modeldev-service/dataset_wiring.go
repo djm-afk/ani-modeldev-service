@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	modeldevv1 "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
@@ -49,6 +51,9 @@ func buildDatasetService(pool *pgxpool.Pool, platform *tenantenvironment.Platfor
 		return nil, err
 	}
 	repo := dataset.New(pool).WithInputPublisher(input.New(pool))
+	if importConfig.maxRunning > 0 {
+		repo.WithConcurrencyLimit(importConfig.maxRunning)
+	}
 	collections, err := biz.NewDatasetCollections(biz.DatasetCollectionsDeps{
 		Datasets: repo, Commands: repo, Operations: repo, Versions: repo, Tasks: repo,
 	})
@@ -76,11 +81,31 @@ type confDatasetImport struct {
 	modelScope  string
 	timeout     time.Duration
 	maxRunning  int
+
+	importerImage   string
+	importerDigest  string
+	serviceAccount  string
+	storageClass    string
+	cpuRequest      string
+	cpuLimit        string
+	memoryRequest   string
+	memoryLimit     string
+	pvcSize         string
+	credentialFile  string
+	scheduleTimeout time.Duration
+	interval        time.Duration
+	leaseTTL        time.Duration
+	owner           string
+	connectionID    string
+	s3Client        *s3.Client
+	s3Endpoint      string
+	s3Region        string
+	logf            func(message string, args ...any)
 }
 
 // datasetImportConfig resolves the optional configuration once. Absent fields
 // keep the feature off rather than defaulting to a public endpoint.
-func datasetImportConfig(runtime *conf.ManagedRuntime) *confDatasetImport {
+func datasetImportConfig(runtime *conf.ManagedRuntime, connectionID, s3Endpoint, s3Region string, s3Client *s3.Client, owner string) *confDatasetImport {
 	if runtime == nil || runtime.GetDatasetImport() == nil {
 		return nil
 	}
@@ -92,10 +117,37 @@ func datasetImportConfig(runtime *conf.ManagedRuntime) *confDatasetImport {
 	if timeout <= 0 {
 		timeout = 10 * time.Second
 	}
+	interval := value.GetSchedulerInterval().AsDuration()
+	if interval <= 0 {
+		interval = time.Second
+	}
+	leaseTTL := value.GetSchedulerLeaseTtl().AsDuration()
+	if leaseTTL <= 0 {
+		leaseTTL = 2 * interval
+	}
 	return &confDatasetImport{
 		huggingFace: value.GetHuggingfaceEndpoint(),
 		modelScope:  value.GetModelscopeEndpoint(),
 		timeout:     timeout,
 		maxRunning:  int(value.GetMaxRunningImports()),
+
+		importerImage:   value.GetImporterImage(),
+		importerDigest:  value.GetImporterImageDigest(),
+		serviceAccount:  value.GetImporterServiceAccount(),
+		storageClass:    value.GetStorageClass(),
+		cpuRequest:      value.GetCpuRequest(),
+		cpuLimit:        value.GetCpuLimit(),
+		memoryRequest:   value.GetMemoryRequest(),
+		memoryLimit:     value.GetMemoryLimit(),
+		pvcSize:         value.GetPvcSize(),
+		credentialFile:  value.GetCredentialFile(),
+		scheduleTimeout: time.Duration(runtime.GetImportTimeoutSeconds()) * time.Second,
+		interval:        interval,
+		leaseTTL:        leaseTTL,
+		owner:           owner,
+		connectionID:    connectionID,
+		s3Client:        s3Client,
+		s3Endpoint:      s3Endpoint,
+		s3Region:        s3Region,
 	}
 }

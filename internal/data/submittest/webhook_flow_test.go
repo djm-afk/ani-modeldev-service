@@ -26,6 +26,7 @@ import (
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
 	admissionv1 "k8s.io/api/admission/v1"
 	authenticationv1 "k8s.io/api/authentication/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -68,6 +69,9 @@ func (reader flowIdentityReader) ServiceAccount(ctx context.Context, namespace, 
 	return &result, err
 }
 
+func (reader flowIdentityReader) Job(ctx context.Context, namespace, name string) (*batchv1.Job, error) {
+	return nil, errors.New("not found")
+}
 func (reader flowIdentityReader) Workflow(ctx context.Context, namespace, name string) (*unstructured.Unstructured, error) {
 	return reader.client.Resource(schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "workflows"}).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
 }

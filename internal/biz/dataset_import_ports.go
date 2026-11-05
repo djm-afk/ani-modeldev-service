@@ -33,6 +33,9 @@ type DatasetImportTask struct {
 	ExpectedSizeBytes    int64
 	AcceptedLimitBytes   int64
 
+	// EnvironmentID is the execution-registry row used for the workload's
+	// environment-id label. Empty means no row was observed.
+	EnvironmentID        string
 	ClusterID            string
 	NamespaceName        string
 	NamespaceUID         string
@@ -51,6 +54,18 @@ type DatasetImportTask struct {
 	Phase              ImportPhase
 	RecoveryGeneration int64
 	RecoveryPolicy     []byte
+
+	NextRunAt                time.Time
+	LeaseOwner               string
+	LeaseEpoch               int64
+	CurrentAttemptID         string
+	CandidateAttemptID       string
+	CandidateObjectKey       string
+	CandidateVersionID       string
+	CandidateSizeBytes       int64
+	CandidateSHA256          string
+	CandidateReportVersionID string
+	CandidateReportSHA256    string
 
 	CancelRequestedAt *time.Time
 	FailureCode       string
@@ -177,6 +192,11 @@ type AcceptanceResult struct {
 // READY input proof, the version metadata row and the task transition commit
 // together or not at all.
 type DatasetPublicationRepository interface {
+	// ReserveImport writes the immutable frozen import row that the publication
+	// transaction later locks. Publication fails with INPUT_VERSION_NOT_FOUND
+	// when that row is missing, and reserving is idempotent: the same request
+	// returns the original row.
+	ReserveImport(ctx context.Context, request InputImport) (InputVersion, error)
 	PublishVersion(ctx context.Context, request PublicationRequest) (PublicationResult, error)
 }
 

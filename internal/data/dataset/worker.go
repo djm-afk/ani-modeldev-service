@@ -3,6 +3,7 @@ package dataset
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -23,6 +24,7 @@ func attemptFromRow(row datasetsql.ModeldevDatasetImportAttempt) (biz.DatasetImp
 		AttemptNo: row.AttemptNo, RecoveryGeneration: row.RecoveryGeneration,
 		ClusterID: uuidText(row.ClusterID), NamespaceName: row.NamespaceName, NamespaceUID: uuidText(row.NamespaceUid),
 		JobName: row.JobName, PVCName: row.PvcName, SecretName: row.SecretName,
+		JobUID: row.JobUid.String, JobResourceVersion: row.JobResourceVersion.String,
 		RuntimePlan: row.RuntimePlan, RuntimePlanSHA256: row.RuntimePlanSha256,
 		DataObjectKey: row.DataObjectKey, ResultObjectKey: row.ResultObjectKey,
 		DeadlineAt: row.DeadlineAt.Time.UTC(), CleanupState: row.CleanupState,
@@ -64,7 +66,7 @@ func (r *Repository) ListDueTasks(ctx context.Context, now time.Time, batch int3
 		Now: pgtype.Timestamptz{Time: now.UTC(), Valid: true}, BatchSize: batch,
 	})
 	if err != nil {
-		return nil, biz.ErrPersistence
+		return nil, fmt.Errorf("%w: list due tasks: %v", biz.ErrPersistence, err)
 	}
 	tasks := make([]biz.DatasetImportTask, 0, len(rows))
 	for _, row := range rows {
@@ -86,14 +88,14 @@ func (r *Repository) AcquireTaskLease(ctx context.Context, tenantID, taskID, own
 		return biz.DatasetImportTask{}, err
 	}
 	row, err := datasetsql.New(r.pool).AcquireTaskLease(ctx, datasetsql.AcquireTaskLeaseParams{
-		Owner: pgtype.Text{String: owner, Valid: true}, Ttl: pgtype.Interval{Microseconds: ttl.Microseconds()},
+		Owner: pgtype.Text{String: owner, Valid: true}, TtlSeconds: ttl.Seconds(),
 		TenantID: tenant, TaskID: id,
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return biz.DatasetImportTask{}, biz.ErrTaskLeaseLost
 	}
 	if err != nil {
-		return biz.DatasetImportTask{}, biz.ErrPersistence
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: acquire task lease: %v", biz.ErrPersistence, err)
 	}
 	return taskFromRow(row)
 }
@@ -191,6 +193,28 @@ func (r *Repository) SetCurrentAttempt(ctx context.Context, tenantID, taskID, at
 	return taskFromRow(row)
 }
 
+func (r *Repository) GetAttempt(ctx context.Context, tenantID, attemptID string) (biz.DatasetImportAttempt, error) {
+	if r == nil || r.pool == nil {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: repository not configured", biz.ErrPersistence)
+	}
+	tenant, err := databaseID(tenantID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	id, err := databaseID(attemptID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	row, err := datasetsql.New(r.pool).GetAttempt(ctx, datasetsql.GetAttemptParams{TenantID: tenant, AttemptID: id})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportAttempt{}, biz.ErrImportTaskNotFound
+	}
+	if err != nil {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: read attempt: %v", biz.ErrPersistence, err)
+	}
+	return attemptFromRow(row)
+}
+
 func (r *Repository) ListDueAttempts(ctx context.Context, now time.Time, batch int32) ([]biz.DatasetImportAttempt, error) {
 	if r == nil || r.pool == nil {
 		return nil, biz.ErrPersistence
@@ -228,7 +252,7 @@ func (r *Repository) AcquireAttemptLease(ctx context.Context, tenantID, attemptI
 		return biz.DatasetImportAttempt{}, err
 	}
 	row, err := datasetsql.New(r.pool).AcquireAttemptLease(ctx, datasetsql.AcquireAttemptLeaseParams{
-		Owner: pgtype.Text{String: owner, Valid: true}, Ttl: pgtype.Interval{Microseconds: ttl.Microseconds()},
+		Owner: pgtype.Text{String: owner, Valid: true}, TtlSeconds: ttl.Seconds(),
 		TenantID: tenant, AttemptID: id,
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -305,7 +329,250 @@ func (r *Repository) FreezeCandidate(ctx context.Context, tenantID, attemptID, v
 		return biz.DatasetImportAttempt{}, biz.ErrImportStateConflict
 	}
 	if err != nil {
-		return biz.DatasetImportAttempt{}, biz.ErrPersistence
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: freeze candidate: %v", biz.ErrPersistence, err)
 	}
 	return attemptFromRow(row)
+}
+
+// StartTask moves a QUEUED task to RUNNING under the caller's live lease.
+func (r *Repository) StartTask(ctx context.Context, tenantID, taskID, leaseOwner string, leaseEpoch int64) (biz.DatasetImportTask, error) {
+	if r == nil || r.pool == nil || leaseOwner == "" || leaseEpoch <= 0 {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: task start requires a live lease", biz.ErrPersistence)
+	}
+	tenant, task, err := tenantAndDataset(tenantID, taskID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	row, err := datasetsql.New(r.pool).StartTask(ctx, datasetsql.StartTaskParams{
+		TenantID: tenant, TaskID: task, LeaseOwner: pgtype.Text{String: leaseOwner, Valid: true}, LeaseEpoch: leaseEpoch,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: start import task: %v", biz.ErrPersistence, err)
+	}
+	return taskFromRow(row)
+}
+
+// FreezeTaskCandidate pins the task to exactly one verified attempt.
+func (r *Repository) FreezeTaskCandidate(ctx context.Context, freeze biz.CandidateFreeze) (biz.DatasetImportTask, error) {
+	if r == nil || r.pool == nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: repository not configured", biz.ErrPersistence)
+	}
+	tenant, task, err := tenantAndDataset(freeze.TenantID, freeze.TaskID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	attempt, err := databaseID(freeze.AttemptID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	row, err := datasetsql.New(r.pool).FreezeTaskCandidate(ctx, datasetsql.FreezeTaskCandidateParams{
+		TenantID: tenant, TaskID: task, AttemptID: attempt,
+		ObjectKey: pgtype.Text{String: freeze.ObjectKey, Valid: true},
+		VersionID: pgtype.Text{String: freeze.VersionID, Valid: true},
+		SizeBytes: freeze.SizeBytes, Sha256: pgtype.Text{String: freeze.SHA256, Valid: true},
+		ReportVersionID: pgtype.Text{String: freeze.ReportVersionID, Valid: true},
+		ReportSha256:    pgtype.Text{String: freeze.ReportSHA256, Valid: true},
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: freeze task candidate: %v", biz.ErrPersistence, err)
+	}
+	return taskFromRow(row)
+}
+
+// FailTask records a terminal failure with the caller's retryability verdict.
+func (r *Repository) FailTask(ctx context.Context, failure biz.TaskFailure) (biz.DatasetImportTask, error) {
+	if r == nil || r.pool == nil || failure.Code == "" {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: task failure requires a code", biz.ErrPersistence)
+	}
+	tenant, task, err := tenantAndDataset(failure.TenantID, failure.TaskID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	detail := failure.Detail
+	if len(detail) == 0 {
+		detail = []byte("{}")
+	}
+	row, err := datasetsql.New(r.pool).FailTask(ctx, datasetsql.FailTaskParams{
+		TenantID: tenant, TaskID: task, FailureCode: pgtype.Text{String: failure.Code, Valid: true},
+		FailureDetail: detail, Retryable: failure.Retryable,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: fail import task: %v", biz.ErrPersistence, err)
+	}
+	return taskFromRow(row)
+}
+
+// FinishCancelledTask ends a CANCELING task once no writer remains.
+func (r *Repository) FinishCancelledTask(ctx context.Context, tenantID, taskID string) (biz.DatasetImportTask, error) {
+	if r == nil || r.pool == nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: repository not configured", biz.ErrPersistence)
+	}
+	tenant, task, err := tenantAndDataset(tenantID, taskID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	row, err := datasetsql.New(r.pool).FinishCancelledTask(ctx, datasetsql.FinishCancelledTaskParams{TenantID: tenant, TaskID: task})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: finish cancelled task: %v", biz.ErrPersistence, err)
+	}
+	return taskFromRow(row)
+}
+
+// DeferTask pushes the next scan out without ending the task.
+func (r *Repository) DeferTask(ctx context.Context, deferral biz.TaskDeferral) error {
+	if r == nil || r.pool == nil || deferral.Delay <= 0 {
+		return fmt.Errorf("%w: deferral requires a positive delay", biz.ErrPersistence)
+	}
+	tenant, task, err := tenantAndDataset(deferral.TenantID, deferral.TaskID)
+	if err != nil {
+		return err
+	}
+	if err := datasetsql.New(r.pool).DeferTask(ctx, datasetsql.DeferTaskParams{
+		TenantID: tenant, TaskID: task,
+		Delay:       pgtype.Interval{Microseconds: deferral.Delay.Microseconds()},
+		FailureCode: pgtype.Text{String: deferral.FailureCode, Valid: deferral.FailureCode != ""},
+	}); err != nil {
+		return fmt.Errorf("%w: defer import task: %v", biz.ErrPersistence, err)
+	}
+	return nil
+}
+
+// CloseAttempt stops dispatch for one attempt and records why.
+func (r *Repository) CloseAttempt(ctx context.Context, tenantID, attemptID, reason string) (biz.DatasetImportAttempt, error) {
+	if r == nil || r.pool == nil || reason == "" {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: attempt close requires a reason", biz.ErrPersistence)
+	}
+	tenant, err := databaseID(tenantID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	id, err := databaseID(attemptID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	row, err := datasetsql.New(r.pool).CloseAttempt(ctx, datasetsql.CloseAttemptParams{
+		TenantID: tenant, AttemptID: id, CloseReason: pgtype.Text{String: reason, Valid: true},
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportAttempt{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: close attempt: %v", biz.ErrPersistence, err)
+	}
+	return attemptFromRow(row)
+}
+
+// RecordAttemptJob binds the observed Job identity after a create. A different
+// UID is a conflict, never an adoption.
+func (r *Repository) RecordAttemptJob(ctx context.Context, tenantID, attemptID, jobUID, resourceVersion string) (biz.DatasetImportAttempt, error) {
+	if r == nil || r.pool == nil || jobUID == "" || resourceVersion == "" {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: attempt Job identity is incomplete", biz.ErrPersistence)
+	}
+	tenant, err := databaseID(tenantID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	id, err := databaseID(attemptID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	row, err := datasetsql.New(r.pool).RecordAttemptJob(ctx, datasetsql.RecordAttemptJobParams{
+		TenantID: tenant, AttemptID: id,
+		JobUid: pgtype.Text{String: jobUID, Valid: true}, JobResourceVersion: pgtype.Text{String: resourceVersion, Valid: true},
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportAttempt{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: record attempt Job: %v", biz.ErrPersistence, err)
+	}
+	return attemptFromRow(row)
+}
+
+// RecordAttemptObservation stores the latest bounded runtime observation.
+func (r *Repository) RecordAttemptObservation(ctx context.Context, tenantID, attemptID string, observation []byte) (biz.DatasetImportAttempt, error) {
+	if r == nil || r.pool == nil || len(observation) == 0 {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: observation is empty", biz.ErrPersistence)
+	}
+	tenant, err := databaseID(tenantID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	id, err := databaseID(attemptID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	row, err := datasetsql.New(r.pool).RecordAttemptObservation(ctx, datasetsql.RecordAttemptObservationParams{
+		TenantID: tenant, AttemptID: id, Observation: observation,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportAttempt{}, biz.ErrImportTaskNotFound
+	}
+	if err != nil {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: record attempt observation: %v", biz.ErrPersistence, err)
+	}
+	return attemptFromRow(row)
+}
+
+// ClearCurrentAttempt detaches a closed attempt from the task so the next
+// attempt can be allocated.
+func (r *Repository) ClearCurrentAttempt(ctx context.Context, tenantID, taskID, attemptID string) (biz.DatasetImportTask, error) {
+	if r == nil || r.pool == nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: repository not configured", biz.ErrPersistence)
+	}
+	tenant, task, err := tenantAndDataset(tenantID, taskID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	attempt, err := databaseID(attemptID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	row, err := datasetsql.New(r.pool).ClearCurrentAttempt(ctx, datasetsql.ClearCurrentAttemptParams{
+		TenantID: tenant, TaskID: task, AttemptID: attempt,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: clear current attempt: %v", biz.ErrPersistence, err)
+	}
+	return taskFromRow(row)
+}
+
+// SetTaskEnvironment records the execution-registry row seen at dispatch time.
+func (r *Repository) SetTaskEnvironment(ctx context.Context, tenantID, taskID, environmentID string) (biz.DatasetImportTask, error) {
+	if r == nil || r.pool == nil || environmentID == "" {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: environment id is required", biz.ErrPersistence)
+	}
+	tenant, task, err := tenantAndDataset(tenantID, taskID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	environment, err := databaseID(environmentID)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	row, err := datasetsql.New(r.pool).SetTaskEnvironment(ctx, datasetsql.SetTaskEnvironmentParams{
+		TenantID: tenant, TaskID: task, EnvironmentID: environment,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: set task environment: %v", biz.ErrPersistence, err)
+	}
+	return taskFromRow(row)
 }

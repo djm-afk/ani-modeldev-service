@@ -33,11 +33,12 @@ type EnvironmentObserver interface {
 // about. A missing row is a normal, non-blocking state; it grants nothing and
 // revokes nothing.
 type EnvironmentObservation struct {
-	Present      bool
-	State        string
-	NamespaceUID string
-	Blocked      bool
-	BlockReason  string
+	Present       bool
+	EnvironmentID string
+	State         string
+	NamespaceUID  string
+	Blocked       bool
+	BlockReason   string
 }
 
 // RegistryObservationFailed reports a registry read that could not answer. It
@@ -54,10 +55,22 @@ type TargetReader struct {
 }
 
 func NewTargetReader(namespaces NamespaceReader, environments EnvironmentObserver, platform cpup01.StorageScope, clusterID string) (*TargetReader, error) {
-	if namespaces == nil || platform.Validate() != nil || !biz.CanonicalEnvironmentUUID(clusterID) {
+	if namespaces == nil || !validPlatformInputScope(platform) || !biz.CanonicalEnvironmentUUID(clusterID) {
 		return nil, biz.ErrImportEnvironmentMissing
 	}
 	return &TargetReader{namespaces: namespaces, environments: environments, platform: platform, clusterID: clusterID}, nil
+}
+
+// validPlatformInputScope checks the three fields the platform scope actually
+// contributes. The approved prefix is deliberately not required: the platform
+// scope is the root, and TenantStorageScope overwrites the prefix per tenant on
+// every read, so whatever the platform file carries there is never used. The
+// platform configuration (written long before Dataset existed) carries no
+// prefix, and demanding one would reject a deployment whose inputs are correct.
+func validPlatformInputScope(scope cpup01.StorageScope) bool {
+	return biz.ValidStorageReference(scope.StorageConnectionID) &&
+		biz.ValidStorageReference(scope.Bucket) &&
+		biz.ValidStorageReference(scope.CredentialReference)
 }
 
 var _ biz.DatasetImportTargetReader = (*TargetReader)(nil)
@@ -80,12 +93,14 @@ func (reader *TargetReader) ReadDatasetImportTarget(ctx context.Context, tenantI
 	if identity.ClusterID != reader.clusterID {
 		return biz.DatasetImportTarget{}, biz.ErrImportEnvironmentMissing
 	}
+	var environmentID string
 	if reader.environments != nil {
 		observed, err := reader.environments.ObserveEnvironment(ctx, tenantID, identity.ClusterID)
 		if err != nil {
 			return biz.DatasetImportTarget{}, ErrRegistryObservationFailed
 		}
 		if observed.Present {
+			environmentID = observed.EnvironmentID
 			// A pinned original UID must still match the live Namespace.
 			if observed.NamespaceUID != "" && observed.NamespaceUID != identity.UID {
 				return biz.DatasetImportTarget{}, biz.ErrImportEnvironmentMissing
@@ -102,6 +117,7 @@ func (reader *TargetReader) ReadDatasetImportTarget(ctx context.Context, tenantI
 	}
 	target := biz.DatasetImportTarget{
 		Schema:        biz.DatasetImportTargetSchema,
+		EnvironmentID: environmentID,
 		ClusterID:     identity.ClusterID,
 		NamespaceName: identity.Name,
 		NamespaceUID:  identity.UID,
@@ -130,3 +146,22 @@ func scopeDigest(scope cpup01.StorageScope) string {
 	// the namespace identity changes.
 	return biz.ImportTargetScopeDigest(target.InputScope)
 }
+
+// EnvironmentID returns the registry row's environment id for the workload's
+// environment-id label. A tenant with no row yields an empty string and the
+// caller must refuse dispatch: the native policy requires a real, non-zero id.
+func (reader *TargetReader) EnvironmentID(ctx context.Context, tenantID, clusterID string) (string, error) {
+	if reader == nil || reader.environments == nil {
+		return "", biz.ErrImportEnvironmentMissing
+	}
+	observed, err := reader.environments.ObserveEnvironment(ctx, tenantID, clusterID)
+	if err != nil {
+		return "", ErrRegistryObservationFailed
+	}
+	if !observed.Present {
+		return "", nil
+	}
+	return observed.EnvironmentID, nil
+}
+
+var _ biz.EnvironmentLookup = (*TargetReader)(nil)

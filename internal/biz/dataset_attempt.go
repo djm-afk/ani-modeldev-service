@@ -13,6 +13,9 @@ type DatasetWorkerRepository interface {
 	ListDueTasks(ctx context.Context, now time.Time, batch int32) ([]DatasetImportTask, error)
 	// AcquireTaskLease takes or renews the task lease and returns the new epoch.
 	AcquireTaskLease(ctx context.Context, tenantID, taskID, owner string, ttl time.Duration) (DatasetImportTask, error)
+	// ReleaseTaskLease drops the lease this worker still holds. A held lease is
+	// skipped by ListDueTasks until it expires, so a step that finishes must
+	// release it instead of waiting out the TTL.
 	ReleaseTaskLease(ctx context.Context, tenantID, taskID, owner string, epoch int64) error
 
 	// CountRunningAttempts is the quota observation, read under the capacity lock.
@@ -22,6 +25,9 @@ type DatasetWorkerRepository interface {
 
 	// ListDueAttempts scans reconciliation independently of the parent task state.
 	ListDueAttempts(ctx context.Context, now time.Time, batch int32) ([]DatasetImportAttempt, error)
+	// GetAttempt reads one attempt by id; recovery must re-read the row rather
+	// than trust an in-memory copy.
+	GetAttempt(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
 	AcquireAttemptLease(ctx context.Context, tenantID, attemptID, owner string, ttl time.Duration) (DatasetImportAttempt, error)
 	ClaimAttemptCleanup(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
 	FinishAttemptCleanup(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
@@ -43,6 +49,8 @@ type DatasetImportAttempt struct {
 	JobName            string
 	PVCName            string
 	SecretName         string
+	JobUID             string
+	JobResourceVersion string
 	RuntimePlan        []byte
 	RuntimePlanSHA256  string
 	DataObjectKey      string

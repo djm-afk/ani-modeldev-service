@@ -14,6 +14,10 @@ const (
 	NeedsStepOrComputeCleanup
 	PendingGPUOutbox
 	GPUReleaseNotSealed
+	// NeedsRunTerminal marks an execution whose run reached a terminal failure
+	// before any step callback was observed. It is scanned early so the run-level
+	// outcome is projected instead of waiting for the frozen deadline.
+	NeedsRunTerminal
 )
 
 type PendingCloseRow struct {
@@ -128,7 +132,22 @@ func (w *CloseWorker) ReconcileOnce(ctx context.Context) (CloseBatchResult, erro
 					continue
 				}
 				completed := false
-				if row.Reasons&PendingGPUOutbox != 0 {
+				if row.Reasons&NeedsRunTerminal != 0 && row.Reasons&NeedsClose == 0 && row.Reasons&PendingGPUOutbox == 0 {
+					bounded, stop := context.WithTimeout(ctx, 30*time.Second)
+					closed, closeErr := w.closer.CloseTerminalRun(bounded, tenant, row.ExecutionID)
+					stop()
+					e = closeErr
+					completed = closed.Runtime.ClosedAt != nil
+					if e == nil && completed && closed.Execution.Snapshot.GPU != nil {
+						if w.gpuRelease == nil {
+							e = ErrRuntimeNotReady
+						} else {
+							gpuCtx, gpuStop := context.WithTimeout(ctx, 10*time.Second)
+							_, e = w.gpuRelease.Reconcile(gpuCtx, tenant, row.ExecutionID)
+							gpuStop()
+						}
+					}
+				} else if row.Reasons&PendingGPUOutbox != 0 {
 					completed = true
 					if w.gpuRelease == nil {
 						e = ErrRuntimeNotReady
@@ -147,9 +166,21 @@ func (w *CloseWorker) ReconcileOnce(ctx context.Context) (CloseBatchResult, erro
 						if w.gpuRelease == nil {
 							e = ErrRuntimeNotReady
 						} else {
-							bounded, stop := context.WithTimeout(ctx, 10*time.Second)
-							_, e = w.gpuRelease.Reconcile(bounded, tenant, row.ExecutionID)
-							stop()
+							gpuCtx, gpuStop := context.WithTimeout(ctx, 10*time.Second)
+							_, e = w.gpuRelease.Reconcile(gpuCtx, tenant, row.ExecutionID)
+							gpuStop()
+						}
+					}
+					// A stopped execution that only reached review because the
+					// original close proof was unavailable can still be closed by
+					// the independently verified terminal run.
+					if e != nil && row.Reasons&NeedsRunTerminal != 0 {
+						terminalCtx, terminalStop := context.WithTimeout(ctx, 30*time.Second)
+						terminal, terminalErr := w.closer.CloseTerminalRun(terminalCtx, tenant, row.ExecutionID)
+						terminalStop()
+						if terminalErr == nil && terminal.Runtime.ClosedAt != nil {
+							e = nil
+							completed = true
 						}
 					}
 				}

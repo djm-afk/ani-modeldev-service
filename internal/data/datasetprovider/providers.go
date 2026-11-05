@@ -119,7 +119,9 @@ type modelScopeFile struct {
 func (c *Client) inspectModelScope(ctx context.Context, repoID, revision, filePath string) (biz.SourceFileFact, error) {
 	var payload modelScopeFile
 	query := url.Values{"Revision": {revision}, "Recursive": {"true"}}
-	if _, err := c.getJSON(ctx, c.config.ModelScopeEndpoint, "/api/v1/datasets/"+repoID, query, &payload); err != nil {
+	// Same /repo/tree suffix as the listing: the bare dataset path carries no
+	// Files member, which made every INSPECT_FILE answer "not found".
+	if _, err := c.getJSON(ctx, c.config.ModelScopeEndpoint, "/api/v1/datasets/"+repoID+"/repo/tree", query, &payload); err != nil {
 		return biz.SourceFileFact{}, err
 	}
 	for _, file := range payload.Data.Files {
@@ -158,7 +160,10 @@ func (c *Client) inspectModelScope(ctx context.Context, repoID, revision, filePa
 
 func (c *Client) listModelScope(ctx context.Context, repoID, revision, directoryPath, pageToken string, pageSize int32) (biz.SourcePage, error) {
 	var payload modelScopeFile
-	if _, err := c.getJSON(ctx, c.config.ModelScopeEndpoint, "/api/v1/datasets/"+repoID, url.Values{"Revision": {revision}, "Recursive": {"true"}}, &payload); err != nil {
+	// ModelScope needs the /repo/tree suffix for the file listing; the bare
+	// dataset path returns repository metadata with no Files member at all, so
+	// using it silently produced an empty page instead of an error.
+	if _, err := c.getJSON(ctx, c.config.ModelScopeEndpoint, "/api/v1/datasets/"+repoID+"/repo/tree", url.Values{"Revision": {revision}, "Recursive": {"true"}}, &payload); err != nil {
 		return biz.SourcePage{}, err
 	}
 	page := biz.SourcePage{}

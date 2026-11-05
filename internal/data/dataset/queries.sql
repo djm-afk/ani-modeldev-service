@@ -321,9 +321,15 @@ LIMIT sqlc.arg(batch_size);
 -- The lease is granted only when it is free or already ours. The epoch advances
 -- on every hand-over so a stale owner cannot act on the new lease.
 UPDATE modeldev_dataset_import_tasks
+-- lease_epoch refers to the pre-update value in SET, so a rename cannot
+-- collapse the epoch: every hand-over must advance it, and check9 requires > 0.
 SET lease_owner = sqlc.arg(owner),
-    lease_epoch = CASE WHEN lease_owner = sqlc.arg(owner) THEN lease_epoch ELSE lease_epoch + 1 END,
-    lease_until = clock_timestamp() + sqlc.arg(ttl)::interval,
+    lease_epoch = CASE WHEN modeldev_dataset_import_tasks.lease_owner = sqlc.arg(owner)
+                       THEN modeldev_dataset_import_tasks.lease_epoch
+                       ELSE modeldev_dataset_import_tasks.lease_epoch + 1 END,
+    -- Seconds, not an interval value: a bound interval arrives as a binary
+    -- value the text cast turns into NULL, which then fails the lease CHECK.
+    lease_until = clock_timestamp() + make_interval(secs => sqlc.arg(ttl_seconds)::double precision),
     updated_at = clock_timestamp()
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND task_id = sqlc.arg(task_id)::uuid
@@ -374,6 +380,38 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND current_attempt_id IS NULL
 RETURNING *;
 
+-- name: GetAttempt :one
+SELECT * FROM modeldev_dataset_import_attempts
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid;
+
+-- name: SetTaskEnvironment :one
+-- Record the execution-registry row observed at dispatch time. The native
+-- admission policy requires the owning workload to carry a non-zero
+-- modeldev.ani.io/environment-id, so it must come from the real registry row
+-- rather than being invented.
+UPDATE modeldev_dataset_import_tasks
+SET observed_environment_id = sqlc.arg(environment_id)::uuid,
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND state IN ('QUEUED','RUNNING')
+RETURNING *;
+
+-- name: ClearCurrentAttempt :one
+-- A closed attempt stops being the task's current one. Without this the task
+-- keeps pointing at the closed row and can never allocate the next attempt.
+UPDATE modeldev_dataset_import_tasks
+SET current_attempt_id = NULL,
+    next_run_at = clock_timestamp(),
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND state = 'RUNNING'
+  AND cancel_requested_at IS NULL
+  AND current_attempt_id = sqlc.arg(attempt_id)::uuid
+RETURNING *;
+
 -- name: ListDueAttempts :many
 SELECT * FROM modeldev_dataset_import_attempts
 WHERE reconcile_next_at IS NOT NULL
@@ -385,8 +423,10 @@ LIMIT sqlc.arg(batch_size);
 -- name: AcquireAttemptLease :one
 UPDATE modeldev_dataset_import_attempts
 SET reconcile_owner = sqlc.arg(owner),
-    reconcile_epoch = CASE WHEN reconcile_owner = sqlc.arg(owner) THEN reconcile_epoch ELSE reconcile_epoch + 1 END,
-    reconcile_until = clock_timestamp() + sqlc.arg(ttl)::interval
+    reconcile_epoch = CASE WHEN modeldev_dataset_import_attempts.reconcile_owner = sqlc.arg(owner)
+                           THEN modeldev_dataset_import_attempts.reconcile_epoch
+                           ELSE modeldev_dataset_import_attempts.reconcile_epoch + 1 END,
+    reconcile_until = clock_timestamp() + make_interval(secs => sqlc.arg(ttl_seconds)::double precision)
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND attempt_id = sqlc.arg(attempt_id)::uuid
   AND (reconcile_owner IS NULL OR reconcile_owner = sqlc.arg(owner) OR reconcile_until < clock_timestamp())
@@ -428,4 +468,117 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND attempt_id = sqlc.arg(attempt_id)::uuid
   AND writers_stopped_at IS NULL
   AND result_object_version_id IS NULL
+RETURNING *;
+
+-- name: LockImportCapacity :exec
+SELECT modeldev_lock_import_capacity();
+
+-- name: StartTask :one
+-- QUEUED -> RUNNING when this worker still holds the lease. The attempt is
+-- claimed separately, so a failure between the two leaves a RUNNING task with
+-- no attempt, which the next scan repairs.
+UPDATE modeldev_dataset_import_tasks
+SET state = 'RUNNING',
+    phase = 'WAITING',
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND state = 'QUEUED'
+  AND cancel_requested_at IS NULL
+  AND lease_owner = sqlc.arg(lease_owner)
+  AND lease_epoch = sqlc.arg(lease_epoch)
+  AND lease_until > clock_timestamp()
+RETURNING *;
+
+-- name: NextAttemptNumber :one
+SELECT (COALESCE(max(attempt_no), 0) + 1)::bigint AS next_no
+FROM modeldev_dataset_import_attempts
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid;
+
+-- name: FreezeTaskCandidate :one
+-- The task's candidate may only go from empty to one frozen attempt. The
+-- attempt row must already hold the same identity, so a task cannot name an
+-- object nobody verified.
+UPDATE modeldev_dataset_import_tasks
+SET candidate_attempt_id = sqlc.arg(attempt_id)::uuid,
+    candidate_object_key = sqlc.arg(object_key),
+    candidate_version_id = sqlc.arg(version_id),
+    candidate_size_bytes = sqlc.arg(size_bytes)::bigint,
+    candidate_sha256 = sqlc.arg(sha256),
+    candidate_frozen_at = clock_timestamp(),
+    candidate_report_version_id = sqlc.arg(report_version_id),
+    candidate_report_sha256 = sqlc.arg(report_sha256),
+    phase = 'VERIFYING',
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND state = 'RUNNING'
+  AND candidate_attempt_id IS NULL
+  AND cancel_requested_at IS NULL
+RETURNING *;
+
+-- name: FailTask :one
+-- Only a live task can fail. The caller decides retryability; the CHECK
+-- constraint requires a failure code whenever the state is FAILED.
+UPDATE modeldev_dataset_import_tasks
+SET state = 'FAILED',
+    failure_code = sqlc.arg(failure_code),
+    failure_detail = sqlc.arg(failure_detail)::jsonb,
+    retryable = sqlc.arg(retryable),
+    next_run_at = clock_timestamp(),
+    lease_owner = NULL,
+    lease_until = NULL,
+    finished_at = clock_timestamp(),
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND state IN ('QUEUED','RUNNING')
+RETURNING *;
+
+-- name: DeferTask :exec
+-- A retryable transient failure keeps the task live and just pushes the next
+-- scan out by the bounded backoff, so the retry budget is spent in plain sight.
+UPDATE modeldev_dataset_import_tasks
+SET next_run_at = clock_timestamp() + sqlc.arg(delay)::interval,
+    lease_owner = NULL,
+    lease_until = NULL,
+    failure_code = sqlc.arg(failure_code),
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = sqlc.arg(task_id)::uuid
+  AND state IN ('QUEUED','RUNNING');
+
+-- name: CloseAttempt :one
+-- Stop dispatching for this attempt and record why. writers_stopped_at is set
+-- only once the attempt no longer owns a live writer; a failed attempt whose Job
+-- never started already satisfies that.
+UPDATE modeldev_dataset_import_attempts
+SET dispatch_closed_at = clock_timestamp(),
+    close_reason = sqlc.arg(close_reason),
+    writers_stopped_at = clock_timestamp(),
+    reconcile_next_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
+  AND dispatch_closed_at IS NULL
+RETURNING *;
+
+-- name: RecordAttemptJob :one
+-- Bind the real Job identity after an observed create. A different UID is a
+-- conflict, never an adoption.
+UPDATE modeldev_dataset_import_attempts
+SET job_uid = sqlc.arg(job_uid),
+    job_resource_version = sqlc.arg(job_resource_version),
+    reconcile_next_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
+  AND (job_uid IS NULL OR job_uid = sqlc.arg(job_uid))
+RETURNING *;
+
+-- name: RecordAttemptObservation :one
+UPDATE modeldev_dataset_import_attempts
+SET runtime_observation = sqlc.arg(observation)::jsonb,
+    reconcile_next_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
 RETURNING *;

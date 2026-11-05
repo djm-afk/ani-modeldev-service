@@ -84,6 +84,9 @@ func (r *Repository) ListPendingClosures(ctx context.Context, cluster, tenant st
 			if state.CloseGeneration > 0 || !biz.ActiveBusinessDeadline(biz.Execution{Admission: a}, state).After(cursor.SweepBefore) {
 				item.Reasons |= biz.NeedsClose
 			}
+			if state.TrainingWindow == nil && len(state.StepTimings) == 0 && len(state.FinetuningSteps) == 0 {
+				item.Reasons |= biz.NeedsRunTerminal
+			}
 		} else {
 			if (state.CloseEvidence == nil || !state.CloseEvidence.NoDispatch) && (state.StepExitCleanup == nil || state.StepExitCleanup.CompletedAt == nil || state.StepExitCleanup.CompletedAt.IsZero() || state.ComputeCleanup == nil || state.ComputeCleanup.Phase != "APPLIED" && (state.ComputeCleanup.Attempts < 3 || state.ComputeCleanup.Phase == "STARTED")) {
 				item.Reasons |= biz.NeedsStepOrComputeCleanup

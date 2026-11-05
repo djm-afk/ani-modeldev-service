@@ -20,14 +20,30 @@ import (
 // package's SQL, only its one guarded write.
 type InputPublisher interface {
 	PublishVerifiedAlpacaInTx(ctx context.Context, tx pgx.Tx, expected biz.InputImport, verified biz.VerifiedAlpaca) (biz.InputVersion, error)
+	// FreezeImport writes the immutable frozen input row. The publication
+	// transaction locks that row, so it has to exist first.
+	FreezeImport(ctx context.Context, request biz.InputImport) (biz.InputVersion, error)
 }
 
 type Repository struct {
 	pool   *pgxpool.Pool
 	inputs InputPublisher
+	// limit is the global running-attempt budget. It is a setting of the whole
+	// deployment, not a per-replica goroutine count, and it only takes effect
+	// inside AllocateAttempt's capacity transaction.
+	limit int
 }
 
 func New(pool *pgxpool.Pool) *Repository { return &Repository{pool: pool} }
+
+// WithConcurrencyLimit sets the shared import budget. A non-positive value
+// leaves allocation failing closed.
+func (r *Repository) WithConcurrencyLimit(limit int) *Repository {
+	if r != nil {
+		r.limit = limit
+	}
+	return r
+}
 
 // WithInputPublisher attaches the input writer used by publication. Without it
 // publication fails closed rather than writing a version nobody verified.

@@ -7,10 +7,11 @@
 package biz
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -281,7 +282,11 @@ type ImportTargetScope struct {
 // computed over exactly these fields and nothing else: no Secret content, no
 // registry row version, no KFP or training profile.
 type DatasetImportTarget struct {
-	Schema           string
+	Schema string
+	// EnvironmentID is the tenant execution registry row observed at acceptance.
+	// It is an audit/label fact, not part of the frozen digest: a re-registered
+	// environment must not invalidate an already accepted task.
+	EnvironmentID    string
 	ClusterID        string
 	NamespaceName    string
 	NamespaceUID     string
@@ -292,34 +297,38 @@ type DatasetImportTarget struct {
 
 const DatasetImportTargetSchema = "ani.modeldev.dataset.import-target.v1"
 
-// Canonical returns the frozen key/value layout of the target snapshot. Keys
-// are sorted so the digest never depends on map iteration order.
+// Canonical returns the frozen layout of the target snapshot with keys sorted
+// lexically, so the digest never depends on map iteration order. input_scope is
+// a nested object, not dotted keys: the database compares the stored JSON
+// against a nested jsonb_build_object, and the two forms are not equal.
 func (target DatasetImportTarget) Canonical() ([]byte, error) {
-	if !CanonicalEnvironmentUUID(target.InputScopeStorageTenant()) {
+	tenant := target.InputScopeStorageTenant()
+	if !CanonicalEnvironmentUUID(tenant) || !CanonicalEnvironmentUUID(target.ClusterID) || !CanonicalEnvironmentUUID(target.NamespaceUID) {
 		return nil, ErrDatasetInvalidMetadata
 	}
-	fields := [][2]string{
-		{"cluster_id", target.ClusterID},
-		{"input_scope.storage_connection_id", target.InputScope.StorageConnectionID},
-		{"input_scope.bucket", target.InputScope.Bucket},
-		{"input_scope.approved_prefix", target.InputScope.ApprovedPrefix},
-		{"input_scope.credential_reference", target.InputScope.CredentialReference},
-		{"namespace_name", target.NamespaceName},
-		{"namespace_uid", target.NamespaceUID},
-		{"schema", DatasetImportTargetSchema},
-		{"tenant_id", target.InputScopeStorageTenant()},
+	if target.NamespaceName != "tenant-"+tenant {
+		return nil, ErrDatasetInvalidMetadata
 	}
-	sort.Slice(fields, func(i, j int) bool { return fields[i][0] < fields[j][0] })
-	var builder strings.Builder
-	builder.WriteByte('{')
-	for index, field := range fields {
-		if index > 0 {
-			builder.WriteByte(',')
-		}
-		builder.WriteString(`"` + field[0] + `":"` + field[1] + `"`)
+	value := map[string]any{
+		"cluster_id": target.ClusterID,
+		"input_scope": map[string]string{
+			"approved_prefix":       target.InputScope.ApprovedPrefix,
+			"bucket":                target.InputScope.Bucket,
+			"credential_reference":  target.InputScope.CredentialReference,
+			"storage_connection_id": target.InputScope.StorageConnectionID,
+		},
+		"namespace_name": target.NamespaceName,
+		"namespace_uid":  target.NamespaceUID,
+		"schema":         DatasetImportTargetSchema,
+		"tenant_id":      tenant,
 	}
-	builder.WriteByte('}')
-	return []byte(builder.String()), nil
+	var buffer bytes.Buffer
+	encoder := json.NewEncoder(&buffer)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(value); err != nil {
+		return nil, ErrDatasetInvalidMetadata
+	}
+	return bytes.TrimSuffix(buffer.Bytes(), []byte("\n")), nil
 }
 
 // InputScopeStorageTenant returns the tenant that owns the approved prefix.

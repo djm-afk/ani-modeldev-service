@@ -25,6 +25,7 @@ import (
 	jsonpatch "gopkg.in/evanphx/json-patch.v4"
 	admissionv1 "k8s.io/api/admission/v1"
 	authenticationv1 "k8s.io/api/authentication/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -45,6 +46,7 @@ type identities struct {
 	environment *corev1.ConfigMap
 	accounts    map[string]*corev1.ServiceAccount
 	workflow    *unstructured.Unstructured
+	job         *batchv1.Job
 	err         error
 	entered     chan struct{}
 	block       chan struct{}
@@ -101,6 +103,13 @@ func refreshProjection(t *testing.T, config *modeldevwebhook.Config, reader *ide
 	reader.environment.Data["binding.json"] = string(raw)
 	reader.environment.Data["binding.sha256"] = projection.Digest(raw)
 }
+func (reader *identities) Job(context.Context, string, string) (*batchv1.Job, error) {
+	if reader.job != nil {
+		return reader.job, nil
+	}
+	return nil, errors.New("not found")
+}
+
 func (reader *identities) Environment(context.Context, string) (*corev1.ConfigMap, error) {
 	if reader.err != nil {
 		return nil, reader.err
@@ -160,7 +169,7 @@ func fixtureConfig(t *testing.T) (modeldevwebhook.Config, *identities) {
 		t.Fatal(err)
 	}
 	bundleHash := sha256.Sum256(bundle)
-	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles, ClusterID: "22222222-2222-4222-8222-222222222222", MaterialBundleFile: bundleFile, MaterialBundleDigest: hex.EncodeToString(bundleHash[:]), ArgoCreator: "system:serviceaccount:kubeflow:argo", Training: &modeldevwebhook.TrainingBinding{ServiceAccount: "trainer-workload", Creator: "system:serviceaccount:kube-system:job-controller"}, Driver: &modeldevwebhook.DriverBinding{Image: "example.invalid/driver@sha256:" + strings.Repeat("b", 64), Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}, ControllerPrincipals: []string{"system:serviceaccount:kube-system:job-controller", "system:serviceaccount:kubeflow:argo"}}
+	config := modeldevwebhook.Config{SchemaVersion: modeldevwebhook.ConfigSchemaVersion, Profiles: profiles, ClusterID: "22222222-2222-4222-8222-222222222222", MaterialBundleFile: bundleFile, MaterialBundleDigest: hex.EncodeToString(bundleHash[:]), ImporterImage: testImporterImage, ArgoCreator: "system:serviceaccount:kubeflow:argo", Training: &modeldevwebhook.TrainingBinding{ServiceAccount: "trainer-workload", Creator: "system:serviceaccount:kube-system:job-controller"}, Driver: &modeldevwebhook.DriverBinding{Image: "example.invalid/driver@sha256:" + strings.Repeat("b", 64), Command: []string{"driver"}, AllowedSupportImages: []string{supportImage}}, ControllerPrincipals: []string{"system:serviceaccount:kube-system:job-controller", "system:serviceaccount:kubeflow:argo"}}
 	namespace := "tenant-" + namespaceTenant
 	reader := &identities{namespace: &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace, UID: types.UID(namespaceUID), Labels: map[string]string{"network.ani.io/managed-by": "ani-network-service", modeldevwebhook.NamespaceTenantLabel: namespaceTenant}}, Status: corev1.NamespaceStatus{Phase: corev1.NamespaceActive}}, workflow: &unstructured.Unstructured{Object: map[string]any{"apiVersion": "argoproj.io/v1alpha1", "kind": "Workflow", "metadata": map[string]any{"name": "main-flow", "namespace": namespace, "uid": workflowUID, "labels": map[string]any{"pipeline/runid": runID}}}}}
 	snapshot := conformance.SnapshotV1()

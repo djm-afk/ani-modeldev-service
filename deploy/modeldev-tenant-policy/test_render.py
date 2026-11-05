@@ -17,7 +17,11 @@ class NativeTemplates(unittest.TestCase):
         self.assertEqual(set(policies),set(render.NAMES))
         for policy in policies.values():
             self.assertEqual(policy["spec"]["failurePolicy"],"Fail")
-            self.assertNotIn("namespaceSelector",policy["spec"]["matchConstraints"])
+            # Empty selectors are load-bearing: omitting them makes the API
+            # server evaluate namespaceObject as null, so `protected` errors and
+            # failurePolicy=Fail denies every covered request cluster-wide.
+            self.assertEqual(policy["spec"]["matchConstraints"]["namespaceSelector"],{})
+            self.assertEqual(policy["spec"]["matchConstraints"]["objectSelector"],{})
         configuration=str(policies[render.NAMES[1]])
         for word in ["kubernetes.io/service-account-token","oldObject","modeldev-execution-environment","modeldev-kfp-artifacts"]:
             self.assertIn(word,configuration)
@@ -94,6 +98,31 @@ class NativeTemplates(unittest.TestCase):
         # Creation is limited to the dataset control plane, not to a trainer.
         self.assertIn("system:serviceaccount:platform:dataset-control", text)
 
+    def test_every_import_pods_read_is_null_guarded(self):
+        """The importer gate must never read metadata of an absent object.
+
+        On CREATE oldObject is absent and on DELETE object is absent. An
+        unguarded `has(oldObject.metadata.labels)` makes the `protected`
+        variable error out, and failurePolicy=Fail then denies every workload
+        request cluster-wide regardless of labels. This actually happened.
+        """
+        document = render.render(config())
+        workload = next(o for o in document["items"] if o["kind"] == "ValidatingAdmissionPolicy" and o["metadata"]["name"] == render.NAMES[2])
+        protected = next(v["expression"] for v in workload["spec"]["variables"] if v["name"] == "protected")
+        # Only the Dataset purpose clauses introduce their own metadata reads in
+        # this variable; the shared marker() helper already guards itself.
+        for obj in ("object", "oldObject"):
+            needle = obj + '.metadata.labels["modeldev.ani.io/purpose"]'
+            index = protected.find(needle)
+            self.assertGreaterEqual(index, 0, f"dataset clause for {obj} missing")
+            # The clause must open with the null guard for the same object.
+            guard = "(" + obj + " != null && "
+            clause = protected[protected.rfind(guard, 0, index):index]
+            self.assertTrue(
+                clause.startswith(guard),
+                f"unguarded metadata read on {obj}: ...{protected[max(0, index-120):index]}",
+            )
+
     def test_dataset_principal_is_required(self):
         value = copy.deepcopy(config())
         del value["principals"]["dataset_control"]
@@ -114,6 +143,23 @@ class NativeTemplates(unittest.TestCase):
         # It appears only alongside the importer purpose label.
         self.assertIn(dataset_control, str(workload["spec"]["matchConditions"]))
         self.assertIn("dataset-import", str(workload["spec"]["matchConditions"]))
+
+    def test_importer_shape_constrains_jobs_only(self):
+        document = render.render(config())
+        workload = next(o for o in document["items"] if o["kind"] == "ValidatingAdmissionPolicy" and o["metadata"]["name"] == render.NAMES[2])
+        create_condition = next(e["expression"] for e in workload["spec"]["validations"] if "only exact original controllers" in e["message"])
+        # The importer-only shape must not block TrainJob/TrainingRuntime creation.
+        self.assertIn("request.resource.resource != 'jobs'", create_condition)
+
+    def test_control_keeps_exit_evidence_release_when_sharing_dataset_identity(self):
+        value = copy.deepcopy(config())
+        value["principals"]["dataset_control"] = value["principals"]["control"]
+        document = render.render(value)
+        workload = next(o for o in document["items"] if o["kind"] == "ValidatingAdmissionPolicy" and o["metadata"]["name"] == render.NAMES[2])
+        update_condition = next(e["expression"] for e in workload["spec"]["validations"] if "variables.sameIdentity" in e["expression"])
+        # Prompt 01/02 reuse one identity for training control and dataset
+        # control; the control principal must still release retained Pods.
+        self.assertIn('"' + value["principals"]["control"] + '"', update_condition)
 
     def test_native_rbac_needs_no_global_authorization_inventory(self):
         rows=render.render(config())["items"]

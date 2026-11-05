@@ -206,3 +206,25 @@ func TestGCVisibleUntilBlocksOnUnboundedUnknown(t *testing.T) {
 		t.Fatalf("conservative expiry lost: %v", until)
 	}
 }
+
+// STS rejects a RoleSessionName longer than 64 characters. Concatenating two
+// UUIDs produced an 89-character name, so every import issuance failed before
+// any request left the process.
+func TestImportSessionNameFitsTheRoleSessionLimit(t *testing.T) {
+	name := importSessionName(biz.ImportSessionRequest{
+		TaskID: "482b31c0-e503-4d95-b8a1-2623f3c161ac", AttemptID: "eb281562-7d3e-4eb0-bd33-1699bb5b5d2e",
+	})
+	if len(name) > 64 {
+		t.Fatalf("session name is %d characters: %q", len(name), name)
+	}
+	if name == "" {
+		t.Fatal("session name is empty")
+	}
+	// Different attempts must not collapse onto the same session name.
+	other := importSessionName(biz.ImportSessionRequest{
+		TaskID: "482b31c0-e503-4d95-b8a1-2623f3c161ac", AttemptID: "cd36a43b-96fd-48e1-ae2f-fd9a23911d51",
+	})
+	if name == other {
+		t.Fatalf("distinct attempts share a session name: %q", name)
+	}
+}

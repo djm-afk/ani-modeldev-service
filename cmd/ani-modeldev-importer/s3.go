@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"os"
 	"strings"
 
@@ -45,8 +48,26 @@ func newS3Client(endpoint, region, credentialPath string) (*s3.Client, error) {
 			SessionToken: credential.SessionToken, Source: "ani-dataset-issuance",
 		}, nil
 	})
-	return s3.New(s3.Options{
+	options := s3.Options{
 		Region: region, BaseEndpoint: aws.String(endpoint), UsePathStyle: true,
 		Credentials: provider,
-	}), nil
+	}
+	// The platform store presents an internal CA. Trusting only the system roots
+	// would turn every upload into an opaque TLS failure, so the mounted bundle
+	// is loaded explicitly when present.
+	if bundle := os.Getenv("AWS_CA_BUNDLE"); bundle != "" {
+		pem, err := os.ReadFile(bundle)
+		if err != nil {
+			return nil, errors.New("s3 CA bundle unreadable")
+		}
+		roots, err := x509.SystemCertPool()
+		if err != nil || roots == nil {
+			roots = x509.NewCertPool()
+		}
+		if !roots.AppendCertsFromPEM(pem) {
+			return nil, errors.New("s3 CA bundle invalid")
+		}
+		options.HTTPClient = &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}}}
+	}
+	return s3.New(options), nil
 }
