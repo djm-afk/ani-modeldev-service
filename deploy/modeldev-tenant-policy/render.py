@@ -10,13 +10,14 @@ NAMES = ["modeldev-bootstrap-v1", "modeldev-environment-config-v1", "modeldev-wo
 SA = ["modeldev-step", "trainer-workload", "verifier", "modeldev-dataset-importer"]
 RB = ["modeldev-runtime", "modeldev-step", "modeldev-webhook-read", "modeldev-kfp-api", "modeldev-kfp-access", "modeldev-dataset-webhook-read"]
 IMPORTER = "modeldev-dataset-importer"
+IMPORT_CA = "modeldev-dataset-import-ca"
 # Only the importer ServiceAccount may own an importer Pod, and only the Dataset
 # control plane may create it. Purpose is a label the native policy pins; RBAC
 # cannot express a dynamic name prefix, so the write boundary lives here.
 PURPOSE = "modeldev.ani.io/purpose"
 PURPOSE_IMPORT = "dataset-import"
 
-CM = ["modeldev-step-owner", "ani-kfp-ca", "kfp-launcher", "metadata-grpc-configmap", "modeldev-execution-environment"]
+CM = ["modeldev-step-owner", "ani-kfp-ca", "kfp-launcher", "metadata-grpc-configmap", "modeldev-execution-environment", IMPORT_CA]
 q = lambda value: json.dumps(value, separators=(",", ":"))
 UUID = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
@@ -43,6 +44,41 @@ def owner_expression():
     return f"has({labels}) && has({annotations}) && 'ani.io/managed-by' in {labels} && {labels}['ani.io/managed-by'] == 'ani-modeldev-service' && 'modeldev.ani.io/tenant-id' in {labels} && {labels}['modeldev.ani.io/tenant-id'] == namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'modeldev.ani.io/environment-id' in {labels} && {labels}['modeldev.ani.io/environment-id'].matches({q(UUID)}) && {labels}['modeldev.ani.io/environment-id'] != '00000000-0000-0000-0000-000000000000' && 'modeldev.ani.io/namespace-uid' in {annotations} && {annotations}['modeldev.ani.io/namespace-uid'].matches({q(UUID)}) && {annotations}['modeldev.ani.io/namespace-uid'] != '00000000-0000-0000-0000-000000000000'"
 
 
+def dataset_identity():
+    # Dataset material and attempt Secrets must not depend on a training
+    # registry row: §7.3 allows a tenant with no row to import. The identity is
+    # therefore the live Namespace plus the frozen attempt target, and it is
+    # scoped to exactly the importer account and the two-key attempt Secret so a
+    # training object can never use this branch. Variables are evaluated eagerly,
+    # so every namespace label read stays behind has()/in guards.
+    labels, annotations = "object.metadata.labels", "object.metadata.annotations"
+    namespace_labels = "namespaceObject.metadata.labels"
+    namespace = ("namespaceObject != null && has(" + namespace_labels + ")"
+                 " && 'network.ani.io/tenant-id' in " + namespace_labels + " && ")
+    material = "request.resource.resource == 'serviceaccounts' && object.metadata.name == " + q(IMPORTER)
+    # The importer needs the artifact store's CA. It cannot read the training
+    # ConfigMap: a tenant with no registry row has none, and the importer must
+    # not depend on training material (§7.3, §12.4). The CA therefore ships as
+    # Dataset material with its own fixed name and key set.
+    ca_material = ("request.resource.resource == 'configmaps' && object.metadata.name == "
+                   + q(IMPORT_CA) + " && has(object.data) && size(object.data) == 1"
+                   " && 's3-ca.pem' in object.data && size(object.data['s3-ca.pem']) > 0")
+    attempt_secret = ("request.resource.resource == 'secrets'"
+                      " && " + q(PURPOSE) + " in " + labels
+                      + " && " + labels + "[" + q(PURPOSE) + "] == " + q(PURPOSE_IMPORT)
+                      + " && 'modeldev.ani.io/target-snapshot-sha256' in " + annotations
+                      + " && " + annotations + "['modeldev.ani.io/target-snapshot-sha256'].matches('^[0-9a-f]{64}$')")
+    return ("(has(" + labels + ") && has(" + annotations + ")"
+            " && 'ani.io/managed-by' in " + labels
+            + " && " + labels + "['ani.io/managed-by'] == 'ani-modeldev-service'"
+            + " && 'modeldev.ani.io/tenant-id' in " + labels
+            + " && " + namespace + labels + "['modeldev.ani.io/tenant-id'] == " + namespace_labels + "['network.ani.io/tenant-id']"
+            + " && 'modeldev.ani.io/namespace-uid' in " + annotations
+            + " && " + annotations + "['modeldev.ani.io/namespace-uid'].matches(" + q(UUID) + ")"
+            + " && " + annotations + "['modeldev.ani.io/namespace-uid'] != '00000000-0000-0000-0000-000000000000'"
+            + " && (" + material + " || " + ca_material + " || (" + attempt_secret + ")))")
+
+
 def resource_rule(groups, resources, operations=("CREATE", "UPDATE")):
     return {"apiGroups": groups, "apiVersions": ["*"], "operations": list(operations), "resources": resources, "scope": "Namespaced"}
 
@@ -61,7 +97,7 @@ def policy(name, rules, variables, checks, conditions=None):
 
 
 def bootstrap(p, ca_key):
-    checks = [("variables.standardNamespace && variables.owner", "standard namespace and original owner identity required"), ("request.operation != 'UPDATE' || (has(oldObject.metadata.labels) && has(oldObject.metadata.annotations) && object.metadata.labels == oldObject.metadata.labels && object.metadata.annotations == oldObject.metadata.annotations)", "original managed identity metadata cannot change")]
+    checks = [("variables.standardNamespace && (variables.owner || variables.datasetIdentity)", "standard namespace and original owner identity required"), ("request.operation != 'UPDATE' || (has(oldObject.metadata.labels) && has(oldObject.metadata.annotations) && object.metadata.labels == oldObject.metadata.labels && object.metadata.annotations == oldObject.metadata.annotations)", "original managed identity metadata cannot change")]
     checks.append(("request.resource.resource != 'serviceaccounts' || (object.metadata.name in " + q(SA) + " && ((object.metadata.name in ['trainer-workload','modeldev-dataset-importer'] && (!has(object.imagePullSecrets) || size(object.imagePullSecrets) == 0) && has(object.automountServiceAccountToken) && !object.automountServiceAccountToken) || (object.metadata.name in ['modeldev-step','verifier'] && has(object.imagePullSecrets) && size(object.imagePullSecrets) == 1 && object.imagePullSecrets[0].name.matches('^ani-pull-[0-9a-f]{32}$'))))", "fixed SA and managed pull references required"))
     subjects = {"modeldev-runtime": p["control"], "modeldev-step": None, "modeldev-webhook-read": p["webhook"], "modeldev-kfp-api": p["kfp_api"], "modeldev-kfp-access": p["control"], "modeldev-dataset-webhook-read": p["webhook"]}
     bindings = []
@@ -71,7 +107,7 @@ def bootstrap(p, ca_key):
         bindings.append(f"(object.metadata.name == {q(name)} && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == {q(name+'-v1')} && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == {q(account)} && object.subjects[0].namespace == {namespace})")
     checks.append(("request.resource.resource != 'rolebindings' || (" + " || ".join(bindings) + ")", "six exact role references and subjects required"))
     checks.append(("request.resource.resource != 'serviceaccounts' || request.operation != 'UPDATE' || (" + optional("object", "imagePullSecrets", "[]") + " == " + optional("oldObject", "imagePullSecrets", "[]") + " && " + optional("object", "automountServiceAccountToken", "true") + " == " + optional("oldObject", "automountServiceAccountToken", "true") + ")", "original service account pull references and token policy cannot change"))
-    maps = {"modeldev-step-owner": ["config.json", "modeldev-ca.pem", "s3-ca.pem"], "ani-kfp-ca": [ca_key], "kfp-launcher": ["providers", "defaultPipelineRoot"], "metadata-grpc-configmap": ["METADATA_GRPC_SERVICE_HOST", "METADATA_GRPC_SERVICE_PORT"], "modeldev-execution-environment": ["binding.json", "binding.sha256"]}
+    maps = {"modeldev-step-owner": ["config.json", "modeldev-ca.pem", "s3-ca.pem"], "ani-kfp-ca": [ca_key], "kfp-launcher": ["providers", "defaultPipelineRoot"], "metadata-grpc-configmap": ["METADATA_GRPC_SERVICE_HOST", "METADATA_GRPC_SERVICE_PORT"], "modeldev-execution-environment": ["binding.json", "binding.sha256"], IMPORT_CA: ["s3-ca.pem"]}
     conditions = []
     for name, keys in maps.items():
         exact = "size(object.data) == 1" if keys is None else f"size(object.data) == {len(keys)} && {q(keys)}.all(k,k in object.data && size(object.data[k]) > 0)"
@@ -86,7 +122,7 @@ def bootstrap(p, ca_key):
     # purpose label instead of import_pods(): the writer must be this control
     # plane, the object must be one of its import attempts, and the payload is
     # exactly the credential bundle and the frozen plan.
-    attempt_secret = ("(variables.owner"
+    attempt_secret = ("(variables.datasetIdentity"
                       " && 'modeldev.ani.io/purpose' in object.metadata.labels"
                       " && object.metadata.labels['modeldev.ani.io/purpose'] == 'dataset-import'"
                       " && object.metadata.name.startsWith('md-import-')"
@@ -95,7 +131,7 @@ def bootstrap(p, ca_key):
                       " && ['credentials.json','plan.json'].all(k,k in object.data && size(object.data[k]) > 0)"
                       " && (!has(object.stringData) || size(object.stringData) == 0))")
     checks.append(("request.resource.resource != 'secrets' || (object.metadata.name == 'modeldev-kfp-artifacts' && object.type == 'Opaque' && has(object.data) && size(object.data) == 2 && ['access_key','secret_key'].all(k,k in object.data && size(object.data[k]) > 0) && (!has(object.stringData) || size(object.stringData) == 0) && size(object.metadata.labels) == 3 && size(object.metadata.annotations) == 1) || " + attempt_secret, "dedicated two-key artifact Secret and identity-only metadata required"))
-    return policy(NAMES[0], [resource_rule([""], ["serviceaccounts", "configmaps", "secrets"]), resource_rule(["rbac.authorization.k8s.io"], ["rolebindings"])], [("standardNamespace", namespace_expression()), ("owner", owner_expression())], checks, [("control", "request.userInfo.username == " + q(p["control"]))])
+    return policy(NAMES[0], [resource_rule([""], ["serviceaccounts", "configmaps", "secrets"]), resource_rule(["rbac.authorization.k8s.io"], ["rolebindings"])], [("standardNamespace", namespace_expression()), ("owner", owner_expression()), ("datasetIdentity", dataset_identity())], checks, [("control", "request.userInfo.username == " + q(p["control"]))])
 
 
 def configuration(p):

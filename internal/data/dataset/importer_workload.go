@@ -116,25 +116,33 @@ func (w *ImporterWorkload) EnsureImporter(ctx context.Context, attempt biz.Datas
 	return w.ensureJob(ctx, attempt, plan, task)
 }
 
-// importerLabels satisfies the native policy's owner identity: managed-by,
-// tenant-id, a real non-zero environment-id, and the namespace UID — the last
-// one as an annotation, not a label.
+// importerLabels satisfies the native policy's dataset identity: managed-by,
+// tenant-id and the dataset-import purpose. A training registry row is optional:
+// when present its environment id is recorded for audit, but the identity never
+// depends on it (§7.3, §12.4).
 func importerLabels(task biz.DatasetImportTask, attempt biz.DatasetImportAttempt) map[string]any {
-	return map[string]any{
-		"ani.io/managed-by":              "ani-modeldev-service",
-		"modeldev.ani.io/purpose":        "dataset-import",
-		"modeldev.ani.io/tenant-id":      task.TenantID,
-		"modeldev.ani.io/environment-id": task.EnvironmentID,
-		"modeldev.ani.io/dataset-id":     task.DatasetID,
-		"modeldev.ani.io/task-id":        task.TaskID,
-		"modeldev.ani.io/attempt-id":     attempt.AttemptID,
+	labels := map[string]any{
+		"ani.io/managed-by":          "ani-modeldev-service",
+		"modeldev.ani.io/purpose":    "dataset-import",
+		"modeldev.ani.io/tenant-id":  task.TenantID,
+		"modeldev.ani.io/dataset-id": task.DatasetID,
+		"modeldev.ani.io/task-id":    task.TaskID,
+		"modeldev.ani.io/attempt-id": attempt.AttemptID,
 	}
+	if task.EnvironmentID != "" {
+		labels["modeldev.ani.io/environment-id"] = task.EnvironmentID
+	}
+	return labels
 }
 
-// importerAnnotations carries the namespace UID the policy expects as an
-// annotation. It is the live UID frozen on the attempt, never a guess.
-func importerAnnotations(attempt biz.DatasetImportAttempt) map[string]any {
-	return map[string]any{"modeldev.ani.io/namespace-uid": attempt.NamespaceUID}
+// importerAnnotations carries the Namespace UID and the frozen target digest the
+// native policy expects as annotations. A 64-hex SHA-256 exceeds the 63-character
+// label value limit, so the digest cannot be a label.
+func importerAnnotations(task biz.DatasetImportTask, attempt biz.DatasetImportAttempt) map[string]any {
+	return map[string]any{
+		"modeldev.ani.io/namespace-uid":          attempt.NamespaceUID,
+		"modeldev.ani.io/target-snapshot-sha256": task.TargetSnapshotSHA256,
+	}
 }
 
 func (w *ImporterWorkload) ensureSecret(ctx context.Context, attempt biz.DatasetImportAttempt, task biz.DatasetImportTask, plan biz.AttemptPlan, credentials biz.TemporaryStorageCredentials) error {
@@ -149,7 +157,7 @@ func (w *ImporterWorkload) ensureSecret(ctx context.Context, attempt biz.Dataset
 		"apiVersion": "v1", "kind": "Secret",
 		"metadata": map[string]any{
 			"name": attempt.SecretName, "namespace": attempt.NamespaceName,
-			"labels": importerLabels(task, attempt), "annotations": importerAnnotations(attempt),
+			"labels": importerLabels(task, attempt), "annotations": importerAnnotations(task, attempt),
 		},
 		"type": "Opaque",
 		// The frozen plan rides along in the attempt Secret: the control plane
@@ -170,7 +178,7 @@ func (w *ImporterWorkload) ensurePVC(ctx context.Context, attempt biz.DatasetImp
 		"apiVersion": "v1", "kind": "PersistentVolumeClaim",
 		"metadata": map[string]any{
 			"name": attempt.PVCName, "namespace": attempt.NamespaceName,
-			"labels": importerLabels(task, attempt), "annotations": importerAnnotations(attempt),
+			"labels": importerLabels(task, attempt), "annotations": importerAnnotations(task, attempt),
 		},
 		"spec": map[string]any{
 			"accessModes":      []any{"ReadWriteOnce"},
@@ -194,7 +202,7 @@ func (w *ImporterWorkload) ensureJob(ctx context.Context, attempt biz.DatasetImp
 		"apiVersion": "batch/v1", "kind": "Job",
 		"metadata": map[string]any{
 			"name": attempt.JobName, "namespace": attempt.NamespaceName, "labels": labels,
-			"annotations": importerAnnotations(attempt),
+			"annotations": importerAnnotations(task, attempt),
 		},
 		"spec": map[string]any{
 			"suspend": true, "backoffLimit": int64(0),
@@ -205,7 +213,7 @@ func (w *ImporterWorkload) ensureJob(ctx context.Context, attempt biz.DatasetImp
 			// attempt is refused earlier by the scheduler, not here.
 			"activeDeadlineSeconds": activeDeadlineSeconds(plan.DeadlineAt),
 			"template": map[string]any{
-				"metadata": map[string]any{"labels": labels, "annotations": importerAnnotations(attempt)},
+				"metadata": map[string]any{"labels": labels, "annotations": importerAnnotations(task, attempt)},
 				"spec": map[string]any{
 					"serviceAccountName":           w.serviceAccount,
 					"automountServiceAccountToken": false,
@@ -246,7 +254,7 @@ func (w *ImporterWorkload) ensureJob(ctx context.Context, attempt biz.DatasetImp
 						}},
 						map[string]any{"name": "workspace", "persistentVolumeClaim": map[string]any{"claimName": attempt.PVCName}},
 						map[string]any{"name": "credentials", "secret": map[string]any{"secretName": attempt.SecretName}},
-						map[string]any{"name": "s3-ca", "configMap": map[string]any{"name": "modeldev-step-owner", "items": []any{map[string]any{"key": "s3-ca.pem", "path": "s3-ca.crt"}}}},
+						map[string]any{"name": "s3-ca", "configMap": map[string]any{"name": "modeldev-dataset-import-ca", "items": []any{map[string]any{"key": "s3-ca.pem", "path": "s3-ca.crt"}}}},
 					},
 				},
 			},

@@ -88,6 +88,24 @@ class NativeTemplates(unittest.TestCase):
         self.assertIn("modeldev-dataset-control-v1", names)
         self.assertIn("modeldev-dataset-webhook-read-v1", names)
 
+    def test_dataset_identity_does_not_require_a_training_registry(self):
+        document = render.render(config())
+        bootstrap = next(o for o in document["items"] if o["kind"] == "ValidatingAdmissionPolicy" and o["metadata"]["name"] == render.NAMES[0])
+        variables = {v["name"]: v["expression"] for v in bootstrap["spec"]["variables"]}
+        identity = variables["datasetIdentity"]
+        # Only the importer account and the frozen attempt Secret may use it.
+        self.assertIn("modeldev-dataset-importer", identity)
+        self.assertIn("modeldev-dataset-import-ca", identity)
+        self.assertIn("target-snapshot-sha256", identity)
+        self.assertIn("namespace-uid", identity)
+        self.assertNotIn("environment-id", identity)
+        # Training objects keep the registry identity.
+        self.assertIn("environment-id", variables["owner"])
+        checks = [v["expression"] for v in bootstrap["spec"]["validations"]]
+        self.assertIn("variables.owner || variables.datasetIdentity", checks[0])
+        # The attempt Secret rides the dataset identity, not the training owner.
+        self.assertTrue(any("variables.datasetIdentity" in c and "credentials.json" in c for c in checks))
+
     def test_importer_purpose_is_required_on_pods(self):
         document = render.render(config())
         workload = next(o for o in document["items"] if o["kind"] == "ValidatingAdmissionPolicy" and o["metadata"]["name"] == render.NAMES[2])

@@ -307,7 +307,7 @@ func DecodeEnvironmentReceipts(raw []byte) (EnvironmentReceipts, error) {
 	if d.Decode(new(any)) != io.EOF {
 		return v, ErrTenantEnvironmentPersistence
 	}
-	allowed := map[string]string{"modeldev-step": "ServiceAccount|RoleBinding", "trainer-workload": "ServiceAccount", "verifier": "ServiceAccount", "modeldev-dataset-importer": "ServiceAccount", "modeldev-runtime": "RoleBinding", "modeldev-webhook-read": "RoleBinding", "modeldev-kfp-api": "RoleBinding", "modeldev-kfp-access": "RoleBinding", "modeldev-step-owner": "ConfigMap", "ani-kfp-ca": "ConfigMap", "kfp-launcher": "ConfigMap", "metadata-grpc-configmap": "ConfigMap", "modeldev-execution-environment": "ConfigMap", "modeldev-kfp-artifacts": "Secret"}
+	allowed := map[string]string{"modeldev-step": "ServiceAccount|RoleBinding", "trainer-workload": "ServiceAccount", "verifier": "ServiceAccount", "modeldev-dataset-importer": "ServiceAccount", "modeldev-dataset-import-ca": "ConfigMap", "modeldev-runtime": "RoleBinding", "modeldev-webhook-read": "RoleBinding", "modeldev-kfp-api": "RoleBinding", "modeldev-kfp-access": "RoleBinding", "modeldev-step-owner": "ConfigMap", "ani-kfp-ca": "ConfigMap", "kfp-launcher": "ConfigMap", "metadata-grpc-configmap": "ConfigMap", "modeldev-execution-environment": "ConfigMap", "modeldev-kfp-artifacts": "Secret"}
 	seen := map[string]bool{}
 	for _, r := range v.Objects {
 		key := r.Kind + "/" + r.Name
