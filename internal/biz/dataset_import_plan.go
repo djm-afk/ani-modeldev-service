@@ -271,6 +271,13 @@ func DecodeSourceSnapshot(raw []byte) (SourceSnapshot, error) {
 	if lock != LockImmutableRevision && lock != LockFileSHA256 {
 		return SourceSnapshot{}, ErrDatasetInvalidMetadata
 	}
+	// resolved_at is part of the frozen snapshot identity, so a reader that
+	// dropped it would report a zero time and a different digest than the one
+	// the acceptance path computed.
+	resolvedAt, err := time.Parse(time.RFC3339Nano, value.ResolvedAt)
+	if err != nil || resolvedAt.IsZero() || resolvedAt.Nanosecond()%1000 != 0 {
+		return SourceSnapshot{}, ErrDatasetInvalidMetadata
+	}
 	return SourceSnapshot{
 		SourceSelection: SourceSelection{
 			Provider: SourceProvider(value.Provider), RepoID: value.RepoID,
@@ -278,6 +285,7 @@ func DecodeSourceSnapshot(raw []byte) (SourceSnapshot, error) {
 			LockKind: lock, ResolvedRevision: value.ResolvedRevision,
 			ExpectedSizeBytes: size, ExpectedFileSHA256: value.ExpectedFileSHA256,
 		},
+		ResolvedAt: resolvedAt.UTC(),
 	}, nil
 }
 

@@ -94,6 +94,26 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND (sqlc.arg(state)::text = '' OR state = sqlc.arg(state)::text)
   AND (sqlc.arg(name_filter)::text = '' OR position(sqlc.arg(name_filter)::text IN name) > 0);
 
+-- name: DatasetVersionStats :many
+-- Published-version facts for a page of collections. A dataset with no published
+-- version simply has no row, which the caller reads as zero.
+SELECT dataset_id,
+       count(*)::bigint AS ready_version_count,
+       max(version_number)::bigint AS latest_ready_version_number
+FROM modeldev_dataset_version_metadata
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND dataset_id = ANY(sqlc.arg(dataset_ids)::uuid[])
+GROUP BY dataset_id;
+
+-- name: LatestImportTasks :many
+-- The most recently accepted task per collection, whatever its state. A failed
+-- or cancelled task is still the latest import the page should show.
+SELECT DISTINCT ON (dataset_id) *
+FROM modeldev_dataset_import_tasks
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND dataset_id = ANY(sqlc.arg(dataset_ids)::uuid[])
+ORDER BY dataset_id, accepted_at DESC, task_id DESC;
+
 -- name: InsertCommandReceipt :one
 INSERT INTO modeldev_dataset_command_receipts (
     tenant_id, receipt_id, actor_id, operation_kind, idempotency_key,
@@ -261,6 +281,35 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND dataset_id = sqlc.arg(dataset_id)::uuid
 ORDER BY version_number DESC, input_version_id DESC
 LIMIT sqlc.arg(page_size) OFFSET sqlc.arg(page_offset);
+
+-- name: ListVersionFacts :many
+-- One page of published versions with the input facts and the frozen source the
+-- version view shows. Both joins are inner: a version row cannot exist without
+-- its input identity and its task, so a missing side is corruption, not a gap.
+SELECT v.input_version_id, v.dataset_id, v.import_task_id, v.version_number, v.published_at,
+       v.preview,
+       i.state AS input_state, i.format AS input_format, i.size_bytes AS input_size_bytes,
+       i.sha256 AS input_sha256, i.verified_row_count, i.verified_feature_count,
+       i.requested_at AS input_requested_at,
+       t.source_snapshot, t.source_snapshot_sha256
+FROM modeldev_dataset_version_metadata v
+JOIN modeldev_input_versions i
+  ON i.tenant_id = v.tenant_id AND i.input_version_id = v.input_version_id
+JOIN modeldev_dataset_import_tasks t
+  ON t.tenant_id = v.tenant_id AND t.task_id = v.import_task_id
+WHERE v.tenant_id = sqlc.arg(tenant_id)::uuid
+  AND v.dataset_id = sqlc.arg(dataset_id)::uuid
+ORDER BY v.version_number DESC, v.input_version_id DESC
+LIMIT sqlc.arg(page_size) OFFSET sqlc.arg(page_offset);
+
+-- name: TaskAttemptCounts :many
+-- How many attempts a task has started. A task that never dispatched has no
+-- attempt row, which the caller reads as zero.
+SELECT task_id, count(*)::bigint AS attempt_count
+FROM modeldev_dataset_import_attempts
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND task_id = ANY(sqlc.arg(task_ids)::uuid[])
+GROUP BY task_id;
 
 -- name: CountVersionMetadata :one
 SELECT count(*) FROM modeldev_dataset_version_metadata

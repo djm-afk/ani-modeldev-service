@@ -14,8 +14,10 @@ import (
 const acquireAttemptLease = `-- name: AcquireAttemptLease :one
 UPDATE modeldev_dataset_import_attempts
 SET reconcile_owner = $1,
-    reconcile_epoch = CASE WHEN reconcile_owner = $1 THEN reconcile_epoch ELSE reconcile_epoch + 1 END,
-    reconcile_until = clock_timestamp() + $2::interval
+    reconcile_epoch = CASE WHEN modeldev_dataset_import_attempts.reconcile_owner = $1
+                           THEN modeldev_dataset_import_attempts.reconcile_epoch
+                           ELSE modeldev_dataset_import_attempts.reconcile_epoch + 1 END,
+    reconcile_until = clock_timestamp() + make_interval(secs => $2::double precision)
 WHERE tenant_id = $3::uuid
   AND attempt_id = $4::uuid
   AND (reconcile_owner IS NULL OR reconcile_owner = $1 OR reconcile_until < clock_timestamp())
@@ -23,16 +25,16 @@ RETURNING tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_gener
 `
 
 type AcquireAttemptLeaseParams struct {
-	Owner     pgtype.Text
-	Ttl       pgtype.Interval
-	TenantID  pgtype.UUID
-	AttemptID pgtype.UUID
+	Owner      pgtype.Text
+	TtlSeconds float64
+	TenantID   pgtype.UUID
+	AttemptID  pgtype.UUID
 }
 
 func (q *Queries) AcquireAttemptLease(ctx context.Context, arg AcquireAttemptLeaseParams) (ModeldevDatasetImportAttempt, error) {
 	row := q.db.QueryRow(ctx, acquireAttemptLease,
 		arg.Owner,
-		arg.Ttl,
+		arg.TtlSeconds,
 		arg.TenantID,
 		arg.AttemptID,
 	)
@@ -83,8 +85,12 @@ func (q *Queries) AcquireAttemptLease(ctx context.Context, arg AcquireAttemptLea
 const acquireTaskLease = `-- name: AcquireTaskLease :one
 UPDATE modeldev_dataset_import_tasks
 SET lease_owner = $1,
-    lease_epoch = CASE WHEN lease_owner = $1 THEN lease_epoch ELSE lease_epoch + 1 END,
-    lease_until = clock_timestamp() + $2::interval,
+    lease_epoch = CASE WHEN modeldev_dataset_import_tasks.lease_owner = $1
+                       THEN modeldev_dataset_import_tasks.lease_epoch
+                       ELSE modeldev_dataset_import_tasks.lease_epoch + 1 END,
+    -- Seconds, not an interval value: a bound interval arrives as a binary
+    -- value the text cast turns into NULL, which then fails the lease CHECK.
+    lease_until = clock_timestamp() + make_interval(secs => $2::double precision),
     updated_at = clock_timestamp()
 WHERE tenant_id = $3::uuid
   AND task_id = $4::uuid
@@ -94,18 +100,20 @@ RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_
 `
 
 type AcquireTaskLeaseParams struct {
-	Owner    pgtype.Text
-	Ttl      pgtype.Interval
-	TenantID pgtype.UUID
-	TaskID   pgtype.UUID
+	Owner      pgtype.Text
+	TtlSeconds float64
+	TenantID   pgtype.UUID
+	TaskID     pgtype.UUID
 }
 
 // The lease is granted only when it is free or already ours. The epoch advances
 // on every hand-over so a stale owner cannot act on the new lease.
+// lease_epoch refers to the pre-update value in SET, so a rename cannot
+// collapse the epoch: every hand-over must advance it, and check9 requires > 0.
 func (q *Queries) AcquireTaskLease(ctx context.Context, arg AcquireTaskLeaseParams) (ModeldevDatasetImportTask, error) {
 	row := q.db.QueryRow(ctx, acquireTaskLease,
 		arg.Owner,
-		arg.Ttl,
+		arg.TtlSeconds,
 		arg.TenantID,
 		arg.TaskID,
 	)
@@ -278,6 +286,91 @@ func (q *Queries) ClaimAttemptCleanup(ctx context.Context, arg ClaimAttemptClean
 		&i.ReconcileNextAt,
 		&i.CleanupState,
 		&i.CleanupCompletedAt,
+	)
+	return i, err
+}
+
+const clearCurrentAttempt = `-- name: ClearCurrentAttempt :one
+UPDATE modeldev_dataset_import_tasks
+SET current_attempt_id = NULL,
+    next_run_at = clock_timestamp(),
+    updated_at = clock_timestamp()
+WHERE tenant_id = $1::uuid
+  AND task_id = $2::uuid
+  AND state = 'RUNNING'
+  AND cancel_requested_at IS NULL
+  AND current_attempt_id = $3::uuid
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+`
+
+type ClearCurrentAttemptParams struct {
+	TenantID  pgtype.UUID
+	TaskID    pgtype.UUID
+	AttemptID pgtype.UUID
+}
+
+// A closed attempt stops being the task's current one. Without this the task
+// keeps pointing at the closed row and can never allocate the next attempt.
+func (q *Queries) ClearCurrentAttempt(ctx context.Context, arg ClearCurrentAttemptParams) (ModeldevDatasetImportTask, error) {
+	row := q.db.QueryRow(ctx, clearCurrentAttempt, arg.TenantID, arg.TaskID, arg.AttemptID)
+	var i ModeldevDatasetImportTask
+	err := row.Scan(
+		&i.TenantID,
+		&i.TaskID,
+		&i.DatasetID,
+		&i.AcceptanceReceiptID,
+		&i.ReservedInputVersionID,
+		&i.InputRequestID,
+		&i.VersionNumber,
+		&i.CreatedBy,
+		&i.AcceptedAt,
+		&i.SourceProvider,
+		&i.SourceSnapshot,
+		&i.SourceSnapshotSha256,
+		&i.ExpectedSizeBytes,
+		&i.AcceptedLimitBytes,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.TargetSnapshot,
+		&i.TargetSnapshotSha256,
+		&i.StorageConnectionID,
+		&i.Bucket,
+		&i.ApprovedPrefix,
+		&i.InputScopeSha256,
+		&i.CredentialReference,
+		&i.ObservedEnvironmentID,
+		&i.ObservedEnvironmentBindingDigest,
+		&i.AuthorizationScope,
+		&i.AuthorizationScopeSha256,
+		&i.TargetInvalidatedAt,
+		&i.TargetInvalidatedReason,
+		&i.State,
+		&i.Phase,
+		&i.RecoveryGeneration,
+		&i.RecoveryPolicy,
+		&i.ValidationRetryCount,
+		&i.ValidationDeadlineAt,
+		&i.NextRunAt,
+		&i.CurrentAttemptID,
+		&i.LeaseOwner,
+		&i.LeaseEpoch,
+		&i.LeaseUntil,
+		&i.CancelRequestedAt,
+		&i.FailureCode,
+		&i.FailureDetail,
+		&i.Retryable,
+		&i.CandidateAttemptID,
+		&i.CandidateObjectKey,
+		&i.CandidateVersionID,
+		&i.CandidateSizeBytes,
+		&i.CandidateSha256,
+		&i.CandidateFrozenAt,
+		&i.CandidateReportVersionID,
+		&i.CandidateReportSha256,
+		&i.FinishedAt,
+		&i.PublishedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -463,6 +556,49 @@ func (q *Queries) DatasetNameTaken(ctx context.Context, arg DatasetNameTakenPara
 	var dataset_id string
 	err := row.Scan(&dataset_id)
 	return dataset_id, err
+}
+
+const datasetVersionStats = `-- name: DatasetVersionStats :many
+SELECT dataset_id,
+       count(*)::bigint AS ready_version_count,
+       max(version_number)::bigint AS latest_ready_version_number
+FROM modeldev_dataset_version_metadata
+WHERE tenant_id = $1::uuid
+  AND dataset_id = ANY($2::uuid[])
+GROUP BY dataset_id
+`
+
+type DatasetVersionStatsParams struct {
+	TenantID   pgtype.UUID
+	DatasetIds []pgtype.UUID
+}
+
+type DatasetVersionStatsRow struct {
+	DatasetID                pgtype.UUID
+	ReadyVersionCount        int64
+	LatestReadyVersionNumber int64
+}
+
+// Published-version facts for a page of collections. A dataset with no published
+// version simply has no row, which the caller reads as zero.
+func (q *Queries) DatasetVersionStats(ctx context.Context, arg DatasetVersionStatsParams) ([]DatasetVersionStatsRow, error) {
+	rows, err := q.db.Query(ctx, datasetVersionStats, arg.TenantID, arg.DatasetIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DatasetVersionStatsRow
+	for rows.Next() {
+		var i DatasetVersionStatsRow
+		if err := rows.Scan(&i.DatasetID, &i.ReadyVersionCount, &i.LatestReadyVersionNumber); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const deferTask = `-- name: DeferTask :exec
@@ -1640,6 +1776,98 @@ func (q *Queries) InsertVersionMetadata(ctx context.Context, arg InsertVersionMe
 	return i, err
 }
 
+const latestImportTasks = `-- name: LatestImportTasks :many
+SELECT DISTINCT ON (dataset_id) tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+FROM modeldev_dataset_import_tasks
+WHERE tenant_id = $1::uuid
+  AND dataset_id = ANY($2::uuid[])
+ORDER BY dataset_id, accepted_at DESC, task_id DESC
+`
+
+type LatestImportTasksParams struct {
+	TenantID   pgtype.UUID
+	DatasetIds []pgtype.UUID
+}
+
+// The most recently accepted task per collection, whatever its state. A failed
+// or cancelled task is still the latest import the page should show.
+func (q *Queries) LatestImportTasks(ctx context.Context, arg LatestImportTasksParams) ([]ModeldevDatasetImportTask, error) {
+	rows, err := q.db.Query(ctx, latestImportTasks, arg.TenantID, arg.DatasetIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ModeldevDatasetImportTask
+	for rows.Next() {
+		var i ModeldevDatasetImportTask
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.TaskID,
+			&i.DatasetID,
+			&i.AcceptanceReceiptID,
+			&i.ReservedInputVersionID,
+			&i.InputRequestID,
+			&i.VersionNumber,
+			&i.CreatedBy,
+			&i.AcceptedAt,
+			&i.SourceProvider,
+			&i.SourceSnapshot,
+			&i.SourceSnapshotSha256,
+			&i.ExpectedSizeBytes,
+			&i.AcceptedLimitBytes,
+			&i.ClusterID,
+			&i.NamespaceName,
+			&i.NamespaceUid,
+			&i.TargetSnapshot,
+			&i.TargetSnapshotSha256,
+			&i.StorageConnectionID,
+			&i.Bucket,
+			&i.ApprovedPrefix,
+			&i.InputScopeSha256,
+			&i.CredentialReference,
+			&i.ObservedEnvironmentID,
+			&i.ObservedEnvironmentBindingDigest,
+			&i.AuthorizationScope,
+			&i.AuthorizationScopeSha256,
+			&i.TargetInvalidatedAt,
+			&i.TargetInvalidatedReason,
+			&i.State,
+			&i.Phase,
+			&i.RecoveryGeneration,
+			&i.RecoveryPolicy,
+			&i.ValidationRetryCount,
+			&i.ValidationDeadlineAt,
+			&i.NextRunAt,
+			&i.CurrentAttemptID,
+			&i.LeaseOwner,
+			&i.LeaseEpoch,
+			&i.LeaseUntil,
+			&i.CancelRequestedAt,
+			&i.FailureCode,
+			&i.FailureDetail,
+			&i.Retryable,
+			&i.CandidateAttemptID,
+			&i.CandidateObjectKey,
+			&i.CandidateVersionID,
+			&i.CandidateSizeBytes,
+			&i.CandidateSha256,
+			&i.CandidateFrozenAt,
+			&i.CandidateReportVersionID,
+			&i.CandidateReportSha256,
+			&i.FinishedAt,
+			&i.PublishedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listDatasetOperations = `-- name: ListDatasetOperations :many
 SELECT tenant_id, operation_id, dataset_id, task_id, attempt_id, receipt_id, actor, event_type, result, before_state, after_state, before_revision, after_revision, recovery_generation, failure_code, detail, occurred_at FROM modeldev_dataset_operations
 WHERE tenant_id = $1::uuid
@@ -2015,6 +2243,93 @@ func (q *Queries) ListImportTasks(ctx context.Context, arg ListImportTasksParams
 			&i.FinishedAt,
 			&i.PublishedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listVersionFacts = `-- name: ListVersionFacts :many
+SELECT v.input_version_id, v.dataset_id, v.import_task_id, v.version_number, v.published_at,
+       v.preview,
+       i.state AS input_state, i.format AS input_format, i.size_bytes AS input_size_bytes,
+       i.sha256 AS input_sha256, i.verified_row_count, i.verified_feature_count,
+       i.requested_at AS input_requested_at,
+       t.source_snapshot, t.source_snapshot_sha256
+FROM modeldev_dataset_version_metadata v
+JOIN modeldev_input_versions i
+  ON i.tenant_id = v.tenant_id AND i.input_version_id = v.input_version_id
+JOIN modeldev_dataset_import_tasks t
+  ON t.tenant_id = v.tenant_id AND t.task_id = v.import_task_id
+WHERE v.tenant_id = $1::uuid
+  AND v.dataset_id = $2::uuid
+ORDER BY v.version_number DESC, v.input_version_id DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListVersionFactsParams struct {
+	TenantID   pgtype.UUID
+	DatasetID  pgtype.UUID
+	PageOffset int32
+	PageSize   int32
+}
+
+type ListVersionFactsRow struct {
+	InputVersionID       pgtype.UUID
+	DatasetID            pgtype.UUID
+	ImportTaskID         pgtype.UUID
+	VersionNumber        int64
+	PublishedAt          pgtype.Timestamptz
+	Preview              []byte
+	InputState           string
+	InputFormat          string
+	InputSizeBytes       int64
+	InputSha256          string
+	VerifiedRowCount     pgtype.Int8
+	VerifiedFeatureCount pgtype.Int4
+	InputRequestedAt     pgtype.Timestamptz
+	SourceSnapshot       []byte
+	SourceSnapshotSha256 string
+}
+
+// One page of published versions with the input facts and the frozen source the
+// version view shows. Both joins are inner: a version row cannot exist without
+// its input identity and its task, so a missing side is corruption, not a gap.
+func (q *Queries) ListVersionFacts(ctx context.Context, arg ListVersionFactsParams) ([]ListVersionFactsRow, error) {
+	rows, err := q.db.Query(ctx, listVersionFacts,
+		arg.TenantID,
+		arg.DatasetID,
+		arg.PageOffset,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListVersionFactsRow
+	for rows.Next() {
+		var i ListVersionFactsRow
+		if err := rows.Scan(
+			&i.InputVersionID,
+			&i.DatasetID,
+			&i.ImportTaskID,
+			&i.VersionNumber,
+			&i.PublishedAt,
+			&i.Preview,
+			&i.InputState,
+			&i.InputFormat,
+			&i.InputSizeBytes,
+			&i.InputSha256,
+			&i.VerifiedRowCount,
+			&i.VerifiedFeatureCount,
+			&i.InputRequestedAt,
+			&i.SourceSnapshot,
+			&i.SourceSnapshotSha256,
 		); err != nil {
 			return nil, err
 		}
@@ -2922,6 +3237,90 @@ func (q *Queries) SetCurrentAttempt(ctx context.Context, arg SetCurrentAttemptPa
 	return i, err
 }
 
+const setTaskEnvironment = `-- name: SetTaskEnvironment :one
+UPDATE modeldev_dataset_import_tasks
+SET observed_environment_id = $1::uuid,
+    updated_at = clock_timestamp()
+WHERE tenant_id = $2::uuid
+  AND task_id = $3::uuid
+  AND state IN ('QUEUED','RUNNING')
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+`
+
+type SetTaskEnvironmentParams struct {
+	EnvironmentID pgtype.UUID
+	TenantID      pgtype.UUID
+	TaskID        pgtype.UUID
+}
+
+// Record the execution-registry row observed at dispatch time. The native
+// admission policy requires the owning workload to carry a non-zero
+// modeldev.ani.io/environment-id, so it must come from the real registry row
+// rather than being invented.
+func (q *Queries) SetTaskEnvironment(ctx context.Context, arg SetTaskEnvironmentParams) (ModeldevDatasetImportTask, error) {
+	row := q.db.QueryRow(ctx, setTaskEnvironment, arg.EnvironmentID, arg.TenantID, arg.TaskID)
+	var i ModeldevDatasetImportTask
+	err := row.Scan(
+		&i.TenantID,
+		&i.TaskID,
+		&i.DatasetID,
+		&i.AcceptanceReceiptID,
+		&i.ReservedInputVersionID,
+		&i.InputRequestID,
+		&i.VersionNumber,
+		&i.CreatedBy,
+		&i.AcceptedAt,
+		&i.SourceProvider,
+		&i.SourceSnapshot,
+		&i.SourceSnapshotSha256,
+		&i.ExpectedSizeBytes,
+		&i.AcceptedLimitBytes,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.TargetSnapshot,
+		&i.TargetSnapshotSha256,
+		&i.StorageConnectionID,
+		&i.Bucket,
+		&i.ApprovedPrefix,
+		&i.InputScopeSha256,
+		&i.CredentialReference,
+		&i.ObservedEnvironmentID,
+		&i.ObservedEnvironmentBindingDigest,
+		&i.AuthorizationScope,
+		&i.AuthorizationScopeSha256,
+		&i.TargetInvalidatedAt,
+		&i.TargetInvalidatedReason,
+		&i.State,
+		&i.Phase,
+		&i.RecoveryGeneration,
+		&i.RecoveryPolicy,
+		&i.ValidationRetryCount,
+		&i.ValidationDeadlineAt,
+		&i.NextRunAt,
+		&i.CurrentAttemptID,
+		&i.LeaseOwner,
+		&i.LeaseEpoch,
+		&i.LeaseUntil,
+		&i.CancelRequestedAt,
+		&i.FailureCode,
+		&i.FailureDetail,
+		&i.Retryable,
+		&i.CandidateAttemptID,
+		&i.CandidateObjectKey,
+		&i.CandidateVersionID,
+		&i.CandidateSizeBytes,
+		&i.CandidateSha256,
+		&i.CandidateFrozenAt,
+		&i.CandidateReportVersionID,
+		&i.CandidateReportSha256,
+		&i.FinishedAt,
+		&i.PublishedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const startTask = `-- name: StartTask :one
 UPDATE modeldev_dataset_import_tasks
 SET state = 'RUNNING',
@@ -3037,6 +3436,46 @@ func (q *Queries) TakeVersionNumber(ctx context.Context, arg TakeVersionNumberPa
 	var version_number int64
 	err := row.Scan(&version_number)
 	return version_number, err
+}
+
+const taskAttemptCounts = `-- name: TaskAttemptCounts :many
+SELECT task_id, count(*)::bigint AS attempt_count
+FROM modeldev_dataset_import_attempts
+WHERE tenant_id = $1::uuid
+  AND task_id = ANY($2::uuid[])
+GROUP BY task_id
+`
+
+type TaskAttemptCountsParams struct {
+	TenantID pgtype.UUID
+	TaskIds  []pgtype.UUID
+}
+
+type TaskAttemptCountsRow struct {
+	TaskID       pgtype.UUID
+	AttemptCount int64
+}
+
+// How many attempts a task has started. A task that never dispatched has no
+// attempt row, which the caller reads as zero.
+func (q *Queries) TaskAttemptCounts(ctx context.Context, arg TaskAttemptCountsParams) ([]TaskAttemptCountsRow, error) {
+	rows, err := q.db.Query(ctx, taskAttemptCounts, arg.TenantID, arg.TaskIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TaskAttemptCountsRow
+	for rows.Next() {
+		var i TaskAttemptCountsRow
+		if err := rows.Scan(&i.TaskID, &i.AttemptCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateDatasetMetadata = `-- name: UpdateDatasetMetadata :one

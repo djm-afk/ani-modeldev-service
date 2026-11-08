@@ -73,6 +73,11 @@ type DatasetImportTask struct {
 	FinishedAt        *time.Time
 	PublishedAt       *time.Time
 	UpdatedAt         time.Time
+
+	// AttemptCount is how many attempts this task has started. It is a read
+	// fact from the attempt table, not a stored counter, so a retry cannot
+	// desynchronise it.
+	AttemptCount int64
 }
 
 // CanCancel reports whether a user cancel is still meaningful. A succeeded task
@@ -118,6 +123,24 @@ type DatasetVersion struct {
 	VersionNumber  int64
 	Preview        []byte
 	PublishedAt    time.Time
+
+	// Input is the published input identity the version points at. It is read
+	// from the input row, never copied into the version row.
+	Input *DatasetVersionInput
+	// Source is the frozen selection the import task accepted. It is read from
+	// the permanent task row so a later task edit cannot rewrite history.
+	Source *SourceSnapshot
+}
+
+// DatasetVersionInput is the input-side fact set a version view shows.
+type DatasetVersionInput struct {
+	State        string
+	Format       string
+	SizeBytes    int64
+	SHA256       string
+	RowCount     int64
+	FeatureCount int64
+	RequestedAt  time.Time
 }
 
 type DatasetVersionRepository interface {

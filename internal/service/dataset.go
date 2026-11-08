@@ -364,6 +364,39 @@ func (service *Dataset) ListDatasetVersions(ctx context.Context, request *modeld
 	return response, nil
 }
 
+// GetInputVersionPreview returns the bounded preview stored with the published
+// version. The importer already applied the display budgets at publication
+// time, so this read never touches the source object and never re-derives rows.
+func (service *Dataset) GetInputVersionPreview(ctx context.Context, request *modeldevv1.GetInputVersionPreviewRequest) (*modeldevv1.GetInputVersionPreviewResponse, error) {
+	scope, err := queryScope(ctx, modeldevv1.ModelDevDatasetService_GetInputVersionPreview_FullMethodName)
+	if err != nil {
+		return nil, err
+	}
+	if request == nil || !queryID(request.InputVersionId) {
+		return nil, datasetInvalid(scope.RequestID)
+	}
+	version, err := service.collections.GetVersion(ctx, scope.TenantID, request.InputVersionId)
+	if err != nil {
+		return nil, datasetError(err, scope.RequestID)
+	}
+	preview, err := biz.DecodeDatasetPreview(version.Preview)
+	if err != nil {
+		return nil, datasetError(err, scope.RequestID)
+	}
+	response := &modeldevv1.GetInputVersionPreviewResponse{
+		InputVersionId: version.InputVersionID, TotalRows: preview.TotalRows,
+		PreviewTruncated: preview.Truncated, MaxRecords: preview.MaxRecords,
+		MaxFieldCharacters: preview.MaxFieldCharacters,
+	}
+	for _, record := range preview.Records {
+		response.Records = append(response.Records, &modeldevv1.DatasetPreviewRecord{
+			SampleIndex: record.SampleIndex, Instruction: record.Instruction,
+			Input: record.Input, Output: record.Output, TruncatedFields: record.TruncatedFields,
+		})
+	}
+	return response, nil
+}
+
 func (service *Dataset) ListDatasetImportTasks(ctx context.Context, request *modeldevv1.ListDatasetImportTasksRequest) (*modeldevv1.ListDatasetImportTasksResponse, error) {
 	scope, err := queryScope(ctx, modeldevv1.ModelDevDatasetService_ListDatasetImportTasks_FullMethodName)
 	if err != nil {
@@ -493,6 +526,11 @@ func datasetError(err error, requestID string) error {
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INPUT_NOT_READY, "source changed since confirmation", requestID)
 	case errors.Is(err, biz.ErrImportEnvironmentMissing):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_ENVIRONMENT_NOT_READY, "import environment unavailable", requestID)
+	case errors.Is(err, biz.ErrDatasetPreviewInvalid):
+		// The preview is written by this service in the same transaction that
+		// publishes the version, so a shape it cannot read is corruption rather
+		// than a client mistake.
+		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INTEGRITY_MISMATCH, "dataset preview unavailable", requestID)
 	case errors.Is(err, biz.ErrDatasetInvalidMetadata), errors.Is(err, biz.ErrSourceInvalidInput), errors.Is(err, biz.ErrSourceFileInvalid):
 		return datasetInvalid(requestID)
 	default:
@@ -508,6 +546,10 @@ func datasetView(dataset biz.Dataset) *modeldevv1.DatasetView {
 		Modality: "TEXT", SchemaKind: "ALPACA", State: datasetState(dataset.State),
 		Revision: dataset.Revision, CreatedBy: dataset.CreatedBy,
 		CreatedAt: timestamppb.New(dataset.CreatedAt), UpdatedAt: timestamppb.New(dataset.UpdatedAt),
+		ReadyVersionCount: dataset.ReadyVersionCount, LatestReadyVersionNumber: dataset.LatestReadyVersionNumber,
+	}
+	if dataset.LatestImport != nil {
+		view.LatestImport = importTaskView(*dataset.LatestImport)
 	}
 	return view
 }
@@ -535,6 +577,7 @@ func importTaskView(task biz.DatasetImportTask) *modeldevv1.DatasetImportTaskVie
 		ReservedInputVersionId: task.ReservedInputVersionID, VersionNumber: task.VersionNumber,
 		State: importTaskState(task.State), Phase: importPhase(task.Phase),
 		AcceptedAt: timestamppb.New(task.AcceptedAt), RecoveryGeneration: task.RecoveryGeneration,
+		AttemptCount: task.AttemptCount, Progress: importProgressView(task),
 	}
 	if task.State == biz.TaskSucceeded {
 		view.InputVersionId = task.ReservedInputVersionID
@@ -542,14 +585,69 @@ func importTaskView(task biz.DatasetImportTask) *modeldevv1.DatasetImportTaskVie
 	if task.FailureCode != "" {
 		view.Failure = &modeldevv1.ErrorDetail{SafeMessage: task.FailureCode}
 	}
+	// The frozen source is stored on the task row, so a task view can always
+	// show what was accepted. A row this service wrote always decodes; a
+	// failure here means corruption, and the task is still reported without it
+	// rather than failing the whole read.
+	if snapshot, err := biz.DecodeSourceSnapshot(task.SourceSnapshot); err == nil {
+		view.Source = sourceSnapshotView(snapshot)
+	}
 	return view
 }
 
+// importProgressView derives the display progress from facts this service
+// actually observes. Byte progress is not instrumented, so bytes_total stays
+// zero — the contract's "unknown" value — and the page must not render a
+// percentage. The stage and the single-file counter are real.
+func importProgressView(task biz.DatasetImportTask) *modeldevv1.DatasetImportProgress {
+	done := int64(0)
+	if task.State == biz.TaskSucceeded {
+		done = 1
+	}
+	return &modeldevv1.DatasetImportProgress{
+		Stage: importPhase(task.Phase), BytesTotal: 0, BytesDone: 0,
+		FilesTotal: 1, FilesDone: done, UpdatedAt: timestamppb.New(task.UpdatedAt),
+	}
+}
+
 func versionView(version biz.DatasetVersion) *modeldevv1.DatasetVersionView {
-	return &modeldevv1.DatasetVersionView{
+	view := &modeldevv1.DatasetVersionView{
 		InputVersionId: version.InputVersionID, DatasetId: version.DatasetID,
 		ImportTaskId: version.ImportTaskID, VersionNumber: version.VersionNumber,
 		PublishedAt: timestamppb.New(version.PublishedAt), PreviewAvailable: len(version.Preview) > 0,
+	}
+	if version.Input != nil {
+		view.InputVersion = &modeldevv1.InputVersionView{
+			InputVersionId: version.InputVersionID, State: inputState(version.Input.State),
+			Format: version.Input.Format, SizeBytes: version.Input.SizeBytes, Sha256: version.Input.SHA256,
+			RowCount: version.Input.RowCount, FeatureCount: uint32(version.Input.FeatureCount),
+			CreatedAt: timestamppb.New(version.Input.RequestedAt),
+		}
+	}
+	if version.Source != nil {
+		view.Source = sourceSnapshotView(*version.Source)
+	}
+	return view
+}
+
+// inputState maps the stored input state onto the contract enum. The dataset
+// version view only ever shows a published version, so an unknown stored value
+// is reported as validating rather than silently claiming READY.
+func inputState(state string) modeldevv1.InputState {
+	switch state {
+	case "READY":
+		return modeldevv1.InputState_INPUT_STATE_READY
+	case "REJECTED":
+		return modeldevv1.InputState_INPUT_STATE_FAILED
+	}
+	return modeldevv1.InputState_INPUT_STATE_VALIDATING
+}
+
+func sourceSnapshotView(snapshot biz.SourceSnapshot) *modeldevv1.DatasetSourceSnapshot {
+	return &modeldevv1.DatasetSourceSnapshot{
+		Selection:      sourceSelectionView(snapshot.SourceSelection),
+		ResolvedAt:     timestamppb.New(snapshot.ResolvedAt),
+		SnapshotSha256: snapshot.SnapshotSHA256(),
 	}
 }
 

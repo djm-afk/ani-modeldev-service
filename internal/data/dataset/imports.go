@@ -106,7 +106,16 @@ func (r *Repository) GetImportTask(ctx context.Context, tenantID, taskID string)
 	if err != nil {
 		return biz.DatasetImportTask{}, biz.ErrPersistence
 	}
-	return taskFromRow(row)
+	task, err := taskFromRow(row)
+	if err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	if err := r.attachAttemptCounts(ctx, tenant, []biz.DatasetImportTask{task}, func(index int, count int64) {
+		task.AttemptCount = count
+	}); err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	return task, nil
 }
 
 func (r *Repository) ListImportTasks(ctx context.Context, filter biz.DatasetImportFilter) (biz.DatasetImportTaskPage, error) {
@@ -137,7 +146,41 @@ func (r *Repository) ListImportTasks(ctx context.Context, filter biz.DatasetImpo
 		}
 		page.Items = append(page.Items, item)
 	}
+	if err := r.attachAttemptCounts(ctx, tenant, page.Items, func(index int, count int64) {
+		page.Items[index].AttemptCount = count
+	}); err != nil {
+		return biz.DatasetImportTaskPage{}, err
+	}
 	return page, nil
+}
+
+// attachAttemptCounts fills the attempt counter for one page of tasks in a
+// single grouped query. A task that never dispatched has no attempt row and
+// keeps the zero value.
+func (r *Repository) attachAttemptCounts(ctx context.Context, tenant pgtype.UUID, items []biz.DatasetImportTask, apply func(int, int64)) error {
+	if len(items) == 0 {
+		return nil
+	}
+	ids := make([]pgtype.UUID, 0, len(items))
+	for _, item := range items {
+		id, err := databaseID(item.TaskID)
+		if err != nil {
+			return err
+		}
+		ids = append(ids, id)
+	}
+	rows, err := datasetsql.New(r.pool).TaskAttemptCounts(ctx, datasetsql.TaskAttemptCountsParams{TenantID: tenant, TaskIds: ids})
+	if err != nil {
+		return biz.ErrPersistence
+	}
+	counts := make(map[string]int64, len(rows))
+	for _, row := range rows {
+		counts[row.TaskID.String()] = row.AttemptCount
+	}
+	for position, item := range items {
+		apply(position, counts[item.TaskID])
+	}
+	return nil
 }
 
 func (r *Repository) GetVersion(ctx context.Context, tenantID, inputVersionID string) (biz.DatasetVersion, error) {
@@ -172,7 +215,7 @@ func (r *Repository) ListVersions(ctx context.Context, filter biz.DatasetVersion
 	}
 	pageSize, offset := normalizePage(filter.Page, filter.PageSize)
 	queries := datasetsql.New(r.pool)
-	rows, err := queries.ListVersionMetadata(ctx, datasetsql.ListVersionMetadataParams{TenantID: tenant, DatasetID: datasetID, PageSize: pageSize, PageOffset: offset})
+	rows, err := queries.ListVersionFacts(ctx, datasetsql.ListVersionFactsParams{TenantID: tenant, DatasetID: datasetID, PageSize: pageSize, PageOffset: offset})
 	if err != nil {
 		return biz.DatasetVersionPage{}, biz.ErrPersistence
 	}
@@ -182,13 +225,46 @@ func (r *Repository) ListVersions(ctx context.Context, filter biz.DatasetVersion
 	}
 	page := biz.DatasetVersionPage{Total: total, Items: make([]biz.DatasetVersion, 0, len(rows))}
 	for _, row := range rows {
-		item, err := versionFromRow(row)
+		item, err := versionFactsFromRow(row)
 		if err != nil {
 			return biz.DatasetVersionPage{}, err
 		}
 		page.Items = append(page.Items, item)
 	}
 	return page, nil
+}
+
+// versionFactsFromRow projects one joined version row. The source snapshot is
+// decoded with the same strict decoder the importer used, so a version view can
+// never show a selection the acceptance path would have rejected.
+func versionFactsFromRow(row datasetsql.ListVersionFactsRow) (biz.DatasetVersion, error) {
+	if !row.InputVersionID.Valid || !row.DatasetID.Valid || !row.ImportTaskID.Valid || !row.PublishedAt.Valid {
+		return biz.DatasetVersion{}, biz.ErrPersistence
+	}
+	if !row.InputRequestedAt.Valid || row.InputRequestedAt.InfinityModifier != pgtype.Finite {
+		return biz.DatasetVersion{}, biz.ErrPersistence
+	}
+	snapshot, err := biz.DecodeSourceSnapshot(row.SourceSnapshot)
+	if err != nil {
+		return biz.DatasetVersion{}, err
+	}
+	value := biz.DatasetVersion{
+		InputVersionID: row.InputVersionID.String(), DatasetID: row.DatasetID.String(),
+		ImportTaskID: row.ImportTaskID.String(), VersionNumber: row.VersionNumber,
+		PublishedAt: row.PublishedAt.Time.UTC(), Preview: row.Preview,
+		Input: &biz.DatasetVersionInput{
+			State: row.InputState, Format: row.InputFormat, SizeBytes: row.InputSizeBytes,
+			SHA256: row.InputSha256, RequestedAt: row.InputRequestedAt.Time.UTC(),
+		},
+		Source: &snapshot,
+	}
+	if row.VerifiedRowCount.Valid {
+		value.Input.RowCount = row.VerifiedRowCount.Int64
+	}
+	if row.VerifiedFeatureCount.Valid {
+		value.Input.FeatureCount = int64(row.VerifiedFeatureCount.Int32)
+	}
+	return value, nil
 }
 
 // ---- acceptance ----

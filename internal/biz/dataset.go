@@ -125,6 +125,16 @@ type Dataset struct {
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 	ArchivedAt        *time.Time
+
+	// ReadyVersionCount and LatestReadyVersionNumber describe published versions
+	// only. They are read facts, not stored columns: a version is published by
+	// the same transaction that writes its metadata row, so counting that table
+	// is the definition.
+	ReadyVersionCount        int64
+	LatestReadyVersionNumber int64
+	// LatestImport is the most recently accepted task, whatever its state. Nil
+	// means the collection has never been imported into.
+	LatestImport *DatasetImportTask
 }
 
 // NormalizeDatasetName applies the one normalization rule both the application

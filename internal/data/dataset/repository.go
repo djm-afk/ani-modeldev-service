@@ -139,7 +139,18 @@ func (r *Repository) GetDataset(ctx context.Context, tenantID, datasetID string)
 	if err != nil {
 		return biz.Dataset{}, biz.ErrPersistence
 	}
-	return datasetFromRow(row)
+	value, err := datasetFromRow(row)
+	if err != nil {
+		return biz.Dataset{}, err
+	}
+	if err := r.attachDatasetFacts(ctx, tenant, []biz.Dataset{value}, func(index int, stats datasetStats, latest *biz.DatasetImportTask) {
+		value.ReadyVersionCount = stats.readyVersionCount
+		value.LatestReadyVersionNumber = stats.latestReadyVersionNumber
+		value.LatestImport = latest
+	}); err != nil {
+		return biz.Dataset{}, err
+	}
+	return value, nil
 }
 
 func (r *Repository) ListDatasets(ctx context.Context, filter biz.DatasetListFilter) (biz.DatasetPage, error) {
@@ -168,7 +179,72 @@ func (r *Repository) ListDatasets(ctx context.Context, filter biz.DatasetListFil
 		}
 		pageValue.Items = append(pageValue.Items, item)
 	}
+	if err := r.attachDatasetFacts(ctx, tenant, pageValue.Items, func(index int, stats datasetStats, latest *biz.DatasetImportTask) {
+		pageValue.Items[index].ReadyVersionCount = stats.readyVersionCount
+		pageValue.Items[index].LatestReadyVersionNumber = stats.latestReadyVersionNumber
+		pageValue.Items[index].LatestImport = latest
+	}); err != nil {
+		return biz.DatasetPage{}, err
+	}
 	return pageValue, nil
+}
+
+// datasetStats is the published-version summary of one collection.
+type datasetStats struct {
+	readyVersionCount        int64
+	latestReadyVersionNumber int64
+}
+
+// attachDatasetFacts fills the read-only summary fields for one page of
+// collections in two bounded queries. Both are keyed by the page's own ids, so
+// the cost does not grow with the tenant's history.
+func (r *Repository) attachDatasetFacts(ctx context.Context, tenant pgtype.UUID, items []biz.Dataset, apply func(int, datasetStats, *biz.DatasetImportTask)) error {
+	if len(items) == 0 {
+		return nil
+	}
+	ids := make([]pgtype.UUID, 0, len(items))
+	for _, item := range items {
+		id, err := databaseID(item.DatasetID)
+		if err != nil {
+			return err
+		}
+		ids = append(ids, id)
+	}
+	queries := datasetsql.New(r.pool)
+	stats := make(map[string]datasetStats, len(items))
+	rows, err := queries.DatasetVersionStats(ctx, datasetsql.DatasetVersionStatsParams{TenantID: tenant, DatasetIds: ids})
+	if err != nil {
+		return biz.ErrPersistence
+	}
+	for _, row := range rows {
+		stats[row.DatasetID.String()] = datasetStats{readyVersionCount: row.ReadyVersionCount, latestReadyVersionNumber: row.LatestReadyVersionNumber}
+	}
+	latest := make(map[string]*biz.DatasetImportTask, len(items))
+	tasks, err := queries.LatestImportTasks(ctx, datasetsql.LatestImportTasksParams{TenantID: tenant, DatasetIds: ids})
+	if err != nil {
+		return biz.ErrPersistence
+	}
+	latestItems := make([]biz.DatasetImportTask, 0, len(tasks))
+	for _, row := range tasks {
+		task, err := taskFromRow(row)
+		if err != nil {
+			return err
+		}
+		latestItems = append(latestItems, task)
+	}
+	if err := r.attachAttemptCounts(ctx, tenant, latestItems, func(index int, count int64) {
+		latestItems[index].AttemptCount = count
+	}); err != nil {
+		return err
+	}
+	for index := range latestItems {
+		task := latestItems[index]
+		latest[task.DatasetID] = &task
+	}
+	for position, item := range items {
+		apply(position, stats[item.DatasetID], latest[item.DatasetID])
+	}
+	return nil
 }
 
 func (r *Repository) UpdateDatasetMetadata(ctx context.Context, update biz.DatasetMetadataUpdate) (biz.Dataset, error) {
