@@ -200,8 +200,9 @@ func (imports *DatasetImports) AcceptImport(ctx context.Context, acceptance Impo
 	})
 }
 
-// CancelImport closes a live task. An already finished task is a stable no-op
-// reported as a conflict so the caller reads the current state instead.
+// CancelImport closes a live task. Cancelling a task that already reached a
+// terminal state is a stable no-op: the receipt says ALREADY_TERMINAL and the
+// caller reads the current result from Task GET. Nothing is rolled back.
 func (imports *DatasetImports) CancelImport(ctx context.Context, command TaskCommand) (CommandReceipt, error) {
 	if imports == nil || !ValidIdempotencyKey(command.IdempotencyKey) {
 		return CommandReceipt{}, ErrDatasetInvalidMetadata
@@ -220,8 +221,9 @@ func (imports *DatasetImports) CancelImport(ctx context.Context, command TaskCom
 		return CommandReceipt{}, err
 	}
 	if !task.CanCancel() {
-		// Publish already committed or the task is terminal: nothing to undo.
-		return CommandReceipt{}, ErrImportStateConflict
+		// Publish already committed or the task is terminal: nothing to undo, and
+		// the caller must read the current state rather than see a failure.
+		return imports.recordTerminalNoop(ctx, command, intent)
 	}
 	if _, err := imports.transitions.RequestCancel(ctx, TaskCommandRequest{
 		TenantID: command.TenantID, ActorID: command.ActorID, DatasetID: command.DatasetID,
@@ -288,7 +290,8 @@ func (imports *DatasetImports) recordTransitionReceipt(ctx context.Context, comm
 		TenantID: command.TenantID, ReceiptID: receiptID, ActorID: command.ActorID,
 		Kind: intent.Kind, IdempotencyKey: command.IdempotencyKey, RequestSHA256: intent.Digest(),
 		DatasetID: command.DatasetID, TaskID: command.TaskID,
-		ResponseStatus: ReceiptStatusAccepted, AcceptedAt: imports.now().UTC().Truncate(time.Microsecond),
+		ResponseStatus: ReceiptStatusAccepted, Outcome: ReceiptOutcomeAccepted,
+		AcceptedAt: imports.now().UTC().Truncate(time.Microsecond),
 	})
 	if err != nil {
 		return CommandReceipt{}, err
@@ -305,6 +308,24 @@ func (imports *DatasetImports) recordTransitionReceipt(ctx context.Context, comm
 		return CommandReceipt{}, err
 	}
 	return receipt, nil
+}
+
+// recordTerminalNoop answers a cancel that found nothing left to undo. It still
+// writes a receipt, so a replay returns the same verdict, but it writes no
+// history event: nothing changed, and a fabricated IMPORT_CANCELLED would claim
+// a cancellation that never happened.
+func (imports *DatasetImports) recordTerminalNoop(ctx context.Context, command TaskCommand, intent DatasetCommand) (CommandReceipt, error) {
+	receiptID, err := imports.newID()
+	if err != nil {
+		return CommandReceipt{}, ErrPersistence
+	}
+	return imports.commands.InsertReceipt(ctx, CommandReceipt{
+		TenantID: command.TenantID, ReceiptID: receiptID, ActorID: command.ActorID,
+		Kind: intent.Kind, IdempotencyKey: command.IdempotencyKey, RequestSHA256: intent.Digest(),
+		DatasetID: command.DatasetID, TaskID: command.TaskID,
+		ResponseStatus: ReceiptStatusAccepted, Outcome: ReceiptOutcomeAlreadyTerminal,
+		AcceptedAt: imports.now().UTC().Truncate(time.Microsecond),
+	})
 }
 
 // PublishImport commits the READY input, the version row and the task success in

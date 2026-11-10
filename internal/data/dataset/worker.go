@@ -386,9 +386,11 @@ func (r *Repository) FreezeTaskCandidate(ctx context.Context, freeze biz.Candida
 }
 
 // FailTask records a terminal failure with the caller's retryability verdict.
+// The IMPORT_FAILED history entry is written in the same transaction, so a task
+// can never reach FAILED without its event.
 func (r *Repository) FailTask(ctx context.Context, failure biz.TaskFailure) (biz.DatasetImportTask, error) {
-	if r == nil || r.pool == nil || failure.Code == "" {
-		return biz.DatasetImportTask{}, fmt.Errorf("%w: task failure requires a code", biz.ErrPersistence)
+	if r == nil || r.pool == nil || failure.Code == "" || failure.OperationID == "" || failure.Actor == "" {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: task failure requires a code, an operation id and an actor", biz.ErrPersistence)
 	}
 	tenant, task, err := tenantAndDataset(failure.TenantID, failure.TaskID)
 	if err != nil {
@@ -398,7 +400,13 @@ func (r *Repository) FailTask(ctx context.Context, failure biz.TaskFailure) (biz
 	if len(detail) == 0 {
 		detail = []byte("{}")
 	}
-	row, err := datasetsql.New(r.pool).FailTask(ctx, datasetsql.FailTaskParams{
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
+	}
+	defer tx.Rollback(ctx)
+	queries := datasetsql.New(tx)
+	row, err := queries.FailTask(ctx, datasetsql.FailTaskParams{
 		TenantID: tenant, TaskID: task, FailureCode: pgtype.Text{String: failure.Code, Valid: true},
 		FailureDetail: detail, Retryable: failure.Retryable,
 	})
@@ -408,26 +416,99 @@ func (r *Repository) FailTask(ctx context.Context, failure biz.TaskFailure) (biz
 	if err != nil {
 		return biz.DatasetImportTask{}, fmt.Errorf("%w: fail import task: %v", biz.ErrPersistence, err)
 	}
+	if err := insertTerminalOperation(ctx, queries, terminalOperation{
+		TenantID: failure.TenantID, OperationID: failure.OperationID, DatasetID: row.DatasetID.String(),
+		TaskID: failure.TaskID, Actor: failure.Actor, EventType: biz.EventImportFailed,
+		Result: "FAILED", FailureCode: failure.Code, RecoveryGeneration: row.RecoveryGeneration,
+	}); err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
+	}
 	return taskFromRow(row)
 }
 
-// FinishCancelledTask ends a CANCELING task once no writer remains.
-func (r *Repository) FinishCancelledTask(ctx context.Context, tenantID, taskID string) (biz.DatasetImportTask, error) {
-	if r == nil || r.pool == nil {
-		return biz.DatasetImportTask{}, fmt.Errorf("%w: repository not configured", biz.ErrPersistence)
+// FinishCancelledTask ends a CANCELING task once no writer remains, together
+// with its IMPORT_CANCELLED history entry.
+func (r *Repository) FinishCancelledTask(ctx context.Context, cancellation biz.TaskCancellation) (biz.DatasetImportTask, error) {
+	if r == nil || r.pool == nil || cancellation.OperationID == "" || cancellation.Actor == "" {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: cancellation requires an operation id and an actor", biz.ErrPersistence)
 	}
-	tenant, task, err := tenantAndDataset(tenantID, taskID)
+	tenant, task, err := tenantAndDataset(cancellation.TenantID, cancellation.TaskID)
 	if err != nil {
 		return biz.DatasetImportTask{}, err
 	}
-	row, err := datasetsql.New(r.pool).FinishCancelledTask(ctx, datasetsql.FinishCancelledTaskParams{TenantID: tenant, TaskID: task})
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
+	}
+	defer tx.Rollback(ctx)
+	queries := datasetsql.New(tx)
+	row, err := queries.FinishCancelledTask(ctx, datasetsql.FinishCancelledTaskParams{TenantID: tenant, TaskID: task})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return biz.DatasetImportTask{}, biz.ErrImportStateConflict
 	}
 	if err != nil {
 		return biz.DatasetImportTask{}, fmt.Errorf("%w: finish cancelled task: %v", biz.ErrPersistence, err)
 	}
+	if err := insertTerminalOperation(ctx, queries, terminalOperation{
+		TenantID: cancellation.TenantID, OperationID: cancellation.OperationID, DatasetID: row.DatasetID.String(),
+		TaskID: cancellation.TaskID, Actor: cancellation.Actor, EventType: biz.EventImportCanceled,
+		Result: "CANCELLED", RecoveryGeneration: row.RecoveryGeneration,
+	}); err != nil {
+		return biz.DatasetImportTask{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return biz.DatasetImportTask{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
+	}
 	return taskFromRow(row)
+}
+
+// terminalOperation is one task-result history entry. It is written inside the
+// same transaction as the state change it describes.
+type terminalOperation struct {
+	TenantID           string
+	OperationID        string
+	DatasetID          string
+	TaskID             string
+	Actor              string
+	EventType          biz.DatasetEventType
+	Result             string
+	FailureCode        string
+	RecoveryGeneration int64
+}
+
+// insertTerminalOperation appends the result event. The caller owns the
+// transaction, so a failed insert rolls the state change back with it.
+func insertTerminalOperation(ctx context.Context, queries *datasetsql.Queries, operation terminalOperation) error {
+	tenant, datasetID, err := tenantAndDataset(operation.TenantID, operation.DatasetID)
+	if err != nil {
+		return err
+	}
+	operationID, err := databaseID(operation.OperationID)
+	if err != nil {
+		return err
+	}
+	taskID, err := databaseID(operation.TaskID)
+	if err != nil {
+		return err
+	}
+	params := datasetsql.InsertDatasetOperationParams{
+		TenantID: tenant, OperationID: operationID, DatasetID: datasetID, TaskID: taskID,
+		Actor: operation.Actor, EventType: string(operation.EventType), Result: operation.Result,
+		Detail: []byte(`{}`),
+	}
+	if operation.FailureCode != "" {
+		params.FailureCode = pgtype.Text{String: operation.FailureCode, Valid: true}
+	}
+	if operation.RecoveryGeneration > 0 {
+		params.RecoveryGeneration = pgtype.Int8{Int64: operation.RecoveryGeneration, Valid: true}
+	}
+	if _, err := queries.InsertDatasetOperation(ctx, params); err != nil {
+		return fmt.Errorf("%w: insert terminal operation: %v", biz.ErrPersistence, err)
+	}
+	return nil
 }
 
 // DeferTask pushes the next scan out without ending the task.

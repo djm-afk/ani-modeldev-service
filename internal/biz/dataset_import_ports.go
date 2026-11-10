@@ -13,6 +13,13 @@ const (
 	ReceiptStatusAccepted = 202
 )
 
+// Receipt outcomes. ACCEPTED means the command took effect; ALREADY_TERMINAL
+// means a cancel found the task already finished, so nothing was undone.
+const (
+	ReceiptOutcomeAccepted        = "ACCEPTED"
+	ReceiptOutcomeAlreadyTerminal = "ALREADY_TERMINAL"
+)
+
 // DatasetImportTask is one asynchronous import of a single file into a new
 // version. Its source, target, reserved input identity and version number are
 // frozen at acceptance and never rewritten by a retry.

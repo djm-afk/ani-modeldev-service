@@ -276,9 +276,21 @@ message DatasetImportTaskView {
   int64 attempt_count = 9;
   int64 recovery_generation = 10;
   DatasetImportProgress progress = 11;
-  ErrorDetail failure = 12;
+  DatasetTaskFailure failure = 12;
   // Set only after success, and equal to reserved_input_version_id.
   string input_version_id = 13;
+}
+
+// DatasetTaskFailure is the asynchronous carrier for a task that was already
+// accepted. Its code is the importer's own vocabulary (SOURCE_CHANGED,
+// IMPORT_TIMEOUT, DATASET_INVALID, ...), never an ErrorReason: an accepted task
+// has no synchronous rejection to describe, and reusing ErrorDetail would force
+// every async code through an enum that does not contain them.
+message DatasetTaskFailure {
+  string code = 1;
+  // Decided by this service from the persisted state and the failure class; a
+  // job's own opinion is never trusted.
+  bool retryable = 2;
 }
 
 // Progress is a display cache, never a verification proof.

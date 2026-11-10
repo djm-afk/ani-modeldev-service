@@ -38,6 +38,11 @@ type TaskFailure struct {
 	Code      string
 	Detail    []byte
 	Retryable bool
+
+	// OperationID and Actor identify the IMPORT_FAILED history entry, which is
+	// written in the same transaction as the state change.
+	OperationID string
+	Actor       string
 }
 
 // TaskDeferral keeps a live task and pushes its next scan out, recording a
@@ -47,6 +52,15 @@ type TaskDeferral struct {
 	TaskID      string
 	Delay       time.Duration
 	FailureCode string
+}
+
+// TaskCancellation is the terminal cancel write. OperationID and Actor identify
+// the IMPORT_CANCELLED history entry written in the same transaction.
+type TaskCancellation struct {
+	TenantID    string
+	TaskID      string
+	OperationID string
+	Actor       string
 }
 
 // AttemptPlan is the frozen material identity of one physical attempt. The
@@ -133,7 +147,7 @@ type ImportSchedulerRepository interface {
 	// FinishCancelledTask turns a CANCELING task into its terminal CANCELLED
 	// state. It is only called after the attempt's writer has been observed as
 	// finished or gone; a missing row is a state conflict, never a no-op.
-	FinishCancelledTask(ctx context.Context, tenantID, taskID string) (DatasetImportTask, error)
+	FinishCancelledTask(ctx context.Context, cancellation TaskCancellation) (DatasetImportTask, error)
 	DeferTask(ctx context.Context, deferral TaskDeferral) error
 
 	CloseAttempt(ctx context.Context, tenantID, attemptID, reason string) (DatasetImportAttempt, error)

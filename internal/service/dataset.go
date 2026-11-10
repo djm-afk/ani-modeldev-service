@@ -555,12 +555,15 @@ func datasetView(dataset biz.Dataset) *modeldevv1.DatasetView {
 }
 
 func receiptView(receipt biz.CommandReceipt, dataset biz.Dataset, task biz.DatasetImportTask) *modeldevv1.CommandReceipt {
+	outcome := receipt.Outcome
+	if outcome == "" {
+		outcome = biz.ReceiptOutcomeAccepted
+	}
 	view := &modeldevv1.CommandReceipt{
-		ReceiptId: receipt.ReceiptID, Operation: string(receipt.Kind), Outcome: "ACCEPTED",
+		ReceiptId: receipt.ReceiptID, Operation: string(receipt.Kind), Outcome: outcome,
 		DatasetId: receipt.DatasetID, AcceptedAt: timestamppb.New(receipt.AcceptedAt),
 	}
 	if receipt.Kind == biz.OpImportVersion {
-		view.Outcome = "ACCEPTED"
 		view.ImportTaskId = task.TaskID
 		view.ReservedInputVersionId = task.ReservedInputVersionID
 		view.VersionNumber = task.VersionNumber
@@ -583,7 +586,7 @@ func importTaskView(task biz.DatasetImportTask) *modeldevv1.DatasetImportTaskVie
 		view.InputVersionId = task.ReservedInputVersionID
 	}
 	if task.FailureCode != "" {
-		view.Failure = &modeldevv1.ErrorDetail{SafeMessage: task.FailureCode}
+		view.Failure = &modeldevv1.DatasetTaskFailure{Code: task.FailureCode, Retryable: task.Retryable}
 	}
 	// The frozen source is stored on the task row, so a task view can always
 	// show what was accepted. A row this service wrote always decodes; a

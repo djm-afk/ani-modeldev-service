@@ -142,6 +142,27 @@ func TestSchedulerClassifiesRetryability(t *testing.T) {
 	}
 }
 
+// A report's own FAILED verdict must survive classification: the job is the only
+// party that observed what went wrong, so its code is the one the page branches
+// on. Rewriting it to a generic persistence error erases the reason.
+func TestFailureCodeKeepsTheReportedVerdict(t *testing.T) {
+	for _, code := range []ImportFailureCode{FailSourceChanged, FailSourceNotFound, FailSourceAuthRequired,
+		FailDependencyUnavailable, FailResourceUnavailable, FailTimeout, FailStorageVersioningRequired} {
+		if got := failureCodeFor(errors.New(string(code))); got != string(code) {
+			t.Fatalf("reported %s became %s", code, got)
+		}
+	}
+	if got := failureCodeFor(ErrInputVerification); got != string(FailDatasetInvalid) {
+		t.Fatalf("a content rejection became %s, want %s", got, FailDatasetInvalid)
+	}
+	if got := failureCodeFor(ErrImportResultInvalid); got != string(FailImportResultInvalid) {
+		t.Fatalf("an unreadable report became %s, want %s", got, FailImportResultInvalid)
+	}
+	if got := failureCodeFor(errors.New("something else")); got != string(FailPersistence) {
+		t.Fatalf("an unknown cause became %s, want %s", got, FailPersistence)
+	}
+}
+
 // The scheduler must refuse an assembly missing any port rather than run a
 // half-wired loop.
 func TestSchedulerRequiresEveryPort(t *testing.T) {

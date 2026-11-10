@@ -336,16 +336,25 @@ func TestCancelImportTransitionsLiveTaskOnly(t *testing.T) {
 	}
 }
 
-func TestCancelImportRejectsTerminalTask(t *testing.T) {
+// Cancelling a task that already reached a terminal state is a stable no-op:
+// the receipt says ALREADY_TERMINAL, nothing is undone, and no history event
+// claims a cancellation that never happened.
+func TestCancelImportIsNoopOnTerminalTask(t *testing.T) {
 	for _, state := range []ImportTaskState{TaskSucceeded, TaskFailed, TaskCancelled} {
 		f := newImportsFixture()
 		f.tasks.value = DatasetImportTask{TenantID: fixtureTenant, TaskID: fixtureTask, DatasetID: fixtureDataset, State: state}
-		_, err := f.imports.CancelImport(context.Background(), TaskCommand{TenantID: fixtureTenant, ActorID: "a:b:1", DatasetID: fixtureDataset, TaskID: fixtureTask, IdempotencyKey: "cancel-2"})
-		if !errors.Is(err, ErrImportStateConflict) {
+		receipt, err := f.imports.CancelImport(context.Background(), TaskCommand{TenantID: fixtureTenant, ActorID: "a:b:1", DatasetID: fixtureDataset, TaskID: fixtureTask, IdempotencyKey: "cancel-2"})
+		if err != nil {
 			t.Fatalf("%s cancel returned %v", state, err)
+		}
+		if receipt.Outcome != ReceiptOutcomeAlreadyTerminal {
+			t.Fatalf("%s cancel outcome = %q, want %q", state, receipt.Outcome, ReceiptOutcomeAlreadyTerminal)
 		}
 		if f.transitions.cancelled {
 			t.Fatalf("%s reached the transition port", state)
+		}
+		if len(f.operations.inserted) != 0 {
+			t.Fatalf("%s wrote %d history events, want 0", state, len(f.operations.inserted))
 		}
 	}
 }

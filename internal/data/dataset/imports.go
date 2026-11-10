@@ -544,8 +544,8 @@ func writeOperation(ctx context.Context, queries *datasetsql.Queries, operation 
 // closure so the input package keeps ownership of its own SQL while the dataset
 // package keeps ownership of the boundary.
 func (r *Repository) PublishVersion(ctx context.Context, request biz.PublicationRequest) (biz.PublicationResult, error) {
-	if r == nil || r.pool == nil || r.inputs == nil {
-		return biz.PublicationResult{}, fmt.Errorf("%w: repository or input publisher not configured", biz.ErrPersistence)
+	if r == nil || r.pool == nil || r.inputs == nil || request.OperationID == "" || request.Actor == "" {
+		return biz.PublicationResult{}, fmt.Errorf("%w: repository, input publisher, operation id and actor are required", biz.ErrPersistence)
 	}
 	tenant, datasetID, err := tenantAndDataset(request.TenantID, request.DatasetID)
 	if err != nil {
@@ -618,6 +618,15 @@ func (r *Repository) PublishVersion(ctx context.Context, request biz.Publication
 	}
 	if err != nil {
 		return biz.PublicationResult{}, fmt.Errorf("%w: mark task succeeded: %v", biz.ErrPersistence, err)
+	}
+	// The result event commits with the version it describes, so a published
+	// version can never lack its IMPORT_SUCCEEDED history entry.
+	if err := insertTerminalOperation(ctx, queries, terminalOperation{
+		TenantID: request.TenantID, OperationID: request.OperationID, DatasetID: request.DatasetID,
+		TaskID: request.TaskID, Actor: request.Actor, EventType: biz.EventImportOK,
+		Result: "SUCCEEDED", RecoveryGeneration: request.RecoveryGeneration,
+	}); err != nil {
+		return biz.PublicationResult{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return biz.PublicationResult{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)

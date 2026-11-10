@@ -63,6 +63,16 @@ func validImportFailureCode(code ImportFailureCode) bool {
 	return false
 }
 
+// Control-plane verdicts. These are decided by this service after reading the
+// verified bytes, so a job can never report them: the importer's own vocabulary
+// stops at what it observed, and content validity is the verifier's call.
+const (
+	FailDatasetInvalid        ImportFailureCode = "DATASET_INVALID"
+	FailDatasetRecordTooLarge ImportFailureCode = "DATASET_RECORD_TOO_LARGE"
+	FailImportResultInvalid   ImportFailureCode = "IMPORT_RESULT_INVALID"
+	FailPersistence           ImportFailureCode = "IMPORT_PERSISTENCE_UNAVAILABLE"
+)
+
 // ImportResultObject is the exact uploaded object identity.
 type ImportResultObject struct {
 	StorageConnectionID string

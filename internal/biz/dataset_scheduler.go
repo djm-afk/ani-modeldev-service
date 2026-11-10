@@ -381,7 +381,10 @@ func (scheduler *ImportScheduler) cancel(ctx context.Context, task DatasetImport
 			scheduler.report("import cancel cleanup failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", deleteErr)
 		}
 	}
-	if _, err := scheduler.repository.FinishCancelledTask(ctx, task.TenantID, task.TaskID); err != nil {
+	if _, err := scheduler.repository.FinishCancelledTask(ctx, TaskCancellation{
+		TenantID: task.TenantID, TaskID: task.TaskID,
+		OperationID: scheduler.newOperationID(), Actor: scheduler.owner,
+	}); err != nil {
 		if errors.Is(err, ErrImportStateConflict) {
 			// A concurrent sweep already finished this cancel.
 			outcome.skipped++
@@ -400,6 +403,18 @@ func (scheduler *ImportScheduler) failTask(ctx context.Context, task DatasetImpo
 }
 
 func outcomeNoop() taskOutcome { return taskOutcome{} }
+
+// newOperationID mints the history entry identity for a terminal transition. A
+// failure to mint one must not silently drop the event, so the caller sees an
+// empty id and the repository refuses the write.
+func (scheduler *ImportScheduler) newOperationID() string {
+	id, err := scheduler.newID()
+	if err != nil {
+		scheduler.report("import operation id unavailable", "error", err)
+		return ""
+	}
+	return id
+}
 
 // prepareAttempt returns the attempt the task is already working on, or
 // allocates exactly one, together with the material plan it froze.
@@ -511,6 +526,7 @@ func (scheduler *ImportScheduler) recordError(ctx context.Context, task DatasetI
 	if _, ferr := scheduler.repository.FailTask(ctx, TaskFailure{
 		TenantID: task.TenantID, TaskID: task.TaskID,
 		Code: failureCodeFor(cause), Retryable: scheduler.retryable(cause),
+		OperationID: scheduler.newOperationID(), Actor: scheduler.owner,
 	}); ferr != nil {
 		return outcome, ferr
 	}
@@ -536,7 +552,18 @@ func (scheduler *ImportScheduler) retryable(cause error) bool {
 	return false
 }
 
+// failureCodeFor maps a cause onto the public failure vocabulary. A cause that
+// is already one of the importer's own codes keeps it: the report is the only
+// place that knows what the job observed, and rewriting it to a generic
+// persistence error would erase the reason the page branches on.
 func failureCodeFor(cause error) string {
+	// A record that exceeds the parser guard is a content verdict with its own
+	// public code, not a generic invalid dataset. It is checked first because the
+	// verifier may report it alongside the generic verification failure.
+	var violation *cpup01.LimitViolation
+	if errors.As(cause, &violation) && violation.Reason == string(FailDatasetRecordTooLarge) {
+		return string(FailDatasetRecordTooLarge)
+	}
 	switch {
 	case errors.Is(cause, ErrImportDispatchUnavailable):
 		return string(FailDependencyUnavailable)
@@ -552,8 +579,18 @@ func failureCodeFor(cause error) string {
 		return string(FailSourceNotFound)
 	case errors.Is(cause, ErrSourceAuthRequired):
 		return string(FailSourceAuthRequired)
+	case errors.Is(cause, ErrImportResultInvalid):
+		return string(FailImportResultInvalid)
+	case errors.Is(cause, ErrInputSourceUnavailable), errors.Is(cause, ErrObjectSourceUnavailable):
+		return string(FailDependencyUnavailable)
+	case errors.Is(cause, ErrInputVerification), errors.Is(cause, ErrObjectVerification):
+		return string(FailDatasetInvalid)
 	}
-	return "IMPORT_PERSISTENCE_UNAVAILABLE"
+	// A report's own FAILED verdict arrives as a bare error carrying its code.
+	if code := ImportFailureCode(cause.Error()); validImportFailureCode(code) {
+		return string(code)
+	}
+	return string(FailPersistence)
 }
 
 // publish re-verifies the frozen candidate and commits the READY version. The
@@ -602,6 +639,7 @@ func (scheduler *ImportScheduler) publish(ctx context.Context, task DatasetImpor
 		InputVersionID: task.ReservedInputVersionID, VersionNumber: task.VersionNumber,
 		Preview: preview, PublishedAt: now, Actor: scheduler.owner,
 		RecoveryGeneration: task.RecoveryGeneration,
+		OperationID:        scheduler.newOperationID(),
 		Target:             taskTarget(task),
 	})
 	if publishErr != nil {

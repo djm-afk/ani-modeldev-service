@@ -252,7 +252,10 @@ type CommandReceipt struct {
 	DatasetID      string
 	TaskID         string
 	ResponseStatus int
-	AcceptedAt     time.Time
+	// Outcome is the public receipt verdict: ACCEPTED for a command that took
+	// effect, ALREADY_TERMINAL for a cancel that found nothing left to undo.
+	Outcome    string
+	AcceptedAt time.Time
 }
 
 // SameIntent reports whether an existing receipt answers the same request.

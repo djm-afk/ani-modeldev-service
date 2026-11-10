@@ -346,7 +346,7 @@ func (r *Repository) InsertReceipt(ctx context.Context, receipt biz.CommandRecei
 		}
 		taskID = parsed
 	}
-	body, err := json.Marshal(map[string]string{"receipt_id": receipt.ReceiptID, "operation": string(receipt.Kind)})
+	body, err := json.Marshal(map[string]string{"receipt_id": receipt.ReceiptID, "operation": string(receipt.Kind), "outcome": receipt.Outcome})
 	if err != nil {
 		return biz.CommandReceipt{}, biz.ErrPersistence
 	}
@@ -380,6 +380,14 @@ func receiptFromRow(row datasetsql.ModeldevDatasetCommandReceipt) (biz.CommandRe
 		IdempotencyKey: row.IdempotencyKey, RequestSHA256: row.RequestSha256,
 		DatasetID: row.DatasetID.String(), ResponseStatus: int(row.ResponseStatus),
 		AcceptedAt: row.AcceptedAt.Time.UTC(),
+	}
+	// The stored body carries the verdict the command actually reached, so a
+	// replayed receipt reports the same outcome as the first response.
+	var stored struct {
+		Outcome string `json:"outcome"`
+	}
+	if len(row.Receipt) > 0 && json.Unmarshal(row.Receipt, &stored) == nil {
+		receipt.Outcome = stored.Outcome
 	}
 	if row.TaskID.Valid {
 		receipt.TaskID = row.TaskID.String()

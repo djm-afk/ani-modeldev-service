@@ -2203,7 +2203,7 @@ type DatasetImportTaskView struct {
 	AttemptCount           int64                  `protobuf:"varint,9,opt,name=attempt_count,json=attemptCount,proto3" json:"attempt_count,omitempty"`
 	RecoveryGeneration     int64                  `protobuf:"varint,10,opt,name=recovery_generation,json=recoveryGeneration,proto3" json:"recovery_generation,omitempty"`
 	Progress               *DatasetImportProgress `protobuf:"bytes,11,opt,name=progress,proto3" json:"progress,omitempty"`
-	Failure                *ErrorDetail           `protobuf:"bytes,12,opt,name=failure,proto3" json:"failure,omitempty"`
+	Failure                *DatasetTaskFailure    `protobuf:"bytes,12,opt,name=failure,proto3" json:"failure,omitempty"`
 	// Set only after success, and equal to reserved_input_version_id.
 	InputVersionId string `protobuf:"bytes,13,opt,name=input_version_id,json=inputVersionId,proto3" json:"input_version_id,omitempty"`
 	unknownFields  protoimpl.UnknownFields
@@ -2317,7 +2317,7 @@ func (x *DatasetImportTaskView) GetProgress() *DatasetImportProgress {
 	return nil
 }
 
-func (x *DatasetImportTaskView) GetFailure() *ErrorDetail {
+func (x *DatasetImportTaskView) GetFailure() *DatasetTaskFailure {
 	if x != nil {
 		return x.Failure
 	}
@@ -2329,6 +2329,65 @@ func (x *DatasetImportTaskView) GetInputVersionId() string {
 		return x.InputVersionId
 	}
 	return ""
+}
+
+// DatasetTaskFailure is the asynchronous carrier for a task that was already
+// accepted. Its code is the importer's own vocabulary (SOURCE_CHANGED,
+// IMPORT_TIMEOUT, DATASET_INVALID, ...), never an ErrorReason: an accepted task
+// has no synchronous rejection to describe, and reusing ErrorDetail would force
+// every async code through an enum that does not contain them.
+type DatasetTaskFailure struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Code  string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	// Decided by this service from the persisted state and the failure class; a
+	// job's own opinion is never trusted.
+	Retryable     bool `protobuf:"varint,2,opt,name=retryable,proto3" json:"retryable,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DatasetTaskFailure) Reset() {
+	*x = DatasetTaskFailure{}
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatasetTaskFailure) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatasetTaskFailure) ProtoMessage() {}
+
+func (x *DatasetTaskFailure) ProtoReflect() protoreflect.Message {
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DatasetTaskFailure.ProtoReflect.Descriptor instead.
+func (*DatasetTaskFailure) Descriptor() ([]byte, []int) {
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *DatasetTaskFailure) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *DatasetTaskFailure) GetRetryable() bool {
+	if x != nil {
+		return x.Retryable
+	}
+	return false
 }
 
 // Progress is a display cache, never a verification proof.
@@ -2348,7 +2407,7 @@ type DatasetImportProgress struct {
 
 func (x *DatasetImportProgress) Reset() {
 	*x = DatasetImportProgress{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[29]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2360,7 +2419,7 @@ func (x *DatasetImportProgress) String() string {
 func (*DatasetImportProgress) ProtoMessage() {}
 
 func (x *DatasetImportProgress) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[29]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2373,7 +2432,7 @@ func (x *DatasetImportProgress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DatasetImportProgress.ProtoReflect.Descriptor instead.
 func (*DatasetImportProgress) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{29}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *DatasetImportProgress) GetStage() DatasetImportPhase {
@@ -2427,7 +2486,7 @@ type GetDatasetImportTaskRequest struct {
 
 func (x *GetDatasetImportTaskRequest) Reset() {
 	*x = GetDatasetImportTaskRequest{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[30]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2439,7 +2498,7 @@ func (x *GetDatasetImportTaskRequest) String() string {
 func (*GetDatasetImportTaskRequest) ProtoMessage() {}
 
 func (x *GetDatasetImportTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[30]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2452,7 +2511,7 @@ func (x *GetDatasetImportTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDatasetImportTaskRequest.ProtoReflect.Descriptor instead.
 func (*GetDatasetImportTaskRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{30}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *GetDatasetImportTaskRequest) GetImportTaskId() string {
@@ -2471,7 +2530,7 @@ type GetDatasetImportTaskResponse struct {
 
 func (x *GetDatasetImportTaskResponse) Reset() {
 	*x = GetDatasetImportTaskResponse{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[31]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2483,7 +2542,7 @@ func (x *GetDatasetImportTaskResponse) String() string {
 func (*GetDatasetImportTaskResponse) ProtoMessage() {}
 
 func (x *GetDatasetImportTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[31]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2496,7 +2555,7 @@ func (x *GetDatasetImportTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDatasetImportTaskResponse.ProtoReflect.Descriptor instead.
 func (*GetDatasetImportTaskResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{31}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *GetDatasetImportTaskResponse) GetTask() *DatasetImportTaskView {
@@ -2517,7 +2576,7 @@ type ListDatasetImportTasksRequest struct {
 
 func (x *ListDatasetImportTasksRequest) Reset() {
 	*x = ListDatasetImportTasksRequest{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[32]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2529,7 +2588,7 @@ func (x *ListDatasetImportTasksRequest) String() string {
 func (*ListDatasetImportTasksRequest) ProtoMessage() {}
 
 func (x *ListDatasetImportTasksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[32]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2542,7 +2601,7 @@ func (x *ListDatasetImportTasksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatasetImportTasksRequest.ProtoReflect.Descriptor instead.
 func (*ListDatasetImportTasksRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{32}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ListDatasetImportTasksRequest) GetDatasetId() string {
@@ -2576,7 +2635,7 @@ type ListDatasetImportTasksResponse struct {
 
 func (x *ListDatasetImportTasksResponse) Reset() {
 	*x = ListDatasetImportTasksResponse{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[33]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2588,7 +2647,7 @@ func (x *ListDatasetImportTasksResponse) String() string {
 func (*ListDatasetImportTasksResponse) ProtoMessage() {}
 
 func (x *ListDatasetImportTasksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[33]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2601,7 +2660,7 @@ func (x *ListDatasetImportTasksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatasetImportTasksResponse.ProtoReflect.Descriptor instead.
 func (*ListDatasetImportTasksResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{33}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ListDatasetImportTasksResponse) GetTotal() int64 {
@@ -2634,7 +2693,7 @@ type DatasetVersionView struct {
 
 func (x *DatasetVersionView) Reset() {
 	*x = DatasetVersionView{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[34]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2646,7 +2705,7 @@ func (x *DatasetVersionView) String() string {
 func (*DatasetVersionView) ProtoMessage() {}
 
 func (x *DatasetVersionView) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[34]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2659,7 +2718,7 @@ func (x *DatasetVersionView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DatasetVersionView.ProtoReflect.Descriptor instead.
 func (*DatasetVersionView) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{34}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *DatasetVersionView) GetInputVersionId() string {
@@ -2728,7 +2787,7 @@ type ListDatasetVersionsRequest struct {
 
 func (x *ListDatasetVersionsRequest) Reset() {
 	*x = ListDatasetVersionsRequest{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[35]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2740,7 +2799,7 @@ func (x *ListDatasetVersionsRequest) String() string {
 func (*ListDatasetVersionsRequest) ProtoMessage() {}
 
 func (x *ListDatasetVersionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[35]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2753,7 +2812,7 @@ func (x *ListDatasetVersionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatasetVersionsRequest.ProtoReflect.Descriptor instead.
 func (*ListDatasetVersionsRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{35}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ListDatasetVersionsRequest) GetDatasetId() string {
@@ -2780,7 +2839,7 @@ type ListDatasetVersionsResponse struct {
 
 func (x *ListDatasetVersionsResponse) Reset() {
 	*x = ListDatasetVersionsResponse{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[36]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2792,7 +2851,7 @@ func (x *ListDatasetVersionsResponse) String() string {
 func (*ListDatasetVersionsResponse) ProtoMessage() {}
 
 func (x *ListDatasetVersionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[36]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2805,7 +2864,7 @@ func (x *ListDatasetVersionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatasetVersionsResponse.ProtoReflect.Descriptor instead.
 func (*ListDatasetVersionsResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{36}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ListDatasetVersionsResponse) GetTotal() int64 {
@@ -2836,7 +2895,7 @@ type DatasetPreviewRecord struct {
 
 func (x *DatasetPreviewRecord) Reset() {
 	*x = DatasetPreviewRecord{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[37]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2848,7 +2907,7 @@ func (x *DatasetPreviewRecord) String() string {
 func (*DatasetPreviewRecord) ProtoMessage() {}
 
 func (x *DatasetPreviewRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[37]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2861,7 +2920,7 @@ func (x *DatasetPreviewRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DatasetPreviewRecord.ProtoReflect.Descriptor instead.
 func (*DatasetPreviewRecord) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{37}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *DatasetPreviewRecord) GetSampleIndex() int64 {
@@ -2913,7 +2972,7 @@ type GetInputVersionPreviewResponse struct {
 
 func (x *GetInputVersionPreviewResponse) Reset() {
 	*x = GetInputVersionPreviewResponse{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[38]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2925,7 +2984,7 @@ func (x *GetInputVersionPreviewResponse) String() string {
 func (*GetInputVersionPreviewResponse) ProtoMessage() {}
 
 func (x *GetInputVersionPreviewResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[38]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2938,7 +2997,7 @@ func (x *GetInputVersionPreviewResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInputVersionPreviewResponse.ProtoReflect.Descriptor instead.
 func (*GetInputVersionPreviewResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{38}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *GetInputVersionPreviewResponse) GetInputVersionId() string {
@@ -2992,7 +3051,7 @@ type GetInputVersionPreviewRequest struct {
 
 func (x *GetInputVersionPreviewRequest) Reset() {
 	*x = GetInputVersionPreviewRequest{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[39]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3004,7 +3063,7 @@ func (x *GetInputVersionPreviewRequest) String() string {
 func (*GetInputVersionPreviewRequest) ProtoMessage() {}
 
 func (x *GetInputVersionPreviewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[39]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3017,7 +3076,7 @@ func (x *GetInputVersionPreviewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInputVersionPreviewRequest.ProtoReflect.Descriptor instead.
 func (*GetInputVersionPreviewRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{39}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *GetInputVersionPreviewRequest) GetInputVersionId() string {
@@ -3046,7 +3105,7 @@ type DatasetOperationView struct {
 
 func (x *DatasetOperationView) Reset() {
 	*x = DatasetOperationView{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[40]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3058,7 +3117,7 @@ func (x *DatasetOperationView) String() string {
 func (*DatasetOperationView) ProtoMessage() {}
 
 func (x *DatasetOperationView) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[40]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3071,7 +3130,7 @@ func (x *DatasetOperationView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DatasetOperationView.ProtoReflect.Descriptor instead.
 func (*DatasetOperationView) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{40}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *DatasetOperationView) GetOperationId() string {
@@ -3163,7 +3222,7 @@ type ListDatasetOperationsRequest struct {
 
 func (x *ListDatasetOperationsRequest) Reset() {
 	*x = ListDatasetOperationsRequest{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[41]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3175,7 +3234,7 @@ func (x *ListDatasetOperationsRequest) String() string {
 func (*ListDatasetOperationsRequest) ProtoMessage() {}
 
 func (x *ListDatasetOperationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[41]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3188,7 +3247,7 @@ func (x *ListDatasetOperationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatasetOperationsRequest.ProtoReflect.Descriptor instead.
 func (*ListDatasetOperationsRequest) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{41}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ListDatasetOperationsRequest) GetDatasetId() string {
@@ -3229,7 +3288,7 @@ type ListDatasetOperationsResponse struct {
 
 func (x *ListDatasetOperationsResponse) Reset() {
 	*x = ListDatasetOperationsResponse{}
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[42]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3241,7 +3300,7 @@ func (x *ListDatasetOperationsResponse) String() string {
 func (*ListDatasetOperationsResponse) ProtoMessage() {}
 
 func (x *ListDatasetOperationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[42]
+	mi := &file_ani_modeldev_v1_dataset_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3254,7 +3313,7 @@ func (x *ListDatasetOperationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatasetOperationsResponse.ProtoReflect.Descriptor instead.
 func (*ListDatasetOperationsResponse) Descriptor() ([]byte, []int) {
-	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{42}
+	return file_ani_modeldev_v1_dataset_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ListDatasetOperationsResponse) GetTotal() int64 {
@@ -3423,7 +3482,7 @@ const file_ani_modeldev_v1_dataset_proto_rawDesc = "" +
 	"\x0eversion_number\x18\a \x01(\x03R\rversionNumber\x12;\n" +
 	"\vaccepted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"acceptedAt\x12\x1a\n" +
-	"\brevision\x18\t \x01(\x03R\brevision\"\xb1\x05\n" +
+	"\brevision\x18\t \x01(\x03R\brevision\"\xb8\x05\n" +
 	"\x15DatasetImportTaskView\x12$\n" +
 	"\x0eimport_task_id\x18\x01 \x01(\tR\fimportTaskId\x12\x1d\n" +
 	"\n" +
@@ -3438,9 +3497,12 @@ const file_ani_modeldev_v1_dataset_proto_rawDesc = "" +
 	"\rattempt_count\x18\t \x01(\x03R\fattemptCount\x12/\n" +
 	"\x13recovery_generation\x18\n" +
 	" \x01(\x03R\x12recoveryGeneration\x12B\n" +
-	"\bprogress\x18\v \x01(\v2&.ani.modeldev.v1.DatasetImportProgressR\bprogress\x126\n" +
-	"\afailure\x18\f \x01(\v2\x1c.ani.modeldev.v1.ErrorDetailR\afailure\x12(\n" +
-	"\x10input_version_id\x18\r \x01(\tR\x0einputVersionId\"\x8d\x02\n" +
+	"\bprogress\x18\v \x01(\v2&.ani.modeldev.v1.DatasetImportProgressR\bprogress\x12=\n" +
+	"\afailure\x18\f \x01(\v2#.ani.modeldev.v1.DatasetTaskFailureR\afailure\x12(\n" +
+	"\x10input_version_id\x18\r \x01(\tR\x0einputVersionId\"F\n" +
+	"\x12DatasetTaskFailure\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x1c\n" +
+	"\tretryable\x18\x02 \x01(\bR\tretryable\"\x8d\x02\n" +
 	"\x15DatasetImportProgress\x129\n" +
 	"\x05stage\x18\x01 \x01(\x0e2#.ani.modeldev.v1.DatasetImportPhaseR\x05stage\x12\x1f\n" +
 	"\vbytes_total\x18\x02 \x01(\x03R\n" +
@@ -3600,7 +3662,7 @@ func file_ani_modeldev_v1_dataset_proto_rawDescGZIP() []byte {
 }
 
 var file_ani_modeldev_v1_dataset_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_ani_modeldev_v1_dataset_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
+var file_ani_modeldev_v1_dataset_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
 var file_ani_modeldev_v1_dataset_proto_goTypes = []any{
 	(DatasetState)(0),                      // 0: ani.modeldev.v1.DatasetState
 	(DatasetImportTaskState)(0),            // 1: ani.modeldev.v1.DatasetImportTaskState
@@ -3637,30 +3699,30 @@ var file_ani_modeldev_v1_dataset_proto_goTypes = []any{
 	(*RetryDatasetImportResponse)(nil),     // 32: ani.modeldev.v1.RetryDatasetImportResponse
 	(*CommandReceipt)(nil),                 // 33: ani.modeldev.v1.CommandReceipt
 	(*DatasetImportTaskView)(nil),          // 34: ani.modeldev.v1.DatasetImportTaskView
-	(*DatasetImportProgress)(nil),          // 35: ani.modeldev.v1.DatasetImportProgress
-	(*GetDatasetImportTaskRequest)(nil),    // 36: ani.modeldev.v1.GetDatasetImportTaskRequest
-	(*GetDatasetImportTaskResponse)(nil),   // 37: ani.modeldev.v1.GetDatasetImportTaskResponse
-	(*ListDatasetImportTasksRequest)(nil),  // 38: ani.modeldev.v1.ListDatasetImportTasksRequest
-	(*ListDatasetImportTasksResponse)(nil), // 39: ani.modeldev.v1.ListDatasetImportTasksResponse
-	(*DatasetVersionView)(nil),             // 40: ani.modeldev.v1.DatasetVersionView
-	(*ListDatasetVersionsRequest)(nil),     // 41: ani.modeldev.v1.ListDatasetVersionsRequest
-	(*ListDatasetVersionsResponse)(nil),    // 42: ani.modeldev.v1.ListDatasetVersionsResponse
-	(*DatasetPreviewRecord)(nil),           // 43: ani.modeldev.v1.DatasetPreviewRecord
-	(*GetInputVersionPreviewResponse)(nil), // 44: ani.modeldev.v1.GetInputVersionPreviewResponse
-	(*GetInputVersionPreviewRequest)(nil),  // 45: ani.modeldev.v1.GetInputVersionPreviewRequest
-	(*DatasetOperationView)(nil),           // 46: ani.modeldev.v1.DatasetOperationView
-	(*ListDatasetOperationsRequest)(nil),   // 47: ani.modeldev.v1.ListDatasetOperationsRequest
-	(*ListDatasetOperationsResponse)(nil),  // 48: ani.modeldev.v1.ListDatasetOperationsResponse
-	(*timestamppb.Timestamp)(nil),          // 49: google.protobuf.Timestamp
-	(*PageRequest)(nil),                    // 50: ani.modeldev.v1.PageRequest
-	(*ErrorDetail)(nil),                    // 51: ani.modeldev.v1.ErrorDetail
+	(*DatasetTaskFailure)(nil),             // 35: ani.modeldev.v1.DatasetTaskFailure
+	(*DatasetImportProgress)(nil),          // 36: ani.modeldev.v1.DatasetImportProgress
+	(*GetDatasetImportTaskRequest)(nil),    // 37: ani.modeldev.v1.GetDatasetImportTaskRequest
+	(*GetDatasetImportTaskResponse)(nil),   // 38: ani.modeldev.v1.GetDatasetImportTaskResponse
+	(*ListDatasetImportTasksRequest)(nil),  // 39: ani.modeldev.v1.ListDatasetImportTasksRequest
+	(*ListDatasetImportTasksResponse)(nil), // 40: ani.modeldev.v1.ListDatasetImportTasksResponse
+	(*DatasetVersionView)(nil),             // 41: ani.modeldev.v1.DatasetVersionView
+	(*ListDatasetVersionsRequest)(nil),     // 42: ani.modeldev.v1.ListDatasetVersionsRequest
+	(*ListDatasetVersionsResponse)(nil),    // 43: ani.modeldev.v1.ListDatasetVersionsResponse
+	(*DatasetPreviewRecord)(nil),           // 44: ani.modeldev.v1.DatasetPreviewRecord
+	(*GetInputVersionPreviewResponse)(nil), // 45: ani.modeldev.v1.GetInputVersionPreviewResponse
+	(*GetInputVersionPreviewRequest)(nil),  // 46: ani.modeldev.v1.GetInputVersionPreviewRequest
+	(*DatasetOperationView)(nil),           // 47: ani.modeldev.v1.DatasetOperationView
+	(*ListDatasetOperationsRequest)(nil),   // 48: ani.modeldev.v1.ListDatasetOperationsRequest
+	(*ListDatasetOperationsResponse)(nil),  // 49: ani.modeldev.v1.ListDatasetOperationsResponse
+	(*timestamppb.Timestamp)(nil),          // 50: google.protobuf.Timestamp
+	(*PageRequest)(nil),                    // 51: ani.modeldev.v1.PageRequest
 	(*InputVersionView)(nil),               // 52: ani.modeldev.v1.InputVersionView
 }
 var file_ani_modeldev_v1_dataset_proto_depIdxs = []int32{
 	3,  // 0: ani.modeldev.v1.DatasetSourceSelection.provider:type_name -> ani.modeldev.v1.DatasetSourceProvider
 	4,  // 1: ani.modeldev.v1.DatasetSourceSelection.lock_kind:type_name -> ani.modeldev.v1.DatasetSourceLockKind
 	6,  // 2: ani.modeldev.v1.DatasetSourceSnapshot.selection:type_name -> ani.modeldev.v1.DatasetSourceSelection
-	49, // 3: ani.modeldev.v1.DatasetSourceSnapshot.resolved_at:type_name -> google.protobuf.Timestamp
+	50, // 3: ani.modeldev.v1.DatasetSourceSnapshot.resolved_at:type_name -> google.protobuf.Timestamp
 	10, // 4: ani.modeldev.v1.InspectDatasetSourceRequest.list_files:type_name -> ani.modeldev.v1.ListDatasetSourceFiles
 	11, // 5: ani.modeldev.v1.InspectDatasetSourceRequest.inspect_file:type_name -> ani.modeldev.v1.InspectDatasetSourceFile
 	3,  // 6: ani.modeldev.v1.ListDatasetSourceFiles.provider:type_name -> ani.modeldev.v1.DatasetSourceProvider
@@ -3669,13 +3731,13 @@ var file_ani_modeldev_v1_dataset_proto_depIdxs = []int32{
 	12, // 9: ani.modeldev.v1.InspectDatasetSourceResponse.files_page:type_name -> ani.modeldev.v1.DatasetSourceFilesPage
 	6,  // 10: ani.modeldev.v1.InspectDatasetSourceResponse.selection:type_name -> ani.modeldev.v1.DatasetSourceSelection
 	0,  // 11: ani.modeldev.v1.DatasetView.state:type_name -> ani.modeldev.v1.DatasetState
-	49, // 12: ani.modeldev.v1.DatasetView.created_at:type_name -> google.protobuf.Timestamp
-	49, // 13: ani.modeldev.v1.DatasetView.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 12: ani.modeldev.v1.DatasetView.created_at:type_name -> google.protobuf.Timestamp
+	50, // 13: ani.modeldev.v1.DatasetView.updated_at:type_name -> google.protobuf.Timestamp
 	34, // 14: ani.modeldev.v1.DatasetView.latest_import:type_name -> ani.modeldev.v1.DatasetImportTaskView
 	14, // 15: ani.modeldev.v1.CreateDatasetResponse.dataset:type_name -> ani.modeldev.v1.DatasetView
 	33, // 16: ani.modeldev.v1.CreateDatasetResponse.receipt:type_name -> ani.modeldev.v1.CommandReceipt
 	14, // 17: ani.modeldev.v1.GetDatasetResponse.dataset:type_name -> ani.modeldev.v1.DatasetView
-	50, // 18: ani.modeldev.v1.ListDatasetsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	51, // 18: ani.modeldev.v1.ListDatasetsRequest.page:type_name -> ani.modeldev.v1.PageRequest
 	0,  // 19: ani.modeldev.v1.ListDatasetsRequest.state:type_name -> ani.modeldev.v1.DatasetState
 	14, // 20: ani.modeldev.v1.ListDatasetsResponse.items:type_name -> ani.modeldev.v1.DatasetView
 	14, // 21: ani.modeldev.v1.UpdateDatasetResponse.dataset:type_name -> ani.modeldev.v1.DatasetView
@@ -3689,30 +3751,30 @@ var file_ani_modeldev_v1_dataset_proto_depIdxs = []int32{
 	34, // 29: ani.modeldev.v1.ImportDatasetVersionResponse.task:type_name -> ani.modeldev.v1.DatasetImportTaskView
 	33, // 30: ani.modeldev.v1.CancelDatasetImportResponse.receipt:type_name -> ani.modeldev.v1.CommandReceipt
 	33, // 31: ani.modeldev.v1.RetryDatasetImportResponse.receipt:type_name -> ani.modeldev.v1.CommandReceipt
-	49, // 32: ani.modeldev.v1.CommandReceipt.accepted_at:type_name -> google.protobuf.Timestamp
+	50, // 32: ani.modeldev.v1.CommandReceipt.accepted_at:type_name -> google.protobuf.Timestamp
 	1,  // 33: ani.modeldev.v1.DatasetImportTaskView.state:type_name -> ani.modeldev.v1.DatasetImportTaskState
 	2,  // 34: ani.modeldev.v1.DatasetImportTaskView.phase:type_name -> ani.modeldev.v1.DatasetImportPhase
 	7,  // 35: ani.modeldev.v1.DatasetImportTaskView.source:type_name -> ani.modeldev.v1.DatasetSourceSnapshot
-	49, // 36: ani.modeldev.v1.DatasetImportTaskView.accepted_at:type_name -> google.protobuf.Timestamp
-	35, // 37: ani.modeldev.v1.DatasetImportTaskView.progress:type_name -> ani.modeldev.v1.DatasetImportProgress
-	51, // 38: ani.modeldev.v1.DatasetImportTaskView.failure:type_name -> ani.modeldev.v1.ErrorDetail
+	50, // 36: ani.modeldev.v1.DatasetImportTaskView.accepted_at:type_name -> google.protobuf.Timestamp
+	36, // 37: ani.modeldev.v1.DatasetImportTaskView.progress:type_name -> ani.modeldev.v1.DatasetImportProgress
+	35, // 38: ani.modeldev.v1.DatasetImportTaskView.failure:type_name -> ani.modeldev.v1.DatasetTaskFailure
 	2,  // 39: ani.modeldev.v1.DatasetImportProgress.stage:type_name -> ani.modeldev.v1.DatasetImportPhase
-	49, // 40: ani.modeldev.v1.DatasetImportProgress.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 40: ani.modeldev.v1.DatasetImportProgress.updated_at:type_name -> google.protobuf.Timestamp
 	34, // 41: ani.modeldev.v1.GetDatasetImportTaskResponse.task:type_name -> ani.modeldev.v1.DatasetImportTaskView
-	50, // 42: ani.modeldev.v1.ListDatasetImportTasksRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	51, // 42: ani.modeldev.v1.ListDatasetImportTasksRequest.page:type_name -> ani.modeldev.v1.PageRequest
 	1,  // 43: ani.modeldev.v1.ListDatasetImportTasksRequest.state:type_name -> ani.modeldev.v1.DatasetImportTaskState
 	34, // 44: ani.modeldev.v1.ListDatasetImportTasksResponse.items:type_name -> ani.modeldev.v1.DatasetImportTaskView
-	49, // 45: ani.modeldev.v1.DatasetVersionView.published_at:type_name -> google.protobuf.Timestamp
+	50, // 45: ani.modeldev.v1.DatasetVersionView.published_at:type_name -> google.protobuf.Timestamp
 	52, // 46: ani.modeldev.v1.DatasetVersionView.input_version:type_name -> ani.modeldev.v1.InputVersionView
 	7,  // 47: ani.modeldev.v1.DatasetVersionView.source:type_name -> ani.modeldev.v1.DatasetSourceSnapshot
-	50, // 48: ani.modeldev.v1.ListDatasetVersionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
-	40, // 49: ani.modeldev.v1.ListDatasetVersionsResponse.items:type_name -> ani.modeldev.v1.DatasetVersionView
-	43, // 50: ani.modeldev.v1.GetInputVersionPreviewResponse.records:type_name -> ani.modeldev.v1.DatasetPreviewRecord
+	51, // 48: ani.modeldev.v1.ListDatasetVersionsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	41, // 49: ani.modeldev.v1.ListDatasetVersionsResponse.items:type_name -> ani.modeldev.v1.DatasetVersionView
+	44, // 50: ani.modeldev.v1.GetInputVersionPreviewResponse.records:type_name -> ani.modeldev.v1.DatasetPreviewRecord
 	5,  // 51: ani.modeldev.v1.DatasetOperationView.event_type:type_name -> ani.modeldev.v1.DatasetOperationEventType
-	49, // 52: ani.modeldev.v1.DatasetOperationView.occurred_at:type_name -> google.protobuf.Timestamp
-	50, // 53: ani.modeldev.v1.ListDatasetOperationsRequest.page:type_name -> ani.modeldev.v1.PageRequest
+	50, // 52: ani.modeldev.v1.DatasetOperationView.occurred_at:type_name -> google.protobuf.Timestamp
+	51, // 53: ani.modeldev.v1.ListDatasetOperationsRequest.page:type_name -> ani.modeldev.v1.PageRequest
 	5,  // 54: ani.modeldev.v1.ListDatasetOperationsRequest.event_type:type_name -> ani.modeldev.v1.DatasetOperationEventType
-	46, // 55: ani.modeldev.v1.ListDatasetOperationsResponse.items:type_name -> ani.modeldev.v1.DatasetOperationView
+	47, // 55: ani.modeldev.v1.ListDatasetOperationsResponse.items:type_name -> ani.modeldev.v1.DatasetOperationView
 	15, // 56: ani.modeldev.v1.ModelDevDatasetService.CreateDataset:input_type -> ani.modeldev.v1.CreateDatasetRequest
 	17, // 57: ani.modeldev.v1.ModelDevDatasetService.GetDataset:input_type -> ani.modeldev.v1.GetDatasetRequest
 	19, // 58: ani.modeldev.v1.ModelDevDatasetService.ListDatasets:input_type -> ani.modeldev.v1.ListDatasetsRequest
@@ -3723,11 +3785,11 @@ var file_ani_modeldev_v1_dataset_proto_depIdxs = []int32{
 	27, // 63: ani.modeldev.v1.ModelDevDatasetService.ImportDatasetVersion:input_type -> ani.modeldev.v1.ImportDatasetVersionRequest
 	29, // 64: ani.modeldev.v1.ModelDevDatasetService.CancelDatasetImport:input_type -> ani.modeldev.v1.CancelDatasetImportRequest
 	31, // 65: ani.modeldev.v1.ModelDevDatasetService.RetryDatasetImport:input_type -> ani.modeldev.v1.RetryDatasetImportRequest
-	41, // 66: ani.modeldev.v1.ModelDevDatasetService.ListDatasetVersions:input_type -> ani.modeldev.v1.ListDatasetVersionsRequest
-	45, // 67: ani.modeldev.v1.ModelDevDatasetService.GetInputVersionPreview:input_type -> ani.modeldev.v1.GetInputVersionPreviewRequest
-	38, // 68: ani.modeldev.v1.ModelDevDatasetService.ListDatasetImportTasks:input_type -> ani.modeldev.v1.ListDatasetImportTasksRequest
-	36, // 69: ani.modeldev.v1.ModelDevDatasetService.GetDatasetImportTask:input_type -> ani.modeldev.v1.GetDatasetImportTaskRequest
-	47, // 70: ani.modeldev.v1.ModelDevDatasetService.ListDatasetOperations:input_type -> ani.modeldev.v1.ListDatasetOperationsRequest
+	42, // 66: ani.modeldev.v1.ModelDevDatasetService.ListDatasetVersions:input_type -> ani.modeldev.v1.ListDatasetVersionsRequest
+	46, // 67: ani.modeldev.v1.ModelDevDatasetService.GetInputVersionPreview:input_type -> ani.modeldev.v1.GetInputVersionPreviewRequest
+	39, // 68: ani.modeldev.v1.ModelDevDatasetService.ListDatasetImportTasks:input_type -> ani.modeldev.v1.ListDatasetImportTasksRequest
+	37, // 69: ani.modeldev.v1.ModelDevDatasetService.GetDatasetImportTask:input_type -> ani.modeldev.v1.GetDatasetImportTaskRequest
+	48, // 70: ani.modeldev.v1.ModelDevDatasetService.ListDatasetOperations:input_type -> ani.modeldev.v1.ListDatasetOperationsRequest
 	16, // 71: ani.modeldev.v1.ModelDevDatasetService.CreateDataset:output_type -> ani.modeldev.v1.CreateDatasetResponse
 	18, // 72: ani.modeldev.v1.ModelDevDatasetService.GetDataset:output_type -> ani.modeldev.v1.GetDatasetResponse
 	20, // 73: ani.modeldev.v1.ModelDevDatasetService.ListDatasets:output_type -> ani.modeldev.v1.ListDatasetsResponse
@@ -3738,11 +3800,11 @@ var file_ani_modeldev_v1_dataset_proto_depIdxs = []int32{
 	28, // 78: ani.modeldev.v1.ModelDevDatasetService.ImportDatasetVersion:output_type -> ani.modeldev.v1.ImportDatasetVersionResponse
 	30, // 79: ani.modeldev.v1.ModelDevDatasetService.CancelDatasetImport:output_type -> ani.modeldev.v1.CancelDatasetImportResponse
 	32, // 80: ani.modeldev.v1.ModelDevDatasetService.RetryDatasetImport:output_type -> ani.modeldev.v1.RetryDatasetImportResponse
-	42, // 81: ani.modeldev.v1.ModelDevDatasetService.ListDatasetVersions:output_type -> ani.modeldev.v1.ListDatasetVersionsResponse
-	44, // 82: ani.modeldev.v1.ModelDevDatasetService.GetInputVersionPreview:output_type -> ani.modeldev.v1.GetInputVersionPreviewResponse
-	39, // 83: ani.modeldev.v1.ModelDevDatasetService.ListDatasetImportTasks:output_type -> ani.modeldev.v1.ListDatasetImportTasksResponse
-	37, // 84: ani.modeldev.v1.ModelDevDatasetService.GetDatasetImportTask:output_type -> ani.modeldev.v1.GetDatasetImportTaskResponse
-	48, // 85: ani.modeldev.v1.ModelDevDatasetService.ListDatasetOperations:output_type -> ani.modeldev.v1.ListDatasetOperationsResponse
+	43, // 81: ani.modeldev.v1.ModelDevDatasetService.ListDatasetVersions:output_type -> ani.modeldev.v1.ListDatasetVersionsResponse
+	45, // 82: ani.modeldev.v1.ModelDevDatasetService.GetInputVersionPreview:output_type -> ani.modeldev.v1.GetInputVersionPreviewResponse
+	40, // 83: ani.modeldev.v1.ModelDevDatasetService.ListDatasetImportTasks:output_type -> ani.modeldev.v1.ListDatasetImportTasksResponse
+	38, // 84: ani.modeldev.v1.ModelDevDatasetService.GetDatasetImportTask:output_type -> ani.modeldev.v1.GetDatasetImportTaskResponse
+	49, // 85: ani.modeldev.v1.ModelDevDatasetService.ListDatasetOperations:output_type -> ani.modeldev.v1.ListDatasetOperationsResponse
 	71, // [71:86] is the sub-list for method output_type
 	56, // [56:71] is the sub-list for method input_type
 	56, // [56:56] is the sub-list for extension type_name
@@ -3762,15 +3824,15 @@ func file_ani_modeldev_v1_dataset_proto_init() {
 	}
 	file_ani_modeldev_v1_dataset_proto_msgTypes[13].OneofWrappers = []any{}
 	file_ani_modeldev_v1_dataset_proto_msgTypes[15].OneofWrappers = []any{}
-	file_ani_modeldev_v1_dataset_proto_msgTypes[32].OneofWrappers = []any{}
-	file_ani_modeldev_v1_dataset_proto_msgTypes[41].OneofWrappers = []any{}
+	file_ani_modeldev_v1_dataset_proto_msgTypes[33].OneofWrappers = []any{}
+	file_ani_modeldev_v1_dataset_proto_msgTypes[42].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ani_modeldev_v1_dataset_proto_rawDesc), len(file_ani_modeldev_v1_dataset_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   43,
+			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
