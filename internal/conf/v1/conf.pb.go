@@ -118,8 +118,11 @@ type ManagedRuntime struct {
 	// One platform provision specification, containing no tenant bindings.
 	TenantEnvironmentFile   string `protobuf:"bytes,17,opt,name=tenant_environment_file,json=tenantEnvironmentFile,proto3" json:"tenant_environment_file,omitempty"`
 	TenantEnvironmentSha256 string `protobuf:"bytes,18,opt,name=tenant_environment_sha256,json=tenantEnvironmentSha256,proto3" json:"tenant_environment_sha256,omitempty"`
-	unknownFields           protoimpl.UnknownFields
-	sizeCache               protoimpl.SizeCache
+	// Dataset imports. Absent configuration disables acceptance rather than
+	// falling back to a public default endpoint.
+	DatasetImport *DatasetImport `protobuf:"bytes,19,opt,name=dataset_import,json=datasetImport,proto3" json:"dataset_import,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ManagedRuntime) Reset() {
@@ -257,6 +260,182 @@ func (x *ManagedRuntime) GetTenantEnvironmentSha256() string {
 	return ""
 }
 
+func (x *ManagedRuntime) GetDatasetImport() *DatasetImport {
+	if x != nil {
+		return x.DatasetImport
+	}
+	return nil
+}
+
+// DatasetImport pins the two supported public hubs and the import budget.
+type DatasetImport struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	HuggingfaceEndpoint string                 `protobuf:"bytes,1,opt,name=huggingface_endpoint,json=huggingfaceEndpoint,proto3" json:"huggingface_endpoint,omitempty"`
+	ModelscopeEndpoint  string                 `protobuf:"bytes,2,opt,name=modelscope_endpoint,json=modelscopeEndpoint,proto3" json:"modelscope_endpoint,omitempty"`
+	// Global running-attempt budget, coordinated across replicas.
+	MaxRunningImports      uint32 `protobuf:"varint,3,opt,name=max_running_imports,json=maxRunningImports,proto3" json:"max_running_imports,omitempty"`
+	ProviderTimeoutSeconds uint32 `protobuf:"varint,4,opt,name=provider_timeout_seconds,json=providerTimeoutSeconds,proto3" json:"provider_timeout_seconds,omitempty"`
+	// Importer workload. The image is pinned by digest and never selected per
+	// request; the ServiceAccount is the fixed identity the native policy pins.
+	ImporterImage          string `protobuf:"bytes,5,opt,name=importer_image,json=importerImage,proto3" json:"importer_image,omitempty"`
+	ImporterImageDigest    string `protobuf:"bytes,6,opt,name=importer_image_digest,json=importerImageDigest,proto3" json:"importer_image_digest,omitempty"`
+	ImporterServiceAccount string `protobuf:"bytes,7,opt,name=importer_service_account,json=importerServiceAccount,proto3" json:"importer_service_account,omitempty"`
+	StorageClass           string `protobuf:"bytes,8,opt,name=storage_class,json=storageClass,proto3" json:"storage_class,omitempty"`
+	CpuRequest             string `protobuf:"bytes,9,opt,name=cpu_request,json=cpuRequest,proto3" json:"cpu_request,omitempty"`
+	CpuLimit               string `protobuf:"bytes,10,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty"`
+	MemoryRequest          string `protobuf:"bytes,11,opt,name=memory_request,json=memoryRequest,proto3" json:"memory_request,omitempty"`
+	MemoryLimit            string `protobuf:"bytes,12,opt,name=memory_limit,json=memoryLimit,proto3" json:"memory_limit,omitempty"`
+	PvcSize                string `protobuf:"bytes,13,opt,name=pvc_size,json=pvcSize,proto3" json:"pvc_size,omitempty"`
+	CredentialFile         string `protobuf:"bytes,14,opt,name=credential_file,json=credentialFile,proto3" json:"credential_file,omitempty"`
+	// Scan and lease timing for the import scheduler.
+	SchedulerInterval *durationpb.Duration `protobuf:"bytes,15,opt,name=scheduler_interval,json=schedulerInterval,proto3" json:"scheduler_interval,omitempty"`
+	SchedulerLeaseTtl *durationpb.Duration `protobuf:"bytes,16,opt,name=scheduler_lease_ttl,json=schedulerLeaseTtl,proto3" json:"scheduler_lease_ttl,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *DatasetImport) Reset() {
+	*x = DatasetImport{}
+	mi := &file_conf_v1_conf_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DatasetImport) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DatasetImport) ProtoMessage() {}
+
+func (x *DatasetImport) ProtoReflect() protoreflect.Message {
+	mi := &file_conf_v1_conf_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DatasetImport.ProtoReflect.Descriptor instead.
+func (*DatasetImport) Descriptor() ([]byte, []int) {
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *DatasetImport) GetHuggingfaceEndpoint() string {
+	if x != nil {
+		return x.HuggingfaceEndpoint
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetModelscopeEndpoint() string {
+	if x != nil {
+		return x.ModelscopeEndpoint
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetMaxRunningImports() uint32 {
+	if x != nil {
+		return x.MaxRunningImports
+	}
+	return 0
+}
+
+func (x *DatasetImport) GetProviderTimeoutSeconds() uint32 {
+	if x != nil {
+		return x.ProviderTimeoutSeconds
+	}
+	return 0
+}
+
+func (x *DatasetImport) GetImporterImage() string {
+	if x != nil {
+		return x.ImporterImage
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetImporterImageDigest() string {
+	if x != nil {
+		return x.ImporterImageDigest
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetImporterServiceAccount() string {
+	if x != nil {
+		return x.ImporterServiceAccount
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetStorageClass() string {
+	if x != nil {
+		return x.StorageClass
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetCpuRequest() string {
+	if x != nil {
+		return x.CpuRequest
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetCpuLimit() string {
+	if x != nil {
+		return x.CpuLimit
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetMemoryRequest() string {
+	if x != nil {
+		return x.MemoryRequest
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetMemoryLimit() string {
+	if x != nil {
+		return x.MemoryLimit
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetPvcSize() string {
+	if x != nil {
+		return x.PvcSize
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetCredentialFile() string {
+	if x != nil {
+		return x.CredentialFile
+	}
+	return ""
+}
+
+func (x *DatasetImport) GetSchedulerInterval() *durationpb.Duration {
+	if x != nil {
+		return x.SchedulerInterval
+	}
+	return nil
+}
+
+func (x *DatasetImport) GetSchedulerLeaseTtl() *durationpb.Duration {
+	if x != nil {
+		return x.SchedulerLeaseTtl
+	}
+	return nil
+}
+
 type RuntimeLimits struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	MaxContentBytes int64                  `protobuf:"varint,1,opt,name=max_content_bytes,json=maxContentBytes,proto3" json:"max_content_bytes,omitempty"`
@@ -266,7 +445,7 @@ type RuntimeLimits struct {
 
 func (x *RuntimeLimits) Reset() {
 	*x = RuntimeLimits{}
-	mi := &file_conf_v1_conf_proto_msgTypes[2]
+	mi := &file_conf_v1_conf_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -278,7 +457,7 @@ func (x *RuntimeLimits) String() string {
 func (*RuntimeLimits) ProtoMessage() {}
 
 func (x *RuntimeLimits) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[2]
+	mi := &file_conf_v1_conf_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -291,7 +470,7 @@ func (x *RuntimeLimits) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeLimits.ProtoReflect.Descriptor instead.
 func (*RuntimeLimits) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{2}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *RuntimeLimits) GetMaxContentBytes() int64 {
@@ -318,7 +497,7 @@ type ImageRuntimeConnection struct {
 
 func (x *ImageRuntimeConnection) Reset() {
 	*x = ImageRuntimeConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[3]
+	mi := &file_conf_v1_conf_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -330,7 +509,7 @@ func (x *ImageRuntimeConnection) String() string {
 func (*ImageRuntimeConnection) ProtoMessage() {}
 
 func (x *ImageRuntimeConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[3]
+	mi := &file_conf_v1_conf_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -343,7 +522,7 @@ func (x *ImageRuntimeConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImageRuntimeConnection.ProtoReflect.Descriptor instead.
 func (*ImageRuntimeConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{3}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ImageRuntimeConnection) GetEndpoint() string {
@@ -399,7 +578,7 @@ type ManagedGPUOwner struct {
 
 func (x *ManagedGPUOwner) Reset() {
 	*x = ManagedGPUOwner{}
-	mi := &file_conf_v1_conf_proto_msgTypes[4]
+	mi := &file_conf_v1_conf_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -411,7 +590,7 @@ func (x *ManagedGPUOwner) String() string {
 func (*ManagedGPUOwner) ProtoMessage() {}
 
 func (x *ManagedGPUOwner) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[4]
+	mi := &file_conf_v1_conf_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -424,7 +603,7 @@ func (x *ManagedGPUOwner) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ManagedGPUOwner.ProtoReflect.Descriptor instead.
 func (*ManagedGPUOwner) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{4}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ManagedGPUOwner) GetGovernance() *OwnerMTLSConnection {
@@ -455,7 +634,7 @@ type OwnerMTLSConnection struct {
 
 func (x *OwnerMTLSConnection) Reset() {
 	*x = OwnerMTLSConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[5]
+	mi := &file_conf_v1_conf_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -467,7 +646,7 @@ func (x *OwnerMTLSConnection) String() string {
 func (*OwnerMTLSConnection) ProtoMessage() {}
 
 func (x *OwnerMTLSConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[5]
+	mi := &file_conf_v1_conf_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -480,7 +659,7 @@ func (x *OwnerMTLSConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OwnerMTLSConnection.ProtoReflect.Descriptor instead.
 func (*OwnerMTLSConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{5}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *OwnerMTLSConnection) GetEndpoint() string {
@@ -537,7 +716,7 @@ type HTTPSWorkloadConnection struct {
 
 func (x *HTTPSWorkloadConnection) Reset() {
 	*x = HTTPSWorkloadConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[6]
+	mi := &file_conf_v1_conf_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -549,7 +728,7 @@ func (x *HTTPSWorkloadConnection) String() string {
 func (*HTTPSWorkloadConnection) ProtoMessage() {}
 
 func (x *HTTPSWorkloadConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[6]
+	mi := &file_conf_v1_conf_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -562,7 +741,7 @@ func (x *HTTPSWorkloadConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HTTPSWorkloadConnection.ProtoReflect.Descriptor instead.
 func (*HTTPSWorkloadConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{6}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *HTTPSWorkloadConnection) GetEndpoint() string {
@@ -602,7 +781,7 @@ type ObjectStorageConnection struct {
 
 func (x *ObjectStorageConnection) Reset() {
 	*x = ObjectStorageConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	mi := &file_conf_v1_conf_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -614,7 +793,7 @@ func (x *ObjectStorageConnection) String() string {
 func (*ObjectStorageConnection) ProtoMessage() {}
 
 func (x *ObjectStorageConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[7]
+	mi := &file_conf_v1_conf_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -627,7 +806,7 @@ func (x *ObjectStorageConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ObjectStorageConnection.ProtoReflect.Descriptor instead.
 func (*ObjectStorageConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{7}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ObjectStorageConnection) GetEndpoint() string {
@@ -692,7 +871,7 @@ type GovernanceCommand struct {
 
 func (x *GovernanceCommand) Reset() {
 	*x = GovernanceCommand{}
-	mi := &file_conf_v1_conf_proto_msgTypes[8]
+	mi := &file_conf_v1_conf_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -704,7 +883,7 @@ func (x *GovernanceCommand) String() string {
 func (*GovernanceCommand) ProtoMessage() {}
 
 func (x *GovernanceCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[8]
+	mi := &file_conf_v1_conf_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -717,7 +896,7 @@ func (x *GovernanceCommand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GovernanceCommand.ProtoReflect.Descriptor instead.
 func (*GovernanceCommand) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{8}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GovernanceCommand) GetDatabaseUrlFile() string {
@@ -795,7 +974,7 @@ type ModelConnection struct {
 
 func (x *ModelConnection) Reset() {
 	*x = ModelConnection{}
-	mi := &file_conf_v1_conf_proto_msgTypes[9]
+	mi := &file_conf_v1_conf_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -807,7 +986,7 @@ func (x *ModelConnection) String() string {
 func (*ModelConnection) ProtoMessage() {}
 
 func (x *ModelConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[9]
+	mi := &file_conf_v1_conf_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -820,7 +999,7 @@ func (x *ModelConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ModelConnection.ProtoReflect.Descriptor instead.
 func (*ModelConnection) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{9}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ModelConnection) GetEndpoint() string {
@@ -897,7 +1076,7 @@ type BaseModelStorageScope struct {
 
 func (x *BaseModelStorageScope) Reset() {
 	*x = BaseModelStorageScope{}
-	mi := &file_conf_v1_conf_proto_msgTypes[10]
+	mi := &file_conf_v1_conf_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -909,7 +1088,7 @@ func (x *BaseModelStorageScope) String() string {
 func (*BaseModelStorageScope) ProtoMessage() {}
 
 func (x *BaseModelStorageScope) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[10]
+	mi := &file_conf_v1_conf_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -922,7 +1101,7 @@ func (x *BaseModelStorageScope) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BaseModelStorageScope.ProtoReflect.Descriptor instead.
 func (*BaseModelStorageScope) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{10}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *BaseModelStorageScope) GetConnectionId() string {
@@ -955,7 +1134,7 @@ type AdmissionResolution struct {
 
 func (x *AdmissionResolution) Reset() {
 	*x = AdmissionResolution{}
-	mi := &file_conf_v1_conf_proto_msgTypes[11]
+	mi := &file_conf_v1_conf_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -967,7 +1146,7 @@ func (x *AdmissionResolution) String() string {
 func (*AdmissionResolution) ProtoMessage() {}
 
 func (x *AdmissionResolution) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[11]
+	mi := &file_conf_v1_conf_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -980,7 +1159,7 @@ func (x *AdmissionResolution) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmissionResolution.ProtoReflect.Descriptor instead.
 func (*AdmissionResolution) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{11}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *AdmissionResolution) GetCatalogueDirectory() string {
@@ -1001,7 +1180,7 @@ type Server struct {
 
 func (x *Server) Reset() {
 	*x = Server{}
-	mi := &file_conf_v1_conf_proto_msgTypes[12]
+	mi := &file_conf_v1_conf_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1013,7 +1192,7 @@ func (x *Server) String() string {
 func (*Server) ProtoMessage() {}
 
 func (x *Server) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[12]
+	mi := &file_conf_v1_conf_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1026,7 +1205,7 @@ func (x *Server) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server.ProtoReflect.Descriptor instead.
 func (*Server) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{12}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Server) GetGrpc() *Server_GRPC {
@@ -1061,7 +1240,7 @@ type Server_GRPC struct {
 
 func (x *Server_GRPC) Reset() {
 	*x = Server_GRPC{}
-	mi := &file_conf_v1_conf_proto_msgTypes[13]
+	mi := &file_conf_v1_conf_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1073,7 +1252,7 @@ func (x *Server_GRPC) String() string {
 func (*Server_GRPC) ProtoMessage() {}
 
 func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[13]
+	mi := &file_conf_v1_conf_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1086,7 +1265,7 @@ func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server_GRPC.ProtoReflect.Descriptor instead.
 func (*Server_GRPC) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{12, 0}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{13, 0}
 }
 
 func (x *Server_GRPC) GetNetwork() string {
@@ -1121,7 +1300,7 @@ type Server_Admin struct {
 
 func (x *Server_Admin) Reset() {
 	*x = Server_Admin{}
-	mi := &file_conf_v1_conf_proto_msgTypes[14]
+	mi := &file_conf_v1_conf_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1133,7 +1312,7 @@ func (x *Server_Admin) String() string {
 func (*Server_Admin) ProtoMessage() {}
 
 func (x *Server_Admin) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_v1_conf_proto_msgTypes[14]
+	mi := &file_conf_v1_conf_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1146,7 +1325,7 @@ func (x *Server_Admin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Server_Admin.ProtoReflect.Descriptor instead.
 func (*Server_Admin) Descriptor() ([]byte, []int) {
-	return file_conf_v1_conf_proto_rawDescGZIP(), []int{12, 1}
+	return file_conf_v1_conf_proto_rawDescGZIP(), []int{13, 1}
 }
 
 func (x *Server_Admin) GetNetwork() string {
@@ -1179,7 +1358,7 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"\x06server\x18\x01 \x01(\v2\x0f.conf.v1.ServerR\x06server\x124\n" +
 	"\acommand\x18\x02 \x01(\v2\x1a.conf.v1.GovernanceCommandR\acommand\x121\n" +
 	"\aruntime\x18\x03 \x01(\v2\x17.conf.v1.ManagedRuntimeR\aruntime\x12D\n" +
-	"\rimage_runtime\x18\x04 \x01(\v2\x1f.conf.v1.ImageRuntimeConnectionR\fimageRuntime\"\xa2\a\n" +
+	"\rimage_runtime\x18\x04 \x01(\v2\x1f.conf.v1.ImageRuntimeConnectionR\fimageRuntime\"\xe1\a\n" +
 	"\x0eManagedRuntime\x12(\n" +
 	"\x04step\x18\x01 \x01(\v2\x14.conf.v1.Server.GRPCR\x04step\x12)\n" +
 	"\x10certificate_file\x18\x02 \x01(\tR\x0fcertificateFile\x12(\n" +
@@ -1199,7 +1378,27 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"\x16import_timeout_seconds\x18\x0f \x01(\rR\x14importTimeoutSeconds\x12G\n" +
 	" model_resolution_timeout_seconds\x18\x10 \x01(\rR\x1dmodelResolutionTimeoutSeconds\x126\n" +
 	"\x17tenant_environment_file\x18\x11 \x01(\tR\x15tenantEnvironmentFile\x12:\n" +
-	"\x19tenant_environment_sha256\x18\x12 \x01(\tR\x17tenantEnvironmentSha256J\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\f\x10\rR\fbinding_fileR\x0ebinding_sha256R\x13dispatch_batch_size\";\n" +
+	"\x19tenant_environment_sha256\x18\x12 \x01(\tR\x17tenantEnvironmentSha256\x12=\n" +
+	"\x0edataset_import\x18\x13 \x01(\v2\x16.conf.v1.DatasetImportR\rdatasetImportJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\f\x10\rR\fbinding_fileR\x0ebinding_sha256R\x13dispatch_batch_size\"\xf8\x05\n" +
+	"\rDatasetImport\x121\n" +
+	"\x14huggingface_endpoint\x18\x01 \x01(\tR\x13huggingfaceEndpoint\x12/\n" +
+	"\x13modelscope_endpoint\x18\x02 \x01(\tR\x12modelscopeEndpoint\x12.\n" +
+	"\x13max_running_imports\x18\x03 \x01(\rR\x11maxRunningImports\x128\n" +
+	"\x18provider_timeout_seconds\x18\x04 \x01(\rR\x16providerTimeoutSeconds\x12%\n" +
+	"\x0eimporter_image\x18\x05 \x01(\tR\rimporterImage\x122\n" +
+	"\x15importer_image_digest\x18\x06 \x01(\tR\x13importerImageDigest\x128\n" +
+	"\x18importer_service_account\x18\a \x01(\tR\x16importerServiceAccount\x12#\n" +
+	"\rstorage_class\x18\b \x01(\tR\fstorageClass\x12\x1f\n" +
+	"\vcpu_request\x18\t \x01(\tR\n" +
+	"cpuRequest\x12\x1b\n" +
+	"\tcpu_limit\x18\n" +
+	" \x01(\tR\bcpuLimit\x12%\n" +
+	"\x0ememory_request\x18\v \x01(\tR\rmemoryRequest\x12!\n" +
+	"\fmemory_limit\x18\f \x01(\tR\vmemoryLimit\x12\x19\n" +
+	"\bpvc_size\x18\r \x01(\tR\apvcSize\x12'\n" +
+	"\x0fcredential_file\x18\x0e \x01(\tR\x0ecredentialFile\x12H\n" +
+	"\x12scheduler_interval\x18\x0f \x01(\v2\x19.google.protobuf.DurationR\x11schedulerInterval\x12I\n" +
+	"\x13scheduler_lease_ttl\x18\x10 \x01(\v2\x19.google.protobuf.DurationR\x11schedulerLeaseTtl\";\n" +
 	"\rRuntimeLimits\x12*\n" +
 	"\x11max_content_bytes\x18\x01 \x01(\x03R\x0fmaxContentBytes\"\xf8\x01\n" +
 	"\x16ImageRuntimeConnection\x12\x1a\n" +
@@ -1285,56 +1484,60 @@ func file_conf_v1_conf_proto_rawDescGZIP() []byte {
 	return file_conf_v1_conf_proto_rawDescData
 }
 
-var file_conf_v1_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_conf_v1_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_conf_v1_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),               // 0: conf.v1.Bootstrap
 	(*ManagedRuntime)(nil),          // 1: conf.v1.ManagedRuntime
-	(*RuntimeLimits)(nil),           // 2: conf.v1.RuntimeLimits
-	(*ImageRuntimeConnection)(nil),  // 3: conf.v1.ImageRuntimeConnection
-	(*ManagedGPUOwner)(nil),         // 4: conf.v1.ManagedGPUOwner
-	(*OwnerMTLSConnection)(nil),     // 5: conf.v1.OwnerMTLSConnection
-	(*HTTPSWorkloadConnection)(nil), // 6: conf.v1.HTTPSWorkloadConnection
-	(*ObjectStorageConnection)(nil), // 7: conf.v1.ObjectStorageConnection
-	(*GovernanceCommand)(nil),       // 8: conf.v1.GovernanceCommand
-	(*ModelConnection)(nil),         // 9: conf.v1.ModelConnection
-	(*BaseModelStorageScope)(nil),   // 10: conf.v1.BaseModelStorageScope
-	(*AdmissionResolution)(nil),     // 11: conf.v1.AdmissionResolution
-	(*Server)(nil),                  // 12: conf.v1.Server
-	(*Server_GRPC)(nil),             // 13: conf.v1.Server.GRPC
-	(*Server_Admin)(nil),            // 14: conf.v1.Server.Admin
-	(*durationpb.Duration)(nil),     // 15: google.protobuf.Duration
+	(*DatasetImport)(nil),           // 2: conf.v1.DatasetImport
+	(*RuntimeLimits)(nil),           // 3: conf.v1.RuntimeLimits
+	(*ImageRuntimeConnection)(nil),  // 4: conf.v1.ImageRuntimeConnection
+	(*ManagedGPUOwner)(nil),         // 5: conf.v1.ManagedGPUOwner
+	(*OwnerMTLSConnection)(nil),     // 6: conf.v1.OwnerMTLSConnection
+	(*HTTPSWorkloadConnection)(nil), // 7: conf.v1.HTTPSWorkloadConnection
+	(*ObjectStorageConnection)(nil), // 8: conf.v1.ObjectStorageConnection
+	(*GovernanceCommand)(nil),       // 9: conf.v1.GovernanceCommand
+	(*ModelConnection)(nil),         // 10: conf.v1.ModelConnection
+	(*BaseModelStorageScope)(nil),   // 11: conf.v1.BaseModelStorageScope
+	(*AdmissionResolution)(nil),     // 12: conf.v1.AdmissionResolution
+	(*Server)(nil),                  // 13: conf.v1.Server
+	(*Server_GRPC)(nil),             // 14: conf.v1.Server.GRPC
+	(*Server_Admin)(nil),            // 15: conf.v1.Server.Admin
+	(*durationpb.Duration)(nil),     // 16: google.protobuf.Duration
 }
 var file_conf_v1_conf_proto_depIdxs = []int32{
-	12, // 0: conf.v1.Bootstrap.server:type_name -> conf.v1.Server
-	8,  // 1: conf.v1.Bootstrap.command:type_name -> conf.v1.GovernanceCommand
+	13, // 0: conf.v1.Bootstrap.server:type_name -> conf.v1.Server
+	9,  // 1: conf.v1.Bootstrap.command:type_name -> conf.v1.GovernanceCommand
 	1,  // 2: conf.v1.Bootstrap.runtime:type_name -> conf.v1.ManagedRuntime
-	3,  // 3: conf.v1.Bootstrap.image_runtime:type_name -> conf.v1.ImageRuntimeConnection
-	13, // 4: conf.v1.ManagedRuntime.step:type_name -> conf.v1.Server.GRPC
-	6,  // 5: conf.v1.ManagedRuntime.kubernetes:type_name -> conf.v1.HTTPSWorkloadConnection
-	6,  // 6: conf.v1.ManagedRuntime.pipeline:type_name -> conf.v1.HTTPSWorkloadConnection
-	7,  // 7: conf.v1.ManagedRuntime.object_storage:type_name -> conf.v1.ObjectStorageConnection
-	15, // 8: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
-	15, // 9: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
-	4,  // 10: conf.v1.ManagedRuntime.gpu_owner:type_name -> conf.v1.ManagedGPUOwner
-	2,  // 11: conf.v1.ManagedRuntime.limits:type_name -> conf.v1.RuntimeLimits
-	15, // 12: conf.v1.ImageRuntimeConnection.timeout:type_name -> google.protobuf.Duration
-	5,  // 13: conf.v1.ManagedGPUOwner.governance:type_name -> conf.v1.OwnerMTLSConnection
-	15, // 14: conf.v1.OwnerMTLSConnection.timeout:type_name -> google.protobuf.Duration
-	15, // 15: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
-	11, // 16: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
-	9,  // 17: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
-	15, // 18: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
-	10, // 19: conf.v1.ModelConnection.base_model_storage_scope:type_name -> conf.v1.BaseModelStorageScope
-	13, // 20: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
-	14, // 21: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
-	15, // 22: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
-	15, // 23: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	15, // 24: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	25, // [25:25] is the sub-list for method output_type
-	25, // [25:25] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	4,  // 3: conf.v1.Bootstrap.image_runtime:type_name -> conf.v1.ImageRuntimeConnection
+	14, // 4: conf.v1.ManagedRuntime.step:type_name -> conf.v1.Server.GRPC
+	7,  // 5: conf.v1.ManagedRuntime.kubernetes:type_name -> conf.v1.HTTPSWorkloadConnection
+	7,  // 6: conf.v1.ManagedRuntime.pipeline:type_name -> conf.v1.HTTPSWorkloadConnection
+	8,  // 7: conf.v1.ManagedRuntime.object_storage:type_name -> conf.v1.ObjectStorageConnection
+	16, // 8: conf.v1.ManagedRuntime.api_timeout:type_name -> google.protobuf.Duration
+	16, // 9: conf.v1.ManagedRuntime.dispatch_interval:type_name -> google.protobuf.Duration
+	5,  // 10: conf.v1.ManagedRuntime.gpu_owner:type_name -> conf.v1.ManagedGPUOwner
+	3,  // 11: conf.v1.ManagedRuntime.limits:type_name -> conf.v1.RuntimeLimits
+	2,  // 12: conf.v1.ManagedRuntime.dataset_import:type_name -> conf.v1.DatasetImport
+	16, // 13: conf.v1.DatasetImport.scheduler_interval:type_name -> google.protobuf.Duration
+	16, // 14: conf.v1.DatasetImport.scheduler_lease_ttl:type_name -> google.protobuf.Duration
+	16, // 15: conf.v1.ImageRuntimeConnection.timeout:type_name -> google.protobuf.Duration
+	6,  // 16: conf.v1.ManagedGPUOwner.governance:type_name -> conf.v1.OwnerMTLSConnection
+	16, // 17: conf.v1.OwnerMTLSConnection.timeout:type_name -> google.protobuf.Duration
+	16, // 18: conf.v1.ObjectStorageConnection.streaming_timeout:type_name -> google.protobuf.Duration
+	12, // 19: conf.v1.GovernanceCommand.admission_resolution:type_name -> conf.v1.AdmissionResolution
+	10, // 20: conf.v1.GovernanceCommand.model:type_name -> conf.v1.ModelConnection
+	16, // 21: conf.v1.ModelConnection.timeout:type_name -> google.protobuf.Duration
+	11, // 22: conf.v1.ModelConnection.base_model_storage_scope:type_name -> conf.v1.BaseModelStorageScope
+	14, // 23: conf.v1.Server.grpc:type_name -> conf.v1.Server.GRPC
+	15, // 24: conf.v1.Server.admin:type_name -> conf.v1.Server.Admin
+	16, // 25: conf.v1.Server.shutdown_timeout:type_name -> google.protobuf.Duration
+	16, // 26: conf.v1.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	16, // 27: conf.v1.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	28, // [28:28] is the sub-list for method output_type
+	28, // [28:28] is the sub-list for method input_type
+	28, // [28:28] is the sub-list for extension type_name
+	28, // [28:28] is the sub-list for extension extendee
+	0,  // [0:28] is the sub-list for field type_name
 }
 
 func init() { file_conf_v1_conf_proto_init() }
@@ -1348,7 +1551,7 @@ func file_conf_v1_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conf_v1_conf_proto_rawDesc), len(file_conf_v1_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

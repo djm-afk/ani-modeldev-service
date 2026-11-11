@@ -56,12 +56,37 @@ func (r *Repository) Get(ctx context.Context, tenant, cluster string) (biz.Tenan
 	}
 	return scan(r.pool.QueryRow(ctx, `SELECT `+columns+` FROM modeldev_tenant_execution_environments WHERE tenant_id=$1::uuid AND cluster_id=$2::uuid`, tenant, cluster))
 }
+
+// targetCommitTx opens one short transaction that already holds the dataset
+// target commit lock. Registry writes and dataset acceptance therefore have a
+// definite order: whichever commits first wins the boundary, and the other
+// re-reads committed state instead of a stale snapshot. No network call runs
+// inside this transaction.
+func (r *Repository) targetCommitTx(ctx context.Context, tenant, cluster string) (pgx.Tx, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, biz.ErrTenantEnvironmentPersistence
+	}
+	if _, err := tx.Exec(ctx, `SELECT modeldev_lock_dataset_target_commit($1::uuid,$2::uuid)`, tenant, cluster); err != nil {
+		_ = tx.Rollback(ctx)
+		return nil, biz.ErrTenantEnvironmentPersistence
+	}
+	return tx, nil
+}
+
 func (r *Repository) Register(ctx context.Context, v biz.TenantExecutionEnvironment) (biz.TenantExecutionEnvironment, error) {
 	if r == nil || r.pool == nil {
 		return v, biz.ErrTenantEnvironmentPersistence
 	}
-	_, err := r.pool.Exec(ctx, `INSERT INTO modeldev_tenant_execution_environments(environment_id,tenant_id,cluster_id,namespace_name,state,phase,provision_spec_canonical,provision_spec_hash,kfp_connection_ref,experiment_name,first_operation_id,last_operation_id,first_actor_id,last_actor_id) VALUES($1::uuid,$2::uuid,$3::uuid,$4,'PROVISIONING','NAMESPACE',$5,$6,$7,$8,$9::uuid,$9::uuid,$10,$10) ON CONFLICT(tenant_id,cluster_id) DO NOTHING`, v.ID, v.TenantID, v.ClusterID, v.NamespaceName, v.ProvisionSpecCanonical, v.ProvisionSpecHash, v.KFPConnectionRef, v.ExperimentName, v.FirstOperationID, v.FirstActorID)
+	tx, err := r.targetCommitTx(ctx, v.TenantID, v.ClusterID)
 	if err != nil {
+		return v, err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `INSERT INTO modeldev_tenant_execution_environments(environment_id,tenant_id,cluster_id,namespace_name,state,phase,provision_spec_canonical,provision_spec_hash,kfp_connection_ref,experiment_name,first_operation_id,last_operation_id,first_actor_id,last_actor_id) VALUES($1::uuid,$2::uuid,$3::uuid,$4,'PROVISIONING','NAMESPACE',$5,$6,$7,$8,$9::uuid,$9::uuid,$10,$10) ON CONFLICT(tenant_id,cluster_id) DO NOTHING`, v.ID, v.TenantID, v.ClusterID, v.NamespaceName, v.ProvisionSpecCanonical, v.ProvisionSpecHash, v.KFPConnectionRef, v.ExperimentName, v.FirstOperationID, v.FirstActorID); err != nil {
+		return v, biz.ErrTenantEnvironmentPersistence
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return v, biz.ErrTenantEnvironmentPersistence
 	}
 	return r.Get(ctx, v.TenantID, v.ClusterID)
@@ -95,9 +120,22 @@ func (r *Repository) Save(ctx context.Context, v *biz.TenantExecutionEnvironment
 	if len(v.BindingCanonical) > 0 {
 		binding = v.BindingCanonical
 	}
-	err = r.pool.QueryRow(ctx, `UPDATE modeldev_tenant_execution_environments SET namespace_uid=$4::uuid,state=$5,phase=$6,binding_canonical=$7,binding_digest=$8,experiment_id=$9::uuid,experiment_create_intent=$10::jsonb,resource_receipts=$11::jsonb,last_operation_id=$12::uuid,last_actor_id=$13,reason_code=$14,reason_stage=$15,row_version=row_version+1,updated_at=clock_timestamp(),last_verified_at=$16,ready_at=$17 WHERE tenant_id=$1::uuid AND cluster_id=$2::uuid AND row_version=$3 RETURNING row_version,updated_at`, v.TenantID, v.ClusterID, v.RowVersion, nullable(v.NamespaceUID), v.State, v.Phase, binding, nullable(v.BindingDigest), nullable(v.ExperimentID), intent, receipts, v.LastOperationID, v.LastActorID, v.ReasonCode, v.ReasonStage, nullableTime(v.LastVerifiedAt), nullableTime(v.ReadyAt)).Scan(&v.RowVersion, &v.UpdatedAt)
+	err = func() error {
+		tx, beginErr := r.targetCommitTx(ctx, v.TenantID, v.ClusterID)
+		if beginErr != nil {
+			return beginErr
+		}
+		defer tx.Rollback(ctx)
+		if saveErr := tx.QueryRow(ctx, `UPDATE modeldev_tenant_execution_environments SET namespace_uid=$4::uuid,state=$5,phase=$6,binding_canonical=$7,binding_digest=$8,experiment_id=$9::uuid,experiment_create_intent=$10::jsonb,resource_receipts=$11::jsonb,last_operation_id=$12::uuid,last_actor_id=$13,reason_code=$14,reason_stage=$15,row_version=row_version+1,updated_at=clock_timestamp(),last_verified_at=$16,ready_at=$17 WHERE tenant_id=$1::uuid AND cluster_id=$2::uuid AND row_version=$3 RETURNING row_version,updated_at`, v.TenantID, v.ClusterID, v.RowVersion, nullable(v.NamespaceUID), v.State, v.Phase, binding, nullable(v.BindingDigest), nullable(v.ExperimentID), intent, receipts, v.LastOperationID, v.LastActorID, v.ReasonCode, v.ReasonStage, nullableTime(v.LastVerifiedAt), nullableTime(v.ReadyAt)).Scan(&v.RowVersion, &v.UpdatedAt); saveErr != nil {
+			return biz.ErrTenantEnvironmentPersistence
+		}
+		if commitErr := tx.Commit(ctx); commitErr != nil {
+			return biz.ErrTenantEnvironmentPersistence
+		}
+		return nil
+	}()
 	if err != nil {
-		return biz.ErrTenantEnvironmentPersistence
+		return err
 	}
 	return nil
 }

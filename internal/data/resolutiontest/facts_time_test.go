@@ -20,10 +20,6 @@ func TestPrepareRejectsIncompatibleManagedFactsAndInvalidTiming(t *testing.T) {
 		{"input connection", func(v *biz.TenantAdmissionFacts) { v.InputScope.StorageConnectionID = "other" }},
 		{"input bucket", func(v *biz.TenantAdmissionFacts) { v.InputScope.Bucket = "other" }},
 		{"prefix boundary", func(v *biz.TenantAdmissionFacts) { v.InputScope.ApprovedPrefix = "fixed/in" }},
-		{"relative path", func(v *biz.TenantAdmissionFacts) { v.InputFilePath = "relative.csv" }},
-		{"path traversal", func(v *biz.TenantAdmissionFacts) { v.InputFilePath = "/workspace/../data.csv" }},
-		{"same output", func(v *biz.TenantAdmissionFacts) { v.OutputDirectoryPath = v.InputFilePath }},
-		{"nested output", func(v *biz.TenantAdmissionFacts) { v.OutputDirectoryPath = v.InputFilePath + "/out" }},
 		{"unknown cluster", func(v *biz.TenantAdmissionFacts) { v.Environment.ClusterID = "UNKNOWN" }},
 		{"namespace uid", func(v *biz.TenantAdmissionFacts) { v.Environment.NamespaceUID = "" }},
 		{"shared service account", func(v *biz.TenantAdmissionFacts) {

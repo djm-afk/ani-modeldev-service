@@ -74,6 +74,34 @@ func SnapshotV1() cpup01.Snapshot {
 	return snapshot
 }
 
+// SnapshotJSONTrainingV1 is the general-training shape over an Alpaca JSON
+// input. It differs from SnapshotV1 only in the frozen input facts: the same
+// execution contract must accept both formats, so nothing else may move.
+func SnapshotJSONTrainingV1() cpup01.Snapshot {
+	snapshot := SnapshotV1()
+	version := "input-version-1"
+	snapshot.Input = cpup01.InputRef{
+		InputVersionID: snapshot.Input.InputVersionID,
+		Object: cpup01.FixedObjectRef{
+			StorageConnectionID: "input-store-v1", Bucket: "cpu-inputs",
+			Key:       "inputs/77777777-7777-4777-8777-777777777777/data.json",
+			VersionID: &version, SizeBytes: 4096, SHA256: strings.Repeat("d", 64),
+		},
+		Format:        "JSON",
+		SchemaVersion: cpup01.FinetuningInputSchemaVersion,
+		RowCount:      64,
+		FeatureCount:  0,
+		PreparedDataset: cpup01.PreparedDatasetFacts{
+			Format: "ALPACA_JSONL", TransformID: "alpaca-array-compact-jsonl-v3",
+			SizeBytes: 3900, SHA256: strings.Repeat("1", 64), RowCount: 64,
+		},
+	}
+	dataset, _ := cpup01.BuildDatasetManifest(snapshot.Input)
+	datasetDigest, _ := dataset.Digest()
+	snapshot.Program.ResolvedArgs = []string{"--dataset-manifest", "/inputs/dataset-manifest.json", "--expected-dataset-manifest-sha256", datasetDigest, "--work-root", "/workspace/work/train", "--output", "/outputs"}
+	return snapshot
+}
+
 func MaterialV21() cpup01.ImplementationMaterial {
 	s := SnapshotV1()
 	return cpup01.ImplementationMaterial{SchemaVersion: cpup01.MaterialSchemaVersion, Implementation: s.Implementation, Training: &cpup01.TrainingMaterial{DefaultImage: cpup01.DefaultTrainingImage{ImageID: s.Program.ImageID, Scope: s.Program.ImageScope}, Command: s.Program.Command, ArgsTemplate: []cpup01.MaterialArgument{{Literal: "--dataset-manifest"}, {Literal: "/inputs/dataset-manifest.json"}, {Literal: "--expected-dataset-manifest-sha256"}, {Source: "DATASET_MANIFEST_SHA256"}, {Literal: "--work-root"}, {Literal: "/workspace/work/train"}, {Literal: "--output"}, {Source: "OUTPUT_PATH"}, {Literal: "--learning-rate"}, {Source: "LEARNING_RATE"}, {Literal: "--epochs"}, {Source: "EPOCHS"}, {Literal: "--batch-size"}, {Source: "BATCH_SIZE"}, {Literal: "--seed"}, {Source: "SEED"}}}, Workspace: s.Workspace, ComponentResources: ComponentResourceFixtures("GENERAL_TRAINING"), OutputContract: s.OutputContract}

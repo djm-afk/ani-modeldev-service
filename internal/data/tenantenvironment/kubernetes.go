@@ -65,6 +65,49 @@ func originalObjectFailure(err error) error {
 	}
 	return kubernetesFailure(err)
 }
+
+// NamespaceIdentity is the verified standard tenant Namespace fact. It carries
+// no training-registry state, so the dataset import path can reuse the same
+// rule without reading a training environment projection.
+type NamespaceIdentity struct {
+	ClusterID string
+	Name      string
+	UID       string
+}
+
+// ReadNamespaceIdentity verifies exactly one standard tenant Namespace and
+// returns its real identity. It is the KFP-free core of VerifyNamespace; the
+// training path keeps its own row-updating wrapper.
+func (p *Platform) ReadNamespaceIdentity(ctx context.Context, tenantID, originalUID string) (NamespaceIdentity, error) {
+	name, err := biz.TenantNamespace(tenantID)
+	if err != nil {
+		return NamespaceIdentity{}, biz.EnvironmentConflict("TENANT_NAMESPACE_OWNERSHIP_MISMATCH")
+	}
+	o, err := p.get(ctx, resource("Namespace"), "", name)
+	if apierrors.IsNotFound(err) {
+		return NamespaceIdentity{}, biz.EnvironmentError("TENANT_NAMESPACE_NOT_FOUND")
+	}
+	if apierrors.IsForbidden(err) || apierrors.IsUnauthorized(err) {
+		return NamespaceIdentity{}, biz.EnvironmentError("TENANT_NAMESPACE_ACCESS_DENIED")
+	}
+	if err != nil {
+		return NamespaceIdentity{}, biz.EnvironmentError("ENVIRONMENT_DEPENDENCY_UNAVAILABLE")
+	}
+	labels := o.GetLabels()
+	uid := string(o.GetUID())
+	if o.GetName() != name || labels["network.ani.io/tenant-id"] != tenantID || labels["network.ani.io/managed-by"] != "ani-network-service" || !biz.CanonicalEnvironmentUUID(uid) {
+		return NamespaceIdentity{}, biz.EnvironmentConflict("TENANT_NAMESPACE_OWNERSHIP_MISMATCH")
+	}
+	if originalUID != "" && originalUID != uid {
+		return NamespaceIdentity{}, biz.EnvironmentConflict("TENANT_NAMESPACE_UID_CHANGED")
+	}
+	phase, _, _ := unstructured.NestedString(o.Object, "status", "phase")
+	if phase != "Active" || o.GetDeletionTimestamp() != nil {
+		return NamespaceIdentity{}, biz.EnvironmentError("TENANT_NAMESPACE_NOT_ACTIVE")
+	}
+	return NamespaceIdentity{ClusterID: p.config.ClusterID, Name: name, UID: uid}, nil
+}
+
 func (p *Platform) VerifyNamespace(ctx context.Context, row *biz.TenantExecutionEnvironment) error {
 	name, err := biz.TenantNamespace(row.TenantID)
 	if err != nil || name != row.NamespaceName || row.ClusterID != p.config.ClusterID {
@@ -275,6 +318,12 @@ func (p *Platform) publicObjects(row *biz.TenantExecutionEnvironment) ([]*unstru
 		}
 		out = append(out, object(row, "ServiceAccount", name, fields))
 	}
+	// The importer account is Dataset material, not part of the training binding:
+	// its identity must stay the same whether or not a training registry row
+	// exists. It therefore carries the Dataset purpose label and the live
+	// Namespace UID instead of the training environment id (§7.3, §12.4).
+	out = append(out, datasetImporterServiceAccount(row))
+	out = append(out, datasetImporterCA(row, p.config.S3PublicCA))
 	for _, rb := range []struct{ name, role, ns, sa string }{{"modeldev-runtime", "modeldev-runtime-v1", "ani-system", "modeldev-control"}, {"modeldev-step", "modeldev-step-v1", row.NamespaceName, "modeldev-step"}, {"modeldev-webhook-read", "modeldev-webhook-read-v1", "ani-system", "ani-modeldev-webhook"}, {"modeldev-kfp-api", "modeldev-kfp-api-v1", c.KFPAPIServiceAccount.Namespace, c.KFPAPIServiceAccount.Name}, {"modeldev-kfp-access", "modeldev-kfp-access-v1", "ani-system", "modeldev-control"}} {
 		out = append(out, object(row, "RoleBinding", rb.name, map[string]any{"roleRef": map[string]any{"apiGroup": "rbac.authorization.k8s.io", "kind": "ClusterRole", "name": rb.role}, "subjects": []any{map[string]any{"kind": "ServiceAccount", "name": rb.sa, "namespace": rb.ns}}}))
 	}
@@ -293,6 +342,46 @@ func (p *Platform) publicObjects(row *biz.TenantExecutionEnvironment) ([]*unstru
 	}
 	return out, nil
 }
+func datasetImporterServiceAccount(row *biz.TenantExecutionEnvironment) *unstructured.Unstructured {
+	o := &unstructured.Unstructured{Object: map[string]any{
+		"apiVersion": "v1", "kind": "ServiceAccount",
+		"metadata": map[string]any{
+			"name":      "modeldev-dataset-importer",
+			"namespace": row.NamespaceName,
+			"labels": map[string]any{
+				"ani.io/managed-by":         "ani-modeldev-service",
+				"modeldev.ani.io/purpose":   "dataset-import",
+				"modeldev.ani.io/tenant-id": row.TenantID,
+			},
+			"annotations": map[string]any{"modeldev.ani.io/namespace-uid": row.NamespaceUID},
+		},
+		"automountServiceAccountToken": false,
+		"imagePullSecrets":             []any{},
+	}}
+	return o
+}
+
+// datasetImporterCA is the artifact store's CA as Dataset material. The importer
+// cannot mount the training ConfigMap: a tenant with no registry row has none,
+// and the import path must not depend on training material (§7.3, §12.4).
+func datasetImporterCA(row *biz.TenantExecutionEnvironment, ca string) *unstructured.Unstructured {
+	return &unstructured.Unstructured{Object: map[string]any{
+		"apiVersion": "v1", "kind": "ConfigMap",
+		"metadata": map[string]any{
+			"name":      "modeldev-dataset-import-ca",
+			"namespace": row.NamespaceName,
+			"labels": map[string]any{
+				"ani.io/managed-by":         "ani-modeldev-service",
+				"modeldev.ani.io/purpose":   "dataset-import",
+				"modeldev.ani.io/tenant-id": row.TenantID,
+			},
+			"annotations": map[string]any{"modeldev.ani.io/namespace-uid": row.NamespaceUID},
+		},
+		"immutable": true,
+		"data":      map[string]any{"s3-ca.pem": ca},
+	}}
+}
+
 func (p *Platform) Resources(ctx context.Context, row *biz.TenantExecutionEnvironment, checkpoint func() error) error {
 	// Native legacy-token and Pod protections are required before creating SAs.
 	if err := p.verifyBootstrap(ctx); err != nil {
@@ -370,7 +459,11 @@ func (p *Platform) Seal(ctx context.Context, row *biz.TenantExecutionEnvironment
 		return nil, biz.ErrTenantEnvironmentInvalid
 	}
 	for _, r := range row.Receipts.Objects {
-		if r.Kind != "Secret" && r.Name != "modeldev-execution-environment" {
+		// The dataset importer account is created by Ensure but is deliberately
+		// not part of the frozen twelve-object training binding (design §17.2:
+		// dataset SA/RBAC/material are verified by the dataset policy, never by
+		// expanding the training profile set).
+		if r.Kind != "Secret" && r.Name != "modeldev-execution-environment" && r.Name != "modeldev-dataset-importer" && r.Name != "modeldev-dataset-import-ca" {
 			b.Objects = append(b.Objects, projection.ObjectRef{Kind: r.Kind, Name: r.Name, UID: r.UID, SpecDigest: r.SpecDigest})
 		}
 	}
@@ -443,4 +536,23 @@ func (p *Platform) VerifyPublication(ctx context.Context, row *biz.TenantExecuti
 		return biz.EnvironmentConflict("ENVIRONMENT_OBJECT_CONFLICT")
 	}
 	return p.verifyBootstrap(ctx)
+}
+
+// ReadNamespaceIdentityParts adapts ReadNamespaceIdentity to the dataset
+// package's narrow port without exporting the registry model across packages.
+func (p *Platform) ReadNamespaceIdentityParts(ctx context.Context, tenantID, originalUID string) (string, string, string, error) {
+	identity, err := p.ReadNamespaceIdentity(ctx, tenantID, originalUID)
+	if err != nil {
+		return "", "", "", err
+	}
+	return identity.ClusterID, identity.Name, identity.UID, nil
+}
+
+// PlatformInputScope returns the platform-level input scope the dataset target
+// reader derives the tenant prefix from. It carries no tenant identity.
+func (p *Platform) PlatformInputScope() cpup01.StorageScope {
+	if p == nil {
+		return cpup01.StorageScope{}
+	}
+	return p.config.InputScope
 }

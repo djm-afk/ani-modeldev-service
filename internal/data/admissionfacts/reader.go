@@ -93,9 +93,8 @@ func (reader *Reader) ReadAdmissionFacts(ctx context.Context, tenantID, implemen
 	if !strings.HasSuffix(binding.DispatchOwner.PipelineRoot, "/artifacts/"+tenantID) || binding.ManagedImageAccess.Validate() != nil {
 		return biz.TenantAdmissionFacts{}, biz.EnvironmentError("ENVIRONMENT_DEPENDENCY_UNAVAILABLE")
 	}
-	inputPath, outputPath := "/inputs/data.csv", "/outputs"
-	if implementationID == "builtin.sft_lora" {
-		inputPath, outputPath = "/workspace/inputs/data/finetune_data.jsonl", "/workspace/training"
-	}
-	return biz.TenantAdmissionFacts{TenantID: tenantID, Environment: environment, InputScope: binding.InputScope, ModelScope: binding.ModelScope, PublicationScope: binding.PublicationScope, Workspace: binding.Workspace, InputFilePath: inputPath, OutputDirectoryPath: outputPath, Timing: binding.Timing, TargetPlatform: binding.TargetPlatform, DispatchOwner: binding.DispatchOwner, ManagedImageAccess: binding.ManagedImageAccess}, nil
+	// Container paths are a function of (kind, format) in the business layer,
+	// not of the registered environment: this reader runs before the input is
+	// known and never has enough information to decide them.
+	return biz.TenantAdmissionFacts{TenantID: tenantID, Environment: environment, InputScope: binding.InputScope, ModelScope: binding.ModelScope, PublicationScope: binding.PublicationScope, Workspace: binding.Workspace, Timing: binding.Timing, TargetPlatform: binding.TargetPlatform, DispatchOwner: binding.DispatchOwner, ManagedImageAccess: binding.ManagedImageAccess}, nil
 }

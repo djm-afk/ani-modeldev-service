@@ -1,0 +1,414 @@
+syntax = "proto3";
+
+package ani.modeldev.v1;
+
+import "ani/modeldev/v1/modeldev.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/zhangzhe-ctrl/ani-modeldev-service/api/ani/modeldev/v1;modeldevv1";
+
+// Dataset collections and their asynchronous online imports. Governance owns
+// the HTTP surface and the caller's identity; these messages describe only the
+// owner's data and the commands it accepts.
+
+enum DatasetState {
+  DATASET_STATE_UNSPECIFIED = 0;
+  DATASET_STATE_ACTIVE = 1;
+  DATASET_STATE_ARCHIVED = 2;
+}
+
+enum DatasetImportTaskState {
+  DATASET_IMPORT_TASK_STATE_UNSPECIFIED = 0;
+  DATASET_IMPORT_TASK_STATE_QUEUED = 1;
+  DATASET_IMPORT_TASK_STATE_RUNNING = 2;
+  DATASET_IMPORT_TASK_STATE_FAILED = 3;
+  DATASET_IMPORT_TASK_STATE_CANCELING = 4;
+  DATASET_IMPORT_TASK_STATE_CANCELLED = 5;
+  DATASET_IMPORT_TASK_STATE_SUCCEEDED = 6;
+}
+
+enum DatasetImportPhase {
+  DATASET_IMPORT_PHASE_UNSPECIFIED = 0;
+  DATASET_IMPORT_PHASE_WAITING = 1;
+  DATASET_IMPORT_PHASE_DOWNLOADING = 2;
+  DATASET_IMPORT_PHASE_UPLOADING = 3;
+  DATASET_IMPORT_PHASE_VERIFYING = 4;
+  DATASET_IMPORT_PHASE_PUBLISHING = 5;
+  DATASET_IMPORT_PHASE_STOPPING = 6;
+}
+
+enum DatasetSourceProvider {
+  DATASET_SOURCE_PROVIDER_UNSPECIFIED = 0;
+  DATASET_SOURCE_PROVIDER_HUGGINGFACE = 1;
+  DATASET_SOURCE_PROVIDER_MODELSCOPE = 2;
+}
+
+enum DatasetSourceLockKind {
+  DATASET_SOURCE_LOCK_KIND_UNSPECIFIED = 0;
+  DATASET_SOURCE_LOCK_KIND_IMMUTABLE_REVISION = 1;
+  DATASET_SOURCE_LOCK_KIND_FILE_SHA256 = 2;
+}
+
+enum DatasetOperationEventType {
+  DATASET_OPERATION_EVENT_TYPE_UNSPECIFIED = 0;
+  DATASET_OPERATION_EVENT_TYPE_DATASET_CREATED = 1;
+  DATASET_OPERATION_EVENT_TYPE_DATASET_UPDATED = 2;
+  DATASET_OPERATION_EVENT_TYPE_DATASET_ARCHIVED = 3;
+  DATASET_OPERATION_EVENT_TYPE_DATASET_RESTORED = 4;
+  DATASET_OPERATION_EVENT_TYPE_IMPORT_ACCEPTED = 5;
+  DATASET_OPERATION_EVENT_TYPE_IMPORT_RETRY_ACCEPTED = 6;
+  DATASET_OPERATION_EVENT_TYPE_IMPORT_CANCEL_REQUESTED = 7;
+  DATASET_OPERATION_EVENT_TYPE_IMPORT_SUCCEEDED = 8;
+  DATASET_OPERATION_EVENT_TYPE_IMPORT_FAILED = 9;
+  DATASET_OPERATION_EVENT_TYPE_IMPORT_CANCELLED = 10;
+}
+
+// SourceSelection is the user's choice after the server resolved it. The
+// fingerprint covers exactly these fields, so a changed file cannot be
+// confirmed by an old one.
+message DatasetSourceSelection {
+  DatasetSourceProvider provider = 1;
+  string repo_id = 2;
+  string requested_revision = 3;
+  string file_path = 4;
+  DatasetSourceLockKind lock_kind = 5;
+  // Empty only under FILE_SHA256.
+  string resolved_revision = 6;
+  int64 expected_size_bytes = 7;
+  // Empty when the provider did not prove a full-file digest.
+  string expected_file_sha256 = 8;
+}
+
+// SourceSnapshot is the frozen selection plus the moment it resolved.
+message DatasetSourceSnapshot {
+  DatasetSourceSelection selection = 1;
+  google.protobuf.Timestamp resolved_at = 2;
+  string snapshot_sha256 = 3;
+}
+
+message DatasetSourceFileView {
+  string path = 1;
+  int64 size_bytes = 2;
+  bool directory = 3;
+}
+
+message InspectDatasetSourceRequest {
+  // LIST_FILES and INSPECT_FILE are mutually exclusive shapes.
+  oneof query {
+    ListDatasetSourceFiles list_files = 1;
+    InspectDatasetSourceFile inspect_file = 2;
+  }
+}
+
+message ListDatasetSourceFiles {
+  DatasetSourceProvider provider = 1;
+  string repo_id = 2;
+  string revision = 3;
+  string directory_path = 4;
+  string page_token = 5;
+  uint32 page_size = 6;
+}
+
+message InspectDatasetSourceFile {
+  DatasetSourceProvider provider = 1;
+  string repo_id = 2;
+  string revision = 3;
+  string file_path = 4;
+}
+
+message DatasetSourceFilesPage {
+  repeated DatasetSourceFileView items = 1;
+  string next_page_token = 2;
+  bool has_more = 3;
+}
+
+message InspectDatasetSourceResponse {
+  // Set for LIST_FILES.
+  DatasetSourceFilesPage files_page = 1;
+  string resolved_revision = 2;
+  // Set for INSPECT_FILE: the exact facts and the fingerprint to echo back.
+  DatasetSourceSelection selection = 3;
+  string selection_fingerprint = 4;
+}
+
+message DatasetView {
+  string dataset_id = 1;
+  string name = 2;
+  string description = 3;
+  string modality = 4;
+  string schema_kind = 5;
+  DatasetState state = 6;
+  int64 revision = 7;
+  string created_by = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+  int64 ready_version_count = 11;
+  // The largest published version_number, not the most recently accepted task.
+  int64 latest_ready_version_number = 12;
+  DatasetImportTaskView latest_import = 13;
+}
+
+message CreateDatasetRequest {
+  // The caller-supplied idempotency key, scoped to (tenant, actor, operation).
+  string idempotency_key = 20;
+  string name = 1;
+  string description = 2;
+}
+
+message CreateDatasetResponse {
+  DatasetView dataset = 1;
+  CommandReceipt receipt = 2;
+}
+
+message GetDatasetRequest {
+  string dataset_id = 1;
+}
+
+message GetDatasetResponse {
+  DatasetView dataset = 1;
+}
+
+message ListDatasetsRequest {
+  PageRequest page = 1;
+  // Zero means no lifecycle filter; ACTIVE and ARCHIVED select one.
+  optional DatasetState state = 2;
+  // Literal substring of the normalized name.
+  optional string name = 3;
+}
+
+message ListDatasetsResponse {
+  int64 total = 1;
+  repeated DatasetView items = 2;
+}
+
+message UpdateDatasetRequest {
+  // The caller-supplied idempotency key, scoped to (tenant, actor, operation).
+  string idempotency_key = 20;
+  string dataset_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  int64 expected_revision = 4;
+}
+
+message UpdateDatasetResponse {
+  DatasetView dataset = 1;
+  CommandReceipt receipt = 2;
+}
+
+message ArchiveDatasetRequest {
+  // The caller-supplied idempotency key, scoped to (tenant, actor, operation).
+  string idempotency_key = 20;
+  string dataset_id = 1;
+  int64 expected_revision = 2;
+}
+
+message ArchiveDatasetResponse {
+  DatasetView dataset = 1;
+  CommandReceipt receipt = 2;
+}
+
+message RestoreDatasetRequest {
+  // The caller-supplied idempotency key, scoped to (tenant, actor, operation).
+  string idempotency_key = 20;
+  string dataset_id = 1;
+  int64 expected_revision = 2;
+}
+
+message RestoreDatasetResponse {
+  DatasetView dataset = 1;
+  CommandReceipt receipt = 2;
+}
+
+message ImportDatasetVersionRequest {
+  // The caller-supplied idempotency key, scoped to (tenant, actor, operation).
+  string idempotency_key = 20;
+  string dataset_id = 1;
+  DatasetSourceSelection source = 2;
+  string selection_fingerprint = 3;
+}
+
+message ImportDatasetVersionResponse {
+  CommandReceipt receipt = 1;
+  DatasetImportTaskView task = 2;
+}
+
+message CancelDatasetImportRequest {
+  // The caller-supplied idempotency key, scoped to (tenant, actor, operation).
+  string idempotency_key = 20;
+  string import_task_id = 1;
+}
+
+message CancelDatasetImportResponse {
+  CommandReceipt receipt = 1;
+}
+
+message RetryDatasetImportRequest {
+  // The caller-supplied idempotency key, scoped to (tenant, actor, operation).
+  string idempotency_key = 20;
+  string import_task_id = 1;
+}
+
+message RetryDatasetImportResponse {
+  CommandReceipt receipt = 1;
+}
+
+message CommandReceipt {
+  string receipt_id = 1;
+  string operation = 2;
+  string outcome = 3;
+  string dataset_id = 4;
+  string import_task_id = 5;
+  string reserved_input_version_id = 6;
+  int64 version_number = 7;
+  google.protobuf.Timestamp accepted_at = 8;
+  int64 revision = 9;
+}
+
+message DatasetImportTaskView {
+  string import_task_id = 1;
+  string dataset_id = 2;
+  string reserved_input_version_id = 3;
+  int64 version_number = 4;
+  DatasetImportTaskState state = 5;
+  DatasetImportPhase phase = 6;
+  DatasetSourceSnapshot source = 7;
+  google.protobuf.Timestamp accepted_at = 8;
+  int64 attempt_count = 9;
+  int64 recovery_generation = 10;
+  DatasetImportProgress progress = 11;
+  DatasetTaskFailure failure = 12;
+  // Set only after success, and equal to reserved_input_version_id.
+  string input_version_id = 13;
+}
+
+// DatasetTaskFailure is the asynchronous carrier for a task that was already
+// accepted. Its code is the importer's own vocabulary (SOURCE_CHANGED,
+// IMPORT_TIMEOUT, DATASET_INVALID, ...), never an ErrorReason: an accepted task
+// has no synchronous rejection to describe, and reusing ErrorDetail would force
+// every async code through an enum that does not contain them.
+message DatasetTaskFailure {
+  string code = 1;
+  // Decided by this service from the persisted state and the failure class; a
+  // job's own opinion is never trusted.
+  bool retryable = 2;
+}
+
+// Progress is a display cache, never a verification proof.
+message DatasetImportProgress {
+  DatasetImportPhase stage = 1;
+  // Zero means unknown; the page must not render a percentage then.
+  int64 bytes_total = 2;
+  // Monotonic within one (attempt_count, stage) cycle only.
+  int64 bytes_done = 3;
+  int64 files_total = 4;
+  int64 files_done = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message GetDatasetImportTaskRequest {
+  string import_task_id = 1;
+}
+
+message GetDatasetImportTaskResponse {
+  DatasetImportTaskView task = 1;
+}
+
+message ListDatasetImportTasksRequest {
+  string dataset_id = 1;
+  PageRequest page = 2;
+  optional DatasetImportTaskState state = 3;
+}
+
+message ListDatasetImportTasksResponse {
+  int64 total = 1;
+  repeated DatasetImportTaskView items = 2;
+}
+
+message DatasetVersionView {
+  string input_version_id = 1;
+  string dataset_id = 2;
+  string import_task_id = 3;
+  int64 version_number = 4;
+  google.protobuf.Timestamp published_at = 5;
+  bool preview_available = 6;
+  InputVersionView input_version = 7;
+  DatasetSourceSnapshot source = 8;
+}
+
+message ListDatasetVersionsRequest {
+  string dataset_id = 1;
+  PageRequest page = 2;
+}
+
+message ListDatasetVersionsResponse {
+  int64 total = 1;
+  repeated DatasetVersionView items = 2;
+}
+
+message DatasetPreviewRecord {
+  int64 sample_index = 1;
+  string instruction = 2;
+  string input = 3;
+  string output = 4;
+  // Fields the display budget shortened, by field name.
+  repeated string truncated_fields = 5;
+}
+
+message GetInputVersionPreviewResponse {
+  string input_version_id = 1;
+  int64 total_rows = 2;
+  repeated DatasetPreviewRecord records = 3;
+  bool preview_truncated = 4;
+  int32 max_records = 5;
+  int32 max_field_characters = 6;
+}
+
+message GetInputVersionPreviewRequest {
+  string input_version_id = 1;
+}
+
+message DatasetOperationView {
+  string operation_id = 1;
+  DatasetOperationEventType event_type = 2;
+  string actor = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+  string result = 5;
+  string import_task_id = 6;
+  string import_attempt_id = 7;
+  string receipt_id = 8;
+  int64 revision = 9;
+  int64 recovery_generation = 10;
+  string failure_code = 11;
+}
+
+message ListDatasetOperationsRequest {
+  string dataset_id = 1;
+  PageRequest page = 2;
+  optional DatasetOperationEventType event_type = 3;
+  optional string import_task_id = 4;
+}
+
+message ListDatasetOperationsResponse {
+  int64 total = 1;
+  repeated DatasetOperationView items = 2;
+}
+
+// Dataset reads carry the BFF's per-request authorization exactly like the
+// existing query service; writes are delivered as a verified command.
+service ModelDevDatasetService {
+  rpc CreateDataset(CreateDatasetRequest) returns (CreateDatasetResponse);
+  rpc GetDataset(GetDatasetRequest) returns (GetDatasetResponse);
+  rpc ListDatasets(ListDatasetsRequest) returns (ListDatasetsResponse);
+  rpc UpdateDataset(UpdateDatasetRequest) returns (UpdateDatasetResponse);
+  rpc ArchiveDataset(ArchiveDatasetRequest) returns (ArchiveDatasetResponse);
+  rpc RestoreDataset(RestoreDatasetRequest) returns (RestoreDatasetResponse);
+  rpc InspectDatasetSource(InspectDatasetSourceRequest) returns (InspectDatasetSourceResponse);
+  rpc ImportDatasetVersion(ImportDatasetVersionRequest) returns (ImportDatasetVersionResponse);
+  rpc CancelDatasetImport(CancelDatasetImportRequest) returns (CancelDatasetImportResponse);
+  rpc RetryDatasetImport(RetryDatasetImportRequest) returns (RetryDatasetImportResponse);
+  rpc ListDatasetVersions(ListDatasetVersionsRequest) returns (ListDatasetVersionsResponse);
+  rpc GetInputVersionPreview(GetInputVersionPreviewRequest) returns (GetInputVersionPreviewResponse);
+  rpc ListDatasetImportTasks(ListDatasetImportTasksRequest) returns (ListDatasetImportTasksResponse);
+  rpc GetDatasetImportTask(GetDatasetImportTaskRequest) returns (GetDatasetImportTaskResponse);
+  rpc ListDatasetOperations(ListDatasetOperationsRequest) returns (ListDatasetOperationsResponse);
+}

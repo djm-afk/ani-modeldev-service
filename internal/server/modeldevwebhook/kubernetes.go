@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -55,6 +56,10 @@ func (reader *KubernetesReader) Environment(ctx context.Context, namespace strin
 }
 func (reader *KubernetesReader) ServiceAccount(ctx context.Context, namespace, name string) (*corev1.ServiceAccount, error) {
 	return reader.core.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (reader *KubernetesReader) Job(ctx context.Context, namespace, name string) (*batchv1.Job, error) {
+	return reader.core.BatchV1().Jobs(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 func (reader *KubernetesReader) Workflow(ctx context.Context, namespace, name string) (*unstructured.Unstructured, error) {

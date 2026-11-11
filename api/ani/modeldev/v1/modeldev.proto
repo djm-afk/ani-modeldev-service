@@ -229,6 +229,10 @@ enum ErrorReason {
   ERROR_REASON_INPUT_VALIDATION_BUSY = 36;
   ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE = 37;
   ERROR_REASON_ENVIRONMENT_NOT_REGISTERED = 38;
+  // The input is READY, but this execution kind does not accept its format.
+  // Distinct from INPUT_NOT_READY on purpose: nothing is wrong with the data.
+  // Carries no kind/format detail; the reason and the type say it.
+  ERROR_REASON_INPUT_KIND_FORMAT_MISMATCH = 39;
 }
 
 message FieldViolation {

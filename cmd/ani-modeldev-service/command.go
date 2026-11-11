@@ -67,10 +67,10 @@ func buildCommandServerWithCapabilities(listener *conf.Server_GRPC, config *conf
 }
 
 func buildCommandServerWithCapabilitiesAndModelFacts(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, images biz.TrainingImageResolver, runtimeConfig *conf.ManagedRuntime, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
-	return buildCommandServerWithEnvironment(listener, config, pool, query, verifier, operations, models, images, runtimeConfig, nil, nil, middlewares...)
+	return buildCommandServerWithEnvironment(listener, config, pool, query, verifier, operations, models, images, runtimeConfig, nil, nil, nil, middlewares...)
 }
 
-func buildCommandServerWithEnvironment(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, images biz.TrainingImageResolver, runtimeConfig *conf.ManagedRuntime, facts biz.AdmissionFactsReader, environment modeldevv1.ModelDevTenantEnvironmentServiceServer, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
+func buildCommandServerWithEnvironment(listener *conf.Server_GRPC, config *conf.GovernanceCommand, pool *pgxpool.Pool, query modeldevv1.ModelDevQueryServiceServer, verifier biz.CSVVerifier, operations modeldevv1.ModelDevOperationsServiceServer, models biz.FinetuningModelFactsReader, images biz.TrainingImageResolver, runtimeConfig *conf.ManagedRuntime, facts biz.AdmissionFactsReader, environment modeldevv1.ModelDevTenantEnvironmentServiceServer, dataset modeldevv1.ModelDevDatasetServiceServer, middlewares ...middleware.Middleware) (*kratosgrpc.Server, error) {
 	failed := func(message string) (*kratosgrpc.Server, error) { return nil, errors.New(message) }
 	if config == nil || (config.Model != nil && models == nil) {
 		return failed("shared Model resources required")
@@ -131,7 +131,7 @@ func buildCommandServerWithEnvironment(listener *conf.Server_GRPC, config *conf.
 			concrete.WithMaterials(materials).WithFinetuningFacts(models).WithFinetuningReadiness(source, limits)
 		}
 	}
-	s, err := server.NewGovernanceServicesServer(listener, server.CommandTLS{Certificate: certificate, ClientCAs: roots, GovernanceDNSName: config.GovernanceDnsName}, command, admission, query, server.GovernanceServices{Management: management, Operations: operations, Environment: environment, ModelResolutionTimeout: runtimeConfig.ModelResolutionTimeout(), ImportTimeout: runtimeConfig.ImportTimeout()}, middlewares...)
+	s, err := server.NewGovernanceServicesServer(listener, server.CommandTLS{Certificate: certificate, ClientCAs: roots, GovernanceDNSName: config.GovernanceDnsName}, command, admission, query, server.GovernanceServices{Management: management, Operations: operations, Environment: environment, Dataset: dataset, ModelResolutionTimeout: runtimeConfig.ModelResolutionTimeout(), ImportTimeout: runtimeConfig.ImportTimeout()}, middlewares...)
 	if err != nil {
 		return failed("command listener configuration invalid")
 	}

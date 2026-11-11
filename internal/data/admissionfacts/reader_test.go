@@ -142,7 +142,19 @@ func TestSameReadyEnvironmentResolvesBothFixedImplementationPaths(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if mlp.Environment != fine.Environment || mlp.InputFilePath != "/inputs/data.csv" || mlp.OutputDirectoryPath != "/outputs" || fine.InputFilePath != "/workspace/inputs/data/finetune_data.jsonl" || fine.OutputDirectoryPath != "/workspace/training" {
+	if mlp.Environment != fine.Environment || mlp.InputScope != fine.InputScope || mlp.Workspace != fine.Workspace {
 		t.Fatal("one published environment must support both fixed implementations")
+	}
+	// Container paths are not environment facts: both implementations read the
+	// same registration and differ only by the (kind, format) layout.
+	for _, tc := range []struct{ kind, format, input, output string }{
+		{"GENERAL_TRAINING", "CSV", "/inputs/data.csv", "/outputs"},
+		{"GENERAL_TRAINING", "JSON", "/inputs/data/finetune_data.jsonl", "/outputs"},
+		{"FINETUNING", "JSON", "/workspace/inputs/data/finetune_data.jsonl", "/workspace/training"},
+	} {
+		input, output, err := biz.AdmissionInputPaths(tc.kind, tc.format)
+		if err != nil || input != tc.input || output != tc.output {
+			t.Fatalf("%s/%s paths = %q %q %v", tc.kind, tc.format, input, output, err)
+		}
 	}
 }

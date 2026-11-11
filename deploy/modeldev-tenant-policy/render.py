@@ -7,9 +7,17 @@ import re
 
 PREFIX = "modeldev.ani.io/"
 NAMES = ["modeldev-bootstrap-v1", "modeldev-environment-config-v1", "modeldev-workload-guard-v1"]
-SA = ["modeldev-step", "trainer-workload", "verifier"]
-RB = ["modeldev-runtime", "modeldev-step", "modeldev-webhook-read", "modeldev-kfp-api", "modeldev-kfp-access"]
-CM = ["modeldev-step-owner", "ani-kfp-ca", "kfp-launcher", "metadata-grpc-configmap", "modeldev-execution-environment"]
+SA = ["modeldev-step", "trainer-workload", "verifier", "modeldev-dataset-importer"]
+RB = ["modeldev-runtime", "modeldev-step", "modeldev-webhook-read", "modeldev-kfp-api", "modeldev-kfp-access", "modeldev-dataset-webhook-read"]
+IMPORTER = "modeldev-dataset-importer"
+IMPORT_CA = "modeldev-dataset-import-ca"
+# Only the importer ServiceAccount may own an importer Pod, and only the Dataset
+# control plane may create it. Purpose is a label the native policy pins; RBAC
+# cannot express a dynamic name prefix, so the write boundary lives here.
+PURPOSE = "modeldev.ani.io/purpose"
+PURPOSE_IMPORT = "dataset-import"
+
+CM = ["modeldev-step-owner", "ani-kfp-ca", "kfp-launcher", "metadata-grpc-configmap", "modeldev-execution-environment", IMPORT_CA]
 q = lambda value: json.dumps(value, separators=(",", ":"))
 UUID = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
@@ -36,36 +44,94 @@ def owner_expression():
     return f"has({labels}) && has({annotations}) && 'ani.io/managed-by' in {labels} && {labels}['ani.io/managed-by'] == 'ani-modeldev-service' && 'modeldev.ani.io/tenant-id' in {labels} && {labels}['modeldev.ani.io/tenant-id'] == namespaceObject.metadata.labels['network.ani.io/tenant-id'] && 'modeldev.ani.io/environment-id' in {labels} && {labels}['modeldev.ani.io/environment-id'].matches({q(UUID)}) && {labels}['modeldev.ani.io/environment-id'] != '00000000-0000-0000-0000-000000000000' && 'modeldev.ani.io/namespace-uid' in {annotations} && {annotations}['modeldev.ani.io/namespace-uid'].matches({q(UUID)}) && {annotations}['modeldev.ani.io/namespace-uid'] != '00000000-0000-0000-0000-000000000000'"
 
 
+def dataset_identity():
+    # Dataset material and attempt Secrets must not depend on a training
+    # registry row: §7.3 allows a tenant with no row to import. The identity is
+    # therefore the live Namespace plus the frozen attempt target, and it is
+    # scoped to exactly the importer account and the two-key attempt Secret so a
+    # training object can never use this branch. Variables are evaluated eagerly,
+    # so every namespace label read stays behind has()/in guards.
+    labels, annotations = "object.metadata.labels", "object.metadata.annotations"
+    namespace_labels = "namespaceObject.metadata.labels"
+    namespace = ("namespaceObject != null && has(" + namespace_labels + ")"
+                 " && 'network.ani.io/tenant-id' in " + namespace_labels + " && ")
+    material = "request.resource.resource == 'serviceaccounts' && object.metadata.name == " + q(IMPORTER)
+    # The importer needs the artifact store's CA. It cannot read the training
+    # ConfigMap: a tenant with no registry row has none, and the importer must
+    # not depend on training material (§7.3, §12.4). The CA therefore ships as
+    # Dataset material with its own fixed name and key set.
+    ca_material = ("request.resource.resource == 'configmaps' && object.metadata.name == "
+                   + q(IMPORT_CA) + " && has(object.data) && size(object.data) == 1"
+                   " && 's3-ca.pem' in object.data && size(object.data['s3-ca.pem']) > 0")
+    attempt_secret = ("request.resource.resource == 'secrets'"
+                      " && " + q(PURPOSE) + " in " + labels
+                      + " && " + labels + "[" + q(PURPOSE) + "] == " + q(PURPOSE_IMPORT)
+                      + " && 'modeldev.ani.io/target-snapshot-sha256' in " + annotations
+                      + " && " + annotations + "['modeldev.ani.io/target-snapshot-sha256'].matches('^[0-9a-f]{64}$')")
+    return ("(has(" + labels + ") && has(" + annotations + ")"
+            " && 'ani.io/managed-by' in " + labels
+            + " && " + labels + "['ani.io/managed-by'] == 'ani-modeldev-service'"
+            + " && 'modeldev.ani.io/tenant-id' in " + labels
+            + " && " + namespace + labels + "['modeldev.ani.io/tenant-id'] == " + namespace_labels + "['network.ani.io/tenant-id']"
+            + " && 'modeldev.ani.io/namespace-uid' in " + annotations
+            + " && " + annotations + "['modeldev.ani.io/namespace-uid'].matches(" + q(UUID) + ")"
+            + " && " + annotations + "['modeldev.ani.io/namespace-uid'] != '00000000-0000-0000-0000-000000000000'"
+            + " && (" + material + " || " + ca_material + " || (" + attempt_secret + ")))")
+
+
 def resource_rule(groups, resources, operations=("CREATE", "UPDATE")):
     return {"apiGroups": groups, "apiVersions": ["*"], "operations": list(operations), "resources": resources, "scope": "Namespaced"}
 
 
 def policy(name, rules, variables, checks, conditions=None):
-    spec = {"failurePolicy": "Fail", "matchConstraints": {"matchPolicy": "Equivalent", "resourceRules": rules}, "variables": [{"name": n, "expression": e} for n, e in variables], "validations": [{"expression": e, "message": "ModelDev: " + message} for e, message in checks]}
+    # The empty selectors are required, not cosmetic: without them the API
+    # server evaluates namespaceObject as null and any variable that reads it
+    # through namespace_expression() errors out. With failurePolicy=Fail that
+    # error becomes a denial for every covered request, i.e. a cluster-wide
+    # outage. They must also stay explicit so a re-render matches the object
+    # that is already installed.
+    spec = {"failurePolicy": "Fail", "matchConstraints": {"matchPolicy": "Equivalent", "namespaceSelector": {}, "objectSelector": {}, "resourceRules": rules}, "variables": [{"name": n, "expression": e} for n, e in variables], "validations": [{"expression": e, "message": "ModelDev: " + message} for e, message in checks]}
     if conditions:
         spec["matchConditions"] = [{"name": n, "expression": e} for n, e in conditions]
     return [{"apiVersion": "admissionregistration.k8s.io/v1", "kind": "ValidatingAdmissionPolicy", "metadata": {"name": name}, "spec": spec}, {"apiVersion": "admissionregistration.k8s.io/v1", "kind": "ValidatingAdmissionPolicyBinding", "metadata": {"name": name + "-binding"}, "spec": {"policyName": name, "validationActions": ["Deny"]}}]
 
 
 def bootstrap(p, ca_key):
-    checks = [("variables.standardNamespace && variables.owner", "standard namespace and original owner identity required"), ("request.operation != 'UPDATE' || (has(oldObject.metadata.labels) && has(oldObject.metadata.annotations) && object.metadata.labels == oldObject.metadata.labels && object.metadata.annotations == oldObject.metadata.annotations)", "original managed identity metadata cannot change")]
-    checks.append(("request.resource.resource != 'serviceaccounts' || (object.metadata.name in " + q(SA) + " && ((object.metadata.name == 'trainer-workload' && (!has(object.imagePullSecrets) || size(object.imagePullSecrets) == 0) && has(object.automountServiceAccountToken) && !object.automountServiceAccountToken) || (object.metadata.name != 'trainer-workload' && has(object.imagePullSecrets) && size(object.imagePullSecrets) == 1 && object.imagePullSecrets[0].name.matches('^ani-pull-[0-9a-f]{32}$'))))", "fixed SA and managed pull references required"))
-    subjects = {"modeldev-runtime": p["control"], "modeldev-step": None, "modeldev-webhook-read": p["webhook"], "modeldev-kfp-api": p["kfp_api"], "modeldev-kfp-access": p["control"]}
+    checks = [("variables.standardNamespace && (variables.owner || variables.datasetIdentity)", "standard namespace and original owner identity required"), ("request.operation != 'UPDATE' || (has(oldObject.metadata.labels) && has(oldObject.metadata.annotations) && object.metadata.labels == oldObject.metadata.labels && object.metadata.annotations == oldObject.metadata.annotations)", "original managed identity metadata cannot change")]
+    checks.append(("request.resource.resource != 'serviceaccounts' || (object.metadata.name in " + q(SA) + " && ((object.metadata.name in ['trainer-workload','modeldev-dataset-importer'] && (!has(object.imagePullSecrets) || size(object.imagePullSecrets) == 0) && has(object.automountServiceAccountToken) && !object.automountServiceAccountToken) || (object.metadata.name in ['modeldev-step','verifier'] && has(object.imagePullSecrets) && size(object.imagePullSecrets) == 1 && object.imagePullSecrets[0].name.matches('^ani-pull-[0-9a-f]{32}$'))))", "fixed SA and managed pull references required"))
+    subjects = {"modeldev-runtime": p["control"], "modeldev-step": None, "modeldev-webhook-read": p["webhook"], "modeldev-kfp-api": p["kfp_api"], "modeldev-kfp-access": p["control"], "modeldev-dataset-webhook-read": p["webhook"]}
     bindings = []
     for name, principal in subjects.items():
         ns, account = (None, "modeldev-step") if principal is None else principal.split(":")[2:]
         namespace = "request.namespace" if ns is None else q(ns)
         bindings.append(f"(object.metadata.name == {q(name)} && object.roleRef.apiGroup == 'rbac.authorization.k8s.io' && object.roleRef.kind == 'ClusterRole' && object.roleRef.name == {q(name+'-v1')} && has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'ServiceAccount' && object.subjects[0].name == {q(account)} && object.subjects[0].namespace == {namespace})")
-    checks.append(("request.resource.resource != 'rolebindings' || (" + " || ".join(bindings) + ")", "five exact role references and subjects required"))
+    checks.append(("request.resource.resource != 'rolebindings' || (" + " || ".join(bindings) + ")", "six exact role references and subjects required"))
     checks.append(("request.resource.resource != 'serviceaccounts' || request.operation != 'UPDATE' || (" + optional("object", "imagePullSecrets", "[]") + " == " + optional("oldObject", "imagePullSecrets", "[]") + " && " + optional("object", "automountServiceAccountToken", "true") + " == " + optional("oldObject", "automountServiceAccountToken", "true") + ")", "original service account pull references and token policy cannot change"))
-    maps = {"modeldev-step-owner": ["config.json", "modeldev-ca.pem", "s3-ca.pem"], "ani-kfp-ca": [ca_key], "kfp-launcher": ["providers", "defaultPipelineRoot"], "metadata-grpc-configmap": ["METADATA_GRPC_SERVICE_HOST", "METADATA_GRPC_SERVICE_PORT"], "modeldev-execution-environment": ["binding.json", "binding.sha256"]}
+    maps = {"modeldev-step-owner": ["config.json", "modeldev-ca.pem", "s3-ca.pem"], "ani-kfp-ca": [ca_key], "kfp-launcher": ["providers", "defaultPipelineRoot"], "metadata-grpc-configmap": ["METADATA_GRPC_SERVICE_HOST", "METADATA_GRPC_SERVICE_PORT"], "modeldev-execution-environment": ["binding.json", "binding.sha256"], IMPORT_CA: ["s3-ca.pem"]}
     conditions = []
     for name, keys in maps.items():
         exact = "size(object.data) == 1" if keys is None else f"size(object.data) == {len(keys)} && {q(keys)}.all(k,k in object.data && size(object.data[k]) > 0)"
         conditions.append(f"(object.metadata.name == {q(name)} && {exact})")
     checks.append(("request.resource.resource != 'configmaps' || (has(object.immutable) && object.immutable && has(object.data) && (!has(object.binaryData) || size(object.binaryData) == 0) && (" + " || ".join(conditions) + "))", "fixed immutable ConfigMaps and exact key sets required"))
-    checks.append(("request.resource.resource != 'secrets' || (object.metadata.name == 'modeldev-kfp-artifacts' && object.type == 'Opaque' && has(object.data) && size(object.data) == 2 && ['access_key','secret_key'].all(k,k in object.data && size(object.data[k]) > 0) && (!has(object.stringData) || size(object.stringData) == 0) && size(object.metadata.labels) == 3 && size(object.metadata.annotations) == 1)", "dedicated two-key artifact Secret and identity-only metadata required"))
-    return policy(NAMES[0], [resource_rule([""], ["serviceaccounts", "configmaps", "secrets"]), resource_rule(["rbac.authorization.k8s.io"], ["rolebindings"])], [("standardNamespace", namespace_expression()), ("owner", owner_expression())], checks, [("control", "request.userInfo.username == " + q(p["control"]))])
+    # Two Secret shapes are allowed. The artifact Secret is the original fixed
+    # one. The dataset attempt Secret is the importer's own credential+plan
+    # bundle: exactly two keys, the dataset-import purpose label, the importer
+    # account as subject, and only the control plane may write it. Any other
+    # Secret is refused, as before.
+    # A Secret has no pod template, so this uses the owner identity plus the
+    # purpose label instead of import_pods(): the writer must be this control
+    # plane, the object must be one of its import attempts, and the payload is
+    # exactly the credential bundle and the frozen plan.
+    attempt_secret = ("(variables.datasetIdentity"
+                      " && 'modeldev.ani.io/purpose' in object.metadata.labels"
+                      " && object.metadata.labels['modeldev.ani.io/purpose'] == 'dataset-import'"
+                      " && object.metadata.name.startsWith('md-import-')"
+                      " && object.type == 'Opaque' && has(object.data)"
+                      " && size(object.data) == 2"
+                      " && ['credentials.json','plan.json'].all(k,k in object.data && size(object.data[k]) > 0)"
+                      " && (!has(object.stringData) || size(object.stringData) == 0))")
+    checks.append(("request.resource.resource != 'secrets' || (object.metadata.name == 'modeldev-kfp-artifacts' && object.type == 'Opaque' && has(object.data) && size(object.data) == 2 && ['access_key','secret_key'].all(k,k in object.data && size(object.data[k]) > 0) && (!has(object.stringData) || size(object.stringData) == 0) && size(object.metadata.labels) == 3 && size(object.metadata.annotations) == 1) || " + attempt_secret, "dedicated two-key artifact Secret and identity-only metadata required"))
+    return policy(NAMES[0], [resource_rule([""], ["serviceaccounts", "configmaps", "secrets"]), resource_rule(["rbac.authorization.k8s.io"], ["rolebindings"])], [("standardNamespace", namespace_expression()), ("owner", owner_expression()), ("datasetIdentity", dataset_identity())], checks, [("control", "request.userInfo.username == " + q(p["control"]))])
 
 
 def configuration(p):
@@ -94,6 +160,25 @@ def protected_pods(name):
     return f"{name}.exists(s,(has(s.serviceAccountName) && s.serviceAccountName in {q(SA)}) || ({volumes}) || {containers})"
 
 
+def import_pods(obj):
+    """The Dataset import Job and its Pods, identified by purpose and SA.
+
+    A workload carrying the importer ServiceAccount must also carry the purpose
+    label, and only the Dataset control plane may create it. Without this, any
+    tenant workload could borrow the importer identity and its temporary
+    credential Secret.
+
+    Every read is guarded by `obj != null`: on CREATE oldObject is absent, and on
+    DELETE object is absent. An unguarded `has(obj.metadata.labels)` errors with
+    "no such key: metadata", which failurePolicy=Fail turns into a denial of the
+    whole request.
+    """
+    pods = f"(has({obj}.spec.template) && has({obj}.spec.template.spec) ? [{obj}.spec.template.spec] : [])"
+    return (f"({obj} != null && has({obj}.metadata.labels) && {q(PURPOSE)} in {obj}.metadata.labels "
+            f"&& {obj}.metadata.labels[{q(PURPOSE)}] == {q(PURPOSE_IMPORT)} "
+            f"&& {pods}.exists(s,has(s.serviceAccountName) && s.serviceAccountName == {q(IMPORTER)}))")
+
+
 def trusted_platform_principals(p, nodes, network_metadata_writer, network_status_writer, gc_writer, scheduler_writer, device_writer):
     """Existing platform identities explicitly trusted by the deployment owner."""
     return sorted(set(nodes + [network_metadata_writer, network_status_writer,
@@ -109,22 +194,32 @@ def workload(p, nodes, network_metadata_writer, network_status_writer, gc_finali
         metadata.extend([f"{old}.all(k,!({condition}) || (k in {new} && {old}[k] == {new}[k]))", f"{new}.all(k,!({condition}) || (k in {old} && {old}[k] == {new}[k]))"])
     metadata.append(optional("object", "metadata.ownerReferences", "[]") + " == (oldObject != null ? " + optional("oldObject", "metadata.ownerReferences", "[]") + " : [])")
     workflow_templates = "(request.resource.resource == 'workflows' && ((object != null && has(object.spec.templates) && object.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in " + q(SA) + ")) || (oldObject != null && has(oldObject.spec.templates) && oldObject.spec.templates.exists(t,has(t.serviceAccountName) && t.serviceAccountName in " + q(SA) + "))))"
-    variables = [("newPods", podspecs("object")), ("oldPods", podspecs("oldObject")), ("protected", marker("object") + " || " + marker("oldObject") + " || " + protected_pods("variables.newPods") + " || " + protected_pods("variables.oldPods") + " || " + workflow_templates), ("standardNamespace", namespace_expression())]
+    variables = [("newPods", podspecs("object")), ("oldPods", podspecs("oldObject")), ("protected", marker("object") + " || " + marker("oldObject") + " || " + protected_pods("variables.newPods") + " || " + protected_pods("variables.oldPods") + " || " + workflow_templates + " || " + import_pods("object") + " || " + import_pods("oldObject")), ("standardNamespace", namespace_expression())]
     for category in ["Labels", "Annotations"]:
         field = "metadata." + category.lower()
         variables += [("new" + category, optional("object", field, "{}")), ("old" + category, "oldObject != null ? " + optional("oldObject", field, "{}") + " : {}")]
     variables += [("sameIdentity", " && ".join(metadata)), ("sameSpec", "oldObject != null && object.spec == oldObject.spec"), ("sameRetention", "oldObject == null || !has(oldObject.metadata.finalizers) || oldObject.metadata.finalizers.filter(f,f.startsWith('modeldev.ani.io/')).all(f,has(object.metadata.finalizers) && f in object.metadata.finalizers) || request.userInfo.username == " + q(p["control"])), ("suspendOnly", "oldObject != null && request.userInfo.username == " + q(p["control"]) + " && has(object.spec.suspend) && object.spec.suspend && object.spec.all(k,k == 'suspend' || (k in oldObject.spec && object.spec[k] == oldObject.spec[k])) && oldObject.spec.all(k,k == 'suspend' || (k in object.spec && object.spec[k] == oldObject.spec[k]))")]
-    creators = {"workflows": [p["kfp_api"]], "trainjobs": [p["control"]], "trainingruntimes": [p["control"]], "jobsets": [p["trainer"]], "jobs": [p["jobset"]], "pods": [p["argo"], p["job_controller"]]}
+    creators = {"workflows": [p["kfp_api"]], "trainjobs": [p["control"]], "trainingruntimes": [p["control"]], "jobsets": [p["trainer"]], "jobs": [p["jobset"], p["dataset_control"]], "pods": [p["argo"], p["job_controller"]]}
     create = " || ".join(f"(request.resource.resource == {q(resource)} && request.userInfo.username in {q(users)})" for resource, users in creators.items())
+    # The Dataset control plane may only create the importer workload shape.
+    # The restriction is scoped to Jobs: the same identity is also the training
+    # control principal, which must keep creating TrainJob/TrainingRuntime.
+    create = "(" + create + ") && (request.userInfo.username != " + q(p["dataset_control"]) + " || request.resource.resource != 'jobs' || " + import_pods("object") + ")"
     deadline = optional("object", "spec.activeDeadlineSeconds", "-1") + " == " + optional("oldObject", "spec.activeDeadlineSeconds", "-1")
     workflow_equal = "object.spec.templates == oldObject.spec.templates && " + optional("object", "spec.arguments", "{}") + " == " + optional("oldObject", "spec.arguments", "{}") + " && object.spec.entrypoint == oldObject.spec.entrypoint && object.spec.serviceAccountName == oldObject.spec.serviceAccountName && (" + deadline + " || (request.userInfo.username == " + q(p["kfp_api"]) + " && has(object.spec.activeDeadlineSeconds) && object.spec.activeDeadlineSeconds == 0))"
-    updates = "request.userInfo.username in " + q(sorted(set(p.values()) - {p["persistence_agent"], p["trainer"], p["jobset"]})) + " && variables.sameIdentity && variables.sameRetention && (request.resource.resource == 'workflows' ? (" + workflow_equal + ") : request.resource.resource == 'trainjobs' ? (variables.sameSpec || variables.suspendOnly) : request.resource.resource in ['pods','trainingruntimes'] ? variables.sameSpec : variables.newPods == variables.oldPods)"
-    pod_identity = "has(object.spec.serviceAccountName) && ((object.spec.serviceAccountName == 'modeldev-step' && (request.operation != 'CREATE' || request.userInfo.username == " + q(p["argo"]) + ")) || (object.spec.serviceAccountName == 'trainer-workload' && (request.operation != 'CREATE' || request.userInfo.username == " + q(p["job_controller"]) + ")))"
+    # The dataset control plane owns only importer objects; it is never a
+    # generic updater of training workloads. The training control principal stays
+    # listed even when a deployment reuses one identity for both, because it must
+    # release retained Pod exit evidence (finalizer removal) after training ends.
+    generic_updaters = sorted((set(p.values()) - {p["persistence_agent"], p["trainer"], p["jobset"], p["dataset_control"]}) | {p["control"]})
+    updates = "request.userInfo.username in " + q(generic_updaters) + " && variables.sameIdentity && variables.sameRetention && (request.resource.resource == 'workflows' ? (" + workflow_equal + ") : request.resource.resource == 'trainjobs' ? (variables.sameSpec || variables.suspendOnly) : request.resource.resource in ['pods','trainingruntimes'] ? variables.sameSpec : variables.newPods == variables.oldPods)"
+    pod_identity = "has(object.spec.serviceAccountName) && ((object.spec.serviceAccountName == 'modeldev-step' && (request.operation != 'CREATE' || request.userInfo.username == " + q(p["argo"]) + ")) || (object.spec.serviceAccountName == 'trainer-workload' && (request.operation != 'CREATE' || request.userInfo.username == " + q(p["job_controller"]) + ")) || (object.spec.serviceAccountName == " + q(IMPORTER) + " && has(object.metadata.labels) && " + q(PURPOSE) + " in object.metadata.labels && object.metadata.labels[" + q(PURPOSE) + "] == " + q(PURPOSE_IMPORT) + " && (request.operation != 'CREATE' || request.userInfo.username in " + q([p["dataset_control"], p["job_controller"]]) + ")))"
     checks = [("!variables.protected || variables.standardNamespace", "protected workload requires the standard owned namespace"), ("!variables.protected || request.operation != 'CREATE' || (" + create + ")", "only exact original controllers create protected resources"), ("!variables.protected || request.resource.resource != 'pods' || (" + pod_identity + ")", "reserved Secret, PVC or SA cannot be borrowed"), ("!variables.protected || request.operation != 'UPDATE' || (" + updates + ")", "original templates, four parameters, owner identity and retained Pod spec cannot change")]
     rules = [resource_rule(["argoproj.io"], ["workflows", "workflows/status"]), resource_rule(["trainer.kubeflow.org"], ["trainjobs", "trainjobs/status", "trainingruntimes"]), resource_rule(["jobset.x-k8s.io"], ["jobsets", "jobsets/status"]), resource_rule(["batch"], ["jobs", "jobs/status"]), resource_rule([""], ["pods", "pods/status", "pods/ephemeralcontainers"])]
     trusted = trusted_platform_principals(p, nodes, network_metadata_writer, network_status_writer, gc_finalizer_writer, scheduler_writer, device_plugin_writer)
     persistence_update = "request.userInfo.username == " + q(p["persistence_agent"]) + " && request.operation == 'UPDATE' && ((has(request.subResource) && request.subResource == 'status') || (oldObject != null && object != null && object.spec == oldObject.spec))"
-    conditions = [("platform-controller-trust", "!(request.userInfo.username in " + q(trusted) + " || (" + persistence_update + "))")]
+    dataset_owned = "(request.userInfo.username == " + q(p["dataset_control"]) + " && " + import_pods("object") + ")"
+    conditions = [("platform-controller-trust", "!(request.userInfo.username in " + q(trusted) + " || (" + persistence_update + ") || (" + dataset_owned + "))")]
     return policy(NAMES[2], rules, variables, checks, conditions)
 
 
@@ -142,10 +237,16 @@ def rbac(p):
     runtime = [rule([""], ["pods"], ["get", "list", "patch", "delete"]), rule([""], ["pods/log"], ["get"]), rule([""], ["persistentvolumeclaims"], ["get", "list", "delete"]), rule([""], ["serviceaccounts"], ["get"], SA), rule([""], ["events"], ["get", "list"]), rule(["argoproj.io"], ["workflows"], ["get", "list", "delete"]), rule(["trainer.kubeflow.org"], ["trainjobs"], ["create", "get", "list", "patch", "delete"]), rule(["trainer.kubeflow.org"], ["trainingruntimes"], ["create", "get", "delete"]), rule(["jobset.x-k8s.io"], ["jobsets"], ["get", "list", "delete"]), rule(["batch"], ["jobs"], ["get", "list", "delete"]), rule(["scheduling.volcano.sh"], ["podgroups"], ["get", "list", "delete"])]
     step = [rule([""], ["pods"], ["get"]), rule([""], ["persistentvolumeclaims"], ["create", "get"]), rule(["argoproj.io"], ["workflows"], ["get", "list", "patch", "update"]), rule(["argoproj.io"], ["workflowtaskresults"], ["create", "patch"]), rule([""], ["configmaps"], ["get"], ["kfp-launcher", "metadata-grpc-configmap", "ani-kfp-ca"]), rule([""], ["secrets"], ["get"], ["modeldev-kfp-artifacts"])]
     webhook = [rule(["argoproj.io"], ["workflows"], ["get"]), rule(["batch"], ["jobs"], ["get"]), rule(["jobset.x-k8s.io"], ["jobsets"], ["get"]), rule(["trainer.kubeflow.org"], ["trainjobs", "trainingruntimes"], ["get"]), rule([""], ["serviceaccounts"], ["get"], SA), rule([""], ["configmaps"], ["get"], ["modeldev-execution-environment"])]
+    # The dataset webhook branch reads only a Job and the importer account: it
+    # must not depend on the training environment projection.
+    dataset_webhook = [rule(["batch"], ["jobs"], ["get"]), rule([""], ["serviceaccounts"], ["get"], [IMPORTER]), rule([""], ["pods"], ["get"])]
+    # Dataset control plane: dynamic object names cannot be expressed by RBAC,
+    # so verbs stay minimal and the native policy pins the write boundary.
+    dataset_control = [rule(["batch"], ["jobs"], ["create", "get", "list", "patch", "delete"]), rule([""], ["persistentvolumeclaims"], ["create", "get", "delete"]), rule([""], ["secrets"], ["create", "get", "patch", "delete"]), rule([""], ["pods"], ["get", "list", "patch", "delete"]), rule([""], ["serviceaccounts"], ["get"], [IMPORTER]), rule([""], ["namespaces"], ["get"]), rule([""], ["events"], ["get", "list"])]
     logical = [rule(["pipelines.kubeflow.org"], ["experiments"], ["create", "get", "list"]), rule(["pipelines.kubeflow.org"], ["runs"], ["create", "get", "list", "terminate", "delete"])]
-    rows = [role("modeldev-runtime-v1", runtime), role("modeldev-step-v1", step), role("modeldev-webhook-read-v1", webhook), role("modeldev-kfp-api-v1", [rule(["argoproj.io"], ["workflows"], ["create", "patch", "delete"])]), role("modeldev-kfp-access-v1", logical)]
+    rows = [role("modeldev-runtime-v1", runtime), role("modeldev-step-v1", step), role("modeldev-webhook-read-v1", webhook), role("modeldev-kfp-api-v1", [rule(["argoproj.io"], ["workflows"], ["create", "patch", "delete"])]), role("modeldev-kfp-access-v1", logical), role("modeldev-dataset-webhook-read-v1", dataset_webhook), role("modeldev-dataset-control-v1", dataset_control)]
     control = [rule([""], ["namespaces"], ["get"]), rule([""], ["serviceaccounts", "configmaps", "secrets"], ["create"]), rule(["rbac.authorization.k8s.io"], ["rolebindings"], ["create"]), rule([""], ["serviceaccounts"], ["get", "patch"], SA), rule([""], ["configmaps"], ["get", "patch"], CM), rule([""], ["secrets"], ["get", "patch"], ["modeldev-kfp-artifacts"]), rule(["rbac.authorization.k8s.io"], ["rolebindings"], ["get", "patch"], RB), rule(["rbac.authorization.k8s.io"], ["clusterroles"], ["get", "bind"], [name + "-v1" for name in RB]), rule(["admissionregistration.k8s.io"], ["validatingadmissionpolicies"], ["get"], NAMES), rule(["admissionregistration.k8s.io"], ["validatingadmissionpolicybindings"], ["get"], [name + "-binding" for name in NAMES]), rule(["admissionregistration.k8s.io"], ["mutatingwebhookconfigurations"], ["get"], ["ani-modeldev-webhook"])]
-    for name, rules, principal in [("modeldev-environment-control-v1", control, p["control"]), ("modeldev-webhook-namespace-v1", [rule([""], ["namespaces"], ["get"])], p["webhook"])]:
+    for name, rules, principal in [("modeldev-environment-control-v1", control, p["control"]), ("modeldev-webhook-namespace-v1", [rule([""], ["namespaces"], ["get"])], p["webhook"]), ("modeldev-dataset-control", dataset_control, p["control"]), ("modeldev-dataset-webhook-read", dataset_webhook, p["webhook"])]:
         rows += [role(name, rules), binding(name.removesuffix("-v1"), name, principal)]
     rows += [role("modeldev-kfp-platform-read-v1",[rule(["pipelines.kubeflow.org"],["pipelines"],["get"],["modeldev-mlp-cpu","modeldev-mlp-gpu","modeldev-sft-lora-cpu","modeldev-sft-lora-gpu"])]), {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"RoleBinding","metadata":{"name":"modeldev-kfp-platform-read","namespace":"ani-system"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"modeldev-kfp-platform-read-v1"},"subjects":[{"kind":"ServiceAccount","name":"modeldev-control","namespace":"ani-system"}]},role("modeldev-token-review-v1",[rule(["authentication.k8s.io"],["tokenreviews"],["create"])]),binding("modeldev-token-review","modeldev-token-review-v1",p["control"])]
     return rows
@@ -157,7 +258,7 @@ def render(config):
     p, nodes = config["principals"], config["node_principals"]
     if not isinstance(config["kfp_ca_key"],str) or not re.fullmatch(r"[A-Za-z0-9._-]+",config["kfp_ca_key"]):
         raise ValueError("actual CABUNDLE_KEY_NAME required")
-    keys = {"control", "webhook", "kfp_api", "argo", "trainer", "jobset", "job_controller", "persistence_agent", "maintenance"}
+    keys = {"control", "webhook", "kfp_api", "argo", "trainer", "jobset", "job_controller", "persistence_agent", "maintenance", "dataset_control"}
     if set(p) != keys or any(not isinstance(v, str) or not v or "*" in v for v in p.values()):
         raise ValueError("missing exact platform principal")
     if p["control"] != "system:serviceaccount:ani-system:modeldev-control" or p["webhook"] != "system:serviceaccount:ani-system:ani-modeldev-webhook":

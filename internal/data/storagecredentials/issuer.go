@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -239,3 +240,143 @@ func (issuer *Issuer) Close() {
 }
 
 var _ biz.StorageCredentialIssuer = (*Issuer)(nil)
+
+// IssueImportSession issues one attempt-scoped session. It reuses the same
+// SigV4 + AssumeRole path as execution issuance but scopes the policy to the
+// attempt's exact data and result keys, so an importer can never write another
+// attempt's bytes.
+func (issuer *Issuer) IssueImportSession(ctx context.Context, request biz.ImportSessionRequest, grant biz.ImportSessionGrant) (biz.ImportSession, error) {
+	if issuer == nil || ctx == nil || ctx.Err() != nil {
+		return biz.ImportSession{}, ErrUnavailable
+	}
+	if !biz.ValidStorageReference(grant.StorageConnectionID) || grant.Bucket == "" ||
+		!biz.ValidStorageKey(grant.DataKey) || !biz.ValidStorageKey(grant.ResultKey) || grant.DataKey == grant.ResultKey {
+		return biz.ImportSession{}, ErrUnavailable
+	}
+	// The platform input scope is the only boundary this issuer may widen to; a
+	// task frozen against another bucket or connection is not issuable here.
+	if grant.StorageConnectionID != issuer.config.InputConnectionID || grant.Bucket != issuer.config.InputBucket {
+		return biz.ImportSession{}, ErrUnavailable
+	}
+	tenantPrefix := "inputs/" + request.TenantID
+	if !strings.HasPrefix(grant.DataKey, tenantPrefix+"/") || !strings.HasPrefix(grant.ResultKey, tenantPrefix+"/") {
+		return biz.ImportSession{}, ErrUnavailable
+	}
+	statement := policyStatement{
+		Effect: "Allow",
+		// Same action vocabulary the execution issuer uses for its writable
+		// session. Adding multipart-only actions made this store reject the whole
+		// policy as unknown, which surfaced as AccessDenied on every PutObject.
+		Action: []string{"s3:GetObject", "s3:GetObjectVersion", "s3:PutObject"},
+		// Prefix-scoped to this attempt only. An exact-object ARN is not honoured
+		// by this store's STS policy engine, which evaluates the prefix form.
+		Resource: []string{"arn:aws:s3:::" + grant.Bucket + "/" + attemptPrefix(grant)},
+	}
+	policy, err := json.Marshal(struct {
+		Version   string            `json:"Version"`
+		Statement []policyStatement `json:"Statement"`
+	}{"2012-10-17", []policyStatement{statement}})
+	if err != nil {
+		return biz.ImportSession{}, fmt.Errorf("%w: encode import policy: %v", ErrUnavailable, err)
+	}
+	if len(policy) > 2048 {
+		return biz.ImportSession{}, fmt.Errorf("%w: import policy is %d bytes", ErrUnavailable, len(policy))
+	}
+	owner, err := issuer.config.Credentials.Retrieve(ctx)
+	if err != nil {
+		return biz.ImportSession{}, fmt.Errorf("%w: retrieve owner credential: %v", ErrUnavailable, err)
+	}
+	if owner.CanExpire || owner.SessionToken != "" {
+		return biz.ImportSession{}, fmt.Errorf("%w: owner credential must be long-lived parent key", ErrUnavailable)
+	}
+	if !safeCredential(owner.AccessKeyID) || !safeCredential(owner.SecretAccessKey) {
+		return biz.ImportSession{}, fmt.Errorf("%w: owner credential is malformed", ErrUnavailable)
+	}
+	values := url.Values{
+		"Action": {"AssumeRole"}, "Version": {"2011-06-15"}, "DurationSeconds": {"900"},
+		"RoleSessionName": {importSessionName(request)}, "Policy": {string(policy)},
+	}
+	encoded := values.Encode()
+	endpoint := strings.TrimSuffix(issuer.config.Endpoint, "/") + "/"
+	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(encoded))
+	if err != nil {
+		return biz.ImportSession{}, ErrUnavailable
+	}
+	httpRequest.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	digest := sha256.Sum256([]byte(encoded))
+	httpRequest.Header.Set("X-Amz-Content-Sha256", hex.EncodeToString(digest[:]))
+	started := time.Now().UTC()
+	if err := v4.NewSigner().SignHTTP(ctx, owner, httpRequest, hex.EncodeToString(digest[:]), "s3", issuer.config.Region, started); err != nil {
+		return biz.ImportSession{}, ErrUnavailable
+	}
+	response, err := issuer.client.Do(httpRequest)
+	if err != nil {
+		return biz.ImportSession{}, fmt.Errorf("%w: assume role request: %v", ErrUnavailable, err)
+	}
+	defer response.Body.Close()
+	data, err := io.ReadAll(io.LimitReader(response.Body, (64<<10)+1))
+	if err != nil || len(data) > 64<<10 {
+		return biz.ImportSession{}, fmt.Errorf("%w: read assume role response: %v", ErrUnavailable, err)
+	}
+	if response.StatusCode != http.StatusOK {
+		// The STS error body names the rejected parameter; keep a bounded prefix.
+		return biz.ImportSession{}, fmt.Errorf("%w: assume role status %d: %.200s", ErrUnavailable, response.StatusCode, strings.TrimSpace(string(data)))
+	}
+	var reply struct {
+		XMLName     xml.Name `xml:"AssumeRoleResponse"`
+		Credentials struct {
+			AccessKeyID     string    `xml:"AccessKeyId"`
+			SecretAccessKey string    `xml:"SecretAccessKey"`
+			SessionToken    string    `xml:"SessionToken"`
+			Expiration      time.Time `xml:"Expiration"`
+		} `xml:"AssumeRoleResult>Credentials"`
+	}
+	if err := xml.Unmarshal(data, &reply); err != nil {
+		return biz.ImportSession{}, fmt.Errorf("%w: decode assume role response: %v", ErrUnavailable, err)
+	}
+	value := reply.Credentials
+	if !safeCredential(value.AccessKeyID) || !safeCredential(value.SecretAccessKey) || !safeCredential(value.SessionToken) {
+		return biz.ImportSession{}, fmt.Errorf("%w: assume role returned an unusable session", ErrUnavailable)
+	}
+	if !value.Expiration.After(time.Now().Add(2*time.Minute)) || value.Expiration.After(started.Add(16*time.Minute)) {
+		return biz.ImportSession{}, fmt.Errorf("%w: assume role expiry %s is outside the allowed window", ErrUnavailable, value.Expiration.UTC())
+	}
+	return biz.ImportSession{
+		Issued: true, ExpiresAt: value.Expiration.UTC(),
+		Credentials: biz.TemporaryStorageCredentials{
+			AccessKeyID: value.AccessKeyID, SecretAccessKey: value.SecretAccessKey,
+			SessionToken: value.SessionToken, ExpiresAt: value.Expiration.UTC(),
+			StorageConnectionID: grant.StorageConnectionID, Bucket: grant.Bucket, ObjectKey: grant.DataKey,
+		},
+	}, nil
+}
+
+var _ biz.ImportSessionIssuer = (*Issuer)(nil)
+
+// importSessionName stays within the STS 64-character limit. The task and
+// attempt UUIDs are already unique, so a prefix of both keeps the name
+// recognisable for operators while guaranteeing uniqueness.
+func importSessionName(request biz.ImportSessionRequest) string {
+	short := func(value string) string {
+		if len(value) <= 8 {
+			return value
+		}
+		return value[:8]
+	}
+	return "md-import-" + short(request.TaskID) + "-" + short(request.AttemptID)
+}
+
+// attemptPrefix is the shared directory of the attempt's two keys, expressed as
+// a policy wildcard. This store's STS policy engine evaluates prefix-form
+// resources; an exact-object ARN is ignored and the request is denied.
+func attemptPrefix(grant biz.ImportSessionGrant) string {
+	data, result := grant.DataKey, grant.ResultKey
+	index := 0
+	for index < len(data) && index < len(result) && data[index] == result[index] {
+		index++
+	}
+	if slash := strings.LastIndexByte(data[:index], '/'); slash >= 0 {
+		return data[:slash+1] + "*"
+	}
+	return data[:index] + "*"
+}

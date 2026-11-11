@@ -298,8 +298,24 @@ func (snapshot Snapshot) validate(requireRuntime bool) error {
 	if input.PreparedDataset.ValidateForSource(input.Format, input.Object.SizeBytes, input.Object.SHA256, input.RowCount) != nil {
 		return invalid("prepared dataset facts")
 	}
-	if snapshot.Kind == "GENERAL_TRAINING" && (input.Format != "CSV" || input.SchemaVersion != "ani.cpu.csv.v1" || input.RowCount <= 0 || input.FeatureCount != 16) {
-		return invalid("fixed CSV contract")
+	// General training accepts either the numeric CSV contract or the Alpaca
+	// text contract. Each keeps its own frozen schema; the format selects which
+	// one applies. FeatureCount stays 0 for JSON: text has no numeric
+	// dimension, and the training implementation's own vectorization never
+	// writes back to the input contract.
+	if snapshot.Kind == "GENERAL_TRAINING" {
+		switch input.Format {
+		case "CSV":
+			if input.SchemaVersion != "ani.cpu.csv.v1" || input.RowCount <= 0 || input.FeatureCount != 16 {
+				return invalid("fixed CSV contract")
+			}
+		case "JSON":
+			if input.SchemaVersion != FinetuningInputSchemaVersion || input.RowCount <= 0 || input.FeatureCount != 0 {
+				return invalid("fixed JSON contract")
+			}
+		default:
+			return invalid("input format")
+		}
 	}
 	object := input.Object
 	if !validSnapshotReference(object.StorageConnectionID) || !validSnapshotDNSName(object.Bucket) || !validSnapshotPath(object.Key) || !strings.HasPrefix(object.Key, "inputs/"+identity.TenantID+"/") || object.SizeBytes <= 0 {

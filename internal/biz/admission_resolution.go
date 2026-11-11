@@ -3,7 +3,6 @@ package biz
 import (
 	"context"
 	"errors"
-	"path"
 	"reflect"
 	"strings"
 	"time"
@@ -28,15 +27,13 @@ type PrepareAdmissionInput struct {
 }
 
 type TenantAdmissionFacts struct {
-	TenantID            string
-	Environment         cpup01.EnvironmentBindingSnapshot
-	PublicationScope    cpup01.StorageScope
-	InputScope          cpup01.StorageScope
-	ModelScope          cpup01.StorageScope
-	Workspace           cpup01.WorkspaceContract
-	InputFilePath       string
-	OutputDirectoryPath string
-	Timing              cpup01.TimingConfiguration
+	TenantID         string
+	Environment      cpup01.EnvironmentBindingSnapshot
+	PublicationScope cpup01.StorageScope
+	InputScope       cpup01.StorageScope
+	ModelScope       cpup01.StorageScope
+	Workspace        cpup01.WorkspaceContract
+	Timing           cpup01.TimingConfiguration
 	// TargetPlatform is the pinned OCI platform of this environment. It is
 	// required for general training, whose image is resolved per execution.
 	TargetPlatform     cpup01.TrainingPlatform
@@ -163,7 +160,12 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 	if err := limits.Check(cpup01.ContentDataset, input.Object.SizeBytes); err != nil {
 		return cpup01.PreparedCandidate{}, err
 	}
-	if !compatibleAdmissionFacts(facts, input.Object, intent.Kind) {
+	// A pair without a frozen layout is not an environment problem: it is an
+	// unsupported combination and must not be reported as "environment not ready".
+	if !compatibleAdmissionFacts(facts, input.Object, intent.Kind, input.Format) {
+		if !AdmissionKindFormatSupported(intent.Kind, input.Format) {
+			return cpup01.PreparedCandidate{}, ErrInputKindFormatMismatch
+		}
 		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
 	}
 	parameters, err := intent.ResolveParameters()
@@ -301,6 +303,13 @@ func (r *AdmissionResolver) resolveTrainingProgram(ctx context.Context, tenantID
 	if training == nil || r.images == nil || facts.TargetPlatform.Validate() != nil {
 		return cpup01.ProgramRef{}, nil, ErrAdmissionEnvironmentNotReady
 	}
+	// This resolves the general-training program only, so the kind is fixed here
+	// and the format decides the layout. Both training formats write to the same
+	// output directory; only the input path differs.
+	_, outputDirectoryPath, err := AdmissionInputPaths("GENERAL_TRAINING", input.Format)
+	if err != nil {
+		return cpup01.ProgramRef{}, nil, ErrInputKindFormatMismatch
+	}
 	imageID, scope := training.DefaultImage.ImageID, string(training.DefaultImage.Scope)
 	if intent.TrainingImageID != nil {
 		imageID, scope = *intent.TrainingImageID, *intent.TrainingImageScope
@@ -320,7 +329,7 @@ func (r *AdmissionResolver) resolveTrainingProgram(ctx context.Context, tenantID
 	if err != nil {
 		return cpup01.ProgramRef{}, nil, ErrAdmissionEnvironmentNotReady
 	}
-	args, err := resolveAdmissionArguments(training.ArgsTemplate, parameters, facts, input)
+	args, err := resolveAdmissionArguments(training.ArgsTemplate, parameters, outputDirectoryPath, input)
 	if err != nil {
 		return cpup01.ProgramRef{}, nil, err
 	}
@@ -339,20 +348,14 @@ func canonicalResolutionIntent(original cpup01.Intent) (cpup01.Intent, error) {
 	}
 	return intent, nil
 }
-func compatibleAdmissionFacts(f TenantAdmissionFacts, object cpup01.FixedObjectRef, kind string) bool {
-	if kind == "GENERAL_TRAINING" && (f.InputFilePath != "/inputs/data.csv" || f.OutputDirectoryPath != "/outputs") {
-		return false
-	}
-	if kind == "FINETUNING" && (f.InputFilePath != "/workspace/inputs/data/finetune_data.jsonl" || f.OutputDirectoryPath != "/workspace/training") {
+func compatibleAdmissionFacts(f TenantAdmissionFacts, object cpup01.FixedObjectRef, kind, format string) bool {
+	if _, _, err := AdmissionInputPaths(kind, format); err != nil {
 		return false
 	}
 	scope := f.InputScope
-	return scope.StorageConnectionID == object.StorageConnectionID && scope.Bucket == object.Bucket && ValidStorageKey(scope.ApprovedPrefix) && strings.HasPrefix(object.Key, scope.ApprovedPrefix+"/") && validAdmissionContainerPath(f.InputFilePath) && validAdmissionContainerPath(f.OutputDirectoryPath) && f.InputFilePath != f.OutputDirectoryPath && !strings.HasPrefix(f.InputFilePath, f.OutputDirectoryPath+"/") && !strings.HasPrefix(f.OutputDirectoryPath, f.InputFilePath+"/")
+	return scope.StorageConnectionID == object.StorageConnectionID && scope.Bucket == object.Bucket && ValidStorageKey(scope.ApprovedPrefix) && strings.HasPrefix(object.Key, scope.ApprovedPrefix+"/")
 }
-func validAdmissionContainerPath(value string) bool {
-	return path.IsAbs(value) && path.Clean(value) == value && ValidStorageKey(strings.TrimPrefix(value, "/")) && !strings.ContainsAny(value, "*?[]")
-}
-func resolveAdmissionArguments(template []cpup01.MaterialArgument, parameters []cpup01.Parameter, facts TenantAdmissionFacts, input cpup01.InputRef) ([]string, error) {
+func resolveAdmissionArguments(template []cpup01.MaterialArgument, parameters []cpup01.Parameter, outputDirectoryPath string, input cpup01.InputRef) ([]string, error) {
 	manifest, err := cpup01.BuildDatasetManifest(input)
 	if err != nil {
 		return nil, ErrImplementationUnavailable
@@ -361,7 +364,7 @@ func resolveAdmissionArguments(template []cpup01.MaterialArgument, parameters []
 	if err != nil {
 		return nil, ErrImplementationUnavailable
 	}
-	values := map[string]string{"OUTPUT_PATH": facts.OutputDirectoryPath, "DATASET_MANIFEST_SHA256": digest}
+	values := map[string]string{"OUTPUT_PATH": outputDirectoryPath, "DATASET_MANIFEST_SHA256": digest}
 	for _, p := range parameters {
 		values[strings.ToUpper(p.Name)] = p.Value
 	}

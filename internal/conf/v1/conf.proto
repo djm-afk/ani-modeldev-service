@@ -44,6 +44,33 @@ message ManagedRuntime {
   // One platform provision specification, containing no tenant bindings.
   string tenant_environment_file = 17;
   string tenant_environment_sha256 = 18;
+  // Dataset imports. Absent configuration disables acceptance rather than
+  // falling back to a public default endpoint.
+  DatasetImport dataset_import = 19;
+}
+
+// DatasetImport pins the two supported public hubs and the import budget.
+message DatasetImport {
+  string huggingface_endpoint = 1;
+  string modelscope_endpoint = 2;
+  // Global running-attempt budget, coordinated across replicas.
+  uint32 max_running_imports = 3;
+  uint32 provider_timeout_seconds = 4;
+  // Importer workload. The image is pinned by digest and never selected per
+  // request; the ServiceAccount is the fixed identity the native policy pins.
+  string importer_image = 5;
+  string importer_image_digest = 6;
+  string importer_service_account = 7;
+  string storage_class = 8;
+  string cpu_request = 9;
+  string cpu_limit = 10;
+  string memory_request = 11;
+  string memory_limit = 12;
+  string pvc_size = 13;
+  string credential_file = 14;
+  // Scan and lease timing for the import scheduler.
+  google.protobuf.Duration scheduler_interval = 15;
+  google.protobuf.Duration scheduler_lease_ttl = 16;
 }
 
 message RuntimeLimits {

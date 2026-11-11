@@ -31,6 +31,33 @@ func TestSnapshotFreezesCompletePlanAndRejectsDrift(t *testing.T) {
 		t.Fatal("finite nonbaseline dataset rejected")
 	}
 }
+func TestGeneralTrainingSnapshotAcceptsBothFrozenInputFormats(t *testing.T) {
+	if s := conformance.SnapshotV1(); s.Validate() != nil {
+		t.Fatal("current CSV general-training snapshot rejected")
+	}
+	json := conformance.SnapshotJSONTrainingV1()
+	if e := json.Validate(); e != nil {
+		t.Fatalf("Alpaca JSON general-training snapshot rejected: %v", e)
+	}
+	// The kind keeps its own proof per format; neither may borrow the other's.
+	for _, change := range []func(*cpup01.Snapshot){
+		func(s *cpup01.Snapshot) { s.Input.FeatureCount = 16 },
+		func(s *cpup01.Snapshot) { s.Input.SchemaVersion = "ani.cpu.csv.v1" },
+		func(s *cpup01.Snapshot) { s.Input.Format = "PARQUET" },
+	} {
+		v := conformance.SnapshotJSONTrainingV1()
+		change(&v)
+		if v.Validate() == nil {
+			t.Fatal("JSON general-training drift accepted")
+		}
+	}
+	csv := conformance.SnapshotV1()
+	csv.Input.FeatureCount = 0
+	if csv.Validate() == nil {
+		t.Fatal("CSV general-training accepted a zero feature count")
+	}
+}
+
 func TestTimingHasOneFrozenWindowWithoutRenewal(t *testing.T) {
 	start := time.Date(2026, 10, 22, 0, 0, 0, 0, time.UTC)
 	v, e := (cpup01.TimingConfiguration{ExecutionTimeoutDefaultSeconds: 240, ExecutionTimeoutMaxSeconds: 7200, StepTimeoutSeconds: 90}).Resolve(start, nil)

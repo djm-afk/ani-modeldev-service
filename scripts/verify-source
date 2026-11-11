@@ -35,7 +35,7 @@ baseline=$repository_root/migrations/0001_current_baseline.up.sql
 [[ -f $baseline ]] || die "current database baseline is missing"
 while IFS= read -r -d '' migration; do
   case ${migration#"$repository_root/"} in
-    migrations/0001_current_baseline.up.sql|migrations/0002_tenant_execution_environments.up.sql|migrations/0003_execution_environment_projection.up.sql) ;;
+    migrations/0001_current_baseline.up.sql|migrations/0002_tenant_execution_environments.up.sql|migrations/0003_execution_environment_projection.up.sql|migrations/0004_dataset_domain.up.sql) ;;
     *) die "unexpected database migration: ${migration#"$repository_root/"}" ;;
   esac
 done < <(find "$repository_root/migrations" -maxdepth 1 -type f -name '*.sql' -print0)

@@ -97,10 +97,14 @@ type Profile struct {
 }
 
 type Config struct {
-	SchemaVersion                 string           `json:"schema_version"`
-	ClusterID                     string           `json:"cluster_id"`
-	MaterialBundleDigest          string           `json:"material_bundle_digest"`
-	MaterialBundleFile            string           `json:"material_bundle_file"`
+	SchemaVersion        string `json:"schema_version"`
+	ClusterID            string `json:"cluster_id"`
+	MaterialBundleDigest string `json:"material_bundle_digest"`
+	MaterialBundleFile   string `json:"material_bundle_file"`
+	// ImporterImage is the one importer image the dataset control plane may
+	// execute. The Pod admission branch pins it exactly; an importer-shaped
+	// workload with any other image is refused.
+	ImporterImage                 string           `json:"importer_image"`
 	ArgoCreator                   string           `json:"argo_creator"`
 	Training                      *TrainingBinding `json:"training"`
 	Driver                        *DriverBinding   `json:"driver"`
@@ -173,7 +177,7 @@ func (config Config) Validate() error { _, err := config.freeze(); return err }
 
 func (config Config) freeze() (map[string]frozenProfile, error) {
 	config.defaults()
-	if config.SchemaVersion != ConfigSchemaVersion || !canonicalUUID(config.ClusterID) || !sha256Pattern.MatchString(config.MaterialBundleDigest) || !creatorPattern.MatchString(config.ArgoCreator) || config.Training == nil || config.Training.ServiceAccount != "trainer-workload" || !creatorPattern.MatchString(config.Training.Creator) || config.Driver == nil || len(config.ControllerPrincipals) == 0 || len(config.Profiles) != 4 ||
+	if config.SchemaVersion != ConfigSchemaVersion || !canonicalUUID(config.ClusterID) || !sha256Pattern.MatchString(config.MaterialBundleDigest) || !imagePattern.MatchString(config.ImporterImage) || !creatorPattern.MatchString(config.ArgoCreator) || config.Training == nil || config.Training.ServiceAccount != "trainer-workload" || !creatorPattern.MatchString(config.Training.Creator) || config.Driver == nil || len(config.ControllerPrincipals) == 0 || len(config.Profiles) != 4 ||
 		config.MaxBodyBytes < 1024 || config.MaxBodyBytes > 1<<20 || config.MaxConcurrentRequests < 1 || config.MaxConcurrentRequests > 128 ||
 		config.RequestTimeoutMilliseconds < 100 || config.RequestTimeoutMilliseconds > 8000 || config.DependencyTimeoutMilliseconds < 50 || config.DependencyTimeoutMilliseconds > 3000 || config.DependencyTimeoutMilliseconds >= config.RequestTimeoutMilliseconds {
 		return nil, ErrConfiguration

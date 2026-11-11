@@ -590,6 +590,10 @@ const (
 	ErrorReason_ERROR_REASON_INPUT_VALIDATION_BUSY           ErrorReason = 36
 	ErrorReason_ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE  ErrorReason = 37
 	ErrorReason_ERROR_REASON_ENVIRONMENT_NOT_REGISTERED      ErrorReason = 38
+	// The input is READY, but this execution kind does not accept its format.
+	// Distinct from INPUT_NOT_READY on purpose: nothing is wrong with the data.
+	// Carries no kind/format detail; the reason and the type say it.
+	ErrorReason_ERROR_REASON_INPUT_KIND_FORMAT_MISMATCH ErrorReason = 39
 )
 
 // Enum value maps for ErrorReason.
@@ -632,6 +636,7 @@ var (
 		36: "ERROR_REASON_INPUT_VALIDATION_BUSY",
 		37: "ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE",
 		38: "ERROR_REASON_ENVIRONMENT_NOT_REGISTERED",
+		39: "ERROR_REASON_INPUT_KIND_FORMAT_MISMATCH",
 	}
 	ErrorReason_value = map[string]int32{
 		"ERROR_REASON_UNSPECIFIED":                     0,
@@ -671,6 +676,7 @@ var (
 		"ERROR_REASON_INPUT_VALIDATION_BUSY":           36,
 		"ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE":  37,
 		"ERROR_REASON_ENVIRONMENT_NOT_REGISTERED":      38,
+		"ERROR_REASON_INPUT_KIND_FORMAT_MISMATCH":      39,
 	}
 )
 
@@ -12290,7 +12296,7 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x15PARAMETER_TYPE_STRING\x10\x01\x12\x1a\n" +
 	"\x16PARAMETER_TYPE_INTEGER\x10\x02\x12\x1a\n" +
 	"\x16PARAMETER_TYPE_BOOLEAN\x10\x03\x12\x1a\n" +
-	"\x16PARAMETER_TYPE_DECIMAL\x10\x04*\x87\f\n" +
+	"\x16PARAMETER_TYPE_DECIMAL\x10\x04*\xb4\f\n" +
 	"\vErrorReason\x12\x1c\n" +
 	"\x18ERROR_REASON_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dERROR_REASON_INVALID_ARGUMENT\x10\x01\x12 \n" +
@@ -12329,7 +12335,8 @@ const file_ani_modeldev_v1_modeldev_proto_rawDesc = "" +
 	"\x1cERROR_REASON_DATASET_INVALID\x10#\x12&\n" +
 	"\"ERROR_REASON_INPUT_VALIDATION_BUSY\x10$\x12/\n" +
 	"+ERROR_REASON_FINETUNING_RUNTIME_UNAVAILABLE\x10%\x12+\n" +
-	"'ERROR_REASON_ENVIRONMENT_NOT_REGISTERED\x10&\"\x04\b\a\x10\a\"\x04\b\x15\x10\x15*\"ERROR_REASON_NO_COMPATIBLE_RELEASE*\x1cERROR_REASON_INPUT_TOO_LARGE*\xab\x01\n" +
+	"'ERROR_REASON_ENVIRONMENT_NOT_REGISTERED\x10&\x12+\n" +
+	"'ERROR_REASON_INPUT_KIND_FORMAT_MISMATCH\x10'\"\x04\b\a\x10\a\"\x04\b\x15\x10\x15*\"ERROR_REASON_NO_COMPATIBLE_RELEASE*\x1cERROR_REASON_INPUT_TOO_LARGE*\xab\x01\n" +
 	"\x13KfpRunTerminalState\x12&\n" +
 	"\"KFP_RUN_TERMINAL_STATE_UNSPECIFIED\x10\x00\x12$\n" +
 	" KFP_RUN_TERMINAL_STATE_SUCCEEDED\x10\x01\x12!\n" +

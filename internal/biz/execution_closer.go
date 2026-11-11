@@ -285,6 +285,72 @@ func (closer *ExecutionCloser) Reconcile(ctx context.Context, tenant, execution 
 	return closer.reconcileStepExits(ctx, result, owner, false)
 }
 
+// CloseTerminalRun converges an execution whose KFP run already reached a
+// terminal failure before any step callback existed. It proves the same owner
+// termination the normal closer needs first, then commits the close with the
+// run-level reason. A run that is merely running returns ErrRuntimeNotReady.
+func (closer *ExecutionCloser) CloseTerminalRun(ctx context.Context, tenant, execution string) (ManagedRuntimeResult, error) {
+	if ctx == nil || !validAdmissionID(tenant) || !validAdmissionID(execution) || strings.ToLower(tenant) != tenant || strings.ToLower(execution) != execution {
+		return ManagedRuntimeResult{}, ErrInvalidAdmission
+	}
+	if closer == nil || closer.runtime == nil || closer.runs == nil || closer.writers == nil {
+		return ManagedRuntimeResult{}, ErrRuntimeNotReady
+	}
+	if err := ctx.Err(); err != nil {
+		return ManagedRuntimeResult{}, err
+	}
+	runtime := closer.runtime
+	admitted, err := runtime.steps.executions.Get(ctx, tenant, execution)
+	if err != nil {
+		return ManagedRuntimeResult{}, err
+	}
+	authority, err := runtime.steps.repository.GetRunAuthority(ctx, tenant, execution)
+	if err != nil {
+		// Without a bound run there is nothing whose terminal phase could be
+		// observed here; the undispatched/close recovery paths own that case.
+		return ManagedRuntimeResult{}, ErrRuntimeNotReady
+	}
+	state, err := runtime.repository.GetRuntime(ctx, tenant, execution)
+	if err != nil {
+		return ManagedRuntimeResult{}, err
+	}
+	result := ManagedRuntimeResult{Execution: admitted, Authority: authority, Runtime: state}
+	if state.ClosedAt != nil {
+		return closer.reconcileStepExits(ctx, result, authority.RunAuthorityCandidate, true)
+	}
+	if state.CloseReason == "NATURAL_TERMINAL" {
+		return result, ErrRuntimeNotReady
+	}
+	evidence, err := closer.writers.VerifyOwnerWritersAbsent(ctx, admitted, authority.RunAuthorityCandidate, state.Workspace)
+	if err != nil {
+		return result, err
+	}
+	owner := evidence.OwnerTermination
+	if owner == nil || owner.RunState != "FAILED" || (owner.WorkflowPhase != "Failed" && owner.WorkflowPhase != "Error") {
+		return result, ErrRuntimeNotReady
+	}
+	if state.CloseGeneration == 0 {
+		// The frozen close-reason vocabulary has no dedicated run-level value;
+		// STEP_FAILED is the existing reason for "pipeline ended before normal
+		// completion". The terminal-run evidence above is what makes it safe.
+		state, _, err = runtime.repository.RequestRuntimeClose(ctx, authority.RunAuthorityCandidate, "STEP_FAILED")
+		if err != nil {
+			return ManagedRuntimeResult{}, err
+		}
+		result.Runtime = state
+	}
+	observation := TrainingRuntimeObservation{}
+	if state.Observation != nil {
+		observation = *state.Observation
+	}
+	state, err = runtime.repository.ConfirmRuntimeClosed(ctx, authority.RunAuthorityCandidate, state.CloseGeneration, observation, evidence)
+	if err != nil {
+		return ManagedRuntimeResult{}, err
+	}
+	result.Runtime = state
+	return closer.reconcileStepExits(ctx, result, authority.RunAuthorityCandidate, false)
+}
+
 func (closer *ExecutionCloser) reconcileStepExits(ctx context.Context, result ManagedRuntimeResult, owner RunAuthorityCandidate, replayed bool) (ManagedRuntimeResult, error) {
 	state := result.Runtime
 	if closer.cleanup == nil {

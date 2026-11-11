@@ -96,6 +96,21 @@ WHERE a.cluster_id=sqlc.arg(cluster_id)::uuid AND (
                   '[]'::jsonb) <> '[]'::jsonb
       OR COALESCE(NULLIF(r.facts -> 'FinetuningSteps', 'null'::jsonb),
                   '[]'::jsonb) <> '[]'::jsonb
+      -- A run can become terminal before any step callback exists. Such rows
+      -- are scanned early so a run-level failure is observed instead of waiting
+      -- for the original deadline.
+      OR (
+        COALESCE(NULLIF(r.facts -> 'TrainingWindow', 'null'::jsonb),
+                 '{}'::jsonb) = '{}'::jsonb
+        AND COALESCE(NULLIF(r.facts -> 'StepTimings', 'null'::jsonb),
+                     '[]'::jsonb) = '[]'::jsonb
+        AND COALESCE(NULLIF(r.facts -> 'FinetuningSteps', 'null'::jsonb),
+                     '[]'::jsonb) = '[]'::jsonb
+        AND EXISTS (
+          SELECT 1 FROM modeldev_run_authorities AS ra
+          WHERE ra.tenant_id=a.tenant_id AND ra.execution_id=a.execution_id
+        )
+      )
     )
   )
   OR
@@ -158,6 +173,21 @@ WHERE a.cluster_id=sqlc.arg(cluster_id)::uuid AND (
                   '[]'::jsonb) <> '[]'::jsonb
       OR COALESCE(NULLIF(r.facts -> 'FinetuningSteps', 'null'::jsonb),
                   '[]'::jsonb) <> '[]'::jsonb
+      -- A run can become terminal before any step callback exists. Such rows
+      -- are scanned early so a run-level failure is observed instead of waiting
+      -- for the original deadline.
+      OR (
+        COALESCE(NULLIF(r.facts -> 'TrainingWindow', 'null'::jsonb),
+                 '{}'::jsonb) = '{}'::jsonb
+        AND COALESCE(NULLIF(r.facts -> 'StepTimings', 'null'::jsonb),
+                     '[]'::jsonb) = '[]'::jsonb
+        AND COALESCE(NULLIF(r.facts -> 'FinetuningSteps', 'null'::jsonb),
+                     '[]'::jsonb) = '[]'::jsonb
+        AND EXISTS (
+          SELECT 1 FROM modeldev_run_authorities AS ra
+          WHERE ra.tenant_id=a.tenant_id AND ra.execution_id=a.execution_id
+        )
+      )
     )
   )
   OR
