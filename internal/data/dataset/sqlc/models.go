@@ -180,6 +180,7 @@ type ModeldevDatasetImportTask struct {
 	FinishedAt                       pgtype.Timestamptz
 	PublishedAt                      pgtype.Timestamptz
 	UpdatedAt                        pgtype.Timestamptz
+	DeferCount                       int32
 }
 
 type ModeldevDatasetOperation struct {

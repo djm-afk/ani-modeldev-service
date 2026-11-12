@@ -30,6 +30,7 @@ type ImportScheduler struct {
 	interval      time.Duration
 	leaseTTL      time.Duration
 	capacity      int
+	batchSize     int32
 	importTimeout time.Duration
 	logf          func(message string, args ...any)
 }
@@ -46,10 +47,13 @@ type ImportSchedulerDeps struct {
 	Operations   DatasetOperationRepository
 	Environments EnvironmentLookup
 
-	Owner         string
-	Interval      time.Duration
-	LeaseTTL      time.Duration
-	Capacity      int
+	Owner    string
+	Interval time.Duration
+	LeaseTTL time.Duration
+	Capacity int
+	// BatchSize bounds one scan. Zero keeps the default; a deployment with a
+	// large backlog raises it instead of waiting for many sweeps.
+	BatchSize     int32
 	ImportTimeout time.Duration
 	Now           func() time.Time
 	NewID         func() (string, error)
@@ -77,14 +81,22 @@ func NewImportScheduler(deps ImportSchedulerDeps) (*ImportScheduler, error) {
 	if ttl <= 0 {
 		ttl = 2 * deps.Interval
 	}
+	batchSize := deps.BatchSize
+	if batchSize <= 0 {
+		batchSize = defaultSweepBatchSize
+	}
 	return &ImportScheduler{
 		repository: deps.Repository, worker: deps.Worker, planner: deps.Planner,
 		workloads: deps.Workloads, objects: deps.Objects, issuer: deps.Issuer,
 		publication: deps.Publication, operations: deps.Operations, environments: deps.Environments,
 		now: now, newID: newID, owner: deps.Owner, interval: deps.Interval,
-		leaseTTL: ttl, capacity: deps.Capacity, importTimeout: deps.ImportTimeout, logf: deps.Logf,
+		leaseTTL: ttl, capacity: deps.Capacity, batchSize: batchSize,
+		importTimeout: deps.ImportTimeout, logf: deps.Logf,
 	}, nil
 }
+
+// defaultSweepBatchSize bounds one scan when the deployment does not override it.
+const defaultSweepBatchSize int32 = 20
 
 // BatchResult is one sweep's bounded progress, reported for logs and tests.
 type BatchResult struct {
@@ -123,22 +135,43 @@ func (scheduler *ImportScheduler) Run(ctx context.Context) error {
 
 // Sweep runs one pass. Dispatch is bounded by the shared capacity, so a sweep may
 // legitimately do nothing while tasks are due.
+//
+// The scan is split by what the task needs. Observation work (a bound attempt, a
+// frozen candidate, a pending cancel) always runs; dispatch work only runs while
+// the shared quota has a free slot. Without that split a full quota made every
+// sweep re-read the same first batch of unstartable tasks and never reach the
+// ones already running, so a finished Job was never observed and its slot never
+// returned.
 func (scheduler *ImportScheduler) Sweep(ctx context.Context) (BatchResult, error) {
 	result := BatchResult{}
 	if ctx == nil || scheduler == nil {
 		return result, ErrImportWorkerConfiguration
 	}
 	now := scheduler.now().UTC()
-	tasks, err := scheduler.worker.ListDueTasks(ctx, now, 20)
+	includeDispatch, quotaErr := scheduler.dispatchAllowed(ctx)
+	if quotaErr != nil {
+		// A quota read failure must not stop observation: the running attempts
+		// still need to be observed and cleaned up.
+		scheduler.report("import quota observation failed", "error", quotaErr)
+	}
+	tasks, err := scheduler.worker.ListDueTasks(ctx, now, scheduler.batchSize, includeDispatch)
 	if err != nil {
 		scheduler.report("list due tasks failed", "error", err)
 		return result, err
 	}
-	scheduler.report("import sweep", "due", len(tasks))
+	scheduler.report("import sweep", "due", len(tasks), "dispatch", includeDispatch)
 	result.Scanned = len(tasks)
+	dispatched := 0
 	for _, due := range tasks {
 		if ctx.Err() != nil {
 			return result, nil
+		}
+		// Once this sweep has started its share of attempts, the remaining
+		// dispatch-only rows are left for the next sweep. Observation rows are
+		// still processed: they are what returns a slot.
+		if dispatched >= scheduler.capacity && due.needsDispatchOnly() {
+			result.Skipped++
+			continue
 		}
 		outcome, taskErr := scheduler.advance(ctx, due, now)
 		result.Admitted += outcome.admitted
@@ -147,11 +180,23 @@ func (scheduler *ImportScheduler) Sweep(ctx context.Context) (BatchResult, error
 		result.Failed += outcome.failed
 		result.Deferred += outcome.deferred
 		result.Skipped += outcome.skipped
+		dispatched += outcome.dispatched
 		if taskErr != nil {
 			result.LastError = taskErr
 		}
 	}
 	return result, nil
+}
+
+// dispatchAllowed reports whether this sweep may start new attempts. A read
+// failure is reported and treated as "observation only": starting work on an
+// unknown quota would overrun the shared budget.
+func (scheduler *ImportScheduler) dispatchAllowed(ctx context.Context) (bool, error) {
+	running, err := scheduler.worker.CountRunningAttempts(ctx)
+	if err != nil {
+		return false, err
+	}
+	return ClaimsSlot(scheduler.capacity, running) == nil, nil
 }
 
 // report emits one bounded diagnostic line. The loop has no logger of its own,
@@ -223,9 +268,10 @@ func (scheduler *ImportScheduler) advance(ctx context.Context, due DatasetImport
 // the task has none: SetCurrentAttempt is a one-way binding, so allocating on
 // every sweep fails the task and leaks a capacity slot each round.
 //
-// Any failure after allocation closes that attempt, which releases the shared
-// slot. Without that, one failure permanently consumes budget and later tasks
-// can never start.
+// A failure before the workload exists proves no writer was ever created, so the
+// slot is released immediately. A failure after that point only closes the
+// dispatch gate: the Job may still be running, and the attempt reconciler is the
+// only party allowed to record that its writer stopped.
 func (scheduler *ImportScheduler) dispatch(ctx context.Context, task DatasetImportTask, outcome taskOutcome) (taskOutcome, error) {
 	attempt, planned, prepareErr := scheduler.prepareAttempt(ctx, task)
 	if prepareErr != nil {
@@ -237,11 +283,19 @@ func (scheduler *ImportScheduler) dispatch(ctx context.Context, task DatasetImpo
 		return scheduler.recordError(ctx, task, prepareErr, outcome)
 	}
 
+	// writerPossible tracks whether a Job may exist. It starts false because the
+	// attempt row alone creates no workload.
+	writerPossible := false
 	fail := func(cause error) (taskOutcome, error) {
-		// Nothing of this attempt is usable after a failed dispatch: close it so
-		// its slot returns and the task can be retried cleanly.
 		if _, closeErr := scheduler.repository.CloseAttempt(ctx, task.TenantID, attempt.AttemptID, "FAILED"); closeErr != nil {
 			scheduler.report("import attempt close failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", closeErr)
+		}
+		if !writerPossible {
+			// No Job was ever requested, so nothing can be writing. Recording the
+			// stop here is a proven fact, not an assumption.
+			if _, stopErr := scheduler.repository.ConfirmWritersStopped(ctx, task.TenantID, attempt.AttemptID); stopErr != nil {
+				scheduler.report("import attempt writer confirmation failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", stopErr)
+			}
 		}
 		return scheduler.recordError(ctx, task, cause, outcome)
 	}
@@ -262,6 +316,9 @@ func (scheduler *ImportScheduler) dispatch(ctx context.Context, task DatasetImpo
 		}
 		task.EnvironmentID = environmentID
 	}
+	// From here on a Job may exist even when the call reports an error: a create
+	// whose response was lost still produced an object.
+	writerPossible = true
 	workload, ensureErr := scheduler.workloads.EnsureImporter(ctx, attempt, planned, task, credentials)
 	if ensureErr != nil {
 		return fail(ensureErr)
@@ -292,10 +349,9 @@ func (scheduler *ImportScheduler) observe(ctx context.Context, task DatasetImpor
 		return observeErr
 	}
 	if !status.Present {
-		// The Job vanished without a result: nothing verifiable remains.
-		if _, closeErr := scheduler.repository.CloseAttempt(ctx, task.TenantID, attempt.AttemptID, "FAILED"); closeErr != nil {
-			scheduler.report("import attempt close failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", closeErr)
-		}
+		// The Job vanished without a result: nothing verifiable remains. Its
+		// absence is the proof that no writer survives.
+		scheduler.closeObservedAttempt(ctx, task, attempt, "FAILED")
 		return scheduler.failTask(ctx, task, ErrImportDispatchUnavailable, outcomeNoop())
 	}
 	if !status.Finished {
@@ -305,17 +361,13 @@ func (scheduler *ImportScheduler) observe(ctx context.Context, task DatasetImpor
 	if resultErr != nil {
 		// A finished Job whose report cannot be read is not publishable. The
 		// attempt is closed and the task failed with a content-level reason.
-		if _, closeErr := scheduler.repository.CloseAttempt(ctx, task.TenantID, attempt.AttemptID, "FAILED"); closeErr != nil {
-			scheduler.report("import attempt close failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", closeErr)
-		}
+		scheduler.closeObservedAttempt(ctx, task, attempt, "FAILED")
 		return scheduler.failTask(ctx, task, resultErr, outcomeNoop())
 	}
 	result := report.Result
 	if result.Status != ImportResultSucceeded || result.Object == nil {
 		code := errors.New(string(result.FailureCode))
-		if _, closeErr := scheduler.repository.CloseAttempt(ctx, task.TenantID, attempt.AttemptID, "FAILED"); closeErr != nil {
-			scheduler.report("import attempt close failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", closeErr)
-		}
+		scheduler.closeObservedAttempt(ctx, task, attempt, "FAILED")
 		return scheduler.failTask(ctx, task, code, outcomeNoop())
 	}
 	object := result.Object
@@ -341,6 +393,18 @@ func (scheduler *ImportScheduler) observe(ctx context.Context, task DatasetImpor
 		return freezeErr
 	}
 	return nil
+}
+
+// closeObservedAttempt closes an attempt whose Job was just observed finished or
+// gone. Both facts prove no writer survives, so the slot is released in the same
+// step instead of waiting for the reconciler to observe the same Job again.
+func (scheduler *ImportScheduler) closeObservedAttempt(ctx context.Context, task DatasetImportTask, attempt DatasetImportAttempt, reason string) {
+	if _, closeErr := scheduler.repository.CloseAttempt(ctx, task.TenantID, attempt.AttemptID, reason); closeErr != nil {
+		scheduler.report("import attempt close failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", closeErr)
+	}
+	if _, stopErr := scheduler.repository.ConfirmWritersStopped(ctx, task.TenantID, attempt.AttemptID); stopErr != nil {
+		scheduler.report("import attempt writer confirmation failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", stopErr)
+	}
 }
 
 // cancel converges a cancel-requested task without publishing anything. It
@@ -375,6 +439,12 @@ func (scheduler *ImportScheduler) cancel(ctx context.Context, task DatasetImport
 			}
 			if _, closeErr := scheduler.repository.CloseAttempt(ctx, task.TenantID, attempt.AttemptID, "CANCELLED"); closeErr != nil && !errors.Is(closeErr, ErrImportStateConflict) {
 				return outcome, closeErr
+			}
+			// The Job was just observed finished or gone, which is the proof the
+			// slot needs. Without it the cancel would finish while still holding
+			// capacity.
+			if _, stopErr := scheduler.repository.ConfirmWritersStopped(ctx, task.TenantID, attempt.AttemptID); stopErr != nil && !errors.Is(stopErr, ErrImportStateConflict) {
+				scheduler.report("import cancel writer confirmation failed", "task", task.TaskID, "attempt", attempt.AttemptID, "error", stopErr)
 			}
 		}
 		if deleteErr := scheduler.workloads.DeleteImporter(ctx, attempt); deleteErr != nil {
@@ -510,12 +580,16 @@ func (scheduler *ImportScheduler) credentials(ctx context.Context, task DatasetI
 
 // recordError classifies a step failure: a retryable transient failure keeps the
 // task alive with a bounded delay; everything else ends it.
+//
+// The budget is DeferCount, not RecoveryGeneration: the latter only advances on
+// an explicit user retry, so using it here made the automatic budget either
+// infinite or unrelated to the number of retries actually spent.
 func (scheduler *ImportScheduler) recordError(ctx context.Context, task DatasetImportTask, cause error, outcome taskOutcome) (taskOutcome, error) {
 	scheduler.report("import task step failed", "task", task.TaskID, "state", string(task.State), "error", cause)
-	if scheduler.retryable(cause) && task.RecoveryGeneration <= maxRecoveryGenerations {
+	if scheduler.retryable(cause) && task.DeferCount < maxAutomaticRetries {
 		if derr := scheduler.repository.DeferTask(ctx, TaskDeferral{
 			TenantID: task.TenantID, TaskID: task.TaskID,
-			Delay:       BackoffDelay(int(task.RecoveryGeneration), scheduler.interval, 5*time.Minute),
+			Delay:       BackoffDelay(int(task.DeferCount)+1, scheduler.interval, 5*time.Minute),
 			FailureCode: failureCodeFor(cause),
 		}); derr != nil {
 			return outcome, derr
@@ -534,9 +608,10 @@ func (scheduler *ImportScheduler) recordError(ctx context.Context, task DatasetI
 	return outcome, cause
 }
 
-// maxRecoveryGenerations bounds automatic advances of one recovery cycle. Retry
-// policy is operational, so this is a small fixed constant, never a content limit.
-const maxRecoveryGenerations = 3
+// maxAutomaticRetries bounds the background retries of one recovery cycle. Retry
+// policy is operational, so this is a small fixed constant, never a content
+// limit. An explicit user retry resets the counter.
+const maxAutomaticRetries int32 = 3
 
 // retryable lists transient causes worth another attempt. A content verdict is
 // never in it: re-downloading the same bytes cannot fix an invalid file.

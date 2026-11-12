@@ -95,6 +95,7 @@ type confDatasetImport struct {
 	scheduleTimeout time.Duration
 	interval        time.Duration
 	leaseTTL        time.Duration
+	batchSize       int32
 	owner           string
 	connectionID    string
 	s3Client        *s3.Client
@@ -144,6 +145,7 @@ func datasetImportConfig(runtime *conf.ManagedRuntime, connectionID, s3Endpoint,
 		scheduleTimeout: time.Duration(runtime.GetImportTimeoutSeconds()) * time.Second,
 		interval:        interval,
 		leaseTTL:        leaseTTL,
+		batchSize:       int32(value.GetSchedulerBatchSize()),
 		owner:           owner,
 		connectionID:    connectionID,
 		s3Client:        s3Client,

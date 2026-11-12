@@ -170,3 +170,339 @@ func TestSchedulerRequiresEveryPort(t *testing.T) {
 		t.Fatalf("empty assembly accepted: %v", err)
 	}
 }
+
+// A task with no bound attempt, no frozen candidate and no pending cancel can
+// only be dispatched. While the shared quota is full such a row must be skipped
+// so the batch is spent on the rows that observe a running Job and return a
+// slot.
+func TestSweepSkipsDispatchOnlyRowsWhenQuotaIsFull(t *testing.T) {
+	queued := schedulerTask()
+	queued.TaskID = "99999999-9999-4999-8999-999999999999"
+	// A pending cancel is observation work: it must be processed even while the
+	// quota is full, because converging it is what returns a slot.
+	canceling := schedulerTask()
+	canceling.TaskID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+	canceling.State = TaskCanceling
+	canceling.Phase = PhaseStopping
+	canceledAt := time.Date(2026, 11, 11, 0, 0, 0, 0, time.UTC)
+	canceling.CancelRequestedAt = &canceledAt
+
+	worker := &fakeSweepWorker{tasks: []DatasetImportTask{queued, canceling}, running: 1}
+	scheduler := newTestScheduler(t, worker, 1)
+
+	result, err := scheduler.Sweep(context.Background())
+	if err != nil {
+		t.Fatalf("sweep: %v", err)
+	}
+	if worker.includeDispatch {
+		t.Fatal("a full quota still asked for dispatch rows")
+	}
+	if result.Scanned != 1 {
+		t.Fatalf("scanned = %d, want only the observation row", result.Scanned)
+	}
+	if len(worker.advanced) != 1 || worker.advanced[0] != canceling.TaskID {
+		t.Fatalf("advanced = %v, want the canceling task", worker.advanced)
+	}
+}
+
+// With a free slot the same sweep must consider dispatch rows too.
+func TestSweepIncludesDispatchRowsWhenQuotaHasRoom(t *testing.T) {
+	queued := schedulerTask()
+	worker := &fakeSweepWorker{tasks: []DatasetImportTask{queued}, running: 0}
+	scheduler := newTestScheduler(t, worker, 3)
+
+	if _, err := scheduler.Sweep(context.Background()); err != nil {
+		t.Fatalf("sweep: %v", err)
+	}
+	if !worker.includeDispatch {
+		t.Fatal("a free quota did not ask for dispatch rows")
+	}
+	if len(worker.advanced) != 1 {
+		t.Fatalf("advanced = %v", worker.advanced)
+	}
+}
+
+// A quota read failure must degrade to observation only: starting work on an
+// unknown budget would overrun the shared limit.
+func TestSweepDegradesToObservationWhenQuotaIsUnknown(t *testing.T) {
+	queued := schedulerTask()
+	worker := &fakeSweepWorker{tasks: []DatasetImportTask{queued}, countErr: ErrPersistence}
+	scheduler := newTestScheduler(t, worker, 3)
+
+	if _, err := scheduler.Sweep(context.Background()); err != nil {
+		t.Fatalf("sweep: %v", err)
+	}
+	if worker.includeDispatch {
+		t.Fatal("an unknown quota still asked for dispatch rows")
+	}
+}
+
+// The automatic retry budget is DeferCount, not RecoveryGeneration: the latter
+// only advances on an explicit user retry.
+func TestAutomaticRetryBudgetUsesDeferCount(t *testing.T) {
+	task := schedulerTask()
+	task.State = TaskRunning
+	task.RecoveryGeneration = 1
+	task.DeferCount = maxAutomaticRetries
+	worker := &fakeSweepWorker{}
+	scheduler := newTestScheduler(t, worker, 1)
+
+	if _, err := scheduler.recordError(context.Background(), task, ErrSourceUnavailable, taskOutcome{}); err == nil {
+		t.Fatal("a spent budget reported no cause")
+	}
+	if worker.deferred != 0 {
+		t.Fatalf("a spent budget deferred again: %d", worker.deferred)
+	}
+	if worker.failed != 1 {
+		t.Fatalf("a spent budget did not fail the task: %d", worker.failed)
+	}
+
+	task.DeferCount = 0
+	if _, err := scheduler.recordError(context.Background(), task, ErrSourceUnavailable, taskOutcome{}); err == nil {
+		t.Fatal("a fresh budget reported no cause")
+	}
+	if worker.deferred != 1 {
+		t.Fatalf("a fresh budget did not defer: %d", worker.deferred)
+	}
+}
+
+// fakeSweepWorker serves the scheduler's scan and records what it was asked for.
+type fakeSweepWorker struct {
+	tasks           []DatasetImportTask
+	running         int64
+	countErr        error
+	includeDispatch bool
+	advanced        []string
+	deferred        int
+	failed          int
+}
+
+func (worker *fakeSweepWorker) ListDueTasks(_ context.Context, _ time.Time, _ int32, includeDispatch bool) ([]DatasetImportTask, error) {
+	worker.includeDispatch = includeDispatch
+	out := make([]DatasetImportTask, 0, len(worker.tasks))
+	for _, task := range worker.tasks {
+		if !includeDispatch && task.needsDispatchOnly() {
+			continue
+		}
+		out = append(out, task)
+	}
+	return out, nil
+}
+
+func (worker *fakeSweepWorker) CountRunningAttempts(context.Context) (int64, error) {
+	if worker.countErr != nil {
+		return 0, worker.countErr
+	}
+	return worker.running, nil
+}
+
+func (worker *fakeSweepWorker) AcquireTaskLease(_ context.Context, _, taskID, _ string, _ time.Duration) (DatasetImportTask, error) {
+	worker.advanced = append(worker.advanced, taskID)
+	for _, task := range worker.tasks {
+		if task.TaskID == taskID {
+			return task, nil
+		}
+	}
+	return DatasetImportTask{}, ErrTaskLeaseLost
+}
+
+func (worker *fakeSweepWorker) ReleaseTaskLease(context.Context, string, string, string, int64) error {
+	return nil
+}
+
+func (worker *fakeSweepWorker) DeferTask(context.Context, TaskDeferral) error {
+	worker.deferred++
+	return nil
+}
+
+func (worker *fakeSweepWorker) FailTask(context.Context, TaskFailure) (DatasetImportTask, error) {
+	worker.failed++
+	return DatasetImportTask{}, nil
+}
+
+func (worker *fakeSweepWorker) ListDueAttempts(context.Context, time.Time, int32) ([]DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) GetAttempt(_ context.Context, _, attemptID string) (DatasetImportAttempt, error) {
+	// A canceling task with no attempt converges without one.
+	return DatasetImportAttempt{}, ErrImportStateConflict
+}
+
+func (worker *fakeSweepWorker) AcquireAttemptLease(context.Context, string, string, string, time.Duration) (DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) ReleaseAttemptLease(context.Context, string, string, string, int64) error {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) ClaimAttemptCleanup(context.Context, string, string) (DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) FinishAttemptCleanup(context.Context, string, string) (DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) FreezeCandidate(context.Context, string, string, string, string) (DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) CloseAttempt(context.Context, string, string, string) (DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) ConfirmWritersStopped(context.Context, string, string) (DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) InsertAttempt(context.Context, DatasetImportAttempt) (DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) SetCurrentAttempt(context.Context, string, string, string) (DatasetImportTask, error) {
+	panic("not used by the scheduler")
+}
+
+// newTestScheduler builds a scheduler whose only real dependency is the worker.
+// The remaining ports are never reached by the paths these tests exercise.
+func newTestScheduler(t *testing.T, worker *fakeSweepWorker, capacity int) *ImportScheduler {
+	t.Helper()
+	scheduler, err := NewImportScheduler(ImportSchedulerDeps{
+		Repository: &fakeSweepRepository{worker: worker}, Worker: worker,
+		Planner: &fakeSweepPlanner{}, Workloads: &fakeSweepWorkloads{},
+		Objects: &fakeSweepObjects{}, Issuer: &fakeSweepIssuer{},
+		Publication: &fakeSweepPublication{}, Operations: &fakeSweepOperations{},
+		Environments: &fakeSweepEnvironments{},
+		Owner:        "modeldev:service:test", Interval: time.Second, Capacity: capacity,
+		ImportTimeout: time.Minute,
+		Now:           func() time.Time { return time.Date(2026, 11, 11, 0, 0, 0, 0, time.UTC) },
+	})
+	if err != nil {
+		t.Fatalf("new scheduler: %v", err)
+	}
+	return scheduler
+}
+
+type fakeSweepRepository struct{ worker *fakeSweepWorker }
+
+func (repo *fakeSweepRepository) AllocateAttempt(context.Context, AttemptAllocationRequest) (DatasetImportAttempt, error) {
+	panic("not used by these tests")
+}
+
+func (repo *fakeSweepRepository) StartTask(context.Context, string, string, string, int64) (DatasetImportTask, error) {
+	// These tests assert the scan split, not the dispatch chain. A state
+	// conflict ends the row through the normal error path.
+	return DatasetImportTask{}, ErrImportStateConflict
+}
+
+func (repo *fakeSweepRepository) SetCurrentAttempt(context.Context, string, string, string) (DatasetImportTask, error) {
+	panic("not used by these tests")
+}
+
+func (repo *fakeSweepRepository) FreezeTaskCandidate(context.Context, CandidateFreeze) (DatasetImportTask, error) {
+	panic("not used by these tests")
+}
+
+func (repo *fakeSweepRepository) FailTask(ctx context.Context, failure TaskFailure) (DatasetImportTask, error) {
+	return repo.worker.FailTask(ctx, failure)
+}
+
+func (repo *fakeSweepRepository) FinishCancelledTask(context.Context, TaskCancellation) (DatasetImportTask, error) {
+	return DatasetImportTask{}, nil
+}
+
+func (repo *fakeSweepRepository) DeferTask(ctx context.Context, deferral TaskDeferral) error {
+	return repo.worker.DeferTask(ctx, deferral)
+}
+
+func (repo *fakeSweepRepository) CloseAttempt(context.Context, string, string, string) (DatasetImportAttempt, error) {
+	panic("not used by these tests")
+}
+
+func (repo *fakeSweepRepository) ConfirmWritersStopped(context.Context, string, string) (DatasetImportAttempt, error) {
+	panic("not used by these tests")
+}
+
+func (repo *fakeSweepRepository) ClearCurrentAttempt(context.Context, string, string, string) (DatasetImportTask, error) {
+	panic("not used by these tests")
+}
+
+func (repo *fakeSweepRepository) SetTaskEnvironment(context.Context, string, string, string) (DatasetImportTask, error) {
+	panic("not used by these tests")
+}
+
+func (repo *fakeSweepRepository) RecordAttemptJob(context.Context, string, string, string, string) (DatasetImportAttempt, error) {
+	panic("not used by these tests")
+}
+
+func (repo *fakeSweepRepository) RecordAttemptObservation(context.Context, string, string, []byte) (DatasetImportAttempt, error) {
+	panic("not used by these tests")
+}
+
+type fakeSweepPlanner struct{}
+
+func (fakeSweepPlanner) PlanAttempt(context.Context, DatasetImportTask, string, int64) (AttemptPlan, error) {
+	panic("not used by these tests")
+}
+
+type fakeSweepWorkloads struct{}
+
+func (fakeSweepWorkloads) EnsureImporter(context.Context, DatasetImportAttempt, AttemptPlan, DatasetImportTask, TemporaryStorageCredentials) (ImportWorkload, error) {
+	panic("not used by these tests")
+}
+
+func (fakeSweepWorkloads) ResumeImporter(context.Context, DatasetImportAttempt, string) error {
+	panic("not used by these tests")
+}
+
+func (fakeSweepWorkloads) ObserveImporter(context.Context, DatasetImportAttempt) (ImportWorkloadStatus, error) {
+	panic("not used by these tests")
+}
+
+func (fakeSweepWorkloads) DeleteImporter(context.Context, DatasetImportAttempt) error {
+	panic("not used by these tests")
+}
+
+type fakeSweepObjects struct{}
+
+func (fakeSweepObjects) ReadResult(context.Context, DatasetImportTask, DatasetImportAttempt) (ImportReport, error) {
+	panic("not used by these tests")
+}
+
+func (fakeSweepObjects) VerifyCandidate(context.Context, DatasetImportTask, ImportResult) (VerifiedAlpaca, []byte, error) {
+	panic("not used by these tests")
+}
+
+type fakeSweepIssuer struct{}
+
+func (fakeSweepIssuer) IssueImportSession(context.Context, ImportSessionRequest, ImportSessionGrant) (ImportSession, error) {
+	panic("not used by these tests")
+}
+
+type fakeSweepPublication struct{}
+
+func (fakeSweepPublication) ReserveImport(context.Context, InputImport) (InputVersion, error) {
+	panic("not used by these tests")
+}
+
+func (fakeSweepPublication) PublishVersion(context.Context, PublicationRequest) (PublicationResult, error) {
+	panic("not used by these tests")
+}
+
+type fakeSweepOperations struct{}
+
+func (fakeSweepOperations) InsertOperation(context.Context, DatasetOperation) (DatasetOperation, error) {
+	panic("not used by these tests")
+}
+
+func (fakeSweepOperations) ListOperations(context.Context, DatasetOperationFilter) (DatasetOperationPage, error) {
+	panic("not used by these tests")
+}
+
+type fakeSweepEnvironments struct{}
+
+func (fakeSweepEnvironments) EnvironmentID(context.Context, string, string) (string, error) {
+	panic("not used by these tests")
+}

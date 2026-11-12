@@ -10,7 +10,9 @@ import (
 type DatasetWorkerRepository interface {
 	// ListDueTasks returns tasks whose next_run_at has passed and whose lease is
 	// free. Terminal tasks are excluded; their work is attempt reconciliation.
-	ListDueTasks(ctx context.Context, now time.Time, batch int32) ([]DatasetImportTask, error)
+	// includeDispatch=false restricts the scan to observation work, which is what
+	// a full quota needs: a task that cannot start must not consume the batch.
+	ListDueTasks(ctx context.Context, now time.Time, batch int32, includeDispatch bool) ([]DatasetImportTask, error)
 	// AcquireTaskLease takes or renews the task lease and returns the new epoch.
 	AcquireTaskLease(ctx context.Context, tenantID, taskID, owner string, ttl time.Duration) (DatasetImportTask, error)
 	// ReleaseTaskLease drops the lease this worker still holds. A held lease is
@@ -29,9 +31,18 @@ type DatasetWorkerRepository interface {
 	// than trust an in-memory copy.
 	GetAttempt(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
 	AcquireAttemptLease(ctx context.Context, tenantID, attemptID, owner string, ttl time.Duration) (DatasetImportAttempt, error)
+	// ReleaseAttemptLease drops the reconcile lease this worker still holds, so
+	// the attempt stays scannable instead of waiting out the TTL.
+	ReleaseAttemptLease(ctx context.Context, tenantID, attemptID, owner string, epoch int64) error
 	ClaimAttemptCleanup(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
 	FinishAttemptCleanup(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
 	FreezeCandidate(ctx context.Context, tenantID, attemptID, versionID, sha256 string) (DatasetImportAttempt, error)
+	// CloseAttempt closes the dispatch gate for one attempt. It never records
+	// that the writer stopped: that is a separate, observed fact.
+	CloseAttempt(ctx context.Context, tenantID, attemptID, reason string) (DatasetImportAttempt, error)
+	// ConfirmWritersStopped records the one fact that releases a capacity slot.
+	// It is only legal after the dispatch gate closed, and only once.
+	ConfirmWritersStopped(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
 }
 
 // DatasetImportAttempt is one physical execution of a task. Its runtime plan and

@@ -55,7 +55,7 @@ func attemptFromRow(row datasetsql.ModeldevDatasetImportAttempt) (biz.DatasetImp
 	return attempt, nil
 }
 
-func (r *Repository) ListDueTasks(ctx context.Context, now time.Time, batch int32) ([]biz.DatasetImportTask, error) {
+func (r *Repository) ListDueTasks(ctx context.Context, now time.Time, batch int32, includeDispatch bool) ([]biz.DatasetImportTask, error) {
 	if r == nil || r.pool == nil {
 		return nil, biz.ErrPersistence
 	}
@@ -64,6 +64,7 @@ func (r *Repository) ListDueTasks(ctx context.Context, now time.Time, batch int3
 	}
 	rows, err := datasetsql.New(r.pool).ListDueTasks(ctx, datasetsql.ListDueTasksParams{
 		Now: pgtype.Timestamptz{Time: now.UTC(), Valid: true}, BatchSize: batch,
+		IncludeDispatch: includeDispatch,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: list due tasks: %v", biz.ErrPersistence, err)
@@ -262,6 +263,26 @@ func (r *Repository) AcquireAttemptLease(ctx context.Context, tenantID, attemptI
 		return biz.DatasetImportAttempt{}, biz.ErrPersistence
 	}
 	return attemptFromRow(row)
+}
+
+func (r *Repository) ReleaseAttemptLease(ctx context.Context, tenantID, attemptID, owner string, epoch int64) error {
+	if r == nil || r.pool == nil {
+		return biz.ErrPersistence
+	}
+	tenant, err := databaseID(tenantID)
+	if err != nil {
+		return err
+	}
+	id, err := databaseID(attemptID)
+	if err != nil {
+		return err
+	}
+	if err := datasetsql.New(r.pool).ReleaseAttemptLease(ctx, datasetsql.ReleaseAttemptLeaseParams{
+		TenantID: tenant, AttemptID: id, Owner: pgtype.Text{String: owner, Valid: true}, Epoch: epoch,
+	}); err != nil {
+		return biz.ErrPersistence
+	}
+	return nil
 }
 
 func (r *Repository) ClaimAttemptCleanup(ctx context.Context, tenantID, attemptID string) (biz.DatasetImportAttempt, error) {
@@ -522,7 +543,10 @@ func (r *Repository) DeferTask(ctx context.Context, deferral biz.TaskDeferral) e
 	}
 	if err := datasetsql.New(r.pool).DeferTask(ctx, datasetsql.DeferTaskParams{
 		TenantID: tenant, TaskID: task,
-		Delay:       pgtype.Interval{Microseconds: deferral.Delay.Microseconds()},
+		// Valid must be set: an unbound pgtype.Interval is written as NULL, which
+		// violates next_run_at NOT NULL and turns a bounded retry into a hard
+		// persistence failure.
+		Delay:       pgtype.Interval{Microseconds: deferral.Delay.Microseconds(), Valid: true},
 		FailureCode: pgtype.Text{String: deferral.FailureCode, Valid: deferral.FailureCode != ""},
 	}); err != nil {
 		return fmt.Errorf("%w: defer import task: %v", biz.ErrPersistence, err)
@@ -551,6 +575,35 @@ func (r *Repository) CloseAttempt(ctx context.Context, tenantID, attemptID, reas
 	}
 	if err != nil {
 		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: close attempt: %v", biz.ErrPersistence, err)
+	}
+	return attemptFromRow(row)
+}
+
+// ConfirmWritersStopped records that the attempt no longer owns a live writer.
+// It is the only write that releases a capacity slot, and it requires the
+// dispatch gate to be closed first.
+func (r *Repository) ConfirmWritersStopped(ctx context.Context, tenantID, attemptID string) (biz.DatasetImportAttempt, error) {
+	if r == nil || r.pool == nil {
+		return biz.DatasetImportAttempt{}, biz.ErrPersistence
+	}
+	tenant, err := databaseID(tenantID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	id, err := databaseID(attemptID)
+	if err != nil {
+		return biz.DatasetImportAttempt{}, err
+	}
+	row, err := datasetsql.New(r.pool).ConfirmWritersStopped(ctx, datasetsql.ConfirmWritersStoppedParams{
+		TenantID: tenant, AttemptID: id,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		// Already confirmed, or the dispatch gate is still open. Both are a state
+		// conflict for the caller, never a silent success.
+		return biz.DatasetImportAttempt{}, biz.ErrImportStateConflict
+	}
+	if err != nil {
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: confirm writers stopped: %v", biz.ErrPersistence, err)
 	}
 	return attemptFromRow(row)
 }

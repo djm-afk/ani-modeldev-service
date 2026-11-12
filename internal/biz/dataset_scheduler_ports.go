@@ -151,6 +151,9 @@ type ImportSchedulerRepository interface {
 	DeferTask(ctx context.Context, deferral TaskDeferral) error
 
 	CloseAttempt(ctx context.Context, tenantID, attemptID, reason string) (DatasetImportAttempt, error)
+	// ConfirmWritersStopped records the one fact that releases a capacity slot.
+	// It is only legal after the dispatch gate closed, and only once.
+	ConfirmWritersStopped(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
 	// ClearCurrentAttempt detaches a closed attempt so the task can allocate the
 	// next one. SetCurrentAttempt refuses to overwrite an existing binding.
 	ClearCurrentAttempt(ctx context.Context, tenantID, taskID, attemptID string) (DatasetImportTask, error)

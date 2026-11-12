@@ -96,7 +96,7 @@ WHERE tenant_id = $3::uuid
   AND task_id = $4::uuid
   AND state IN ('QUEUED','RUNNING','CANCELING')
   AND (lease_owner IS NULL OR lease_owner = $1 OR lease_until < clock_timestamp())
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type AcquireTaskLeaseParams struct {
@@ -175,6 +175,7 @@ func (q *Queries) AcquireTaskLease(ctx context.Context, arg AcquireTaskLeasePara
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -300,7 +301,7 @@ WHERE tenant_id = $1::uuid
   AND state = 'RUNNING'
   AND cancel_requested_at IS NULL
   AND current_attempt_id = $3::uuid
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type ClearCurrentAttemptParams struct {
@@ -371,6 +372,7 @@ func (q *Queries) ClearCurrentAttempt(ctx context.Context, arg ClearCurrentAttem
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -379,7 +381,6 @@ const closeAttempt = `-- name: CloseAttempt :one
 UPDATE modeldev_dataset_import_attempts
 SET dispatch_closed_at = clock_timestamp(),
     close_reason = $1,
-    writers_stopped_at = clock_timestamp(),
     reconcile_next_at = clock_timestamp()
 WHERE tenant_id = $2::uuid
   AND attempt_id = $3::uuid
@@ -393,11 +394,76 @@ type CloseAttemptParams struct {
 	AttemptID   pgtype.UUID
 }
 
-// Stop dispatching for this attempt and record why. writers_stopped_at is set
-// only once the attempt no longer owns a live writer; a failed attempt whose Job
-// never started already satisfies that.
+// Stop dispatching for this attempt and record why. writers_stopped_at is NOT
+// set here: closing the dispatch gate stops new work but proves nothing about
+// the Job already running. Only ConfirmWritersStopped may record that fact,
+// after the workload was observed finished or gone.
 func (q *Queries) CloseAttempt(ctx context.Context, arg CloseAttemptParams) (ModeldevDatasetImportAttempt, error) {
 	row := q.db.QueryRow(ctx, closeAttempt, arg.CloseReason, arg.TenantID, arg.AttemptID)
+	var i ModeldevDatasetImportAttempt
+	err := row.Scan(
+		&i.TenantID,
+		&i.AttemptID,
+		&i.DatasetID,
+		&i.TaskID,
+		&i.AttemptNo,
+		&i.RecoveryGeneration,
+		&i.ClusterID,
+		&i.NamespaceName,
+		&i.NamespaceUid,
+		&i.JobName,
+		&i.PvcName,
+		&i.SecretName,
+		&i.JobUid,
+		&i.JobResourceVersion,
+		&i.PvcUid,
+		&i.PvcResourceVersion,
+		&i.SecretUid,
+		&i.SecretResourceVersion,
+		&i.RuntimePlan,
+		&i.RuntimePlanSha256,
+		&i.RuntimeObservation,
+		&i.DataObjectKey,
+		&i.ResultObjectKey,
+		&i.CreatedAt,
+		&i.DeadlineAt,
+		&i.DispatchClosedAt,
+		&i.CloseReason,
+		&i.WritersStoppedAt,
+		&i.ResultObjectVersionID,
+		&i.ResultSha256,
+		&i.LastCredentialGeneration,
+		&i.SecretGeneration,
+		&i.ReconcileOwner,
+		&i.ReconcileEpoch,
+		&i.ReconcileUntil,
+		&i.ReconcileNextAt,
+		&i.CleanupState,
+		&i.CleanupCompletedAt,
+	)
+	return i, err
+}
+
+const confirmWritersStopped = `-- name: ConfirmWritersStopped :one
+UPDATE modeldev_dataset_import_attempts
+SET writers_stopped_at = clock_timestamp(),
+    reconcile_next_at = clock_timestamp()
+WHERE tenant_id = $1::uuid
+  AND attempt_id = $2::uuid
+  AND dispatch_closed_at IS NOT NULL
+  AND writers_stopped_at IS NULL
+RETURNING tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation, cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name, job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_plan, runtime_plan_sha256, runtime_observation, data_object_key, result_object_key, created_at, deadline_at, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at
+`
+
+type ConfirmWritersStoppedParams struct {
+	TenantID  pgtype.UUID
+	AttemptID pgtype.UUID
+}
+
+// The one write that may release a capacity slot. It requires the dispatch gate
+// to be closed first, so a live attempt can never be marked stopped.
+func (q *Queries) ConfirmWritersStopped(ctx context.Context, arg ConfirmWritersStoppedParams) (ModeldevDatasetImportAttempt, error) {
+	row := q.db.QueryRow(ctx, confirmWritersStopped, arg.TenantID, arg.AttemptID)
 	var i ModeldevDatasetImportAttempt
 	err := row.Scan(
 		&i.TenantID,
@@ -511,10 +577,13 @@ func (q *Queries) CountImportTasks(ctx context.Context, arg CountImportTasksPara
 
 const countRunningAttempts = `-- name: CountRunningAttempts :one
 SELECT count(*) FROM modeldev_dataset_import_attempts
-WHERE cleanup_state NOT IN ('DONE')
-  AND dispatch_closed_at IS NULL
+WHERE writers_stopped_at IS NULL
 `
 
+// The quota counts attempts whose writer is not yet proven stopped, not merely
+// attempts whose dispatch gate closed. Closing dispatch stops new work; it does
+// not prove the existing Job stopped writing, so releasing the slot on close
+// would let a second writer start beside the first.
 func (q *Queries) CountRunningAttempts(ctx context.Context) (int64, error) {
 	row := q.db.QueryRow(ctx, countRunningAttempts)
 	var count int64
@@ -604,6 +673,7 @@ func (q *Queries) DatasetVersionStats(ctx context.Context, arg DatasetVersionSta
 const deferTask = `-- name: DeferTask :exec
 UPDATE modeldev_dataset_import_tasks
 SET next_run_at = clock_timestamp() + $1::interval,
+    defer_count = defer_count + 1,
     lease_owner = NULL,
     lease_until = NULL,
     failure_code = $2,
@@ -622,6 +692,8 @@ type DeferTaskParams struct {
 
 // A retryable transient failure keeps the task live and just pushes the next
 // scan out by the bounded backoff, so the retry budget is spent in plain sight.
+// defer_count is the automatic-retry budget: recovery_generation only advances
+// on an explicit user retry, so it cannot bound background retries.
 func (q *Queries) DeferTask(ctx context.Context, arg DeferTaskParams) error {
 	_, err := q.db.Exec(ctx, deferTask,
 		arg.Delay,
@@ -646,7 +718,7 @@ SET state = 'FAILED',
 WHERE tenant_id = $4::uuid
   AND task_id = $5::uuid
   AND state IN ('QUEUED','RUNNING')
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type FailTaskParams struct {
@@ -725,6 +797,7 @@ func (q *Queries) FailTask(ctx context.Context, arg FailTaskParams) (ModeldevDat
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -804,7 +877,7 @@ SET state = 'CANCELLED',
 WHERE tenant_id = $1::uuid
   AND task_id = $2::uuid
   AND state = 'CANCELING'
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type FinishCancelledTaskParams struct {
@@ -872,6 +945,7 @@ func (q *Queries) FinishCancelledTask(ctx context.Context, arg FinishCancelledTa
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -967,7 +1041,7 @@ WHERE tenant_id = $8::uuid
   AND state = 'RUNNING'
   AND candidate_attempt_id IS NULL
   AND cancel_requested_at IS NULL
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type FreezeTaskCandidateParams struct {
@@ -1055,6 +1129,7 @@ func (q *Queries) FreezeTaskCandidate(ctx context.Context, arg FreezeTaskCandida
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -1190,7 +1265,7 @@ func (q *Queries) GetDataset(ctx context.Context, arg GetDatasetParams) (Modelde
 }
 
 const getImportTask = `-- name: GetImportTask :one
-SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at FROM modeldev_dataset_import_tasks
+SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count FROM modeldev_dataset_import_tasks
 WHERE tenant_id = $1::uuid
   AND task_id = $2::uuid
 `
@@ -1260,6 +1335,7 @@ func (q *Queries) GetImportTask(ctx context.Context, arg GetImportTaskParams) (M
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -1606,7 +1682,7 @@ INSERT INTO modeldev_dataset_import_tasks (
     $27::jsonb
 )
 ON CONFLICT DO NOTHING
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type InsertImportTaskParams struct {
@@ -1727,6 +1803,7 @@ func (q *Queries) InsertImportTask(ctx context.Context, arg InsertImportTaskPara
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -1777,7 +1854,7 @@ func (q *Queries) InsertVersionMetadata(ctx context.Context, arg InsertVersionMe
 }
 
 const latestImportTasks = `-- name: LatestImportTasks :many
-SELECT DISTINCT ON (dataset_id) tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+SELECT DISTINCT ON (dataset_id) tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 FROM modeldev_dataset_import_tasks
 WHERE tenant_id = $1::uuid
   AND dataset_id = ANY($2::uuid[])
@@ -1857,6 +1934,7 @@ func (q *Queries) LatestImportTasks(ctx context.Context, arg LatestImportTasksPa
 			&i.FinishedAt,
 			&i.PublishedAt,
 			&i.UpdatedAt,
+			&i.DeferCount,
 		); err != nil {
 			return nil, err
 		}
@@ -2064,21 +2142,33 @@ func (q *Queries) ListDueAttempts(ctx context.Context, arg ListDueAttemptsParams
 }
 
 const listDueTasks = `-- name: ListDueTasks :many
-SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at FROM modeldev_dataset_import_tasks
+SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count FROM modeldev_dataset_import_tasks
 WHERE state IN ('QUEUED','RUNNING','CANCELING')
   AND next_run_at <= $1
   AND (lease_until IS NULL OR lease_until < $1)
-ORDER BY next_run_at, accepted_at, tenant_id, task_id
-LIMIT $2
+  AND ($2::boolean
+       OR current_attempt_id IS NOT NULL
+       OR candidate_attempt_id IS NOT NULL
+       OR cancel_requested_at IS NOT NULL)
+ORDER BY (current_attempt_id IS NULL AND candidate_attempt_id IS NULL
+          AND cancel_requested_at IS NULL) ASC,
+         next_run_at, accepted_at, tenant_id, task_id
+LIMIT $3
 `
 
 type ListDueTasksParams struct {
-	Now       pgtype.Timestamptz
-	BatchSize int32
+	Now             pgtype.Timestamptz
+	IncludeDispatch bool
+	BatchSize       int32
 }
 
+// Observation work (a bound attempt, a frozen candidate or a pending cancel)
+// always comes first, and a full quota only suppresses the dispatch rows. A
+// single ordering by next_run_at let a backlog of unstarted tasks starve the
+// ones already running, because binding an attempt used to push its row to the
+// back of the queue.
 func (q *Queries) ListDueTasks(ctx context.Context, arg ListDueTasksParams) ([]ModeldevDatasetImportTask, error) {
-	rows, err := q.db.Query(ctx, listDueTasks, arg.Now, arg.BatchSize)
+	rows, err := q.db.Query(ctx, listDueTasks, arg.Now, arg.IncludeDispatch, arg.BatchSize)
 	if err != nil {
 		return nil, err
 	}
@@ -2143,6 +2233,7 @@ func (q *Queries) ListDueTasks(ctx context.Context, arg ListDueTasksParams) ([]M
 			&i.FinishedAt,
 			&i.PublishedAt,
 			&i.UpdatedAt,
+			&i.DeferCount,
 		); err != nil {
 			return nil, err
 		}
@@ -2155,7 +2246,7 @@ func (q *Queries) ListDueTasks(ctx context.Context, arg ListDueTasksParams) ([]M
 }
 
 const listImportTasks = `-- name: ListImportTasks :many
-SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at FROM modeldev_dataset_import_tasks
+SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count FROM modeldev_dataset_import_tasks
 WHERE tenant_id = $1::uuid
   AND dataset_id = $2::uuid
   AND ($3::text = '' OR state = $3::text)
@@ -2243,6 +2334,7 @@ func (q *Queries) ListImportTasks(ctx context.Context, arg ListImportTasksParams
 			&i.FinishedAt,
 			&i.PublishedAt,
 			&i.UpdatedAt,
+			&i.DeferCount,
 		); err != nil {
 			return nil, err
 		}
@@ -2467,7 +2559,7 @@ func (q *Queries) LockImportCapacity(ctx context.Context) error {
 }
 
 const lockImportTask = `-- name: LockImportTask :one
-SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at FROM modeldev_dataset_import_tasks
+SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count FROM modeldev_dataset_import_tasks
 WHERE tenant_id = $1::uuid
   AND task_id = $2::uuid
 FOR UPDATE
@@ -2538,12 +2630,13 @@ func (q *Queries) LockImportTask(ctx context.Context, arg LockImportTaskParams) 
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
 
 const lockImportTasksByDataset = `-- name: LockImportTasksByDataset :many
-SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at FROM modeldev_dataset_import_tasks
+SELECT tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count FROM modeldev_dataset_import_tasks
 WHERE tenant_id = $1::uuid
   AND dataset_id = $2::uuid
   AND state IN ('QUEUED', 'RUNNING', 'FAILED', 'CANCELING')
@@ -2623,6 +2716,7 @@ func (q *Queries) LockImportTasksByDataset(ctx context.Context, arg LockImportTa
 			&i.FinishedAt,
 			&i.PublishedAt,
 			&i.UpdatedAt,
+			&i.DeferCount,
 		); err != nil {
 			return nil, err
 		}
@@ -2680,7 +2774,7 @@ WHERE tenant_id = $1::uuid
   AND task_id = $2::uuid
   AND state = 'RUNNING'
   AND cancel_requested_at IS NULL
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type MarkTaskSucceededParams struct {
@@ -2748,6 +2842,7 @@ func (q *Queries) MarkTaskSucceeded(ctx context.Context, arg MarkTaskSucceededPa
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -2903,6 +2998,35 @@ func (q *Queries) RecordAttemptObservation(ctx context.Context, arg RecordAttemp
 	return i, err
 }
 
+const releaseAttemptLease = `-- name: ReleaseAttemptLease :exec
+UPDATE modeldev_dataset_import_attempts
+SET reconcile_owner = NULL, reconcile_until = NULL
+WHERE tenant_id = $1::uuid
+  AND attempt_id = $2::uuid
+  AND reconcile_owner = $3
+  AND reconcile_epoch = $4
+`
+
+type ReleaseAttemptLeaseParams struct {
+	TenantID  pgtype.UUID
+	AttemptID pgtype.UUID
+	Owner     pgtype.Text
+	Epoch     int64
+}
+
+// The reconcile lease is a fence for one step, not a lock held across sweeps.
+// Releasing it keeps the attempt scannable instead of stalling it for a whole
+// TTL between two steps that need no exclusivity.
+func (q *Queries) ReleaseAttemptLease(ctx context.Context, arg ReleaseAttemptLeaseParams) error {
+	_, err := q.db.Exec(ctx, releaseAttemptLease,
+		arg.TenantID,
+		arg.AttemptID,
+		arg.Owner,
+		arg.Epoch,
+	)
+	return err
+}
+
 const releaseTaskLease = `-- name: ReleaseTaskLease :exec
 UPDATE modeldev_dataset_import_tasks
 SET lease_owner = NULL, lease_until = NULL, updated_at = clock_timestamp()
@@ -2940,7 +3064,7 @@ SET state = 'CANCELING',
 WHERE tenant_id = $1::uuid
   AND task_id = $2::uuid
   AND state IN ('QUEUED', 'RUNNING')
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type RequestCancelTaskParams struct {
@@ -3008,6 +3132,7 @@ func (q *Queries) RequestCancelTask(ctx context.Context, arg RequestCancelTaskPa
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -3017,6 +3142,7 @@ UPDATE modeldev_dataset_import_tasks
 SET state = 'QUEUED',
     phase = 'WAITING',
     recovery_generation = recovery_generation + 1,
+    defer_count = 0,
     validation_retry_count = 0,
     validation_deadline_at = NULL,
     failure_code = NULL,
@@ -3031,7 +3157,7 @@ WHERE tenant_id = $1::uuid
   AND state = 'FAILED'
   AND retryable = true
   AND cancel_requested_at IS NULL
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type RequeueRetryableTaskParams struct {
@@ -3101,6 +3227,7 @@ func (q *Queries) RequeueRetryableTask(ctx context.Context, arg RequeueRetryable
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -3157,14 +3284,13 @@ const setCurrentAttempt = `-- name: SetCurrentAttempt :one
 UPDATE modeldev_dataset_import_tasks
 SET current_attempt_id = $1::uuid,
     phase = 'WAITING',
-    next_run_at = clock_timestamp(),
     updated_at = clock_timestamp()
 WHERE tenant_id = $2::uuid
   AND task_id = $3::uuid
   AND state = 'RUNNING'
   AND cancel_requested_at IS NULL
   AND current_attempt_id IS NULL
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type SetCurrentAttemptParams struct {
@@ -3173,6 +3299,9 @@ type SetCurrentAttemptParams struct {
 	TaskID    pgtype.UUID
 }
 
+// Binding an attempt must not move the row in the scan order: next_run_at is
+// left untouched so the task keeps being observed instead of falling behind a
+// backlog of unstarted tasks.
 func (q *Queries) SetCurrentAttempt(ctx context.Context, arg SetCurrentAttemptParams) (ModeldevDatasetImportTask, error) {
 	row := q.db.QueryRow(ctx, setCurrentAttempt, arg.AttemptID, arg.TenantID, arg.TaskID)
 	var i ModeldevDatasetImportTask
@@ -3233,6 +3362,7 @@ func (q *Queries) SetCurrentAttempt(ctx context.Context, arg SetCurrentAttemptPa
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -3244,7 +3374,7 @@ SET observed_environment_id = $1::uuid,
 WHERE tenant_id = $2::uuid
   AND task_id = $3::uuid
   AND state IN ('QUEUED','RUNNING')
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type SetTaskEnvironmentParams struct {
@@ -3317,6 +3447,7 @@ func (q *Queries) SetTaskEnvironment(ctx context.Context, arg SetTaskEnvironment
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }
@@ -3333,7 +3464,7 @@ WHERE tenant_id = $1::uuid
   AND lease_owner = $3
   AND lease_epoch = $4
   AND lease_until > clock_timestamp()
-RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
 `
 
 type StartTaskParams struct {
@@ -3411,6 +3542,7 @@ func (q *Queries) StartTask(ctx context.Context, arg StartTaskParams) (ModeldevD
 		&i.FinishedAt,
 		&i.PublishedAt,
 		&i.UpdatedAt,
+		&i.DeferCount,
 	)
 	return i, err
 }

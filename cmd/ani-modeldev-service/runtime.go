@@ -159,7 +159,11 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if modelClient != nil {
 		operations.WithRegistrationRecovery(runtime, admissions)
 	}
-	datasetImport := datasetImportConfig(config.Runtime, clients.environmentConfig.InputScope.StorageConnectionID, config.Runtime.ObjectStorage.Endpoint, config.Runtime.ObjectStorage.Region, clients.store, "modeldev:service")
+	workerOwner, ownerErr := datasetWorkerOwner()
+	if ownerErr != nil {
+		return failed("dataset worker owner invalid: " + ownerErr.Error())
+	}
+	datasetImport := datasetImportConfig(config.Runtime, clients.environmentConfig.InputScope.StorageConnectionID, config.Runtime.ObjectStorage.Endpoint, config.Runtime.ObjectStorage.Region, clients.store, workerOwner)
 	if datasetImport != nil {
 		datasetImport.logf = func(message string, args ...any) { logger.Info(message, args...) }
 	}
@@ -170,11 +174,11 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 	if err != nil {
 		return failed("dataset import service invalid")
 	}
-	datasetScheduler, err := buildDatasetScheduler(pool, clients.kube, environments, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), clients.storageIssuer, environmentPlatform, clients.environmentConfig.ClusterID, datasetImport)
+	datasetScheduler, datasetReconciler, err := buildDatasetScheduler(pool, clients.kube, environments, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), clients.storageIssuer, environmentPlatform, clients.environmentConfig.ClusterID, datasetImport)
 	if err != nil {
 		return failed("dataset import scheduler invalid: " + err.Error())
 	}
-	logger.Info("dataset import scheduler", "enabled", datasetScheduler != nil, "configuration_present", datasetImport != nil)
+	logger.Info("dataset import scheduler", "enabled", datasetScheduler != nil, "reconciler", datasetReconciler != nil, "configuration_present", datasetImport != nil)
 	command, err := buildCommandServerWithEnvironment(config.Server.Grpc, config.Command, pool, query, objectstore.NewVerifier(clients.store, config.Runtime.ObjectStorage.ConnectionId), operations, modelFacts, images, config.Runtime, admissionFacts, environmentService, datasetService, middlewares...)
 	if err != nil {
 		return failed("managed command listener configuration invalid: " + err.Error())
@@ -195,7 +199,7 @@ func buildRuntimeApp(config *conf.Bootstrap, logger *slog.Logger) (*application,
 		return failed("managed close coordinator configuration invalid")
 	}
 	workerContext, cancelWorker := context.WithCancel(context.Background())
-	worker := &runtimeWorker{dispatcher: dispatcher, closer: closeWorker, scheduler: datasetSchedulerLifetime(datasetScheduler), ctx: workerContext, cancel: cancelWorker, done: make(chan struct{}), ready: ready}
+	worker := &runtimeWorker{dispatcher: dispatcher, closer: closeWorker, scheduler: datasetSchedulerLifetime(datasetScheduler, datasetReconciler), ctx: workerContext, cancel: cancelWorker, done: make(chan struct{}), ready: ready}
 	admin := server.NewAdminServer(config.Server.Admin, ready, observability.Gatherer(), middlewares...)
 	release := sync.OnceValue(func() error {
 		worker.unavailable()

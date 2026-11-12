@@ -71,6 +71,9 @@ message DatasetImport {
   // Scan and lease timing for the import scheduler.
   google.protobuf.Duration scheduler_interval = 15;
   google.protobuf.Duration scheduler_lease_ttl = 16;
+  // Rows one scan may consider. A large backlog raises this instead of waiting
+  // for many sweeps; zero keeps the built-in default.
+  uint32 scheduler_batch_size = 17;
 }
 
 message RuntimeLimits {

@@ -61,6 +61,10 @@ type DatasetImportTask struct {
 	Phase              ImportPhase
 	RecoveryGeneration int64
 	RecoveryPolicy     []byte
+	// DeferCount is the automatic-retry budget spent in the current recovery
+	// cycle. RecoveryGeneration only advances on an explicit user retry, so it
+	// cannot bound background retries.
+	DeferCount int32
 
 	NextRunAt                time.Time
 	LeaseOwner               string
@@ -91,6 +95,15 @@ type DatasetImportTask struct {
 // keeps its version; cancelling then is a stable no-op, not a rollback.
 func (task DatasetImportTask) CanCancel() bool {
 	return task.State == TaskQueued || task.State == TaskRunning
+}
+
+// needsDispatchOnly reports whether the task has no observation work pending, so
+// the only thing a sweep could do for it is start a new attempt. Such a row is
+// skipped while the shared quota is full; a row with a bound attempt, a frozen
+// candidate or a pending cancel is always processed because that is what
+// observes a finished Job and returns its slot.
+func (task DatasetImportTask) needsDispatchOnly() bool {
+	return task.CurrentAttemptID == "" && task.CandidateAttemptID == "" && task.CancelRequestedAt == nil
 }
 
 // CanRetry reports whether an explicit retry is legal: only a retryable FAILED

@@ -290,8 +290,11 @@ type DatasetImport struct {
 	// Scan and lease timing for the import scheduler.
 	SchedulerInterval *durationpb.Duration `protobuf:"bytes,15,opt,name=scheduler_interval,json=schedulerInterval,proto3" json:"scheduler_interval,omitempty"`
 	SchedulerLeaseTtl *durationpb.Duration `protobuf:"bytes,16,opt,name=scheduler_lease_ttl,json=schedulerLeaseTtl,proto3" json:"scheduler_lease_ttl,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// Rows one scan may consider. A large backlog raises this instead of waiting
+	// for many sweeps; zero keeps the built-in default.
+	SchedulerBatchSize uint32 `protobuf:"varint,17,opt,name=scheduler_batch_size,json=schedulerBatchSize,proto3" json:"scheduler_batch_size,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *DatasetImport) Reset() {
@@ -434,6 +437,13 @@ func (x *DatasetImport) GetSchedulerLeaseTtl() *durationpb.Duration {
 		return x.SchedulerLeaseTtl
 	}
 	return nil
+}
+
+func (x *DatasetImport) GetSchedulerBatchSize() uint32 {
+	if x != nil {
+		return x.SchedulerBatchSize
+	}
+	return 0
 }
 
 type RuntimeLimits struct {
@@ -1379,7 +1389,7 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	" model_resolution_timeout_seconds\x18\x10 \x01(\rR\x1dmodelResolutionTimeoutSeconds\x126\n" +
 	"\x17tenant_environment_file\x18\x11 \x01(\tR\x15tenantEnvironmentFile\x12:\n" +
 	"\x19tenant_environment_sha256\x18\x12 \x01(\tR\x17tenantEnvironmentSha256\x12=\n" +
-	"\x0edataset_import\x18\x13 \x01(\v2\x16.conf.v1.DatasetImportR\rdatasetImportJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\f\x10\rR\fbinding_fileR\x0ebinding_sha256R\x13dispatch_batch_size\"\xf8\x05\n" +
+	"\x0edataset_import\x18\x13 \x01(\v2\x16.conf.v1.DatasetImportR\rdatasetImportJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\f\x10\rR\fbinding_fileR\x0ebinding_sha256R\x13dispatch_batch_size\"\xaa\x06\n" +
 	"\rDatasetImport\x121\n" +
 	"\x14huggingface_endpoint\x18\x01 \x01(\tR\x13huggingfaceEndpoint\x12/\n" +
 	"\x13modelscope_endpoint\x18\x02 \x01(\tR\x12modelscopeEndpoint\x12.\n" +
@@ -1398,7 +1408,8 @@ const file_conf_v1_conf_proto_rawDesc = "" +
 	"\bpvc_size\x18\r \x01(\tR\apvcSize\x12'\n" +
 	"\x0fcredential_file\x18\x0e \x01(\tR\x0ecredentialFile\x12H\n" +
 	"\x12scheduler_interval\x18\x0f \x01(\v2\x19.google.protobuf.DurationR\x11schedulerInterval\x12I\n" +
-	"\x13scheduler_lease_ttl\x18\x10 \x01(\v2\x19.google.protobuf.DurationR\x11schedulerLeaseTtl\";\n" +
+	"\x13scheduler_lease_ttl\x18\x10 \x01(\v2\x19.google.protobuf.DurationR\x11schedulerLeaseTtl\x120\n" +
+	"\x14scheduler_batch_size\x18\x11 \x01(\rR\x12schedulerBatchSize\";\n" +
 	"\rRuntimeLimits\x12*\n" +
 	"\x11max_content_bytes\x18\x01 \x01(\x03R\x0fmaxContentBytes\"\xf8\x01\n" +
 	"\x16ImageRuntimeConnection\x12\x1a\n" +

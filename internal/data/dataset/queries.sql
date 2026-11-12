@@ -228,6 +228,7 @@ UPDATE modeldev_dataset_import_tasks
 SET state = 'QUEUED',
     phase = 'WAITING',
     recovery_generation = recovery_generation + 1,
+    defer_count = 0,
     validation_retry_count = 0,
     validation_deadline_at = NULL,
     failure_code = NULL,
@@ -359,11 +360,22 @@ SELECT modeldev_lock_dataset_target_commit(
 );
 
 -- name: ListDueTasks :many
+-- Observation work (a bound attempt, a frozen candidate or a pending cancel)
+-- always comes first, and a full quota only suppresses the dispatch rows. A
+-- single ordering by next_run_at let a backlog of unstarted tasks starve the
+-- ones already running, because binding an attempt used to push its row to the
+-- back of the queue.
 SELECT * FROM modeldev_dataset_import_tasks
 WHERE state IN ('QUEUED','RUNNING','CANCELING')
   AND next_run_at <= sqlc.arg(now)
   AND (lease_until IS NULL OR lease_until < sqlc.arg(now))
-ORDER BY next_run_at, accepted_at, tenant_id, task_id
+  AND (sqlc.arg(include_dispatch)::boolean
+       OR current_attempt_id IS NOT NULL
+       OR candidate_attempt_id IS NOT NULL
+       OR cancel_requested_at IS NOT NULL)
+ORDER BY (current_attempt_id IS NULL AND candidate_attempt_id IS NULL
+          AND cancel_requested_at IS NULL) ASC,
+         next_run_at, accepted_at, tenant_id, task_id
 LIMIT sqlc.arg(batch_size);
 
 -- name: AcquireTaskLease :one
@@ -395,9 +407,12 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND lease_epoch = sqlc.arg(epoch);
 
 -- name: CountRunningAttempts :one
+-- The quota counts attempts whose writer is not yet proven stopped, not merely
+-- attempts whose dispatch gate closed. Closing dispatch stops new work; it does
+-- not prove the existing Job stopped writing, so releasing the slot on close
+-- would let a second writer start beside the first.
 SELECT count(*) FROM modeldev_dataset_import_attempts
-WHERE cleanup_state NOT IN ('DONE')
-  AND dispatch_closed_at IS NULL;
+WHERE writers_stopped_at IS NULL;
 
 -- name: InsertAttempt :one
 INSERT INTO modeldev_dataset_import_attempts (
@@ -417,10 +432,12 @@ ON CONFLICT DO NOTHING
 RETURNING *;
 
 -- name: SetCurrentAttempt :one
+-- Binding an attempt must not move the row in the scan order: next_run_at is
+-- left untouched so the task keeps being observed instead of falling behind a
+-- backlog of unstarted tasks.
 UPDATE modeldev_dataset_import_tasks
 SET current_attempt_id = sqlc.arg(attempt_id)::uuid,
     phase = 'WAITING',
-    next_run_at = clock_timestamp(),
     updated_at = clock_timestamp()
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND task_id = sqlc.arg(task_id)::uuid
@@ -480,6 +497,17 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND attempt_id = sqlc.arg(attempt_id)::uuid
   AND (reconcile_owner IS NULL OR reconcile_owner = sqlc.arg(owner) OR reconcile_until < clock_timestamp())
 RETURNING *;
+
+-- name: ReleaseAttemptLease :exec
+-- The reconcile lease is a fence for one step, not a lock held across sweeps.
+-- Releasing it keeps the attempt scannable instead of stalling it for a whole
+-- TTL between two steps that need no exclusivity.
+UPDATE modeldev_dataset_import_attempts
+SET reconcile_owner = NULL, reconcile_until = NULL
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
+  AND reconcile_owner = sqlc.arg(owner)
+  AND reconcile_epoch = sqlc.arg(epoch);
 
 -- name: ClaimAttemptCleanup :one
 -- The cleanup claim is the only path that may delete an attempt's objects.
@@ -588,8 +616,11 @@ RETURNING *;
 -- name: DeferTask :exec
 -- A retryable transient failure keeps the task live and just pushes the next
 -- scan out by the bounded backoff, so the retry budget is spent in plain sight.
+-- defer_count is the automatic-retry budget: recovery_generation only advances
+-- on an explicit user retry, so it cannot bound background retries.
 UPDATE modeldev_dataset_import_tasks
 SET next_run_at = clock_timestamp() + sqlc.arg(delay)::interval,
+    defer_count = defer_count + 1,
     lease_owner = NULL,
     lease_until = NULL,
     failure_code = sqlc.arg(failure_code),
@@ -599,17 +630,29 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND state IN ('QUEUED','RUNNING');
 
 -- name: CloseAttempt :one
--- Stop dispatching for this attempt and record why. writers_stopped_at is set
--- only once the attempt no longer owns a live writer; a failed attempt whose Job
--- never started already satisfies that.
+-- Stop dispatching for this attempt and record why. writers_stopped_at is NOT
+-- set here: closing the dispatch gate stops new work but proves nothing about
+-- the Job already running. Only ConfirmWritersStopped may record that fact,
+-- after the workload was observed finished or gone.
 UPDATE modeldev_dataset_import_attempts
 SET dispatch_closed_at = clock_timestamp(),
     close_reason = sqlc.arg(close_reason),
-    writers_stopped_at = clock_timestamp(),
     reconcile_next_at = clock_timestamp()
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND attempt_id = sqlc.arg(attempt_id)::uuid
   AND dispatch_closed_at IS NULL
+RETURNING *;
+
+-- name: ConfirmWritersStopped :one
+-- The one write that may release a capacity slot. It requires the dispatch gate
+-- to be closed first, so a live attempt can never be marked stopped.
+UPDATE modeldev_dataset_import_attempts
+SET writers_stopped_at = clock_timestamp(),
+    reconcile_next_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid
+  AND dispatch_closed_at IS NOT NULL
+  AND writers_stopped_at IS NULL
 RETURNING *;
 
 -- name: RecordAttemptJob :one
