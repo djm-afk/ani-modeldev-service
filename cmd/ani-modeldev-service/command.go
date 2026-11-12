@@ -18,6 +18,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	conf "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/conf/v1"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/catalogue"
+	datasetdata "github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/dataset"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/execution"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/data/input"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/server"
@@ -118,7 +119,12 @@ func buildCommandServerWithEnvironment(listener *conf.Server_GRPC, config *conf.
 			return failed("command admission catalogue unavailable or invalid")
 		}
 		inputs := input.New(pool)
-		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models, images, limits))
+		// Prepare observes the dataset lifecycle so a new admission cannot start
+		// from an archived collection. The check is a short read of the owning
+		// dataset row; a version that belongs to no dataset is a legacy input and
+		// stays available.
+		admission = service.NewAdmission(biz.NewFinetuningAdmissionResolver(implementationMaterials, inputs, facts, models, images, limits).
+			WithDatasetAvailability(datasetdata.New(pool)))
 		materials := biz.NewManagedMaterials(implementationMaterials, facts, inputs, biz.NewInputImporter(inputs, verifier, limits, runtimeConfig.ImportTimeout()))
 		management = service.NewManagement(materials)
 		source, sourceOK := models.(biz.FinetuningSourceFactsReader)

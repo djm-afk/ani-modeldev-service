@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01"
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/contract/cpup01/conformance"
@@ -233,4 +234,42 @@ func TestPrepareFinalizeFreezesInputsAndReverifiesCurrentEnvironmentWithoutWrite
 	if json.Unmarshal(again.Snapshot.RuntimePlan.ExpectedSpec, &runtime) != nil || runtime["template"] == nil {
 		t.Fatal("Runtime plan omitted full template")
 	}
+}
+
+// datasetAvailabilityProbe records what Prepare asked and answers with a fixed
+// error, so the test can prove the observation happens and its answer is
+// honoured.
+type datasetAvailabilityProbe struct {
+	tenant  string
+	version string
+	calls   int
+	err     error
+}
+
+func (p *datasetAvailabilityProbe) CheckDatasetAvailable(_ context.Context, tenant, version string) error {
+	p.calls++
+	p.tenant, p.version = tenant, version
+	return p.err
+}
+
+// Prepare must observe the dataset lifecycle for the exact input version it
+// froze, and must refuse the admission when that dataset is archived.
+func TestPrepareObservesTheDatasetLifecycle(t *testing.T) {
+	f := prepareResolution(t)
+	probe := &datasetAvailabilityProbe{}
+	f.resolver.WithDatasetAvailability(probe)
+
+	if _, err := f.resolver.Prepare(f.ctx, f.request); err != nil {
+		t.Fatalf("an available dataset was rejected: %v", err)
+	}
+	if probe.calls != 1 || probe.tenant != f.imported.TenantID || probe.version != f.imported.InputVersionID {
+		t.Fatalf("Prepare observed %d times for %s/%s, want one observation of the frozen input",
+			probe.calls, probe.tenant, probe.version)
+	}
+
+	probe.err = biz.ErrDatasetArchived
+	if _, err := f.resolver.Prepare(f.ctx, f.request); !errors.Is(err, biz.ErrDatasetArchived) {
+		t.Fatalf("an archived dataset returned %v, want DATASET_ARCHIVED", err)
+	}
+	requireNoResolvedExecution(t, f)
 }

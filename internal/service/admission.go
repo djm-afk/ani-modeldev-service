@@ -119,6 +119,12 @@ func admissionError(err error, requestID string) error {
 		return commandError(codes.NotFound, modeldevv1.ErrorReason_ERROR_REASON_RESOURCE_NOT_FOUND, "input version unavailable", requestID)
 	case errors.Is(err, biz.ErrAdmissionInputNotReady):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INPUT_NOT_READY, "input version is not ready", requestID)
+	case errors.Is(err, biz.ErrDatasetArchived):
+		// The input version is still READY, but the collection that owns it is
+		// archived. Reporting it as "not ready" would send operators after a
+		// dataset-state problem that does not exist, so the message names the
+		// lifecycle instead.
+		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INPUT_NOT_READY, "input dataset is archived", requestID)
 	case errors.Is(err, biz.ErrInputKindFormatMismatch):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INPUT_KIND_FORMAT_MISMATCH, "input format is not accepted by this execution kind", requestID)
 	case errors.Is(err, biz.ErrAdmissionEnvironmentNotReady):

@@ -55,6 +55,18 @@ type AdmissionFactsReader interface {
 	ReadAdmissionFacts(context.Context, string, string) (TenantAdmissionFacts, error)
 }
 
+// DatasetAvailabilityChecker answers whether the dataset that owns an input
+// version is still usable. It is a separate, narrow port because the answer is
+// an observation of another aggregate: Prepare must not read the dataset row
+// directly, and the check must stay a short read that holds no lock while
+// waiting for anything external.
+//
+// A version that belongs to no dataset is a legacy CSV input, which this
+// lifecycle does not govern; the implementation reports that as available.
+type DatasetAvailabilityChecker interface {
+	CheckDatasetAvailable(ctx context.Context, tenantID, inputVersionID string) error
+}
+
 // TrainingImageResolution is Resource's answer for one catalogue selection. It
 // carries the authoritative registry authority, so no consumer re-derives the
 // host from the reference.
@@ -87,11 +99,22 @@ type AdmissionResolver struct {
 	facts     AdmissionFactsReader
 	models    FinetuningModelFactsReader
 	images    TrainingImageResolver
+	datasets  DatasetAvailabilityChecker
 	limits    cpup01.ContentLimits
 }
 
 func NewAdmissionResolver(materials AdmissionMaterialReader, inputs AdmissionInputReader, facts AdmissionFactsReader, images TrainingImageResolver, limits cpup01.ContentLimits) *AdmissionResolver {
 	return &AdmissionResolver{materials: materials, inputs: inputs, facts: facts, images: images, limits: limits}
+}
+
+// WithDatasetAvailability attaches the dataset lifecycle observation. It is
+// optional so a deployment without the dataset domain keeps working, but when it
+// is present Prepare refuses an archived collection.
+func (r *AdmissionResolver) WithDatasetAvailability(checker DatasetAvailabilityChecker) *AdmissionResolver {
+	if r != nil {
+		r.datasets = checker
+	}
+	return r
 }
 
 func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissionInput) (cpup01.PreparedCandidate, error) {
@@ -229,6 +252,17 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 	normalized, err := cpup01.DecodePreparedCandidate(raw, hash)
 	if err != nil {
 		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
+	}
+	// The dataset lifecycle is observed last, after the candidate is canonical
+	// and hashed. Checking earlier would leave a wider window in which an archive
+	// lands between the check and the freeze, and the candidate would then be
+	// frozen from a collection that is no longer active. Design §10.2 puts the
+	// observation here: a candidate frozen before the archive keeps its contract,
+	// but a new admission must not start from an archived collection.
+	if r.datasets != nil {
+		if err := r.datasets.CheckDatasetAvailable(ctx, identity.TenantID, intent.DatasetVersionID); err != nil {
+			return cpup01.PreparedCandidate{}, err
+		}
 	}
 	return normalized, nil
 }

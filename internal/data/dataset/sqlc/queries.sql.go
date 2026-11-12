@@ -824,6 +824,30 @@ func (q *Queries) DatasetNameTaken(ctx context.Context, arg DatasetNameTakenPara
 	return dataset_id, err
 }
 
+const datasetStateForInputVersion = `-- name: DatasetStateForInputVersion :one
+SELECT d.state
+FROM modeldev_datasets d
+JOIN modeldev_dataset_version_metadata m
+  ON m.tenant_id = d.tenant_id AND m.dataset_id = d.dataset_id
+WHERE m.tenant_id = $1::uuid
+  AND m.input_version_id = $2::uuid
+`
+
+type DatasetStateForInputVersionParams struct {
+	TenantID       pgtype.UUID
+	InputVersionID pgtype.UUID
+}
+
+// The availability observation for a training admission. A version that belongs
+// to no dataset is a legacy CSV input and is not governed by this lifecycle, so
+// the caller distinguishes "no row" from "archived".
+func (q *Queries) DatasetStateForInputVersion(ctx context.Context, arg DatasetStateForInputVersionParams) (string, error) {
+	row := q.db.QueryRow(ctx, datasetStateForInputVersion, arg.TenantID, arg.InputVersionID)
+	var state string
+	err := row.Scan(&state)
+	return state, err
+}
+
 const datasetVersionStats = `-- name: DatasetVersionStats :many
 SELECT dataset_id,
        count(*)::bigint AS ready_version_count,

@@ -49,6 +49,10 @@ type schedFixture struct {
 	datasetID string
 	taskID    string
 	seq       int
+	// lastInputVersion and lastVersionNumber record what the most recent addTask
+	// reserved, so a test can publish a version for that exact task.
+	lastInputVersion  string
+	lastVersionNumber int
 }
 
 // nextSeq hands out a distinct small integer per fixture row.
@@ -155,6 +159,8 @@ VALUES ($1,$2,$3,$4,$5,$6,$24,$7,clock_timestamp(),'MODELSCOPE',
 		t.Fatalf("commit: %v", err)
 	}
 	fixture.taskID = taskID
+	fixture.lastInputVersion = inputVersion
+	fixture.lastVersionNumber = versionNumber
 }
 
 // addAttempt inserts one attempt for the given task.

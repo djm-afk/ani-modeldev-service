@@ -57,6 +57,17 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND state = 'ACTIVE'
 RETURNING *;
 
+-- name: DatasetStateForInputVersion :one
+-- The availability observation for a training admission. A version that belongs
+-- to no dataset is a legacy CSV input and is not governed by this lifecycle, so
+-- the caller distinguishes "no row" from "archived".
+SELECT d.state
+FROM modeldev_datasets d
+JOIN modeldev_dataset_version_metadata m
+  ON m.tenant_id = d.tenant_id AND m.dataset_id = d.dataset_id
+WHERE m.tenant_id = sqlc.arg(tenant_id)::uuid
+  AND m.input_version_id = sqlc.arg(input_version_id)::uuid;
+
 -- name: RestoreDataset :one
 UPDATE modeldev_datasets
 SET state = 'ACTIVE',
