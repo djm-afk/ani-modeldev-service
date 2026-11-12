@@ -325,6 +325,22 @@ func TestAcceptImportRequiresSizeAndLimit(t *testing.T) {
 	}
 }
 
+// A file larger than the accepted limit must be refused here, before the hub is
+// queried. The database enforces S <= L as a CHECK, so accepting it would
+// surface as a persistence failure after the expensive work was already done.
+func TestAcceptImportRejectsAFileAboveTheLimit(t *testing.T) {
+	f := newImportsFixture()
+	acceptance := validAcceptance()
+	acceptance.AcceptedLimit = acceptance.Selection.ExpectedSizeBytes - 1
+	if _, err := f.imports.AcceptImport(context.Background(), acceptance); !errors.Is(err, ErrSourceTooLarge) {
+		t.Fatalf("oversize file returned %v, want SOURCE_TOO_LARGE", err)
+	}
+	// The refusal must happen before any hub access.
+	if len(f.sources.paths) != 0 {
+		t.Fatalf("an oversize file still reached the hub %d times", len(f.sources.paths))
+	}
+}
+
 func TestCancelImportTransitionsLiveTaskOnly(t *testing.T) {
 	f := newImportsFixture()
 	f.tasks.value = DatasetImportTask{TenantID: fixtureTenant, TaskID: fixtureTask, DatasetID: fixtureDataset, State: TaskRunning}

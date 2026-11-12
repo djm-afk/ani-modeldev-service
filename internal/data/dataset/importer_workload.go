@@ -10,6 +10,7 @@ import (
 
 	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -149,6 +150,10 @@ func (w *ImporterWorkload) ensureSecret(ctx context.Context, attempt biz.Dataset
 	payload, err := json.Marshal(map[string]string{
 		"access_key_id": credentials.AccessKeyID, "secret_access_key": credentials.SecretAccessKey,
 		"session_token": credentials.SessionToken,
+		// The expiry rides along so the importer can refuse to start an upload it
+		// cannot finish, instead of letting the store answer AccessDenied halfway
+		// through and reporting it as an opaque dependency failure.
+		"expiration": credentials.ExpiresAt.UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		return fmt.Errorf("%w: encode import credentials: %v", biz.ErrPersistence, err)
@@ -174,6 +179,10 @@ func (w *ImporterWorkload) ensureSecret(ctx context.Context, attempt biz.Dataset
 }
 
 func (w *ImporterWorkload) ensurePVC(ctx context.Context, attempt biz.DatasetImportAttempt, task biz.DatasetImportTask) error {
+	storage, err := w.pvcStorage(task.ExpectedSizeBytes)
+	if err != nil {
+		return err
+	}
 	expected := &unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": "v1", "kind": "PersistentVolumeClaim",
 		"metadata": map[string]any{
@@ -183,11 +192,40 @@ func (w *ImporterWorkload) ensurePVC(ctx context.Context, attempt biz.DatasetImp
 		"spec": map[string]any{
 			"accessModes":      []any{"ReadWriteOnce"},
 			"storageClassName": w.storageClass,
-			"resources":        map[string]any{"requests": map[string]any{"storage": w.pvcSize}},
+			"resources":        map[string]any{"requests": map[string]any{"storage": storage}},
 		},
 	}}
-	_, err := w.ensureObject(ctx, importerPVCResource, expected, false)
+	_, err = w.ensureObject(ctx, importerPVCResource, expected, false)
 	return err
+}
+
+// pvcStorage sizes the staging volume for the file this task will download.
+//
+// A fixed size silently capped every import at whatever the deployment happened
+// to configure, so a file the platform accepted could never be staged. The
+// request is the larger of the configured floor and the file plus a headroom
+// factor, because the importer writes the download and then reads it back while
+// uploading. Each attempt gets its own PVC, so this never expands an existing
+// volume and needs no allowVolumeExpansion.
+func (w *ImporterWorkload) pvcStorage(expectedSizeBytes int64) (string, error) {
+	floor, err := resource.ParseQuantity(w.pvcSize)
+	if err != nil || floor.Sign() <= 0 {
+		return "", biz.ErrImportWorkerConfiguration
+	}
+	if expectedSizeBytes <= 0 {
+		return w.pvcSize, nil
+	}
+	// ceil(S * 1.2) + 256MiB, computed in bytes so no rounding can undershoot.
+	// The guard keeps the multiplication from wrapping on an absurd size.
+	if expectedSizeBytes > (1<<62)/6 {
+		return "", biz.ErrImportWorkerConfiguration
+	}
+	scaled := (expectedSizeBytes*6 + 4) / 5
+	needed := resource.NewQuantity(scaled+256<<20, resource.BinarySI)
+	if needed.Cmp(floor) <= 0 {
+		return w.pvcSize, nil
+	}
+	return needed.String(), nil
 }
 
 // ensureJob creates the suspended Job. The plan is embedded as an annotation

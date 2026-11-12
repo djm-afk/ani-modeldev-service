@@ -18,6 +18,9 @@ var (
 	ErrSourceChanged      = errors.New("SOURCE_CHANGED")
 	ErrSourceFileInvalid  = errors.New("SOURCE_FILE_INVALID")
 	ErrSourceInvalidInput = errors.New("SOURCE_INVALID_INPUT")
+	// ErrSourceTooLarge means the confirmed file exceeds the limit this
+	// deployment accepts. It is a content verdict, not a hub problem.
+	ErrSourceTooLarge = errors.New("SOURCE_TOO_LARGE")
 	// ErrSourceUnavailable is a transport-level failure reaching the hub (DNS,
 	// egress, TLS, hub outage). It is deliberately distinct from
 	// SOURCE_NOT_FOUND: the repository may well exist, and the caller must not

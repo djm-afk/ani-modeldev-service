@@ -16,7 +16,12 @@ var (
 	ErrAdmissionEnvironmentNotReady = errors.New("ENVIRONMENT_NOT_READY")
 	ErrAdmissionPlanMismatch        = errors.New("ADMISSION_PLAN_MISMATCH")
 	ErrUnsupportedDevice            = errors.New("UNSUPPORTED_DEVICE")
-	ErrComputeClusterMismatch       = EnvironmentError("COMPUTE_CLUSTER_MISMATCH")
+	// ErrWorkspaceCapacityInsufficient means this environment's execution PVC
+	// cannot hold the prepared dataset plus the run's own working files. It is a
+	// resource verdict about one environment, not a content verdict about the
+	// version: the same version may run where capacity is larger.
+	ErrWorkspaceCapacityInsufficient = errors.New("WORKSPACE_CAPACITY_INSUFFICIENT")
+	ErrComputeClusterMismatch        = EnvironmentError("COMPUTE_CLUSTER_MISMATCH")
 )
 
 type PrepareAdmissionInput struct {
@@ -191,6 +196,12 @@ func (r *AdmissionResolver) Prepare(ctx context.Context, request PrepareAdmissio
 		}
 		return cpup01.PreparedCandidate{}, ErrAdmissionEnvironmentNotReady
 	}
+	// The training Pod writes the prepared dataset, its mmap working files and
+	// its outputs into one execution PVC. Checking that sum here names the real
+	// cause instead of letting the Pod fail on a full volume mid-run.
+	if err := checkWorkspaceCapacity(facts.Workspace, input); err != nil {
+		return cpup01.PreparedCandidate{}, err
+	}
 	parameters, err := intent.ResolveParameters()
 	if err != nil {
 		return cpup01.PreparedCandidate{}, ErrInvalidAdmission
@@ -330,6 +341,51 @@ func (r *AdmissionResolver) Finalize(ctx context.Context, candidate cpup01.Prepa
 		return AdmissionResolution{}, err
 	}
 	return AdmissionResolution{Snapshot: normalized, SpecHash: hash}, nil
+}
+
+// checkWorkspaceCapacity compares the run's estimated footprint with the
+// environment's execution PVC. The estimate covers what the training Pod writes
+// into that one volume: the prepared dataset, the mmap working files, the
+// metrics and model artifacts, and the tar copy made while packaging.
+//
+// The estimate is deliberately conservative rather than exact: an under-estimate
+// would let the Pod fail on a full volume mid-run, which is the failure this
+// check exists to prevent. It adds no new dataset ceiling; the only limit is the
+// environment's own configured capacity.
+func checkWorkspaceCapacity(workspace cpup01.WorkspaceContract, input cpup01.InputRef) error {
+	if workspace.CapacityBytes <= 0 {
+		// A contract without capacity is not this check's business; snapshot
+		// validation already rejects it.
+		return nil
+	}
+	prepared := input.PreparedDataset.SizeBytes
+	if prepared <= 0 {
+		prepared = input.Object.SizeBytes
+	}
+	// features.f32 (64) + labels.i64 (8) + order.i64 (8) per row.
+	working, err := cpup01.CheckedMultiply(input.RowCount, 80)
+	if err != nil {
+		return ErrWorkspaceCapacityInsufficient
+	}
+	// Artifacts and the packaging copy are bounded by a fixed allowance rather
+	// than guessed per step: metrics.jsonl, model.pt, model_config.json,
+	// summary.json and the tar copy of the prepared dataset.
+	artifacts := int64(64 << 20)
+	packaging := prepared
+	total, err := cpup01.CheckedAdd(prepared, working)
+	if err != nil {
+		return ErrWorkspaceCapacityInsufficient
+	}
+	if total, err = cpup01.CheckedAdd(total, artifacts); err != nil {
+		return ErrWorkspaceCapacityInsufficient
+	}
+	if total, err = cpup01.CheckedAdd(total, packaging); err != nil {
+		return ErrWorkspaceCapacityInsufficient
+	}
+	if total > workspace.CapacityBytes {
+		return ErrWorkspaceCapacityInsufficient
+	}
+	return nil
 }
 
 func (r *AdmissionResolver) resolveTrainingProgram(ctx context.Context, tenantID string, intent cpup01.Intent, material cpup01.ImplementationMaterial, parameters []cpup01.Parameter, facts TenantAdmissionFacts, input cpup01.InputRef) (cpup01.ProgramRef, *cpup01.TrainingImageFacts, error) {

@@ -71,6 +71,12 @@ const (
 	FailDatasetRecordTooLarge ImportFailureCode = "DATASET_RECORD_TOO_LARGE"
 	FailImportResultInvalid   ImportFailureCode = "IMPORT_RESULT_INVALID"
 	FailPersistence           ImportFailureCode = "IMPORT_PERSISTENCE_UNAVAILABLE"
+	// FailDatasetArchived and FailImportStateConflict name the two lifecycle
+	// races a publish can lose. Reporting them as IMPORT_PERSISTENCE_UNAVAILABLE
+	// told operators the store was broken when the collection had simply been
+	// archived or the task had already moved on.
+	FailDatasetArchived     ImportFailureCode = "DATASET_ARCHIVED"
+	FailImportStateConflict ImportFailureCode = "IMPORT_STATE_CONFLICT"
 )
 
 // ImportResultObject is the exact uploaded object identity.

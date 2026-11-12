@@ -233,6 +233,12 @@ enum ErrorReason {
   // Distinct from INPUT_NOT_READY on purpose: nothing is wrong with the data.
   // Carries no kind/format detail; the reason and the type say it.
   ERROR_REASON_INPUT_KIND_FORMAT_MISMATCH = 39;
+  // The published version is valid, but this environment's training workspace
+  // cannot hold the prepared dataset plus the run's own outputs. Distinct from
+  // CONTENT_LIMIT_EXCEEDED (the file is too big for the platform) and from
+  // IMPORT_RESOURCE_UNAVAILABLE (staging failed): the same version may still be
+  // usable in an environment with more capacity.
+  ERROR_REASON_WORKSPACE_CAPACITY_INSUFFICIENT = 40;
 }
 
 message FieldViolation {

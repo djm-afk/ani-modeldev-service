@@ -656,6 +656,10 @@ func failureCodeFor(cause error) string {
 		return string(FailSourceAuthRequired)
 	case errors.Is(cause, ErrImportResultInvalid):
 		return string(FailImportResultInvalid)
+	case errors.Is(cause, ErrDatasetArchived):
+		return string(FailDatasetArchived)
+	case errors.Is(cause, ErrImportStateConflict):
+		return string(FailImportStateConflict)
 	case errors.Is(cause, ErrInputSourceUnavailable), errors.Is(cause, ErrObjectSourceUnavailable):
 		return string(FailDependencyUnavailable)
 	case errors.Is(cause, ErrInputVerification), errors.Is(cause, ErrObjectVerification):

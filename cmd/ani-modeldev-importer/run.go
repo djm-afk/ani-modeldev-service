@@ -129,6 +129,11 @@ func classifyUploadError(err error) biz.ImportFailureCode {
 	if isVersioningRequired(err) {
 		return biz.FailStorageVersioningRequired
 	}
+	// An expired session is a deadline problem, not a store outage: the attempt
+	// ran past the window its credentials covered.
+	if errors.Is(err, errCredentialsExpired) {
+		return biz.FailTimeout
+	}
 	return biz.FailDependencyUnavailable
 }
 

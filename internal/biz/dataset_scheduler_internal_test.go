@@ -142,6 +142,18 @@ func TestSchedulerClassifiesRetryability(t *testing.T) {
 	}
 }
 
+// A publish that loses a lifecycle race must name the race. Reporting it as
+// IMPORT_PERSISTENCE_UNAVAILABLE told operators the store was broken when the
+// collection had simply been archived or the task had already moved on.
+func TestFailureCodeNamesLifecycleRaces(t *testing.T) {
+	if got := failureCodeFor(ErrDatasetArchived); got != string(FailDatasetArchived) {
+		t.Fatalf("archived dataset reported %s, want DATASET_ARCHIVED", got)
+	}
+	if got := failureCodeFor(ErrImportStateConflict); got != string(FailImportStateConflict) {
+		t.Fatalf("state conflict reported %s, want IMPORT_STATE_CONFLICT", got)
+	}
+}
+
 // A report's own FAILED verdict must survive classification: the job is the only
 // party that observed what went wrong, so its code is the one the page branches
 // on. Rewriting it to a generic persistence error erases the reason.

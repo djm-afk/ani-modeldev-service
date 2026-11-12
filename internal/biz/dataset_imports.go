@@ -102,6 +102,12 @@ func (imports *DatasetImports) AcceptImport(ctx context.Context, acceptance Impo
 	if acceptance.AcceptedLimit <= 0 || acceptance.Selection.ExpectedSizeBytes <= 0 {
 		return AcceptanceResult{}, ErrSourceSizeUnknown
 	}
+	// The database enforces S <= L as a CHECK, so accepting a larger file here
+	// would surface as a persistence failure after the hub was already queried.
+	// Refusing now names the real cause: the file exceeds the current limit.
+	if acceptance.Selection.ExpectedSizeBytes > acceptance.AcceptedLimit {
+		return AcceptanceResult{}, ErrSourceTooLarge
+	}
 
 	// 1. Idempotent replay is answered before any hub access. The selection
 	// fingerprint is part of the intent, so the same key with a different file

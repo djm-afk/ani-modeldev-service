@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -21,7 +22,15 @@ type credentialFile struct {
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
 	SessionToken    string `json:"session_token"`
+	// Expiration is the session's proven expiry. It is optional so an older
+	// Secret shape still works, but when present an expired session is refused
+	// before the request leaves the Pod.
+	Expiration string `json:"expiration"`
 }
+
+// errCredentialsExpired is a distinct cause so the caller can report a timeout
+// rather than an opaque dependency failure.
+var errCredentialsExpired = errors.New("import credentials expired")
 
 func newS3Client(endpoint, region, credentialPath string) (*s3.Client, error) {
 	if endpoint == "" || region == "" || credentialPath == "" {
@@ -42,6 +51,17 @@ func newS3Client(endpoint, region, credentialPath string) (*s3.Client, error) {
 		if credential.AccessKeyID == "" || credential.SecretAccessKey == "" ||
 			strings.ContainsAny(credential.AccessKeyID+credential.SecretAccessKey+credential.SessionToken, " \t\r\n") {
 			return aws.Credentials{}, errors.New("invalid credential file")
+		}
+		// An expired session cannot sign anything. Saying so here keeps the
+		// failure attributable instead of surfacing as AccessDenied from the store.
+		if credential.Expiration != "" {
+			expiresAt, parseErr := time.Parse(time.RFC3339, credential.Expiration)
+			if parseErr != nil {
+				return aws.Credentials{}, errors.New("invalid credential expiry")
+			}
+			if !expiresAt.After(time.Now()) {
+				return aws.Credentials{}, errCredentialsExpired
+			}
 		}
 		return aws.Credentials{
 			AccessKeyID: credential.AccessKeyID, SecretAccessKey: credential.SecretAccessKey,

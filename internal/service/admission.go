@@ -133,6 +133,11 @@ func admissionError(err error, requestID string) error {
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_IMPLEMENTATION_UNAVAILABLE, "implementation software materials unavailable", requestID)
 	case errors.Is(err, biz.ErrUnsupportedDevice):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_UNSUPPORTED_DEVICE, "implementation does not support this device", requestID)
+	case errors.Is(err, biz.ErrWorkspaceCapacityInsufficient):
+		// The version is valid; this environment's execution volume is too small.
+		// Reporting it as a content or environment error would send operators to
+		// fix the wrong thing.
+		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_WORKSPACE_CAPACITY_INSUFFICIENT, "training workspace capacity is insufficient for this dataset", requestID)
 	case errors.Is(err, biz.ErrAdmissionPlanMismatch):
 		return commandError(codes.InvalidArgument, modeldevv1.ErrorReason_ERROR_REASON_ADMISSION_PLAN_MISMATCH, "admission plan mismatch", requestID)
 	case errors.Is(err, biz.ErrInputProofUnavailable), errors.Is(err, biz.ErrInputPathUnavailable):

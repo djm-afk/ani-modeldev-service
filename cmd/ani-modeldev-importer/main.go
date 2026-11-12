@@ -71,8 +71,12 @@ func NewHTTPFetcher(hfHost, msHost string, deadline time.Time) (*HTTPFetcher, er
 	// which is the normal path for any real dataset. The redirect is followed
 	// only when the target host is on the fixed allowlist below: never an
 	// arbitrary destination, never a scheme downgrade, and at most two hops.
+	//
+	// There is deliberately no client-level Timeout: the transfer window is the
+	// attempt's frozen deadline, which the request context already carries. A
+	// second, shorter hard-coded limit would cut off a slow but legitimate
+	// download that the plan explicitly allowed.
 	fetcher.client = &http.Client{
-		Timeout: 30 * time.Minute,
 		CheckRedirect: func(request *http.Request, via []*http.Request) error {
 			if len(via) >= 2 {
 				return errors.New("too many redirects")
@@ -133,7 +137,9 @@ func (fetcher *HTTPFetcher) Stream(ctx context.Context, plan ImportPlan) (io.Rea
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		return nil, biz.ErrSourceNotFound
+		// A transport failure is not a missing file: the hub may be throttling or
+		// down, and the task must be retried rather than failed permanently.
+		return nil, biz.ErrSourceUnavailable
 	}
 	switch response.StatusCode {
 	case http.StatusOK:
@@ -143,9 +149,15 @@ func (fetcher *HTTPFetcher) Stream(ctx context.Context, plan ImportPlan) (io.Rea
 	case http.StatusNotFound:
 		response.Body.Close()
 		return nil, biz.ErrSourceNotFound
+	case http.StatusTooManyRequests:
+		response.Body.Close()
+		return nil, biz.ErrSourceUnavailable
 	default:
 		response.Body.Close()
-		return nil, biz.ErrSourceNotFound
+		if response.StatusCode >= 500 {
+			return nil, biz.ErrSourceUnavailable
+		}
+		return nil, biz.ErrSourceInvalidInput
 	}
 	return response.Body, nil
 }

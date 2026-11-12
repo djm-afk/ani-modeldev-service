@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -293,7 +294,8 @@ func (issuer *Issuer) IssueImportSession(ctx context.Context, request biz.Import
 		return biz.ImportSession{}, fmt.Errorf("%w: owner credential is malformed", ErrUnavailable)
 	}
 	values := url.Values{
-		"Action": {"AssumeRole"}, "Version": {"2011-06-15"}, "DurationSeconds": {"900"},
+		"Action": {"AssumeRole"}, "Version": {"2011-06-15"},
+		"DurationSeconds": {strconv.FormatInt(importSessionSeconds(request.AuthDeadline, time.Now().UTC()), 10)},
 		"RoleSessionName": {importSessionName(request)}, "Policy": {string(policy)},
 	}
 	encoded := values.Encode()
@@ -338,7 +340,10 @@ func (issuer *Issuer) IssueImportSession(ctx context.Context, request biz.Import
 	if !safeCredential(value.AccessKeyID) || !safeCredential(value.SecretAccessKey) || !safeCredential(value.SessionToken) {
 		return biz.ImportSession{}, fmt.Errorf("%w: assume role returned an unusable session", ErrUnavailable)
 	}
-	if !value.Expiration.After(time.Now().Add(2*time.Minute)) || value.Expiration.After(started.Add(16*time.Minute)) {
+	// The session must cover the attempt's frozen deadline, so the upper bound is
+	// the STS maximum rather than a fixed short window. A session that expires
+	// before the deadline would fail the upload halfway through a slow download.
+	if !value.Expiration.After(time.Now().Add(2*time.Minute)) || value.Expiration.After(started.Add(time.Duration(maxImportSessionSeconds)*time.Second+time.Minute)) {
 		return biz.ImportSession{}, fmt.Errorf("%w: assume role expiry %s is outside the allowed window", ErrUnavailable, value.Expiration.UTC())
 	}
 	return biz.ImportSession{
@@ -352,6 +357,27 @@ func (issuer *Issuer) IssueImportSession(ctx context.Context, request biz.Import
 }
 
 var _ biz.ImportSessionIssuer = (*Issuer)(nil)
+
+// maxImportSessionSeconds is the AssumeRole ceiling. A session cannot be asked
+// for longer than this, so an attempt whose deadline is further out cannot be
+// covered by a single session.
+const maxImportSessionSeconds int64 = 12 * 60 * 60
+
+// importSessionSeconds asks for exactly the window the attempt still needs,
+// clamped to the STS maximum. Asking for a fixed 900s made every import longer
+// than fifteen minutes fail at upload time with an opaque AccessDenied.
+func importSessionSeconds(authDeadline, now time.Time) int64 {
+	remaining := int64(authDeadline.Sub(now) / time.Second)
+	if remaining < 900 {
+		// STS rejects anything under 900s; the caller has already checked that the
+		// deadline is still in the future.
+		return 900
+	}
+	if remaining > maxImportSessionSeconds {
+		return maxImportSessionSeconds
+	}
+	return remaining
+}
 
 // importSessionName stays within the STS 64-character limit. The task and
 // attempt UUIDs are already unique, so a prefix of both keeps the name
