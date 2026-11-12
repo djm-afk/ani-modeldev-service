@@ -340,11 +340,16 @@ func (issuer *Issuer) IssueImportSession(ctx context.Context, request biz.Import
 	if !safeCredential(value.AccessKeyID) || !safeCredential(value.SecretAccessKey) || !safeCredential(value.SessionToken) {
 		return biz.ImportSession{}, fmt.Errorf("%w: assume role returned an unusable session", ErrUnavailable)
 	}
-	// The session must cover the attempt's frozen deadline, so the upper bound is
-	// the STS maximum rather than a fixed short window. A session that expires
-	// before the deadline would fail the upload halfway through a slow download.
+	// The session must cover the attempt's frozen deadline. The Secret is written
+	// once and never refreshed, so a session that lapses before the deadline fails
+	// the upload after a slow download with an opaque AccessDenied. The upper bound
+	// is the STS maximum rather than a fixed short window.
 	if !value.Expiration.After(time.Now().Add(2*time.Minute)) || value.Expiration.After(started.Add(time.Duration(maxImportSessionSeconds)*time.Second+time.Minute)) {
 		return biz.ImportSession{}, fmt.Errorf("%w: assume role expiry %s is outside the allowed window", ErrUnavailable, value.Expiration.UTC())
+	}
+	if value.Expiration.Before(request.AuthDeadline) {
+		return biz.ImportSession{}, fmt.Errorf("%w: assume role expiry %s does not cover the attempt deadline %s",
+			ErrUnavailable, value.Expiration.UTC(), request.AuthDeadline.UTC())
 	}
 	return biz.ImportSession{
 		Issued: true, ExpiresAt: value.Expiration.UTC(),

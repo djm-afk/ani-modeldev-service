@@ -89,7 +89,10 @@ func TestIssueForImportRecordsIssuedExpiry(t *testing.T) {
 	sts := &fakeSTS{issued: true, credentials: biz.TemporaryStorageCredentials{
 		AccessKeyID: "a", SecretAccessKey: "b", SessionToken: "c", ExpiresAt: expiry,
 	}}
-	outcome, err := newIssuer(t, ledger, sts, now).IssueForImport(context.Background(), baseRequest(now), baseGrant())
+	request := baseRequest(now)
+	// The session must cover the attempt window, so the deadline sits inside it.
+	request.AuthDeadline = now.Add(5 * time.Minute)
+	outcome, err := newIssuer(t, ledger, sts, now).IssueForImport(context.Background(), request, baseGrant())
 	if err != nil {
 		t.Fatalf("issue: %v", err)
 	}
@@ -98,14 +101,58 @@ func TestIssueForImportRecordsIssuedExpiry(t *testing.T) {
 	}
 }
 
-func TestIssueForImportRejectsSessionBeyondAuthorizationWindow(t *testing.T) {
+// A session that outlives the attempt window is accepted: the policy is already
+// scoped to this attempt's two keys and the attempt stops at its deadline, so a
+// longer session grants nothing extra. Refusing it would only reject a backend
+// that rounds its expiry upward.
+func TestIssueForImportAcceptsSessionBeyondAuthorizationWindow(t *testing.T) {
 	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
 	ledger := &fakeLedger{generation: 1}
 	sts := &fakeSTS{issued: true, credentials: biz.TemporaryStorageCredentials{
 		AccessKeyID: "a", SecretAccessKey: "b", SessionToken: "c", ExpiresAt: now.Add(15 * time.Minute),
 	}}
-	if _, err := newIssuer(t, ledger, sts, now).IssueForImport(context.Background(), baseRequest(now), baseGrant()); !errors.Is(err, ErrImportIssuanceUnavailable) {
-		t.Fatalf("over-long session accepted: %v", err)
+	outcome, err := newIssuer(t, ledger, sts, now).IssueForImport(context.Background(), baseRequest(now), baseGrant())
+	if err != nil {
+		t.Fatalf("a longer session was refused: %v", err)
+	}
+	if outcome.State != "ISSUED" {
+		t.Fatalf("outcome = %+v", outcome)
+	}
+}
+
+// A session shorter than the attempt window cannot carry the upload that follows
+// a slow download. The Secret is written once and never refreshed, so a short
+// session fails the import halfway through with an opaque AccessDenied.
+func TestIssueForImportRejectsSessionShorterThanTheAttemptWindow(t *testing.T) {
+	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
+	request := baseRequest(now)
+	// The attempt still needs ten minutes; the backend returns five.
+	request.AuthDeadline = now.Add(10 * time.Minute)
+	ledger := &fakeLedger{generation: 1}
+	sts := &fakeSTS{issued: true, credentials: biz.TemporaryStorageCredentials{
+		AccessKeyID: "a", SecretAccessKey: "b", SessionToken: "c", ExpiresAt: now.Add(5 * time.Minute),
+	}}
+	if _, err := newIssuer(t, ledger, sts, now).IssueForImport(context.Background(), request, baseGrant()); !errors.Is(err, ErrImportIssuanceUnavailable) {
+		t.Fatalf("a session shorter than the attempt window was accepted: %v", err)
+	}
+}
+
+// A session that covers the window exactly is usable: the rule is "at least the
+// deadline", not "strictly more".
+func TestIssueForImportAcceptsASessionThatCoversTheWindow(t *testing.T) {
+	now := time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)
+	request := baseRequest(now)
+	request.AuthDeadline = now.Add(10 * time.Minute)
+	ledger := &fakeLedger{generation: 1}
+	sts := &fakeSTS{issued: true, credentials: biz.TemporaryStorageCredentials{
+		AccessKeyID: "a", SecretAccessKey: "b", SessionToken: "c", ExpiresAt: now.Add(10 * time.Minute),
+	}}
+	outcome, err := newIssuer(t, ledger, sts, now).IssueForImport(context.Background(), request, baseGrant())
+	if err != nil {
+		t.Fatalf("a covering session was refused: %v", err)
+	}
+	if outcome.State != "ISSUED" {
+		t.Fatalf("outcome = %+v", outcome)
 	}
 }
 

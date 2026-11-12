@@ -32,6 +32,39 @@ type credentialFile struct {
 // rather than an opaque dependency failure.
 var errCredentialsExpired = errors.New("import credentials expired")
 
+// loadCredential reads the mounted Secret and refuses a session that can no
+// longer sign. The clock is a parameter so the expiry rule is testable without
+// waiting for a real session to lapse.
+func loadCredential(credentialPath string, now time.Time) (aws.Credentials, error) {
+	raw, err := os.ReadFile(credentialPath)
+	if err != nil {
+		return aws.Credentials{}, err
+	}
+	var credential credentialFile
+	if err := json.Unmarshal(raw, &credential); err != nil {
+		return aws.Credentials{}, err
+	}
+	if credential.AccessKeyID == "" || credential.SecretAccessKey == "" ||
+		strings.ContainsAny(credential.AccessKeyID+credential.SecretAccessKey+credential.SessionToken, " \t\r\n") {
+		return aws.Credentials{}, errors.New("invalid credential file")
+	}
+	// An expired session cannot sign anything. Saying so here keeps the failure
+	// attributable instead of surfacing as AccessDenied from the store.
+	if credential.Expiration != "" {
+		expiresAt, parseErr := time.Parse(time.RFC3339, credential.Expiration)
+		if parseErr != nil {
+			return aws.Credentials{}, errors.New("invalid credential expiry")
+		}
+		if !expiresAt.After(now) {
+			return aws.Credentials{}, errCredentialsExpired
+		}
+	}
+	return aws.Credentials{
+		AccessKeyID: credential.AccessKeyID, SecretAccessKey: credential.SecretAccessKey,
+		SessionToken: credential.SessionToken, Source: "ani-dataset-issuance",
+	}, nil
+}
+
 func newS3Client(endpoint, region, credentialPath string) (*s3.Client, error) {
 	if endpoint == "" || region == "" || credentialPath == "" {
 		return nil, errors.New("s3 endpoint, region and credential file are required")
@@ -40,33 +73,7 @@ func newS3Client(endpoint, region, credentialPath string) (*s3.Client, error) {
 		if ctx == nil || ctx.Err() != nil {
 			return aws.Credentials{}, ctx.Err()
 		}
-		raw, err := os.ReadFile(credentialPath)
-		if err != nil {
-			return aws.Credentials{}, err
-		}
-		var credential credentialFile
-		if err := json.Unmarshal(raw, &credential); err != nil {
-			return aws.Credentials{}, err
-		}
-		if credential.AccessKeyID == "" || credential.SecretAccessKey == "" ||
-			strings.ContainsAny(credential.AccessKeyID+credential.SecretAccessKey+credential.SessionToken, " \t\r\n") {
-			return aws.Credentials{}, errors.New("invalid credential file")
-		}
-		// An expired session cannot sign anything. Saying so here keeps the
-		// failure attributable instead of surfacing as AccessDenied from the store.
-		if credential.Expiration != "" {
-			expiresAt, parseErr := time.Parse(time.RFC3339, credential.Expiration)
-			if parseErr != nil {
-				return aws.Credentials{}, errors.New("invalid credential expiry")
-			}
-			if !expiresAt.After(time.Now()) {
-				return aws.Credentials{}, errCredentialsExpired
-			}
-		}
-		return aws.Credentials{
-			AccessKeyID: credential.AccessKeyID, SecretAccessKey: credential.SecretAccessKey,
-			SessionToken: credential.SessionToken, Source: "ani-dataset-issuance",
-		}, nil
+		return loadCredential(credentialPath, time.Now())
 	})
 	options := s3.Options{
 		Region: region, BaseEndpoint: aws.String(endpoint), UsePathStyle: true,

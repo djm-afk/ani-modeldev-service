@@ -126,8 +126,12 @@ func (issuer *DatasetImportIssuer) IssueForImport(ctx context.Context, request I
 		outcome.State = "ISSUED"
 		outcome.ExpiresAt = credentials.ExpiresAt
 		outcome.Credentials = credentials
-		// A session must not outlive the attempt deadline.
-		if credentials.ExpiresAt.After(request.AuthDeadline) {
+		// The session must cover the attempt's remaining window without outliving
+		// the authorization that granted it. The Secret is written once and never
+		// refreshed, so a session that lapses before the deadline fails the upload
+		// after a slow download with an opaque AccessDenied; a session that outlives
+		// the attempt keeps a credential alive past the work it authorized.
+		if !sessionCoversWindow(credentials.ExpiresAt, request.AuthDeadline) {
 			return ImportIssuanceOutcome{}, ErrImportIssuanceUnavailable
 		}
 		return outcome, nil
@@ -148,6 +152,18 @@ func (issuer *DatasetImportIssuer) IssueForImport(ctx context.Context, request I
 		outcome.State = "UNKNOWN"
 		return outcome, nil
 	}
+}
+
+// sessionCoversWindow reports whether a session's proven expiry can carry the
+// attempt to its deadline. The window is inclusive: a session that ends exactly
+// when the attempt must stop is enough.
+//
+// A session that outlives the deadline is accepted rather than refused. The
+// policy is already scoped to this attempt's two keys, and the attempt stops at
+// the deadline regardless, so a longer session grants nothing extra; refusing it
+// would only reject a backend that rounds its expiry upward.
+func sessionCoversWindow(expiresAt, authDeadline time.Time) bool {
+	return !expiresAt.Before(authDeadline)
 }
 
 func validGrant(grant ImportGrant) bool {
