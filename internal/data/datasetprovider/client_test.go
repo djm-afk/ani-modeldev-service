@@ -54,9 +54,14 @@ func TestInspectHuggingFacePinsCommit(t *testing.T) {
 		case strings.Contains(r.URL.Path, "/revision/"):
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"sha":"` + testSHA + `"}`))
-		case strings.Contains(r.URL.Path, "/tree/"):
+		case strings.Contains(r.URL.Path, "/paths-info/"):
+			// The exact-path lookup must run against the resolved commit, not the
+			// branch the caller named.
+			if !strings.HasSuffix(r.URL.Path, "/paths-info/"+testSHA) {
+				t.Errorf("paths-info used %q, want the resolved commit", r.URL.Path)
+			}
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"type":"file","path":"alpaca.json","size":4096}`))
+			_, _ = w.Write([]byte(`[{"type":"file","path":"alpaca.json","size":4096}]`))
 		default:
 			http.NotFound(w, r)
 		}
@@ -78,6 +83,75 @@ func TestInspectHuggingFacePinsCommit(t *testing.T) {
 	}
 }
 
+// A mirror without paths-info must still resolve the exact path, and the
+// fallback must accept the array shape the tree endpoint returns.
+func TestInspectHuggingFaceFallsBackToTreeArray(t *testing.T) {
+	client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.Contains(r.URL.Path, "/revision/"):
+			_, _ = w.Write([]byte(`{"sha":"` + testSHA + `"}`))
+		case strings.Contains(r.URL.Path, "/paths-info/"):
+			http.NotFound(w, r)
+		case strings.Contains(r.URL.Path, "/tree/"):
+			if !strings.Contains(r.URL.Path, testSHA) {
+				t.Errorf("tree fallback used %q, want the resolved commit", r.URL.Path)
+			}
+			_, _ = w.Write([]byte(`[{"type":"file","path":"alpaca.json","size":8192}]`))
+		default:
+			http.NotFound(w, r)
+		}
+	})
+	useTestTransport(client, server)
+	fact, err := client.InspectFile(context.Background(), biz.ProviderHuggingFace, testRepo, "main", "alpaca.json")
+	if err != nil {
+		t.Fatalf("inspect: %v", err)
+	}
+	if fact.SizeBytes != 8192 || fact.ResolvedRevision != testSHA {
+		t.Fatalf("fact = %+v", fact)
+	}
+}
+
+// A listing that answers with a sibling or a parent directory is not evidence
+// about the requested file.
+func TestInspectHuggingFaceRequiresAnExactPathMatch(t *testing.T) {
+	client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.Contains(r.URL.Path, "/revision/"):
+			_, _ = w.Write([]byte(`{"sha":"` + testSHA + `"}`))
+		case strings.Contains(r.URL.Path, "/paths-info/"):
+			_, _ = w.Write([]byte(`[{"type":"file","path":"other.json","size":4096}]`))
+		default:
+			http.NotFound(w, r)
+		}
+	})
+	useTestTransport(client, server)
+	if _, err := client.InspectFile(context.Background(), biz.ProviderHuggingFace, testRepo, "main", "alpaca.json"); err != biz.ErrSourceNotFound {
+		t.Fatalf("a sibling path was accepted: %v", err)
+	}
+}
+
+// A throttled or failing hub is not a missing file. Reporting it as
+// SOURCE_NOT_FOUND would fail the task permanently instead of backing off.
+func TestInspectMapsTransientStatusesToUnavailable(t *testing.T) {
+	for _, status := range []int{http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable} {
+		client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(status) })
+		useTestTransport(client, server)
+		_, err := client.InspectFile(context.Background(), biz.ProviderHuggingFace, testRepo, "main", "alpaca.json")
+		if err != biz.ErrSourceUnavailable {
+			t.Fatalf("%d returned %v, want IMPORT_DEPENDENCY_UNAVAILABLE", status, err)
+		}
+	}
+}
+
+// A 4xx this adapter caused is neither a missing file nor an outage.
+func TestInspectMapsOtherClientErrorsToInvalidInput(t *testing.T) {
+	client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusBadRequest) })
+	useTestTransport(client, server)
+	if _, err := client.InspectFile(context.Background(), biz.ProviderHuggingFace, testRepo, "main", "alpaca.json"); err != biz.ErrSourceInvalidInput {
+		t.Fatalf("400 returned %v, want SOURCE_INVALID_INPUT", err)
+	}
+}
+
 func TestInspectRejectsGatedRepository(t *testing.T) {
 	for _, status := range []int{http.StatusUnauthorized, http.StatusForbidden} {
 		client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(status) })
@@ -94,8 +168,8 @@ func TestInspectRejectsUnknownPathAndDirectory(t *testing.T) {
 		switch {
 		case strings.Contains(r.URL.Path, "/revision/"):
 			_, _ = w.Write([]byte(`{"sha":"` + testSHA + `"}`))
-		case strings.Contains(r.URL.Path, "/tree/"):
-			_, _ = w.Write([]byte(`{"type":"directory","path":"alpaca.json"}`))
+		case strings.Contains(r.URL.Path, "/paths-info/"):
+			_, _ = w.Write([]byte(`[{"type":"directory","path":"alpaca.json"}]`))
 		default:
 			http.NotFound(w, r)
 		}
@@ -112,11 +186,12 @@ func TestInspectRejectsOversizeMetadata(t *testing.T) {
 			_, _ = w.Write([]byte(`{"sha":"` + testSHA + `"}`))
 			return
 		}
-		_, _ = w.Write([]byte(`{"type":"file","path":"alpaca.json","size":` + strings.Repeat("1", datasetprovider.MaxMetadataBytes) + `}`))
+		_, _ = w.Write([]byte(`[{"type":"file","path":"alpaca.json","size":` + strings.Repeat("1", datasetprovider.MaxMetadataBytes) + `}]`))
 	})
 	useTestTransport(client, server)
-	if _, err := client.InspectFile(context.Background(), biz.ProviderHuggingFace, testRepo, "main", "alpaca.json"); err == nil {
-		t.Fatal("oversize metadata accepted")
+	// Oversize metadata is a hub anomaly, not a missing file.
+	if _, err := client.InspectFile(context.Background(), biz.ProviderHuggingFace, testRepo, "main", "alpaca.json"); err != biz.ErrSourceUnavailable {
+		t.Fatalf("oversize metadata returned %v, want IMPORT_DEPENDENCY_UNAVAILABLE", err)
 	}
 }
 
@@ -160,6 +235,7 @@ func TestListDirectoryBindsPageToken(t *testing.T) {
 			_, _ = w.Write([]byte(`[]`))
 			return
 		}
+		w.Header().Set("Link", `<https://hub.example/api/datasets/`+testRepo+`/tree/main?cursor=abc>; rel="next"`)
 		_, _ = w.Write([]byte(`[{"type":"file","path":"a.json","size":10}]`))
 	})
 	useTestTransport(client, server)
@@ -173,6 +249,53 @@ func TestListDirectoryBindsPageToken(t *testing.T) {
 	}
 	if len(page.Entries) != 1 || !page.HasMore || page.NextPageToken == "" {
 		t.Fatalf("page = %+v", page)
+	}
+	// The next request must carry the hub's own cursor, not this adapter's token.
+	if _, err := client.ListDirectory(ctx, biz.ProviderHuggingFace, testRepo, "main", "", page.NextPageToken, 1); err != nil {
+		t.Fatalf("second page: %v", err)
+	}
+}
+
+// A full page without a Link header is the last page. Inventing a cursor from
+// the entry count made the second request repeat the first page forever.
+func TestListDirectoryDoesNotInventACursor(t *testing.T) {
+	client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`[{"type":"file","path":"a.json","size":10}]`))
+	})
+	useTestTransport(client, server)
+	page, err := client.ListDirectory(context.Background(), biz.ProviderHuggingFace, testRepo, "main", "", "", 1)
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	if page.HasMore || page.NextPageToken != "" {
+		t.Fatalf("a full page without a Link header claimed more: %+v", page)
+	}
+}
+
+// ModelScope returns the whole tree at once, so the second page must start
+// after the entries the first page already returned.
+func TestListModelScopePagesByOffset(t *testing.T) {
+	client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"Data":{"Revision":"","Files":[` +
+			`{"Path":"a.json","Size":1,"Type":"blob"},` +
+			`{"Path":"b.json","Size":2,"Type":"blob"},` +
+			`{"Path":"c.json","Size":3,"Type":"blob"}]}}`))
+	})
+	useTestTransport(client, server)
+	ctx := context.Background()
+	first, err := client.ListDirectory(ctx, biz.ProviderModelScope, testRepo, "master", "", "", 2)
+	if err != nil {
+		t.Fatalf("first page: %v", err)
+	}
+	if len(first.Entries) != 2 || !first.HasMore || first.NextPageToken == "" {
+		t.Fatalf("first page = %+v", first)
+	}
+	second, err := client.ListDirectory(ctx, biz.ProviderModelScope, testRepo, "master", "", first.NextPageToken, 2)
+	if err != nil {
+		t.Fatalf("second page: %v", err)
+	}
+	if len(second.Entries) != 1 || second.Entries[0].Path != "c.json" || second.HasMore {
+		t.Fatalf("second page = %+v", second)
 	}
 }
 

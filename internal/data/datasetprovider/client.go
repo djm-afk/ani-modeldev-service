@@ -4,6 +4,7 @@
 package datasetprovider
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -124,47 +125,102 @@ func (c *Client) ListDirectory(ctx context.Context, provider biz.SourceProvider,
 
 // getJSON performs one bounded anonymous GET and decodes into out.
 func (c *Client) getJSON(ctx context.Context, endpoint, path string, query url.Values, out any) (int, error) {
+	status, _, err := c.doJSON(ctx, http.MethodGet, endpoint, path, query, nil, out)
+	return status, err
+}
+
+// getJSONWithHeaders is getJSON plus the response headers, for endpoints whose
+// pagination cursor lives in a Link header rather than in the body.
+func (c *Client) getJSONWithHeaders(ctx context.Context, endpoint, path string, query url.Values, out any) (int, http.Header, error) {
+	return c.doJSON(ctx, http.MethodGet, endpoint, path, query, nil, out)
+}
+
+// postJSON performs one bounded anonymous POST with a JSON body. Hugging Face
+// exposes exact-path metadata only through paths-info, which is a POST.
+func (c *Client) postJSON(ctx context.Context, endpoint, path string, body any, out any) (int, error) {
+	encoded, err := json.Marshal(body)
+	if err != nil {
+		return 0, biz.ErrSourceInvalidInput
+	}
+	status, _, err := c.doJSON(ctx, http.MethodPost, endpoint, path, nil, encoded, out)
+	return status, err
+}
+
+// doJSON performs one bounded anonymous request and decodes into out. The
+// returned status is the upstream one, so a caller can distinguish "this
+// endpoint does not exist" from "this file does not exist".
+func (c *Client) doJSON(ctx context.Context, method, endpoint, path string, query url.Values, body []byte, out any) (int, http.Header, error) {
 	target := strings.TrimSuffix(endpoint, "/") + path
 	if len(query) != 0 {
 		target += "?" + query.Encode()
 	}
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	var reader io.Reader
+	if body != nil {
+		reader = bytes.NewReader(body)
+	}
+	request, err := http.NewRequestWithContext(ctx, method, target, reader)
 	if err != nil {
-		return 0, biz.ErrSourceInvalidInput
+		return 0, nil, biz.ErrSourceInvalidInput
 	}
 	// Anonymous only. No Authorization, Cookie or user agent claims an account.
 	request.Header.Set("Accept", "application/json")
+	if body != nil {
+		request.Header.Set("Content-Type", "application/json")
+	}
 	response, err := c.http.Do(request)
 	if err != nil {
 		if ctx.Err() != nil {
-			return 0, ctx.Err()
+			return 0, nil, ctx.Err()
 		}
 		// A transport failure is not a missing source. Reporting it as
 		// SOURCE_NOT_FOUND would tell the caller to fix a repository name when
 		// the real problem is DNS, egress or the hub being down.
-		return 0, biz.ErrSourceUnavailable
+		return 0, nil, biz.ErrSourceUnavailable
 	}
 	defer response.Body.Close()
-	switch response.StatusCode {
-	case http.StatusOK:
-	case http.StatusUnauthorized, http.StatusForbidden:
-		// Private or gated repositories are not supported in this release.
-		return response.StatusCode, biz.ErrSourceAuthRequired
-	case http.StatusNotFound:
-		return response.StatusCode, biz.ErrSourceNotFound
-	default:
-		return response.StatusCode, biz.ErrSourceNotFound
+	if err := statusError(response.StatusCode); err != nil {
+		return response.StatusCode, response.Header, err
 	}
 	limited := io.LimitReader(response.Body, MaxMetadataBytes+1)
 	raw, err := io.ReadAll(limited)
 	if err != nil {
-		return response.StatusCode, biz.ErrSourceNotFound
+		// A truncated or reset metadata body is a hub problem, not a missing
+		// file: the repository answered 200 and then failed mid-response.
+		return response.StatusCode, response.Header, biz.ErrSourceUnavailable
 	}
 	if len(raw) > MaxMetadataBytes {
-		return response.StatusCode, biz.ErrSourceNotFound
+		// The hub answered with more metadata than any real listing needs. That
+		// is an anomaly on its side, so it must not be reported as "not found".
+		return response.StatusCode, response.Header, biz.ErrSourceUnavailable
 	}
 	if err := json.Unmarshal(raw, out); err != nil {
-		return response.StatusCode, biz.ErrSourceNotFound
+		return response.StatusCode, response.Header, biz.ErrSourceUnavailable
 	}
-	return response.StatusCode, nil
+	return response.StatusCode, response.Header, nil
+}
+
+// statusError maps an upstream status onto the source vocabulary. Rate limiting
+// and hub outages are retryable; only a real 404 means the file is absent.
+func statusError(status int) error {
+	switch {
+	case status == http.StatusOK:
+		return nil
+	case status == http.StatusUnauthorized, status == http.StatusForbidden:
+		// Private or gated repositories are not supported in this release.
+		return biz.ErrSourceAuthRequired
+	case status == http.StatusNotFound:
+		return biz.ErrSourceNotFound
+	case status == http.StatusTooManyRequests:
+		// The hub is throttling this caller. The repository and file may be
+		// perfectly valid, so this must stay retryable.
+		return biz.ErrSourceUnavailable
+	case status >= 500:
+		return biz.ErrSourceUnavailable
+	case status >= 400:
+		// Any other 4xx is a request this adapter built wrongly, not a missing
+		// file and not a transient outage.
+		return biz.ErrSourceInvalidInput
+	default:
+		return biz.ErrSourceUnavailable
+	}
 }
