@@ -226,73 +226,106 @@ type modelScopeFile struct {
 	} `json:"Data"`
 }
 
+// ModelScopePageSize is the page the hub is asked for. The hub pages
+// server-side on PageNumber/PageSize, so a single request only ever returns one
+// page.
+const ModelScopePageSize = 100
+
+// maxModelScopePages bounds a walk of the repository. A tree larger than this
+// is not a dataset this feature can inspect within one bounded request budget.
+const maxModelScopePages = 50
+
+// modelScopeTree fetches one page of the repository tree. The hub pages
+// server-side: asking once and slicing locally returned the same first page
+// forever, so a file on page two was reported as missing.
+func (c *Client) modelScopeTree(ctx context.Context, repoID, revision string, pageNumber int) (modelScopeFile, error) {
+	var payload modelScopeFile
+	query := url.Values{
+		"Revision":   {revision},
+		"Recursive":  {"true"},
+		"PageNumber": {strconv.Itoa(pageNumber)},
+		"PageSize":   {strconv.Itoa(ModelScopePageSize)},
+	}
+	// ModelScope needs the /repo/tree suffix for the file listing; the bare
+	// dataset path returns repository metadata with no Files member at all, so
+	// using it silently produced an empty page instead of an error.
+	if _, err := c.getJSON(ctx, c.config.ModelScopeEndpoint, "/api/v1/datasets/"+repoID+"/repo/tree", query, &payload); err != nil {
+		return modelScopeFile{}, err
+	}
+	return payload, nil
+}
+
 // inspectModelScope only claims an immutable revision when the response proves
 // one. Otherwise it falls back to a full-file SHA plus size, which the download
 // must then match exactly.
+//
+// The lookup walks the hub's pages: a file that is not on the first page is
+// still a real file, and reporting it as SOURCE_NOT_FOUND told the caller to
+// pick another file that exists.
 func (c *Client) inspectModelScope(ctx context.Context, repoID, revision, filePath string) (biz.SourceFileFact, error) {
-	var payload modelScopeFile
-	query := url.Values{"Revision": {revision}, "Recursive": {"true"}}
-	// Same /repo/tree suffix as the listing: the bare dataset path carries no
-	// Files member, which made every INSPECT_FILE answer "not found".
-	if _, err := c.getJSON(ctx, c.config.ModelScopeEndpoint, "/api/v1/datasets/"+repoID+"/repo/tree", query, &payload); err != nil {
-		return biz.SourceFileFact{}, err
-	}
-	for _, file := range payload.Data.Files {
-		if file.Path != filePath {
-			continue
+	for pageNumber := 1; pageNumber <= maxModelScopePages; pageNumber++ {
+		payload, err := c.modelScopeTree(ctx, repoID, revision, pageNumber)
+		if err != nil {
+			return biz.SourceFileFact{}, err
 		}
-		if file.Type == "tree" || file.Type == "dir" {
-			return biz.SourceFileFact{}, biz.ErrSourceNotFound
-		}
-		if file.Size <= 0 {
-			return biz.SourceFileFact{}, biz.ErrSourceSizeUnknown
-		}
-		fact := biz.SourceFileFact{
-			Provider: biz.ProviderModelScope, RepoID: repoID, RequestedRevision: revision,
-			FilePath: filePath, SizeBytes: file.Size,
-		}
-		// Only adopt a revision lock when the response echoes a concrete commit.
-		if payload.Data.Revision != "" && payload.Data.Revision != revision && len(payload.Data.Revision) >= 7 {
-			fact.LockKind = biz.LockImmutableRevision
-			fact.ResolvedRevision = payload.Data.Revision
-			if file.Sha256 != "" {
-				fact.FileSHA256 = strings.ToLower(file.Sha256)
+		for _, file := range payload.Data.Files {
+			if file.Path != filePath {
+				continue
 			}
+			if file.Type == "tree" || file.Type == "dir" {
+				return biz.SourceFileFact{}, biz.ErrSourceNotFound
+			}
+			if file.Size <= 0 {
+				return biz.SourceFileFact{}, biz.ErrSourceSizeUnknown
+			}
+			fact := biz.SourceFileFact{
+				Provider: biz.ProviderModelScope, RepoID: repoID, RequestedRevision: revision,
+				FilePath: filePath, SizeBytes: file.Size,
+			}
+			// Only adopt a revision lock when the response echoes a concrete commit.
+			if payload.Data.Revision != "" && payload.Data.Revision != revision && len(payload.Data.Revision) >= 7 {
+				fact.LockKind = biz.LockImmutableRevision
+				fact.ResolvedRevision = payload.Data.Revision
+				if file.Sha256 != "" {
+					fact.FileSHA256 = strings.ToLower(file.Sha256)
+				}
+				return fact, nil
+			}
+			// No proven immutable revision: require the full-file SHA instead.
+			if file.Sha256 == "" || len(file.Sha256) != 64 {
+				return biz.SourceFileFact{}, biz.ErrSourceNotPinnable
+			}
+			fact.LockKind = biz.LockFileSHA256
+			fact.FileSHA256 = strings.ToLower(file.Sha256)
 			return fact, nil
 		}
-		// No proven immutable revision: require the full-file SHA instead.
-		if file.Sha256 == "" || len(file.Sha256) != 64 {
-			return biz.SourceFileFact{}, biz.ErrSourceNotPinnable
+		// A short page is the last page: the hub has nothing more to give.
+		if len(payload.Data.Files) < ModelScopePageSize {
+			break
 		}
-		fact.LockKind = biz.LockFileSHA256
-		fact.FileSHA256 = strings.ToLower(file.Sha256)
-		return fact, nil
 	}
 	return biz.SourceFileFact{}, biz.ErrSourceNotFound
 }
 
 func (c *Client) listModelScope(ctx context.Context, repoID, revision, directoryPath, pageToken string, pageSize int32) (biz.SourcePage, error) {
-	// The token carries how many matching entries the caller already has. The
-	// hub returns the whole tree in one response, so paging is local and the
-	// offset is the only thing that makes the second page different from the
-	// first.
-	offset := 0
+	// The token carries the hub's page number plus how far into that page the
+	// caller already read. Paging is server-side, so the page number is what
+	// makes the request different; the offset is what keeps a caller whose page
+	// is smaller than the hub's from re-reading the same entries forever.
+	pageNumber, offset := 1, 0
 	if pageToken != "" {
 		marker, ok := pageTokenMarker(pageToken, repoID, revision, directoryPath)
 		if !ok {
 			return biz.SourcePage{}, biz.ErrSourceInvalidInput
 		}
-		parsed, err := strconv.Atoi(marker)
-		if err != nil || parsed < 0 {
+		parsedPage, parsedOffset, ok := parseModelScopeMarker(marker)
+		if !ok {
 			return biz.SourcePage{}, biz.ErrSourceInvalidInput
 		}
-		offset = parsed
+		pageNumber, offset = parsedPage, parsedOffset
 	}
-	var payload modelScopeFile
-	// ModelScope needs the /repo/tree suffix for the file listing; the bare
-	// dataset path returns repository metadata with no Files member at all, so
-	// using it silently produced an empty page instead of an error.
-	if _, err := c.getJSON(ctx, c.config.ModelScopeEndpoint, "/api/v1/datasets/"+repoID+"/repo/tree", url.Values{"Revision": {revision}, "Recursive": {"true"}}, &payload); err != nil {
+	payload, err := c.modelScopeTree(ctx, repoID, revision, pageNumber)
+	if err != nil {
 		return biz.SourcePage{}, err
 	}
 	page := biz.SourcePage{}
@@ -307,7 +340,7 @@ func (c *Client) listModelScope(ctx context.Context, repoID, revision, directory
 		}
 		if len(page.Entries) >= int(pageSize) {
 			page.HasMore = true
-			page.NextPageToken = makePageToken(repoID, revision, directoryPath, strconv.Itoa(offset+len(page.Entries)))
+			page.NextPageToken = makePageToken(repoID, revision, directoryPath, modelScopeMarker(pageNumber, seen))
 			break
 		}
 		page.Entries = append(page.Entries, biz.SourceDirectoryEntry{
@@ -315,7 +348,34 @@ func (c *Client) listModelScope(ctx context.Context, repoID, revision, directory
 		})
 		seen++
 	}
+	if !page.HasMore && len(payload.Data.Files) >= ModelScopePageSize {
+		// A full hub page means another one may exist.
+		page.HasMore = true
+		page.NextPageToken = makePageToken(repoID, revision, directoryPath, modelScopeMarker(pageNumber+1, 0))
+	}
 	return page, nil
+}
+
+// modelScopeMarker encodes the hub page and the offset inside it. The token is
+// pipe-separated, so the two numbers are joined with a colon.
+func modelScopeMarker(pageNumber, offset int) string {
+	return strconv.Itoa(pageNumber) + ":" + strconv.Itoa(offset)
+}
+
+func parseModelScopeMarker(marker string) (int, int, bool) {
+	parts := strings.Split(marker, ":")
+	if len(parts) != 2 {
+		return 0, 0, false
+	}
+	pageNumber, err := strconv.Atoi(parts[0])
+	if err != nil || pageNumber < 1 {
+		return 0, 0, false
+	}
+	offset, err := strconv.Atoi(parts[1])
+	if err != nil || offset < 0 {
+		return 0, 0, false
+	}
+	return pageNumber, offset, true
 }
 
 // pageToken is bound to the exact listing identity. A token from another

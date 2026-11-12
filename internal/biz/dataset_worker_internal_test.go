@@ -74,28 +74,36 @@ func TestDispatchGateIsOneWay(t *testing.T) {
 	}
 }
 
+// The gate governs the attempt's temporary Kubernetes objects only. A READY
+// version and a frozen candidate are durable assets that live in object storage,
+// so they must not block collecting the Job, PVC and Secret.
 func TestCleanupGateProtectsLiveReferences(t *testing.T) {
 	gate := CleanupGate{TaskState: TaskFailed}
 	if err := gate.AllowsGCObjects(LiveReferences{}); err != nil {
 		t.Fatalf("orphan objects were not collectable: %v", err)
 	}
+	// A READY version and a frozen candidate are not deletion targets, so they do
+	// not stop the temporary objects from being collected.
 	for name, references := range map[string]LiveReferences{
 		"ready":     {ReadyVersion: true},
 		"candidate": {Candidate: true},
-		"multipart": {UnfinishedMultipart: true},
 	} {
-		if err := gate.AllowsGCObjects(references); !errors.Is(err, ErrImportStateConflict) {
-			t.Fatalf("%s reference was collected: %v", name, err)
+		if err := gate.AllowsGCObjects(references); err != nil {
+			t.Fatalf("%s reference blocked temporary cleanup: %v", name, err)
 		}
+	}
+	// An unfinished multipart upload still owns bytes in the store.
+	if err := gate.AllowsGCObjects(LiveReferences{UnfinishedMultipart: true}); !errors.Is(err, ErrImportStateConflict) {
+		t.Fatalf("unfinished multipart was collected: %v", err)
 	}
 	// A live current attempt may still produce its candidate.
 	live := CleanupGate{TaskState: TaskRunning, CurrentAttempt: true}
 	if err := live.AllowsGCObjects(LiveReferences{}); !errors.Is(err, ErrImportStateConflict) {
 		t.Fatal("live attempt result was collected")
 	}
-	// A succeeded task's permanent candidate is never a deletion target.
-	if err := (CleanupGate{TaskState: TaskSucceeded}).AllowsGCObjects(LiveReferences{}); !errors.Is(err, ErrImportStateConflict) {
-		t.Fatal("succeeded task objects were collected")
+	// A succeeded task still owns a Job, PVC and Secret that must be removed.
+	if err := (CleanupGate{TaskState: TaskSucceeded}).AllowsGCObjects(LiveReferences{ReadyVersion: true, Candidate: true}); err != nil {
+		t.Fatalf("succeeded task temporary objects were kept: %v", err)
 	}
 }
 

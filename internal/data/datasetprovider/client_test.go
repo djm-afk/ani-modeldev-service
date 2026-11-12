@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -272,9 +273,74 @@ func TestListDirectoryDoesNotInventACursor(t *testing.T) {
 	}
 }
 
-// ModelScope returns the whole tree at once, so the second page must start
-// after the entries the first page already returned.
-func TestListModelScopePagesByOffset(t *testing.T) {
+// ModelScope pages server-side. A file that only appears on the second page must
+// still be browsable, inspectable and submittable; slicing one response locally
+// reported it as missing.
+func TestModelScopeReadsLaterPages(t *testing.T) {
+	const digest = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+	firstPage := `{"Data":{"Revision":"","Files":[`
+	for index := 0; index < datasetprovider.ModelScopePageSize; index++ {
+		if index > 0 {
+			firstPage += ","
+		}
+		firstPage += `{"Path":"filler/` + strconv.Itoa(index) + `.json","Size":1,"Type":"blob"}`
+	}
+	firstPage += `]}}`
+	secondPage := `{"Data":{"Revision":"","Files":[{"Path":"alpaca.json","Size":2048,"Sha256":"` + digest + `","Type":"blob"}]}}`
+
+	client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) {
+		// The hub only returns the target file when the caller asks for page two.
+		if r.URL.Query().Get("PageNumber") == "2" {
+			_, _ = w.Write([]byte(secondPage))
+			return
+		}
+		_, _ = w.Write([]byte(firstPage))
+	})
+	useTestTransport(client, server)
+	ctx := context.Background()
+
+	fact, err := client.InspectFile(ctx, biz.ProviderModelScope, testRepo, "master", "alpaca.json")
+	if err != nil {
+		t.Fatalf("a file on page two was reported missing: %v", err)
+	}
+	if fact.SizeBytes != 2048 || fact.FileSHA256 != digest {
+		t.Fatalf("fact = %+v", fact)
+	}
+
+	// Browsing must reach the second page too.
+	first, err := client.ListDirectory(ctx, biz.ProviderModelScope, testRepo, "master", "", "", 2)
+	if err != nil {
+		t.Fatalf("first page: %v", err)
+	}
+	if !first.HasMore || first.NextPageToken == "" {
+		t.Fatalf("first page claimed no more: %+v", first)
+	}
+	// Walk to the page that holds the target file.
+	token := first.NextPageToken
+	found := false
+	for page := 0; page < 60 && token != ""; page++ {
+		next, err := client.ListDirectory(ctx, biz.ProviderModelScope, testRepo, "master", "", token, 100)
+		if err != nil {
+			t.Fatalf("page %d: %v", page, err)
+		}
+		for _, entry := range next.Entries {
+			if entry.Path == "alpaca.json" {
+				found = true
+			}
+		}
+		if !next.HasMore {
+			break
+		}
+		token = next.NextPageToken
+	}
+	if !found {
+		t.Fatal("browsing never reached the file on page two")
+	}
+}
+
+// A caller page smaller than the hub page must advance, not re-read the same
+// entries forever.
+func TestModelScopeSmallCallerPageAdvances(t *testing.T) {
 	client, server := newClient(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"Data":{"Revision":"","Files":[` +
 			`{"Path":"a.json","Size":1,"Type":"blob"},` +
@@ -283,19 +349,26 @@ func TestListModelScopePagesByOffset(t *testing.T) {
 	})
 	useTestTransport(client, server)
 	ctx := context.Background()
-	first, err := client.ListDirectory(ctx, biz.ProviderModelScope, testRepo, "master", "", "", 2)
-	if err != nil {
-		t.Fatalf("first page: %v", err)
+	seen := map[string]bool{}
+	token := ""
+	for page := 0; page < 10; page++ {
+		result, err := client.ListDirectory(ctx, biz.ProviderModelScope, testRepo, "master", "", token, 1)
+		if err != nil {
+			t.Fatalf("page %d: %v", page, err)
+		}
+		for _, entry := range result.Entries {
+			if seen[entry.Path] {
+				t.Fatalf("%s was returned twice", entry.Path)
+			}
+			seen[entry.Path] = true
+		}
+		if !result.HasMore {
+			break
+		}
+		token = result.NextPageToken
 	}
-	if len(first.Entries) != 2 || !first.HasMore || first.NextPageToken == "" {
-		t.Fatalf("first page = %+v", first)
-	}
-	second, err := client.ListDirectory(ctx, biz.ProviderModelScope, testRepo, "master", "", first.NextPageToken, 2)
-	if err != nil {
-		t.Fatalf("second page: %v", err)
-	}
-	if len(second.Entries) != 1 || second.Entries[0].Path != "c.json" || second.HasMore {
-		t.Fatalf("second page = %+v", second)
+	if len(seen) != 3 {
+		t.Fatalf("walked %d entries, want 3", len(seen))
 	}
 }
 

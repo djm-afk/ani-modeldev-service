@@ -154,6 +154,16 @@ func (reconciler *AttemptReconciler) reconcile(ctx context.Context, due DatasetI
 			reconciler.report("attempt lease release failed", "attempt", leased.AttemptID, "error", releaseErr)
 		}
 	}()
+	// A skipped attempt must leave the current batch. Without this a handful of
+	// rows that can never progress fill every batch and starve the rest.
+	defer func() {
+		if outcome.skipped == 0 {
+			return
+		}
+		if deferErr := reconciler.worker.DeferAttemptReconcile(ctx, leased.TenantID, leased.AttemptID, reconciler.interval); deferErr != nil {
+			reconciler.report("attempt reconcile defer failed", "attempt", leased.AttemptID, "error", deferErr)
+		}
+	}()
 
 	task, err := reconciler.tasks.GetImportTask(ctx, leased.TenantID, leased.TaskID)
 	if err != nil {
@@ -176,10 +186,22 @@ func (reconciler *AttemptReconciler) reconcile(ctx context.Context, due DatasetI
 			return outcome, nil
 		}
 		if task.CurrentAttemptID == "" && task.State == TaskRunning && task.CancelRequestedAt == nil {
-			// Allocated but never bound: bind it so the scheduler can drive it.
+			// Allocated but never bound. Allocation now binds inside its own
+			// transaction, so this is only reachable for a row written before that
+			// change or by a replica that died between the two steps.
 			if _, bindErr := reconciler.worker.SetCurrentAttempt(ctx, task.TenantID, task.TaskID, leased.AttemptID); bindErr == nil {
 				outcome.bound++
 				return outcome, nil
+			} else if errors.Is(bindErr, ErrImportStateConflict) {
+				// Someone else bound an attempt first. Re-read the task: if it is
+				// this attempt, the bind succeeded elsewhere and there is nothing to
+				// close. Treating the conflict as failure here is what left a slot
+				// taken with no Job behind it.
+				current, readErr := reconciler.tasks.GetImportTask(ctx, leased.TenantID, leased.TaskID)
+				if readErr == nil && current.CurrentAttemptID == leased.AttemptID {
+					outcome.bound++
+					return outcome, nil
+				}
 			}
 			// A bind failure means the task moved on; fall through to closing.
 		}

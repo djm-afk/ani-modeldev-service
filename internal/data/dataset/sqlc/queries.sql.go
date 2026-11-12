@@ -334,7 +334,7 @@ UPDATE modeldev_dataset_import_attempts
 SET cleanup_state = 'RUNNING'
 WHERE tenant_id = $1::uuid
   AND attempt_id = $2::uuid
-  AND cleanup_state IN ('PENDING','WAITING')
+  AND cleanup_state IN ('PENDING','WAITING','RUNNING')
   AND writers_stopped_at IS NOT NULL
   AND dispatch_closed_at IS NOT NULL
 RETURNING tenant_id, attempt_id, dataset_id, task_id, attempt_no, recovery_generation, cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name, job_uid, job_resource_version, pvc_uid, pvc_resource_version, secret_uid, secret_resource_version, runtime_plan, runtime_plan_sha256, runtime_observation, data_object_key, result_object_key, created_at, deadline_at, dispatch_closed_at, close_reason, writers_stopped_at, result_object_version_id, result_sha256, last_credential_generation, secret_generation, reconcile_owner, reconcile_epoch, reconcile_until, reconcile_next_at, cleanup_state, cleanup_completed_at
@@ -346,6 +346,9 @@ type ClaimAttemptCleanupParams struct {
 }
 
 // The cleanup claim is the only path that may delete an attempt's objects.
+// RUNNING is accepted so a worker that died mid-delete can be resumed by the
+// next lease holder; without it the attempt stayed RUNNING forever and its
+// objects were never collected.
 func (q *Queries) ClaimAttemptCleanup(ctx context.Context, arg ClaimAttemptCleanupParams) (ModeldevDatasetImportAttempt, error) {
 	row := q.db.QueryRow(ctx, claimAttemptCleanup, arg.TenantID, arg.AttemptID)
 	var i ModeldevDatasetImportAttempt
@@ -889,6 +892,27 @@ func (q *Queries) DatasetVersionStats(ctx context.Context, arg DatasetVersionSta
 		return nil, err
 	}
 	return items, nil
+}
+
+const deferAttemptReconcile = `-- name: DeferAttemptReconcile :exec
+UPDATE modeldev_dataset_import_attempts
+SET reconcile_next_at = clock_timestamp() + make_interval(secs => $1::double precision)
+WHERE tenant_id = $2::uuid
+  AND attempt_id = $3::uuid
+`
+
+type DeferAttemptReconcileParams struct {
+	DelaySeconds float64
+	TenantID     pgtype.UUID
+	AttemptID    pgtype.UUID
+}
+
+// A skipped attempt must move out of the current batch. Leaving reconcile_next_at
+// in the past let a handful of permanently-skipped rows fill every batch and
+// starve the attempts that could make progress.
+func (q *Queries) DeferAttemptReconcile(ctx context.Context, arg DeferAttemptReconcileParams) error {
+	_, err := q.db.Exec(ctx, deferAttemptReconcile, arg.DelaySeconds, arg.TenantID, arg.AttemptID)
+	return err
 }
 
 const deferTask = `-- name: DeferTask :exec

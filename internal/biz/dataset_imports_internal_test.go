@@ -269,6 +269,47 @@ func TestAcceptImportRejectsArchivedDataset(t *testing.T) {
 	}
 }
 
+// A task accepted under a larger limit must stay replayable after the limit is
+// lowered. The limit governs new acceptances, not the receipt of one already
+// granted.
+func TestAcceptImportReplaySurvivesALoweredLimit(t *testing.T) {
+	f := newImportsFixture()
+	acceptance := validAcceptance()
+	intent := DatasetCommand{TenantID: acceptance.TenantID, ActorID: acceptance.ActorID, Kind: OpImportVersion, IdempotencyKey: acceptance.IdempotencyKey, DatasetID: acceptance.DatasetID, SelectionFingerprint: acceptance.SelectionFingerprint}
+	f.commands.err = nil
+	f.commands.receipt = CommandReceipt{
+		TenantID: acceptance.TenantID, ReceiptID: "66666666-6666-4666-8666-666666666666", ActorID: acceptance.ActorID,
+		Kind: OpImportVersion, IdempotencyKey: acceptance.IdempotencyKey,
+		RequestSHA256: intent.Digest(), DatasetID: acceptance.DatasetID, TaskID: fixtureTask,
+		ResponseStatus: ReceiptStatusAccepted,
+	}
+	// The deployment lowered the limit below the already-accepted file size.
+	acceptance.AcceptedLimit = acceptance.Selection.ExpectedSizeBytes - 1
+	result, err := f.imports.AcceptImport(context.Background(), acceptance)
+	if err != nil {
+		t.Fatalf("a granted receipt was refused by the new limit: %v", err)
+	}
+	if !result.Replayed {
+		t.Fatal("the receipt was not replayed")
+	}
+}
+
+// The fingerprint must describe the selection this request carries. Trusting the
+// client's copy let a caller keep the old fingerprint while pointing at a
+// different file, which replayed the first task.
+func TestAcceptImportRejectsAFingerprintThatDoesNotMatchTheSelection(t *testing.T) {
+	f := newImportsFixture()
+	acceptance := validAcceptance()
+	acceptance.Selection.FilePath = "other.json"
+	// The fingerprint still describes the original file.
+	if _, err := f.imports.AcceptImport(context.Background(), acceptance); !errors.Is(err, ErrSourceChanged) {
+		t.Fatalf("a mismatched fingerprint was accepted: %v", err)
+	}
+	if len(f.sources.paths) != 0 {
+		t.Fatal("a mismatched fingerprint still reached the hub")
+	}
+}
+
 func TestAcceptImportReplayDoesNotTouchTheHub(t *testing.T) {
 	f := newImportsFixture()
 	acceptance := validAcceptance()

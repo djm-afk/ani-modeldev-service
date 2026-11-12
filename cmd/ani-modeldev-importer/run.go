@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -75,6 +76,13 @@ func RunImport(ctx context.Context, plan ImportPlan, fetcher SourceFetcher, uplo
 		if ctx.Err() != nil {
 			return ImportOutcome{Failure: biz.FailTimeout, Stage: biz.StageDownload}
 		}
+		// A local write failure is a staging problem, not a source problem. The
+		// copy writes to the staging volume, so ENOSPC here means the volume is
+		// too small for this file; reporting it as a hub failure sent operators
+		// after the wrong system.
+		if isLocalWriteFailure(err) {
+			return ImportOutcome{Failure: biz.FailResourceUnavailable, Stage: biz.StageDownload}
+		}
 		return ImportOutcome{Failure: classifySourceError(err), Stage: biz.StageDownload}
 	}
 	if written != plan.ExpectedSizeBytes {
@@ -123,6 +131,13 @@ func classifySourceError(err error) biz.ImportFailureCode {
 	default:
 		return biz.FailDependencyUnavailable
 	}
+}
+
+// isLocalWriteFailure reports whether the copy failed writing to the staging
+// volume rather than reading from the hub. ENOSPC and EDQUOT are the two the
+// kernel returns when the volume cannot take the bytes.
+func isLocalWriteFailure(err error) bool {
+	return errors.Is(err, syscall.ENOSPC) || errors.Is(err, syscall.EDQUOT)
 }
 
 func classifyUploadError(err error) biz.ImportFailureCode {

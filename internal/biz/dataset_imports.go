@@ -102,16 +102,17 @@ func (imports *DatasetImports) AcceptImport(ctx context.Context, acceptance Impo
 	if acceptance.AcceptedLimit <= 0 || acceptance.Selection.ExpectedSizeBytes <= 0 {
 		return AcceptanceResult{}, ErrSourceSizeUnknown
 	}
-	// The database enforces S <= L as a CHECK, so accepting a larger file here
-	// would surface as a persistence failure after the hub was already queried.
-	// Refusing now names the real cause: the file exceeds the current limit.
-	if acceptance.Selection.ExpectedSizeBytes > acceptance.AcceptedLimit {
-		return AcceptanceResult{}, ErrSourceTooLarge
+	// The fingerprint is recomputed from the selection this request actually
+	// carries. Trusting the client's copy let a caller keep the old fingerprint
+	// while pointing at a different file, which replayed the first task.
+	if acceptance.Selection.SelectionFingerprint() != acceptance.SelectionFingerprint {
+		return AcceptanceResult{}, ErrSourceChanged
 	}
 
-	// 1. Idempotent replay is answered before any hub access. The selection
-	// fingerprint is part of the intent, so the same key with a different file
-	// is a conflict rather than a replay of the first task.
+	// 1. Idempotent replay is answered before any hub access and before the
+	// current limit is applied. A task accepted under a larger limit must stay
+	// replayable after the limit is lowered: the limit governs new acceptances,
+	// not the receipt of one already granted.
 	command := DatasetCommand{
 		TenantID: acceptance.TenantID, ActorID: acceptance.ActorID,
 		Kind: OpImportVersion, IdempotencyKey: acceptance.IdempotencyKey,
@@ -131,7 +132,14 @@ func (imports *DatasetImports) AcceptImport(ctx context.Context, acceptance Impo
 		return AcceptanceResult{}, err
 	}
 
-	// 2. The dataset must still be ACTIVE for a genuinely new acceptance.
+	// 2. A genuinely new acceptance must fit the current limit. The database
+	// enforces S <= L as a CHECK, so accepting a larger file here would surface
+	// as a persistence failure after the hub was already queried.
+	if acceptance.Selection.ExpectedSizeBytes > acceptance.AcceptedLimit {
+		return AcceptanceResult{}, ErrSourceTooLarge
+	}
+
+	// 3. The dataset must still be ACTIVE for a genuinely new acceptance.
 	dataset, err := imports.datasets.GetDataset(ctx, acceptance.TenantID, acceptance.DatasetID)
 	if err != nil {
 		return AcceptanceResult{}, err
@@ -140,7 +148,7 @@ func (imports *DatasetImports) AcceptImport(ctx context.Context, acceptance Impo
 		return AcceptanceResult{}, ErrDatasetArchived
 	}
 
-	// 3. Re-resolve the chosen file and compare with what the user confirmed.
+	// 4. Re-resolve the chosen file and compare with what the user confirmed.
 	// A changed file requires a new confirmation, never a silent re-pin.
 	fact, err := imports.sources.InspectFile(ctx, acceptance.Selection.Provider, acceptance.Selection.RepoID, acceptance.Selection.RequestedRevision, acceptance.Selection.FilePath)
 	if err != nil {
@@ -154,12 +162,18 @@ func (imports *DatasetImports) AcceptImport(ctx context.Context, acceptance Impo
 	if resolved.SelectionFingerprint() != acceptance.SelectionFingerprint {
 		return AcceptanceResult{}, ErrSourceChanged
 	}
+	// The hub's answer is authoritative for the size this task will download, so
+	// the limit is applied to it as well. A file that grew past the limit since
+	// the user confirmed it must not be accepted on the stale figure.
+	if resolved.ExpectedSizeBytes > acceptance.AcceptedLimit {
+		return AcceptanceResult{}, ErrSourceTooLarge
+	}
 	snapshot := SourceSnapshot{SourceSelection: resolved, ResolvedAt: imports.now().UTC().Truncate(time.Microsecond)}
 	if err := snapshot.Validate(); err != nil {
 		return AcceptanceResult{}, err
 	}
 
-	// 4. The trusted target: namespace identity plus the input scope.
+	// 5. The trusted target: namespace identity plus the input scope.
 	target, err := imports.targets.ReadDatasetImportTarget(ctx, acceptance.TenantID)
 	if err != nil {
 		return AcceptanceResult{}, err
@@ -173,7 +187,7 @@ func (imports *DatasetImports) AcceptImport(ctx context.Context, acceptance Impo
 		return AcceptanceResult{}, err
 	}
 
-	// 5. Pre-generate the identities the transaction reserves.
+	// 6. Pre-generate the identities the transaction reserves.
 	taskID, err := imports.newID()
 	if err != nil {
 		return AcceptanceResult{}, ErrPersistence

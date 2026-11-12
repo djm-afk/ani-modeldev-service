@@ -280,11 +280,31 @@ func (scheduler *ImportScheduler) dispatch(ctx context.Context, task DatasetImpo
 			outcome.skipped++
 			return outcome, nil
 		}
+		if errors.Is(prepareErr, errAttemptWriterRunning) {
+			// The previous attempt's writer has not been observed as stopped. A
+			// replacement must wait: starting one now would put two writers on the
+			// same task.
+			outcome.skipped++
+			return outcome, nil
+		}
 		return scheduler.recordError(ctx, task, prepareErr, outcome)
 	}
 
-	// writerPossible tracks whether a Job may exist. It starts false because the
-	// attempt row alone creates no workload.
+	// An attempt that already recorded a Job has a writer. Re-running the
+	// dispatch steps would issue a second STS session and re-create objects for a
+	// workload that is already running; the only correct action is to observe it.
+	if attempt.JobUID != "" {
+		if observeErr := scheduler.observe(ctx, task, attempt); observeErr != nil {
+			scheduler.report("import observation deferred", "task", task.TaskID, "attempt", attempt.AttemptID, "error", observeErr)
+		}
+		outcome.skipped++
+		return outcome, nil
+	}
+
+	// writerPossible tracks whether a Job may exist. It starts false because this
+	// path only runs for an attempt that has not recorded a Job yet; from the
+	// EnsureImporter call onward a create whose response was lost still produced
+	// an object.
 	writerPossible := false
 	fail := func(cause error) (taskOutcome, error) {
 		if _, closeErr := scheduler.repository.CloseAttempt(ctx, task.TenantID, attempt.AttemptID, "FAILED"); closeErr != nil {
@@ -366,9 +386,13 @@ func (scheduler *ImportScheduler) observe(ctx context.Context, task DatasetImpor
 	}
 	result := report.Result
 	if result.Status != ImportResultSucceeded || result.Object == nil {
-		code := errors.New(string(result.FailureCode))
+		// The report carries a code, not an error value. Rebuilding it with
+		// errors.New loses the identity retryable() matches on, so a transient
+		// download failure became a permanent one on the first attempt. The code
+		// is translated back into the cause it names.
+		cause := causeForFailureCode(result.FailureCode)
 		scheduler.closeObservedAttempt(ctx, task, attempt, "FAILED")
-		return scheduler.failTask(ctx, task, code, outcomeNoop())
+		return scheduler.failTask(ctx, task, cause, outcomeNoop())
 	}
 	object := result.Object
 	// Closing the attempt first records that no writer remains and releases its
@@ -486,6 +510,10 @@ func (scheduler *ImportScheduler) newOperationID() string {
 	return id
 }
 
+// errAttemptWriterRunning means the task's previous attempt has not been observed
+// as stopped, so a replacement must not start yet.
+var errAttemptWriterRunning = errors.New("import attempt writer still running")
+
 // prepareAttempt returns the attempt the task is already working on, or
 // allocates exactly one, together with the material plan it froze.
 func (scheduler *ImportScheduler) prepareAttempt(ctx context.Context, task DatasetImportTask) (DatasetImportAttempt, AttemptPlan, error) {
@@ -499,6 +527,13 @@ func (scheduler *ImportScheduler) prepareAttempt(ctx context.Context, task Datas
 		// SetCurrentAttempt could never bind a replacement, so the task would loop
 		// forever. Detach and fall through to allocation.
 		if attempt.DispatchClosedAt != nil {
+			// A closed dispatch gate stops new work but says nothing about the Pod
+			// already running. Replacing the attempt before its writer is observed
+			// as stopped would put two writers on the same task whenever a slot is
+			// free, so the replacement waits for that proof.
+			if attempt.WritersStoppedAt == nil {
+				return DatasetImportAttempt{}, AttemptPlan{}, errAttemptWriterRunning
+			}
 			detached, detachErr := scheduler.repository.ClearCurrentAttempt(ctx, task.TenantID, task.TaskID, attempt.AttemptID)
 			if detachErr != nil {
 				return DatasetImportAttempt{}, AttemptPlan{}, detachErr
@@ -545,9 +580,10 @@ func (scheduler *ImportScheduler) prepareAttempt(ctx context.Context, task Datas
 	if allocErr != nil {
 		return DatasetImportAttempt{}, AttemptPlan{}, allocErr
 	}
-	if _, bindErr := scheduler.repository.SetCurrentAttempt(ctx, task.TenantID, task.TaskID, attempt.AttemptID); bindErr != nil {
-		return DatasetImportAttempt{}, AttemptPlan{}, bindErr
-	}
+	// AllocateAttempt binds the attempt inside its own transaction. Binding here
+	// as a second step let the reconciler win the race, after which this call
+	// matched no row and the task was failed as a conflict while the slot stayed
+	// taken.
 	return attempt, planned, nil
 }
 
@@ -612,6 +648,35 @@ func (scheduler *ImportScheduler) recordError(ctx context.Context, task DatasetI
 // policy is operational, so this is a small fixed constant, never a content
 // limit. An explicit user retry resets the counter.
 const maxAutomaticRetries int32 = 3
+
+// causeForFailureCode turns a report's failure code back into the cause it
+// names. The importer reports a code, not an error value, so the scheduler must
+// restore the identity that retryable() and failureCodeFor() match on. A code
+// with no transient meaning keeps its own text, which failureCodeFor passes
+// through unchanged.
+func causeForFailureCode(code ImportFailureCode) error {
+	switch code {
+	case FailDependencyUnavailable:
+		return ErrSourceUnavailable
+	case FailResourceUnavailable:
+		return ErrImportQuotaExhausted
+	case FailTimeout:
+		return ErrImportTimeout
+	case FailSourceChanged:
+		return ErrSourceChanged
+	case FailSourceNotFound:
+		return ErrSourceNotFound
+	case FailSourceAuthRequired:
+		return ErrSourceAuthRequired
+	case FailImportResultInvalid:
+		return ErrImportResultInvalid
+	case FailDatasetInvalid:
+		return ErrInputVerification
+	case FailDatasetRecordTooLarge:
+		return &cpup01.LimitViolation{Reason: string(FailDatasetRecordTooLarge)}
+	}
+	return errors.New(string(code))
+}
 
 // retryable lists transient causes worth another attempt. A content verdict is
 // never in it: re-downloading the same bytes cannot fix an invalid file.
@@ -702,9 +767,14 @@ func (scheduler *ImportScheduler) publish(ctx context.Context, task DatasetImpor
 	// INPUT_VERSION_NOT_FOUND when it is absent. The same InputImport value is
 	// used here and below: the frozen fields must match or sameImport reports a
 	// conflict instead of republishing the original row.
+	//
+	// The actor is derived from the task, not from this process. A pod-scoped
+	// actor made a handover between replicas look like a conflicting import: the
+	// first replica reserved the row, the second compared its own name against it
+	// and refused.
 	importRequest := InputImport{
 		Format: "JSON", TenantID: task.TenantID, RequestID: task.InputRequestID,
-		InputVersionID: task.ReservedInputVersionID, Actor: scheduler.owner,
+		InputVersionID: task.ReservedInputVersionID, Actor: importActor(task),
 		RequestedAt: task.AcceptedAt, Scope: targetStorageScope(task),
 		Object: candidateObjectRef(task),
 	}
@@ -725,6 +795,18 @@ func (scheduler *ImportScheduler) publish(ctx context.Context, task DatasetImpor
 		return false, publishErr
 	}
 	return !version.Replayed || version.Task.State == TaskSucceeded, nil
+}
+
+// importActor is the actor recorded on the frozen input row. It must be stable
+// across replicas: the publication transaction compares the actor of the existing
+// row with the one this process would write, so a pod-scoped value made a
+// handover between replicas look like a conflicting import.
+//
+// The task identity is the stable part: one task owns exactly one reserved input
+// version, so naming the task attributes the row without tying it to the replica
+// that happened to write it.
+func importActor(task DatasetImportTask) string {
+	return "modeldev:import:" + task.TaskID
 }
 
 // currentAttempt finds the attempt the task froze. Recovery must read it back

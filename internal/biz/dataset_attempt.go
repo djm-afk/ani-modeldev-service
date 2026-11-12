@@ -36,6 +36,10 @@ type DatasetWorkerRepository interface {
 	ReleaseAttemptLease(ctx context.Context, tenantID, attemptID, owner string, epoch int64) error
 	ClaimAttemptCleanup(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
 	FinishAttemptCleanup(ctx context.Context, tenantID, attemptID string) (DatasetImportAttempt, error)
+	// DeferAttemptReconcile moves a skipped attempt out of the current batch. A
+	// row that stays due forever fills every batch and starves the attempts that
+	// could make progress.
+	DeferAttemptReconcile(ctx context.Context, tenantID, attemptID string, delay time.Duration) error
 	FreezeCandidate(ctx context.Context, tenantID, attemptID, versionID, sha256 string) (DatasetImportAttempt, error)
 	// CloseAttempt closes the dispatch gate for one attempt. It never records
 	// that the writer stopped: that is a separate, observed fact.

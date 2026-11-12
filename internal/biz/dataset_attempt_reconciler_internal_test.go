@@ -18,6 +18,7 @@ type fakeAttemptWorker struct {
 	stopped    []string
 	cleaned    []string
 	bound      []string
+	deferred   []string
 	observe    ImportWorkloadStatus
 	observeErr error
 }
@@ -104,6 +105,11 @@ func (worker *fakeAttemptWorker) FinishAttemptCleanup(_ context.Context, _, atte
 	worker.attempts[attemptID] = attempt
 	worker.cleaned = append(worker.cleaned, attemptID)
 	return attempt, nil
+}
+
+func (worker *fakeAttemptWorker) DeferAttemptReconcile(_ context.Context, _, attemptID string, _ time.Duration) error {
+	worker.deferred = append(worker.deferred, attemptID)
+	return nil
 }
 
 func (worker *fakeAttemptWorker) FreezeCandidate(context.Context, string, string, string, string) (DatasetImportAttempt, error) {
@@ -278,9 +284,10 @@ func TestReconcilerReleasesTheSlotAndCleansUp(t *testing.T) {
 	}
 }
 
-// A succeeded task's candidate is a permanent asset: the attempt must never be
-// deleted, even though its writer is gone.
-func TestReconcilerKeepsThePublishedCandidate(t *testing.T) {
+// A succeeded task's READY version and frozen candidate are durable assets in
+// object storage. Its Job, PVC and Secret are temporary and must still be
+// collected, or every successful import leaks a workload.
+func TestReconcilerCollectsTemporaryObjectsOfASucceededTask(t *testing.T) {
 	attempt, task := reconcilerFixture()
 	closed := time.Date(2026, 11, 11, 0, 0, 0, 0, time.UTC)
 	stopped := time.Date(2026, 11, 11, 0, 1, 0, 0, time.UTC)
@@ -297,10 +304,10 @@ func TestReconcilerKeepsThePublishedCandidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("sweep: %v", err)
 	}
-	if len(worker.cleaned) != 0 || len(workloads.deleted) != 0 {
-		t.Fatalf("a published candidate was deleted: cleaned=%v deleted=%v", worker.cleaned, workloads.deleted)
+	if len(worker.cleaned) != 1 || len(workloads.deleted) != 1 {
+		t.Fatalf("a succeeded task leaked its temporary objects: cleaned=%v deleted=%v", worker.cleaned, workloads.deleted)
 	}
-	if result.Skipped != 1 {
+	if result.Cleaned != 1 {
 		t.Fatalf("result = %+v", result)
 	}
 }

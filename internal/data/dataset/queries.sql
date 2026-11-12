@@ -566,14 +566,26 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
 
 -- name: ClaimAttemptCleanup :one
 -- The cleanup claim is the only path that may delete an attempt's objects.
+-- RUNNING is accepted so a worker that died mid-delete can be resumed by the
+-- next lease holder; without it the attempt stayed RUNNING forever and its
+-- objects were never collected.
 UPDATE modeldev_dataset_import_attempts
 SET cleanup_state = 'RUNNING'
 WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND attempt_id = sqlc.arg(attempt_id)::uuid
-  AND cleanup_state IN ('PENDING','WAITING')
+  AND cleanup_state IN ('PENDING','WAITING','RUNNING')
   AND writers_stopped_at IS NOT NULL
   AND dispatch_closed_at IS NOT NULL
 RETURNING *;
+
+-- name: DeferAttemptReconcile :exec
+-- A skipped attempt must move out of the current batch. Leaving reconcile_next_at
+-- in the past let a handful of permanently-skipped rows fill every batch and
+-- starve the attempts that could make progress.
+UPDATE modeldev_dataset_import_attempts
+SET reconcile_next_at = clock_timestamp() + make_interval(secs => sqlc.arg(delay_seconds)::double precision)
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND attempt_id = sqlc.arg(attempt_id)::uuid;
 
 -- name: FinishAttemptCleanup :one
 UPDATE modeldev_dataset_import_attempts

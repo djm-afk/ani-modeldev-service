@@ -278,15 +278,106 @@ func TestAutomaticRetryBudgetUsesDeferCount(t *testing.T) {
 	}
 }
 
+// A closed attempt whose writer has not been observed as stopped must not be
+// replaced. Starting a replacement while the previous Pod may still be uploading
+// puts two writers on the same task.
+func TestPrepareAttemptWaitsForThePreviousWriter(t *testing.T) {
+	closed := time.Date(2026, 11, 11, 0, 0, 0, 0, time.UTC)
+	attempt := DatasetImportAttempt{
+		TenantID: "11111111-1111-4111-8111-111111111111", AttemptID: "22222222-2222-4222-8222-222222222222",
+		TaskID: "33333333-3333-4333-8333-333333333333", AttemptNo: 1,
+		DispatchClosedAt: &closed,
+		DeadlineAt:       closed.Add(time.Hour),
+	}
+	task := schedulerTask()
+	task.State = TaskRunning
+	task.CurrentAttemptID = attempt.AttemptID
+	worker := &fakeSweepWorker{attempt: attempt}
+	scheduler := newTestScheduler(t, worker, 3)
+
+	if _, _, err := scheduler.prepareAttempt(context.Background(), task); !errors.Is(err, errAttemptWriterRunning) {
+		t.Fatalf("a replacement started before the writer stopped: %v", err)
+	}
+	if worker.cleared != 0 {
+		t.Fatalf("the attempt was detached before its writer stopped: %d", worker.cleared)
+	}
+
+	// Once the stop is observed, the replacement may proceed. Allocation itself is
+	// out of scope here, so a quota refusal is the expected next step.
+	stopped := closed.Add(time.Minute)
+	worker.attempt.WritersStoppedAt = &stopped
+	if _, _, err := scheduler.prepareAttempt(context.Background(), task); errors.Is(err, errAttemptWriterRunning) {
+		t.Fatal("a stopped writer still blocked the replacement")
+	}
+	if worker.cleared != 1 {
+		t.Fatalf("the stopped attempt was not detached: %d", worker.cleared)
+	}
+}
+
+// An attempt that already recorded a Job must be observed, not dispatched again.
+// Re-running the dispatch steps issued a second STS session and re-created
+// objects for a workload that was already running.
+func TestDispatchObservesAnAttemptThatAlreadyHasAJob(t *testing.T) {
+	attempt := DatasetImportAttempt{
+		TenantID: "11111111-1111-4111-8111-111111111111", AttemptID: "22222222-2222-4222-8222-222222222222",
+		TaskID: "33333333-3333-4333-8333-333333333333", AttemptNo: 1,
+		JobUID:     "job-uid-1",
+		DeadlineAt: time.Date(2026, 11, 11, 1, 0, 0, 0, time.UTC),
+	}
+	task := schedulerTask()
+	task.State = TaskRunning
+	task.CurrentAttemptID = attempt.AttemptID
+	worker := &fakeSweepWorker{attempt: attempt}
+	scheduler := newTestScheduler(t, worker, 3)
+
+	outcome, err := scheduler.dispatch(context.Background(), task, taskOutcome{})
+	if err != nil {
+		t.Fatalf("dispatch: %v", err)
+	}
+	if outcome.skipped != 1 || outcome.dispatched != 0 {
+		t.Fatalf("a running attempt was dispatched again: %+v", outcome)
+	}
+}
+
+// A report carries a code, not an error value. Rebuilding it with errors.New
+// lost the identity retryable() matches on, so a transient download failure
+// became permanent on the first attempt.
+func TestReportedFailureCodeKeepsItsRetryability(t *testing.T) {
+	scheduler := &ImportScheduler{interval: time.Second}
+	// A throttled or failing hub is transient: the same request may succeed.
+	for _, code := range []ImportFailureCode{FailDependencyUnavailable, FailResourceUnavailable} {
+		cause := causeForFailureCode(code)
+		if !scheduler.retryable(cause) {
+			t.Fatalf("%s was not retryable after translation", code)
+		}
+		if got := failureCodeFor(cause); got != string(code) {
+			t.Fatalf("%s became %s", code, got)
+		}
+	}
+	// A timeout and every content verdict stay terminal: repeating them cannot
+	// change the outcome.
+	for _, code := range []ImportFailureCode{FailTimeout, FailSourceNotFound, FailSourceAuthRequired, FailSourceChanged, FailDatasetInvalid} {
+		cause := causeForFailureCode(code)
+		if scheduler.retryable(cause) {
+			t.Fatalf("%s became retryable", code)
+		}
+		if got := failureCodeFor(cause); got != string(code) {
+			t.Fatalf("%s became %s", code, got)
+		}
+	}
+}
+
 // fakeSweepWorker serves the scheduler's scan and records what it was asked for.
 type fakeSweepWorker struct {
 	tasks           []DatasetImportTask
+	attempt         DatasetImportAttempt
 	running         int64
 	countErr        error
 	includeDispatch bool
 	advanced        []string
 	deferred        int
 	failed          int
+	cleared         int
 }
 
 func (worker *fakeSweepWorker) ListDueTasks(_ context.Context, _ time.Time, _ int32, includeDispatch bool) ([]DatasetImportTask, error) {
@@ -337,6 +428,9 @@ func (worker *fakeSweepWorker) ListDueAttempts(context.Context, time.Time, int32
 }
 
 func (worker *fakeSweepWorker) GetAttempt(_ context.Context, _, attemptID string) (DatasetImportAttempt, error) {
+	if worker.attempt.AttemptID == attemptID {
+		return worker.attempt, nil
+	}
 	// A canceling task with no attempt converges without one.
 	return DatasetImportAttempt{}, ErrImportStateConflict
 }
@@ -354,6 +448,10 @@ func (worker *fakeSweepWorker) ClaimAttemptCleanup(context.Context, string, stri
 }
 
 func (worker *fakeSweepWorker) FinishAttemptCleanup(context.Context, string, string) (DatasetImportAttempt, error) {
+	panic("not used by the scheduler")
+}
+
+func (worker *fakeSweepWorker) DeferAttemptReconcile(context.Context, string, string, time.Duration) error {
 	panic("not used by the scheduler")
 }
 
@@ -400,7 +498,8 @@ func newTestScheduler(t *testing.T, worker *fakeSweepWorker, capacity int) *Impo
 type fakeSweepRepository struct{ worker *fakeSweepWorker }
 
 func (repo *fakeSweepRepository) AllocateAttempt(context.Context, AttemptAllocationRequest) (DatasetImportAttempt, error) {
-	panic("not used by these tests")
+	// These tests assert the scan split and the writer gate, not allocation.
+	return DatasetImportAttempt{}, ErrImportQuotaExhausted
 }
 
 func (repo *fakeSweepRepository) StartTask(context.Context, string, string, string, int64) (DatasetImportTask, error) {
@@ -437,8 +536,12 @@ func (repo *fakeSweepRepository) ConfirmWritersStopped(context.Context, string, 
 	panic("not used by these tests")
 }
 
-func (repo *fakeSweepRepository) ClearCurrentAttempt(context.Context, string, string, string) (DatasetImportTask, error) {
-	panic("not used by these tests")
+func (repo *fakeSweepRepository) ClearCurrentAttempt(_ context.Context, _, _, _ string) (DatasetImportTask, error) {
+	repo.worker.cleared++
+	task := schedulerTask()
+	task.State = TaskRunning
+	task.CurrentAttemptID = ""
+	return task, nil
 }
 
 func (repo *fakeSweepRepository) SetTaskEnvironment(context.Context, string, string, string) (DatasetImportTask, error) {
@@ -456,7 +559,7 @@ func (repo *fakeSweepRepository) RecordAttemptObservation(context.Context, strin
 type fakeSweepPlanner struct{}
 
 func (fakeSweepPlanner) PlanAttempt(context.Context, DatasetImportTask, string, int64) (AttemptPlan, error) {
-	panic("not used by these tests")
+	return AttemptPlan{}, nil
 }
 
 type fakeSweepWorkloads struct{}
@@ -470,7 +573,8 @@ func (fakeSweepWorkloads) ResumeImporter(context.Context, DatasetImportAttempt, 
 }
 
 func (fakeSweepWorkloads) ObserveImporter(context.Context, DatasetImportAttempt) (ImportWorkloadStatus, error) {
-	panic("not used by these tests")
+	// The Job is still running, so observation is a no-op for these tests.
+	return ImportWorkloadStatus{Present: true, Finished: false}, nil
 }
 
 func (fakeSweepWorkloads) DeleteImporter(context.Context, DatasetImportAttempt) error {

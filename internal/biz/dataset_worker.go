@@ -139,17 +139,12 @@ type CleanupGate struct {
 	CancelRequested bool
 }
 
-// AllowsGCObjects reports whether an attempt's temporary objects may be deleted.
-// Live READY references and unfinished multipart state always win.
+// AllowsGCObjects answers whether an attempt's temporary Kubernetes objects may
+// be deleted. It governs the Job, PVC and Secret only: the READY version and the
+// S3 objects are never deletion targets, so a succeeded task must still have its
+// temporary resources collected.
 func (gate CleanupGate) AllowsGCObjects(references LiveReferences) error {
-	if references.ReadyVersion || references.Candidate {
-		return ErrImportStateConflict
-	}
 	if references.UnfinishedMultipart {
-		return ErrImportStateConflict
-	}
-	// A succeeded task's permanent candidate is never a deletion target.
-	if gate.TaskState == TaskSucceeded {
 		return ErrImportStateConflict
 	}
 	if gate.TaskState == TaskRunning && gate.CurrentAttempt && !gate.CancelRequested {

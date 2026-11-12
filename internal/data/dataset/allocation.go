@@ -90,6 +90,20 @@ func (r *Repository) AllocateAttempt(ctx context.Context, request biz.AttemptAll
 	if err != nil {
 		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: insert attempt: %v", biz.ErrPersistence, err)
 	}
+	// Binding happens in the same transaction as the insert. Splitting them let a
+	// second party bind the attempt first, after which this UPDATE matched no row
+	// and the task was failed as a conflict while the slot stayed taken. Rolling
+	// back here releases the slot with the attempt.
+	if _, err := queries.SetCurrentAttempt(ctx, datasetsql.SetCurrentAttemptParams{
+		AttemptID: attemptID, TenantID: tenant, TaskID: taskID,
+	}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// The task moved on (cancelled, or already bound elsewhere) between the
+			// scan and this transaction. Nothing was allocated.
+			return biz.DatasetImportAttempt{}, biz.ErrImportStateConflict
+		}
+		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: bind attempt: %v", biz.ErrPersistence, err)
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return biz.DatasetImportAttempt{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}

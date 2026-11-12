@@ -330,6 +330,29 @@ func (r *Repository) FinishAttemptCleanup(ctx context.Context, tenantID, attempt
 	return attemptFromRow(row)
 }
 
+func (r *Repository) DeferAttemptReconcile(ctx context.Context, tenantID, attemptID string, delay time.Duration) error {
+	if r == nil || r.pool == nil {
+		return biz.ErrPersistence
+	}
+	tenant, err := databaseID(tenantID)
+	if err != nil {
+		return err
+	}
+	id, err := databaseID(attemptID)
+	if err != nil {
+		return err
+	}
+	if delay <= 0 {
+		delay = time.Second
+	}
+	if err := datasetsql.New(r.pool).DeferAttemptReconcile(ctx, datasetsql.DeferAttemptReconcileParams{
+		DelaySeconds: delay.Seconds(), TenantID: tenant, AttemptID: id,
+	}); err != nil {
+		return biz.ErrPersistence
+	}
+	return nil
+}
+
 func (r *Repository) FreezeCandidate(ctx context.Context, tenantID, attemptID, versionID, sha256 string) (biz.DatasetImportAttempt, error) {
 	if r == nil || r.pool == nil || versionID == "" || len(sha256) != 64 {
 		return biz.DatasetImportAttempt{}, biz.ErrPersistence
