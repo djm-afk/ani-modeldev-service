@@ -228,6 +228,107 @@ func (q *Queries) ArchiveDataset(ctx context.Context, arg ArchiveDatasetParams) 
 	return i, err
 }
 
+const cancelQueuedTasksForArchive = `-- name: CancelQueuedTasksForArchive :many
+UPDATE modeldev_dataset_import_tasks
+SET state = 'CANCELLED',
+    phase = 'STOPPING',
+    cancel_requested_at = clock_timestamp(),
+    finished_at = clock_timestamp(),
+    lease_owner = NULL,
+    lease_until = NULL,
+    updated_at = clock_timestamp()
+WHERE tenant_id = $1::uuid
+  AND dataset_id = $2::uuid
+  AND state = 'QUEUED'
+  AND current_attempt_id IS NULL
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
+`
+
+type CancelQueuedTasksForArchiveParams struct {
+	TenantID  pgtype.UUID
+	DatasetID pgtype.UUID
+}
+
+// A QUEUED task with no attempt has nothing to stop, so the archive transaction
+// finishes it directly instead of leaving a CANCELING row for the worker.
+func (q *Queries) CancelQueuedTasksForArchive(ctx context.Context, arg CancelQueuedTasksForArchiveParams) ([]ModeldevDatasetImportTask, error) {
+	rows, err := q.db.Query(ctx, cancelQueuedTasksForArchive, arg.TenantID, arg.DatasetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ModeldevDatasetImportTask
+	for rows.Next() {
+		var i ModeldevDatasetImportTask
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.TaskID,
+			&i.DatasetID,
+			&i.AcceptanceReceiptID,
+			&i.ReservedInputVersionID,
+			&i.InputRequestID,
+			&i.VersionNumber,
+			&i.CreatedBy,
+			&i.AcceptedAt,
+			&i.SourceProvider,
+			&i.SourceSnapshot,
+			&i.SourceSnapshotSha256,
+			&i.ExpectedSizeBytes,
+			&i.AcceptedLimitBytes,
+			&i.ClusterID,
+			&i.NamespaceName,
+			&i.NamespaceUid,
+			&i.TargetSnapshot,
+			&i.TargetSnapshotSha256,
+			&i.StorageConnectionID,
+			&i.Bucket,
+			&i.ApprovedPrefix,
+			&i.InputScopeSha256,
+			&i.CredentialReference,
+			&i.ObservedEnvironmentID,
+			&i.ObservedEnvironmentBindingDigest,
+			&i.AuthorizationScope,
+			&i.AuthorizationScopeSha256,
+			&i.TargetInvalidatedAt,
+			&i.TargetInvalidatedReason,
+			&i.State,
+			&i.Phase,
+			&i.RecoveryGeneration,
+			&i.RecoveryPolicy,
+			&i.ValidationRetryCount,
+			&i.ValidationDeadlineAt,
+			&i.NextRunAt,
+			&i.CurrentAttemptID,
+			&i.LeaseOwner,
+			&i.LeaseEpoch,
+			&i.LeaseUntil,
+			&i.CancelRequestedAt,
+			&i.FailureCode,
+			&i.FailureDetail,
+			&i.Retryable,
+			&i.CandidateAttemptID,
+			&i.CandidateObjectKey,
+			&i.CandidateVersionID,
+			&i.CandidateSizeBytes,
+			&i.CandidateSha256,
+			&i.CandidateFrozenAt,
+			&i.CandidateReportVersionID,
+			&i.CandidateReportSha256,
+			&i.FinishedAt,
+			&i.PublishedAt,
+			&i.UpdatedAt,
+			&i.DeferCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const claimAttemptCleanup = `-- name: ClaimAttemptCleanup :one
 UPDATE modeldev_dataset_import_attempts
 SET cleanup_state = 'RUNNING'
@@ -375,6 +476,102 @@ func (q *Queries) ClearCurrentAttempt(ctx context.Context, arg ClearCurrentAttem
 		&i.DeferCount,
 	)
 	return i, err
+}
+
+const clearRetryableForArchive = `-- name: ClearRetryableForArchive :many
+UPDATE modeldev_dataset_import_tasks
+SET retryable = false,
+    updated_at = clock_timestamp()
+WHERE tenant_id = $1::uuid
+  AND dataset_id = $2::uuid
+  AND state = 'FAILED'
+  AND retryable = true
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
+`
+
+type ClearRetryableForArchiveParams struct {
+	TenantID  pgtype.UUID
+	DatasetID pgtype.UUID
+}
+
+// A retryable FAILED task would otherwise be reopened by an explicit retry after
+// the collection was archived.
+func (q *Queries) ClearRetryableForArchive(ctx context.Context, arg ClearRetryableForArchiveParams) ([]ModeldevDatasetImportTask, error) {
+	rows, err := q.db.Query(ctx, clearRetryableForArchive, arg.TenantID, arg.DatasetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ModeldevDatasetImportTask
+	for rows.Next() {
+		var i ModeldevDatasetImportTask
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.TaskID,
+			&i.DatasetID,
+			&i.AcceptanceReceiptID,
+			&i.ReservedInputVersionID,
+			&i.InputRequestID,
+			&i.VersionNumber,
+			&i.CreatedBy,
+			&i.AcceptedAt,
+			&i.SourceProvider,
+			&i.SourceSnapshot,
+			&i.SourceSnapshotSha256,
+			&i.ExpectedSizeBytes,
+			&i.AcceptedLimitBytes,
+			&i.ClusterID,
+			&i.NamespaceName,
+			&i.NamespaceUid,
+			&i.TargetSnapshot,
+			&i.TargetSnapshotSha256,
+			&i.StorageConnectionID,
+			&i.Bucket,
+			&i.ApprovedPrefix,
+			&i.InputScopeSha256,
+			&i.CredentialReference,
+			&i.ObservedEnvironmentID,
+			&i.ObservedEnvironmentBindingDigest,
+			&i.AuthorizationScope,
+			&i.AuthorizationScopeSha256,
+			&i.TargetInvalidatedAt,
+			&i.TargetInvalidatedReason,
+			&i.State,
+			&i.Phase,
+			&i.RecoveryGeneration,
+			&i.RecoveryPolicy,
+			&i.ValidationRetryCount,
+			&i.ValidationDeadlineAt,
+			&i.NextRunAt,
+			&i.CurrentAttemptID,
+			&i.LeaseOwner,
+			&i.LeaseEpoch,
+			&i.LeaseUntil,
+			&i.CancelRequestedAt,
+			&i.FailureCode,
+			&i.FailureDetail,
+			&i.Retryable,
+			&i.CandidateAttemptID,
+			&i.CandidateObjectKey,
+			&i.CandidateVersionID,
+			&i.CandidateSizeBytes,
+			&i.CandidateSha256,
+			&i.CandidateFrozenAt,
+			&i.CandidateReportVersionID,
+			&i.CandidateReportSha256,
+			&i.FinishedAt,
+			&i.PublishedAt,
+			&i.UpdatedAt,
+			&i.DeferCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const closeAttempt = `-- name: CloseAttempt :one
@@ -3135,6 +3332,105 @@ func (q *Queries) RequestCancelTask(ctx context.Context, arg RequestCancelTaskPa
 		&i.DeferCount,
 	)
 	return i, err
+}
+
+const requestCancelTasksForArchive = `-- name: RequestCancelTasksForArchive :many
+UPDATE modeldev_dataset_import_tasks
+SET state = 'CANCELING',
+    phase = 'STOPPING',
+    cancel_requested_at = clock_timestamp(),
+    lease_owner = NULL,
+    lease_until = NULL,
+    updated_at = clock_timestamp()
+WHERE tenant_id = $1::uuid
+  AND dataset_id = $2::uuid
+  AND state IN ('QUEUED', 'RUNNING')
+RETURNING tenant_id, task_id, dataset_id, acceptance_receipt_id, reserved_input_version_id, input_request_id, version_number, created_by, accepted_at, source_provider, source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes, cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256, storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference, observed_environment_id, observed_environment_binding_digest, authorization_scope, authorization_scope_sha256, target_invalidated_at, target_invalidated_reason, state, phase, recovery_generation, recovery_policy, validation_retry_count, validation_deadline_at, next_run_at, current_attempt_id, lease_owner, lease_epoch, lease_until, cancel_requested_at, failure_code, failure_detail, retryable, candidate_attempt_id, candidate_object_key, candidate_version_id, candidate_size_bytes, candidate_sha256, candidate_frozen_at, candidate_report_version_id, candidate_report_sha256, finished_at, published_at, updated_at, defer_count
+`
+
+type RequestCancelTasksForArchiveParams struct {
+	TenantID  pgtype.UUID
+	DatasetID pgtype.UUID
+}
+
+// Everything else that can still run gets a cancel intent. The worker converges
+// it; the archive transaction must not wait for a Job to exit.
+func (q *Queries) RequestCancelTasksForArchive(ctx context.Context, arg RequestCancelTasksForArchiveParams) ([]ModeldevDatasetImportTask, error) {
+	rows, err := q.db.Query(ctx, requestCancelTasksForArchive, arg.TenantID, arg.DatasetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ModeldevDatasetImportTask
+	for rows.Next() {
+		var i ModeldevDatasetImportTask
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.TaskID,
+			&i.DatasetID,
+			&i.AcceptanceReceiptID,
+			&i.ReservedInputVersionID,
+			&i.InputRequestID,
+			&i.VersionNumber,
+			&i.CreatedBy,
+			&i.AcceptedAt,
+			&i.SourceProvider,
+			&i.SourceSnapshot,
+			&i.SourceSnapshotSha256,
+			&i.ExpectedSizeBytes,
+			&i.AcceptedLimitBytes,
+			&i.ClusterID,
+			&i.NamespaceName,
+			&i.NamespaceUid,
+			&i.TargetSnapshot,
+			&i.TargetSnapshotSha256,
+			&i.StorageConnectionID,
+			&i.Bucket,
+			&i.ApprovedPrefix,
+			&i.InputScopeSha256,
+			&i.CredentialReference,
+			&i.ObservedEnvironmentID,
+			&i.ObservedEnvironmentBindingDigest,
+			&i.AuthorizationScope,
+			&i.AuthorizationScopeSha256,
+			&i.TargetInvalidatedAt,
+			&i.TargetInvalidatedReason,
+			&i.State,
+			&i.Phase,
+			&i.RecoveryGeneration,
+			&i.RecoveryPolicy,
+			&i.ValidationRetryCount,
+			&i.ValidationDeadlineAt,
+			&i.NextRunAt,
+			&i.CurrentAttemptID,
+			&i.LeaseOwner,
+			&i.LeaseEpoch,
+			&i.LeaseUntil,
+			&i.CancelRequestedAt,
+			&i.FailureCode,
+			&i.FailureDetail,
+			&i.Retryable,
+			&i.CandidateAttemptID,
+			&i.CandidateObjectKey,
+			&i.CandidateVersionID,
+			&i.CandidateSizeBytes,
+			&i.CandidateSha256,
+			&i.CandidateFrozenAt,
+			&i.CandidateReportVersionID,
+			&i.CandidateReportSha256,
+			&i.FinishedAt,
+			&i.PublishedAt,
+			&i.UpdatedAt,
+			&i.DeferCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const requeueRetryableTask = `-- name: RequeueRetryableTask :one

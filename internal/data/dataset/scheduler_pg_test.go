@@ -91,6 +91,16 @@ func (fixture *schedFixture) addTask(t *testing.T, taskID, state string, nextRun
 	inputRequest := uuidFor("eeeeeeee", fixture.nextSeq())
 	// Version numbers are unique per dataset, so each fixture task takes the next.
 	versionNumber := fixture.nextSeq()
+	// A FAILED row must carry a failure code and a finish time; the schema
+	// requires both for a terminal state.
+	var failureCode *string
+	var finishedAt *time.Time
+	if state == "FAILED" {
+		code := "IMPORT_DEPENDENCY_UNAVAILABLE"
+		failureCode = &code
+		at := time.Now().UTC()
+		finishedAt = &at
+	}
 
 	sourceSnapshot := fmt.Sprintf(`{"schema":"ani.modeldev.dataset.source-snapshot.v1",`+
 		`"provider":"MODELSCOPE","repo_type":"dataset","repo_id":"org/ds",`+
@@ -127,18 +137,18 @@ INSERT INTO modeldev_dataset_import_tasks (
     source_snapshot, source_snapshot_sha256, expected_size_bytes, accepted_limit_bytes,
     cluster_id, namespace_name, namespace_uid, target_snapshot, target_snapshot_sha256,
     storage_connection_id, bucket, approved_prefix, input_scope_sha256, credential_reference,
-    authorization_scope, authorization_scope_sha256, recovery_policy, state, next_run_at)
+    authorization_scope, authorization_scope_sha256, recovery_policy, state, next_run_at, failure_code, finished_at)
 VALUES ($1,$2,$3,$4,$5,$6,$24,$7,clock_timestamp(),'MODELSCOPE',
         $8::jsonb,$9,116,1073741824,
         $10,$11,$12,$13::jsonb,$14,
         $15,$16,$17,$18,$19,
-        $20::jsonb,$21,'{}'::jsonb,$22,$23)`,
+        $20::jsonb,$21,'{}'::jsonb,$22,$23,$25,$26)`,
 		schedTenant, taskID, schedDataset, receiptID, inputVersion,
 		inputRequest, schedActor,
 		sourceSnapshot, hex64('e'),
 		schedCluster, schedNSName, schedNSUID, targetSnapshot, hex64('f'),
 		schedStore, schedBucket, schedPrefix, hex64('c'), schedCredRef,
-		authorizationScope, hex64('a'), state, nextRunAt, versionNumber); err != nil {
+		authorizationScope, hex64('a'), state, nextRunAt, versionNumber, failureCode, finishedAt); err != nil {
 		t.Fatalf("insert task: %v", err)
 	}
 	if err := tx.Commit(ctx); err != nil {
@@ -147,8 +157,8 @@ VALUES ($1,$2,$3,$4,$5,$6,$24,$7,clock_timestamp(),'MODELSCOPE',
 	fixture.taskID = taskID
 }
 
-// addAttempt inserts one attempt for the fixture's task.
-func (fixture *schedFixture) addAttempt(t *testing.T, attemptID string, attemptNo int64) {
+// addAttempt inserts one attempt for the given task.
+func (fixture *schedFixture) addAttempt(t *testing.T, taskID, attemptID string, attemptNo int64) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -158,7 +168,7 @@ INSERT INTO modeldev_dataset_import_attempts (
     cluster_id, namespace_name, namespace_uid, job_name, pvc_name, secret_name,
     runtime_plan, runtime_plan_sha256, data_object_key, result_object_key, deadline_at)
 VALUES ($1,$2,$3,$4,$5,1,$6,$7,$8,$9,$10,$11,'{}'::jsonb,$12,$13,$14,clock_timestamp() + interval '30 minutes')`,
-		schedTenant, attemptID, schedDataset, fixture.taskID, attemptNo,
+		schedTenant, attemptID, schedDataset, taskID, attemptNo,
 		schedCluster, schedNSName, schedNSUID,
 		"job-"+attemptID, "pvc-"+attemptID, "secret-"+attemptID,
 		hex64('1'), "data/"+attemptID, "result/"+attemptID); err != nil {
@@ -205,7 +215,7 @@ func TestListDueTasksSeparatesObservationFromDispatch(t *testing.T) {
 	running := "aaaaaaaa-0000-4000-8000-000000000002"
 	fixture.addTask(t, queued, "QUEUED", now.Add(-time.Minute))
 	fixture.addTask(t, running, "RUNNING", now.Add(-time.Minute))
-	fixture.addAttempt(t, "bbbbbbbb-0000-4000-8000-000000000002", 1)
+	fixture.addAttempt(t, running, "bbbbbbbb-0000-4000-8000-000000000002", 1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -245,7 +255,7 @@ func TestSetCurrentAttemptKeepsNextRunAt(t *testing.T) {
 	taskID := "aaaaaaaa-0000-4000-8000-000000000003"
 	attemptID := "bbbbbbbb-0000-4000-8000-000000000003"
 	fixture.addTask(t, taskID, "RUNNING", original)
-	fixture.addAttempt(t, attemptID, 1)
+	fixture.addAttempt(t, taskID, attemptID, 1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -293,7 +303,7 @@ func TestCountRunningAttemptsUsesWritersStopped(t *testing.T) {
 	taskID := "aaaaaaaa-0000-4000-8000-000000000005"
 	attemptID := "bbbbbbbb-0000-4000-8000-000000000005"
 	fixture.addTask(t, taskID, "RUNNING", time.Now().UTC().Add(-time.Minute))
-	fixture.addAttempt(t, attemptID, 1)
+	fixture.addAttempt(t, taskID, attemptID, 1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -337,7 +347,7 @@ func TestWriterStopRequiresAClosedDispatchGate(t *testing.T) {
 	taskID := "aaaaaaaa-0000-4000-8000-000000000006"
 	attemptID := "bbbbbbbb-0000-4000-8000-000000000006"
 	fixture.addTask(t, taskID, "RUNNING", time.Now().UTC().Add(-time.Minute))
-	fixture.addAttempt(t, attemptID, 1)
+	fixture.addAttempt(t, taskID, attemptID, 1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -376,7 +386,7 @@ func TestAttemptLeaseIsReleasable(t *testing.T) {
 	taskID := "aaaaaaaa-0000-4000-8000-000000000007"
 	attemptID := "bbbbbbbb-0000-4000-8000-000000000007"
 	fixture.addTask(t, taskID, "RUNNING", time.Now().UTC().Add(-time.Minute))
-	fixture.addAttempt(t, attemptID, 1)
+	fixture.addAttempt(t, taskID, attemptID, 1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -407,7 +417,7 @@ func TestCleanupClaimRequiresAStoppedWriter(t *testing.T) {
 	taskID := "aaaaaaaa-0000-4000-8000-000000000008"
 	attemptID := "bbbbbbbb-0000-4000-8000-000000000008"
 	fixture.addTask(t, taskID, "RUNNING", time.Now().UTC().Add(-time.Minute))
-	fixture.addAttempt(t, attemptID, 1)
+	fixture.addAttempt(t, taskID, attemptID, 1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()

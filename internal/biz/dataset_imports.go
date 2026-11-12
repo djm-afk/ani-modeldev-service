@@ -103,11 +103,14 @@ func (imports *DatasetImports) AcceptImport(ctx context.Context, acceptance Impo
 		return AcceptanceResult{}, ErrSourceSizeUnknown
 	}
 
-	// 1. Idempotent replay is answered before any hub access.
+	// 1. Idempotent replay is answered before any hub access. The selection
+	// fingerprint is part of the intent, so the same key with a different file
+	// is a conflict rather than a replay of the first task.
 	command := DatasetCommand{
 		TenantID: acceptance.TenantID, ActorID: acceptance.ActorID,
 		Kind: OpImportVersion, IdempotencyKey: acceptance.IdempotencyKey,
-		DatasetID: acceptance.DatasetID,
+		DatasetID:            acceptance.DatasetID,
+		SelectionFingerprint: acceptance.SelectionFingerprint,
 	}
 	if receipt, err := imports.commands.FindReceipt(ctx, acceptance.TenantID, acceptance.ActorID, OpImportVersion, acceptance.IdempotencyKey); err == nil {
 		if !receipt.SameIntent(command) {

@@ -70,6 +70,50 @@ WHERE tenant_id = sqlc.arg(tenant_id)::uuid
   AND state = 'ARCHIVED'
 RETURNING *;
 
+-- name: CancelQueuedTasksForArchive :many
+-- A QUEUED task with no attempt has nothing to stop, so the archive transaction
+-- finishes it directly instead of leaving a CANCELING row for the worker.
+UPDATE modeldev_dataset_import_tasks
+SET state = 'CANCELLED',
+    phase = 'STOPPING',
+    cancel_requested_at = clock_timestamp(),
+    finished_at = clock_timestamp(),
+    lease_owner = NULL,
+    lease_until = NULL,
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND dataset_id = sqlc.arg(dataset_id)::uuid
+  AND state = 'QUEUED'
+  AND current_attempt_id IS NULL
+RETURNING *;
+
+-- name: RequestCancelTasksForArchive :many
+-- Everything else that can still run gets a cancel intent. The worker converges
+-- it; the archive transaction must not wait for a Job to exit.
+UPDATE modeldev_dataset_import_tasks
+SET state = 'CANCELING',
+    phase = 'STOPPING',
+    cancel_requested_at = clock_timestamp(),
+    lease_owner = NULL,
+    lease_until = NULL,
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND dataset_id = sqlc.arg(dataset_id)::uuid
+  AND state IN ('QUEUED', 'RUNNING')
+RETURNING *;
+
+-- name: ClearRetryableForArchive :many
+-- A retryable FAILED task would otherwise be reopened by an explicit retry after
+-- the collection was archived.
+UPDATE modeldev_dataset_import_tasks
+SET retryable = false,
+    updated_at = clock_timestamp()
+WHERE tenant_id = sqlc.arg(tenant_id)::uuid
+  AND dataset_id = sqlc.arg(dataset_id)::uuid
+  AND state = 'FAILED'
+  AND retryable = true
+RETURNING *;
+
 -- name: TakeVersionNumber :one
 -- The version sequence advances in the acceptance transaction; a failed or
 -- cancelled task leaves a permanent gap and never recycles the number.

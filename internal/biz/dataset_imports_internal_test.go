@@ -272,7 +272,7 @@ func TestAcceptImportRejectsArchivedDataset(t *testing.T) {
 func TestAcceptImportReplayDoesNotTouchTheHub(t *testing.T) {
 	f := newImportsFixture()
 	acceptance := validAcceptance()
-	intent := DatasetCommand{TenantID: acceptance.TenantID, ActorID: acceptance.ActorID, Kind: OpImportVersion, IdempotencyKey: acceptance.IdempotencyKey, DatasetID: acceptance.DatasetID}
+	intent := DatasetCommand{TenantID: acceptance.TenantID, ActorID: acceptance.ActorID, Kind: OpImportVersion, IdempotencyKey: acceptance.IdempotencyKey, DatasetID: acceptance.DatasetID, SelectionFingerprint: acceptance.SelectionFingerprint}
 	f.commands.err = nil
 	f.commands.receipt = CommandReceipt{
 		TenantID: acceptance.TenantID, ReceiptID: "66666666-6666-4666-8666-666666666666", ActorID: acceptance.ActorID,

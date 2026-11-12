@@ -215,6 +215,11 @@ type DatasetCommand struct {
 	UpdateDesc  bool
 
 	ExpectedRevision int64
+
+	// SelectionFingerprint is the confirmed source selection of an import. It is
+	// part of the intent: the same key with a different file is a different
+	// command, not a replay of the first one.
+	SelectionFingerprint string
 }
 
 // Digest is the canonical intent hash used to detect "same key, different
@@ -235,6 +240,11 @@ func (command DatasetCommand) Digest() string {
 	}
 	if command.ExpectedRevision > 0 {
 		parts = append(parts, "revision="+strconv.FormatInt(command.ExpectedRevision, 10))
+	}
+	// An import's source selection is part of what the user asked for. Without
+	// it, reusing a key with a different file silently returned the first task.
+	if command.SelectionFingerprint != "" {
+		parts = append(parts, "selection="+command.SelectionFingerprint)
 	}
 	sum := sha256.Sum256([]byte(strings.Join(parts, "\x00")))
 	return hex.EncodeToString(sum[:])

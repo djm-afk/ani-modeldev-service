@@ -7,7 +7,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -284,13 +286,36 @@ func (r *Repository) transitionState(ctx context.Context, change biz.DatasetStat
 	if err != nil {
 		return biz.Dataset{}, err
 	}
-	queries := datasetsql.New(r.pool)
-	var row datasetsql.ModeldevDataset
-	if archive {
-		row, err = queries.ArchiveDataset(ctx, datasetsql.ArchiveDatasetParams{TenantID: tenant, DatasetID: datasetID, UpdatedBy: change.ActorID, ExpectedRevision: change.ExpectedRevision})
-	} else {
-		row, err = queries.RestoreDataset(ctx, datasetsql.RestoreDatasetParams{TenantID: tenant, DatasetID: datasetID, UpdatedBy: change.ActorID, ExpectedRevision: change.ExpectedRevision})
+	if !archive {
+		// Restore only reopens the collection. It never revives cancelled work, so
+		// no task row is touched.
+		row, restoreErr := datasetsql.New(r.pool).RestoreDataset(ctx, datasetsql.RestoreDatasetParams{
+			TenantID: tenant, DatasetID: datasetID, UpdatedBy: change.ActorID, ExpectedRevision: change.ExpectedRevision,
+		})
+		if errors.Is(restoreErr, pgx.ErrNoRows) {
+			return biz.Dataset{}, biz.ErrRevisionConflict
+		}
+		if restoreErr != nil {
+			return biz.Dataset{}, biz.ErrPersistence
+		}
+		return datasetFromRow(row)
 	}
+
+	// Archive closes the collection and every task that could still produce a
+	// version, in one transaction. Design §10.2 requires the closure to be part
+	// of the archive itself: a task left running would publish a READY version
+	// after the collection was archived, and a restore would then make that
+	// version look legitimate.
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return biz.Dataset{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
+	}
+	defer tx.Rollback(ctx)
+	queries := datasetsql.New(tx)
+
+	row, err := queries.ArchiveDataset(ctx, datasetsql.ArchiveDatasetParams{
+		TenantID: tenant, DatasetID: datasetID, UpdatedBy: change.ActorID, ExpectedRevision: change.ExpectedRevision,
+	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		// Either the revision moved or the lifecycle is already in that state.
 		// The caller distinguishes by re-reading, so report the generic conflict.
@@ -298,6 +323,57 @@ func (r *Repository) transitionState(ctx context.Context, change biz.DatasetStat
 	}
 	if err != nil {
 		return biz.Dataset{}, biz.ErrPersistence
+	}
+
+	// A QUEUED task with no attempt has nothing to stop: finish it here so the
+	// worker never has to converge a cancel that cannot make progress.
+	cancelled, err := queries.CancelQueuedTasksForArchive(ctx, datasetsql.CancelQueuedTasksForArchiveParams{
+		TenantID: tenant, DatasetID: datasetID,
+	})
+	if err != nil {
+		return biz.Dataset{}, fmt.Errorf("%w: cancel queued tasks: %v", biz.ErrPersistence, err)
+	}
+	// Everything else that can still run gets a cancel intent. The worker
+	// converges it; the archive transaction must not wait for a Job to exit.
+	canceling, err := queries.RequestCancelTasksForArchive(ctx, datasetsql.RequestCancelTasksForArchiveParams{
+		TenantID: tenant, DatasetID: datasetID,
+	})
+	if err != nil {
+		return biz.Dataset{}, fmt.Errorf("%w: request task cancels: %v", biz.ErrPersistence, err)
+	}
+	// A retryable FAILED task would otherwise be reopened by an explicit retry
+	// after the collection was archived.
+	cleared, err := queries.ClearRetryableForArchive(ctx, datasetsql.ClearRetryableForArchiveParams{
+		TenantID: tenant, DatasetID: datasetID,
+	})
+	if err != nil {
+		return biz.Dataset{}, fmt.Errorf("%w: clear retryable tasks: %v", biz.ErrPersistence, err)
+	}
+
+	// Each closed task gets its own history entry, so the archive is auditable
+	// per task rather than only as a collection-level event.
+	for _, task := range append(append(cancelled, canceling...), cleared...) {
+		operationID, idErr := uuid.NewRandom()
+		if idErr != nil {
+			return biz.Dataset{}, biz.ErrPersistence
+		}
+		event := biz.EventCancelRequest
+		result := "ACCEPTED"
+		if task.State == string(biz.TaskCancelled) {
+			event, result = biz.EventImportCanceled, "SUCCEEDED"
+		}
+		if err := writeOperation(ctx, queries, biz.DatasetOperation{
+			TenantID: change.TenantID, OperationID: operationID.String(), DatasetID: change.DatasetID,
+			TaskID: task.TaskID.String(), Actor: change.ActorID,
+			EventType: event, Result: result,
+			BeforeState: task.State, AfterState: task.State,
+		}); err != nil {
+			return biz.Dataset{}, err
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return biz.Dataset{}, fmt.Errorf("%w: %v", biz.ErrPersistence, err)
 	}
 	return datasetFromRow(row)
 }
