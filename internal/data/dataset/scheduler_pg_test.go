@@ -64,7 +64,9 @@ func (fixture *schedFixture) nextSeq() int {
 func newSchedFixture(t *testing.T) *schedFixture {
 	t.Helper()
 	pool := postgres.Prepare(t)()
-	fixture := &schedFixture{pool: pool, repo: dataset.New(pool)}
+	// The capacity limit is a deployment setting; allocation fails closed without
+	// one, so the fixture supplies a small budget.
+	fixture := &schedFixture{pool: pool, repo: dataset.New(pool).WithConcurrencyLimit(4)}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
@@ -445,6 +447,99 @@ func TestCleanupClaimRequiresAStoppedWriter(t *testing.T) {
 	_, _, cleanup := fixture.attemptRow(t, attemptID)
 	if cleanup != "DONE" {
 		t.Fatalf("cleanup state = %s, want DONE", cleanup)
+	}
+}
+
+// Allocation and binding share one transaction. Splitting them let a second
+// party bind the attempt first, after which the scheduler's UPDATE matched no
+// row and the task was failed as a conflict while the slot stayed taken.
+func TestAllocateAttemptBindsInsideTheSameTransaction(t *testing.T) {
+	fixture := newSchedFixture(t)
+	taskID := "aaaaaaaa-0000-4000-8000-000000000009"
+	attemptID := "bbbbbbbb-0000-4000-8000-000000000009"
+	fixture.addTask(t, taskID, "RUNNING", time.Now().UTC().Add(-time.Minute))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	attempt, err := fixture.repo.AllocateAttempt(ctx, allocationRequest(taskID, attemptID))
+	if err != nil {
+		t.Fatalf("allocate: %v", err)
+	}
+	if attempt.AttemptID != attemptID {
+		t.Fatalf("attempt = %+v", attempt)
+	}
+	// The binding is visible in the same commit as the insert.
+	var current string
+	if err := fixture.pool.QueryRow(ctx,
+		`SELECT current_attempt_id::text FROM modeldev_dataset_import_tasks WHERE tenant_id=$1 AND task_id=$2`,
+		schedTenant, taskID).Scan(&current); err != nil {
+		t.Fatalf("read task: %v", err)
+	}
+	if current != attemptID {
+		t.Fatalf("current_attempt_id = %q, want %q", current, attemptID)
+	}
+
+	// A second allocation for the same task must not take a second slot: the
+	// binding is already taken, so the whole transaction rolls back.
+	if _, err := fixture.repo.AllocateAttempt(ctx, allocationRequest(taskID, "bbbbbbbb-0000-4000-8000-000000000010")); !errors.Is(err, biz.ErrImportStateConflict) {
+		t.Fatalf("a second allocation was accepted: %v", err)
+	}
+	var attempts int
+	if err := fixture.pool.QueryRow(ctx,
+		`SELECT count(*) FROM modeldev_dataset_import_attempts WHERE tenant_id=$1 AND task_id=$2`,
+		schedTenant, taskID).Scan(&attempts); err != nil {
+		t.Fatalf("count attempts: %v", err)
+	}
+	if attempts != 1 {
+		t.Fatalf("attempts = %d, want the rolled-back insert to leave 1", attempts)
+	}
+}
+
+// A task that moved on between the scan and the transaction must not leave an
+// attempt behind: the insert and the binding roll back together, so the slot is
+// released with the attempt.
+func TestAllocateAttemptRollsBackWhenTheTaskMovedOn(t *testing.T) {
+	fixture := newSchedFixture(t)
+	taskID := "aaaaaaaa-0000-4000-8000-000000000011"
+	attemptID := "bbbbbbbb-0000-4000-8000-000000000011"
+	// QUEUED is not bindable: SetCurrentAttempt only matches a RUNNING task.
+	fixture.addTask(t, taskID, "QUEUED", time.Now().UTC().Add(-time.Minute))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	if _, err := fixture.repo.AllocateAttempt(ctx, allocationRequest(taskID, attemptID)); !errors.Is(err, biz.ErrImportStateConflict) {
+		t.Fatalf("an unbindable task accepted an attempt: %v", err)
+	}
+	var attempts int
+	if err := fixture.pool.QueryRow(ctx,
+		`SELECT count(*) FROM modeldev_dataset_import_attempts WHERE tenant_id=$1 AND task_id=$2`,
+		schedTenant, taskID).Scan(&attempts); err != nil {
+		t.Fatalf("count attempts: %v", err)
+	}
+	if attempts != 0 {
+		t.Fatalf("attempts = %d, want the rolled-back insert to leave none", attempts)
+	}
+}
+
+// allocationRequest builds the minimum a real allocation needs. The plan
+// callback runs inside the transaction, so it must return a complete plan.
+func allocationRequest(taskID, attemptID string) biz.AttemptAllocationRequest {
+	return biz.AttemptAllocationRequest{
+		Task: biz.DatasetImportTask{
+			TenantID: schedTenant, DatasetID: schedDataset, TaskID: taskID,
+			ClusterID: schedCluster, NamespaceName: schedNSName, NamespaceUID: schedNSUID,
+			RecoveryGeneration: 1,
+		},
+		AttemptID: attemptID,
+		Plan: func(context.Context, int64) (biz.AttemptPlan, error) {
+			return biz.AttemptPlan{
+				JobName: "job-" + attemptID, PVCName: "pvc-" + attemptID, SecretName: "secret-" + attemptID,
+				DataObjectKey: "data/" + attemptID, ResultObjectKey: "result/" + attemptID,
+				DeadlineAt:        time.Now().UTC().Add(30 * time.Minute),
+				RuntimePlan:       []byte(`{}`),
+				RuntimePlanSHA256: hex64('1'),
+			}, nil
+		},
 	}
 }
 

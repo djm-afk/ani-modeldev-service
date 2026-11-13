@@ -21,6 +21,7 @@ type fakeAttemptWorker struct {
 	deferred   []string
 	observe    ImportWorkloadStatus
 	observeErr error
+	bindErr    error
 }
 
 func newFakeAttemptWorker(attempts ...DatasetImportAttempt) *fakeAttemptWorker {
@@ -56,6 +57,9 @@ func (worker *fakeAttemptWorker) InsertAttempt(context.Context, DatasetImportAtt
 
 func (worker *fakeAttemptWorker) SetCurrentAttempt(_ context.Context, _, _, attemptID string) (DatasetImportTask, error) {
 	worker.bound = append(worker.bound, attemptID)
+	if worker.bindErr != nil {
+		return DatasetImportTask{}, worker.bindErr
+	}
 	return DatasetImportTask{}, nil
 }
 
@@ -140,12 +144,17 @@ func (worker *fakeAttemptWorker) ConfirmWritersStopped(_ context.Context, _, att
 	return attempt, nil
 }
 
-// fakeAttemptTasks serves the one task lookup the reconciler performs.
+// fakeAttemptTasks serves the one task lookup the reconciler performs. get, when
+// set, answers instead of the map so a test can vary the answer between reads.
 type fakeAttemptTasks struct {
 	tasks map[string]DatasetImportTask
+	get   func() DatasetImportTask
 }
 
 func (tasks *fakeAttemptTasks) GetImportTask(_ context.Context, _, taskID string) (DatasetImportTask, error) {
+	if tasks.get != nil {
+		return tasks.get(), nil
+	}
 	task, ok := tasks.tasks[taskID]
 	if !ok {
 		return DatasetImportTask{}, ErrImportTaskNotFound
@@ -229,6 +238,92 @@ func TestReconcilerBindsAnUnboundAttempt(t *testing.T) {
 	}
 	if len(worker.closed) != 0 {
 		t.Fatalf("a bindable attempt was closed: %v", worker.closed)
+	}
+}
+
+// A bind conflict is not a failure when the task now names this attempt: the
+// other party bound the same row, so there is nothing to close. Treating the
+// conflict as failure is what left a slot taken with no Job behind it.
+func TestReconcilerTreatsAConcurrentBindOfTheSameAttemptAsSuccess(t *testing.T) {
+	attempt, task := reconcilerFixture()
+	task.CurrentAttemptID = ""
+	worker := newFakeAttemptWorker(attempt)
+	worker.bindErr = ErrImportStateConflict
+	// The re-read shows the attempt bound by the other party.
+	tasks := &fakeAttemptTasks{tasks: map[string]DatasetImportTask{task.TaskID: task}}
+	tasks.tasks[task.TaskID] = task
+	reconciler := newTestReconciler(t, worker, tasks, &fakeAttemptWorkloads{})
+
+	// The first read sees no binding; the second (after the conflict) sees this
+	// attempt, which is what a concurrent bind leaves behind.
+	reads := 0
+	tasks.get = func() DatasetImportTask {
+		reads++
+		if reads == 1 {
+			return task
+		}
+		bound := task
+		bound.CurrentAttemptID = attempt.AttemptID
+		return bound
+	}
+
+	result, err := reconciler.Sweep(context.Background())
+	if err != nil {
+		t.Fatalf("sweep: %v", err)
+	}
+	if result.Bound != 1 {
+		t.Fatalf("a concurrent bind of the same attempt was not accepted: %+v", result)
+	}
+	if len(worker.closed) != 0 {
+		t.Fatalf("the attempt was closed after a successful bind: %v", worker.closed)
+	}
+}
+
+// A skipped attempt must leave the current batch. Without this a handful of rows
+// that can never progress fill every batch and starve the ones that could.
+func TestReconcilerDefersEverySkippedAttempt(t *testing.T) {
+	attempt, task := reconcilerFixture()
+	// The scheduler owns this attempt's dispatch, so the reconciler skips it.
+	worker := newFakeAttemptWorker(attempt)
+	tasks := &fakeAttemptTasks{tasks: map[string]DatasetImportTask{task.TaskID: task}}
+	reconciler := newTestReconciler(t, worker, tasks, &fakeAttemptWorkloads{})
+
+	result, err := reconciler.Sweep(context.Background())
+	if err != nil {
+		t.Fatalf("sweep: %v", err)
+	}
+	if result.Skipped != 1 {
+		t.Fatalf("result = %+v", result)
+	}
+	if len(worker.deferred) != 1 || worker.deferred[0] != attempt.AttemptID {
+		t.Fatalf("a skipped attempt stayed in the batch: %v", worker.deferred)
+	}
+}
+
+// A worker that died mid-delete leaves cleanup_state RUNNING. The next lease
+// holder must be able to finish it; accepting only PENDING/WAITING left the
+// attempt RUNNING forever and its objects were never collected.
+func TestReconcilerResumesAnInterruptedCleanup(t *testing.T) {
+	attempt, task := reconcilerFixture()
+	closed := time.Date(2026, 11, 11, 0, 0, 0, 0, time.UTC)
+	stopped := time.Date(2026, 11, 11, 0, 1, 0, 0, time.UTC)
+	attempt.DispatchClosedAt = &closed
+	attempt.WritersStoppedAt = &stopped
+	attempt.CleanupState = "RUNNING"
+	worker := newFakeAttemptWorker(attempt)
+	tasks := &fakeAttemptTasks{tasks: map[string]DatasetImportTask{task.TaskID: task}}
+	workloads := &fakeAttemptWorkloads{status: ImportWorkloadStatus{Present: false}}
+	reconciler := newTestReconciler(t, worker, tasks, workloads)
+
+	result, err := reconciler.Sweep(context.Background())
+	if err != nil {
+		t.Fatalf("sweep: %v", err)
+	}
+	if result.Cleaned != 1 || len(worker.cleaned) != 1 {
+		t.Fatalf("an interrupted cleanup was not resumed: %+v cleaned=%v", result, worker.cleaned)
+	}
+	if len(workloads.deleted) != 1 {
+		t.Fatalf("the temporary objects were not deleted: %v", workloads.deleted)
 	}
 }
 

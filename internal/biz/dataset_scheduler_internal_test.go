@@ -367,6 +367,179 @@ func TestReportedFailureCodeKeepsItsRetryability(t *testing.T) {
 	}
 }
 
+// A create whose response was lost still produced a Job. The scheduler must not
+// record the writer as stopped in that case: the Pod may be uploading, and
+// releasing the slot would let a second writer start beside it.
+func TestDispatchKeepsTheSlotWhenACreateResponseIsLost(t *testing.T) {
+	attempt := DatasetImportAttempt{
+		TenantID: "11111111-1111-4111-8111-111111111111", AttemptID: "22222222-2222-4222-8222-222222222222",
+		TaskID: "33333333-3333-4333-8333-333333333333", AttemptNo: 1,
+		DeadlineAt: time.Date(2026, 11, 11, 1, 0, 0, 0, time.UTC),
+	}
+	task := schedulerTask()
+	task.State = TaskRunning
+	task.CurrentAttemptID = attempt.AttemptID
+	worker := &fakeSweepWorker{attempt: attempt}
+	scheduler, fakes := newSchedulerFixture(t, worker, 3)
+	// The API server accepted the create but the reply never arrived.
+	fakes.workloads.ensureErr = ErrImportDispatchUnavailable
+
+	if _, err := scheduler.dispatch(context.Background(), task, taskOutcome{}); err == nil {
+		t.Fatal("a lost create response was reported as success")
+	}
+	if len(fakes.repo.closed) != 1 {
+		t.Fatalf("the attempt was not closed: %v", fakes.repo.closed)
+	}
+	if len(fakes.repo.stopped) != 0 {
+		t.Fatalf("a possibly running writer was declared stopped: %v", fakes.repo.stopped)
+	}
+}
+
+// A failure before the workload is requested proves no writer exists, so the
+// slot must be released in the same step instead of waiting for an observation
+// that can never happen.
+func TestDispatchReleasesTheSlotWhenNoJobWasRequested(t *testing.T) {
+	attempt := DatasetImportAttempt{
+		TenantID: "11111111-1111-4111-8111-111111111111", AttemptID: "22222222-2222-4222-8222-222222222222",
+		TaskID: "33333333-3333-4333-8333-333333333333", AttemptNo: 1,
+		DeadlineAt: time.Date(2026, 11, 11, 1, 0, 0, 0, time.UTC),
+	}
+	task := schedulerTask()
+	task.State = TaskRunning
+	task.CurrentAttemptID = attempt.AttemptID
+	worker := &fakeSweepWorker{attempt: attempt}
+	scheduler, fakes := newSchedulerFixture(t, worker, 3)
+	// STS is unavailable, so EnsureImporter is never reached.
+	fakes.issuer.err = errors.New("sts unavailable")
+
+	if _, err := scheduler.dispatch(context.Background(), task, taskOutcome{}); err == nil {
+		t.Fatal("a failed credential issue was reported as success")
+	}
+	if len(fakes.repo.stopped) != 1 {
+		t.Fatalf("a slot with no writer was not released: %v", fakes.repo.stopped)
+	}
+	if fakes.workloads.ensureCalls != 0 {
+		t.Fatalf("a workload was requested without credentials: %d", fakes.workloads.ensureCalls)
+	}
+}
+
+// The frozen input row is compared field by field, including the actor. A
+// pod-scoped actor made a handover between replicas look like a conflicting
+// import: replica A reserved the row, replica B compared its own name and
+// refused. The actor must therefore be derived from the task.
+func TestPublishUsesTheSameActorAcrossReplicas(t *testing.T) {
+	attempt := DatasetImportAttempt{
+		TenantID: "11111111-1111-4111-8111-111111111111", AttemptID: "22222222-2222-4222-8222-222222222222",
+		TaskID: "33333333-3333-4333-8333-333333333333", AttemptNo: 1,
+	}
+	task := schedulerTask()
+	task.State = TaskRunning
+	task.Phase = PhaseVerifying
+	task.CurrentAttemptID = attempt.AttemptID
+	task.CandidateAttemptID = attempt.AttemptID
+	task.CandidateObjectKey = "inputs/tenant/data/attempt/data.json"
+	task.CandidateVersionID = "version-1"
+	task.CandidateSizeBytes = 116
+	task.CandidateSHA256 = fillerHex('b', 64)
+
+	// Replica A reserves the frozen row and then dies before publishing.
+	first := &fakeSweepWorker{attempt: attempt}
+	schedulerA, fakesA := newSchedulerFixture(t, first, 3)
+	schedulerA.owner = "modeldev:service:pod-a"
+	fakesA.objects.report = ImportReport{
+		Result: ImportResult{
+			Status: ImportResultSucceeded,
+			Object: &ImportResultObject{
+				StorageConnectionID: task.StorageConnectionID, Bucket: task.Bucket,
+				Key: task.CandidateObjectKey, VersionID: task.CandidateVersionID,
+				SizeBytes: task.CandidateSizeBytes, SHA256: task.CandidateSHA256,
+			},
+		},
+		VersionID: "report-version-1", SHA256: fillerHex('c', 64),
+	}
+	fakesA.publication.publishErr = ErrImportDispatchUnavailable
+	if _, err := schedulerA.publish(context.Background(), task, time.Date(2026, 11, 11, 0, 0, 0, 0, time.UTC)); err == nil {
+		t.Fatal("the first replica reported a lost publish as success")
+	}
+	if len(fakesA.publication.reserved) != 1 {
+		t.Fatalf("the first replica did not reserve: %v", fakesA.publication.reserved)
+	}
+
+	// Replica B takes over the same task under a different pod name.
+	second := &fakeSweepWorker{attempt: attempt}
+	schedulerB, fakesB := newSchedulerFixture(t, second, 3)
+	schedulerB.owner = "modeldev:service:pod-b"
+	fakesB.objects.report = fakesA.objects.report
+	if _, err := schedulerB.publish(context.Background(), task, time.Date(2026, 11, 11, 0, 1, 0, 0, time.UTC)); err != nil {
+		t.Fatalf("the second replica could not publish the same version: %v", err)
+	}
+	if len(fakesB.publication.published) != 1 {
+		t.Fatalf("the second replica did not publish: %v", fakesB.publication.published)
+	}
+	reservedActor := fakesA.publication.reserved[0].Actor
+	publishedActor := fakesB.publication.published[0].Import.Actor
+	if reservedActor != publishedActor {
+		t.Fatalf("the actor changed across replicas: %q then %q", reservedActor, publishedActor)
+	}
+	if reservedActor != importActor(task) {
+		t.Fatalf("the actor is not derived from the task: %q", reservedActor)
+	}
+}
+
+// A transient download failure must reach the task as a retryable deferral, and
+// only a spent budget may end it. The report carries a code, so the scheduler
+// has to translate it back into the cause retryable() matches on.
+func TestReportedTransientFailureDefersThenFailsAsRetryable(t *testing.T) {
+	attempt := DatasetImportAttempt{
+		TenantID: "11111111-1111-4111-8111-111111111111", AttemptID: "22222222-2222-4222-8222-222222222222",
+		TaskID: "33333333-3333-4333-8333-333333333333", AttemptNo: 1,
+		JobUID: "job-uid-1", DeadlineAt: time.Date(2026, 11, 11, 1, 0, 0, 0, time.UTC),
+	}
+	task := schedulerTask()
+	task.State = TaskRunning
+	task.CurrentAttemptID = attempt.AttemptID
+	worker := &fakeSweepWorker{attempt: attempt}
+	scheduler, fakes := newSchedulerFixture(t, worker, 3)
+	fakes.workloads.status = ImportWorkloadStatus{Present: true, Finished: true, Failed: true}
+	fakes.objects.report = ImportReport{Result: ImportResult{
+		Status: ImportResultFailed, FailureCode: FailDependencyUnavailable, FailureStage: StageDownload,
+	}}
+
+	// First observation: the hub throttled the download, so the task is deferred
+	// with the reported code and keeps its slot for the retry. The observation
+	// path reports the failure through the task row, not through this return.
+	if _, err := scheduler.dispatch(context.Background(), task, taskOutcome{}); err != nil {
+		t.Fatalf("dispatch: %v", err)
+	}
+	if len(fakes.repo.deferrals) != 1 {
+		t.Fatalf("a transient failure was not deferred: %v", fakes.repo.deferrals)
+	}
+	if got := fakes.repo.deferrals[0].FailureCode; got != string(FailDependencyUnavailable) {
+		t.Fatalf("deferral code = %s, want %s", got, FailDependencyUnavailable)
+	}
+	if len(fakes.repo.failures) != 0 {
+		t.Fatalf("a transient failure ended the task: %v", fakes.repo.failures)
+	}
+
+	// The budget is spent: the same failure now ends the task, still marked
+	// retryable so an operator can retry it explicitly.
+	exhausted := task
+	exhausted.DeferCount = maxAutomaticRetries
+	worker.attempt = attempt
+	if _, err := scheduler.dispatch(context.Background(), exhausted, taskOutcome{}); err != nil {
+		t.Fatalf("dispatch: %v", err)
+	}
+	if len(fakes.repo.failures) != 1 {
+		t.Fatalf("a spent budget did not end the task: %v", fakes.repo.failures)
+	}
+	if !fakes.repo.failures[0].Retryable {
+		t.Fatal("a transient failure was recorded as permanent")
+	}
+	if got := fakes.repo.failures[0].Code; got != string(FailDependencyUnavailable) {
+		t.Fatalf("failure code = %s, want %s", got, FailDependencyUnavailable)
+	}
+}
+
 // fakeSweepWorker serves the scheduler's scan and records what it was asked for.
 type fakeSweepWorker struct {
 	tasks           []DatasetImportTask
@@ -475,16 +648,45 @@ func (worker *fakeSweepWorker) SetCurrentAttempt(context.Context, string, string
 	panic("not used by the scheduler")
 }
 
+// schedulerFakes exposes every port so a test can assert what the scheduler
+// asked for, not only what it returned.
+type schedulerFakes struct {
+	worker       *fakeSweepWorker
+	repo         *fakeSweepRepository
+	planner      *fakeSweepPlanner
+	workloads    *fakeSweepWorkloads
+	objects      *fakeSweepObjects
+	issuer       *fakeSweepIssuer
+	publication  *fakeSweepPublication
+	operations   *fakeSweepOperations
+	environments *fakeSweepEnvironments
+}
+
 // newTestScheduler builds a scheduler whose only real dependency is the worker.
 // The remaining ports are never reached by the paths these tests exercise.
 func newTestScheduler(t *testing.T, worker *fakeSweepWorker, capacity int) *ImportScheduler {
 	t.Helper()
+	scheduler, _ := newSchedulerFixture(t, worker, capacity)
+	return scheduler
+}
+
+// newSchedulerFixture is newTestScheduler plus the fakes themselves, for tests
+// that assert which port was called with what.
+func newSchedulerFixture(t *testing.T, worker *fakeSweepWorker, capacity int) (*ImportScheduler, *schedulerFakes) {
+	t.Helper()
+	fakes := &schedulerFakes{
+		worker: worker, repo: &fakeSweepRepository{worker: worker},
+		planner: &fakeSweepPlanner{}, workloads: &fakeSweepWorkloads{},
+		objects: &fakeSweepObjects{}, issuer: &fakeSweepIssuer{},
+		publication: &fakeSweepPublication{}, operations: &fakeSweepOperations{},
+		environments: &fakeSweepEnvironments{},
+	}
 	scheduler, err := NewImportScheduler(ImportSchedulerDeps{
-		Repository: &fakeSweepRepository{worker: worker}, Worker: worker,
-		Planner: &fakeSweepPlanner{}, Workloads: &fakeSweepWorkloads{},
-		Objects: &fakeSweepObjects{}, Issuer: &fakeSweepIssuer{},
-		Publication: &fakeSweepPublication{}, Operations: &fakeSweepOperations{},
-		Environments: &fakeSweepEnvironments{},
+		Repository: fakes.repo, Worker: worker,
+		Planner: fakes.planner, Workloads: fakes.workloads,
+		Objects: fakes.objects, Issuer: fakes.issuer,
+		Publication: fakes.publication, Operations: fakes.operations,
+		Environments: fakes.environments,
 		Owner:        "modeldev:service:test", Interval: time.Second, Capacity: capacity,
 		ImportTimeout: time.Minute,
 		Now:           func() time.Time { return time.Date(2026, 11, 11, 0, 0, 0, 0, time.UTC) },
@@ -492,17 +694,43 @@ func newTestScheduler(t *testing.T, worker *fakeSweepWorker, capacity int) *Impo
 	if err != nil {
 		t.Fatalf("new scheduler: %v", err)
 	}
-	return scheduler
+	return scheduler, fakes
 }
 
-type fakeSweepRepository struct{ worker *fakeSweepWorker }
+type fakeSweepRepository struct {
+	worker *fakeSweepWorker
 
-func (repo *fakeSweepRepository) AllocateAttempt(context.Context, AttemptAllocationRequest) (DatasetImportAttempt, error) {
+	allocErr     error
+	allocated    []AttemptAllocationRequest
+	started      []string
+	closed       []string
+	stopped      []string
+	jobs         []string
+	frozen       []CandidateFreeze
+	failures     []TaskFailure
+	deferrals    []TaskDeferral
+	clearErr     error
+	closeErr     error
+	stopErr      error
+	freezeErr    error
+	startErr     error
+	recordJobErr error
+}
+
+func (repo *fakeSweepRepository) AllocateAttempt(_ context.Context, request AttemptAllocationRequest) (DatasetImportAttempt, error) {
+	repo.allocated = append(repo.allocated, request)
+	if repo.allocErr != nil {
+		return DatasetImportAttempt{}, repo.allocErr
+	}
 	// These tests assert the scan split and the writer gate, not allocation.
 	return DatasetImportAttempt{}, ErrImportQuotaExhausted
 }
 
-func (repo *fakeSweepRepository) StartTask(context.Context, string, string, string, int64) (DatasetImportTask, error) {
+func (repo *fakeSweepRepository) StartTask(_ context.Context, _, taskID, _ string, _ int64) (DatasetImportTask, error) {
+	repo.started = append(repo.started, taskID)
+	if repo.startErr != nil {
+		return DatasetImportTask{}, repo.startErr
+	}
 	// These tests assert the scan split, not the dispatch chain. A state
 	// conflict ends the row through the normal error path.
 	return DatasetImportTask{}, ErrImportStateConflict
@@ -512,11 +740,16 @@ func (repo *fakeSweepRepository) SetCurrentAttempt(context.Context, string, stri
 	panic("not used by these tests")
 }
 
-func (repo *fakeSweepRepository) FreezeTaskCandidate(context.Context, CandidateFreeze) (DatasetImportTask, error) {
-	panic("not used by these tests")
+func (repo *fakeSweepRepository) FreezeTaskCandidate(_ context.Context, freeze CandidateFreeze) (DatasetImportTask, error) {
+	repo.frozen = append(repo.frozen, freeze)
+	if repo.freezeErr != nil {
+		return DatasetImportTask{}, repo.freezeErr
+	}
+	return DatasetImportTask{}, nil
 }
 
 func (repo *fakeSweepRepository) FailTask(ctx context.Context, failure TaskFailure) (DatasetImportTask, error) {
+	repo.failures = append(repo.failures, failure)
 	return repo.worker.FailTask(ctx, failure)
 }
 
@@ -525,15 +758,24 @@ func (repo *fakeSweepRepository) FinishCancelledTask(context.Context, TaskCancel
 }
 
 func (repo *fakeSweepRepository) DeferTask(ctx context.Context, deferral TaskDeferral) error {
+	repo.deferrals = append(repo.deferrals, deferral)
 	return repo.worker.DeferTask(ctx, deferral)
 }
 
-func (repo *fakeSweepRepository) CloseAttempt(context.Context, string, string, string) (DatasetImportAttempt, error) {
-	panic("not used by these tests")
+func (repo *fakeSweepRepository) CloseAttempt(_ context.Context, _, attemptID, _ string) (DatasetImportAttempt, error) {
+	repo.closed = append(repo.closed, attemptID)
+	if repo.closeErr != nil {
+		return DatasetImportAttempt{}, repo.closeErr
+	}
+	return DatasetImportAttempt{AttemptID: attemptID}, nil
 }
 
-func (repo *fakeSweepRepository) ConfirmWritersStopped(context.Context, string, string) (DatasetImportAttempt, error) {
-	panic("not used by these tests")
+func (repo *fakeSweepRepository) ConfirmWritersStopped(_ context.Context, _, attemptID string) (DatasetImportAttempt, error) {
+	repo.stopped = append(repo.stopped, attemptID)
+	if repo.stopErr != nil {
+		return DatasetImportAttempt{}, repo.stopErr
+	}
+	return DatasetImportAttempt{AttemptID: attemptID}, nil
 }
 
 func (repo *fakeSweepRepository) ClearCurrentAttempt(_ context.Context, _, _, _ string) (DatasetImportTask, error) {
@@ -544,67 +786,134 @@ func (repo *fakeSweepRepository) ClearCurrentAttempt(_ context.Context, _, _, _ 
 	return task, nil
 }
 
-func (repo *fakeSweepRepository) SetTaskEnvironment(context.Context, string, string, string) (DatasetImportTask, error) {
-	panic("not used by these tests")
+func (repo *fakeSweepRepository) SetTaskEnvironment(_ context.Context, _, _, environmentID string) (DatasetImportTask, error) {
+	task := schedulerTask()
+	task.EnvironmentID = environmentID
+	return task, nil
 }
 
-func (repo *fakeSweepRepository) RecordAttemptJob(context.Context, string, string, string, string) (DatasetImportAttempt, error) {
-	panic("not used by these tests")
+func (repo *fakeSweepRepository) RecordAttemptJob(_ context.Context, _, attemptID, jobUID, _ string) (DatasetImportAttempt, error) {
+	repo.jobs = append(repo.jobs, jobUID)
+	if repo.recordJobErr != nil {
+		return DatasetImportAttempt{}, repo.recordJobErr
+	}
+	return DatasetImportAttempt{AttemptID: attemptID, JobUID: jobUID}, nil
 }
 
 func (repo *fakeSweepRepository) RecordAttemptObservation(context.Context, string, string, []byte) (DatasetImportAttempt, error) {
 	panic("not used by these tests")
 }
 
-type fakeSweepPlanner struct{}
-
-func (fakeSweepPlanner) PlanAttempt(context.Context, DatasetImportTask, string, int64) (AttemptPlan, error) {
-	return AttemptPlan{}, nil
+type fakeSweepPlanner struct {
+	plan AttemptPlan
+	err  error
 }
 
-type fakeSweepWorkloads struct{}
-
-func (fakeSweepWorkloads) EnsureImporter(context.Context, DatasetImportAttempt, AttemptPlan, DatasetImportTask, TemporaryStorageCredentials) (ImportWorkload, error) {
-	panic("not used by these tests")
+func (planner *fakeSweepPlanner) PlanAttempt(context.Context, DatasetImportTask, string, int64) (AttemptPlan, error) {
+	if planner.err != nil {
+		return AttemptPlan{}, planner.err
+	}
+	return planner.plan, nil
 }
 
-func (fakeSweepWorkloads) ResumeImporter(context.Context, DatasetImportAttempt, string) error {
-	panic("not used by these tests")
+type fakeSweepWorkloads struct {
+	ensureErr   error
+	ensureCalls int
+	workload    ImportWorkload
+	status      ImportWorkloadStatus
+	observeErr  error
+	resumed     []string
+	deleted     []string
 }
 
-func (fakeSweepWorkloads) ObserveImporter(context.Context, DatasetImportAttempt) (ImportWorkloadStatus, error) {
-	// The Job is still running, so observation is a no-op for these tests.
-	return ImportWorkloadStatus{Present: true, Finished: false}, nil
+func (workloads *fakeSweepWorkloads) EnsureImporter(context.Context, DatasetImportAttempt, AttemptPlan, DatasetImportTask, TemporaryStorageCredentials) (ImportWorkload, error) {
+	workloads.ensureCalls++
+	if workloads.ensureErr != nil {
+		return ImportWorkload{}, workloads.ensureErr
+	}
+	return workloads.workload, nil
 }
 
-func (fakeSweepWorkloads) DeleteImporter(context.Context, DatasetImportAttempt) error {
-	panic("not used by these tests")
+func (workloads *fakeSweepWorkloads) ResumeImporter(_ context.Context, _ DatasetImportAttempt, jobUID string) error {
+	workloads.resumed = append(workloads.resumed, jobUID)
+	return nil
 }
 
-type fakeSweepObjects struct{}
-
-func (fakeSweepObjects) ReadResult(context.Context, DatasetImportTask, DatasetImportAttempt) (ImportReport, error) {
-	panic("not used by these tests")
+func (workloads *fakeSweepWorkloads) ObserveImporter(context.Context, DatasetImportAttempt) (ImportWorkloadStatus, error) {
+	if workloads.observeErr != nil {
+		return ImportWorkloadStatus{}, workloads.observeErr
+	}
+	if workloads.status == (ImportWorkloadStatus{}) {
+		// The Job is still running, so observation is a no-op for these tests.
+		return ImportWorkloadStatus{Present: true, Finished: false}, nil
+	}
+	return workloads.status, nil
 }
 
-func (fakeSweepObjects) VerifyCandidate(context.Context, DatasetImportTask, ImportResult) (VerifiedAlpaca, []byte, error) {
-	panic("not used by these tests")
+func (workloads *fakeSweepWorkloads) DeleteImporter(_ context.Context, attempt DatasetImportAttempt) error {
+	workloads.deleted = append(workloads.deleted, attempt.AttemptID)
+	return nil
 }
 
-type fakeSweepIssuer struct{}
-
-func (fakeSweepIssuer) IssueImportSession(context.Context, ImportSessionRequest, ImportSessionGrant) (ImportSession, error) {
-	panic("not used by these tests")
+type fakeSweepObjects struct {
+	report    ImportReport
+	readErr   error
+	verified  VerifiedAlpaca
+	preview   []byte
+	verifyErr error
 }
 
-type fakeSweepPublication struct{}
-
-func (fakeSweepPublication) ReserveImport(context.Context, InputImport) (InputVersion, error) {
-	panic("not used by these tests")
+func (objects *fakeSweepObjects) ReadResult(context.Context, DatasetImportTask, DatasetImportAttempt) (ImportReport, error) {
+	if objects.readErr != nil {
+		return ImportReport{}, objects.readErr
+	}
+	return objects.report, nil
 }
 
-func (fakeSweepPublication) PublishVersion(context.Context, PublicationRequest) (PublicationResult, error) {
-	panic("not used by these tests")
+func (objects *fakeSweepObjects) VerifyCandidate(context.Context, DatasetImportTask, ImportResult) (VerifiedAlpaca, []byte, error) {
+	if objects.verifyErr != nil {
+		return VerifiedAlpaca{}, nil, objects.verifyErr
+	}
+	return objects.verified, objects.preview, nil
+}
+
+type fakeSweepIssuer struct {
+	session ImportSession
+	err     error
+}
+
+func (issuer *fakeSweepIssuer) IssueImportSession(context.Context, ImportSessionRequest, ImportSessionGrant) (ImportSession, error) {
+	if issuer.err != nil {
+		return ImportSession{}, issuer.err
+	}
+	if !issuer.session.Issued {
+		return ImportSession{Issued: true, Credentials: TemporaryStorageCredentials{AccessKeyID: "temporary"}}, nil
+	}
+	return issuer.session, nil
+}
+
+type fakeSweepPublication struct {
+	reserveErr error
+	publishErr error
+	reserved   []InputImport
+	published  []PublicationRequest
+	result     PublicationResult
+}
+
+func (publication *fakeSweepPublication) ReserveImport(_ context.Context, request InputImport) (InputVersion, error) {
+	publication.reserved = append(publication.reserved, request)
+	if publication.reserveErr != nil {
+		return InputVersion{}, publication.reserveErr
+	}
+	return InputVersion{}, nil
+}
+
+func (publication *fakeSweepPublication) PublishVersion(_ context.Context, request PublicationRequest) (PublicationResult, error) {
+	publication.published = append(publication.published, request)
+	if publication.publishErr != nil {
+		return PublicationResult{}, publication.publishErr
+	}
+	return publication.result, nil
 }
 
 type fakeSweepOperations struct{}
@@ -617,8 +926,8 @@ func (fakeSweepOperations) ListOperations(context.Context, DatasetOperationFilte
 	panic("not used by these tests")
 }
 
-type fakeSweepEnvironments struct{}
+type fakeSweepEnvironments struct{ id string }
 
-func (fakeSweepEnvironments) EnvironmentID(context.Context, string, string) (string, error) {
-	panic("not used by these tests")
+func (environments *fakeSweepEnvironments) EnvironmentID(context.Context, string, string) (string, error) {
+	return environments.id, nil
 }
