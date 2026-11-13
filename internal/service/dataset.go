@@ -521,7 +521,10 @@ func datasetError(err error, requestID string) error {
 	case errors.Is(err, biz.ErrSourceNotPinnable), errors.Is(err, biz.ErrSourceSizeUnknown):
 		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_INPUT_NOT_READY, "source cannot be pinned", requestID)
 	case errors.Is(err, biz.ErrSourceTooLarge):
-		return commandError(codes.InvalidArgument, modeldevv1.ErrorReason_ERROR_REASON_CONTENT_LIMIT_EXCEEDED, "source exceeds the accepted content limit", requestID)
+		// The same reason is used by the material path (materialsError), which
+		// reports FailedPrecondition. A reason must carry one code across the
+		// service, or the Gov whitelist cannot validate it and degrades to 503.
+		return commandError(codes.FailedPrecondition, modeldevv1.ErrorReason_ERROR_REASON_CONTENT_LIMIT_EXCEEDED, "source exceeds the accepted content limit", requestID)
 	case errors.Is(err, biz.ErrSourceUnavailable):
 		return commandError(codes.Unavailable, modeldevv1.ErrorReason_ERROR_REASON_UPSTREAM_UNAVAILABLE, "source hub unavailable", requestID)
 	case errors.Is(err, biz.ErrSourceChanged):
