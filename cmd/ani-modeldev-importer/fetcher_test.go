@@ -1,15 +1,103 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/zhangzhe-ctrl/ani-modeldev-service/internal/biz"
 )
 
 func redirectPair(fromURL, toURL string) (*http.Request, *http.Request) {
 	from, _ := http.NewRequest(http.MethodGet, fromURL, nil)
 	to, _ := http.NewRequest(http.MethodGet, toURL, nil)
 	return from, to
+}
+
+// A throttled or failing hub must be reported as a transient source failure, not
+// as a missing file. The download response is the first place this is decided,
+// so the mapping is asserted here rather than only on the report code.
+func TestHTTPFetcherMapsTransientStatusesToUnavailable(t *testing.T) {
+	for _, status := range []int{http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(status)
+			}))
+			defer server.Close()
+			fetcher, err := NewHTTPFetcher(server.URL, server.URL, time.Time{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			fetcher.client = server.Client()
+			plan := planFor(t, "0123456789")
+			plan.Provider = biz.ProviderHuggingFace
+			plan.ResolvedRevision = "abcdef0123456789"
+			if _, err := fetcher.Stream(context.Background(), plan); !errors.Is(err, biz.ErrSourceUnavailable) {
+				t.Fatalf("%d returned %v, want IMPORT_DEPENDENCY_UNAVAILABLE", status, err)
+			}
+		})
+	}
+}
+
+// A 4xx this adapter caused is neither a missing file nor an outage, and a
+// gated repository is its own verdict.
+func TestHTTPFetcherMapsClientStatuses(t *testing.T) {
+	for status, want := range map[int]error{
+		http.StatusUnauthorized: biz.ErrSourceAuthRequired,
+		http.StatusForbidden:    biz.ErrSourceAuthRequired,
+		http.StatusNotFound:     biz.ErrSourceNotFound,
+		http.StatusBadRequest:   biz.ErrSourceInvalidInput,
+	} {
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(status)
+		}))
+		fetcher, err := NewHTTPFetcher(server.URL, server.URL, time.Time{})
+		if err != nil {
+			server.Close()
+			t.Fatal(err)
+		}
+		fetcher.client = server.Client()
+		plan := planFor(t, "0123456789")
+		plan.Provider = biz.ProviderHuggingFace
+		plan.ResolvedRevision = "abcdef0123456789"
+		_, err = fetcher.Stream(context.Background(), plan)
+		server.Close()
+		if !errors.Is(err, want) {
+			t.Fatalf("%d returned %v, want %v", status, err, want)
+		}
+	}
+}
+
+// A successful download returns the body so the caller can stream it.
+func TestHTTPFetcherReturnsTheBodyOnSuccess(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("0123456789"))
+	}))
+	defer server.Close()
+	fetcher, err := NewHTTPFetcher(server.URL, server.URL, time.Time{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fetcher.client = server.Client()
+	plan := planFor(t, "0123456789")
+	plan.Provider = biz.ProviderHuggingFace
+	plan.ResolvedRevision = "abcdef0123456789"
+	body, err := fetcher.Stream(context.Background(), plan)
+	if err != nil {
+		t.Fatalf("stream: %v", err)
+	}
+	defer body.Close()
+	raw, err := io.ReadAll(body)
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	if string(raw) != "0123456789" {
+		t.Fatalf("body = %q", raw)
+	}
 }
 
 // Real datasets are served from a hub's own CDN through a 302. Refusing every

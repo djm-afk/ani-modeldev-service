@@ -450,6 +450,82 @@ func TestCleanupClaimRequiresAStoppedWriter(t *testing.T) {
 	}
 }
 
+// A skipped attempt must leave the current batch. Leaving reconcile_next_at in
+// the past let a handful of permanently-skipped rows fill every batch and starve
+// the attempts that could make progress.
+func TestDeferAttemptReconcileMovesTheRowOutOfTheBatch(t *testing.T) {
+	fixture := newSchedFixture(t)
+	taskID := "aaaaaaaa-0000-4000-8000-000000000012"
+	attemptID := "bbbbbbbb-0000-4000-8000-000000000012"
+	fixture.addTask(t, taskID, "RUNNING", time.Now().UTC().Add(-time.Minute))
+	fixture.addAttempt(t, taskID, attemptID, 1)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	before := time.Now().UTC()
+	if err := fixture.repo.DeferAttemptReconcile(ctx, schedTenant, attemptID, 30*time.Second); err != nil {
+		t.Fatalf("defer: %v", err)
+	}
+	var nextAt time.Time
+	if err := fixture.pool.QueryRow(ctx,
+		`SELECT reconcile_next_at FROM modeldev_dataset_import_attempts WHERE tenant_id=$1 AND attempt_id=$2`,
+		schedTenant, attemptID).Scan(&nextAt); err != nil {
+		t.Fatalf("read attempt: %v", err)
+	}
+	if nextAt.Before(before.Add(20 * time.Second)) {
+		t.Fatalf("reconcile_next_at = %s, want roughly 30s ahead", nextAt)
+	}
+	// The row is no longer due, so the next batch does not spend a slot on it.
+	due, err := fixture.repo.ListDueAttempts(ctx, time.Now().UTC(), 20)
+	if err != nil {
+		t.Fatalf("list due: %v", err)
+	}
+	for _, attempt := range due {
+		if attempt.AttemptID == attemptID {
+			t.Fatal("a deferred attempt stayed in the due batch")
+		}
+	}
+}
+
+// A worker that died mid-delete leaves cleanup_state RUNNING. The next lease
+// holder must be able to claim it again; accepting only PENDING/WAITING left the
+// attempt RUNNING forever and its objects were never collected.
+func TestCleanupClaimResumesARunningCleanup(t *testing.T) {
+	fixture := newSchedFixture(t)
+	taskID := "aaaaaaaa-0000-4000-8000-000000000013"
+	attemptID := "bbbbbbbb-0000-4000-8000-000000000013"
+	fixture.addTask(t, taskID, "RUNNING", time.Now().UTC().Add(-time.Minute))
+	fixture.addAttempt(t, taskID, attemptID, 1)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	if _, err := fixture.repo.CloseAttempt(ctx, schedTenant, attemptID, "FAILED"); err != nil {
+		t.Fatalf("close attempt: %v", err)
+	}
+	if _, err := fixture.repo.ConfirmWritersStopped(ctx, schedTenant, attemptID); err != nil {
+		t.Fatalf("confirm writers stopped: %v", err)
+	}
+	// The first claim succeeds, then the worker dies before finishing.
+	if _, err := fixture.repo.ClaimAttemptCleanup(ctx, schedTenant, attemptID); err != nil {
+		t.Fatalf("first claim: %v", err)
+	}
+	_, _, cleanup := fixture.attemptRow(t, attemptID)
+	if cleanup != "RUNNING" {
+		t.Fatalf("cleanup state = %s, want RUNNING", cleanup)
+	}
+	// The next lease holder must be able to take it over.
+	if _, err := fixture.repo.ClaimAttemptCleanup(ctx, schedTenant, attemptID); err != nil {
+		t.Fatalf("an interrupted cleanup could not be resumed: %v", err)
+	}
+	if _, err := fixture.repo.FinishAttemptCleanup(ctx, schedTenant, attemptID); err != nil {
+		t.Fatalf("finish cleanup: %v", err)
+	}
+	_, _, cleanup = fixture.attemptRow(t, attemptID)
+	if cleanup != "DONE" {
+		t.Fatalf("cleanup state = %s, want DONE", cleanup)
+	}
+}
+
 // Allocation and binding share one transaction. Splitting them let a second
 // party bind the attempt first, after which the scheduler's UPDATE matched no
 // row and the task was failed as a conflict while the slot stayed taken.
